@@ -22,7 +22,7 @@ from flask.ext.login import login_user, current_user
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, username_from_full_name
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -63,29 +63,29 @@ def oauth_authorized(resp):  # pragma: no cover
     session['oauth_token'] = (resp['access_token'], '')
     user_data = facebook.oauth.get('/me').data
 
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
     return manage_user_login(user, user_data, next_url)
 
 
-def manage_user(access_token, user_data, next_url):
+def manage_user(access_token, user_data):
     """Manage the user after signin"""
     user = user_repo.get_by(facebook_user_id=user_data['id'])
 
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        user = user_repo.get_by_name(user_data['username'])
+        name = username_from_full_name(user_data['name'])
+        user_exists = user_repo.get_by_name(name) is not None
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)
-        email = None
-        if user_data.get('email'):
-            email = user_repo.get_by(email_addr=user_data['email'])
+        email_exists = (user_data.get('email') is not None and
+                        user_repo.get_by(email_addr=user_data['email']) is not None)
 
-        if user is None and email is None:
+        if not user_exists and not email_exists:
             if not user_data.get('email'):
                 user_data['email'] = "None"
             user = User(fullname=user_data['name'],
-                   name=user_data['username'],
+                   name=name,
                    email_addr=user_data['email'],
                    facebook_user_id=user_data['id'],
                    info=info)
@@ -97,6 +97,7 @@ def manage_user(access_token, user_data, next_url):
             return None
     else:
         return user
+
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
@@ -113,19 +114,13 @@ def manage_user_login(user, user_data, next_url):
         else:
             return redirect(url_for('account.signin'))
     else:
-        first_login = False
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        request_email = False
-        if (user.email_addr == "None"):
-            request_email = True
+        request_email = (user.email_addr == "None")
         if request_email:
-            if first_login:  # pragma: no cover
-                flash("This is your first login, please add a valid e-mail")
-            else:
-                flash("Please update your e-mail address in your profile page")
+            flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))
-        if (user.email_addr != "None" and user.newsletter_prompted is False
+        if (not request_email and user.newsletter_prompted is False
                 and newsletter.is_initialized()):
             return redirect(url_for('account.newsletter_subscribe', next=next_url))
         return redirect(next_url)

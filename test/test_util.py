@@ -279,3 +279,54 @@ class TestWithCacheDisabledDecorator(object):
         left_value = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
 
         assert left_value == original_value, left_value
+
+
+class TestUsernameFromFullnameFunction(object):
+
+    def test_it_removes_whitespaces(self):
+        name = "john benjamin toshack"
+        expected_username = "johnbenjamintoshack"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained
+
+    def test_it_removes_capital_letters(self):
+        name = "JOHN"
+        expected_username = "john"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained
+
+    def test_it_removes_non_ascii_chars(self):
+        name = "ßetaÑapa"
+        expected_username = "etaapa"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained
+
+    def test_it_removes_whitespaces_unicode(self):
+        name = u"john benjamin toshack"
+        expected_username = u"johnbenjamintoshack"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained
+
+    def test_it_removes_capital_letters_unicode(self):
+        name = u"JOHN"
+        expected_username = u"john"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained
+
+    def test_it_removes_non_ascii_chars_unicode(self):
+        name = u"ßetaÑapa"
+        expected_username = u"etaapa"
+
+        obtained = util.username_from_full_name(name)
+
+        assert obtained == expected_username, obtained

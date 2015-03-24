@@ -29,14 +29,14 @@ class TestTwitter(Test):
         # First with a new user
         user_data = dict(user_id=1, screen_name='twitter')
         token = dict(oauth_token='token', oauth_token_secret='secret')
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         assert user.email_addr == user_data['screen_name'], user
         assert user.name == user_data['screen_name'], user
         assert user.fullname == user_data['screen_name'], user
         assert user.twitter_user_id == user_data['user_id'], user
 
         # Second with the same user
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         assert user.email_addr == user_data['screen_name'], user
         assert user.name == user_data['screen_name'], user
         assert user.fullname == user_data['screen_name'], user
@@ -45,7 +45,7 @@ class TestTwitter(Test):
         # Finally with a user that already is in the system
         user_data = dict(user_id=10, screen_name=self.name)
         token = dict(oauth_token='token2', oauth_token_secret='secret2')
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         err_msg = "It should return the same user"
         assert user.twitter_user_id == 10, err_msg
 

@@ -21,7 +21,7 @@ from flask.ext.login import login_user, current_user
 
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, username_from_full_name
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -51,42 +51,6 @@ def get_google_token():  # pragma: no cover
         return (current_user.info['google_token']['oauth_token'], '')
 
 
-def manage_user(access_token, user_data, next_url):
-    """Manage the user after signin"""
-    # We have to store the oauth_token in the session to get the USER fields
-
-    user = user_repo.get_by(google_user_id=user_data['id'])
-
-    # user never signed on
-    if user is None:
-        google_token = dict(oauth_token=access_token)
-        info = dict(google_token=google_token)
-        name = user_data['name'].encode('ascii', 'ignore').lower().replace(" ", "")
-        user = user_repo.get_by_name(name)
-
-        email = user_repo.get_by(email_addr=user_data['email'])
-
-        if ((user is None) and (email is None)):
-            user = User(fullname=user_data['name'],
-                   name=user_data['name'].encode('ascii', 'ignore')
-                                         .lower().replace(" ", ""),
-                   email_addr=user_data['email'],
-                   google_user_id=user_data['id'],
-                   info=info)
-            user_repo.save(user)
-            if newsletter.is_initialized():
-                newsletter.subscribe_user(user)
-            return user
-        else:
-            return None
-    else:
-        # Update the name to fit with new paradigm to avoid UTF8 problems
-        if type(user.name) == unicode or ' ' in user.name:
-            user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
-            user_repo.update(user)
-        return user
-
-
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
@@ -114,8 +78,44 @@ def oauth_authorized(resp):  # pragma: no cover
     session['oauth_token'] = access_token
     import json
     user_data = json.loads(r.content)
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
     return manage_user_login(user, user_data, next_url)
+
+
+def manage_user(access_token, user_data):
+    """Manage the user after signin"""
+    # We have to store the oauth_token in the session to get the USER fields
+
+    user = user_repo.get_by(google_user_id=user_data['id'])
+
+    # user never signed on
+    if user is None:
+        google_token = dict(oauth_token=access_token)
+        info = dict(google_token=google_token)
+        name = username_from_full_name(user_data['name'])
+        user = user_repo.get_by_name(name)
+
+        email = user_repo.get_by(email_addr=user_data['email'])
+
+        if ((user is None) and (email is None)):
+            user = User(fullname=user_data['name'],
+                        name=name,
+                        email_addr=user_data['email'],
+                        google_user_id=user_data['id'],
+                        info=info)
+            user_repo.save(user)
+            if newsletter.app:
+                newsletter.subscribe_user(user)
+            return user
+        else:
+            return None
+    else:
+        # Update the name to fit with new paradigm to avoid UTF8 problems
+        if type(user.name) == unicode or ' ' in user.name:
+            user.name = username_from_full_name(user.name)
+            user_repo.update(user)
+        return user
+
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
@@ -123,7 +123,7 @@ def manage_user_login(user, user_data, next_url):
         # Give a hint for the user
         user = user_repo.get_by(email_addr=user_data['email'])
         if user is None:
-            name = user_data['name'].encode('ascii', 'ignore').lower().replace(' ', '')
+            name = username_from_full_name(user_data['name'])
             user = user_repo.get_by_name(name)
 
         msg, method = get_user_signup_method(user)

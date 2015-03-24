@@ -46,33 +46,6 @@ def get_twitter_token():  # pragma: no cover
             current_user.info['twitter_token']['oauth_token_secret']))
 
 
-def manage_user(access_token, user_data, next_url):
-    """Manage the user after signin"""
-    # Twitter API does not provide a way
-    # to get the e-mail so we will ask for it
-    # only the first time
-    user = user_repo.get_by(twitter_user_id=user_data['user_id'])
-
-    if user is not None:
-        return user
-
-    twitter_token = dict(oauth_token=access_token['oauth_token'],
-                         oauth_token_secret=access_token['oauth_token_secret'])
-    info = dict(twitter_token=twitter_token)
-    user = user_repo.get_by_name(user_data['screen_name'])
-
-    if user is not None:
-        return None
-
-    user = User(fullname=user_data['screen_name'],
-           name=user_data['screen_name'],
-           email_addr=user_data['screen_name'],
-           twitter_user_id=user_data['user_id'],
-           info=info)
-    user_repo.save(user)
-    return user
-
-
 @blueprint.route('/oauth-authorized')
 @twitter.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
@@ -100,9 +73,37 @@ def oauth_authorized(resp):  # pragma: no cover
     user_data = dict(screen_name=resp['screen_name'],
                      user_id=resp['user_id'])
 
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
 
     return manage_user_login(user, user_data, next_url)
+
+
+def manage_user(access_token, user_data):
+    """Manage the user after signin"""
+    # Twitter API does not provide a way
+    # to get the e-mail so we will ask for it
+    # only the first time
+    user = user_repo.get_by(twitter_user_id=user_data['user_id'])
+
+    if user is not None:
+        return user
+
+    twitter_token = dict(oauth_token=access_token['oauth_token'],
+                         oauth_token_secret=access_token['oauth_token_secret'])
+    info = dict(twitter_token=twitter_token)
+    user = user_repo.get_by_name(user_data['screen_name'])
+
+    if user is not None:
+        return None
+
+    user = User(fullname=user_data['screen_name'],
+           name=user_data['screen_name'],
+           email_addr=user_data['screen_name'],
+           twitter_user_id=user_data['user_id'],
+           info=info)
+    user_repo.save(user)
+    return user
+
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
