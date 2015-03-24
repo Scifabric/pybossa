@@ -21,7 +21,7 @@ import os
 import shutil
 import zipfile
 from StringIO import StringIO
-from default import db, Fixtures, with_context
+from default import db, Fixtures, with_context, FakeResponse
 from helper import web
 from mock import patch, Mock
 from flask import Response, redirect
@@ -45,8 +45,6 @@ from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
-
-FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestWeb(web.Helper):
@@ -297,17 +295,15 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.redirect', wraps=redirect)
-    @patch('pybossa.view.account.signer')
-    def test_register_post_valid_data_validation_disabled(self, signer, redirect):
+    def test_register_post_valid_data_validation_disabled(self, redirect):
         """Test WEB register post with valid form data and account validation
-        disabled redirects to the confirmation URL with valid arguments"""
+        disabled redirects to home page"""
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-        signer.dumps.return_value = 'key'
         res = self.app.post('/account/register', data=data)
         print dir(redirect)
-        redirect.assert_called_with('http://localhost/account/register/confirmation?key=key')
+        redirect.assert_called_with('/')
 
 
     def test_register_confirmation_fails_without_key(self):
@@ -384,7 +380,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.signer')
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
-        newsletter.app = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         user = db.session.query(User).get(1)
         user.valid_email = False
@@ -394,9 +390,9 @@ class TestWeb(web.Helper):
                                               email_addr=user.email_addr)
         self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe')
+        url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.app = False
+        newsletter.ask_user_to_subscribe.return_value = False
         self.app.get('/account/register/confirmation?key=valid-key')
         url_for.assert_called_with('home.home')
 
@@ -705,8 +701,10 @@ class TestWeb(web.Helper):
     def test_10_get_application(self, Mock, mock2):
         """Test WEB project URL/<short_name> works"""
         # Sign in and create a project
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
         self.register()
         res = self.new_application()
@@ -855,8 +853,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_12_update_application(self, Mock, mock, mock_webhook):
         """Test WEB update project works"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
         mock_webhook.return_value = html_request
 
@@ -943,8 +943,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_webhook_to_project(self, mock):
         """Test WEB update sets a webhook for the project"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         mock.return_value = html_request
 
         self.register()
@@ -964,8 +966,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_webhook_to_project_fails(self, mock):
         """Test WEB update does not set a webhook for the project"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 404,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=404,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         mock.return_value = html_request
 
         self.register()
@@ -1004,8 +1008,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_add_password_to_project(self, mock_webhook):
         """Test WEB update sets a password for the project"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
@@ -1021,8 +1027,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_remove_password_from_project(self, mock_webhook):
         """Test WEB update removes the password of the project"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
@@ -1061,8 +1069,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13_hidden_applications(self, Mock, mock):
         """Test WEB hidden project works"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
         self.register()
         self.new_application()
@@ -1081,8 +1091,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13a_hidden_applications_owner(self, Mock, mock):
         """Test WEB hidden projects are shown to their owners"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
 
         self.register()
@@ -1585,8 +1597,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     def test_30_app_id_anonymous_user(self, Mock, mock):
         """Test WEB project page does not show the ID to anonymous users"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
 
         self.register()
@@ -2099,8 +2113,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_48_update_app_info(self, Mock, mock, mock_webhook):
         """Test WEB project update/edit works keeping previous info values"""
-        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
 
         mock_webhook.return_value = html_request
@@ -2842,8 +2858,9 @@ class TestWeb(web.Helper):
     @patch('pybossa.importers.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
         """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
-        csv_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
+        csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
         self.register()
         self.new_application()
@@ -2898,9 +2915,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.importers.requests.get')
     def test_bulk_csv_import_works(self, Mock, mock):
         """Test WEB bulk import works"""
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
+        csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
+        Mock.return_value = csv_file
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -2914,8 +2932,10 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
+        empty_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3\n4,5,6',
+                                  status_code=200,
+                                  headers={'content-type': 'text/plain'},
+                                  encoding='utf-8')
         Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
@@ -2934,9 +2954,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.importers.requests.get')
     def test_bulk_gdocs_import_works(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
+        csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
+        Mock.return_value = csv_file
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -2950,8 +2971,10 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
+        empty_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3\n4,5,6',
+                                  status_code=200,
+                                  headers={'content-type': 'text/plain'},
+                                  encoding='utf-8')
         Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
@@ -2967,9 +2990,6 @@ class TestWeb(web.Helper):
             n += 1
 
         # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
@@ -2989,8 +3009,9 @@ class TestWeb(web.Helper):
     def test_bulk_epicollect_import_works(self, Mock, mock):
         """Test WEB bulk Epicollect import works"""
         data = [dict(DeviceID=23)]
-        html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
         self.register()
         self.new_application()
@@ -3009,8 +3030,9 @@ class TestWeb(web.Helper):
         assert tasks[0].info['DeviceID'] == 23, err_msg
 
         data = [dict(DeviceID=23), dict(DeviceID=24)]
-        html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         Mock.return_value = html_request
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
@@ -3046,8 +3068,9 @@ class TestWeb(web.Helper):
                 "total": 1,
                 "title": "Science Hack Day Balloon Mapping Workshop" },
             "stat": "ok" }
-        html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
         request.return_value = html_request
         self.register()
         self.new_application()

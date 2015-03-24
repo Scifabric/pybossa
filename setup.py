@@ -24,7 +24,7 @@ requirements = [
     "raven>=4.1.1, <5.0",
     "requests>=2.2.1, <3.0",
     "SQLAlchemy>=0.9.6, <0.9.7",
-    "six>=1.8.0, <1.9.0",
+    "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
@@ -77,4 +77,3 @@ setup(
     entry_points = '''
     '''
 )
-

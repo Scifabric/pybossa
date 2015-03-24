@@ -75,6 +75,7 @@ def get_update_feed():
         update_feed.append(tmp)
     return update_feed
 
+
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
@@ -118,15 +119,9 @@ def signin():
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
-            login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            if newsletter.app:
-                if user.newsletter_prompted is False:
-                    if newsletter.is_user_subscribed(user.email_addr) is False:
-                        return redirect(url_for('account.newsletter_subscribe',
-                                                next=request.args.get('next')))
-            return redirect(request.args.get("next") or url_for("home.home"))
+            return _sign_in_user(user)
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
@@ -136,7 +131,7 @@ def signin():
                 flash(msg, 'info')
         else:
             msg = gettext("Ooops, we didn't find you in the system, \
-                          did you sign in?")
+                          did you sign up?")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
@@ -159,6 +154,14 @@ def signin():
         return redirect(url_for("home.home"))
 
 
+def _sign_in_user(user):
+    login_user(user, remember=True)
+    if newsletter.ask_user_to_subscribe(user):
+        return redirect(url_for('account.newsletter_subscribe',
+                                 next=request.args.get('next')))
+    return redirect(request.args.get("next") or url_for("home.home"))
+
+
 @blueprint.route('/signout')
 def signout():
     """
@@ -177,6 +180,7 @@ def get_email_confirmation_url(account):
     key = signer.dumps(account, salt='account-validation')
     confirm_url = url_for('.confirm_account', key=key, _external=True)
     return confirm_url
+
 
 @blueprint.route('/confirm-email')
 @login_required
@@ -224,7 +228,7 @@ def register():
                       password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
-            return redirect(confirm_url)
+            return _create_account(account)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
@@ -248,7 +252,7 @@ def newsletter_subscribe():
 
     """
     # Save that we've prompted the user to sign up in the newsletter
-    if newsletter.app and current_user.is_authenticated():
+    if newsletter.is_initialized() and current_user.is_authenticated():
         next_url = request.args.get('next') or url_for('home.home')
         user = user_repo.get(current_user.id)
         if current_user.newsletter_prompted is False:
@@ -279,31 +283,30 @@ def confirm_account():
     except BadData:
         abort(403)
     # First check if the user exists
-    users = user_repo.filter_by(name=userdict['name'])
-    if len(users) == 1 and users[0].name == userdict['name']:
-        u = users[0]
-        u.valid_email = True
-        u.confirmation_email_sent = False
-        u.email_addr = userdict['email_addr']
-        user_repo.update(u)
-        flash(gettext('Your email has been validated.'))
-        if newsletter.app:
-            return redirect(url_for('account.newsletter_subscribe'))
-        else:
-            return redirect(url_for('home.home'))
+    user = user_repo.get_by_name(userdict['name'])
+    if user is not None:
+        return _update_user_with_valid_email(user, userdict['email_addr'])
+    return _create_account(userdict)
 
-    account = model.user.User(fullname=userdict['fullname'],
-                              name=userdict['name'],
-                              email_addr=userdict['email_addr'],
-                              valid_email=True)
-    account.set_password(userdict['password'])
-    user_repo.save(account)
-    login_user(account, remember=True)
+
+def _create_account(user_data):
+    new_user = model.user.User(fullname=user_data['fullname'],
+                               name=user_data['name'],
+                               email_addr=user_data['email_addr'],
+                               valid_email=True)
+    new_user.set_password(user_data['password'])
+    user_repo.save(new_user)
     flash(gettext('Thanks for signing-up'), 'success')
-    if newsletter.app:
-        return redirect(url_for('account.newsletter_subscribe'))
-    else:
-        return redirect(url_for('home.home'))
+    return _sign_in_user(new_user)
+
+
+def _update_user_with_valid_email(user, email_addr):
+    user.valid_email = True
+    user.confirmation_email_sent = False
+    user.email_addr = email_addr
+    user_repo.update(user)
+    flash(gettext('Your email has been validated.'))
+    return _sign_in_user(user)
 
 
 @blueprint.route('/profile', methods=['GET'])
@@ -337,13 +340,12 @@ def _show_public_profile(user):
     if current_user.is_authenticated() and current_user.admin:
         apps_hidden = cached_users.hidden_apps(user.id)
         apps_created.extend(apps_hidden)
-    if user_dict:
-        title = "%s &middot; User Profile" % user_dict['fullname']
-        return render_template('/account/public_profile.html',
-                               title=title,
-                               user=user_dict,
-                               apps=apps_contributed,
-                               apps_created=apps_created)
+    title = "%s &middot; User Profile" % user_dict['fullname']
+    return render_template('/account/public_profile.html',
+                           title=title,
+                           user=user_dict,
+                           apps=apps_contributed,
+                           apps_created=apps_created)
 
 
 def _show_own_profile(user):
@@ -351,8 +353,6 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    user.valid_email = user.valid_email
-    user.confirmation_email_sent = user.confirmation_email_sent
     apps_contributed = cached_users.apps_contributed_cached(user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
@@ -396,7 +396,6 @@ def _get_user_apps(user_id):
     return apps_published, apps_draft
 
 
-
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
 def update_profile(name):
@@ -417,170 +416,131 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    # Title page
-    title_msg = "Update your profile: %s" % user.fullname
     # Creation of forms
     update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
-    external_form = update_form
 
-    if request.method == 'GET':
-        return render_template('account/update.html',
-                               title=title_msg,
-                               user=usr,
-                               form=update_form,
-                               upload_form=avatar_form,
-                               password_form=password_form,
-                               external_form=external_form,
-                               show_passwd_form=show_passwd_form)
-    else:
-        acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
+    if request.method == 'POST':
         # Update user avatar
         if request.form.get('btn') == 'Upload':
-            avatar_form = AvatarUploadForm()
-            if avatar_form.validate_on_submit():
-                file = request.files['avatar']
-                coordinates = (avatar_form.x1.data, avatar_form.y1.data,
-                               avatar_form.x2.data, avatar_form.y2.data)
-                prefix = time.time()
-                file.filename = "%s_avatar.png" % prefix
-                container = "user_%s" % user.id
-                uploader.upload_file(file,
-                                     container=container,
-                                     coordinates=coordinates)
-                # Delete previous avatar from storage
-                if user.info.get('avatar'):
-                    uploader.delete_file(user.info['avatar'], container)
-                user.info = {'avatar': file.filename,
-                                     'container': container}
-                user_repo.update(user)
-                cached_users.delete_user_summary(user.name)
-                flash(gettext('Your avatar has been updated! It may \
-                              take some minutes to refresh...'), 'success')
-                return redirect(url_for('.update_profile', name=user.name))
-            else:
-                flash("You have to provide an image file to update your avatar",
-                      "error")
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
+            _handle_avatar_update(user, avatar_form)
         # Update user profile
         elif request.form.get('btn') == 'Profile':
-            update_form = UpdateProfileForm()
-            update_form.set_locales(current_app.config['LOCALES'])
-            if update_form.validate():
-                user.id = update_form.id.data
-                user.fullname = update_form.fullname.data
-                user.name = update_form.name.data
-                if (user.email_addr != update_form.email_addr.data and
-                        acc_conf_dis is False):
-                    user.valid_email = False
-                    user.newsletter_prompted = False
-                    account = dict(fullname=update_form.fullname.data,
-                                   name=update_form.name.data,
-                                   email_addr=update_form.email_addr.data)
-                    confirm_url = get_email_confirmation_url(account)
-                    subject = ('You have updated your email in %s! Verify it' \
-                               % current_app.config.get('BRAND'))
-                    msg = dict(subject=subject,
-                               recipients=[update_form.email_addr.data],
-                               body=render_template(
-                                   '/account/email/validate_email.md',
-                                   user=account, confirm_url=confirm_url))
-                    msg['html'] = markdown(msg['body'])
-                    mail_queue.enqueue(send_mail, msg)
-                    user.confirmation_email_sent = True
-                    fls = gettext('An email has been sent to verify your \
-                                  new email: %s. Once you verify it, it will \
-                                  be updated.' % account['email_addr'])
-                    flash(fls, 'info')
-                if acc_conf_dis:
-                    user.email_addr = update_form.email_addr.data
-                user.privacy_mode = update_form.privacy_mode.data
-                user.locale = update_form.locale.data
-                user.subscribed = update_form.subscribed.data
-                user_repo.update(user)
-                cached_users.delete_user_summary(user.name)
-                flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=user.name))
-            else:
-                flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % user.fullname
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
-
+            _handle_profile_update(user, update_form)
         # Update user password
         elif request.form.get('btn') == 'Password':
-            # Update the data because passing it in the constructor does not work
-            update_form.name.data = user.name
-            update_form.fullname.data = user.fullname
-            update_form.email_addr.data = user.email_addr
-            update_form.ckan_api.data = user.ckan_api
-            external_form = update_form
-            if password_form.validate_on_submit():
-                user = user_repo.get(user.id)
-                if user.check_password(password_form.current_password.data):
-                    user.set_password(password_form.new_password.data)
-                    user_repo.update(user)
-                    flash(gettext('Yay, you changed your password succesfully!'),
-                          'success')
-                    return redirect(url_for('.update_profile', name=name))
-                else:
-                    msg = gettext("Your current password doesn't match the "
-                                  "one in our records")
-                    flash(msg, 'error')
-                    return render_template('/account/update.html',
-                                           form=update_form,
-                                           upload_form=avatar_form,
-                                           password_form=password_form,
-                                           external_form=external_form,
-                                           title=title_msg,
-                                           show_passwd_form=show_passwd_form)
-            else:
-                flash(gettext('Please correct the errors'), 'error')
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
+            _handle_password_update(user, password_form)
         # Update user external services
         elif request.form.get('btn') == 'External':
-            del external_form.locale
-            del external_form.email_addr
-            del external_form.fullname
-            del external_form.name
-            if external_form.validate():
-                user.ckan_api = external_form.ckan_api.data or None
-                user_repo.update(user)
-                cached_users.delete_user_summary(user.name)
-                flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=user.name))
-            else:
-                flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % user.fullname
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
+            _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
             return abort(415)
+        return redirect(url_for('.update_profile', name=user.name))
+
+    title_msg = "Update your profile: %s" % user.fullname
+    return render_template('/account/update.html',
+                           form=update_form,
+                           upload_form=avatar_form,
+                           password_form=password_form,
+                           title=title_msg,
+                           show_passwd_form=show_passwd_form)
+
+
+def _handle_avatar_update(user, avatar_form):
+    if avatar_form.validate_on_submit():
+        _file = request.files['avatar']
+        coordinates = (avatar_form.x1.data, avatar_form.y1.data,
+                       avatar_form.x2.data, avatar_form.y2.data)
+        prefix = time.time()
+        _file.filename = "%s_avatar.png" % prefix
+        container = "user_%s" % user.id
+        uploader.upload_file(_file,
+                             container=container,
+                             coordinates=coordinates)
+        # Delete previous avatar from storage
+        if user.info.get('avatar'):
+            uploader.delete_file(user.info['avatar'], container)
+        user.info = {'avatar': _file.filename,
+                             'container': container}
+        user_repo.update(user)
+        cached_users.delete_user_summary(user.name)
+        flash(gettext('Your avatar has been updated! It may \
+                      take some minutes to refresh...'), 'success')
+    else:
+        flash("You have to provide an image file to update your avatar", "error")
+
+
+def _handle_profile_update(user, update_form):
+    acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
+    if update_form.validate():
+        user.id = update_form.id.data
+        user.fullname = update_form.fullname.data
+        user.name = update_form.name.data
+        if (user.email_addr != update_form.email_addr.data and
+                acc_conf_dis is False):
+            user.valid_email = False
+            user.newsletter_prompted = False
+            account = dict(fullname=update_form.fullname.data,
+                           name=update_form.name.data,
+                           email_addr=update_form.email_addr.data)
+            confirm_url = get_email_confirmation_url(account)
+            subject = ('You have updated your email in %s! Verify it' \
+                       % current_app.config.get('BRAND'))
+            msg = dict(subject=subject,
+                       recipients=[update_form.email_addr.data],
+                       body=render_template(
+                           '/account/email/validate_email.md',
+                           user=account, confirm_url=confirm_url))
+            msg['html'] = markdown(msg['body'])
+            mail_queue.enqueue(send_mail, msg)
+            user.confirmation_email_sent = True
+            fls = gettext('An email has been sent to verify your \
+                          new email: %s. Once you verify it, it will \
+                          be updated.' % account['email_addr'])
+            flash(fls, 'info')
+        if acc_conf_dis:
+            user.email_addr = update_form.email_addr.data
+        user.privacy_mode = update_form.privacy_mode.data
+        user.locale = update_form.locale.data
+        user.subscribed = update_form.subscribed.data
+        user_repo.update(user)
+        cached_users.delete_user_summary(user.name)
+        flash(gettext('Your profile has been updated!'), 'success')
+    else:
+        flash(gettext('Please correct the errors'), 'error')
+
+
+def _handle_password_update(user, password_form):
+    if password_form.validate_on_submit():
+        user = user_repo.get(user.id)
+        if user.check_password(password_form.current_password.data):
+            user.set_password(password_form.new_password.data)
+            user_repo.update(user)
+            flash(gettext('Yay, you changed your password succesfully!'),
+                  'success')
+        else:
+            msg = gettext("Your current password doesn't match the "
+                          "one in our records")
+            flash(msg, 'error')
+    else:
+        flash(gettext('Please correct the errors'), 'error')
+
+
+def _handle_external_services_update(user, update_form):
+    del update_form.locale
+    del update_form.email_addr
+    del update_form.fullname
+    del update_form.name
+    if update_form.validate():
+        user.ckan_api = update_form.ckan_api.data or None
+        user_repo.update(user)
+        cached_users.delete_user_summary(user.name)
+        flash(gettext('Your profile has been updated!'), 'success')
+    else:
+        flash(gettext('Please correct the errors'), 'error')
 
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
@@ -610,9 +570,8 @@ def reset_password():
     if form.validate_on_submit():
         user.set_password(form.new_password.data)
         user_repo.update(user)
-        login_user(user)
         flash(gettext('You reset your password successfully!'), 'success')
-        return redirect(url_for('.signin'))
+        return _sign_in_user(user)
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     return render_template('/account/password_reset.html', form=form)
@@ -665,7 +624,7 @@ def forgot_password():
                     '/account/email/forgot_password.html',
                     user=user, recovery_url=recovery_url)
             mail_queue.enqueue(send_mail, msg)
-            flash(gettext("We've send you email with account "
+            flash(gettext("We've send you an email with account "
                           "recovery instructions!"),
                   'success')
         else:
