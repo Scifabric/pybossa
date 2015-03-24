@@ -3315,6 +3315,15 @@ class TestWeb(web.Helper):
         assert "uses cookies" in res.data, err_msg
 
     @with_context
+    def test_59_help_privacy(self):
+        """Test WEB help privacy page exists."""
+        url = "/help/privacy"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a privacy policy page"
+        assert "Privacy" in res.data, err_msg
+
+
+    @with_context
     def test_69_allow_anonymous_contributors(self):
         """Test WEB allow anonymous contributors works"""
         Fixtures.create()
