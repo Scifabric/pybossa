@@ -1656,7 +1656,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
-                                           fake_user, None)
+                                           fake_user)
 
         user = db.session.query(User).get(1)
 
@@ -1688,7 +1688,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
-                                           fake_user, None)
+                                           fake_user)
 
         assert response_user is None, response_user
 
@@ -1718,7 +1718,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import facebook
         response_user = facebook.manage_user(fake_response['access_token'],
-                                             fake_user, None)
+                                             fake_user)
 
         user = db.session.query(User).get(1)
 
@@ -1753,7 +1753,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import facebook
         response_user = facebook.manage_user(fake_response['access_token'],
-                                             fake_user, None)
+                                             fake_user)
 
         assert response_user is None, response_user
 
@@ -1772,7 +1772,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import twitter
         response_user = twitter.manage_user(fake_response['access_token'],
-                                            fake_user, None)
+                                            fake_user)
 
         user = db.session.query(User).get(1)
 
@@ -1800,7 +1800,7 @@ class TestWeb(web.Helper):
 
         from pybossa.view import twitter
         response_user = twitter.manage_user(fake_response['access_token'],
-                                            fake_user, None)
+                                            fake_user)
 
         assert response_user is None, response_user
 
