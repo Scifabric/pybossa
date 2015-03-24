@@ -78,11 +78,11 @@ def oauth_authorized(resp):  # pragma: no cover
     session['oauth_token'] = access_token
     import json
     user_data = json.loads(r.content)
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
     return manage_user_login(user, user_data, next_url)
 
 
-def manage_user(access_token, user_data, next_url):
+def manage_user(access_token, user_data):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
