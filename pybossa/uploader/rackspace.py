@@ -25,11 +25,10 @@ This module exports:
 """
 import pyrax
 import traceback
+import time
 from flask import current_app, url_for
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
-import time
-import traceback
 
 class RackspaceUploader(Uploader):
 

@@ -118,7 +118,7 @@ def manage_user_login(user, user_data, next_url):
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
-            and newsletter.app):
+            and newsletter.is_initialized()):
         return redirect(url_for('account.newsletter_subscribe',
                                 next=next_url))
     if user.email_addr != user.name:

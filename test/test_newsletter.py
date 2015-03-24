@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import with_context
+from default import with_context, Test
 from helper import web
-from mock import patch
+from mock import patch, MagicMock
 from collections import namedtuple
 from pybossa.core import user_repo
 from pybossa.newsletter import Newsletter
@@ -30,11 +30,10 @@ from mailchimp import Error
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
-class TestNewsletter(web.Helper):
+class TestNewsletterClass(Test):
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_init_app(self, mailchimp):
+    def test_init_app(self, mailchimp):
         """Test Newsletter init_app method works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -45,9 +44,8 @@ class TestNewsletter(web.Helper):
             assert nw.client, nw.client
             assert nw.list_id == 1
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_is_user_subscribed_false(self, mailchimp):
+    def test_is_user_subscribed_false(self, mailchimp):
         """Test is_user_subscribed returns False."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -59,9 +57,8 @@ class TestNewsletter(web.Helper):
                                                            [{'email': email}])
             assert res is False
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_is_user_subscribed_true(self, mailchimp):
+    def test_is_user_subscribed_true(self, mailchimp):
         """Test is_user_subscribed returns True."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -76,9 +73,8 @@ class TestNewsletter(web.Helper):
                                                            [{'email': email}])
             assert res is True
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_is_user_subscribed_exception(self, mp):
+    def test_is_user_subscribed_exception(self, mp):
         """Test is_user_subscribed exception works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -86,12 +82,10 @@ class TestNewsletter(web.Helper):
             nw = Newsletter()
             nw.init_app(self.flask_app)
             nw.client.lists.member_info.side_effect = Error
-            # nw.is_user_subscribed(email)
             assert_raises(Error, nw.is_user_subscribed, email)
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_subscribe_user_exception(self, mp):
+    def test_subscribe_user_exception(self, mp):
         """Test subscribe_user exception works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -105,9 +99,8 @@ class TestNewsletter(web.Helper):
             assert_raises(Error, nw.subscribe_user, user)
 
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_subscribe_user(self, mailchimp):
+    def test_subscribe_user(self, mailchimp):
         """Test subscribe user works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -122,9 +115,8 @@ class TestNewsletter(web.Helper):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=False)
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_subscribe_user_update_existing(self, mailchimp):
+    def test_subscribe_user_update_existing(self, mailchimp):
         """Test subscribe user update existing works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -146,12 +138,71 @@ class TestNewsletter(web.Helper):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=True)
 
+    @patch('pybossa.newsletter.mailchimp')
+    def test_is_initialized_returns_false_before_calling_init_app(self, mailchimp):
+        nw = Newsletter()
+        app = MagicMock()
+
+        assert nw.is_initialized() is False
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_is_initialized_returns_true_after_calling_init_app(self, mailchimp):
+        nw = Newsletter()
+        app = MagicMock()
+        nw.init_app(app)
+
+        assert nw.is_initialized() is True
+
+    def test_ask_user_to_subscribe_returns_false_if_not_initialized(self):
+        nw = Newsletter()
+        user = UserFactory.build()
+
+        assert nw.ask_user_to_subscribe(user) is False
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_ask_user_to_subscribe_returns_false_if_newsletter_prompted(self, mailchimp):
+        nw = Newsletter()
+        app = MagicMock()
+        nw.init_app(app)
+        user = UserFactory.build(newsletter_prompted=True)
+
+        assert nw.ask_user_to_subscribe(user) is False
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_ask_user_to_subscribe_returns_false_if_user_subscribed(self, mailchimp):
+        user = UserFactory.build(newsletter_prompted=False)
+        app = MagicMock()
+        fake_client = MagicMock()
+        fake_client.lists.member_info.return_value = {
+            'success_count': 1, 'data': [{'email':user.email_addr}]}
+        mailchimp.Mailchimp.return_value = fake_client
+        nw = Newsletter()
+        nw.init_app(app)
+
+        assert nw.ask_user_to_subscribe(user) is False
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_ask_user_to_subscribe_returns_true_if_user_not_subscribed(self, mailchimp):
+        user = UserFactory.build(newsletter_prompted=False)
+        app = MagicMock()
+        fake_client = MagicMock()
+        fake_client.lists.member_info.return_value = {
+            'success_count': 0, 'data': [{'email':'anotheruser@a.com'}]}
+        mailchimp.Mailchimp.return_value = fake_client
+        nw = Newsletter()
+        nw.init_app(app)
+
+        assert nw.ask_user_to_subscribe(user) is True
+
+
+class TestNewsletterViewFuntions(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_new_user_gets_newsletter(self, newsletter):
         """Test NEWSLETTER new user works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a newsletter page."
@@ -164,7 +215,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_new_user_gets_newsletter_only_once(self, newsletter):
         """Test NEWSLETTER user gets newsletter only once works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
         dom = BeautifulSoup(res.data)
         user = user_repo.get(1)
@@ -175,6 +227,7 @@ class TestNewsletter(web.Helper):
         assert user.newsletter_prompted is True, err_msg
 
         self.signout()
+        newsletter.ask_user_to_subscribe.return_value = False
         res = self.signin()
         dom = BeautifulSoup(res.data)
         assert dom.find(id='newsletter') is None, err_msg
@@ -185,7 +238,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_subscribe_returns_404(self, newsletter):
         """Test NEWSLETTER view returns 404 works."""
-        newsletter.app = None
+        newsletter.is_initialized.return_value = False
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter', follow_redirects=True)
         dom = BeautifulSoup(res.data)
@@ -197,7 +251,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_subscribe(self, newsletter):
         """Test NEWSLETTER view subcribe works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=True',
                            follow_redirects=True)
@@ -212,7 +267,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_subscribe_next(self, newsletter):
         """Test NEWSLETTER view subscribe next works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=True&next=%s' % next_url
@@ -228,7 +284,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_not_subscribe(self, newsletter):
         """Test NEWSLETTER view not subcribe works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=False',
                            follow_redirects=True)
@@ -240,7 +297,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_not_subscribe_next(self, newsletter):
         """Test NEWSLETTER view subscribe next works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=False&next=%s' % next_url
@@ -254,7 +312,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_with_any_argument(self, newsletter):
         """Test NEWSLETTER view with any argument works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=something',
                            follow_redirects=True)
@@ -268,7 +327,8 @@ class TestNewsletter(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_with_any_argument_variation(self, newsletter):
         """Test NEWSLETTER view with any argument variation works."""
-        newsletter.app = True
+        newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?myarg=something',
                            follow_redirects=True)
