@@ -393,3 +393,11 @@ def is_reserved_name(blueprint, name):
     reserved_names = [url.split('/')[2] for url in app_urls
                       if url.split('/')[2] != '']
     return name in reserved_names
+
+
+def username_from_full_name(username):
+    """Takes a username that may contain several words with capital letters and
+    returns a single word username, no spaces, all lowercases."""
+    if type(username) == str:
+        return username.decode('ascii', 'ignore').lower().replace(' ', '')
+    return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')

@@ -416,19 +416,19 @@ def update(short_name):
         else:
             if upload_form.validate_on_submit():
                 project = project_repo.get(project.id)
-                file = request.files['avatar']
+                _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
                 prefix = time.time()
-                file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
+                _file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
-                uploader.upload_file(file,
+                uploader.upload_file(_file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
                 if project.info.get('thumbnail'):
                     uploader.delete_file(project.info['thumbnail'], container)
-                project.info['thumbnail'] = file.filename
+                project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
                 project_repo.save(project)
                 cached_projects.delete_project(project.short_name)
@@ -785,7 +785,7 @@ def tutorial(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
-    """Return a file with all the TaskRuns for a give Task"""
+    """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)

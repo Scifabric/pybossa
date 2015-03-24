@@ -383,8 +383,8 @@ class Fixtures:
     def create_categories(cls):
         names = [cls.cat_1, cls.cat_2]
         db.session.add_all([Category(name=c_name,
-                                           short_name=c_name.lower().replace(" ",""),
-                                           description=c_name)
+                                     short_name=c_name.lower().replace(" ", ""),
+                                     description=c_name)
                             for c_name in names])
         db.session.commit()
 
@@ -398,3 +398,8 @@ def assert_not_raises(exception, call, *args, **kwargs):
         assert True
     except exception as ex:
         assert False, str(ex)
+
+
+class FakeResponse(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(**kwargs)

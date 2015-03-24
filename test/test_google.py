@@ -29,14 +29,14 @@ class TestGoogle(Test):
         user_data = dict(id='1', name='google',
                          email='g@g.com')
         token = 't'
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
         assert user.google_user_id == user_data['id'], user
 
         # Second with the same user
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
@@ -46,7 +46,7 @@ class TestGoogle(Test):
         user_data = dict(id='10', name=self.name,
                          email=self.email_addr)
         token = 'tA'
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         err_msg = "User should be the same"
         assert user.google_user_id == '10', err_msg
 
@@ -58,7 +58,7 @@ class TestGoogle(Test):
         user_data = dict(id='1', name='google',
                          email='g@g.com')
         token = 't'
-        user = manage_user(token, user_data, None)
+        user = manage_user(token, user_data)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
@@ -73,7 +73,7 @@ class TestGoogle(Test):
         user = UserFactory.create(fullname='john', name='john',
                                   google_user_id='1')
         user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
-        r_user = manage_user(token, user_data, None)
+        r_user = manage_user(token, user_data)
         assert r_user.email_addr == user_data['email'], user
         assert r_user.name == user_data['name'], user
         assert r_user.fullname == user_data['name'], user

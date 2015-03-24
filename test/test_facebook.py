@@ -19,93 +19,81 @@ from default import Test
 from pybossa.view.facebook import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
+from pybossa.util import username_from_full_name
 
 
 class TestFacebook(Test):
 
+    def setUp(self):
+        super(TestFacebook, self).setUp()
+        self.user_data = {
+            "id": 1234567890,
+            "email": "me@facebook.com",
+            "first_name": "Mauricio",
+            "last_name": "Perez Sanchez",
+            "name": "Mauricio Perez Sanchez"
+        }
+        self.name = username_from_full_name(self.user_data['name'])
+
     def test_manage_user_with_email(self):
         """Test FACEBOOK manage_user works."""
         # First with a new user
-        user_data = dict(id=1, username='facebook',
-                         email='f@f.com', name='name')
         token = 't'
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
 
         # Second with the same user
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
-
-        # Finally with a user that already is in the system
-        user_data = dict(id=10, username=self.name,
-                         email=self.email_addr, name=self.fullname)
-        token = 'tA'
-        user = manage_user(token, user_data, None)
-        err_msg = "It should return the same user"
-        assert user.facebook_user_id == 10, err_msg
-
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
 
     def test_manage_user_without_email(self):
         """Test FACEBOOK manage_user without e-mail works."""
         # First with a new user
-        user_data = dict(id=1, username='facebook', name='name')
+        del self.user_data['email']
         token = 't'
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
 
         # Second with the same user
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
-
-        # Finally with a user that already is in the system
-        user_data = dict(id=10, username=self.name,
-                         email=self.email_addr, name=self.fullname)
-        token = 'tA'
-        user = manage_user(token, user_data, None)
-        err_msg = "It should return the same user"
-        assert user.facebook_user_id == 10, err_msg
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
 
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_with_email_newsletter(self, newsletter):
         """Test FACEBOOK manage_user newsletter works."""
         newsletter.app = True
-        # First with a new user
-        user_data = dict(id=1, username='facebook',
-                         email='f@f.com', name='name')
         token = 't'
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
 
         newsletter.subscribe_user.assert_called_once_with(user)
-
 
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_without_email_newsletter(self, newsletter):
         """Test FACEBOOK manage_user without e-mail newsletter works."""
         newsletter.app = True
-        # First with a new user
-        user_data = dict(id=1, username='facebook', name='name')
+        del self.user_data['email']
         token = 't'
-        user = manage_user(token, user_data, None)
-        assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['username'], user
-        assert user.fullname == user_data['name'], user
-        assert user.facebook_user_id == user_data['id'], user
+        user = manage_user(token, self.user_data)
+        assert user.email_addr == self.user_data['email'], user
+        assert user.name == self.name, user
+        assert user.fullname == self.user_data['name'], user
+        assert user.facebook_user_id == self.user_data['id'], user
         err_msg = "It should not be called."
         assert newsletter.subscribe_user.called is False, err_msg
 
@@ -121,7 +109,7 @@ class TestFacebook(Test):
         """Test manage login user works."""
         newsletter.app = True
         user = UserFactory.create()
-        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.forgot_password')
@@ -138,7 +126,7 @@ class TestFacebook(Test):
         """Test manage login user works."""
         newsletter.app = True
         user = UserFactory.create(info={'google_token': 'k'})
-        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
@@ -154,7 +142,7 @@ class TestFacebook(Test):
                                      newsletter):
         """Test manage login user works."""
         newsletter.app = True
-        user_data = dict(id='3', name='algo', email='email')
+        user_data = dict(name='algo', email='email')
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
@@ -171,7 +159,7 @@ class TestFacebook(Test):
         """Test manage login user works."""
         newsletter.app = True
         user = UserFactory.create(email_addr="None")
-        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
@@ -190,7 +178,7 @@ class TestFacebook(Test):
         """Test manage login user with good email works."""
         newsletter.app = True
         user = UserFactory.create()
-        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
@@ -209,7 +197,7 @@ class TestFacebook(Test):
         """Test manage login user already asked works."""
         newsletter.app = True
         user = UserFactory.create(newsletter_prompted=True)
-        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)

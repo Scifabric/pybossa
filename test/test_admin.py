@@ -553,7 +553,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN add category works"""
         self.create()
         category = {'name': 'cat', 'short_name': 'cat',
-                    'description': 'description'}
+                    'description': 'description', 'id': ""}
         # Anonymous user
         url = '/admin/categories'
         res = self.app.post(url, data=category, follow_redirects=True)
@@ -575,10 +575,7 @@ class TestAdmin(web.Helper):
         assert "Category added" in res.data, err_msg
         assert category['name'] in res.data, err_msg
 
-        category = {'name': 'cat', 'short_name': 'cat',
-                    'description': 'description'}
-
-        self.signin(email=self.root_addr, password=self.root_password)
+        # Create the same category again should fail
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category form validation should work"
         assert "Please correct the errors" in res.data, err_msg
