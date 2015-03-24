@@ -27,7 +27,7 @@ blueprint = Blueprint('help', __name__)
 
 @blueprint.route('/api')
 def api():
-    """Render help/api page"""
+    """Render help/api page."""
     categories = cached_cat.get_used()
     apps = cached_apps.get(categories[0]['short_name'])
     if len(apps) > 0:
@@ -40,17 +40,25 @@ def api():
 
 @blueprint.route('/license')
 def license():
-    """Render help/license page"""
+    """Render help/license page."""
     return render_template('help/license.html', title='Help: Licenses')
 
 
 @blueprint.route('/terms-of-use')
 def tos():
-    """Render help/terms-of-use page"""
+    """Render help/terms-of-use page."""
     return render_template('help/tos.html', title='Help: Terms of Use')
 
 
 @blueprint.route('/cookies-policy')
 def cookies_policy():
-    """Render help/cookies-policy page"""
-    return render_template('help/cookies_policy.html', title='Help: Cookies Policy')
+    """Render help/cookies-policy page."""
+    return render_template('help/cookies_policy.html',
+                           title='Help: Cookies Policy')
+
+
+@blueprint.route('/privacy')
+def privacy_policy():
+    """Render help/privacy policy page."""
+    return render_template('help/privacy.html',
+                           title='Help: Cookies Policy')
