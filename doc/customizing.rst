@@ -510,6 +510,13 @@ please, create a **_cookies_policy.html** file in the **custom** folder. You
 can re-use the template **help/_cookies_policy.html** and adapt it (it is
 located in the **template/help** folder.
 
+Using your own Privacy Policy
+=============================
+
+PyBossa has a blank privacy policy page. We recommend you to add one, so your
+users know how you are using their data. To add it, just create a file named 
+**_privacy_policy.html** file in the **custom** folder.
+
 .. _config-ckan:
 
 Exporting data to a CKAN server

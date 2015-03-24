@@ -55,3 +55,10 @@ def cookies_policy():
     """Render help/cookies-policy page."""
     return render_template('help/cookies_policy.html',
                            title='Help: Cookies Policy')
+
+
+@blueprint.route('/privacy')
+def privacy():
+    """Render help/privacy policy page."""
+    return render_template('help/privacy.html',
+                           title='Help: Cookies Policy')
