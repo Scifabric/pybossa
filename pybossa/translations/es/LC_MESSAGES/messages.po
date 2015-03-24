@@ -1604,7 +1604,7 @@ msgid "Do you want to hide your project?"
 msgstr "¿Quieres ocultar el proyecto?"
 
 #: themes/default/templates/applications/update.html:46
-msgid "Save te changes"
+msgid "Save the changes"
 msgstr "Guardar los cambios"
 
 #: themes/default/templates/applications/update_blogpost.html:14
