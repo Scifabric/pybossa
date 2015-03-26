@@ -894,10 +894,7 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        cached_apps.delete_last_activity(app.id)
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
+        cached_apps.clean_project(app_id)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
 
