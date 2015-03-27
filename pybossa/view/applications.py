@@ -894,17 +894,21 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        json_tasks_filename = json_exporter.download_name(app, 'task')
-        csv_tasks_filename = csv_exporter.download_name(app, 'task')
-        json_taskruns_filename = json_exporter.download_name(app, 'task_run')
-        csv_taskruns_filename = csv_exporter.download_name(app, 'task_run')
-        container = "user_%s" % current_user.id
-        uploader.delete_file(json_tasks_filename, container)
-        uploader.delete_file(csv_tasks_filename, container)
-        uploader.delete_file(json_taskruns_filename, container)
-        uploader.delete_file(csv_taskruns_filename, container)
+        _delete_zip_files_from_store(app)
         cached_apps.clean_project(app.id)
         return redirect(url_for('.tasks', short_name=app.short_name))
+
+
+def _delete_zip_files_from_store(app):
+    json_tasks_filename = json_exporter.download_name(app, 'task')
+    csv_tasks_filename = csv_exporter.download_name(app, 'task')
+    json_taskruns_filename = json_exporter.download_name(app, 'task_run')
+    csv_taskruns_filename = csv_exporter.download_name(app, 'task_run')
+    container = "user_%s" % current_user.id
+    uploader.delete_file(json_tasks_filename, container)
+    uploader.delete_file(csv_tasks_filename, container)
+    uploader.delete_file(json_taskruns_filename, container)
+    uploader.delete_file(csv_taskruns_filename, container)
 
 
 @blueprint.route('/<short_name>/tasks/export')
