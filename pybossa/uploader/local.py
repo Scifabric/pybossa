@@ -72,3 +72,11 @@ class LocalUploader(Uploader):
             return True
         except:
             return False
+
+    def file_exists(self, name, container):
+        """Check if a file exists in a container"""
+        try:
+            path = os.path.join(self.upload_folder, container, name)
+            return os.path.isfile(path)
+        except:
+            return False
