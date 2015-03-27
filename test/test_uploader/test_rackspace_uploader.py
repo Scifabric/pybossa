@@ -275,10 +275,41 @@ class TestRackspaceUploader(Test):
             container.get_object.side_effect = NoSuchObject
             mycf.get_container.return_value = container
 
-            calls = [call.get_container('container'),
-                     ]
+            calls = [call.get_container('container')]
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             err_msg = "It should return False"
             assert u.delete_file('file', 'container') is False, err_msg
             mycf.assert_has_calls(calls, any_order=True)
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_file_exists_for_missing_file(self, credentials):
+        """Test RACKSPACE UPLOADER file_exists returns False if the file does not exist"""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            container = MagicMock()
+            container.get_object.side_effect = NoSuchObject
+            mycf.get_container.return_value = container
+            file_exists = u.file_exists('noexist.txt', 'mycontainer')
+
+            mycf.get_container.assert_called_with('mycontainer')
+            assert file_exists is False
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_file_exists_for_real_file(self, credentials):
+        """Test RACKSPACE UPLOADER file_exists returns True if the file exists"""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            filename='test.jpg'
+            container = MagicMock()
+            container.get_object.return_value = "Real File"
+            mycf.get_container.return_value = container
+            file_exists = u.file_exists(filename, 'mycontainer')
+
+            mycf.get_container.assert_called_with('mycontainer')
+            container.get_object.assert_called_with(filename)
+            assert file_exists is True
