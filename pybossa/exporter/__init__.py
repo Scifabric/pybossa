@@ -23,7 +23,7 @@ Exporter module for exporting tasks and tasks results out of PyBossa
 import os
 import zipfile
 from pybossa.core import uploader
-from pybossa.uploader import local
+from pybossa.uploader import local, rackspace
 from unidecode import unidecode
 from flask import url_for, safe_join, send_file, redirect
 from werkzeug.utils import secure_filename
@@ -82,9 +82,9 @@ class Exporter(object):
         if isinstance(uploader, local.LocalUploader):
             filepath = self._download_path(app)
             return os.path.isfile(safe_join(filepath, filename))
-        else:
-            return True
-            # TODO: Check rackspace file existence
+        if isinstance(uploader, rackspace.RackspaceUploader):
+            return uploader.file_exists(filename, self._container(app))
+        return True
 
     def get_zip(self, app, ty):
         """Get a ZIP file directly from uploaded directory

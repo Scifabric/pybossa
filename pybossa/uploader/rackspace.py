@@ -127,3 +127,16 @@ class RackspaceUploader(Uploader):
             return True
         except:
             return False
+
+    def file_exists(self, name, container):
+        """Check if a file exists in a container"""
+        try:
+            cnt = self.get_container(container)
+            obj = cnt.get_object(name)
+            return obj is not None
+        except pyrax.exceptions.NoSuchObject:
+            return False
+        except Exception as e:
+            from flask import flash
+            flash(e)
+            return False
