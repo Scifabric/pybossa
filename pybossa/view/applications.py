@@ -347,6 +347,7 @@ def delete(short_name):
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
     project_repo.delete(app)
+    _delete_zip_files_from_store(app)
     auditlogger.add_log_entry(app, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))

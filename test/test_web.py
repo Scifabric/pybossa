@@ -1137,6 +1137,17 @@ class TestWeb(web.Helper):
         res = self.delete_application(short_name=Fixtures.app_short_name)
         assert res.status_code == 403, res.status_code
 
+    @patch('pybossa.view.applications.uploader')
+    def test_delete_project_deletes_task_zip_files_too(self, uploader):
+        """Test WEB delete project also deletes zip files for task and taskruns"""
+        Fixtures.create()
+        self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.app.post('/app/test-app/delete', follow_redirects=True)
+        expected = [call('1_test-app_task_json.zip', 'user_1'),
+                    call('1_test-app_task_csv.zip', 'user_1'),
+                    call('1_test-app_task_run_json.zip', 'user_1'),
+                    call('1_test-app_task_run_csv.zip', 'user_1')]
+        assert uploader.delete_file.call_args_list == expected
 
     @with_context
     def test_15_twitter_email_warning(self):
