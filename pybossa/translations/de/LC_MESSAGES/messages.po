@@ -1,0 +1,2335 @@
+# *|----------------------------------------------------------------------------------------------
+# *|                                                     Heidelberg University
+# *|   _____ _____  _____      _                         Department of Geography     
+# *|  / ____|_   _|/ ____|    (_)                        Chair of GIScience
+# *| | |  __  | | | (___   ___ _  ___ _ __   ___ ___     (C) 2015
+# *| | | |_ | | |  \___ \ / __| |/ _ \ '_ \ / __/ _ \    
+# *| | |__| |_| |_ ____) | (__| |  __/ | | | (_|  __/    Berliner Strasse 48                             
+# *|  \_____|_____|_____/ \___|_|\___|_| |_|\___\___|    D-69120 Heidelberg, Germany 
+# *|                                                     http://www.giscience.uni-hd.de
+# *|                             
+# *|----------------------------------------------------------------------------------------------
+# German translations for PROJECT.
+# This file is distributed under the same license as the PyBossa project.
+# Stefan Hahmann <stefan.hahmann@geog.uni-heidelberg.de>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: stefan.hahmann@geog.uni-heidelberg.de\n"
+"POT-Creation-Date: 2014-10-03 19:46+0200\n"
+"PO-Revision-Date: 2013-03-26 18:24+0100\n"
+"Last-Translator: Stefan Hahmann "
+"<stefan.hahmann@geog.uni-heidelberg.de>\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+
+#: core.py:310
+msgid ""
+"Please update your e-mail address in your profile page, right now it is "
+"empty!"
+msgstr ""
+"Bitte aktualisieren Sie Ihre E-Mail Adresse in Ihrer Profilseite, derzeit ist dieses Feld "
+"leer"
+
+#: importers.py:70
+msgid "The file you uploaded has two headers with the same name."
+msgstr "Die Datei, die Sie hochgeladen haben, hat zwei Überschriften (Spaltennamen) mit demselben Namen."
+
+#: importers.py:92
+msgid "Oops! That file doesn't look like the right file."
+msgstr "Oh je! Diese Datei ist nicht die richtige Datei."
+
+#: forms/forms.py:36 forms/forms.py:305
+#: themes/default/templates/stats/index.html:18
+msgid "Name"
+msgstr "Name"
+
+#: forms/forms.py:39
+msgid "Name is already taken."
+msgstr "Dieser Name wird bereits verwendet"
+
+#: forms/forms.py:40
+msgid "Short Name"
+msgstr "Kurzbezeichnung"
+
+#: forms/forms.py:45
+msgid "Short Name is already taken."
+msgstr "Dies Kurzbezeichnung wird bereits verwendet"
+
+#: forms/forms.py:47 forms/forms.py:58
+msgid "Long Description"
+msgstr "Ausführliche Beschreibung"
+
+#: forms/forms.py:53 forms/forms.py:309
+#: themes/default/templates/applications/_helpers.html:57
+#: themes/default/templates/applications/_helpers.html:125
+msgid "Description"
+msgstr "Beschreibung"
+
+#: forms/forms.py:55
+msgid "You must provide a description."
+msgstr "Sie müssen eine Beschreibung angeben."
+
+#: forms/forms.py:60
+msgid "Allow Anonymous Contributors"
+msgstr "Beiträge von anonymen Teilnehmern zulassen"
+
+#: forms/forms.py:61 themes/default/templates/applications/_helpers.html:64
+#: themes/default/templates/applications/tasks/delete.html:24
+msgid "Yes"
+msgstr "Ja"
+
+#: forms/forms.py:62 themes/default/templates/applications/_helpers.html:66
+msgid "No"
+msgstr "Nein"
+
+#: forms/forms.py:63
+msgid "Category"
+msgstr "Kategorie"
+
+#: forms/forms.py:64
+msgid "Hide?"
+msgstr "Verstecken?"
+
+#: forms/forms.py:65
+msgid "Password (leave blank for no password)"
+msgstr "Passwort (leer lassen, wenn kein Passwort vergeben werden soll)"
+
+#: forms/forms.py:74
+#: themes/default/templates/applications/task_settings.html:36
+#: view/applications.py:1196
+msgid "Redundancy"
+msgstr "Redundanz"
+
+#: forms/forms.py:78
+msgid ""
+"Number of answers should be a"
+"                                                        value between 1 "
+"and 1,000"
+msgstr "Die Anzahl der Antwort muss zwischen 1 und 1000 sein"
+
+#: forms/forms.py:83
+msgid "Task IDs"
+msgstr "Aufgaben IDs"
+
+#: forms/forms.py:87
+#: themes/default/templates/applications/task_settings.html:24
+msgid "Priority"
+msgstr "Priorität"
+
+#: forms/forms.py:90
+msgid ""
+"Priority should be a"
+"                                                        value between 0.0"
+" and 1.0"
+msgstr "Die Priorität sollte zwischen 0.0 und 1.0 sein"
+
+#: forms/forms.py:95
+#: themes/default/templates/applications/task_scheduler.html:14
+#: themes/default/templates/applications/task_settings.html:17
+#: view/applications.py:1248
+msgid "Task Scheduler"
+msgstr "Aufgaben Planer"
+
+#: forms/forms.py:96
+#: themes/default/templates/applications/task_scheduler.html:17
+msgid "Default"
+msgstr "Standard"
+
+#: forms/forms.py:97
+#: themes/default/templates/applications/task_scheduler.html:21
+msgid "Breadth First"
+msgstr "Breitensuche"
+
+#: forms/forms.py:98
+#: themes/default/templates/applications/task_scheduler.html:18
+msgid "Depth First"
+msgstr "Tiefensuche"
+
+#: forms/forms.py:99
+#: themes/default/templates/applications/task_scheduler.html:24
+msgid "Random"
+msgstr "Zufällig"
+
+#: forms/forms.py:104
+msgid "Title"
+msgstr "Titel"
+
+#: forms/forms.py:105
+msgid "You must enter a title for the post."
+msgstr "Sie müssen einen Titel für den Post eingeben."
+
+#: forms/forms.py:107
+msgid "Body"
+msgstr "Haupttext"
+
+#: forms/forms.py:108
+msgid "You must enter some text for the post."
+msgstr "Sie müssen Text für den Blogpost eingeben."
+
+#: forms/forms.py:113 forms/forms.py:171
+msgid "Password"
+msgstr "Passwort"
+
+#: forms/forms.py:114
+msgid "You must enter a password"
+msgstr "Sie müssen ein Passwort eingeben"
+
+#: forms/forms.py:120 forms/forms.py:130
+msgid "You must provide a URL"
+msgstr "Sie müssen eine URL angeben"
+
+#: forms/forms.py:121 forms/forms.py:131
+msgid "Oops! That's not a valid URL. You must provide a valid URL"
+msgstr "Oh je! Das ist keine gültige URL. Sie müssen eine gültige URL angeben"
+
+#: forms/forms.py:123 forms/forms.py:133
+msgid "URL"
+msgstr "URL"
+
+#: forms/forms.py:140
+msgid "You must provide an EpiCollect Plus project name"
+msgstr "Sie müssen einen EpiCollect Plus Projektnamen angeben"
+
+#######################################################################################
+
+#: forms/forms.py:142
+msgid "You must provide a Form name for the project"
+msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+
+#: forms/forms.py:144
+msgid "Project Name"
+msgstr "Nombre del Proyecto"
+
+#: forms/forms.py:146
+msgid "Form name"
+msgstr "Nombre del Formulario"
+
+#: forms/forms.py:167 themes/default/templates/account/_helpers.html:41
+msgid "E-mail"
+msgstr "Correo Electrónico"
+
+#: forms/forms.py:169
+msgid "The e-mail is required"
+msgstr "El correo electrónico es obligatorio"
+
+#: forms/forms.py:173
+msgid "You must provide a password"
+msgstr "Debe proporcionar una contraseña"
+
+#: forms/forms.py:181 forms/forms.py:219
+msgid "Full name must be between 3 and 35 characters long"
+msgstr "Nombre y Apellidos debe contenter entre 3 y 35 caracteres"
+
+#: forms/forms.py:183 forms/forms.py:221
+msgid "Full name"
+msgstr "Nombre y Apellidos"
+
+#: forms/forms.py:186 forms/forms.py:224
+msgid "User name must be between 3 and 35 characters long"
+msgstr "El nombre de usuario debe tener entre 3 y 35 caracteres"
+
+#: forms/forms.py:188 forms/forms.py:226
+msgid "The user name is already taken"
+msgstr "El nombre de usuario ya está registrado"
+
+#: forms/forms.py:189
+msgid "User name"
+msgstr "Nombre de usuario"
+
+#: forms/forms.py:195 forms/forms.py:233 forms/forms.py:291
+msgid "Email must be between 3 and 35 characters long"
+msgstr "El correo debe tener entre 3 y 35 caracteres"
+
+#: forms/forms.py:196 forms/forms.py:234
+msgid "Email is already taken"
+msgstr "El correo electrónico ya está registrado"
+
+#: forms/forms.py:197 forms/forms.py:235 forms/forms.py:292
+msgid "Email Address"
+msgstr "Correo Electrónico"
+
+#: forms/forms.py:204 forms/forms.py:266 forms/forms.py:278
+msgid "Password cannot be empty"
+msgstr "La contraseña no puede estara vacía"
+
+#: forms/forms.py:205 forms/forms.py:267 forms/forms.py:279
+msgid "Passwords must match"
+msgstr "Las contraseñas deben coincidir"
+
+#: forms/forms.py:206 forms/forms.py:280
+msgid "New Password"
+msgstr "Nueva Contraseña"
+
+#: forms/forms.py:210 forms/forms.py:283
+msgid "Repeat Password"
+msgstr "Repita la Contraseña"
+
+#: forms/forms.py:227
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: forms/forms.py:242
+msgid "Language"
+msgstr "Idioma por Defecto"
+
+#: forms/forms.py:243
+msgid "CKAN API Key"
+msgstr "Clave API de CKAN"
+
+#: forms/forms.py:244
+msgid "Privacy Mode"
+msgstr "Modo Privado"
+
+#: forms/forms.py:251
+msgid "English"
+msgstr "Inglés"
+
+#: forms/forms.py:253
+msgid "Spanish"
+msgstr "Español"
+
+#: forms/forms.py:255
+msgid "French"
+msgstr "Francés"
+
+#: forms/forms.py:264
+msgid "Current password"
+msgstr "Mi contraseña actual"
+
+#: forms/forms.py:268
+msgid "New password"
+msgstr "Mi nueva contraseña"
+
+#: forms/forms.py:271
+msgid "Repeat password"
+msgstr "Repite la contraseña"
+
+#: forms/forms.py:300 themes/default/templates/account/settings.html:12
+#: themes/default/templates/applications/stats.html:297
+#: themes/default/templates/applications/stats.html:298
+#: themes/default/templates/applications/stats.html:299
+#: themes/default/templates/applications/stats.html:300
+#: themes/default/templates/applications/stats.html:301
+#: themes/default/templates/applications/stats.html:366
+msgid "User"
+msgstr "Usuario"
+
+#: forms/forms.py:315
+msgid "Avatar"
+msgstr "Avatar"
+
+#: forms/validator.py:33
+msgid "This item already exists"
+msgstr "Este elemento ya existe"
+
+#: forms/validator.py:54
+#, python-format
+msgid "%sand space symbols are forbidden"
+msgstr "%sy el espacio en blanco no se permiten"
+
+#: forms/validator.py:70
+msgid "Only comma separated values are allowed, no spaces"
+msgstr "Solo se permiten valores separados por comas, no espacios"
+
+#: themes/default/templates/_navbar.html:12
+#: themes/default/templates/account/index.html:14
+msgid "Community"
+msgstr "Comunidad"
+
+#: themes/default/templates/_navbar.html:13
+#: themes/default/templates/base.html:78
+#: themes/default/templates/account/applications.html:13
+#: themes/default/templates/stats/global.html:89 view/account.py:300
+#: view/applications.py:155
+msgid "Projects"
+msgstr "Proyectos"
+
+#: themes/default/templates/_navbar.html:14
+#: themes/default/templates/applications/new_blogpost.html:21
+msgid "Create"
+msgstr "Crea"
+
+#: themes/default/templates/_navbar.html:15
+#: themes/default/templates/home/_about.html:3
+msgid "About"
+msgstr "Acerca de"
+
+#: themes/default/templates/_navbar.html:22
+#: themes/default/templates/account/_helpers.html:3
+msgid "My Profile"
+msgstr "Mi Perfil"
+
+#: themes/default/templates/_navbar.html:23
+#: themes/default/templates/account/_helpers.html:4
+msgid "My Projects"
+msgstr "Mis Proyectos"
+
+#: themes/default/templates/_navbar.html:24
+#: themes/default/templates/account/_helpers.html:8
+msgid "My Settings"
+msgstr "Mis Preferencias"
+
+#: themes/default/templates/_navbar.html:27
+#: themes/default/templates/account/_helpers.html:6
+#: themes/default/templates/admin/applications.html:13
+#: themes/default/templates/admin/categories.html:13
+#: themes/default/templates/admin/del_category.html:13
+#: themes/default/templates/admin/update_category.html:13
+#: themes/default/templates/admin/users.html:14
+msgid "Admin Site"
+msgstr "Administrar el sitio"
+
+#: themes/default/templates/_navbar.html:30
+msgid "Sign Out"
+msgstr "Cerrar Sesión"
+
+#: themes/default/templates/_navbar.html:38
+#: themes/default/templates/account/signin.html:45
+msgid "Sign in"
+msgstr "Iniciar Sesión"
+
+#: themes/default/templates/base.html:66
+msgid "Resources"
+msgstr "Recursos"
+
+#: themes/default/templates/base.html:67
+msgid "Docs"
+msgstr "Documentación"
+
+#: themes/default/templates/base.html:69
+msgid "Terms of Use"
+msgstr "Términos de Uso"
+
+#: themes/default/templates/base.html:70
+msgid "Cookies Policy"
+msgstr "Política de Cookies"
+
+#: themes/default/templates/base.html:71
+msgid "Stats"
+msgstr "Estadísticas"
+
+#: themes/default/templates/base.html:76
+msgid "Licenses"
+msgstr "Licencias"
+
+#: themes/default/templates/base.html:77
+msgid "Overview"
+msgstr "Resumen"
+
+#: themes/default/templates/base.html:79
+msgid "Data"
+msgstr "Datos"
+
+#: themes/default/templates/base.html:80
+msgid "Content"
+msgstr "Contenido"
+
+#: themes/default/templates/base.html:85
+msgid "Technologies"
+msgstr "Tecnologías"
+
+#: themes/default/templates/base.html:86
+msgid "CKAN"
+msgstr "CKAN"
+
+#: themes/default/templates/base.html:87
+msgid "EpiCollect"
+msgstr "EpiCollect"
+
+#: themes/default/templates/base.html:92
+msgid "Contact"
+msgstr "Contacto"
+
+#: themes/default/templates/base.html:93
+msgid "Email"
+msgstr "Correo Electrónico"
+
+#: themes/default/templates/base.html:94
+msgid "Twitter"
+msgstr "Twitter"
+
+#: themes/default/templates/account/_helpers.html:14
+msgid "I've done"
+msgstr "He hecho"
+
+#: themes/default/templates/account/_helpers.html:14
+msgid "tasks for the @PyBossa project:"
+msgstr "tareas para el proyecto @PyBossa:"
+
+#: themes/default/templates/account/_helpers.html:14
+msgid "Do you want to help?"
+msgstr "¿Quieres ayudar?"
+
+#: themes/default/templates/account/_helpers.html:15
+msgid "Tweet"
+msgstr "Tweet"
+
+#: themes/default/templates/account/_helpers.html:39
+msgid "Nick"
+msgstr "Nombre de Usuario"
+
+#: themes/default/templates/account/_helpers.html:44
+#: themes/default/templates/account/_helpers.html:57
+#: themes/default/templates/stats/index.html:17
+msgid "Rank"
+msgstr "Clasificación"
+
+#: themes/default/templates/account/_helpers.html:49
+#: themes/default/templates/applications/tasks_browse.html:33
+msgid "of"
+msgstr "de"
+
+#: themes/default/templates/account/_helpers.html:49
+msgid "with a Score of"
+msgstr "con una puntuación de"
+
+#: themes/default/templates/account/_helpers.html:49
+msgid "contributed tasks"
+msgstr "tareas contribuidas"
+
+#: themes/default/templates/account/_helpers.html:57
+msgid "The user has not contributed to any tasks yet"
+msgstr "El usuario no ha contribuido tareas todavía"
+
+#: themes/default/templates/account/_helpers.html:60
+#: themes/default/templates/home/index.html:78
+msgid "Joined"
+msgstr "Se ha unido"
+
+#: themes/default/templates/account/_helpers.html:63
+msgid "API key"
+msgstr "Clave API"
+
+#: themes/default/templates/account/_helpers.html:66
+msgid "Edit your profile"
+msgstr "Edita tu perfil"
+
+#: themes/default/templates/account/_helpers.html:90
+#: themes/default/templates/applications/_helpers.html:7
+msgid "Prev"
+msgstr "Anteriores"
+
+#: themes/default/templates/account/_helpers.html:110
+#: themes/default/templates/applications/_helpers.html:27
+msgid "Next"
+msgstr "Siguientes"
+
+#: themes/default/templates/account/applications.html:16
+msgid "Published"
+msgstr "Publicadas"
+
+#: themes/default/templates/account/applications.html:22
+#: themes/default/templates/applications/index.html:15
+msgid "Draft"
+msgstr "Borrador"
+
+#: themes/default/templates/account/applications.html:28
+msgid "You have not created a project"
+msgstr "No has creado unaproyecto"
+
+#: themes/default/templates/account/applications.html:29
+#: themes/default/templates/home/index.html:37 view/applications.py:190
+msgid "Create a Project"
+msgstr "Crea una Proyecto"
+
+#: themes/default/templates/account/index.html:14
+msgid "registered users"
+msgstr "usuarios registrados"
+
+#: themes/default/templates/account/index.html:14
+#: themes/default/templates/stats/global.html:49
+msgid "Leaderboard"
+msgstr "Clasificación"
+
+#: themes/default/templates/account/password.html:13
+#: themes/default/templates/account/update.html:53
+msgid "Change your Password"
+msgstr "Cambia tu contraseña"
+
+#: themes/default/templates/account/password.html:18
+msgid "my current password"
+msgstr "mi contraseña actual"
+
+#: themes/default/templates/account/password.html:19
+#: themes/default/templates/account/password_reset.html:10
+msgid "my new password"
+msgstr "mi nueva contraseña"
+
+#: themes/default/templates/account/password.html:20
+#: themes/default/templates/account/password_reset.html:11
+msgid "my new password again"
+msgstr "mi nueva contraseña de nuevo"
+
+#: themes/default/templates/account/password.html:22
+#: themes/default/templates/account/update.html:63
+msgid "Save the Changes"
+msgstr "Guardar los Cambios"
+
+#: themes/default/templates/account/password.html:23
+#: themes/default/templates/account/password_forgot.html:13
+#: themes/default/templates/account/register.html:25
+#: themes/default/templates/account/signin.html:46
+#: themes/default/templates/account/update.html:47
+#: themes/default/templates/account/update.html:64
+#: themes/default/templates/account/update.html:77
+#: themes/default/templates/admin/update_category.html:23
+#: themes/default/templates/applications/new.html:27
+#: themes/default/templates/applications/new_blogpost.html:22
+#: themes/default/templates/applications/password.html:20
+#: themes/default/templates/applications/task_n_answers.html:21
+#: themes/default/templates/applications/task_presenter_editor.html:36
+#: themes/default/templates/applications/task_priority.html:31
+#: themes/default/templates/applications/task_scheduler.html:35
+#: themes/default/templates/applications/update.html:47
+#: themes/default/templates/applications/update_blogpost.html:24
+#: themes/default/templates/applications/importers/csv.html:24
+#: themes/default/templates/applications/importers/epicollect.html:26
+#: themes/default/templates/applications/importers/gdocs.html:24
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: themes/default/templates/account/password_forgot.html:6
+msgid "Reset your Password"
+msgstr "Restablecer tu contraseña"
+
+#: themes/default/templates/account/password_forgot.html:10
+msgid "my e-mail"
+msgstr "mi correo electrónico"
+
+#: themes/default/templates/account/password_forgot.html:12
+msgid "Reset my Password"
+msgstr "Restablecer mi contraseña"
+
+#: themes/default/templates/account/profile.html:15
+msgid "Your Profile"
+msgstr "Tu perfil"
+
+#: themes/default/templates/account/profile.html:18
+msgid "Your Contributions"
+msgstr "Tus Contribuciones"
+
+#: themes/default/templates/account/profile.html:26
+msgid "Contribute!"
+msgstr "¡Contribuye!"
+
+#: themes/default/templates/account/register.html:6
+#: themes/default/templates/account/reset-api-key.html:14
+#: themes/default/templates/account/signin.html:6
+msgid "Note"
+msgstr "Nota"
+
+#: themes/default/templates/account/register.html:7
+#: themes/default/templates/account/signin.html:7
+msgid "By click the"
+msgstr "Haciendo click en el"
+
+#: themes/default/templates/account/register.html:8
+msgid "Create account button"
+msgstr "En el botón de crear cuenta"
+
+#: themes/default/templates/account/register.html:9
+msgid "below you are agreeing to the"
+msgstr "de abajo estás aceptando los"
+
+#: themes/default/templates/account/register.html:10
+#: themes/default/templates/account/signin.html:8
+msgid "terms of use"
+msgstr "términos de uso"
+
+#: themes/default/templates/account/register.html:10
+#: themes/default/templates/account/signin.html:8
+msgid "and"
+msgstr "y"
+
+#: themes/default/templates/account/register.html:11
+#: themes/default/templates/account/signin.html:9
+msgid "data"
+msgstr "datos"
+
+#: themes/default/templates/account/register.html:14
+#: themes/default/templates/account/register.html:24
+msgid "Create an account"
+msgstr "Crear una cuenta"
+
+#: themes/default/templates/account/register.html:18
+#: themes/default/templates/account/update.html:40
+msgid "my full name"
+msgstr "mi nombre y apellidos"
+
+#: themes/default/templates/account/register.html:19
+#: themes/default/templates/account/update.html:41
+msgid "myusername"
+msgstr "mi nombre de usuario"
+
+#: themes/default/templates/account/register.html:20
+#: themes/default/templates/account/update.html:42
+msgid "hello@mywebsite.org"
+msgstr "hola@miweb.org"
+
+#: themes/default/templates/account/register.html:21
+#: themes/default/templates/account/register.html:22
+msgid "my secret password"
+msgstr "my contraseña secreta"
+
+#: themes/default/templates/account/reset-api-key.html:12
+msgid " Reset API Key"
+msgstr " Reiniciar la clave API"
+
+#: themes/default/templates/account/reset-api-key.html:14
+msgid ""
+" If you reset the API key, you will need to use the new generated key for"
+" any API call."
+msgstr ""
+" Si reinicias la clave API, necesitarás utilizar la nueva clave para "
+"cualquier llamada a la API"
+
+#: themes/default/templates/account/reset-api-key.html:17
+#: themes/default/templates/account/update.html:84
+msgid "Do you want to reset your personal API Key?"
+msgstr "¿Quieres reiniciar tu clave personal de la API?"
+
+#: themes/default/templates/account/reset-api-key.html:21
+#: themes/default/templates/account/update.html:88
+msgid "No, do not reset the API key!"
+msgstr "¡No, no quiero reiniciar mi clave API!"
+
+#: themes/default/templates/account/settings.html:14
+#: themes/default/templates/account/update.html:17
+msgid "Update your profile"
+msgstr "Actualiza tu perfil"
+
+#: themes/default/templates/account/settings.html:15
+msgid "Reset the API Key"
+msgstr "Reinicia la clave API"
+
+#: themes/default/templates/account/settings.html:17
+msgid " Change your Password"
+msgstr " Cambia tu Contraseña"
+
+#: themes/default/templates/account/signin.html:7
+msgid "Sign in button"
+msgstr "Botón de Inicio de Sesión"
+
+#: themes/default/templates/account/signin.html:7
+msgid ""
+"below you are agreeing to\n"
+"    the"
+msgstr "de debajo aceptas los"
+
+#: themes/default/templates/account/signin.html:13
+#: themes/default/templates/account/signin.html:23
+msgid "Sign in with Twitter"
+msgstr "Inicia sesión con Twitter"
+
+#: themes/default/templates/account/signin.html:16
+#: themes/default/templates/account/signin.html:26
+msgid "Sign in with Facebook"
+msgstr "Inicia sesión con Facebook"
+
+#: themes/default/templates/account/signin.html:19
+#: themes/default/templates/account/signin.html:29
+msgid "Sign in with Google"
+msgstr "Inicia sesión con Google"
+
+#: themes/default/templates/account/signin.html:38
+msgid "Or Sign in with your PyBossa account"
+msgstr "O Inicia sesión con tu cuenta PyBossa"
+
+#: themes/default/templates/account/signin.html:40
+msgid "Sign in with your PyBossa account"
+msgstr "Inicia sesión con tu cuenta de PyBossa"
+
+#: themes/default/templates/account/signin.html:52
+msgid " Create a new account!"
+msgstr " ¡Únete ya!"
+
+#: themes/default/templates/account/signin.html:53
+msgid "Forgot Password"
+msgstr "¿Has olvidado tu contraseña?"
+
+#: themes/default/templates/account/update.html:31
+#: themes/default/templates/applications/update.html:28
+msgid "Upload"
+msgstr "Subir"
+
+#: themes/default/templates/account/update.html:46
+#: themes/default/templates/account/update.html:76
+msgid "Save the changes"
+msgstr "Guardar los cambios"
+
+#: themes/default/templates/admin/_helpers.html:12
+msgid "Remove from admin group"
+msgstr "Quitar del grupo de administradores"
+
+#: themes/default/templates/admin/_helpers.html:16
+msgid "Add to admin group"
+msgstr "Añadir al grupo de administradores"
+
+#: themes/default/templates/admin/applications.html:13
+msgid "Manage featured projects"
+msgstr "Organizar los proyectos destacados"
+
+#: themes/default/templates/admin/categories.html:13
+msgid "Manage Categories"
+msgstr "Administrar Categorías"
+
+#: themes/default/templates/admin/categories.html:20
+#: themes/default/templates/admin/update_category.html:19
+msgid "Category name"
+msgstr "Nombre de la categoría"
+
+#: themes/default/templates/admin/categories.html:21
+#: themes/default/templates/admin/update_category.html:20
+msgid "Category description"
+msgstr "Descrición de la categoría"
+
+#: themes/default/templates/admin/categories.html:23
+msgid "Add Category"
+msgstr "Añadir Categoría"
+
+#: themes/default/templates/admin/categories.html:30
+msgid "List of Available Categories"
+msgstr "Todas las categorías disponibles"
+
+#: themes/default/templates/admin/categories.html:39
+msgid "Edit Category Name"
+msgstr "Editar el nombre de la Categoría"
+
+#: themes/default/templates/admin/categories.html:41
+#: themes/default/templates/admin/categories.html:43
+#: themes/default/templates/admin/del_category.html:17 view/admin.py:318
+msgid "Delete Category"
+msgstr "Borrar Categoría"
+
+#: themes/default/templates/admin/del_category.html:15
+#: themes/default/templates/applications/delete.html:14
+#: themes/default/templates/applications/tasks/delete.html:14
+msgid "Danger Zone!"
+msgstr "¡Zona de Peligro!"
+
+#: themes/default/templates/admin/del_category.html:15
+msgid ""
+"Deleting the category will remove it from all the projects! This "
+"operation cannot be undone!"
+msgstr ""
+"Si borras esta categoría, se borrará de todos los proyectos. Esta acción "
+"no puede ser deshecha."
+
+#: themes/default/templates/admin/index.html:15
+#: themes/default/templates/applications/index.html:33
+msgid "Featured Projects"
+msgstr "Proyectos Destacados"
+
+#: themes/default/templates/admin/index.html:16
+msgid "Show projects on the front page"
+msgstr "Mostrar proyectos en la página principal"
+
+#: themes/default/templates/admin/index.html:18
+#: themes/default/templates/admin/index.html:25
+#: themes/default/templates/admin/index.html:34
+msgid "Manage"
+msgstr "Administrar"
+
+#: themes/default/templates/admin/index.html:22 view/admin.py:297
+msgid "Categories"
+msgstr "Categorías"
+
+#: themes/default/templates/admin/index.html:23
+msgid "Manage project categories"
+msgstr "Organizar los proyectos de portada"
+
+#: themes/default/templates/admin/index.html:31
+msgid "Administrators"
+msgstr "Administradores"
+
+#: themes/default/templates/admin/index.html:32
+msgid "Manage administrators"
+msgstr "Organizar los administradores"
+
+#: themes/default/templates/admin/index.html:38
+#: themes/default/templates/applications/stats.html:225
+msgid "Users"
+msgstr "Usuario"
+
+#: themes/default/templates/admin/index.html:39
+msgid "Export a list of users"
+msgstr "Exportar lista de usuarios"
+
+#: themes/default/templates/admin/index.html:41
+msgid "JSON"
+msgstr "JSON"
+
+#: themes/default/templates/admin/index.html:44
+msgid "CSV"
+msgstr "CSV"
+
+#: themes/default/templates/admin/update_category.html:22 view/admin.py:355
+#: view/admin.py:376
+msgid "Update Category"
+msgstr "Actualizar Categoría"
+
+#: themes/default/templates/admin/users.html:14 view/admin.py:137
+#: view/admin.py:141
+msgid "Manage Admin Users"
+msgstr "Organizar los Administradores"
+
+#: themes/default/templates/admin/users.html:19
+msgid "Try with the full name or nick"
+msgstr "Inténtalo con el nombre completo o nombre de usuario"
+
+#: themes/default/templates/admin/users.html:20
+msgid "Search"
+msgstr "Búsqueda"
+
+#: themes/default/templates/admin/users.html:31
+msgid "Current Users with Admin privileges"
+msgstr "Usuarios con privilegios de administrador"
+
+#: themes/default/templates/applications/_helpers.html:36
+#: themes/default/templates/applications/_helpers.html:216
+#: themes/default/templates/home/index.html:18
+msgid "Info"
+msgstr "Información"
+
+#: themes/default/templates/applications/_helpers.html:37
+#: themes/default/templates/applications/presenter.html:15
+msgid "Contribute"
+msgstr "Contribuir"
+
+#: themes/default/templates/applications/_helpers.html:38
+#: themes/default/templates/applications/_helpers.html:61
+#: themes/default/templates/applications/_helpers.html:197
+#: themes/default/templates/applications/export.html:18
+#: themes/default/templates/applications/export.html:23
+#: themes/default/templates/applications/export.html:38
+#: themes/default/templates/applications/stats.html:277
+#: themes/default/templates/applications/stats.html:367
+#: themes/default/templates/applications/tasks.html:13
+#: themes/default/templates/applications/tasks_browse.html:62
+#: themes/default/templates/home/index.html:84
+msgid "Tasks"
+msgstr "Tareas"
+
+#: themes/default/templates/applications/_helpers.html:39
+#: themes/default/templates/applications/stats.html:32
+#: themes/default/templates/home/_about.html:21
+msgid "Statistics"
+msgstr "Estadísticas"
+
+#: themes/default/templates/applications/_helpers.html:41
+#: themes/default/templates/applications/_helpers.html:83
+#: themes/default/templates/applications/_helpers.html:96
+#: themes/default/templates/applications/settings.html:14
+#: themes/default/templates/applications/tasks.html:37
+#: themes/default/templates/applications/tasks.html:41
+msgid "Settings"
+msgstr "Configuración"
+
+#: themes/default/templates/applications/_helpers.html:43
+msgid "Blog"
+msgstr "Blog"
+
+#: themes/default/templates/applications/_helpers.html:55
+msgid "ID"
+msgstr "ID"
+
+#: themes/default/templates/applications/_helpers.html:58
+#: themes/default/templates/applications/_helpers.html:126
+msgid "Creation Date"
+msgstr "Creado"
+
+#: themes/default/templates/applications/_helpers.html:59
+#: themes/default/templates/applications/_helpers.html:128
+msgid "Last Activity"
+msgstr "Actualizado"
+
+#: themes/default/templates/applications/_helpers.html:60
+#: themes/default/templates/applications/_helpers.html:131
+#: themes/default/templates/applications/_helpers.html:193
+msgid "Overall progress"
+msgstr "Progreso Total"
+
+#: themes/default/templates/applications/_helpers.html:60
+#: themes/default/templates/applications/_helpers.html:193
+#: themes/default/templates/applications/tasks_browse.html:19
+msgid "completed"
+msgstr "completado"
+
+#: themes/default/templates/applications/_helpers.html:64
+#: themes/default/templates/applications/_helpers.html:66
+msgid "Hidden"
+msgstr "Oculta"
+
+#: themes/default/templates/applications/_helpers.html:99
+#: themes/default/templates/applications/_helpers.html:109
+msgid "Remove from Featured!"
+msgstr "¡Eliminar de Destacados!"
+
+#: themes/default/templates/applications/_helpers.html:102
+#: themes/default/templates/applications/_helpers.html:106
+msgid "Add to Featured!"
+msgstr "¡En Destacados!"
+
+#: themes/default/templates/applications/_helpers.html:133
+#: themes/default/templates/applications/_helpers.html:135
+msgid "Created by"
+msgstr "Creado por"
+
+#: themes/default/templates/applications/_helpers.html:133
+msgid "Me"
+msgstr "Yo"
+
+#: themes/default/templates/applications/_helpers.html:138
+msgid "Try it!"
+msgstr "¡Participa!"
+
+#: themes/default/templates/applications/_helpers.html:195
+msgid "Start Contributing Now!"
+msgstr "¡Participa!"
+
+#: themes/default/templates/applications/actions.html:9
+#: themes/default/templates/applications/settings.html:18
+msgid "Edit the project details"
+msgstr "Edita los detalles del proyecto"
+
+#: themes/default/templates/applications/actions.html:10
+#: themes/default/templates/applications/tasks.html:33
+msgid "Edit the task presenter"
+msgstr "Edita el presentador de tareas"
+
+#: themes/default/templates/applications/actions.html:11
+#: themes/default/templates/applications/importers/csv.html:14
+#: themes/default/templates/applications/importers/epicollect.html:14
+#: themes/default/templates/applications/importers/gdocs.html:14
+msgid "Import tasks"
+msgstr "Importa tareas"
+
+#: themes/default/templates/applications/actions.html:12
+#: themes/default/templates/applications/settings.html:20
+msgid "Delete the project"
+msgstr "Crear un proyecto"
+
+#: themes/default/templates/applications/app.html:31
+#: themes/default/templates/applications/blog.html:33
+#: themes/default/templates/applications/delete.html:29
+#: themes/default/templates/applications/settings.html:26
+#: themes/default/templates/applications/task_n_answers.html:29
+#: themes/default/templates/applications/task_priority.html:39
+#: themes/default/templates/applications/task_scheduler.html:43
+#: themes/default/templates/applications/task_settings.html:43
+#: themes/default/templates/applications/tasks.html:71
+#: themes/default/templates/applications/tasks_browse.html:65
+msgid "Sorry! This project does not exist."
+msgstr "¡Perdón! Este proyecto no existe"
+
+#: themes/default/templates/applications/blog.html:27
+msgid "Sorry! No posts so far."
+msgstr "Vaya, todavía no hay ningún artículo publicado."
+
+#: themes/default/templates/applications/blog_post.html:15
+msgid "Author: "
+msgstr "Autor: "
+
+#: themes/default/templates/applications/blog_post.html:17
+msgid "Written: "
+msgstr "Escrito: "
+
+#: themes/default/templates/applications/blog_post.html:31
+#: themes/default/templates/applications/task_settings.html:31
+msgid "Delete"
+msgstr "Borrar"
+
+#: themes/default/templates/applications/blog_post.html:32
+msgid "Edit"
+msgstr "Editar"
+
+#: themes/default/templates/applications/blog_post.html:36
+#: themes/default/templates/applications/blog_post.html:41
+msgid "Back"
+msgstr "Atrás"
+
+#: themes/default/templates/applications/blog_post.html:40
+msgid "Sorry! This blogpost does not exist."
+msgstr "¡Perdón! Este artículo no existe"
+
+#: themes/default/templates/applications/delete.html:14
+msgid "If you delete the project and its tasks, it will be gone forever!"
+msgstr "¡Si borras el proyecto y sus tareas, se borrarán para siempre!"
+
+#: themes/default/templates/applications/delete.html:20
+msgid ""
+"Are you sure you want to delete this project and all its tasks and "
+"associated task runs?"
+msgstr ""
+"¿Estás seguro que quieres eliminar este proyecto y todas las tareas y\""
+"\n"
+"\" respuestas asociadas a ella?"
+
+#: themes/default/templates/applications/delete.html:23
+msgid "No, do not delete it!"
+msgstr "¡No, no la borres!"
+
+#: themes/default/templates/applications/export.html:13
+msgid "Export All Tasks and Task Runs"
+msgstr "Exportar Todas las Tareas y Respuestas"
+
+#: themes/default/templates/applications/export.html:14
+msgid "You can export and download"
+msgstr "Puedes exportar y descargar"
+
+#: themes/default/templates/applications/export.html:14
+msgid "all the available"
+msgstr "todas las"
+
+#: themes/default/templates/applications/export.html:14
+msgid ""
+"Tasks and Task Runs (the submitted answers by the users) in CSV or JSON "
+"formats."
+msgstr "Tareas y Repuestas (enviadas por los usuarios) en el formato CSV o JSON"
+
+#: themes/default/templates/applications/export.html:17
+msgid "Export in CSV format"
+msgstr "Exportar en formato CSV"
+
+#: themes/default/templates/applications/export.html:19
+#: themes/default/templates/applications/export.html:24
+#: themes/default/templates/applications/export.html:39
+msgid "Task Runs"
+msgstr "Respuestas"
+
+#: themes/default/templates/applications/export.html:22
+msgid "Export in JSON format"
+msgstr "Exportar en formato JSON"
+
+#: themes/default/templates/applications/import_options.html:13
+#: themes/default/templates/applications/tasks.html:20
+msgid "Import Tasks"
+msgstr "Importa Tareas"
+
+#: themes/default/templates/applications/index.html:35
+msgid "A special selection of the most interesting projects"
+msgstr "Una selección especial de los proyectos más interesantes"
+
+#: themes/default/templates/applications/index.html:38
+#: themes/default/templates/stats/global.html:93
+msgid "Draft Projects"
+msgstr "Crear un Proyecto"
+
+#: themes/default/templates/applications/index.html:39
+msgid "Work in progress projects"
+msgstr "Proyectos en desarrollo"
+
+#: themes/default/templates/applications/index.html:58
+msgid "Sorry, there are no published projects for this category yet"
+msgstr "Vaya, todavía no hay proyectos en esta categoría"
+
+#: themes/default/templates/applications/new.html:13
+msgid "Project"
+msgstr "Nombre del Proyecto"
+
+#: themes/default/templates/applications/new.html:13
+msgid "Create a new project"
+msgstr "Crear un proyecto"
+
+#: themes/default/templates/applications/new.html:17
+#: themes/default/templates/applications/update.html:37
+msgid "The name of the project"
+msgstr "El nombre del proyecto"
+
+#: themes/default/templates/applications/new.html:18
+#: themes/default/templates/applications/update.html:38
+msgid "Short name or slug for the project"
+msgstr "El nombre corto o slug del proyecto"
+
+#: themes/default/templates/applications/new.html:18
+#: themes/default/templates/applications/update.html:38
+msgid "Project slug:"
+msgstr "Slug del proyecto"
+
+#: themes/default/templates/applications/new.html:19
+msgid ""
+"Explain your project"
+"                                                             \n"
+"                · Why? Why you are creating this project, what you want "
+"to achieve with it"
+"                                                             \n"
+"                · How? Explain how your project works"
+"                                                             \n"
+"                · How you can help: Explain to the volunteers how they "
+"can help and contribute to the goal of your project"
+"                                                             \n"
+"                · Will you help make a difference? Explain to the "
+"volunteers why their contribution is essential and how the result of your"
+" project can help change things!"
+"                                                             \n"
+"            (you can use Markdown to give format to your description!)"
+msgstr ""
+"Explica tu proyecto"
+"                                                             \n"
+"                · ¿Por qué? Por qué estás creando este proyecto, qué "
+"quiere                                                             \n"
+"                · ¿Cómo? Explica cómo funciona tu proyecto"
+"                                                             \n"
+"                · ¿Cómo puedo ayudar?: Explica a los voluntarios cómo "
+"puedencontribuir a tu proyecto"
+"                                                             \n"
+"                · ¿Tu contribución será útil? Explica a los voluntarios "
+"por qué su contribución es tan importante para los objetivos de tu "
+"proyecto.                                                             \n"
+"            (Puedes utilizar Markdown para escribir la descripción.)"
+
+#: themes/default/templates/applications/new.html:26
+msgid "Create the project"
+msgstr "Crear un proyecto"
+
+#: themes/default/templates/applications/new_blogpost.html:14
+msgid "Write a new blog post for ad"
+msgstr "Escribe un artículo nuevo para "
+
+#: themes/default/templates/applications/new_blogpost.html:18
+#: themes/default/templates/applications/update_blogpost.html:20
+msgid "The title of your post"
+msgstr "El título de tu artículo"
+
+#: themes/default/templates/applications/new_blogpost.html:19
+#: themes/default/templates/applications/update_blogpost.html:21
+msgid "Write your post here. You can use Markdown!"
+msgstr "Escribe tu artículo aquí. Puedes utilizar Markdown."
+
+#: themes/default/templates/applications/password.html:14
+msgid "Enter the password to contribute to this project:"
+msgstr "Introduce la contraseña para contribuir a este proyecto:"
+
+#: themes/default/templates/applications/password.html:18
+msgid "Project password"
+msgstr "Contraseña del proyecto"
+
+#: themes/default/templates/applications/password.html:21
+msgid "Submit"
+msgstr "Enviar"
+
+#: themes/default/templates/applications/presenter.html:22
+msgid ""
+"Sorry, you've contributed to all the tasks for this project, but this "
+"project still needs more volunteers, so please spread the word!"
+msgstr ""
+"Vaya, ya has contribuiod a todas las tareas de este proyecto, pero "
+"todavía puedes ayudar invitando a otros voluntarios a que participen."
+
+#: themes/default/templates/applications/settings.html:16
+msgid "Project Settings"
+msgstr "Configuración del Proyecto"
+
+#: themes/default/templates/applications/settings.html:19
+#: themes/default/templates/applications/task_settings.html:13
+msgid "Task Settings"
+msgstr "Configuración de las Tareas"
+
+#: themes/default/templates/applications/settings.html:21
+msgid "Write a blog post"
+msgstr "Escribe un artículo"
+
+#: themes/default/templates/applications/stats.html:39
+#: themes/default/templates/applications/task_priority.html:21
+msgid "Important"
+msgstr "Importante"
+
+#: themes/default/templates/applications/stats.html:39
+msgid "Data have been"
+msgstr "Los datos han sido"
+
+#: themes/default/templates/applications/stats.html:39
+msgid "anonymized"
+msgstr "anonimizados"
+
+#: themes/default/templates/applications/stats.html:47
+msgid "Distribution of Answers per Hour"
+msgstr "Distribución de Respuestas por Hora"
+
+#: themes/default/templates/applications/stats.html:77
+msgid "Completed Tasks in the last 15 days"
+msgstr "Tareas completadas en los últimos 15 días"
+
+#: themes/default/templates/applications/stats.html:77
+#: themes/default/templates/applications/stats.html:148
+msgid "select an area to zoom, click to reset the chart"
+msgstr "selecciona un área para hacer zoom, click para reiniciar"
+
+#: themes/default/templates/applications/stats.html:148
+msgid "Answers per day"
+msgstr "Respuestas por día"
+
+#: themes/default/templates/applications/stats.html:160
+msgid "answers were submitted this day"
+msgstr "respuestas enviadas este día"
+
+#: themes/default/templates/applications/stats.html:218
+msgid "Distribution of Answers"
+msgstr "Distribución de Respuestas"
+
+#: themes/default/templates/applications/stats.html:224
+msgid "Type"
+msgstr "Tipo"
+
+#: themes/default/templates/applications/stats.html:226
+msgid "Percentage"
+msgstr "Porcentaje"
+
+#: themes/default/templates/applications/stats.html:265
+msgid "Details about Anonymous Users"
+msgstr "Detalles sobre los Usuarios Anónimos"
+
+#: themes/default/templates/applications/stats.html:268
+msgid "anonymous users have"
+msgstr "usuarios anónimos han"
+
+#: themes/default/templates/applications/stats.html:268
+#: themes/default/templates/applications/stats.html:359
+msgid "participated"
+msgstr "participado"
+
+#: themes/default/templates/applications/stats.html:275
+msgid "Country"
+msgstr "País"
+
+#: themes/default/templates/applications/stats.html:276
+msgid "City"
+msgstr "Ciudad"
+
+#: themes/default/templates/applications/stats.html:317
+#: themes/default/templates/stats/global.html:169
+msgid "This page includes GeoLite data created by MaxMind, available from"
+msgstr "Esta página incluye datos del producto GeoLite de MaxMind, disponible en"
+
+#: themes/default/templates/applications/stats.html:356
+msgid "Details about Authenticated Users"
+msgstr "Detalles sobre los Usuarios Autenticados"
+
+#: themes/default/templates/applications/stats.html:359
+msgid "authenticated users have"
+msgstr "usuarios autenticados han"
+
+#: themes/default/templates/applications/stats.html:361
+msgid "Top 5 users"
+msgstr "Los 5 mejores Usuarios"
+
+#: themes/default/templates/applications/task_n_answers.html:14
+#: themes/default/templates/applications/task_settings.html:34
+msgid "Task Redundancy"
+msgstr "Redundancia de las tareas"
+
+#: themes/default/templates/applications/task_n_answers.html:18
+msgid "The number of answers per tasks that you want for the project"
+msgstr "Número de respuestas por tarea que quieres para tu proyecto"
+
+#: themes/default/templates/applications/task_n_answers.html:20
+#: themes/default/templates/applications/task_scheduler.html:34
+msgid "Set redundancy"
+msgstr "Establecer la redundancia"
+
+#: themes/default/templates/applications/task_presenter_editor.html:28
+msgid "Task Presenter Editor"
+msgstr "Editor del Presentador de Tareas"
+
+#: themes/default/templates/applications/task_presenter_editor.html:28
+msgid "Help"
+msgstr "Ayuda"
+
+#: themes/default/templates/applications/task_presenter_editor.html:34
+msgid "Update the project task presenter"
+msgstr "Actualizar el presentador de las tareas"
+
+#: themes/default/templates/applications/task_presenter_editor.html:35
+msgid "Preview the task presenter"
+msgstr "Vista preliminar del presentador de tareas"
+
+#: themes/default/templates/applications/task_presenter_editor.html:45
+msgid "&times;"
+msgstr "&times;"
+
+#: themes/default/templates/applications/task_presenter_editor.html:46
+msgid "Task Presenter Preview"
+msgstr "Vista preliminar del Presentador de Tareas"
+
+#: themes/default/templates/applications/task_presenter_editor.html:52
+msgid "Close"
+msgstr "Cerrar"
+
+#: themes/default/templates/applications/task_priority.html:14
+#: themes/default/templates/applications/task_settings.html:22
+#: view/applications.py:1288
+msgid "Task Priority"
+msgstr "Prioridad de las tareas"
+
+#: themes/default/templates/applications/task_priority.html:15
+msgid "You can change the"
+msgstr "Puedes cambiar la"
+
+#: themes/default/templates/applications/task_priority.html:16
+msgid "priority"
+msgstr "Prioridad"
+
+#: themes/default/templates/applications/task_priority.html:16
+msgid ""
+"of one or more tasks,\n"
+"                providing a list of task IDs separated by commas. The "
+"lowest\n"
+"                priority is"
+msgstr ""
+"de una o más tareas, \n"
+"                proporcionando una lista de identificadores separados por"
+" comas. La prioridad\n"
+" más baja es"
+
+#: themes/default/templates/applications/task_priority.html:19
+msgid "and the highest priority is"
+msgstr "y la más alta es"
+
+#: themes/default/templates/applications/task_priority.html:21
+msgid ""
+"The priority value is only\n"
+"                respected by the"
+msgstr "La prioridad solo funciona con el"
+
+#: themes/default/templates/applications/task_priority.html:22
+msgid "default scheduler"
+msgstr "gestor por defecto"
+
+#: themes/default/templates/applications/task_priority.html:27
+msgid "Comma separated Task.IDs i.e.: 3, 532, 100"
+msgstr "Valores separados por comas: 3, 532, 100"
+
+#: themes/default/templates/applications/task_priority.html:28
+msgid "Priority value between 0.0 and 1.0"
+msgstr "Valor de la prioridad entre 0.0 y 1.0"
+
+#: themes/default/templates/applications/task_priority.html:30
+msgid "Change Priority"
+msgstr "Cambiar la Prioridad"
+
+#: themes/default/templates/applications/task_scheduler.html:15
+msgid "You can choose from the following schedulers"
+msgstr "Puedes escoger los siguientes gestores"
+
+#: themes/default/templates/applications/task_scheduler.html:17
+msgid "or"
+msgstr "o"
+
+#: themes/default/templates/applications/task_scheduler.html:18
+msgid ""
+"returns a task that\n"
+"                    has not been completed (the value of number of "
+"answers has\n"
+"                    not achieved) excluding the current user"
+msgstr ""
+"devuelve una tarea que no ha sido completada (no se ha alcanzado el "
+"número de respuestas para la tarea) excluyendo al propio usuario"
+
+#: themes/default/templates/applications/task_scheduler.html:21
+msgid ""
+"returns a\n"
+"                    task which has the least number of task runs "
+"(answers)\n"
+"                    excluding the current user"
+msgstr ""
+"devuelve una tarea que tiene el menor número de respuestas, excluyendo al"
+" propio usuario"
+
+#: themes/default/templates/applications/task_scheduler.html:24
+msgid ""
+"returns a task\n"
+"                    randomly --a user could get the same task twice or "
+"more\n"
+"                    times"
+msgstr ""
+"devuelve un tarea aleatoriamente --un usuario puede hacer la misma tarea "
+"varias veces"
+
+#: themes/default/templates/applications/task_settings.html:18
+msgid "Change how the tasks are delivered to volunteers"
+msgstr "Cambiar la gestión de las tareas"
+
+#: themes/default/templates/applications/task_settings.html:19
+msgid "Scheduler"
+msgstr "Gestor de Tareas"
+
+#: themes/default/templates/applications/task_settings.html:23
+msgid "Change the priority of the tasks"
+msgstr "Cambiar la prioridad de las tareas"
+
+#: themes/default/templates/applications/task_settings.html:29
+msgid "Delete Tasks"
+msgstr "Eliminar las Tareas"
+
+#: themes/default/templates/applications/task_settings.html:30
+msgid "Delete all the tasks and associated answers"
+msgstr "Borrar todas las tareas y sus respuestas"
+
+#: themes/default/templates/applications/task_settings.html:35
+msgid "Change the redundancy level for the tasks"
+msgstr "Cambiar el nivel de redundancia para las tareas"
+
+#: themes/default/templates/applications/tasks.html:21
+msgid "Import tasks from templates, GDrive, or CSV"
+msgstr "Importar las tareas de las plantillas, GDrive, o CSV"
+
+#: themes/default/templates/applications/tasks.html:22
+#: themes/default/templates/applications/importers/csv.html:23
+#: themes/default/templates/applications/importers/epicollect.html:25
+#: themes/default/templates/applications/importers/gdocs.html:23
+msgid "Import"
+msgstr "Importar"
+
+#: themes/default/templates/applications/tasks.html:25
+#: themes/default/templates/applications/tasks.html:61
+msgid "Export Tasks"
+msgstr "Exportar tareas"
+
+#: themes/default/templates/applications/tasks.html:26
+#: themes/default/templates/applications/tasks.html:62
+msgid "Export tasks to JSON, CSV or a CKAN server"
+msgstr "Exportar tareas en JSON, CSV o a un servidor CKAN"
+
+#: themes/default/templates/applications/tasks.html:27
+#: themes/default/templates/applications/tasks.html:63 view/applications.py:853
+msgid "Export"
+msgstr "Exportar"
+
+#: themes/default/templates/applications/tasks.html:32
+msgid "Task Presenter"
+msgstr "Edita el presentador de tareas"
+
+#: themes/default/templates/applications/tasks.html:34
+msgid "Editor"
+msgstr "Editor"
+
+#: themes/default/templates/applications/tasks.html:38
+msgid "Configure the task scheduler, redundancy, etc."
+msgstr "Configure el gestor de tareas, redundancia, etc."
+
+#: themes/default/templates/applications/tasks.html:46
+#: themes/default/templates/applications/tasks.html:49
+#: themes/default/templates/applications/tasks.html:55
+#: themes/default/templates/applications/tasks.html:58
+msgid "Browse"
+msgstr "Navegar"
+
+#: themes/default/templates/applications/tasks.html:47
+#: themes/default/templates/applications/tasks.html:56
+msgid "Check the status of the tasks"
+msgstr "Comprueba el estado de las tareas"
+
+#: themes/default/templates/applications/tasks_browse.html:13
+msgid "Browse tasks"
+msgstr "Explorar tareas"
+
+#: themes/default/templates/applications/tasks_browse.html:15
+msgid "This page shows all the available tasks for this project"
+msgstr "Esta página muestra todas las tareas disponibles para este proyecto"
+
+#: themes/default/templates/applications/tasks_browse.html:16
+msgid "For each task, you can find the following information"
+msgstr "Para cada tarea se proporciona la siguiente información"
+
+#: themes/default/templates/applications/tasks_browse.html:18
+#: themes/default/templates/applications/tasks_browse.html:29
+#: themes/default/templates/applications/tasks_browse.html:31
+msgid "Task"
+msgstr "Tarea"
+
+#: themes/default/templates/applications/tasks_browse.html:18
+msgid "This number identifies the task for the project and it is unique"
+msgstr "Este número identifica la tarea del proyecto y es único"
+
+#: themes/default/templates/applications/tasks_browse.html:19
+msgid ""
+"The first number shows how many answers have been submitted for the task "
+"and the"
+msgstr ""
+"El primer número muestra cuantas respuestas se han conseguido para la "
+"tarea\"\n"
+"\" y el"
+
+#: themes/default/templates/applications/tasks_browse.html:19
+msgid ""
+"This redundancy method will help to detect errors, typos, data forging, "
+"etc. when the task has been completed"
+msgstr ""
+"Este método de redundancia ayuda a detectar errores, fallos, "
+"falsificación\"\n"
+"\"de datos, etc. cuando una tarea ha sido completada"
+
+#: themes/default/templates/applications/tasks_browse.html:19
+msgid "second number"
+msgstr "segundo número"
+
+#: themes/default/templates/applications/tasks_browse.html:19
+msgid "how many need to be obtained to mark the task as"
+msgstr "cuantas deben obtenerse para marcar la tarea como"
+
+#: themes/default/templates/applications/tasks_browse.html:20
+msgid "Progress Bar"
+msgstr "Barra de Progreso"
+
+#: themes/default/templates/applications/tasks_browse.html:20
+msgid "The progress bar will the percentage that has been completed for the task"
+msgstr ""
+"La barra de progreso mostrará el porcentaje que ha sido completado para "
+"la tarea"
+
+#: themes/default/templates/applications/tasks_browse.html:48
+msgid "Download Task Results"
+msgstr "Descargar los resultados"
+
+#: themes/default/templates/applications/tasks_browse.html:52
+msgid "Download Partial results"
+msgstr "Descargar los resultados"
+
+#: themes/default/templates/applications/tasks_browse.html:55
+msgid "Nothing to download yet"
+msgstr "Nada para descargar"
+
+#: themes/default/templates/applications/tutorial.html:14
+msgid "Start contributing"
+msgstr "Participa"
+
+#: themes/default/templates/applications/update.html:14
+msgid "Update the project"
+msgstr "Actualizar el proyecto"
+
+#: themes/default/templates/applications/update.html:39
+msgid "Give some details about the project"
+msgstr "Da algunos detalles sobre el proyecto"
+
+#: themes/default/templates/applications/update.html:40
+msgid "Explain the project (use Markdown!)"
+msgstr "Explica el proyecto (usa Markdown)"
+
+#: themes/default/templates/applications/update.html:44
+msgid "Do you want to hide your project?"
+msgstr "¿Quieres ocultar el proyecto?"
+
+#: themes/default/templates/applications/update.html:46
+msgid "Save te changes"
+msgstr "Guardar los cambios"
+
+#: themes/default/templates/applications/update_blogpost.html:14
+msgid "Edit the blog post"
+msgstr "Edita el artículo"
+
+#: themes/default/templates/applications/update_blogpost.html:23
+msgid "Update"
+msgstr "Actualizar"
+
+#: themes/default/templates/applications/importers/csv.html:16
+msgid "From a CSV file"
+msgstr "De un fichero CSV"
+
+#: themes/default/templates/applications/importers/csv.html:20
+msgid ""
+"Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
+" a CSV file with data for"
+msgstr "Por favor proporciona la URL (por ejemplo de DropBox) para"
+"el fichero CSV con los datos para"
+
+#: themes/default/templates/applications/importers/csv.html:20
+#: themes/default/templates/applications/importers/epicollect.html:20
+#: themes/default/templates/applications/importers/gdocs.html:20
+msgid "For more information, please look at"
+msgstr "Para más información, por favor consulta"
+
+#: themes/default/templates/applications/importers/csv.html:20
+#: themes/default/templates/applications/importers/epicollect.html:20
+#: themes/default/templates/applications/importers/gdocs.html:20
+msgid "the documentation"
+msgstr "la documentación"
+
+#: themes/default/templates/applications/importers/csv.html:21
+msgid "The URL of the CSV file"
+msgstr "La URL del fichero CSV"
+
+#: themes/default/templates/applications/importers/epicollect.html:16
+msgid "From an EpiCollect Plus project"
+msgstr "Desde un proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/importers/epicollect.html:20
+msgid "Please provide an EpiCollect Plus project name to import its data for"
+msgstr ""
+"Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
+"importar sus datos para"
+
+#: themes/default/templates/applications/importers/epicollect.html:22
+msgid "The name of the public EpiCollect Plus project"
+msgstr "El nombre del proyecto público EpiCollect Plus"
+
+#: themes/default/templates/applications/importers/epicollect.html:23
+msgid "The name of the project's form"
+msgstr "El nombre del formulario del proyecto"
+
+#: themes/default/templates/applications/importers/gdocs.html:16
+msgid "From a Google Docs Spreadsheet"
+msgstr "Desde una hoja de cálculo de Google"
+
+#: themes/default/templates/applications/importers/gdocs.html:20
+msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
+msgstr ""
+"Por favor, proporciona un enlace de una hoja de cálculo de Google Drive "
+"para"
+
+#: themes/default/templates/applications/snippets/options.html:4
+#: themes/default/templates/applications/tasks/options.html:3
+msgid "Use one of the following available"
+msgstr "Utiliza una de las siguientes"
+
+#: themes/default/templates/applications/snippets/options.html:5
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "templates"
+msgstr "plantillas"
+
+#: themes/default/templates/applications/snippets/options.html:5
+msgid "for your project"
+msgstr "para tu proyeto"
+
+#: themes/default/templates/applications/tasks/csv.html:3
+msgid "Provide a public link to your own CSV file"
+msgstr "Proporciona un enlace público al CSV"
+
+#: themes/default/templates/applications/tasks/csv.html:5
+msgid ""
+"Use the CSV URL\n"
+"      template"
+msgstr "Usa un enlace a fichero CSV"
+
+#: themes/default/templates/applications/tasks/delete.html:14
+msgid ""
+"If you delete all the\n"
+"            tasks and task runs they will be gone\n"
+"            forever!"
+msgstr "¡Si borras el proyecto y sus tareas, se borrarán para siempre!"
+
+#: themes/default/templates/applications/tasks/delete.html:16
+msgid "You cannot undo this action!"
+msgstr "No se puede deshacer esta acción"
+
+#: themes/default/templates/applications/tasks/delete.html:20
+msgid ""
+"Are you sure you want to delete ALL the project tasks and associated task"
+" runs?"
+msgstr ""
+"¿Estás seguro que quieres eliminar este proyecto y todas las tareas y\"\n"
+"\" respuestas asociadas con él?"
+
+#: themes/default/templates/applications/tasks/delete.html:26
+msgid ""
+"No, do not delete\n"
+"              anything!"
+msgstr "No, no quiero borrar nada"
+
+#: themes/default/templates/applications/tasks/epicollect.html:2
+msgid "EpiCollect Plus Project"
+msgstr "Proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/epicollect.html:3
+msgid "Use an EpiCollect Plus project"
+msgstr "Utilizar un proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/epicollect.html:5
+msgid ""
+"Use an EpiCollect\n"
+"      Plus project"
+msgstr "Usar un proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:2
+msgid "Image Pattern Recognition"
+msgstr "Imágenes"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:3
+msgid "Re-use the Flickr Person Finder task template"
+msgstr "Reutiliza la plantilla Flickr Person"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:5
+msgid ""
+"Use the\n"
+"      Image Task template"
+msgstr "Utiliza la plantilla de Imágenes"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:2
+msgid "Geo-coding"
+msgstr "Geo-codificar"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:3
+msgid "Re-use the Urban Park Task template"
+msgstr "Reutiliza la plantilla de los parques"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:5
+msgid ""
+"Use the\n"
+"      Mapping template"
+msgstr "Usa la plantilla de los mapas"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:2
+msgid "Transcribing documents"
+msgstr "Transcripción de documentos"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:3
+msgid "Re-use the PDF transcription template"
+msgstr "Reutiliza la plantilla de transcripción"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:5
+msgid ""
+"Use the\n"
+"      Transcription template"
+msgstr "Utiliza la plantilla de transcripción"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:2
+msgid "Sound Pattern Recognition"
+msgstr "Sonido"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:3
+msgid "Re-use the SoundCloud task template"
+msgstr "Reutiliza la plantilla de SoundCloud"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:5
+msgid ""
+"Use the\n"
+"      Sound Task template"
+msgstr "Utilizar la plantilla de Sonido"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:2
+msgid "Google Drive Spreadsheet"
+msgstr "Hoja de Cálculo en Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:3
+msgid "Import a Google Drive Spreadsheet"
+msgstr "Importar desde Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:5
+msgid ""
+"Use the Google Drive\n"
+"      template"
+msgstr "Utilizar hoja de cálculo de Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:2
+msgid "Video Pattern Recognition"
+msgstr "Vídeos"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:3
+msgid "Re-use the Vimeo task template"
+msgstr "Reutilizar la plantilla de Vimeo"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:5
+msgid ""
+"Use the\n"
+"      Video Task template"
+msgstr "Utilizar la plantilla de vídeo"
+
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "to import tasks"
+msgstr "para importar tareas"
+
+#: themes/default/templates/home/_about.html:5
+msgid ""
+"PyBossa is a free, open-source crowd-sourcing and micro-tasking platform."
+" It enables people to create and run projects that utilise online "
+"assistance in performing tasks that require human cognition such as image"
+" classification, transcription, geocoding and more. PyBossa is there to "
+"help researchers, civic hackers and developers to create projects where "
+"anyone around the world with some time, interest and an internet "
+"connection can contribute."
+msgstr ""
+"PyBossa es una plataforma de código abierto y gratuita para el crowd-"
+"sourcing ylas micro-tareas. La plataforma permite la creación y ejecución"
+" de proyectos en losque se requiera la ayuda del conocimiento humano para"
+" resolver tareas como por ejemplola clasificación de imágenes, "
+"transcripción de documentos, geolocalización, etc. PyBossaes una "
+"herramienta que pretende ayudar a investigadores, hackers cívicos y "
+"desarrolladoresa crear proyectos en los que cualquier persona del mundo "
+"pueda contribuir si tiene una conexión a Internet e interés en el "
+"proyecto."
+
+#: themes/default/templates/home/_about.html:8
+msgid "PyBossa is different to existing efforts:"
+msgstr "PyBossa es diferente a los proyectos existentes porque:"
+
+#: themes/default/templates/home/_about.html:10
+#, fuzzy, python-format
+msgid "It's a 100%% open-source"
+msgstr "Es 100%% código libre"
+
+#: themes/default/templates/home/_about.html:11
+msgid ""
+"Unlike, say, “mechanical turk” style projects, PyBossa is not designed to"
+" handle payment or money — it is designed to support volunteer-driven "
+"projects."
+msgstr ""
+"A diferencia de otros proyectos tipo, por ejemplo “mechanical turk”, "
+"PyBossa\"\n"
+"\"PyBossa no está diseñado para manejar pagos o dinero — está diseñado "
+"para dar soporte\"\n"
+"\" a proyectos orientados alrededor de la comunidad de voluntarios."
+
+#: themes/default/templates/home/_about.html:13
+msgid ""
+"It's designed as a platform and framework for developing deploying crowd-"
+"sourcing and microtasking project rather than being a crowd-sourcing "
+"project itself. Individual crowd-sourcing projects are written as simple "
+"snippets of Javascript and HTML which are then deployed on a PyBossa "
+"instance (such as"
+msgstr ""
+"Está diseñado como una plataforma para el desarrollo y lanzamiento \"\n"
+"\"de proyectos de micro-tareas y/o crowdsourcing más que como siendo "
+"un proyecto\"\n"
+"\"en si misma. Los proyectos individuales se crean escribiendo "
+"pequeños programas\"\n"
+"\"de Javascript y HTML que son posteriormente lanzados como instancias "
+"(como por ejemplo"
+
+#: themes/default/templates/home/_about.html:13
+msgid ""
+"This way one can easily develop custom projects while using the PyBossa "
+"platform to store your data, manage users, and handle workflow"
+msgstr ""
+"De esta forma, se pueden desarrollar proyectos personalizados "
+"mientras\"\n"
+"\"se utiliza la plataforma PyBossa para almacenar los datos, manejar los "
+"usuarios,\"\n"
+"\" y el flujo de trabajo"
+
+#: themes/default/templates/home/_about.html:18
+msgid "You can read more about the architecture in the"
+msgstr "Puedes leer más sobre la arquitectura en la"
+
+#: themes/default/templates/home/_about.html:18
+msgid "PyBossa Documentation"
+msgstr "documentación de PyBossa"
+
+#: themes/default/templates/home/_about.html:18
+msgid "and follow the"
+msgstr "y seguir el"
+
+#: themes/default/templates/home/_about.html:18
+msgid "step-by-step tutorial to create your own projects"
+msgstr "tutorial paso a paso para crear tus propios proyectos"
+
+#: themes/default/templates/home/_about.html:23
+msgid ""
+" PyBossa provides individual statistics for every project in the system, "
+"as well as a"
+msgstr ""
+"PyBossa proporciona estadísticas individuales para cada proyecto \"\n"
+"\" así como también para"
+
+#: themes/default/templates/home/_about.html:23
+msgid "general overview about the system like total number of users, tasks, etc"
+msgstr "todo el sistema: número total de usuarios, tareas, etc."
+
+#: themes/default/templates/home/_about.html:25
+msgid "Check the global statistics"
+msgstr "Ver las estadísticas globales"
+
+#: themes/default/templates/home/_about.html:27
+msgid "Contact information"
+msgstr "Información de Contacto"
+
+#: themes/default/templates/home/_about.html:29
+msgid "For more info, send us an e-mail to: "
+msgstr "Para más información, envíanos un correo electrónico a: "
+
+#: themes/default/templates/home/_about.html:29
+msgid "Follow us on Twitter!"
+msgstr "Síguenos en Twitter!"
+
+#: themes/default/templates/home/_about.html:30
+msgid "E-mail list: "
+msgstr "Lista de correo:"
+
+#: themes/default/templates/home/_about.html:31
+msgid "Report any bug, issue or improvement:"
+msgstr "Envíanos cualquier error, fallo o sugerencia:"
+
+#: themes/default/templates/home/_about.html:33
+msgid "Github Issues"
+msgstr "Github Issues"
+
+#: themes/default/templates/home/_pybossa_text.html:1
+msgid ""
+"Online assistance in performing tasks that require human cognition, "
+"knowledge or intelligence such as image classification, transcription, "
+"geocoding and more!"
+msgstr ""
+
+#: themes/default/templates/home/_pybossa_text.html:3
+msgid "Help advance research"
+msgstr "Ayuda a avanzar la investigación"
+
+#: themes/default/templates/home/_pybossa_text.html:4
+msgid "Everything is open and freely usable"
+msgstr "Todo es código abierto y libre"
+
+#: themes/default/templates/home/_pybossa_text.html:5
+msgid "Things computers can't do"
+msgstr "Resuelve problemas que los ordenadores no pueden"
+
+#: themes/default/templates/home/index.html:33
+msgid "Get Started"
+msgstr "Comenzar"
+
+#: themes/default/templates/home/index.html:34
+msgid "It's really simple to start contributing."
+msgstr "Es muy sencillo participar."
+
+#: themes/default/templates/home/index.html:37
+msgid " Start Contributing"
+msgstr " Únete y Participa"
+
+#: themes/default/templates/home/index.html:42
+msgid "Most Active Projects"
+msgstr "Proyectos más Activos"
+
+#: themes/default/templates/home/index.html:54
+msgid "Start"
+msgstr "Comenzar"
+
+#: themes/default/templates/home/index.html:62
+msgid "Your project"
+msgstr "Tu proyecto"
+
+#: themes/default/templates/home/index.html:63
+msgid "could be here!"
+msgstr "¡podría estar aquí!"
+
+#: themes/default/templates/home/index.html:64
+msgid "Create a project"
+msgstr "Crear un proyecto"
+
+#: themes/default/templates/home/index.html:73
+msgid "Most Active Volunteers"
+msgstr "Voluntarios más Activos"
+
+#: themes/default/templates/home/index.html:80
+msgid "Submitted Tasks"
+msgstr "Respuestas Contribuidas"
+
+#: themes/default/templates/home/search.html:7
+msgid "Search Results"
+msgstr "Buscar Resultados"
+
+#: themes/default/templates/stats/global.html:38
+msgid "General Statistics"
+msgstr "Ver las estadísticas globales"
+
+#: themes/default/templates/stats/global.html:46
+msgid "Anonymous users"
+msgstr "usuarios anónimos han"
+
+#: themes/default/templates/stats/global.html:47
+msgid "Authenticated users"
+msgstr "usuarios autenticados han"
+
+#: themes/default/templates/stats/global.html:48
+#: themes/default/templates/stats/global.html:94
+msgid "Total"
+msgstr "Total"
+
+#: themes/default/templates/stats/global.html:52
+msgid "Top 5 Users in the last 24 hours"
+msgstr "Los 5 mejores usuarios en las últimas 24 horas"
+
+#: themes/default/templates/stats/global.html:55
+msgid "with"
+msgstr "con"
+
+#: themes/default/templates/stats/global.html:55
+msgid "contributed answers"
+msgstr "tareas contribuidas"
+
+#: themes/default/templates/stats/global.html:60
+msgid "No active users in the last 24 hours"
+msgstr "No hay usuarios activos en las últimas 24 horas"
+
+#: themes/default/templates/stats/global.html:92
+msgid "Published Projects"
+msgstr "Proyectos Publicados"
+
+#: themes/default/templates/stats/global.html:97
+msgid "Top 5 projects in the last 24 hours"
+msgstr "Los 5 proyectos más activos en las últimas 24 horas"
+
+#: themes/default/templates/stats/global.html:105
+msgid "No active project in the last 24 hours"
+msgstr "No hay proyectos activos en las últimas 24 horas"
+
+#: themes/default/templates/stats/global.html:135
+msgid "Tasks and Answers"
+msgstr "Exportar Tareas y Respuestas"
+
+#: themes/default/templates/stats/global.html:138
+msgid "Number of Tasks"
+msgstr "Número de tareas"
+
+#: themes/default/templates/stats/global.html:139
+msgid "Number of Task Runs"
+msgstr "Número de Respuestas"
+
+#: themes/default/templates/stats/global.html:167
+msgid "Anonymous Volunteers"
+msgstr "usuarios anónimos han"
+
+#: themes/default/templates/stats/index.html:13
+msgid "Community Leaderboard"
+msgstr "Clasificación"
+
+#: themes/default/templates/stats/index.html:19
+msgid "Score"
+msgstr "Puntuación"
+
+#: view/account.py:118
+msgid "Welcome back"
+msgstr "Bienvenido de nuevo"
+
+#: view/account.py:124
+msgid "Ooops, Incorrect email/password"
+msgstr "Uy! Contraseña y/o correo electrónico incorrecto"
+
+#: view/account.py:129
+msgid ""
+"Ooops, we didn't find you in the system,                           did "
+"you sign in?"
+msgstr "Uy, no te hemos encontrado en el sistema, ¿has creado una cuenta?"
+
+#: view/account.py:134 view/account.py:190 view/account.py:406
+#: view/account.py:445 view/account.py:466 view/account.py:511
+#: view/admin.py:290 view/admin.py:373 view/applications.py:208
+#: view/applications.py:261 view/applications.py:402 view/applications.py:1235
+#: view/applications.py:1279 view/applications.py:1319
+#: view/applications.py:1410 view/applications.py:1457
+msgid "Please correct the errors"
+msgstr "Por favor, corrija los siguientes errores"
+
+#: view/account.py:162
+msgid "You are now signed out"
+msgstr "Acabas de cerrar la sesión"
+
+#: view/account.py:192
+msgid "Register"
+msgstr "Registrarse"
+
+#: view/account.py:211
+msgid "Thanks for signing-up"
+msgstr "Gracias por registrarte"
+
+#: view/account.py:271
+msgid "Profile"
+msgstr "Perfíl"
+
+#: view/account.py:377
+msgid ""
+"Your avatar has been updated! It may                               take "
+"some minutes to refresh..."
+msgstr "Tu avatar ha sido actualizado. Puede tardar unos minutos en refrescarse"
+
+#: view/account.py:403 view/account.py:463
+msgid "Your profile has been updated!"
+msgstr "Tu perfil ha sido actualizado"
+
+#: view/account.py:430
+msgid "Yay, you changed your password succesfully!"
+msgstr "¡Genial, has cambiado tu contraseña!"
+
+#: view/account.py:434
+msgid "Your current password doesn't match the one in our records"
+msgstr "La contraseña actual no coincide con la que tenemos en nuestro sistema"
+
+#: view/account.py:508
+msgid "You reset your password successfully!"
+msgstr "¡Has reiniciado la contraseña satisfactoriamente!"
+
+#: view/account.py:553
+msgid "We've send you email with account recovery instructions!"
+msgstr ""
+"¡Te hemos enviado un correo electrónico con instrucciones para recuperar "
+"la cuenta!"
+
+#: view/account.py:557
+msgid ""
+"We don't have this email in our records. You may have signed up with a "
+"different email or used Twitter, Facebook, or Google to sign-in"
+msgstr ""
+"No encontramos este correo electrónico en nuestros registros. Puede que  "
+"te registraras con un correo diferente o utilizaras Twitter, Facebook o  "
+"Google para iniciar sesión"
+
+#: view/account.py:562
+msgid "Something went wrong, please correct the errors on the form"
+msgstr "Algo ha ido mal, por favor corrige los errores del formulario"
+
+#: view/account.py:585
+msgid "New API-KEY generated"
+msgstr "Nueva clave API creada"
+
+#: view/admin.py:287
+msgid "Category added"
+msgstr "Categoría añadida"
+
+#: view/admin.py:323
+msgid "Category deleted"
+msgstr "Proyecto eliminado"
+
+#: view/admin.py:328
+msgid ""
+"Sorry, it is not possible to delete the only"
+"                                    available category. You can modify "
+"it, click the                                    edit button"
+msgstr ""
+"Vaya, no es posible eliminar la única categoría disponible. Puedes "
+"modificarlahaciendo click en el botón Editar"
+
+#: view/admin.py:369
+msgid "Category updated"
+msgstr "Proyecto actualizado"
+
+#: view/applications.py:225
+msgid "Project created!"
+msgstr "Proyecto creado!"
+
+#: view/applications.py:228
+msgid "You can check the "
+msgstr "Puedes comprobar la"
+
+#: view/applications.py:230
+msgid "Guide and Documentation"
+msgstr "Guía y  Documentación"
+
+#: view/applications.py:232
+msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
+msgstr "para añadir tareas, un icono, utilizando PyBossa.JS, etc."
+
+#: view/applications.py:255
+msgid "Task presenter added!"
+msgstr "Presentador de Tareas añadido!"
+
+#: view/applications.py:268
+msgid "<strong>Note</strong> You will need to upload the tasks using the"
+msgstr "<strong>Nota</strong> Va a necesitar subir las tareas utilizando el"
+
+#: view/applications.py:270
+msgid "CSV importer"
+msgstr "importador CSV"
+
+#: view/applications.py:271
+msgid ""
+" or download the project bundle and run the "
+"<strong>createTasks.py</strong> script in your computer"
+msgstr ""
+" o descargar el proyecto y ejecutar el script "
+"<strong>createTasks.py</strong>  en su PC"
+
+#: view/applications.py:341
+msgid "Project deleted!"
+msgstr "¡Proyecto eliminado!"
+
+#: view/applications.py:376
+msgid "Project updated!"
+msgstr "¡Proyecto actualizado!"
+
+#: view/applications.py:422
+msgid ""
+"Your project thumbnail has been updated! It may"
+"                                   take some minutes to refresh..."
+msgstr ""
+"El avatar de tu proyecto ha sido actualizado. Puede tardar unos minutos "
+"en actualizarse"
+
+#: view/applications.py:425
+msgid "You must provide a file to change the avatar"
+msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+
+#: view/applications.py:517
+msgid "Importing tasks, this may take a while, wait..."
+msgstr "Importando tareas, esto puede llevar un rato, espera..."
+
+#: view/applications.py:573
+msgid "Oops! It looks like the file is empty."
+msgstr "¡Uy! Parece que el fichero está vacío."
+
+#: view/applications.py:575
+msgid "Oops! It looks like there are no new records to import."
+msgstr "¡Uy! Parece que el fichero está vacío."
+
+#: view/applications.py:577
+msgid "Tasks imported successfully!"
+msgstr "¡Tareas importadas satisfactoriamente!"
+
+#: view/applications.py:579
+msgid "Task imported successfully!"
+msgstr "Tarea importada satisfactoriamente!"
+
+#: view/applications.py:635
+msgid ""
+"Ooops! You are an anonymous user and will not get any credit for your "
+"contributions."
+msgstr ""
+"¡Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
+"tus contribuciones."
+
+#: view/applications.py:837
+msgid "All the tasks and associated task runs have been deleted"
+msgstr "Todas las tareas y sus respuestas han sido eliminadas"
+
+#: view/applications.py:854
+msgid "Exporting data..., this may take a while"
+msgstr "Exportando datos..., esto puede llevar un rato"
+
+#: view/applications.py:973
+msgid "Data exported to "
+msgstr "Datos exportados a "
+
+#: view/applications.py:1031
+msgid ""
+"Oops, the project does not have tasks to                         export, "
+"if you are the owner add some tasks"
+msgstr ""
+"Uy, el proyecto no tiene tareas que exportar, si eres el dueño "
+"añade alguna"
+
+#: view/applications.py:1037
+msgid ""
+"Oops, there are no Task Runs yet to export, invite"
+"                          some users to participate"
+msgstr ""
+"Uy, no hay ninguna respuesta que exportar, invita a algunos voluntarios a"
+" participar"
+
+#: view/applications.py:1231
+msgid "Redundancy of Tasks updated!"
+msgstr "Redundancia de las tareas actualizada"
+
+#: view/applications.py:1275
+msgid "Project Task Scheduler updated!"
+msgstr "¡Gestor de tareas actualizado!"
+
+#: view/applications.py:1316
+msgid "Task priority has been changed"
+msgstr "Su perfil ha sido actualizado"
+
+#: view/applications.py:1388
+msgid "Write a new post"
+msgstr "Escribe un nuevo artículo"
+
+#: view/applications.py:1422
+msgid "Blog post created!"
+msgstr "¡Artículo creado!"
+
+#: view/applications.py:1441
+msgid "Edit a post"
+msgstr "Editar artículo"
+
+#: view/applications.py:1470
+msgid "Blog post updated!"
+msgstr "¡Artículo actualizado!"
