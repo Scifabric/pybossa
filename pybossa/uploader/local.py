@@ -61,7 +61,7 @@ class LocalUploader(Uploader):
                 os.makedirs(os.path.join(self.upload_folder, container))
             file.save(os.path.join(self.upload_folder, container, filename))
             return True
-        except:
+        except Exception:
             return False
 
     def delete_file(self, name, container):
@@ -70,7 +70,7 @@ class LocalUploader(Uploader):
             path = os.path.join(self.upload_folder, container, name)
             os.remove(path)
             return True
-        except:
+        except Exception:
             return False
 
     def file_exists(self, name, container):
@@ -78,5 +78,5 @@ class LocalUploader(Uploader):
         try:
             path = os.path.join(self.upload_folder, container, name)
             return os.path.isfile(path)
-        except:
+        except Exception:
             return False
