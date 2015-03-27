@@ -153,3 +153,19 @@ class TestLocalUploader(Test):
         err_msg = "Delete should return False"
         assert u.delete_file('file', 'container') is False, err_msg
 
+    def test_file_exists_for_missing_file(self):
+        """Test LOCAL UPLOADER file_exists returns False if the file does not exist"""
+        u = LocalUploader()
+        container = 'mycontainer'
+
+        assert u.file_exists('noexist.txt', container) is False
+
+    def test_file_exists_for_real_file(self):
+        """Test LOCAL UPLOADER file_exists returns True if the file exists"""
+        u = LocalUploader()
+        u.upload_folder = tempfile.mkdtemp()
+        file = FileStorage(filename='test.jpg')
+        container = 'mycontainer'
+        u.upload_file(file, container=container)
+
+        assert u.file_exists('test.jpg', container) is True
