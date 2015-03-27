@@ -23,7 +23,7 @@ import zipfile
 from StringIO import StringIO
 from default import db, Fixtures, with_context, FakeResponse
 from helper import web
-from mock import patch, Mock
+from mock import patch, Mock, call
 from flask import Response, redirect
 from itsdangerous import BadSignature
 from collections import namedtuple
@@ -3220,6 +3220,18 @@ class TestWeb(web.Helper):
         res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
+
+    @patch('pybossa.view.applications.uploader')
+    def test_delete_tasks_removes_existing_zip_files(self, uploader):
+        """Test WEB delete tasks also deletes zip files for task and taskruns"""
+        Fixtures.create()
+        self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        expected = [call('1_test-app_task_json.zip', 'user_1'),
+                    call('1_test-app_task_csv.zip', 'user_1'),
+                    call('1_test-app_task_run_json.zip', 'user_1'),
+                    call('1_test-app_task_run_csv.zip', 'user_1')]
+        assert uploader.delete_file.call_args_list == expected
 
     @with_context
     def test_57_reset_api_key(self):
