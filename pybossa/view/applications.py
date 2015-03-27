@@ -896,8 +896,8 @@ def delete_tasks(short_name):
         flash(msg, 'success')
         json_tasks_filename = json_exporter.download_name(app, 'task')
         csv_tasks_filename = csv_exporter.download_name(app, 'task')
-        json_taskruns_filename = json_exporter.download_name(app, 'taskrun')
-        csv_taskruns_filename = csv_exporter.download_name(app, 'taskrun')
+        json_taskruns_filename = json_exporter.download_name(app, 'task_run')
+        csv_taskruns_filename = csv_exporter.download_name(app, 'task_run')
         container = "user_%s" % current_user.id
         uploader.delete_file(json_tasks_filename, container)
         uploader.delete_file(csv_tasks_filename, container)
