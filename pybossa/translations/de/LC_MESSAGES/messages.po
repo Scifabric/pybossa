@@ -236,7 +236,7 @@ msgstr "Der Benutzername muss zwischen 3 und 35 Zeichen lang sein"
 msgid "The user name is already taken"
 msgstr "Die Benutzername ist bereits vergeben"
 
-######################################################################################
+####################################################################################
 
 #: forms/forms.py:189
 msgid "User name"
