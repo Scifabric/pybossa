@@ -136,7 +136,3 @@ class RackspaceUploader(Uploader):
             return obj is not None
         except pyrax.exceptions.NoSuchObject:
             return False
-        except Exception as e:
-            from flask import flash
-            flash(e)
-            return False
