@@ -142,14 +142,14 @@ def app_index(page, lookup, category, fallback, use_count):
     categories = cached_cat.get_all()
     # Check for pre-defined categories featured and draft
     featured_cat = model.category.Category(name='Featured',
-                                  short_name='featured',
-                                  description='Featured projects')
+                                           short_name='featured',
+                                           description='Featured projects')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
         active_cat = model.category.Category(name='Draft',
-                                    short_name='draft',
-                                    description='Draft projects')
+                                             short_name='draft',
+                                             description='Draft projects')
     else:
         active_cat = project_repo.get_category_by(short_name=category)
 
@@ -369,16 +369,16 @@ def update(short_name):
         old_info = dict(new_project.info)
         old_project.info = old_info
         if form.id.data == new_project.id:
-            new_project.name=form.name.data
-            new_project.short_name=form.short_name.data
-            new_project.description=form.description.data
-            new_project.long_description=form.long_description.data
-            new_project.hidden=int(form.hidden.data)
-            new_project.webhook=form.webhook.data
-            new_project.info=app.info
-            new_project.owner_id=app.owner_id
-            new_project.allow_anonymous_contributors=form.allow_anonymous_contributors.data
-            new_project.category_id=form.category_id.data
+            new_project.name = form.name.data
+            new_project.short_name = form.short_name.data
+            new_project.description = form.description.data
+            new_project.long_description = form.long_description.data
+            new_project.hidden = int(form.hidden.data)
+            new_project.webhook = form.webhook.data
+            new_project.info = app.info
+            new_project.owner_id = app.owner_id
+            new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
+            new_project.category_id = form.category_id.data
 
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
@@ -681,7 +681,7 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (app, owner,n_tasks, n_task_runs,
+    (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
@@ -935,7 +935,6 @@ def export_to(short_name):
                                n_completed_tasks=n_completed_tasks,
                                overall_progress=overall_progress)
 
-
     def gen_json(table):
         n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
         sep = ", "
@@ -1042,13 +1041,6 @@ def export_to(short_name):
                 owner = user_repo.get(app.owner_id)
                 package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
-                #new_resource = ckan.resource_create(name=ty,
-                #                                    package_id=package['id'])
-                #ckan.datastore_create(name=ty,
-                #                      resource_id=new_resource['result']['id'])
-                #ckan.datastore_upsert(name=ty,
-                #                     records=gen_json(ty),
-                #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1059,7 +1051,7 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
-            else: # pragma: no cover
+            else:  # pragma: no cover
                 msg = ("Error: %s" % inst.args[0])
             current_app.logger.error(msg)
             flash(msg, 'danger')
@@ -1279,7 +1271,7 @@ def task_scheduler(short_name):
         flash(msg, 'success')
 
         return redirect(url_for('.tasks', short_name=app.short_name))
-    else: # pragma: no cover
+    else:  # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
@@ -1319,7 +1311,7 @@ def task_priority(short_name):
                                                 'task_priority_0': t.priority_0})
                         auditlogger.log_event(app, current_user, 'update',
                                               'task.priority_0',
-                                               old_value, new_value)
+                                              old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)
@@ -1363,14 +1355,14 @@ def show_blogpost(short_name, id):
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog_post.html',
-                            app=app,
-                            owner=owner,
-                            blogpost=blogpost,
-                            overall_progress=overall_progress,
-                            n_tasks=n_tasks,
-                            n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           app=app,
+                           owner=owner,
+                           blogpost=blogpost,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1389,7 +1381,6 @@ def new_blogpost(short_name):
                                n_task_runs=n_task_runs,
                                n_completed_tasks=cached_apps.n_completed_tasks(dict_app.get('id')),
                                n_volunteers=cached_apps.n_volunteers(dict_app.get('id')))
-
 
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
@@ -1485,7 +1476,7 @@ def _check_if_redirect_to_password(app):
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
-                                 short_name=app.short_name, next=request.path))
+                                short_name=app.short_name, next=request.path))
 
 
 @blueprint.route('/<short_name>/auditlog')
