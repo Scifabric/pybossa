@@ -196,47 +196,47 @@ msgstr "URL"
 msgid "You must provide an EpiCollect Plus project name"
 msgstr "Sie müssen einen EpiCollect Plus Projektnamen angeben"
 
-#######################################################################################
-
 #: forms/forms.py:142
 msgid "You must provide a Form name for the project"
-msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+msgstr "Sie müssen einen Namen für das Formular des Projektes angeben"
 
 #: forms/forms.py:144
 msgid "Project Name"
-msgstr "Nombre del Proyecto"
+msgstr "Projektname"
 
 #: forms/forms.py:146
 msgid "Form name"
-msgstr "Nombre del Formulario"
+msgstr "Formularname"
 
 #: forms/forms.py:167 themes/default/templates/account/_helpers.html:41
 msgid "E-mail"
-msgstr "Correo Electrónico"
+msgstr "E-Mail Adresse"
 
 #: forms/forms.py:169
 msgid "The e-mail is required"
-msgstr "El correo electrónico es obligatorio"
+msgstr "Angabe der E-Mail Adresse ist obligatorisch"
 
 #: forms/forms.py:173
 msgid "You must provide a password"
-msgstr "Debe proporcionar una contraseña"
+msgstr "Sie müssen ein Passwort angeben"
 
 #: forms/forms.py:181 forms/forms.py:219
 msgid "Full name must be between 3 and 35 characters long"
-msgstr "Nombre y Apellidos debe contenter entre 3 y 35 caracteres"
+msgstr "Der vollständige Name muss zwischen 3 und 35 Zeichen lang sein"
 
 #: forms/forms.py:183 forms/forms.py:221
 msgid "Full name"
-msgstr "Nombre y Apellidos"
+msgstr "Vollständiger Name"
 
 #: forms/forms.py:186 forms/forms.py:224
 msgid "User name must be between 3 and 35 characters long"
-msgstr "El nombre de usuario debe tener entre 3 y 35 caracteres"
+msgstr "Der Benutzername muss zwischen 3 und 35 Zeichen lang sein"
 
 #: forms/forms.py:188 forms/forms.py:226
 msgid "The user name is already taken"
-msgstr "El nombre de usuario ya está registrado"
+msgstr "Die Benutzername ist bereits vergeben"
+
+######################################################################################
 
 #: forms/forms.py:189
 msgid "User name"
