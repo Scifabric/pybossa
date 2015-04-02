@@ -316,10 +316,8 @@ def setup_external_services(app):
 
     # Enable LDAP if available
     try:  # pragma: no cover
-        if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS__OBJECT'] and app.config['LDAP_USERNAME_PATH']):
+        if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS_OBJECT'] and app.config['LDAP_USERNAME_PATH']):
             ldap.init_app(app)
-            from pybossa.view.ldap import blueprint as ldap_bp
-            app.register_blueprint(ldap_bp, url_prefix='/ldap')
     except Exception as inst: # pragma: no cover
         print type(inst)
         print inst.args
