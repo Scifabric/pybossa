@@ -117,22 +117,36 @@ def signin():
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
-        user = user_repo.get_by(email_addr=email)
-        if user and user.check_password(password):
-            msg_1 = gettext("Welcome back") + " " + user.fullname
-            flash(msg_1, 'success')
-            return _sign_in_user(user)
-        elif user:
-            msg, method = get_user_signup_method(user)
-            if method == 'local':
-                msg = gettext("Ooops, Incorrect email/password")
-                flash(msg, 'error')
+        if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS__OBJECT'] and app.config['LDAP_USERNAME_PATH']):
+            ldap_response_object = ldap.base_connection.search(app.config['LDAP_SEARCH_OBJECT'].replace("##ACCOUNT_NAME##",email), base_dn=app.config['LDAP_BASE_SEARCH_DN'])[0]
+            user = user_repo.get_by(name=ldap_response_object[app.config['LDAP_NAME_OBJECT']][0])
+            if user and ldap.base_connection.authenticate(r[app.config['LDAP_USERNAME_PATH']][0], password):
+                msg_1 = gettext("Welcome back") + " " + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
             else:
-                flash(msg, 'info')
+                ldap_signup(ldap_response_object)
+                user = user_repo.get_by(name=ldap_response_object[app.config['LDAP_NAME_OBJECT']][0])
+                msg_1 = gettext("Welcome to PYBOSSA") + " " + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
         else:
-            msg = gettext("Ooops, we didn't find you in the system, \
-                          did you sign up?")
-            flash(msg, 'info')
+            user = user_repo.get_by(email_addr=email)
+            if user and user.check_password(password):
+                msg_1 = gettext("Welcome back") + " " + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
+            elif user:
+                msg, method = get_user_signup_method(user)
+                if method == 'local':
+                    msg = gettext("Ooops, Incorrect email/password")
+                    flash(msg, 'error')
+                else:
+                    flash(msg, 'info')
+            else:
+                msg = gettext("Ooops, we didn't find you in the system, \
+                              did you sign up?")
+                flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
@@ -181,6 +195,13 @@ def get_email_confirmation_url(account):
     confirm_url = url_for('.confirm_account', key=key, _external=True)
     return confirm_url
 
+def ldap_signup(userobject):
+    """
+    Registers an LDAP user to the pybossa database
+    """
+    account = User(fullname=userobject[app.config['LDAP_FULLNAME_OBJECT']][0], name=userobject[app.config['LDAP_NAME_OBJECT']][0], email_addr=userobject[app.config['LDAP_EMAIL_ADDRESS_OBJECT']][0])
+    user_repo.save(account)
+    return account
 
 @blueprint.route('/confirm-email')
 @login_required
