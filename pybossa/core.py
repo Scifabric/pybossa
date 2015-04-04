@@ -314,6 +314,17 @@ def setup_external_services(app):
         log_message = 'Dropbox importer not available: %s' % str(inst)
         app.logger.error(log_message)
 
+    # Enable LDAP if available
+    try:  # pragma: no cover
+        if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS_OBJECT'] and app.config['LDAP_USERNAME_PATH']):
+            ldap.init_app(app)
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "LDAP signin disabled"
+        log_message = 'LDAP signin disabled: %s' % str(inst)
+        app.logger.error(log_message)
 
 def setup_geocoding(app):
     # Check if app stats page can generate the map

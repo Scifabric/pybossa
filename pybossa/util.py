@@ -27,6 +27,7 @@ from flask_oauthlib.client import OAuth
 from flask.ext.login import current_user
 from math import ceil
 import json
+import simpleldap
 
 
 def jsonpify(f):
@@ -241,6 +242,15 @@ class Google(object):
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
 
+class Ldap(object):
+
+    def __init__(self, app=None):
+        self.app=app
+        if app is not None: #pragma: no cover
+            self.init_app()
+
+    def init_app(self, app):
+        self.base_connection = simpleldap.Connection(app.config['LDAP_SERVER'], dn=app.config['LDAP_CONNECTION_ACCOUNT'], password=app.config['LDAP_CONNECTION_PASSWORD'])
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # This code is taken from http://docs.python.org/library/csv.html#examples

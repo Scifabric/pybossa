@@ -20,7 +20,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'newsletter', 'importer',
-           'flickr']
+           'flickr','ldap']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -63,6 +63,9 @@ twitter = Twitter()
 
 from pybossa.util import Google
 google = Google()
+
+from pybossa.util import Ldap
+ldap = Ldap()
 
 # Markdown support
 from flask.ext.misaka import Misaka
