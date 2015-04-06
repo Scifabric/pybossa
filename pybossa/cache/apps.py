@@ -373,6 +373,11 @@ def delete_app(short_name):
     delete_memoized(get_app, short_name)
 
 
+def delete_browse_tasks(project_id):
+    """Reset browse_tasks value in cache"""
+    delete_memoized(browse_tasks, project_id)
+
+
 def delete_n_tasks(app_id):
     """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, app_id)
@@ -416,11 +421,17 @@ def delete_n_volunteers(app_id):
 def clean(app_id):
     """Clean all items in cache"""
     reset()
-    delete_n_tasks(app_id)
-    delete_n_completed_tasks(app_id)
-    delete_n_task_runs(app_id)
-    delete_overall_progress(app_id)
-    delete_last_activity(app_id)
-    delete_n_registered_volunteers(app_id)
-    delete_n_anonymous_volunteers(app_id)
-    delete_n_volunteers(app_id)
+    clean_project(app_id)
+
+
+def clean_project(project_id):
+    """Clean cache for a specific project"""
+    delete_browse_tasks(project_id)
+    delete_n_tasks(project_id)
+    delete_n_completed_tasks(project_id)
+    delete_n_registered_volunteers(project_id)
+    delete_n_anonymous_volunteers(project_id)
+    delete_n_volunteers(project_id)
+    delete_last_activity(project_id)
+    delete_n_task_runs(project_id)
+    delete_overall_progress(project_id)
