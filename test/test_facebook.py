@@ -158,8 +158,8 @@ class TestFacebook(Test):
                                             newsletter):
         """Test manage login user works."""
         newsletter.app = True
-        user = UserFactory.create(email_addr="None")
-        user_data = dict(name=user.name, email=user.email_addr)
+        user = UserFactory.create(name='johndoe', email_addr='johndoe')
+        user_data = dict(name=user.name)
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
