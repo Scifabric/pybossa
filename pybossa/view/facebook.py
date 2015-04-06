@@ -83,14 +83,14 @@ def manage_user(access_token, user_data):
 
         if not user_exists and not email_exists:
             if not user_data.get('email'):
-                user_data['email'] = "None"
+                user_data['email'] = name
             user = User(fullname=user_data['name'],
                    name=name,
                    email_addr=user_data['email'],
                    facebook_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
-            if newsletter.is_initialized() and user.email_addr != "None":
+            if newsletter.is_initialized() and user.email_addr != name:
                 newsletter.subscribe_user(user)
             return user
         else:
@@ -116,7 +116,7 @@ def manage_user_login(user, user_data, next_url):
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        request_email = (user.email_addr == "None")
+        request_email = (user.email_addr == user.name)
         if request_email:
             flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))
