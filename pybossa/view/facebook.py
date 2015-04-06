@@ -103,7 +103,7 @@ def manage_user_login(user, user_data, next_url):
     """Manage user login."""
     if user is None:
         # Give a hint for the user
-        user = user_repo.get_by(email_addr=user_data['email'])
+        user = user_repo.get_by(email_addr=user_data.get('email'))
         if user is not None:
             msg, method = get_user_signup_method(user)
             flash(msg, 'info')
