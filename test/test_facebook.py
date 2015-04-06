@@ -152,6 +152,22 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
+    def test_manage_login_user_empty_no_email(self, redirect,
+                                              url_for, flash,
+                                              login_user,
+                                              newsletter):
+        """Test manage login user new user with no email from facebook"""
+        newsletter.app = True
+        user_data = dict(name='algo')
+        next_url = '/'
+        manage_user_login(None, user_data, next_url)
+        url_for.assert_called_once_with('account.signin')
+
+    @patch('pybossa.view.facebook.newsletter', autospec=True)
+    @patch('pybossa.view.facebook.login_user', return_value=True)
+    @patch('pybossa.view.facebook.flash', return_value=True)
+    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_update_email(self, redirect,
                                             url_for, flash,
                                             login_user,
