@@ -379,8 +379,7 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         if current_user and current_user.is_authenticated():
-            if (current_user.email_addr == current_user.name or
-                    current_user.email_addr == "None"):
+            if current_user.email_addr == current_user.name:
                 flash(lazy_gettext("Please update your e-mail address in your profile page,"
                       " right now it is empty!"), 'error')
 
