@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 from flask import Blueprint, request, url_for, flash, redirect, current_app
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
@@ -69,6 +70,7 @@ def oauth_authorized(resp):  # pragma: no cover
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
+        current_app.logger.error(resp)
         return redirect(next_url)
 
     access_token = dict(oauth_token=resp['oauth_token'],
