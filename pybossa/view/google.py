@@ -26,7 +26,7 @@ from pybossa.util import get_user_signup_method, username_from_full_name
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
 import requests
-
+from flask_oauthlib.client import OAuthException
 # This blueprint will be activated in core.py if the GOOGLE APP ID and SECRET
 # are available
 blueprint = Blueprint('google', __name__)
@@ -63,7 +63,9 @@ def oauth_authorized(resp):  # pragma: no cover
         if request.args.get('error'):
             return redirect(url_for('account.signin'))
         return redirect(next_url)
-
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
+        return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
     try:

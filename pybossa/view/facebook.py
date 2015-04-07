@@ -27,7 +27,7 @@ from pybossa.util import get_user_signup_method, username_from_full_name
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
 #from pybossa.core import app
-
+from flask_oauthlib.client import OAuthException
 # This blueprint will be activated in core.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)
@@ -57,7 +57,9 @@ def oauth_authorized(resp):  # pragma: no cover
         flash(u'Reason: ' + request.args['error_reason'] +
               ' ' + request.args['error_description'], 'error')
         return redirect(next_url)
-
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
+        return redirect(next_url)
     # We have to store the oauth_token in the session to get the USER fields
     access_token = resp['access_token']
     session['oauth_token'] = (resp['access_token'], '')
