@@ -18,16 +18,14 @@
 
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
+from flask_oauthlib.client import OAuthException
 
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
-#from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method, username_from_full_name
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
-#from pybossa.core import app
-from flask_oauthlib.client import OAuthException
 # This blueprint will be activated in core.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)

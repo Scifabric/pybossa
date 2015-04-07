@@ -18,6 +18,7 @@
 
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
+from flask_oauthlib.client import OAuthException
 
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
@@ -26,7 +27,6 @@ from pybossa.util import get_user_signup_method, username_from_full_name
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
 import requests
-from flask_oauthlib.client import OAuthException
 # This blueprint will be activated in core.py if the GOOGLE APP ID and SECRET
 # are available
 blueprint = Blueprint('google', __name__)
