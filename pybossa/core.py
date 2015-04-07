@@ -20,7 +20,6 @@ import os
 import logging
 from flask import Flask, url_for, session, request, render_template, flash, _app_ctx_stack
 from flask.ext.login import current_user
-from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
 
 from pybossa import default_settings as settings
@@ -34,8 +33,6 @@ from rq import Queue
 
 def create_app(run_as_server=True):
     app = Flask(__name__)
-    if 'DATABASE_URL' in os.environ:  # pragma: no cover
-        Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)

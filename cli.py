@@ -18,20 +18,7 @@ from sqlalchemy.sql import text
 app = create_app(run_as_server=False)
 
 def setup_alembic_config():
-    if "DATABASE_URL" not in os.environ:
-        alembic_cfg = Config("alembic.ini")
-    else:
-        dynamic_filename = "alembic-heroku.ini"
-        with file("alembic.ini.template") as f:
-            with file(dynamic_filename, "w") as conf:
-                for line in f.readlines():
-                    if line.startswith("sqlalchemy.url"):
-                        conf.write("sqlalchemy.url = %s\n" %
-                                   os.environ['DATABASE_URL'])
-                    else:
-                        conf.write(line)
-        alembic_cfg = Config(dynamic_filename)
-
+    alembic_cfg = Config("alembic.ini")
     command.stamp(alembic_cfg, "head")
 
 def db_create():
