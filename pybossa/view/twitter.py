@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from flask import Blueprint, request, url_for, flash, redirect
+from flask import Blueprint, request, url_for, flash, redirect, current_app
 from flask.ext.login import login_user, current_user
+from flask_oauthlib.client import OAuthException
 
 from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
@@ -65,6 +66,9 @@ def oauth_authorized(resp):  # pragma: no cover
     next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
+        return redirect(next_url)
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
         return redirect(next_url)
 
     access_token = dict(oauth_token=resp['oauth_token'],
