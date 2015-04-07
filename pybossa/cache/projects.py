@@ -233,11 +233,11 @@ def get_featured(category=None, page=1, per_page=5):
 def n_published():
     """Return number of published projects."""
     sql = text('''
-               WITH published_apps as
+               WITH published_projects as
                (SELECT project.id FROM project, task WHERE
                project.id=task.project_id AND project.hidden=0 AND project.info
                LIKE('%task_presenter%') GROUP BY project.id)
-               SELECT COUNT(id) FROM published_apps;
+               SELECT COUNT(id) FROM published_projects;
                ''')
 
     results = session.execute(sql)
@@ -377,7 +377,7 @@ def get_from_pro_user():
 
 
 def reset():
-    """Clean the cache."""
+    """Clean the cache"""
     delete_cached("index_front_page")
     delete_cached('front_page_featured_projects')
     delete_cached('front_page_top_projects')
@@ -391,58 +391,69 @@ def reset():
 
 
 def delete_project(short_name):
-    """Reset project values in cache."""
+    """Reset project values in cache"""
     delete_memoized(get_project, short_name)
 
 
+def delete_browse_tasks(project_id):
+    """Reset browse_tasks value in cache"""
+    delete_memoized(browse_tasks, project_id)
+
+
 def delete_n_tasks(project_id):
-    """Reset n_tasks value in cache."""
+    """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, project_id)
 
 
 def delete_n_completed_tasks(project_id):
-    """Reset n_completed_tasks value in cache."""
+    """Reset n_completed_tasks value in cache"""
     delete_memoized(n_completed_tasks, project_id)
 
 
 def delete_n_task_runs(project_id):
-    """Reset n_tasks value in cache."""
+    """Reset n_tasks value in cache"""
     delete_memoized(n_task_runs, project_id)
 
 
 def delete_overall_progress(project_id):
-    """Reset overall_progress value in cache."""
+    """Reset overall_progress value in cache"""
     delete_memoized(overall_progress, project_id)
 
 
 def delete_last_activity(project_id):
-    """Reset last_activity value in cache."""
+    """Reset last_activity value in cache"""
     delete_memoized(last_activity, project_id)
 
 
 def delete_n_registered_volunteers(project_id):
-    """Reset n_registered_volunteers value in cache."""
+    """Reset n_registered_volunteers value in cache"""
     delete_memoized(n_registered_volunteers, project_id)
 
 
 def delete_n_anonymous_volunteers(project_id):
-    """Reset n_anonymous_volunteers value in cache."""
+    """Reset n_anonymous_volunteers value in cache"""
     delete_memoized(n_anonymous_volunteers, project_id)
 
 
 def delete_n_volunteers(project_id):
-    """Reset n_volunteers value in cache."""
+    """Reset n_volunteers value in cache"""
     delete_memoized(n_volunteers, project_id)
 
 
 def clean(project_id):
-    """Clean all items in cache."""
+    """Clean all items in cache"""
     reset()
+    clean_project(project_id)
+
+
+def clean_project(project_id):
+    """Clean cache for a specific project"""
+    delete_browse_tasks(project_id)
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
-    delete_n_task_runs(project_id)
-    delete_overall_progress(project_id)
-    delete_last_activity(project_id)
     delete_n_registered_volunteers(project_id)
     delete_n_anonymous_volunteers(project_id)
     delete_n_volunteers(project_id)
+    delete_last_activity(project_id)
+    delete_n_task_runs(project_id)
+    delete_overall_progress(project_id)

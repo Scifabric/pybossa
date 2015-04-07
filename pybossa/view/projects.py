@@ -141,14 +141,14 @@ def project_index(page, lookup, category, fallback, use_count):
     categories = cached_cat.get_all()
     # Check for pre-defined categories featured and draft
     featured_cat = model.category.Category(name='Featured',
-                                  short_name='featured',
-                                  description='Featured projects')
+                                           short_name='featured',
+                                           description='Featured projects')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
         active_cat = model.category.Category(name='Draft',
-                                    short_name='draft',
-                                    description='Draft projects')
+                                             short_name='draft',
+                                             description='Draft projects')
     else:
         active_cat = project_repo.get_category_by(short_name=category)
 
@@ -346,6 +346,7 @@ def delete(short_name):
     cached_projects.delete_project(project.short_name)
     cached_projects.clean(project.id)
     project_repo.delete(project)
+    _delete_zip_files_from_store(project)
     auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -368,16 +369,16 @@ def update(short_name):
         old_info = dict(new_project.info)
         old_project.info = old_info
         if form.id.data == new_project.id:
-            new_project.name=form.name.data
-            new_project.short_name=form.short_name.data
-            new_project.description=form.description.data
-            new_project.long_description=form.long_description.data
-            new_project.hidden=int(form.hidden.data)
-            new_project.webhook=form.webhook.data
-            new_project.info=project.info
-            new_project.owner_id=project.owner_id
-            new_project.allow_anonymous_contributors=form.allow_anonymous_contributors.data
-            new_project.category_id=form.category_id.data
+            new_project.name = form.name.data
+            new_project.short_name = form.short_name.data
+            new_project.description = form.description.data
+            new_project.long_description = form.long_description.data
+            new_project.hidden = int(form.hidden.data)
+            new_project.webhook = form.webhook.data
+            new_project.info = project.info
+            new_project.owner_id = project.owner_id
+            new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
+            new_project.category_id = form.category_id.data
 
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
@@ -680,7 +681,7 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (project, owner,n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
@@ -894,11 +895,21 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        cached_projects.delete_last_activity(project.id)
-        cached_projects.delete_n_tasks(project.id)
-        cached_projects.delete_n_task_runs(project.id)
-        cached_projects.delete_overall_progress(project.id)
+        _delete_zip_files_from_store(project)
+        cached_projects.clean_project(project.id)
         return redirect(url_for('.tasks', short_name=project.short_name))
+
+
+def _delete_zip_files_from_store(project):
+    json_tasks_filename = json_exporter.download_name(project, 'task')
+    csv_tasks_filename = csv_exporter.download_name(project, 'task')
+    json_taskruns_filename = json_exporter.download_name(project, 'task_run')
+    csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
+    container = "user_%s" % current_user.id
+    uploader.delete_file(json_tasks_filename, container)
+    uploader.delete_file(csv_tasks_filename, container)
+    uploader.delete_file(json_taskruns_filename, container)
+    uploader.delete_file(csv_taskruns_filename, container)
 
 
 @blueprint.route('/<short_name>/tasks/export')
@@ -928,7 +939,6 @@ def export_to(short_name):
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks,
                                overall_progress=overall_progress)
-
 
     def gen_json(table):
         n = getattr(task_repo, 'count_%ss_with' % table)(project_id=project.id)
@@ -1048,7 +1058,7 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
-            else: # pragma: no cover
+            else:  # pragma: no cover
                 msg = ("Error: %s" % inst.args[0])
             current_app.logger.error(msg)
             flash(msg, 'danger')
@@ -1268,7 +1278,7 @@ def task_scheduler(short_name):
         flash(msg, 'success')
 
         return redirect(url_for('.tasks', short_name=project.short_name))
-    else: # pragma: no cover
+    else:  # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
@@ -1308,7 +1318,7 @@ def task_priority(short_name):
                                                 'task_priority_0': t.priority_0})
                         auditlogger.log_event(project, current_user, 'update',
                                               'task.priority_0',
-                                               old_value, new_value)
+                                              old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the project" % task_id)), 'danger')
         cached_projects.delete_project(project.short_name)
@@ -1352,14 +1362,14 @@ def show_blogpost(short_name, id):
         return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog_post.html',
-                            project=project,
-                            owner=owner,
-                            blogpost=blogpost,
-                            overall_progress=overall_progress,
-                            n_tasks=n_tasks,
-                            n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                            n_volunteers=cached_projects.n_volunteers(project.get('id')))
+                           project=project,
+                           owner=owner,
+                           blogpost=blogpost,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1378,7 +1388,6 @@ def new_blogpost(short_name):
                                n_task_runs=n_task_runs,
                                n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
                                n_volunteers=cached_projects.n_volunteers(dict_project.get('id')))
-
 
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
@@ -1474,7 +1483,7 @@ def _check_if_redirect_to_password(project):
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(project, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
-                                 short_name=project.short_name, next=request.path))
+                                short_name=project.short_name, next=request.path))
 
 
 @blueprint.route('/<short_name>/auditlog')

@@ -24,6 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from pybossa.model.task import Task
 from api_base import APIBase
+from pybossa.cache import projects as cached_projects
 
 
 class TaskAPI(APIBase):
@@ -31,3 +32,6 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
+
+    def _refresh_cache(self, task):
+        cached_projects.clean_project(task.project_id)

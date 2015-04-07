@@ -352,10 +352,7 @@ class Importer(object):
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
-        cached_projects.delete_n_tasks(project_id)
-        cached_projects.delete_n_task_runs(project_id)
-        cached_projects.delete_overall_progress(project_id)
-        cached_projects.delete_last_activity(project_id)
+        cached_projects.clean_project(project_id)
         return msg
 
     def count_tasks_to_import(self, **form_data):

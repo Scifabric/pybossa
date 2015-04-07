@@ -15,9 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 """Facebook view for PyBossa."""
-from flask import Blueprint, request, url_for, flash, redirect, session
+from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from flask.ext.login import login_user, current_user
+from flask_oauthlib.client import OAuthException
+
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
@@ -56,7 +59,10 @@ def oauth_authorized(resp):  # pragma: no cover
         flash(u'Reason: ' + request.args['error_reason'] +
               ' ' + request.args['error_description'], 'error')
         return redirect(next_url)
-
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
+        current_app.logger.error(resp)
+        return redirect(next_url)
     # We have to store the oauth_token in the session to get the USER fields
     access_token = resp['access_token']
     session['oauth_token'] = (resp['access_token'], '')
@@ -82,14 +88,14 @@ def manage_user(access_token, user_data):
 
         if not user_exists and not email_exists:
             if not user_data.get('email'):
-                user_data['email'] = "None"
+                user_data['email'] = name
             user = User(fullname=user_data['name'],
                         name=name,
                         email_addr=user_data['email'],
                         facebook_user_id=user_data['id'],
                         info=info)
             user_repo.save(user)
-            if newsletter.is_initialized() and user.email_addr != "None":
+            if newsletter.is_initialized() and user.email_addr != name:
                 newsletter.subscribe_user(user)
             return user
         else:
@@ -102,7 +108,7 @@ def manage_user_login(user, user_data, next_url):
     """Manage user login."""
     if user is None:
         # Give a hint for the user
-        user = user_repo.get_by(email_addr=user_data['email'])
+        user = user_repo.get_by(email_addr=user_data.get('email'))
         if user is not None:
             msg, method = get_user_signup_method(user)
             flash(msg, 'info')
@@ -115,7 +121,7 @@ def manage_user_login(user, user_data, next_url):
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        request_email = (user.email_addr == "None")
+        request_email = (user.email_addr == user.name)
         if request_email:
             flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))

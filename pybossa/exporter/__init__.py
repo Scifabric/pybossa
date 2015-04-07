@@ -78,18 +78,13 @@ class Exporter(object):
     def zip_existing(self, project, ty):
         """Check if exported ZIP is existing"""
         # TODO: Check ty
-        filename=self.download_name(project, ty)
-        if isinstance(uploader, local.LocalUploader):
-            filepath = self._download_path(project)
-            return os.path.isfile(safe_join(filepath, filename))
-        else:
-            return True
-            # TODO: Check rackspace file existence
+        filename = self.download_name(project, ty)
+        return uploader.file_exists(filename, self._container(project))
 
     def get_zip(self, project, ty):
         """Get a ZIP file directly from uploaded directory
         or generate one on the fly and upload it if not existing."""
-        filename=self.download_name(project, ty)
+        filename = self.download_name(project, ty)
         if not self.zip_existing(project, ty):
             print "Warning: Generating %s on the fly now!" % filename
             self._make_zip(project, ty)

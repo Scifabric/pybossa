@@ -115,6 +115,10 @@ class Uploader(object):
         # url_for will use this result, instead of raising BuildError.
         return url
 
-    def delete_file(self, name, container): # pragma: no cover
+    def delete_file(self, name, container):  # pragma: no cover
+        """Override by the uploader handler."""
+        pass
+
+    def file_exists(self, name, container):  #pragma: no cover
         """Override by the uploader handler."""
         pass

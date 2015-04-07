@@ -15,9 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 """Google view for PyBossa."""
-from flask import Blueprint, request, url_for, flash, redirect, session
+from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from flask.ext.login import login_user, current_user
+from flask_oauthlib.client import OAuthException
+
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
@@ -60,9 +63,13 @@ def oauth_authorized(resp):  # pragma: no cover
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
+            current_app.logger.error(resp)
             return redirect(url_for('account.signin'))
         return redirect(next_url)
-
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
+        current_app.logger.error(resp)
+        return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
     try:

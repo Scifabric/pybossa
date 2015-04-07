@@ -311,8 +311,8 @@ def warm_cache():  # pragma: no cover
             cached_projects.n_completed_tasks(_id)
             cached_projects.n_volunteers(_id)
             if n_task_runs >= 1000 or featured:
-                print ("Getting stats for %s as it has %s task runs" %
-                       (short_name, n_task_runs))
+                # print ("Getting stats for %s as it has %s task runs" %
+                #        (short_name, n_task_runs))
                 stats.get_stats(_id, app.config.get('GEO'))
             projects_cached.append(_id)
 
@@ -338,7 +338,7 @@ def warm_cache():  # pragma: no cover
     # Users
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
     for user in users:
-        print "Getting stats for %s" % user['name']
+        # print "Getting stats for %s" % user['name']
         cached_users.get_user_summary(user['name'])
         cached_users.projects_contributed_cached(user['id'])
         cached_users.published_projects_cached(user['id'])
