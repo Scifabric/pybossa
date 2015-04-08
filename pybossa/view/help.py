@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Help view for PyBossa."""
 from flask import Blueprint
 from flask import render_template
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from random import choice
 
@@ -29,13 +29,13 @@ blueprint = Blueprint('help', __name__)
 def api():
     """Render help/api page."""
     categories = cached_cat.get_used()
-    apps = cached_apps.get(categories[0]['short_name'])
+    apps = cached_projects.get(categories[0]['short_name'])
     if len(apps) > 0:
-        app_id = choice(apps)['id']
+        project_id = choice(apps)['id']
     else:  # pragma: no cover
-        app_id = None
+        project_id = None
     return render_template('help/api.html', title="Help: API",
-                           app_id=app_id)
+                           project_id=project_id)
 
 
 @blueprint.route('/license')

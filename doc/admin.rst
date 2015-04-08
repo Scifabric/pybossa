@@ -35,7 +35,7 @@ Administrators can manage three different areas of the server:
     monitor all the background jobs and even cancel them or retry failed ones.
 
 .. _`RQ dashboard`: https://github.com/nvie/rq-dashboard
-.. _featured-apps:
+.. _featured-projects:
 
 Featured Projects
 =================

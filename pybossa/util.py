@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Module with PyBossa utils."""
 from datetime import timedelta
 from functools import update_wrapper
 import csv
@@ -30,7 +30,7 @@ import json
 
 
 def jsonpify(f):
-    """Wraps JSONified output for JSONP"""
+    """Wrap JSONified output for JSONP."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         callback = request.args.get('callback', False)
@@ -44,7 +44,7 @@ def jsonpify(f):
 
 
 def admin_required(f):  # pragma: no cover
-    """Checks if the user is and admin or not"""
+    """Check if the user is and admin or not."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.admin:
@@ -58,6 +58,7 @@ def admin_required(f):  # pragma: no cover
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True):
+    """Crossdomain decorator."""
     if methods is not None:  # pragma: no cover
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, basestring):
@@ -100,10 +101,11 @@ def crossdomain(origin=None, methods=None, headers=None,
 
 # Fromhttp://stackoverflow.com/q/1551382
 def pretty_date(time=False):
-    """
+    """Return a pretty date.
+
     Get a datetime object or a int() Epoch timestamp and return a
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
-    'just now', etc
+    'just now', etc.
     """
     from datetime import datetime
     import dateutil.parser
@@ -154,25 +156,32 @@ def pretty_date(time=False):
 
 class Pagination(object):
 
+    """Class to paginate domain objects."""
+
     def __init__(self, page, per_page, total_count):
+        """Init method."""
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
 
     @property
     def pages(self):
+        """Return number of pages."""
         return int(ceil(self.total_count / float(self.per_page)))
 
     @property
     def has_prev(self):
+        """Return if it has a previous page."""
         return self.page > 1
 
     @property
     def has_next(self):
+        """Return if it has a next page."""
         return self.page < self.pages
 
     def iter_pages(self, left_edge=0, left_current=2, right_current=3,
                    right_edge=0):
+        """Iterate over pages."""
         last = 0
         for num in xrange(1, self.pages + 1):
             if (num <= left_edge or
@@ -187,12 +196,16 @@ class Pagination(object):
 
 class Twitter(object):
 
+    """Class Twitter to enable Twitter signin."""
+
     def __init__(self, app=None):
+        """Init method."""
         self.app = app
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
+        """Init app using factories."""
         self.oauth = OAuth().remote_app(
             'twitter',
             base_url='https://api.twitter.com/1/',
@@ -205,12 +218,16 @@ class Twitter(object):
 
 class Facebook(object):
 
+    """Class Facebook to enable Facebook signin."""
+
     def __init__(self, app=None):
+        """Init method."""
         self.app = app
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
+        """Init app using factories pattern."""
         self.oauth = OAuth().remote_app(
             'facebook',
             base_url='https://graph.facebook.com/',
@@ -224,12 +241,16 @@ class Facebook(object):
 
 class Google(object):
 
+    """Class Google to enable Google signin."""
+
     def __init__(self, app=None):
+        """Init method."""
         self.app = app
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
+        """Init app using factories pattern."""
         self.oauth = OAuth().remote_app(
             'google',
             base_url='https://www.googleapis.com/oauth2/v1/',
@@ -243,6 +264,7 @@ class Google(object):
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    """Unicode CSV reader."""
     # This code is taken from http://docs.python.org/library/csv.html#examples
     # csv.py doesn't do Unicode; encode temporarily as UTF-8:
     csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
@@ -253,18 +275,18 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
 
 
 def utf_8_encoder(unicode_csv_data):
+    """UTF8 encoder for CSV data."""
     # This code is taken from http://docs.python.org/library/csv.html#examples
     for line in unicode_csv_data:
         yield line.encode('utf-8')
 
 
 class UnicodeWriter:
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    """
+
+    """A CSV writer which will write rows to CSV file "f"."""
 
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        """Init method."""
         # Redirect output to a queue
         self.queue = cStringIO.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
@@ -272,6 +294,7 @@ class UnicodeWriter:
         self.encoder = codecs.getincrementalencoder(encoding)()
 
     def writerow(self, row):
+        """Write row."""
         line = []
         for s in row:
             if (type(s) == dict):
@@ -290,12 +313,13 @@ class UnicodeWriter:
         self.queue.truncate(0)
 
     def writerows(self, rows):  # pragma: no cover
+        """Write rows."""
         for row in rows:
             self.writerow(row)
 
 
 def get_user_signup_method(user):
-    """Return which OAuth sign up method the user used"""
+    """Return which OAuth sign up method the user used."""
     msg = u'Sorry, there is already an account with the same e-mail.'
     # Google
     if user.info.get('google_token'):
@@ -318,7 +342,9 @@ def get_user_signup_method(user):
         msg += " <br/>You can reset your password if you don't remember it."
         return (msg, 'local')
 
+
 def get_port():
+    """Get port."""
     import os
     port = os.environ.get('PORT', '')
     if port.isdigit():
@@ -328,17 +354,23 @@ def get_port():
 
 
 def get_user_id_or_ip():
-    """Returns the id of the current user if is authenticated. Otherwise
-    returns its IP address (defaults to 127.0.0.1)"""
+    """Return the id of the current user if is authenticated.
+
+    Otherwise returns its IP address (defaults to 127.0.0.1).
+    """
     user_id = current_user.id if current_user.is_authenticated() else None
-    user_ip = request.remote_addr or "127.0.0.1" if current_user.is_anonymous() else None
+    user_ip = request.remote_addr or "127.0.0.1" \
+        if current_user.is_anonymous() else None
     return dict(user_id=user_id, user_ip=user_ip)
 
 
 def with_cache_disabled(f):
-    """Decorator that disables the cache for the execution of a function,
-    enabling it back when the function call is done."""
+    """Decorator that disables the cache for the execution of a function.
+
+    It enables it back when the function call is done.
+    """
     import os
+
     @wraps(f)
     def wrapper(*args, **kwargs):
         env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
@@ -354,7 +386,7 @@ def with_cache_disabled(f):
 
 
 def is_reserved_name(blueprint, name):
-    """Checks if a name has already been registered inside a blueprint URL"""
+    """Check if a name has already been registered inside a blueprint URL."""
     path = ''.join(['/', blueprint])
     app_urls = [r.rule for r in current_app.url_map.iter_rules()
                 if r.rule.startswith(path)]

@@ -18,7 +18,7 @@
 import json
 from default import db, Test, with_context
 from collections import namedtuple
-from factories import AppFactory, AuditlogFactory, UserFactory, CategoryFactory
+from factories import ProjectFactory, AuditlogFactory, UserFactory, CategoryFactory
 from helper import web
 
 from pybossa.repositories import UserRepository
@@ -34,9 +34,9 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 class TestAuditlogAPI(Test):
 
     @with_context
-    def test_app_create(self):
+    def test_project_create(self):
         """Test Auditlog API project create works."""
-        # app = AppFactory.create()
+        # project = ProjectFactory.create()
         CategoryFactory.create()
         user = UserFactory.create()
 
@@ -46,15 +46,15 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
                 }
-        url = '/api/app?api_key=%s' % (user.api_key)
+        url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_short_name='new_short_name')
+        logs = auditlog_repo.filter_by(project_short_name='new_short_name')
 
         assert len(logs) == 1, logs
         for log in logs:
             assert log.user_id == user.id, log.user_id
             assert log.user_name == user.name, log.user_name
-            assert log.app_short_name == 'new_short_name', log.app_short_name
+            assert log.project_short_name == 'new_short_name', log.project_short_name
             assert log.caller == 'api', log.caller
             assert log.action == 'create', log.action
             assert log.attribute == 'project', log.attribute
@@ -62,21 +62,21 @@ class TestAuditlogAPI(Test):
             assert log.new_value == 'New project', log.new_value
 
     @with_context
-    def test_app_delete(self):
+    def test_project_delete(self):
         """Test Auditlog API project create works."""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
-        app_short_name = app.short_name
+        project = ProjectFactory.create(owner=user)
+        project_short_name = project.short_name
 
-        url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
         self.app.delete(url)
-        logs = auditlog_repo.filter_by(app_short_name=app_short_name)
+        logs = auditlog_repo.filter_by(project_short_name=project_short_name)
 
         assert len(logs) == 1, logs
         for log in logs:
             assert log.user_id == user.id, log.user_id
             assert log.user_name == user.name, log.user_name
-            assert log.app_short_name == app_short_name, log.app_short_name
+            assert log.project_short_name == project_short_name, log.project_short_name
             assert log.caller == 'api', log.caller
             assert log.action == 'delete', log.action
             assert log.attribute == 'project', log.attribute
@@ -85,9 +85,9 @@ class TestAuditlogAPI(Test):
 
 
     @with_context
-    def test_app_update_attributes(self):
+    def test_project_update_attributes(self):
         """Test Auditlog API project update attributes works."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
 
         data = {'name': 'New Name',
                 'short_name': 'new_short_name',
@@ -96,15 +96,15 @@ class TestAuditlogAPI(Test):
                 'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 5, logs
         for log in logs:
-            assert log.user_id == app.owner_id, log.user_id
-            assert log.user_name == app.owner.name, log.user_name
-            assert log.app_short_name == app.short_name, log.app_short_name
+            assert log.user_id == project.owner_id, log.user_id
+            assert log.user_name == project.owner.name, log.user_name
+            assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
@@ -112,9 +112,9 @@ class TestAuditlogAPI(Test):
             assert data[log.attribute] == log.new_value, msg
 
     @with_context
-    def test_app_update_attributes_admin(self):
+    def test_project_update_attributes_admin(self):
         """Test Auditlog API project update attributes works for admins."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
         admin = UserFactory.create(admin=True)
 
         data = {'name': 'New Name',
@@ -124,15 +124,15 @@ class TestAuditlogAPI(Test):
                 'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, admin.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 5, logs
         for log in logs:
             assert log.user_id == admin.id, log.user_id
             assert log.user_name == admin.name, log.user_name
-            assert log.app_short_name == app.short_name, log.app_short_name
+            assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
@@ -140,9 +140,9 @@ class TestAuditlogAPI(Test):
             assert data[log.attribute] == log.new_value, msg
 
     @with_context
-    def test_app_update_attributes_non_owner(self):
+    def test_project_update_attributes_non_owner(self):
         """Test Auditlog API project update attributes works for non owners."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
         user = UserFactory.create()
 
         data = {'name': 'New Name',
@@ -151,73 +151,73 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
                 }
-        url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 0, logs
 
-    def test_app_update_task_presenter(self):
+    def test_project_update_task_presenter(self):
         """Test Auditlog API project update info task_presenter works."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
 
-        owner_id = app.owner.id
-        owner_name = app.owner.name
+        owner_id = project.owner.id
+        owner_name = project.owner.name
         data = {'info': {'task_presenter': 'new'}}
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 1, logs
         for log in logs:
             assert log.user_id == owner_id, log.user_id
             assert log.user_name == owner_name, log.user_name
-            assert log.app_short_name == app.short_name, log.app_short_name
+            assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
             assert log.attribute == 'task_presenter', log.attribute
             msg = "%s != %s" % (data['info']['task_presenter'], log.new_value)
             assert data['info']['task_presenter'] == log.new_value, msg
 
-    def test_app_update_scheduler(self):
+    def test_project_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
 
-        owner_id = app.owner.id
-        owner_name = app.owner.name
+        owner_id = project.owner.id
+        owner_name = project.owner.name
         data = {'info': {'sched': 'random'}}
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 1, logs
         for log in logs:
             assert log.user_id == owner_id, log.user_id
             assert log.user_name == owner_name, log.user_name
-            assert log.app_short_name == app.short_name, log.app_short_name
+            assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
             assert log.attribute == 'sched', log.attribute
             msg = "%s != %s" % (data['info']['sched'], log.new_value)
             assert data['info']['sched'] == log.new_value, msg
 
-    def test_app_update_two_info_objects(self):
+    def test_project_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
-        app = AppFactory.create()
+        project = ProjectFactory.create()
 
-        owner_id = app.owner.id
-        owner_name = app.owner.name
+        owner_id = project.owner.id
+        owner_name = project.owner.name
         data = {'info': {'sched': 'random', 'task_presenter': 'new'}}
         attributes = data['info'].keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
-        logs = auditlog_repo.filter_by(app_id=app.id)
+        logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 2, logs
         for log in logs:
             assert log.user_id == owner_id, log.user_id
             assert log.user_name == owner_name, log.user_name
-            assert log.app_short_name == app.short_name, log.app_short_name
+            assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
@@ -244,12 +244,12 @@ class TestAuditlogWEB(web.Helper):
         self.editor = {'editor': 'Some HTML code!'}
 
     @with_context
-    def test_app_create(self):
+    def test_project_create(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        logs = auditlog_repo.filter_by(project_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'project', log.attribute
@@ -261,13 +261,13 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_create(self):
+    def test_project_create(self):
         self.register()
-        self.new_application()
-        self.delete_application()
+        self.new_project()
+        self.delete_project()
         short_name = 'sampleapp'
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'project', log.attribute
@@ -280,18 +280,18 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_update_name(self):
+    def test_project_update_name(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         self.data['name'] = 'New'
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'name', log.attribute
@@ -303,18 +303,18 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_update_short_name(self):
+    def test_project_update_short_name(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'newshort_name'
 
-        url = "/app/sampleapp/update"
+        url = "/project/sampleapp/update"
 
         self.data['short_name'] = 'newshort_name'
 
         res = self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        logs = auditlog_repo.filter_by(project_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'short_name', log.attribute
@@ -326,12 +326,12 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_description(self):
+    def test_project_description(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'description'
 
@@ -343,7 +343,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -356,12 +356,12 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_allow_anonymous_contributors(self):
+    def test_project_allow_anonymous_contributors(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'allow_anonymous_contributors'
 
@@ -373,7 +373,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -385,12 +385,12 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_hidden(self):
+    def test_project_hidden(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'hidden'
 
@@ -402,7 +402,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -415,12 +415,12 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_long_description(self):
+    def test_project_long_description(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'long_description'
 
@@ -432,7 +432,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -445,12 +445,12 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_password(self):
+    def test_project_password(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'password'
 
@@ -462,7 +462,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'passwd_hash', log.attribute
@@ -475,16 +475,16 @@ class TestAuditlogWEB(web.Helper):
 
     @with_context
     @patch('pybossa.forms.validator.requests.get')
-    def test_app_webhook(self, mock):
+    def test_project_webhook(self, mock):
         html_request = FakeRequest(json.dumps(self.data), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'projectlication/json'})
         mock.return_value = html_request
 
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'webhook'
 
@@ -496,7 +496,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -508,12 +508,12 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_task_presenter(self):
+    def test_project_task_presenter(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/taskpresentereditor" % short_name
+        url = "/project/%s/tasks/taskpresentereditor" % short_name
 
         attribute = 'editor'
 
@@ -525,7 +525,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data=self.editor, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'task_presenter', log.attribute
@@ -537,12 +537,12 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_task_scheduler(self):
+    def test_project_task_scheduler(self):
         self.register()
-        self.new_application()
+        self.new_project()
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/scheduler" % short_name
+        url = "/project/%s/tasks/scheduler" % short_name
 
         attribute = 'sched'
 
@@ -552,7 +552,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data={'sched': new_string}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'sched', log.attribute
@@ -564,13 +564,13 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_task_priority(self):
+    def test_project_task_priority(self):
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/priority" % short_name
+        url = "/project/%s/tasks/priority" % short_name
 
         attribute = 'task.priority_0'
 
@@ -580,7 +580,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data={'task_ids': '1', 'priority_0': '0.5'}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -592,20 +592,20 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_app_task_priority_two_tasks(self):
+    def test_project_task_priority_two_tasks(self):
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/priority" % short_name
+        url = "/project/%s/tasks/priority" % short_name
 
         attribute = 'task.priority_0'
 
         self.app.post(url, data={'task_ids': '1,2', 'priority_0': '0.5'}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 2, logs
         id = 1
         for log in logs:
@@ -622,13 +622,13 @@ class TestAuditlogWEB(web.Helper):
             id = id +1
 
     @with_context
-    def test_app_task_redundancy(self):
+    def test_project_task_redundancy(self):
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/redundancy" % short_name
+        url = "/project/%s/tasks/redundancy" % short_name
 
         attribute = 'task.n_answers'
 
@@ -638,7 +638,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -650,13 +650,13 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
 
-    def test_app_auditlog_autoimporter_create(self):
+    def test_project_auditlog_autoimporter_create(self):
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/autoimporter" % short_name
+        url = "/project/%s/tasks/autoimporter" % short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
 
         self.app.post(url, data=data, follow_redirects=True)
@@ -667,7 +667,7 @@ class TestAuditlogWEB(web.Helper):
 
         old_value = 'Nothing'
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -679,12 +679,12 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
 
-    def test_app_auditlog_autoimporter_delete(self):
+    def test_project_auditlog_autoimporter_delete(self):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
-        short_name = app.short_name
+        project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        short_name = project.short_name
 
         attribute = 'autoimporter'
 
@@ -692,10 +692,10 @@ class TestAuditlogWEB(web.Helper):
 
         new_value = 'Nothing'
 
-        url = "/app/%s/tasks/autoimporter/delete" % short_name
+        url = "/project/%s/tasks/autoimporter/delete" % short_name
         self.app.post(url, data={}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        logs = auditlog_repo.filter_by(project_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -708,45 +708,45 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_auditlog_access_anon(self):
+    def test_project_auditlog_access_anon(self):
         # Admin
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
         self.signout()
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert "Sign in" in res.data, res.data
 
 
     @with_context
-    def test_app_auditlog_access_owner(self):
+    def test_project_auditlog_access_owner(self):
         # Admin
         self.register()
         self.signout()
         # User
         self.register(name="Iser")
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
 
 
     @with_context
-    def test_app_auditlog_access_pro(self):
+    def test_project_auditlog_access_pro(self):
         # Admin
         self.register()
         self.signout()
         # User
         self.register(name="Iser")
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
 
@@ -754,27 +754,27 @@ class TestAuditlogWEB(web.Helper):
         user.pro = True
         user_repo.save(user)
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
 
     @with_context
-    def test_app_auditlog_access_admin(self):
+    def test_project_auditlog_access_admin(self):
         # Admin
         self.register()
         self.signout()
         # User
         self.register(name="admin", password="admin")
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         self.signout()
         # Access as admin
         self.signin()
         short_name = 'sampleapp'
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code

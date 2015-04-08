@@ -26,7 +26,7 @@ from pybossa.importers import (_BulkTaskDropboxImport, _BulkTaskFlickrImport,
     BulkImportException, Importer)
 
 from default import Test, FakeResponse
-from factories import AppFactory, TaskFactory
+from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
 from pybossa.core import db
 task_repo = TaskRepository(db)
@@ -43,13 +43,13 @@ class TestImporterPublicMethods(Test):
                                                      'url': 'url'},
                                             'n_answers': 20}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
+        project = ProjectFactory.create()
         form_data = dict(type='csv', csv_url='http://fakecsv.com')
-        self.importer.create_tasks(task_repo, app.id, **form_data)
+        self.importer.create_tasks(task_repo, project.id, **form_data)
         task = task_repo.get_task(1)
 
         assert task is not None
-        assert task.app_id == app.id, task.app_id
+        assert task.project_id == project.id, task.project_id
         assert task.n_answers == 20, task.n_answers
         assert task.info == {'question': 'question', 'url': 'url'}, task.info
         importer_factory.assert_called_with('csv')
@@ -60,10 +60,10 @@ class TestImporterPublicMethods(Test):
         mock_importer.tasks.return_value = [{'info': {'question': 'question1'}},
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
+        project = ProjectFactory.create()
         form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
-        result = self.importer.create_tasks(task_repo, app.id, **form_data)
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
         assert result == '2 new tasks were imported successfully', result
@@ -73,12 +73,12 @@ class TestImporterPublicMethods(Test):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
-        TaskFactory.create(app=app, info={'question': 'question'})
+        project = ProjectFactory.create()
+        TaskFactory.create(project=project, info={'question': 'question'})
         form_data = dict(type='flickr', album_id='1234')
 
-        result = self.importer.create_tasks(task_repo, app.id, **form_data)
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 1, len(tasks)
         assert result == 'It looks like there were no new records to import', result

@@ -155,23 +155,23 @@ class TestPrivacyWebPublic(web_helper.Helper):
     def test_05_app_stats_index(self):
         """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
-        url = "/app/%s/stats" % self.app_short_name
+        url = "/project/%s/stats" % self.project_short_name
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should be shown to anonymous users"
+        err_msg = "Project Stats page should be shown to anonymous users"
         assert dom.find(id='enforce_privacy') is None, err_msg
         # As Authenticated user but NOT ADMIN
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should be shown to authenticated users"
+        err_msg = "Project Stats page should be shown to authenticated users"
         assert dom.find(id='enforce_privacy') is None, err_msg
         self.signout
         # As Authenticated user but ADMIN
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should be shown to admin users"
+        err_msg = "Project Stats page should be shown to admin users"
         assert dom.find(id='enforce_privacy') is None, err_msg
         self.signout()
 
@@ -339,23 +339,23 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
     def test_05_app_stats_index(self):
         """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
-        url = "/app/%s/stats" % self.app_short_name
+        url = "/project/%s/stats" % self.project_short_name
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should not be shown to anonymous users"
+        err_msg = "Project Stats page should not be shown to anonymous users"
         assert dom.find(id='enforce_privacy') is not None, err_msg
         # As Authenticated user but NOT ADMIN
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should not be shown to authenticated users"
+        err_msg = "Project Stats page should not be shown to authenticated users"
         assert dom.find(id='enforce_privacy') is not None, err_msg
         self.signout
         # As Authenticated user but ADMIN
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "App Stats page should be shown to admin users"
+        err_msg = "Project Stats page should be shown to admin users"
         assert dom.find(id='enforce_privacy') is None, err_msg
         self.signout()
 

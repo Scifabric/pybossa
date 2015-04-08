@@ -18,8 +18,8 @@
 
 
 from forms import (
-    AppForm,
-    AppUpdateForm,
+    ProjectForm,
+    ProjectUpdateForm,
     TaskPresenterForm,
     TaskRedundancyForm,
     TaskPriorityForm,

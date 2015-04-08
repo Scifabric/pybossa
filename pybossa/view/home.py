@@ -15,47 +15,47 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
-from flask import current_app, request
+"""Home view for PyBossa."""
+from flask import current_app
 from flask.ext.login import current_user
 from pybossa.model.category import Category
-from pybossa.util import Pagination
 from flask import Blueprint
 from flask import render_template
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 
 
 blueprint = Blueprint('home', __name__)
 
+
 @blueprint.route('/')
 def home():
-    """ Render home page with the cached apps and users"""
-
+    """Render home page with the cached projects and users."""
     page = 1
     per_page = current_app.config.get('APPS_PER_PAGE')
-    if per_page is None: # pragma: no cover
+    if per_page is None:  # pragma: no cover
         per_page = 5
-    d = {'top_apps': cached_apps.get_top(),
+    d = {'top_projects': cached_projects.get_top(),
          'top_users': None}
 
-    # Get all the categories with apps
+    # Get all the categories with projects
     categories = cached_cat.get_used()
     d['categories'] = categories
-    d['categories_apps'] = {}
+    d['categories_projects'] = {}
     for c in categories:
-        tmp_apps = cached_apps.get(c['short_name'], page, per_page)
-        d['categories_apps'][c['short_name']] = tmp_apps
+        tmp_projects = cached_projects.get(c['short_name'], page, per_page)
+        d['categories_projects'][c['short_name']] = tmp_projects
 
     # Add featured
-    tmp_apps = cached_apps.get_featured('featured', page, per_page)
-    if len(tmp_apps) > 0:
+    tmp_projects = cached_projects.get_featured('featured', page, per_page)
+    if len(tmp_projects) > 0:
         featured = Category(name='Featured', short_name='featured')
-        d['categories'].insert(0,featured)
-        d['categories_apps']['featured'] = tmp_apps
+        d['categories'].insert(0, featured)
+        d['categories_projects']['featured'] = tmp_projects
 
-    if current_app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
+    if (current_app.config['ENFORCE_PRIVACY']
+            and current_user.is_authenticated()):
         if current_user.admin:
             d['top_users'] = cached_users.get_top()
     if not current_app.config['ENFORCE_PRIVACY']:
@@ -63,13 +63,13 @@ def home():
     return render_template('/home/index.html', **d)
 
 
-
 @blueprint.route("about")
 def about():
-    """Render the about template"""
+    """Render the about template."""
     return render_template("/home/about.html")
+
 
 @blueprint.route("search")
 def search():
-    """Render search results page"""
+    """Render search results page."""
     return render_template("/home/search.html")

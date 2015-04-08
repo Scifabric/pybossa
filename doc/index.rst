@@ -59,7 +59,7 @@ Useful Links
 
 * Mailing list: http://lists.okfn.org/mailman/listinfo/okfn-labs
 * Source code: https://github.com/PyBossa/pybossa
-* Template apps: https://github.com/PyBossa
+* Template projects: https://github.com/PyBossa
 
 ==================
 Indices and tables

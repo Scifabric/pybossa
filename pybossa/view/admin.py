@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Admin view for PyBossa."""
 from flask import Blueprint
 from flask import render_template
 from flask import request
@@ -31,7 +31,7 @@ from werkzeug.exceptions import HTTPException
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo
@@ -45,6 +45,7 @@ blueprint = Blueprint('admin', __name__)
 
 
 def format_error(msg, status_code):
+    """Return error as a JSON response."""
     error = dict(error=msg,
                  status_code=status_code)
     return Response(json.dumps(error), status=status_code,
@@ -55,52 +56,54 @@ def format_error(msg, status_code):
 @login_required
 @admin_required
 def index():
-    """List admin actions"""
+    """List admin actions."""
     return render_template('/admin/index.html')
 
 
 @blueprint.route('/featured')
-@blueprint.route('/featured/<int:app_id>', methods=['POST', 'DELETE'])
+@blueprint.route('/featured/<int:project_id>', methods=['POST', 'DELETE'])
 @login_required
 @admin_required
-def featured(app_id=None):
-    """List featured apps of PyBossa"""
+def featured(project_id=None):
+    """List featured projects of PyBossa."""
     try:
         if request.method == 'GET':
             categories = cached_cat.get_all()
-            apps = {}
+            projects = {}
             for c in categories:
-                n_apps = cached_apps.n_count(category=c.short_name)
-                apps[c.short_name] = cached_apps.get(category=c.short_name,
-                                                             page=1,
-                                                             per_page=n_apps)
-            return render_template('/admin/applications.html', apps=apps,
+                n_projects = cached_projects.n_count(category=c.short_name)
+                projects[c.short_name] = cached_projects.get(
+                    category=c.short_name,
+                    page=1,
+                    per_page=n_projects)
+            return render_template('/admin/projects.html',
+                                   projects=projects,
                                    categories=categories)
         else:
-            app = project_repo.get(app_id)
-            if app:
-                ensure_authorized_to('update', app)
+            project = project_repo.get(project_id)
+            if project:
+                ensure_authorized_to('update', project)
                 if request.method == 'POST':
-                    if app.featured is True:
-                        msg = "App.id %s already featured" % app_id
+                    if project.featured is True:
+                        msg = "Project.id %s already featured" % project_id
                         return format_error(msg, 415)
-                    cached_apps.reset()
-                    app.featured = True
-                    project_repo.update(app)
-                    return json.dumps(app.dictize())
+                    cached_projects.reset()
+                    project.featured = True
+                    project_repo.update(project)
+                    return json.dumps(project.dictize())
 
                 if request.method == 'DELETE':
-                    if app.featured is False:
-                        msg = 'App.id %s is not featured' % app_id
+                    if project.featured is False:
+                        msg = 'Project.id %s is not featured' % project_id
                         return format_error(msg, 415)
-                    cached_apps.reset()
-                    app.featured = False
-                    project_repo.update(app)
-                    return json.dumps(app.dictize())
+                    cached_projects.reset()
+                    project.featured = False
+                    project_repo.update(project)
+                    return json.dumps(project.dictize())
             else:
-                msg = 'App.id %s not found' % app_id
+                msg = 'Project.id %s not found' % project_id
                 return format_error(msg, 404)
-    except Exception as e: # pragma: no cover
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -109,13 +112,15 @@ def featured(app_id=None):
 @login_required
 @admin_required
 def users(user_id=None):
-    """Manage users of PyBossa"""
+    """Manage users of PyBossa."""
     form = SearchForm(request.form)
-    users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
+    users = [user for user in user_repo.filter_by(admin=True)
+             if user.id != current_user.id]
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
+        found = [user for user in user_repo.search_by_name(query)
+                 if user.id != current_user.id]
         [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
@@ -128,13 +133,11 @@ def users(user_id=None):
                            title=gettext("Manage Admin Users"), form=form)
 
 
-
 @blueprint.route('/users/export')
 @login_required
 @admin_required
 def export_users():
-    """Export Users list in the given format, only for admins"""
-
+    """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
                              'created', 'locale', 'admin')
 
@@ -192,7 +195,7 @@ def export_users():
 @login_required
 @admin_required
 def add_admin(user_id=None):
-    """Add admin flag for user_id"""
+    """Add admin flag for user_id."""
     try:
         if user_id:
             user = user_repo.get(user_id)
@@ -204,7 +207,7 @@ def add_admin(user_id=None):
             else:
                 msg = "User not found"
                 return format_error(msg, 404)
-    except Exception as e: # pragma: no cover
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -213,7 +216,7 @@ def add_admin(user_id=None):
 @login_required
 @admin_required
 def del_admin(user_id=None):
-    """Del admin flag for user_id"""
+    """Del admin flag for user_id."""
     try:
         if user_id:
             user = user_repo.get(user_id)
@@ -237,7 +240,7 @@ def del_admin(user_id=None):
 @login_required
 @admin_required
 def categories():
-    """List Categories"""
+    """List Categories."""
     try:
         if request.method == 'GET':
             ensure_authorized_to('read', Category)
@@ -258,14 +261,15 @@ def categories():
             else:
                 flash(gettext('Please correct the errors'), 'error')
         categories = cached_cat.get_all()
-        n_apps_per_category = dict()
+        n_projects_per_category = dict()
         for c in categories:
-            n_apps_per_category[c.short_name] = cached_apps.n_count(c.short_name)
+            n_projects_per_category[c.short_name] = \
+                cached_projects.n_count(c.short_name)
 
         return render_template('admin/categories.html',
                                title=gettext('Categories'),
                                categories=categories,
-                               n_apps_per_category=n_apps_per_category,
+                               n_projects_per_category=n_projects_per_category,
                                form=form)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
@@ -276,7 +280,7 @@ def categories():
 @login_required
 @admin_required
 def del_category(id):
-    """Deletes a category"""
+    """Delete a category."""
     try:
         category = project_repo.get_category(id)
         if category:
@@ -293,9 +297,9 @@ def del_category(id):
                     cached_cat.reset()
                     return redirect(url_for(".categories"))
             else:
-                msg = gettext('Sorry, it is not possible to delete the only \
-                                   available category. You can modify it, click the \
-                                   edit button')
+                msg = gettext('Sorry, it is not possible to delete the only'
+                              ' available category. You can modify it, '
+                              ' click the edit button')
                 flash(msg, 'warning')
                 return redirect(url_for('.categories'))
         else:
@@ -311,7 +315,7 @@ def del_category(id):
 @login_required
 @admin_required
 def update_category(id):
-    """Updates a category"""
+    """Update a category."""
     try:
         category = project_repo.get_category(id)
         if category:
@@ -346,6 +350,6 @@ def update_category(id):
             abort(404)
     except HTTPException:
         raise
-    except Exception as e: # pragma: no cover
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)

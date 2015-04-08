@@ -39,13 +39,10 @@ from rq import Queue
 
 import pybossa.model as model
 from flask.ext.babel import gettext
-from sqlalchemy.sql import text
-from pybossa.model.user import User
-from pybossa.core import signer, mail, uploader, sentinel, newsletter
-from pybossa.util import Pagination, pretty_date
+from pybossa.core import signer, uploader, sentinel, newsletter
+from pybossa.util import Pagination
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
-from pybossa.cache import apps as cached_apps
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
@@ -139,11 +136,11 @@ def signin():
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if ('twitter' in current_app.blueprints): # pragma: no cover
+        if ('twitter' in current_app.blueprints):  # pragma: no cover
             auth['twitter'] = True
-        if ('facebook' in current_app.blueprints): # pragma: no cover
+        if ('facebook' in current_app.blueprints):  # pragma: no cover
             auth['facebook'] = True
-        if ('google' in current_app.blueprints): # pragma: no cover
+        if ('google' in current_app.blueprints):  # pragma: no cover
             auth['google'] = True
         return render_template('account/signin.html',
                                title="Sign in",
@@ -194,16 +191,13 @@ def confirm_email():
         account = dict(fullname=current_user.fullname, name=current_user.name,
                        email_addr=current_user.email_addr)
         confirm_url = get_email_confirmation_url(account)
-        subject = ('Verify your email in %s' \
-                   % current_app.config.get('BRAND'))
+        subject = ('Verify your email in %s' % current_app.config.get('BRAND'))
         msg = dict(subject=subject,
                    recipients=[current_user.email_addr],
-                   body=render_template(
-                       '/account/email/validate_email.md',
-                       user=account, confirm_url=confirm_url))
-        msg['html'] = render_template(
-                       '/account/email/validate_email.html',
-                       user=account, confirm_url=confirm_url)
+                   body=render_template('/account/email/validate_email.md',
+                                        user=account, confirm_url=confirm_url))
+        msg['html'] = render_template('/account/email/validate_email.html',
+                                      user=account, confirm_url=confirm_url)
         mail_queue.enqueue(send_mail, msg)
         msg = gettext("An e-mail has been sent to \
                        validate your e-mail address.")
@@ -224,15 +218,15 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
-                      email_addr=form.email_addr.data,
-                      password=form.password.data)
+                       email_addr=form.email_addr.data,
+                       password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return _create_account(account)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
-                                       user=account, confirm_url=confirm_url))
+                                        user=account, confirm_url=confirm_url))
         msg['html'] = markdown(msg['body'])
         mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
@@ -274,6 +268,7 @@ def newsletter_subscribe():
 
 @blueprint.route('/register/confirmation', methods=['GET'])
 def confirm_account():
+    """Confir account endpoint."""
     key = request.args.get('key')
     if key is None:
         abort(403)
@@ -311,7 +306,8 @@ def _update_user_with_valid_email(user, email_addr):
 
 @blueprint.route('/profile', methods=['GET'])
 def redirect_profile():
-    if current_user.is_anonymous(): # pragma: no cover
+    """Redirect method for profile."""
+    if current_user.is_anonymous():  # pragma: no cover
         return redirect(url_for('.signin'))
     return redirect(url_for('.profile', name=current_user.name), 302)
 
@@ -335,17 +331,17 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
-    apps_contributed = cached_users.apps_contributed_cached(user.id)
-    apps_created = cached_users.published_apps_cached(user.id)
+    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_created = cached_users.published_projects_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
-        apps_hidden = cached_users.hidden_apps(user.id)
-        apps_created.extend(apps_hidden)
+        projects_hidden = cached_users.hidden_projects(user.id)
+        projects_created.extend(projects_hidden)
     title = "%s &middot; User Profile" % user_dict['fullname']
     return render_template('/account/public_profile.html',
                            title=title,
                            user=user_dict,
-                           apps=apps_contributed,
-                           apps_created=apps_created)
+                           projects=projects_contributed,
+                           projects_created=projects_created)
 
 
 def _show_own_profile(user):
@@ -353,21 +349,22 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    apps_contributed = cached_users.apps_contributed_cached(user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
-    apps_published.extend(cached_users.hidden_apps(user.id))
+    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_published, projects_draft = _get_user_projects(user.id)
+    projects_published.extend(cached_users.hidden_projects(user.id))
     cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
-                          apps_contrib=apps_contributed,
-                          apps_published=apps_published,
-                          apps_draft=apps_draft,
-                          user=user)
+                           projects_contrib=projects_contributed,
+                           projects_published=projects_published,
+                           projects_draft=projects_draft,
+                           user=user)
 
 
 @blueprint.route('/<name>/applications')
+@blueprint.route('/<name>/projects')
 @login_required
-def applications(name):
+def projects(name):
     """
     List user's project list.
 
@@ -381,20 +378,19 @@ def applications(name):
         return abort(403)
 
     user = user_repo.get(current_user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
-    apps_published.extend(cached_users.hidden_apps(user.id))
+    projects_published, projects_draft = _get_user_projects(user.id)
+    projects_published.extend(cached_users.hidden_projects(user.id))
 
-    return render_template('account/applications.html',
+    return render_template('account/projects.html',
                            title=gettext("Projects"),
-                           apps_published=apps_published,
-                           apps_draft=apps_draft)
+                           projects_published=projects_published,
+                           projects_draft=projects_draft)
 
 
-def _get_user_apps(user_id):
-    apps_published = cached_users.published_apps(user_id)
-    apps_draft = cached_users.draft_apps(user_id)
-    return apps_published, apps_draft
-
+def _get_user_projects(user_id):
+    projects_published = cached_users.published_projects(user_id)
+    projects_draft = cached_users.draft_projects(user_id)
+    return projects_published, projects_draft
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
@@ -651,8 +647,6 @@ def reset_api_key(name):
     if not user:
         return abort(404)
     ensure_authorized_to('update', user)
-    title = ("User: %s &middot; Settings"
-             "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
     user_repo.update(user)
     cached_users.delete_user_summary(user.name)

@@ -157,7 +157,7 @@ class TestCategoryAPI(TestAPI):
         ### real user but not allowed as not admin!
         url = '/api/category/%s?api_key=%s' % (cat.id, user.api_key)
         res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update apps of others'
+        error_msg = 'Should not be able to update projects of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error

@@ -14,7 +14,7 @@ a specific Task for a given project.
 
 The following URL is available for every project::
 
-  http://pybossa.com/app/slug/task/id
+  http://pybossa.com/project/slug/task/id
 
 The new endpoint is the same one as the **presenter** one, so the template.html
 should take care of using this new endpoint using some JavaScript.
@@ -24,7 +24,7 @@ DEPRECATED: New Work Flow
 
 This new endpoint opens the possibility to use the following work flow:
 
-* Users will load the following page http://pybossa.com/app/newtask
+* Users will load the following page http://pybossa.com/project/newtask
 * The template.html JavaScript should check if the window.location.pathname has the following sub-string: task
 * If the answer is Yes, then, it should load using an AJAX call the information for the given task
 * Else, the pybossa.newTask() method should be used to obtain a task for the user, and change the window.location.href to the new endpoint:
@@ -55,7 +55,7 @@ load a specific task, or request a new one for the user using PyBossa.JS::
       pybossa.newTask("flickrperson").done( function( data ) { 
   
           if ( !$.isEmptyObject(data.task) ) {
-              window.location.pathname = "/app/flickrperson/task/" + data.task.id;
+              window.location.pathname = "/project/flickrperson/task/" + data.task.id;
           }
          else {
               $(".skeleton").hide();
@@ -122,7 +122,7 @@ from the same page, however we have to do it in a different way.
 Once the answer has been saved, the submitTask(answer) function should change
 the pathname again for requesting a new task::
 
-  window.location.pathname = "/app/flickrperson/newtask"
+  window.location.pathname = "/project/flickrperson/newtask"
 
 This will trigger the right methods described in the beginning of this section,
 checking if the URL has the **task** keyword in the pathname, and acting

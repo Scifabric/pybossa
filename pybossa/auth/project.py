@@ -17,28 +17,28 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class AppAuth(object):
+class ProjectAuth(object):
 
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])
         return getattr(self, action)(user, taskrun)
 
-    def _create(self, user, app=None):
+    def _create(self, user, project=None):
         return user.is_authenticated()
 
-    def _read(self, user, app=None):
-        if app is None:
+    def _read(self, user, project=None):
+        if project is None:
             return True
-        if app.hidden:
-            return self._only_admin_or_owner(user, app)
+        if project.hidden:
+            return self._only_admin_or_owner(user, project)
         return True
 
-    def _update(self, user, app):
-        return self._only_admin_or_owner(user, app)
+    def _update(self, user, project):
+        return self._only_admin_or_owner(user, project)
 
-    def _delete(self, user, app):
-        return self._only_admin_or_owner(user, app)
+    def _delete(self, user, project):
+        return self._only_admin_or_owner(user, project)
 
-    def _only_admin_or_owner(self, user, app):
+    def _only_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
-                (app.owner_id == user.id or user.admin))
+                (project.owner_id == user.id or user.admin))

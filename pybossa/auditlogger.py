@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,19 +15,24 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""AuditLogger module."""
 from pybossa.model.auditlog import Auditlog
+
 
 class AuditLogger(object):
 
+    """Class for logging actions on projects."""
+
     def __init__(self, auditlog_repo, caller='web'):
+        """Setup repository."""
         self.repo = auditlog_repo
         self.caller = caller
 
-    def log_event(self, app, user, action, attribute, old_value, new_value):
+    def log_event(self, project, user, action, attribute, old_value, new_value):
+        """Log event."""
         log = Auditlog(
-            app_id=app.id,
-            app_short_name=app.short_name,
+            project_id=project.id,
+            project_short_name=project.short_name,
             user_id=user.id,
             user_name=user.name,
             action=action,
@@ -38,22 +43,24 @@ class AuditLogger(object):
         self.repo.save(log)
 
     def get_project_logs(self, project_id):
-        return self.repo.filter_by(app_id=project_id)
-
+        """Get all project logs."""
+        return self.repo.filter_by(project_id=project_id)
 
     def add_log_entry(self, old_project, new_project, user):
+        """Add log entry."""
         if old_project is None:
             self.log_event(new_project, user, 'create', 'project',
                            'Nothing', 'New project')
             return
         if new_project is None:
-            self.log_event(old_project, user, 'delete', 'project', 'Saved', 'Deleted')
+            self.log_event(old_project, user, 'delete',
+                           'project', 'Saved', 'Deleted')
             return
         old = old_project.dictize()
         new = new_project.dictize()
         attributes = (set(old.keys()) | set(new.keys())) - set(['updated'])
-        changes = {attr: (old.get(attr), new.get(attr)) for attr in attributes
-                    if old.get(attr) != new.get(attr)}
+        changes = {attr: (old.get(attr), new.get(attr))
+                   for attr in attributes if old.get(attr) != new.get(attr)}
         for attr in changes:
             old_value = changes[attr][0]
             new_value = changes[attr][1]
@@ -69,8 +76,9 @@ class AuditLogger(object):
                     self.log_event(new_project, user, 'update', attr,
                                    unicode(old_value), unicode(new_value))
 
-
-    def _manage_info_keys(self, project, user, old_value, new_value, action='update'):
+    def _manage_info_keys(self, project, user,
+                          old_value, new_value, action='update'):
+        """Manage info keys."""
         s_o = set(old_value.keys())
         s_n = set(new_value.keys())
         # For new keys
