@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Flickr view for PyBossa."""
-from flask import Blueprint, request, url_for, flash, redirect, session
+from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from pybossa.core import flickr
+from flask_oauthlib.client import OAuthException
 
 blueprint = Blueprint('flickr', __name__)
 
@@ -44,6 +45,10 @@ def oauth_authorized():
     resp = flickr.authorized_response()
     if resp is None:
         flash(u'You denied the request to sign in.')
+        return redirect(next_url)
+    if isinstance(resp, OAuthException):
+        flash('Access denied: %s' % resp.message)
+        current_app.logger.error(resp)
         return redirect(next_url)
     flickr_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
