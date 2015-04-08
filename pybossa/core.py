@@ -22,7 +22,7 @@ from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
-from flask.ext.babel import lazy_gettext
+from flask.ext.babel import gettext
 from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -405,7 +405,7 @@ def setup_hooks(app):
     def _global_template_context():
         if current_user and current_user.is_authenticated():
             if current_user.email_addr == current_user.name:
-                flash(lazy_gettext("Please update your e-mail address in your"
+                flash(gettext("Please update your e-mail address in your"
                       " profile page, right now it is empty!"), 'error')
 
         # Cookies warning
