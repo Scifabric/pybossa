@@ -30,11 +30,11 @@ from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
 
 
-class App(db.Model, DomainObject):
+class Project(db.Model, DomainObject):
     '''A microtasking Project to which Tasks are associated.
     '''
 
-    __tablename__ = 'app'
+    __tablename__ = 'project'
 
     #: ID of the project
     id = Column(Integer, primary_key=True)
@@ -74,12 +74,12 @@ class App(db.Model, DomainObject):
     #: Project info field formatted as JSON
     info = Column(JSONEncodedDict, default=dict)
 
-    tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='app')
-    task_runs = relationship(TaskRun, backref='app',
+    tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='project')
+    task_runs = relationship(TaskRun, backref='project',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
     category = relationship(Category)
-    blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
+    blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='project')
 
     def needs_password(self):
         return self.get_passwd_hash() is not None
@@ -117,8 +117,8 @@ class App(db.Model, DomainObject):
         del self.info['autoimporter']
 
 
-@event.listens_for(App, 'before_update')
-@event.listens_for(App, 'before_insert')
+@event.listens_for(Project, 'before_update')
+@event.listens_for(Project, 'before_insert')
 def empty_string_to_none(mapper, conn, target):
     if target.name == '':
         target.name = None
@@ -128,9 +128,9 @@ def empty_string_to_none(mapper, conn, target):
         target.description = None
 
 
-@event.listens_for(App, 'after_insert')
+@event.listens_for(Project, 'after_insert')
 def add_event(mapper, conn, target):
-    """Update PyBossa feed with new app."""
+    """Update PyBossa feed with new project."""
     obj = dict(id=target.id,
                name=target.name,
                short_name=target.short_name,

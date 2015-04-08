@@ -35,10 +35,10 @@ def get_all():
 @cache(key_prefix="categories_used",
        timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_used():
-    """Return categories only used by apps"""
+    """Return categories only used by projects"""
     sql = text('''
-               SELECT category.* FROM category, app
-               WHERE app.category_id=category.id GROUP BY category.id
+               SELECT category.* FROM category, project
+               WHERE project.category_id=category.id GROUP BY category.id
                ''')
     results = session.execute(sql)
     categories = []

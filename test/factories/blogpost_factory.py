@@ -33,8 +33,8 @@ class BlogpostFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'
     body = u'Blogpost body text'
-    app = factory.SubFactory('factories.AppFactory')
-    app_id = factory.LazyAttribute(lambda blogpost: blogpost.app.id)
-    owner = factory.SelfAttribute('app.owner')
+    project = factory.SubFactory('factories.ProjectFactory')
+    project_id = factory.LazyAttribute(lambda blogpost: blogpost.project.id)
+    owner = factory.SelfAttribute('project.owner')
     user_id = factory.LazyAttribute(
         lambda blogpost: blogpost.owner.id if blogpost.owner else None)

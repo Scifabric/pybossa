@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import (AppFactory, AnonymousTaskRunFactory,
+from factories import (ProjectFactory, AnonymousTaskRunFactory,
                        TaskFactory, TaskRunFactory, UserFactory)
 
 
@@ -76,8 +76,8 @@ class TestTaskrunAuthorization(Test):
         """Test anonymous user cannot create a taskrun for a project that does
         not allow for anonymous contributors"""
 
-        project = AppFactory.create(allow_anonymous_contributors=False)
-        task = TaskFactory.create(app=project)
+        project = ProjectFactory.create(allow_anonymous_contributors=False)
+        task = TaskFactory.create(project=project)
         taskrun = AnonymousTaskRunFactory.build(task=task)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
@@ -129,8 +129,8 @@ class TestTaskrunAuthorization(Test):
         """Test authenticated user can create a taskrun for a project that does
         not allow for anonymous contributors"""
 
-        project = AppFactory.create(allow_anonymous_contributors=False)
-        task = TaskFactory.create(app=project)
+        project = ProjectFactory.create(allow_anonymous_contributors=False)
+        task = TaskFactory.create(project=project)
         taskrun = TaskRunFactory.build(task_id=task.id)
 
         assert_not_raises(Exception,

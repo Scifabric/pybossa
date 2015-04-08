@@ -25,7 +25,7 @@ API endpoints like userprogress or vmcp.
 import json
 
 from default import flask_app, sentinel
-from factories import AppFactory, UserFactory
+from factories import ProjectFactory, UserFactory
 from mock import patch
 
 
@@ -47,7 +47,7 @@ class TestAPI(object):
             if action == 'get':
                 res = self.app.get(url)
             elif action == 'post':
-                if obj == 'app':
+                if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
                                 long_description=u'something')
@@ -56,7 +56,7 @@ class TestAPI(object):
             elif action == 'put':
                 _url = '/api/%s/%s' % (obj, i)
 
-                if obj == 'app':
+                if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
                                 long_description=u'something')
@@ -88,53 +88,53 @@ class TestAPI(object):
         # GET as Anonymous
         url = '/api/'
         action = 'get'
-        self.check_limit(url, action, 'app')
+        self.check_limit(url, action, 'project')
 
     @patch('pybossa.api.api_base.APIBase._db_query')
-    def test_00_app_get(self, mock):
-        """Test API.app GET rate limit."""
+    def test_00_project_get(self, mock):
+        """Test API.project GET rate limit."""
         mock.return_value = {}
         # GET as Anonymous
-        url = '/api/app'
+        url = '/api/project'
         action = 'get'
-        self.check_limit(url, action, 'app')
+        self.check_limit(url, action, 'project')
 
     @patch('pybossa.api.api_base.APIBase._create_instance_from_request')
-    def test_01_app_post(self, mock):
-        """Test API.app POST rate limit."""
+    def test_01_project_post(self, mock):
+        """Test API.project POST rate limit."""
         mock.return_value = {}
-        url = '/api/app'
-        self.check_limit(url, 'post', 'app')
+        url = '/api/project'
+        self.check_limit(url, 'post', 'project')
 
     @patch('pybossa.api.api_base.APIBase._delete_instance')
-    def test_02_app_delete(self, mock):
-        """Test API.app DELETE rate limit."""
+    def test_02_project_delete(self, mock):
+        """Test API.project DELETE rate limit."""
         mock.return_value = {}
         url = ''
-        self.check_limit(url, 'delete', 'app')
+        self.check_limit(url, 'delete', 'project')
 
     @patch('pybossa.api.api_base.APIBase._update_instance')
-    def test_03_app_put(self, mock):
-        """Test API.app PUT rate limit."""
+    def test_03_project_put(self, mock):
+        """Test API.project PUT rate limit."""
         mock.return_value = {}
         url = ''
-        self.check_limit(url, 'put', 'app')
+        self.check_limit(url, 'put', 'project')
 
     @patch('pybossa.api._retrieve_new_task')
     def test_04_new_task(self, mock):
-        """Test API.new_task(app_id) GET rate limit."""
+        """Test API.new_task(project_id) GET rate limit."""
         mock.return_value = {}
-        url = '/api/app/1/newtask'
-        self.check_limit(url, 'get', 'app')
+        url = '/api/project/1/newtask'
+        self.check_limit(url, 'get', 'project')
 
     def test_05_vmcp(self):
         """Test API.vmcp GET rate limit."""
         url = '/api/vmcp'
-        self.check_limit(url, 'get', 'app')
+        self.check_limit(url, 'get', 'project')
 
     @patch('pybossa.api.project_repo')
     def test_05_user_progress(self, mock):
         """Test API.user_progress GET rate limit."""
 
-        url = '/api/app/1/userprogress'
-        self.check_limit(url, 'get', 'app')
+        url = '/api/project/1/userprogress'
+        self.check_limit(url, 'get', 'project')

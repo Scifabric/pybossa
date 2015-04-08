@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import AppFactory, BlogpostFactory, UserFactory
+from factories import ProjectFactory, BlogpostFactory, UserFactory
 from pybossa.model.user import User
 
 

@@ -23,7 +23,7 @@ from sqlalchemy import event
 
 from pybossa.core import db
 from pybossa.model import DomainObject, JSONType, JSONEncodedDict, \
-    make_timestamp, update_redis, update_app_timestamp
+    make_timestamp, update_redis, update_project_timestamp
 from pybossa.model.task_run import TaskRun
 
 
@@ -41,7 +41,7 @@ class Task(db.Model, DomainObject):
     #: UTC timestamp when the task was created.
     created = Column(Text, default=make_timestamp)
     #: Project.ID that this task is associated with.
-    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
+    project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'), nullable=False)
     #: Task.state: ongoing or completed.
     state = Column(UnicodeText, default=u'ongoing')
     quorum = Column(Integer, default=0)
@@ -67,10 +67,10 @@ class Task(db.Model, DomainObject):
 @event.listens_for(Task, 'after_insert')
 def add_event(mapper, conn, target):
     """Update PyBossa feed with new task."""
-    sql_query = ('select name, short_name, info from app \
-                 where id=%s') % target.app_id
+    sql_query = ('select name, short_name, info from project \
+                 where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    obj = dict(id=target.app_id,
+    obj = dict(id=target.project_id,
                name=None,
                short_name=None,
                info=None,
@@ -84,6 +84,6 @@ def add_event(mapper, conn, target):
 
 @event.listens_for(Task, 'after_insert')
 @event.listens_for(Task, 'after_update')
-def update_app(mapper, conn, target):
-    """Update app updated timestamp."""
-    update_app_timestamp(mapper, conn, target)
+def update_project(mapper, conn, target):
+    """Update project updated timestamp."""
+    update_project_timestamp(mapper, conn, target)

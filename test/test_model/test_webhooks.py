@@ -18,7 +18,7 @@
 
 from pybossa.model import webhook
 from default import Test, with_context
-from factories import AppFactory
+from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from redis import StrictRedis
@@ -59,9 +59,9 @@ class TestWebHooks(Test):
     @patch('pybossa.model.task_run.webhook_queue', new=queue)
     def test_trigger_webhook_without_url(self):
         """Test WEBHOOK is triggered without url."""
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app, n_answers=1)
-        TaskRunFactory.create(app=app, task=task)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=1)
+        TaskRunFactory.create(project=project, task=task)
         assert queue.enqueue.called is False, queue.enqueue.called
         queue.reset_mock()
 
@@ -70,10 +70,10 @@ class TestWebHooks(Test):
     def test_trigger_webhook_with_url_not_completed_task(self):
         """Test WEBHOOK is not triggered for uncompleted tasks."""
         import random
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
         for i in range(1, random.randrange(2, 5)):
-            TaskRunFactory.create(app=app, task=task)
+            TaskRunFactory.create(project=project, task=task)
         assert queue.enqueue.called is False, queue.enqueue.called
         assert task.state != 'completed'
         queue.reset_mock()
@@ -84,12 +84,12 @@ class TestWebHooks(Test):
     def test_trigger_webhook_with_url(self):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
-        app = AppFactory.create(webhook=url,)
-        task = TaskFactory.create(app=app, n_answers=1)
-        TaskRunFactory.create(app=app, task=task)
+        project = ProjectFactory.create(webhook=url,)
+        task = TaskFactory.create(project=project, n_answers=1)
+        TaskRunFactory.create(project=project, task=task)
         payload = dict(event='task_completed',
-                       app_short_name=app.short_name,
-                       app_id=app.id,
+                       project_short_name=project.short_name,
+                       project_id=project.id,
                        task_id=task.id,
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         assert queue.enqueue.called

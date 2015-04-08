@@ -15,6 +15,6 @@ understand how things fit together.
    user/overview
    user/pbs
    user/tutorial
-   user/app_settings
+   user/project_settings
    api
    model

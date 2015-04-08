@@ -22,5 +22,5 @@ from factories import reset_all_pk_sequences
 
 class TestAPI(Test):
 
-    endpoints = ['app', 'task', 'taskrun', 'user']
+    endpoints = ['project', 'task', 'taskrun', 'user']
 

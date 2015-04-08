@@ -156,9 +156,9 @@ As you can see, you will be able to give a full personality to your own PyBossa
 server without problems.
 
 .. note::
-    You can specify a different amount of apps per page if you want. Change the
-    default value in your settings_local.py file of APPS_PER_PAGE to the number
-    that you want. By default it gives you access to 20.
+    You can specify a different amount of projects per page if you want. Change
+    the default value in your settings_local.py file of APPS_PER_PAGE to the
+    number that you want. By default it gives you access to 20.
 
 .. _`repository pybossa-default-theme`: https://github.com/PyBossa/pybossa-default-theme
 
@@ -305,7 +305,7 @@ fast as possible. PyBossa comes with a default set of timeouts for different
 views that you can change or modify to your own taste. All you have to do is
 modify the following variables in your settings file::
 
-    # App cache
+    # Project cache
     APP_TIMEOUT = 15 * 60
     REGISTERED_USERS_TIMEOUT = 15 * 60
     ANON_USERS_TIMEOUT = 5 * 60 * 60
@@ -354,7 +354,7 @@ settings_local.py file, you can adapt it to your own needs.
 Configuring upload method
 =========================
 
-PyBossa by default allows you to upload avatars for users, icons for apps, etc.
+PyBossa by default allows you to upload avatars for users, icons for projects, etc.
 using the local file system of your server. While this is nice for small
 setups, when you need to add more nodes to serve the same content, this feature
 could become a problem. For this reason, PyBossa also supports cloud solutions
@@ -554,7 +554,7 @@ only administrators will be able to see the following pages:
  * http://server/stats
  * http://server/account/
  * http://server/account/user/
- * http://server/app/stats
+ * http://server/project/stats
 
 Anonymous and authenticated will see a warning message like this:
 
@@ -602,7 +602,7 @@ you want::
     PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf", "yourtemplate"]
 
 **Yourtemplate** should be a template that you have to save in the theme
-folder: **/templates/applications/snippets/** with the same name. Check the
+folder: **/templates/projects/snippets/** with the same name. Check the
 other templates to use them as a base layer for your template.
 
 After adding the template, the server will start offering this new template to

@@ -30,13 +30,13 @@ class TaskRunAuth(object):
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, taskrun):
-        project_id = self.task_repo.get_task(taskrun.task_id).app_id
+        project_id = self.task_repo.get_task(taskrun.task_id).project_id
         project = self.project_repo.get(project_id)
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
             return False
         authorized = self.task_repo.count_task_runs_with(
-            app_id=taskrun.app_id,
+            project_id=taskrun.project_id,
             task_id=taskrun.task_id,
             user_id=taskrun.user_id,
             user_ip=taskrun.user_ip) <= 0

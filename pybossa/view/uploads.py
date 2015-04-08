@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -27,6 +27,8 @@ from pybossa.core import uploader
 
 blueprint = Blueprint('uploads', __name__)
 
+
 @blueprint.route('/<path:filename>')
-def uploaded_file(filename): # pragma: no cover
+def uploaded_file(filename):  # pragma: no cover
+    """Return uploaded file."""
     return send_from_directory(uploader.upload_folder, filename)

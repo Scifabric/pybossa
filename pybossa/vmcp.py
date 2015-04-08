@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,22 +15,23 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""VMCP module to support CernVM.
 
-import M2Crypto
-import hashlib
-import base64
-
-"""
 Sign the data in the given dictionary and return a new hash
 that includes the signature.
 
 @param $data Is a dictionary that contains the values to be signed
 @param $salt Is the salt parameter passed via the cvm_salt GET parameter
-@param $pkey Is the path to the private key file that will be used to calculate the signature
+@param $pkey Is the path to the private key file that will be used to
+calculate the signature
 """
+import M2Crypto
+import hashlib
+import base64
 
 
 def myquote(line):
+    """Quote line."""
     valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"
     escaped = ""
     for c in line:
@@ -42,6 +43,7 @@ def myquote(line):
 
 
 def calculate_buffer(data, salt):
+    """Compute buffer."""
     strBuffer = ""
     for k in sorted(data.iterkeys()):
 
@@ -63,6 +65,7 @@ def calculate_buffer(data, salt):
 
 
 def sign(data, salt, pkey):
+    """Sign data."""
     strBuffer = calculate_buffer(data, salt)
     rsa = M2Crypto.RSA.load_key(pkey)
     digest = hashlib.new('sha512', strBuffer).digest()

@@ -36,7 +36,7 @@ def warm_cache():
     apps_cached = []
     pages = range(1, 4)
     with app.app_context():
-        import pybossa.cache.apps as cached_apps
+        import pybossa.cache.projects as cached_apps
         import pybossa.cache.categories as cached_cat
         import pybossa.cache.users as cached_users
         import pybossa.cache.project_stats  as stats

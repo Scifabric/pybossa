@@ -20,7 +20,7 @@ from default import with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
@@ -31,23 +31,23 @@ class TestApiCommon(TestAPI):
     def test_limits_query(self):
         """Test API GET limits works"""
         owner = UserFactory.create()
-        apps = AppFactory.create_batch(30, owner=owner)
-        for app in apps:
-            task = TaskFactory.create(app=app)
+        projects = ProjectFactory.create_batch(30, owner=owner)
+        for project in projects:
+            task = TaskFactory.create(project=project)
             TaskRunFactory.create(task=task)
 
-        res = self.app.get('/api/app')
+        res = self.app.get('/api/project')
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        res = self.app.get('/api/app?limit=10')
+        res = self.app.get('/api/project?limit=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
-        res = self.app.get('/api/app?limit=10&offset=10')
+        res = self.app.get('/api/project?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == apps[10].name, data[0]
+        assert data[0].get('name') == projects[10].name, data[0]
 
         res = self.app.get('/api/task')
         data = json.loads(res.data)
@@ -78,8 +78,8 @@ class TestApiCommon(TestAPI):
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
         users = UserFactory.create_batch(3)
-        app = AppFactory.create(owner=users[0], info={'total': 150})
-        task = TaskFactory.create(app=app, info={'url': 'my url'})
+        project = ProjectFactory.create(owner=users[0], info={'total': 150})
+        task = TaskFactory.create(project=project, info={'url': 'my url'})
         taskrun = TaskRunFactory.create(task=task, user=users[0],
                                         info={'answer': 'annakarenina'})
         for endpoint in self.endpoints:
@@ -87,10 +87,10 @@ class TestApiCommon(TestAPI):
             res = self.app.get(url)
             data = json.loads(res.data)
 
-            if endpoint == 'app':
+            if endpoint == 'project':
                 assert len(data) == 1, data
-                app = data[0]
-                assert app['info']['total'] == 150, data
+                project = data[0]
+                assert project['info']['total'] == 150, data
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'task':
@@ -137,22 +137,22 @@ class TestApiCommon(TestAPI):
         assert error['status'] == 'failed', error
         assert error['target'] == 'task', error
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api/apappp?' + q)
         assert res.status_code == 404, res.data
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api/' + q)
         assert res.status_code == 404, res.data
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
 
 
     def test_jsonpify(self):
         """Test API jsonpify decorator works."""
-        res = self.app.get('/api/app/1?callback=mycallback')
+        res = self.app.get('/api/project/1?callback=mycallback')
         err_msg = "mycallback should be included in the response"
         assert "mycallback" in res.data, err_msg
         err_msg = "Status code should be 200"
@@ -161,7 +161,7 @@ class TestApiCommon(TestAPI):
 
     def test_cors(self):
         """Test CORS decorator works."""
-        res = self.app.get('/api/app/1')
+        res = self.app.get('/api/project/1')
         err_msg = "CORS should be enabled"
         print res.headers
         assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg

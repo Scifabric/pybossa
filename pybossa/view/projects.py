@@ -35,13 +35,13 @@ import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
     csv_exporter, importer, flickr)
-from pybossa.model.app import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import ensure_authorized_to
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to
@@ -50,43 +50,42 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks
-from pybossa.forms.applications_view_forms import *
+from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
 from pybossa.api import mark_task_as_requested_by_user
 
-blueprint = Blueprint('app', __name__)
+blueprint = Blueprint('project', __name__)
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 HOUR = 60 * 60
 
-def app_title(app, page_name):
-    if not app:  # pragma: no cover
+def project_title(project, page_name):
+    if not project:  # pragma: no cover
         return "Project not found"
     if page_name is None:
-        return "Project: %s" % (app.name)
-    return "Project: %s &middot; %s" % (app.name, page_name)
+        return "Project: %s" % (project.name)
+    return "Project: %s &middot; %s" % (project.name, page_name)
 
 
-def app_by_shortname(short_name):
-    app = cached_apps.get_app(short_name)
-    if app:
+def project_by_shortname(short_name):
+    project = cached_projects.get_project(short_name)
+    if project:
         # Get owner
-        owner = user_repo.get(app.owner_id)
-        # Populate CACHE with the data of the app
-        return (app,
+        owner = user_repo.get(project.owner_id)
+        # Populate CACHE with the data of the project
+        return (project,
                 owner,
-                cached_apps.n_tasks(app.id),
-                cached_apps.n_task_runs(app.id),
-                cached_apps.overall_progress(app.id),
-                cached_apps.last_activity(app.id))
-
+                cached_projects.n_tasks(project.id),
+                cached_projects.n_task_runs(project.id),
+                cached_projects.overall_progress(project.id),
+                cached_projects.last_activity(project.id))
     else:
-        cached_apps.delete_app(short_name)
+        cached_projects.delete_project(short_name)
         return abort(404)
 
 
@@ -102,7 +101,7 @@ def redirect_old_featured(page):
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
     category = project_repo.get_category()
-    return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
+    return redirect(url_for('.project_cat_index', category=category.short_name, page=page), 301)
 
 
 @blueprint.route('/draft/', defaults={'page': 1})
@@ -115,27 +114,27 @@ def redirect_old_draft(page):
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
-    """List apps in the system"""
-    if cached_apps.n_count('featured') > 0:
-        return app_index(page, cached_apps.get_featured, 'featured',
+    """List projects in the system"""
+    if cached_projects.n_count('featured') > 0:
+        return project_index(page, cached_projects.get_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_all()
         cat_short_name = categories[0].short_name
-        return redirect(url_for('.app_cat_index', category=cat_short_name))
+        return redirect(url_for('.project_cat_index', category=cat_short_name))
 
 
-def app_index(page, lookup, category, fallback, use_count):
-    """Show apps of app_type"""
+def project_index(page, lookup, category, fallback, use_count):
+    """Show projects of a category"""
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    apps = lookup(category, page, per_page)
-    count = cached_apps.n_count(category)
+    projects = lookup(category, page, per_page)
+    count = cached_projects.n_count(category)
 
     data = []
 
-    if fallback and not apps:  # pragma: no cover
+    if fallback and not projects:  # pragma: no cover
         return redirect(url_for('.index'))
 
     pagination = Pagination(page, per_page, count)
@@ -154,10 +153,10 @@ def app_index(page, lookup, category, fallback, use_count):
         active_cat = project_repo.get_category_by(short_name=category)
 
     # Check if we have to add the section Featured to local nav
-    if cached_apps.n_count('featured') > 0:
+    if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
     template_args = {
-        "apps": apps,
+        "projects": projects,
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
@@ -165,7 +164,7 @@ def app_index(page, lookup, category, fallback, use_count):
 
     if use_count:
         template_args.update({"count": count})
-    return render_template('/applications/index.html', **template_args)
+    return render_template('/projects/index.html', **template_args)
 
 
 @blueprint.route('/category/draft/', defaults={'page': 1})
@@ -173,26 +172,26 @@ def app_index(page, lookup, category, fallback, use_count):
 @login_required
 @admin_required
 def draft(page):
-    """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'draft',
+    """Show the Draft projects"""
+    return project_index(page, cached_projects.get_draft, 'draft',
                      False, True)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
-def app_cat_index(category, page):
-    """Show Apps that belong to a given category"""
-    return app_index(page, cached_apps.get, category, False, True)
+def project_cat_index(category, page):
+    """Show Projects that belong to a given category"""
+    return project_index(page, cached_projects.get, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    ensure_authorized_to('create', App)
-    form = AppForm(request.form)
+    ensure_authorized_to('create', Project)
+    form = ProjectForm(request.form)
 
     def respond(errors):
-        return render_template('applications/new.html',
+        return render_template('projects/new.html',
                                title=gettext("Create a Project"),
                                form=form, errors=errors)
 
@@ -217,7 +216,7 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    app = App(name=form.name.data,
+    project = Project(name=form.name.data,
               short_name=form.short_name.data,
               description=_description_from_long_description(),
               long_description=form.long_description.data,
@@ -225,7 +224,7 @@ def new():
               info=info,
               category_id=category_by_default.id)
 
-    project_repo.save(app)
+    project_repo.save(project)
 
     msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -236,44 +235,44 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    auditlogger.add_log_entry(None, app, current_user)
+    auditlogger.add_log_entry(None, project, current_user)
 
-    return redirect(url_for('.update', short_name=app.short_name))
+    return redirect(url_for('.update', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
     errors = False
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    title = app_title(app, "Task Presenter Editor")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    title = project_title(project, "Task Presenter Editor")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     form = TaskPresenterForm(request.form)
-    form.id.data = app.id
+    form.id.data = project.id
     if request.method == 'POST' and form.validate():
-        db_app = project_repo.get(app.id)
-        old_app = App(**db_app.dictize())
-        old_info = dict(db_app.info)
+        db_project = project_repo.get(project.id)
+        old_project = Project(**db_project.dictize())
+        old_info = dict(db_project.info)
         old_info['task_presenter'] = form.editor.data
-        db_app.info = old_info
-        auditlogger.add_log_entry(old_app, db_app, current_user)
-        project_repo.update(db_app)
-        cached_apps.delete_app(app.short_name)
+        db_project.info = old_info
+        auditlogger.add_log_entry(old_project, db_project, current_user)
+        project_repo.update(db_project)
+        cached_projects.delete_project(project.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
 
     # It does not have a validation
     if request.method == 'POST' and not form.validate():  # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         errors = True
 
-    if app.info.get('task_presenter'):
-        form.editor.data = app.info['task_presenter']
+    if project.info.get('task_presenter'):
+        form.editor.data = project.info['task_presenter']
     else:
         if not request.args.get('template'):
             msg_1 = gettext('<strong>Note</strong> You will need to upload the'
@@ -282,73 +281,73 @@ def task_presenter_editor(short_name):
             msg_3 = gettext(' or download the project bundle and run the'
                             ' <strong>createTasks.py</strong> script in your'
                             ' computer')
-            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                    short_name=app.short_name), msg_2)
+            url = '<a href="%s"> %s</a>' % (url_for('project.import_task',
+                                                    short_name=project.short_name), msg_2)
             msg = msg_1 + url + msg_3
             flash(msg, 'info')
 
-            wrap = lambda i: "applications/presenters/%s.html" % i
+            wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+            project = add_custom_contrib_button_to(project, get_user_id_or_ip())
             return render_template(
-                'applications/task_presenter_options.html',
+                'projects/task_presenter_options.html',
                 title=title,
-                app=app,
+                project=project,
                 owner=owner,
                 overall_progress=overall_progress,
                 n_tasks=n_tasks,
                 n_task_runs=n_task_runs,
                 last_activity=last_activity,
-                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                n_volunteers=cached_projects.n_volunteers(project.get('id')),
                 presenters=pres_tmpls)
 
-        tmpl_uri = "applications/snippets/%s.html" \
+        tmpl_uri = "projects/snippets/%s.html" \
             % request.args.get('template')
-        tmpl = render_template(tmpl_uri, app=app)
+        tmpl = render_template(tmpl_uri, project=project)
         form.editor.data = tmpl
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(gettext(msg), 'info')
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/task_presenter_editor.html',
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/task_presenter_editor.html',
                            title=title,
                            form=form,
-                           app=dict_app,
+                           project=dict_project,
                            owner=owner,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                           n_volunteers=cached_apps.n_volunteers(app.id),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.id),
+                           n_volunteers=cached_projects.n_volunteers(project.id),
                            errors=errors)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    (app, owner, n_tasks,
-    n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Delete")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('delete', app)
+    (project, owner, n_tasks,
+    n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, "Delete")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('delete', project)
     if request.method == 'GET':
-        return render_template('/applications/delete.html',
+        return render_template('/projects/delete.html',
                                title=title,
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity)
     # Clean cache
-    cached_apps.delete_app(app.short_name)
-    cached_apps.clean(app.id)
-    project_repo.delete(app)
-    _delete_zip_files_from_store(app)
-    auditlogger.add_log_entry(app, None, current_user)
+    cached_projects.delete_project(project.short_name)
+    cached_projects.clean(project.id)
+    project_repo.delete(project)
+    _delete_zip_files_from_store(project)
+    auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
@@ -356,17 +355,17 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    (app, owner, n_tasks,
-     n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks,
+     n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
 
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
-        (app, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity) = app_by_shortname(short_name)
+        (project, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = project_by_shortname(short_name)
 
         new_project = project_repo.get_by_shortname(short_name)
-        old_project = App(**new_project.dictize())
+        old_project = Project(**new_project.dictize())
         old_info = dict(new_project.info)
         old_project.info = old_info
         if form.id.data == new_project.id:
@@ -376,38 +375,38 @@ def update(short_name):
             new_project.long_description = form.long_description.data
             new_project.hidden = int(form.hidden.data)
             new_project.webhook = form.webhook.data
-            new_project.info = app.info
-            new_project.owner_id = app.owner_id
+            new_project.info = project.info
+            new_project.owner_id = project.owner_id
             new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
             new_project.category_id = form.category_id.data
 
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
-        cached_apps.delete_app(short_name)
-        cached_apps.reset()
+        cached_projects.delete_project(short_name)
+        cached_projects.reset()
         cached_cat.reset()
-        cached_apps.get_app(new_project.short_name)
+        cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_project.short_name))
 
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
-    title = app_title(app, "Update")
+    title = project_title(project, "Update")
     if request.method == 'GET':
-        form = AppUpdateForm(obj=app)
+        form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
-        if app.category_id is None:
-            app.category_id = categories[0].id
-        form.populate_obj(app)
+        if project.category_id is None:
+            project.category_id = categories[0].id
+        form.populate_obj(project)
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
-        form = AppUpdateForm(request.form)
+        form = ProjectUpdateForm(request.form)
         categories = cached_cat.get_all()
         form.category_id.choices = [(c.id, c.name) for c in categories]
 
@@ -417,23 +416,23 @@ def update(short_name):
             flash(gettext('Please correct the errors'), 'error')
         else:
             if upload_form.validate_on_submit():
-                app = project_repo.get(app.id)
+                project = project_repo.get(project.id)
                 _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
                 prefix = time.time()
-                _file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                _file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
                 uploader.upload_file(_file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
-                if app.info.get('thumbnail'):
-                    uploader.delete_file(app.info['thumbnail'], container)
-                app.info['thumbnail'] = _file.filename
-                app.info['container'] = container
-                project_repo.save(app)
-                cached_apps.delete_app(app.short_name)
+                if project.info.get('thumbnail'):
+                    uploader.delete_file(project.info['thumbnail'], container)
+                project.info['thumbnail'] = _file.filename
+                project.info['container'] = container
+                project_repo.save(project)
+                cached_projects.delete_project(project.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -441,43 +440,43 @@ def update(short_name):
                       'error')
             return redirect(url_for('.update', short_name=short_name))
 
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/update.html',
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('/projects/update.html',
                            form=form,
                            upload_form=upload_form,
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
                            title=title)
 
 
 @blueprint.route('/<short_name>/')
 def details(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('read', app)
-    template = '/applications/app.html'
+    ensure_authorized_to('read', project)
+    template = '/projects/project.html'
 
-    redirect_to_password = _check_if_redirect_to_password(app)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
-    title = app_title(app, None)
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = {"app": app, "title": title,
+    title = project_title(project, None)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = {"project": project, "title": title,
                      "owner": owner,
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_apps.n_completed_tasks(app.get('id')),
-                     "n_volunteers": cached_apps.n_volunteers(app.get('id'))}
+                     "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
+                     "n_volunteers": cached_projects.n_volunteers(project.get('id'))}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
@@ -488,45 +487,45 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    title = app_title(app, "Settings")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/settings.html',
-                           app=app,
+    title = project_title(project, "Settings")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('/projects/settings.html',
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
                            title=title)
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = app_title(app, "Import Tasks")
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    title = project_title(project, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     template_args = dict(title=title, loading_text=loading_text,
-                         app=dict_app,
+                         project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
-                         target='app.import_task')
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+                         target='project.import_task')
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -537,45 +536,45 @@ def import_task(short_name):
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
             try:
-                return _import_tasks(app, **form.get_import_data())
+                return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
                 flash(err_msg, 'error')
             except Exception as inst:  # pragma: no cover
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
-        return render_template('/applications/importers/%s.html' % importer_type,
+        return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
     if request.method == 'GET':
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
         if importer_type is None:
-            template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+            template_wrap = lambda i: "projects/tasks/gdocs-%s.html" % i
             task_tmpls = map(template_wrap, template_tasks)
             template_args['task_tmpls'] = task_tmpls
-            importer_wrap = lambda i: "applications/tasks/%s.html" % i
+            importer_wrap = lambda i: "projects/tasks/%s.html" % i
             template_args['available_importers'] = map(importer_wrap, all_importers)
-            return render_template('/applications/task_import_options.html',
+            return render_template('/projects/task_import_options.html',
                                    **template_args)
         if importer_type == 'flickr':
             template_args['albums'] = flickr.get_user_albums(session)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
             template = request.args.get('template')
             form.googledocs_url.data = template_tasks.get(template)
-        return render_template('/applications/importers/%s.html' % importer_type,
+        return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
 
-def _import_tasks(app, **form_data):
+def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
-        msg = importer.create_tasks(task_repo, app.id, **form_data)
+        msg = importer.create_tasks(task_repo, project.id, **form_data)
         flash(msg)
     else:
-        importer_queue.enqueue(import_tasks, app.id, **form_data)
+        importer_queue.enqueue(import_tasks, project.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    return redirect(url_for('.tasks', short_name=app.short_name))
+    return redirect(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
@@ -583,20 +582,20 @@ def _import_tasks(app, **form_data):
 def setup_autoimporter(short_name):
     if not current_user.pro and not current_user.admin:
         raise abort(403)
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(app=dict_app,
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = dict(project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
-                         target='app.setup_autoimporter')
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+                         target='project.setup_autoimporter')
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_autoimporter_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -604,31 +603,31 @@ def setup_autoimporter(short_name):
     form = GenericBulkTaskImportForm()(importer_type, request.form)
     template_args['form'] = form
 
-    if app.has_autoimporter():
-        current_autoimporter = app.get_autoimporter()
+    if project.has_autoimporter():
+        current_autoimporter = project.get_autoimporter()
         importer_info = dict(**current_autoimporter)
-        return render_template('/applications/task_autoimporter.html',
+        return render_template('/projects/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
-            app.set_autoimporter(form.get_import_data())
-            project_repo.save(app)
-            auditlogger.log_event(app, current_user, 'create', 'autoimporter',
-                                  'Nothing', json.dumps(app.get_autoimporter()))
-            cached_apps.delete_app(short_name)
+            project.set_autoimporter(form.get_import_data())
+            project_repo.save(project)
+            auditlogger.log_event(project, current_user, 'create', 'autoimporter',
+                                  'Nothing', json.dumps(project.get_autoimporter()))
+            cached_projects.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
-            return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+            return redirect(url_for('.setup_autoimporter', short_name=project.short_name))
 
     if request.method == 'GET':
         if importer_type is None:
-            wrap = lambda i: "applications/tasks/%s.html" % i
+            wrap = lambda i: "projects/tasks/%s.html" % i
             template_args['available_importers'] = map(wrap, all_importers)
-            return render_template('applications/task_autoimport_options.html',
+            return render_template('projects/task_autoimport_options.html',
                                    **template_args)
         if importer_type == 'flickr':
             template_args['albums'] = flickr.get_user_albums(session)
-    return render_template('/applications/importers/%s.html' % importer_type,
+    return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
 
@@ -637,44 +636,44 @@ def setup_autoimporter(short_name):
 def delete_autoimporter(short_name):
     if not current_user.pro and not current_user.admin:
         raise abort(403)
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(app=dict_app,
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = dict(project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    if app.has_autoimporter():
-        autoimporter = app.get_autoimporter()
-        app.delete_autoimporter()
-        project_repo.save(app)
-        auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    if project.has_autoimporter():
+        autoimporter = project.get_autoimporter()
+        project.delete_autoimporter()
+        project_repo.save(project)
+        auditlogger.log_event(project, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
-        cached_apps.delete_app(short_name)
-    return redirect(url_for('.tasks', short_name=app.short_name))
+        cached_projects.delete_project(short_name)
+    return redirect(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
         cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-        if passwd_mngr.validates(password, app):
+        if passwd_mngr.validates(password, project):
             response = make_response(redirect(request.args.get('next')))
-            return passwd_mngr.update_response(response, app, get_user_id_or_ip())
+            return passwd_mngr.update_response(response, project, get_user_id_or_ip())
         flash(gettext('Sorry, incorrect password'))
-    return render_template('applications/password.html',
-                            app=app,
+    return render_template('projects/password.html',
+                            project=project,
                             form=form,
                             short_name=short_name,
                             next=request.args.get('next'))
@@ -682,55 +681,55 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
     if current_user.is_anonymous():
-        if not app.allow_anonymous_contributors:
+        if not project.allow_anonymous_contributors:
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
-                   "project" % app.name)
+                   "project" % project.name)
             flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
-                                    short_name=app.short_name)))
+                                    short_name=project.short_name)))
         else:
             msg_1 = gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
-            next_url = url_for('app.task_presenter',
+            next_url = url_for('project.task_presenter',
                                 short_name=short_name, task_id=task_id)
             url = url_for('account.signin', next=next_url)
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
-    title = app_title(app, "Contribute")
-    template_args = {"app": app, "title": title, "owner": owner}
+    title = project_title(project, "Contribute")
+    template_args = {"project": project, "title": title, "owner": owner}
 
     def respond(tmpl):
         return render_template(tmpl, **template_args)
 
-    if not (task.app_id == app.id):
-        return respond('/applications/task/wrong.html')
+    if not (task.project_id == project.id):
+        return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
-    return respond('/applications/presenter.html')
+    return respond('/projects/presenter.html')
 
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
 
-    def invite_new_volunteers(app):
+    def invite_new_volunteers(project):
         user_id = None if current_user.is_anonymous() else current_user.id
         user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(app.id, app.info.get('sched'), user_id, user_ip, 0)
+        task = sched.new_task(project.id, project.info.get('sched'), user_id, user_ip, 0)
         return task is None and overall_progress < 100.0
 
     def respond(tmpl):
@@ -740,66 +739,67 @@ def presenter(short_name):
         resp = make_response(render_template(tmpl, **template_args))
         return resp
 
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Contribute")
-    template_args = {"app": app, "title": title, "owner": owner,
-                     "invite_new_volunteers": invite_new_volunteers(app)}
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, "Contribute")
+    template_args = {"project": project, "title": title, "owner": owner,
+                     "invite_new_volunteers": invite_new_volunteers(project)}
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
-    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+    if not project.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
-               project" % app.name
+               project" % project.name
         flash(gettext(msg), 'warning')
         return redirect(url_for('account.signin',
-                        next=url_for('.presenter', short_name=app.short_name)))
+                        next=url_for('.presenter',
+                                     short_name=project.short_name)))
 
     msg = "Ooops! You are an anonymous user and will not \
            get any credit for your contributions. Sign in \
            now!"
 
-    if app.info.get("tutorial") and \
-            request.cookies.get(app.short_name + "tutorial") is None:
-        resp = respond('/applications/tutorial.html')
-        resp.set_cookie(app.short_name + 'tutorial', 'seen')
+    if project.info.get("tutorial") and \
+            request.cookies.get(project.short_name + "tutorial") is None:
+        resp = respond('/projects/tutorial.html')
+        resp.set_cookie(project.short_name + 'tutorial', 'seen')
         return resp
     else:
-        return respond('/applications/presenter.html')
+        return respond('/projects/presenter.html')
 
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Tutorial")
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, "Tutorial")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    return render_template('/applications/tutorial.html', title=title,
-                           app=app, owner=owner)
+    return render_template('/projects/tutorial.html', title=title,
+                           project=project, owner=owner)
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
-    # Check if the app exists
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    # Check if the project exists
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
-    # Check if the task belongs to the app and exists
-    task = task_repo.get_task_by(app_id=app.id, id=task_id)
+    # Check if the task belongs to the project and exists
+    task = task_repo.get_task_by(project_id=project.id, id=task_id)
     if task:
-        taskruns = task_repo.filter_task_runs_by(task_id=task_id, app_id=app.id)
+        taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=project.id)
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -808,49 +808,49 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Tasks")
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, "Tasks")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
-    return render_template('/applications/tasks.html',
+    return render_template('/projects/tasks.html',
                            title=title,
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            overall_progress=overall_progress,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Tasks")
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, "Tasks")
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
 
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
         count = n_tasks
-        app_tasks = cached_apps.browse_tasks(app.get('id'))
-        page_tasks = app_tasks[offset:offset+per_page]
+        project_tasks = cached_projects.browse_tasks(project.get('id'))
+        page_tasks = project_tasks[offset:offset+per_page]
         if not page_tasks and page != 1:
             abort(404)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks_browse.html',
-                               app=app,
+        return render_template('/projects/tasks_browse.html',
+                               project=project,
                                owner=owner,
                                tasks=page_tasks,
                                title=title,
@@ -859,11 +859,11 @@ def tasks_browse(short_name, page):
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
 
@@ -871,17 +871,17 @@ def tasks_browse(short_name, page):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     if request.method == 'GET':
-        title = app_title(app, "Delete")
-        n_volunteers = cached_apps.n_volunteers(app.id)
-        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/tasks/delete.html',
-                               app=app,
+        title = project_title(project, "Delete")
+        n_volunteers = cached_projects.n_volunteers(project.id)
+        n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        return render_template('projects/tasks/delete.html',
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
@@ -891,20 +891,20 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        _delete_zip_files_from_store(app)
-        cached_apps.clean_project(app.id)
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        _delete_zip_files_from_store(project)
+        cached_projects.clean_project(project.id)
+        return redirect(url_for('.tasks', short_name=project.short_name))
 
 
-def _delete_zip_files_from_store(app):
-    json_tasks_filename = json_exporter.download_name(app, 'task')
-    csv_tasks_filename = csv_exporter.download_name(app, 'task')
-    json_taskruns_filename = json_exporter.download_name(app, 'task_run')
-    csv_taskruns_filename = csv_exporter.download_name(app, 'task_run')
+def _delete_zip_files_from_store(project):
+    json_tasks_filename = json_exporter.download_name(project, 'task')
+    csv_tasks_filename = csv_exporter.download_name(project, 'task')
+    json_taskruns_filename = json_exporter.download_name(project, 'task_run')
+    csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
     container = "user_%s" % current_user.id
     uploader.delete_file(json_tasks_filename, container)
     uploader.delete_file(csv_tasks_filename, container)
@@ -915,24 +915,24 @@ def _delete_zip_files_from_store(app):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = app_title(app, gettext("Export"))
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
     def respond():
-        return render_template('/applications/export.html',
+        return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
@@ -941,10 +941,10 @@ def export_to(short_name):
                                overall_progress=overall_progress)
 
     def gen_json(table):
-        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
+        n = getattr(task_repo, 'count_%ss_with' % table)(project_id=project.id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id, yielded=True), 1):
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id, yielded=True), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -991,7 +991,7 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id,
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id,
                                                               yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
@@ -999,7 +999,7 @@ def export_to(short_name):
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
-        res = json_exporter.response_zip(app, ty)
+        res = json_exporter.response_zip(project, ty)
         return res
 
     def create_ckan_datastore(ckan, table, package_id):
@@ -1017,16 +1017,17 @@ def export_to(short_name):
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
-        app_url = url_for('.details', short_name=app.short_name, _external=True)
+        project_url = url_for('.details', short_name=project.short_name, _external=True)
 
         try:
-            package, e = ckan.package_exists(name=app.short_name)
+            package, e = ckan.package_exists(name=project.short_name)
             if e:
                 raise e
             if package:
                 # Update the package
-                owner = user_repo.get(app.owner_id)
-                package = ckan.package_update(app=app, user=owner, url=app_url,
+                owner = user_repo.get(project.owner_id)
+                package = ckan.package_update(project=project, user=owner,
+                                              url=project_url,
                                               resources=package['resources'])
 
                 ckan.package = package
@@ -1043,8 +1044,9 @@ def export_to(short_name):
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                owner = user_repo.get(app.owner_id)
-                package = ckan.package_create(app=app, user=owner, url=app_url)
+                owner = user_repo.get(project.owner_id)
+                package = ckan.package_create(project=project, user=owner,
+                                              url=project_url)
                 create_ckan_datastore(ckan, ty, package['id'])
             flash(msg, 'success')
             return respond()
@@ -1084,9 +1086,9 @@ def export_to(short_name):
             return abort(404)
 
         # TODO: change check for existence below
-        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
+        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=project.id)
         if t is not None:
-            res = csv_exporter.response_zip(app, ty)
+            res = csv_exporter.response_zip(project, ty)
             return res
         else:
             flash(msg, 'info')
@@ -1102,12 +1104,12 @@ def export_to(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/export.html',
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
@@ -1121,23 +1123,23 @@ def export_to(short_name):
 
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
-    """Returns App Stats"""
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = app_title(app, "Statistics")
+    """Returns Project Stats"""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    title = project_title(project, "Statistics")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/non_stats.html',
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        return render_template('/projects/non_stats.html',
                                title=title,
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
@@ -1145,7 +1147,7 @@ def show_stats(short_name):
                                n_completed_tasks=n_completed_tasks)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
-        app.id,
+        project.id,
         current_app.config['GEO'])
     anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
                             (users_stats['n_anon'] + users_stats['n_auth']))
@@ -1168,12 +1170,12 @@ def show_stats(short_name):
                dayStats=dates_stats,
                hourStats=hours_stats)
 
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/stats.html',
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('/projects/stats.html',
                            title=title,
                            appStats=json.dumps(tmp),
                            userStats=userStats,
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
@@ -1185,15 +1187,15 @@ def show_stats(short_name):
 @login_required
 def task_settings(short_name):
     """Settings page for tasks of the project"""
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/task_settings.html',
-                           app=app,
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/task_settings.html',
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
@@ -1204,78 +1206,78 @@ def task_settings(short_name):
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
 def task_n_answers(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, gettext('Redundancy'))
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, gettext('Redundancy'))
     form = TaskRedundancyForm()
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     if request.method == 'GET':
-        return render_template('/applications/task_n_answers.html',
+        return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
     elif request.method == 'POST' and form.validate():
-        task_repo.update_tasks_redundancy(app, form.n_answers.data)
+        task_repo.update_tasks_redundancy(project, form.n_answers.data)
         # Log it
-        auditlogger.log_event(app, current_user, 'update', 'task.n_answers',
+        auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
                               'N/A', form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
     else:
         flash(gettext('Please correct the errors'), 'error')
-        return render_template('/applications/task_n_answers.html',
+        return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
 def task_scheduler(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, gettext('Task Scheduler'))
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
     def respond():
-        return render_template('/applications/task_scheduler.html',
+        return render_template('/projects/task_scheduler.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     if request.method == 'GET':
-        if app.info.get('sched'):
+        if project.info.get('sched'):
             for s in form.sched.choices:
-                if app.info['sched'] == s[0]:
+                if project.info['sched'] == s[0]:
                     form.sched.data = s[0]
                     break
         return respond()
 
     if request.method == 'POST' and form.validate():
-        app = project_repo.get_by_shortname(short_name=app.short_name)
-        if app.info.get('sched'):
-            old_sched = app.info['sched']
+        project = project_repo.get_by_shortname(short_name=project.short_name)
+        if project.info.get('sched'):
+            old_sched = project.info['sched']
         else:
             old_sched = 'default'
         if form.sched.data:
-            app.info['sched'] = form.sched.data
-        project_repo.save(app)
-        cached_apps.delete_app(app.short_name)
+            project.info['sched'] = form.sched.data
+        project_repo.save(project)
+        cached_projects.delete_project(project.short_name)
         # Log it
-        if old_sched != app.info['sched']:
-            auditlogger.log_event(app, current_user, 'update', 'sched',
-                                  old_sched, app.info['sched'])
+        if old_sched != project.info['sched']:
+            auditlogger.log_event(project, current_user, 'update', 'sched',
+                                  old_sched, project.info['sched'])
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
 
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
     else:  # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         return respond()
@@ -1284,26 +1286,26 @@ def task_scheduler(short_name):
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
 def task_priority(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, gettext('Task Priority'))
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    title = project_title(project, gettext('Task Priority'))
     form = TaskPriorityForm()
 
     def respond():
-        return render_template('/applications/task_priority.html',
+        return render_template('/projects/task_priority.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     if request.method == 'GET':
         return respond()
     if request.method == 'POST' and form.validate():
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
+                t = task_repo.get_task_by(project_id=project.id, id=int(task_id))
                 if t:
                     old_priority = t.priority_0
                     t.priority_0 = form.priority_0.data
@@ -1314,12 +1316,12 @@ def task_priority(short_name):
                                                 'task_priority_0': old_priority})
                         new_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': t.priority_0})
-                        auditlogger.log_event(app, current_user, 'update',
+                        auditlogger.log_event(project, current_user, 'update',
                                               'task.priority_0',
                                               old_value, new_value)
                 else:  # pragma: no cover
-                    flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
-        cached_apps.delete_app(app.short_name)
+                    flash(gettext(("Ooops, Task.id=%s does not belong to the project" % task_id)), 'danger')
+        cached_projects.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:
@@ -1329,45 +1331,45 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogposts = blog_repo.filter_by(app_id=app.id)
-    ensure_authorized_to('read', Blogpost, app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    blogposts = blog_repo.filter_by(project_id=project.id)
+    ensure_authorized_to('read', Blogpost, project_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog.html', app=app,
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/blog.html', project=project,
                            owner=owner, blogposts=blogposts,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
     ensure_authorized_to('read', blogpost)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog_post.html',
-                           app=app,
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/blog_post.html',
+                           project=project,
                            owner=owner,
                            blogpost=blogpost,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1375,26 +1377,26 @@ def show_blogpost(short_name, id):
 def new_blogpost(short_name):
 
     def respond():
-        dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/new_blogpost.html',
+        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        return render_template('projects/new_blogpost.html',
                                title=gettext("Write a new post"),
                                form=form,
-                               app=dict_app,
+                               project=dict_project,
                                owner=owner,
                                overall_progress=overall_progress,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(dict_app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(dict_app.get('id')))
+                               n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
+                               n_volunteers=cached_projects.n_volunteers(dict_project.get('id')))
 
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
     form = BlogpostForm(request.form)
     del form.id
 
     if request.method != 'POST':
-        ensure_authorized_to('create', Blogpost, app_id=app.id)
+        ensure_authorized_to('create', Blogpost, project_id=project.id)
         return respond()
 
     if not form.validate():
@@ -1404,10 +1406,10 @@ def new_blogpost(short_name):
     blogpost = Blogpost(title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=app.id)
+                        project_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1418,22 +1420,22 @@ def new_blogpost(short_name):
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
 def update_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
 
     def respond():
-        return render_template('applications/update_blogpost.html',
+        return render_template('projects/update_blogpost.html',
                                title=gettext("Edit a post"),
-                               form=form, app=app, owner=owner,
+                               form=form, project=project, owner=owner,
                                blogpost=blogpost,
                                overall_progress=overall_progress,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_projects.n_completed_tasks(project.id),
+                               n_volunteers=cached_projects.n_volunteers(project.id))
 
     form = BlogpostForm()
 
@@ -1451,9 +1453,9 @@ def update_blogpost(short_name, id):
                         title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=app.id)
+                        project_id=project.id)
     blog_repo.update(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1464,42 +1466,42 @@ def update_blogpost(short_name, id):
 @blueprint.route('/<short_name>/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_blogpost(short_name, id):
-    app = app_by_shortname(short_name)[0]
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    project = project_by_shortname(short_name)[0]
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
 
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_projects.delete_project(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
-def _check_if_redirect_to_password(app):
+def _check_if_redirect_to_password(project):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+    if passwd_mngr.password_needed(project, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
-                                short_name=app.short_name, next=request.path))
+                                short_name=project.short_name, next=request.path))
 
 
 @blueprint.route('/<short_name>/auditlog')
 @login_required
 def auditlog(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
 
-    logs = auditlogger.get_project_logs(app.id)
-    ensure_authorized_to('read', Auditlog, app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    logs = auditlogger.get_project_logs(project.id)
+    ensure_authorized_to('read', Auditlog, project_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/auditlog.html', app=app,
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))

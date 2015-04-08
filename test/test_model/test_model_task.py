@@ -20,7 +20,7 @@ from default import Test, db, with_context
 from nose.tools import assert_raises
 from sqlalchemy.exc import IntegrityError
 from pybossa.model.user import User
-from pybossa.model.app import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 
@@ -40,12 +40,12 @@ class TestModelTask(Test):
         db.session.commit()
         user = db.session.query(User).first()
         category = Category(name=u'cat', short_name=u'cat', description=u'cat')
-        app = App(name='Application', short_name='app', description='desc',
+        project = Project(name='Application', short_name='app', description='desc',
                   owner_id=user.id, category=category)
-        db.session.add(app)
+        db.session.add(project)
         db.session.commit()
 
-        task = Task(app_id=None)
+        task = Task(project_id=None)
         db.session.add(task)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Google view for PyBossa."""
 from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
@@ -27,13 +28,13 @@ from pybossa.util import get_user_signup_method, username_from_full_name
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
 import requests
-# This blueprint will be activated in core.py if the GOOGLE APP ID and SECRET
-# are available
+
 blueprint = Blueprint('google', __name__)
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
+    """Login with Google."""
     if request.args.get("next"):
         request_token_params = {
             'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
@@ -45,6 +46,7 @@ def login():  # pragma: no cover
 
 @google.oauth.tokengetter
 def get_google_token():  # pragma: no cover
+    """Get Google Token from session."""
     if current_user.is_anonymous():
         return session.get('oauth_token')
     else:
@@ -54,7 +56,7 @@ def get_google_token():  # pragma: no cover
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
-    #print "OAUTH authorized method called"
+    """Authorize Oauth."""
     next_url = url_for('home.home')
 
     if resp is None or request.args.get('error'):
@@ -108,7 +110,7 @@ def manage_user(access_token, user_data):
                         google_user_id=user_data['id'],
                         info=info)
             user_repo.save(user)
-            if newsletter.app:
+            if newsletter.is_initialized():
                 newsletter.subscribe_user(user)
             return user
         else:

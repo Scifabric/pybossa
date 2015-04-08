@@ -31,8 +31,8 @@ class AuditlogFactory(BaseFactory):
         return log
 
     id = factory.Sequence(lambda n: n)
-    app_id = 1
-    app_short_name = 'app'
+    project_id = 1
+    project_short_name = 'project'
     user_id = 1
     user_name = 'example user'
     action = 'update'

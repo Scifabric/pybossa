@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import AppFactory, UserFactory, TaskFactory
+from factories import ProjectFactory, UserFactory, TaskFactory
 from pybossa.model.task import Task
 
 
@@ -39,8 +39,8 @@ class TestTaskAuthorization(Test):
     def test_anonymous_user_cannot_crud(self):
         """Test anonymous users cannot crud tasks"""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', task)
         assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
@@ -54,8 +54,8 @@ class TestTaskAuthorization(Test):
         """Test project owner can crud tasks"""
         user = UserFactory.create()
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
 
         assert self.mock_authenticated.id == owner.id
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)
@@ -70,8 +70,8 @@ class TestTaskAuthorization(Test):
         """Test non owner user cannot crud tasks"""
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
 
         assert self.mock_authenticated.id != owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'create', task)
@@ -86,8 +86,8 @@ class TestTaskAuthorization(Test):
         """Test admin user can crud tasks"""
         admin = UserFactory.create()
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
 
         assert self.mock_admin.id != owner.id
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)

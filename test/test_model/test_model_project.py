@@ -19,28 +19,28 @@
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from mock import patch
-from pybossa.model.app import App
+from pybossa.model.project import Project
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
-from factories import AppFactory
+from factories import ProjectFactory
 
 
-class TestModelApp(Test):
+class TestModelProject(Test):
 
     @with_context
-    def test_app_errors(self):
+    def test_project_errors(self):
         """Test project model errors."""
-        app = App(name='Project',
+        project = Project(name='Project',
                   short_name='proj',
                   description='desc',
                   owner_id=None)
 
-        # App.owner_id should not be nullable
-        db.session.add(app)
+        # Project.owner_id should not be nullable
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.name should not be nullable
+        # Project.name should not be nullable
         user = User(email_addr="john.doe@example.com",
                     name="johndoe",
                     fullname="John Doe",
@@ -48,125 +48,125 @@ class TestModelApp(Test):
         db.session.add(user)
         db.session.commit()
         user = db.session.query(User).first()
-        app.owner_id = user.id
-        app.name = None
-        db.session.add(app)
+        project.owner_id = user.id
+        project.name = None
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        app.name = ''
-        db.session.add(app)
+        project.name = ''
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.short_name should not be nullable
-        app.name = "Project"
-        app.short_name = None
-        db.session.add(app)
+        # Project.short_name should not be nullable
+        project.name = "Project"
+        project.short_name = None
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        app.short_name = ''
-        db.session.add(app)
+        project.short_name = ''
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.description should not be nullable
-        db.session.add(app)
-        app.short_name = "project"
-        app.description = None
+        # Project.description should not be nullable
+        db.session.add(project)
+        project.short_name = "project"
+        project.description = None
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        app.description = ''
-        db.session.add(app)
+        project.description = ''
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.featured should not be nullable
-        app.description = 'description'
-        app.featured = None
-        db.session.add(app)
+        # Project.featured should not be nullable
+        project.description = 'description'
+        project.featured = None
+        db.session.add(project)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
 
     def test_needs_password_no_password_key(self):
-        """Test needs_password returns false if the app has not a password"""
-        app = AppFactory.build(info={})
+        """Test needs_password returns false if the project has not a password"""
+        project = ProjectFactory.build(info={})
 
-        assert app.needs_password() is False
+        assert project.needs_password() is False
 
 
-    @patch('pybossa.model.app.signer')
+    @patch('pybossa.model.project.signer')
     def test_needs_password_empty_password_key(self, mock_signer):
-        """Test needs_password returns false if the app has an empty password"""
+        """Test needs_password returns false if the project has an empty password"""
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': None})
+        project = ProjectFactory.build(info={'passwd_hash': None})
 
-        assert app.needs_password() is False
+        assert project.needs_password() is False
 
 
-    @patch('pybossa.model.app.signer')
+    @patch('pybossa.model.project.signer')
     def test_needs_password_with_password_key_and_value(self, mock_signer):
-        """Test needs_password returns true if the app has a password"""
+        """Test needs_password returns true if the project has a password"""
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        project = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
-        assert app.needs_password() is True
+        assert project.needs_password() is True
 
 
-    @patch('pybossa.model.app.signer')
+    @patch('pybossa.model.project.signer')
     def test_check_password(self, mock_signer):
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        project = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
-        assert app.check_password('mypassword')
+        assert project.check_password('mypassword')
 
 
-    @patch('pybossa.model.app.signer')
+    @patch('pybossa.model.project.signer')
     def test_check_password_bad_password(self, mock_signer):
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        project = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
-        assert not app.check_password('notmypassword')
+        assert not project.check_password('notmypassword')
 
 
     def test_has_autoimporter_returns_true_if_autoimporter(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
+        project = ProjectFactory.build(info={'autoimporter': autoimporter})
 
-        assert app.has_autoimporter() is True
+        assert project.has_autoimporter() is True
 
 
     def test_has_autoimporter_returns_false_if_no_autoimporter(self):
-        app = AppFactory.build(info={})
+        project = ProjectFactory.build(info={})
 
-        assert app.has_autoimporter() is False
+        assert project.has_autoimporter() is False
 
 
     def test_get_autoimporter_returns_autoimporter(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
+        project = ProjectFactory.build(info={'autoimporter': autoimporter})
 
-        assert app.get_autoimporter() == autoimporter, app.get_autoimporter()
+        assert project.get_autoimporter() == autoimporter, project.get_autoimporter()
 
 
     def test_set_autoimporter_works_as_expected(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={})
-        assert app.has_autoimporter() is False
+        project = ProjectFactory.build(info={})
+        assert project.has_autoimporter() is False
 
-        app.set_autoimporter(autoimporter)
+        project.set_autoimporter(autoimporter)
 
-        assert app.get_autoimporter() == autoimporter, app.get_autoimporter()
+        assert project.get_autoimporter() == autoimporter, project.get_autoimporter()
 
 
     def test_delete_autoimporter_works_as_expected(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
-        assert app.has_autoimporter() is True
+        project = ProjectFactory.build(info={'autoimporter': autoimporter})
+        assert project.has_autoimporter() is True
 
-        app.delete_autoimporter()
+        project.delete_autoimporter()
 
-        assert app.has_autoimporter() is False, app.get_autoimporter()
+        assert project.has_autoimporter() is False, project.get_autoimporter()

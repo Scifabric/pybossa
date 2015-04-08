@@ -24,27 +24,27 @@ from mock import patch
 from helper import sched
 from default import Test, db, with_context
 from pybossa.model.task import Task
-from pybossa.model.app import App
+from pybossa.model.project import Project
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
-from factories import TaskFactory, AppFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
 import pybossa
 
 
 class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
-        self.endpoints = ['app', 'task', 'taskrun']
+        self.endpoints = ['project', 'task', 'taskrun']
 
     # Tests
     @with_context
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
-        project = AppFactory.create()
-        TaskFactory.create(app=project, info='hola')
+        project = ProjectFactory.create()
+        TaskFactory.create(project=project, info='hola')
 
-        res = self.app.get('api/app/%s/newtask' %project.id)
+        res = self.app.get('api/project/%s/newtask' %project.id)
         print res.data
         data = json.loads(res.data)
         assert data['info'] == 'hola', data
@@ -54,9 +54,9 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
         assigned_tasks = []
         # Get a Task until scheduler returns None
-        project = AppFactory.create()
-        tasks = TaskFactory.create_batch(3, app=project)
-        res = self.app.get('api/app/%s/newtask' %project.id)
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project)
+        res = self.app.get('api/project/%s/newtask' %project.id)
         data = json.loads(res.data)
         while data.get('info') is not None:
             # Save the assigned task
@@ -64,8 +64,8 @@ class TestSched(sched.Helper):
 
             task = db.session.query(Task).get(data['id'])
             # Submit an Answer for the assigned task
-            tr = AnonymousTaskRunFactory.create(app=project, task=task)
-            res = self.app.get('api/app/%s/newtask' %project.id)
+            tr = AnonymousTaskRunFactory.create(project=project, task=task)
+            res = self.app.get('api/project/%s/newtask' %project.id)
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
@@ -85,7 +85,7 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # Get Task until scheduler returns None
         for i in range(10):
-            res = self.app.get('api/app/1/newtask')
+            res = self.app.get('api/project/1/newtask')
             data = json.loads(res.data)
 
             while data.get('info') is not None:
@@ -96,16 +96,16 @@ class TestSched(sched.Helper):
                 assigned_tasks.append(data)
 
                 # Submit an Answer for the assigned task
-                tr = TaskRun(app_id=data['app_id'], task_id=data['id'],
+                tr = TaskRun(project_id=data['project_id'], task_id=data['id'],
                              user_ip="127.0.0." + str(i),
                              info={'answer': 'Yes'})
                 db.session.add(tr)
                 db.session.commit()
-                res = self.app.get('api/app/1/newtask')
+                res = self.app.get('api/project/1/newtask')
                 data = json.loads(res.data)
 
         # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         for t in tasks:
             assert len(t.task_runs) == 10, len(t.task_runs)
         # Check that all the answers are from different IPs
@@ -124,7 +124,7 @@ class TestSched(sched.Helper):
         # Register
         self.register()
         self.signin()
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
         assert data['info'], data
         self.signout()
@@ -142,7 +142,7 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
         while data.get('info') is not None:
             # Check that we received a Task
@@ -152,19 +152,19 @@ class TestSched(sched.Helper):
             assigned_tasks.append(data)
 
             # Submit an Answer for the assigned task
-            tr = dict(app_id=data['app_id'], task_id=data['id'],
+            tr = dict(project_id=data['project_id'], task_id=data['id'],
                       info={'answer': 'No'})
             tr = json.dumps(tr)
 
             self.app.post('/api/taskrun', data=tr)
-            res = self.app.get('api/app/1/newtask')
+            res = self.app.get('api/project/1/newtask')
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         assert len(assigned_tasks) == len(tasks), assigned_tasks
         # Check if all the assigned Task.id are equal to the available ones
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         err_msg = "Assigned Task not found in DB Tasks"
         for at in assigned_tasks:
             assert self.is_task(at['id'], tasks), err_msg
@@ -188,7 +188,7 @@ class TestSched(sched.Helper):
                           password="1234" + str(i))
             self.signin()
             # Get Task until scheduler returns None
-            res = self.app.get('api/app/1/newtask')
+            res = self.app.get('api/project/1/newtask')
             data = json.loads(res.data)
 
             while data.get('info') is not None:
@@ -199,17 +199,17 @@ class TestSched(sched.Helper):
                 assigned_tasks.append(data)
 
                 # Submit an Answer for the assigned task
-                tr = dict(app_id=data['app_id'], task_id=data['id'],
+                tr = dict(project_id=data['project_id'], task_id=data['id'],
                           info={'answer': 'No'})
                 tr = json.dumps(tr)
                 self.app.post('/api/taskrun', data=tr)
                 self.redis_flushall()
-                res = self.app.get('api/app/1/newtask')
+                res = self.app.get('api/project/1/newtask')
                 data = json.loads(res.data)
             self.signout()
 
         # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         for t in tasks:
             assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs
@@ -243,7 +243,7 @@ class TestSched(sched.Helper):
             if signin:
                 self.signin()
             # Get Task until scheduler returns None
-            res = self.app.get('api/app/1/newtask')
+            res = self.app.get('api/project/1/newtask')
             data = json.loads(res.data)
 
             while data.get('info') is not None:
@@ -256,24 +256,24 @@ class TestSched(sched.Helper):
 
                 # Submit an Answer for the assigned task
                 if signin:
-                    tr = dict(app_id=data['app_id'], task_id=data['id'],
+                    tr = dict(project_id=data['project_id'], task_id=data['id'],
                               info={'answer': 'No'})
                     tr = json.dumps(tr)
                     self.app.post('/api/taskrun', data=tr)
                 else:
-                    tr = TaskRun(app_id=data['app_id'], task_id=data['id'],
+                    tr = TaskRun(project_id=data['project_id'], task_id=data['id'],
                                  user_ip="127.0.0." + str(i),
                                  info={'answer': 'Yes'})
                     db.session.add(tr)
                     db.session.commit()
 
-                res = self.app.get('api/app/1/newtask')
+                res = self.app.get('api/project/1/newtask')
                 data = json.loads(res.data)
             if signin:
                 self.signout()
 
         # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         for t in tasks:
             assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs and IDs
@@ -299,12 +299,12 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/project/1/newtask')
         task1 = json.loads(res.data)
         # Check that we received a Task
         assert task1.get('info'),  task1
         # Pre-load the next task for the user
-        res = self.app.get('api/app/1/newtask?offset=1')
+        res = self.app.get('api/project/1/newtask?offset=1')
         task2 = json.loads(res.data)
         # Check that we received a Task
         assert task2.get('info'),  task2
@@ -316,17 +316,17 @@ class TestSched(sched.Helper):
 
         # Submit an Answer for the assigned and pre-loaded task
         for t in assigned_tasks:
-            tr = dict(app_id=t['app_id'], task_id=t['id'], info={'answer': 'No'})
+            tr = dict(project_id=t['project_id'], task_id=t['id'], info={'answer': 'No'})
             tr = json.dumps(tr)
 
             self.app.post('/api/taskrun', data=tr)
         # Get two tasks again
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/project/1/newtask')
         task3 = json.loads(res.data)
         # Check that we received a Task
         assert task3.get('info'),  task1
         # Pre-load the next task for the user
-        res = self.app.get('api/app/1/newtask?offset=1')
+        res = self.app.get('api/project/1/newtask?offset=1')
         task4 = json.loads(res.data)
         # Check that we received a Task
         assert task4.get('info'),  task2
@@ -335,7 +335,7 @@ class TestSched(sched.Helper):
         assert task1.get('id') != task3.get('id'), "Tasks should be different"
         assert task2.get('id') != task4.get('id'), "Tasks should be different"
         # Check that a big offset returns None
-        res = self.app.get('api/app/1/newtask?offset=11')
+        res = self.app.get('api/project/1/newtask?offset=11')
         assert json.loads(res.data) == {}, res.data
 
     @with_context
@@ -350,8 +350,8 @@ class TestSched(sched.Helper):
         self.signin()
 
         # By default, tasks without priority should be ordered by task.id (FIFO)
-        tasks = db.session.query(Task).filter_by(app_id=1).order_by('id').all()
-        res = self.app.get('api/app/1/newtask')
+        tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
+        res = self.app.get('api/project/1/newtask')
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
@@ -365,7 +365,7 @@ class TestSched(sched.Helper):
         db.session.add(t)
         db.session.commit()
         # Request again a new task
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/project/1/newtask')
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
@@ -374,34 +374,34 @@ class TestSched(sched.Helper):
         assert task1.get('priority_0') == 1, err_msg
 
     def _add_task_run(self, app, task, user=None):
-        tr = AnonymousTaskRunFactory.create(app=app, task=task)
+        tr = AnonymousTaskRunFactory.create(project=app, task=task)
 
     @with_context
     def test_no_more_tasks(self):
         """Test that a users gets always tasks"""
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner, short_name='egil', name='egil',
+        project = ProjectFactory.create(owner=owner, short_name='egil', name='egil',
                   description='egil')
 
-        app_id = app.id
+        project_id = project.id
 
         for i in range(20):
-            task = TaskFactory.create(app=app, info={'i': i}, n_answers=10)
+            task = TaskFactory.create(project=project, info={'i': i}, n_answers=10)
 
-        tasks = db.session.query(Task).filter_by(app_id=app.id).limit(11).all()
+        tasks = db.session.query(Task).filter_by(project_id=project.id).limit(11).all()
         for t in tasks[0:10]:
             for x in range(10):
-                self._add_task_run(app, t)
+                self._add_task_run(project, t)
 
         assert tasks[0].n_answers == 10
 
-        url = 'api/app/%s/newtask' % app_id
+        url = 'api/project/%s/newtask' % project_id
         res = self.app.get(url)
         data = json.loads(res.data)
 
         err_msg = "User should get a task"
-        assert 'app_id' in data.keys(), err_msg
-        assert data['app_id'] == app_id, err_msg
+        assert 'project_id' in data.keys(), err_msg
+        assert data['project_id'] == project_id, err_msg
         assert data['id'] == tasks[10].id, err_msg
 
 
@@ -412,9 +412,9 @@ class TestGetBreadthFirst(Test):
             self.create()
 
 
-    def del_task_runs(self, app_id=1):
-        """Deletes all TaskRuns for a given app_id"""
-        db.session.query(TaskRun).filter_by(app_id=1).delete()
+    def del_task_runs(self, project_id=1):
+        """Deletes all TaskRuns for a given project_id"""
+        db.session.query(TaskRun).filter_by(project_id=1).delete()
         db.session.commit()
         db.session.remove()
 
@@ -432,14 +432,14 @@ class TestGetBreadthFirst(Test):
         self._test_get_random_task()
 
     def _test_get_random_task(self, user=None):
-        task = pybossa.sched.get_random_task(app_id=1)
+        task = pybossa.sched.get_random_task(project_id=1)
         assert task is not None, task
 
         tasks = db.session.query(Task).all()
         for t in tasks:
             db.session.delete(t)
         db.session.commit()
-        task = pybossa.sched.get_random_task(app_id=1)
+        task = pybossa.sched.get_random_task(project_id=1)
         assert task is None, task
 
 
@@ -451,55 +451,55 @@ class TestGetBreadthFirst(Test):
             short_name = 'xyznouser'
 
         category = db.session.query(Category).get(1)
-        app = App(short_name=short_name, name=short_name,
+        project = Project(short_name=short_name, name=short_name,
               description=short_name, category=category)
         owner = db.session.query(User).get(1)
 
-        app.owner = owner
-        task = Task(app=app, state='0', info={})
-        task2 = Task(app=app, state='0', info={})
-        task.app = app
-        task2.app = app
-        db.session.add(app)
+        project.owner = owner
+        task = Task(project=project, state='0', info={})
+        task2 = Task(project=project, state='0', info={})
+        task.project = project
+        task2.project = project
+        db.session.add(project)
         db.session.add(task)
         db.session.add(task2)
         db.session.commit()
         taskid = task.id
-        appid = app.id
+        projectid = project.id
         # give task2 a bunch of runs
         for idx in range(2):
-            self._add_task_run(app, task2)
+            self._add_task_run(project, task2)
 
         # now check we get task without task runs as anonymous user
-        out = pybossa.sched.get_breadth_first_task(appid)
+        out = pybossa.sched.get_breadth_first_task(projectid)
         assert out.id == taskid, out
 
         # now check we get task without task runs as a user
         owner = db.session.query(User).get(1)
-        out = pybossa.sched.get_breadth_first_task(appid, owner.id)
+        out = pybossa.sched.get_breadth_first_task(projectid, owner.id)
         assert out.id == taskid, out
 
 
         # now check that offset works
-        out1 = pybossa.sched.get_breadth_first_task(appid)
-        out2 = pybossa.sched.get_breadth_first_task(appid, offset=1)
+        out1 = pybossa.sched.get_breadth_first_task(projectid)
+        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=1)
         assert out1.id != out2.id, out
 
         # asking for a bigger offset (max 10)
-        out2 = pybossa.sched.get_breadth_first_task(appid, offset=11)
+        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=11)
         assert out2 is None, out
 
-        self._add_task_run(app, task)
-        out = pybossa.sched.get_breadth_first_task(appid)
+        self._add_task_run(project, task)
+        out = pybossa.sched.get_breadth_first_task(projectid)
         assert out.id == taskid, out
 
         # now add 2 more taskruns. We now have 3 and 2 task runs per task
-        self._add_task_run(app, task)
-        self._add_task_run(app, task)
-        out = pybossa.sched.get_breadth_first_task(appid)
+        self._add_task_run(project, task)
+        self._add_task_run(project, task)
+        out = pybossa.sched.get_breadth_first_task(projectid)
         assert out.id == task2.id, out
 
-    def _add_task_run(self, app, task, user=None):
-        tr = TaskRun(app=app, task=task, user=user)
+    def _add_task_run(self, project, task, user=None):
+        tr = TaskRun(project=project, task=task, user=user)
         db.session.add(tr)
         db.session.commit()

@@ -392,17 +392,17 @@ Migrating Your Old DB Records
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In versions prior to v0.2.3, HTML was supported as the default option for the
-'long_description' field in apps. In new versions of PyBossa, Markdown has been
+'long_description' field in projects. In new versions of PyBossa, Markdown has been
 adopted as the default option. However, you can use HTML instead of Markdown
 by modifying the default PyBossa theme or using your own forked from the default
 one.
 
-If you were have been using PyBossa for a while you may have apps in your
+If you were have been using PyBossa for a while you may have projects in your
 database whose 'long_description' is in HTML format. Hence, if you are using the
 default theme for PyBossa you will no longer see them rendered as HTML and may
 have some issues.
 
-In order to avoid this, you can run a simple script to convert all the DB app's
+In order to avoid this, you can run a simple script to convert all the DB project's
 'long_description' field from HTML to Markdown, just by running the following
 commands::
 

@@ -29,9 +29,9 @@ from pybossa.core import project_repo, user_repo
 import validator as pb_validator
 
 
-### Forms for applications view
+### Forms for projects view
 
-class AppForm(Form):
+class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(project_repo.get_by, 'name',
@@ -47,7 +47,7 @@ class AppForm(Form):
                                      [validators.Required()])
 
 
-class AppUpdateForm(AppForm):
+class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
     description = TextAreaField(lazy_gettext('Description'),
                             [validators.Required(

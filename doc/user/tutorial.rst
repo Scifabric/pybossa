@@ -170,7 +170,7 @@ them to create an empty project in the PyBossa server of your choice.
 If you want to check if the project exists, just open your web browser, and
 type in the folling URL::
 
-    http://server/app/short_name
+    http://server/project/short_name
 
 Where **short_name** is the value of the key with the same name in the file:
 **project.json**. You sould get a project page, with not so much information,
@@ -262,14 +262,14 @@ tutorial: presenting the tasks to the volunteers.
 If something goes wrong, you should an error message similar to the following
 one::
 
-    ERROR:root:pbclient.create_app
+    ERROR:root:pbclient.create_project
     {
         "action": "POST",
         "exception_cls": "IntegrityError",
-        "exception_msg": "(IntegrityError) duplicate key value violates unique constraint \"app_name_key\"\nDETAIL:  Key (name)=(Flickr Person Finder) already exists.\n",
+        "exception_msg": "(IntegrityError) duplicate key value violates unique constraint \"project_name_key\"\nDETAIL:  Key (name)=(Flickr Person Finder) already exists.\n",
         "status": "failed",
         "status_code": 415,
-        "target": "app"
+        "target": "project"
     }
 
 The error message will have the information regarding the problems it has found
@@ -383,7 +383,7 @@ task presenter to the project. You can add it running the following command:
 
 In PyBossa every project has a **presenter** endpoint:
 
- * http://PYBOSSA-SERVER/app/SLUG/newtask
+ * http://PYBOSSA-SERVER/project/SLUG/newtask
 
 .. note::
    The **slug** is the short name for the project, in this case 
@@ -427,7 +427,7 @@ that a new task is being loaded:
           <br/>
           <div class="alert-actions">
             <a class="btn small" href="/">Go back</a>
-            <a class="btn small" href="/app">or, Check other projects</a>
+            <a class="btn small" href="/project">or, Check other projects</a>
           </div>
         </div>
         <div id="error" class="alert alert-error" style="display:none;">
@@ -720,7 +720,7 @@ completely, however the volunteers will benefit from this type of information
 as they will be able to know how many tasks they have to do, giving an idea of
 progress while the contribute to the project.
 
-Finally, we only need in our application to run the PyBossa project:
+Finally, we only need in our code to tell pybossa.js to run our project:
 
 .. code-block:: javascript
 
@@ -788,7 +788,7 @@ and look for the **Edit the task presenter** button.
 
 In order to test the project task presenter, go to the following URL::
 
-  http://PYBOSSA-SERVER/app/SLUG/presenter
+  http://PYBOSSA-SERVER/project/SLUG/presenter
 
 The presenter will load one task, and you will be able to submit and save one
 answer for the current task.
@@ -841,7 +841,7 @@ your project is important and how, as a volunteer, you can contribute.
 If your project has a tutorial, you can actually access it directly in this
 endpoint::
 
-  http://server/app/tutorial
+  http://server/project/tutorial
 
 
 Providing some I18n support
@@ -884,7 +884,7 @@ the tutorial. Here you have a snippet of HTML tutorial file:
                    </p>
                 </div>
                 <div id="1" class="modal-body" style="display:none">
-                    <p>The application is really simple. It loads a photo from <a href="http://flickr.com">Flickr</a> and asks you this question: <strong>Do you see a human in this photo?</strong></p>
+                    <p>The project is really simple. It loads a photo from <a href="http://flickr.com">Flickr</a> and asks you this question: <strong>Do you see a human in this photo?</strong></p>
                     <img src="http://farm7.staticflickr.com/6109/6286728068_2f3c6912b8_q.jpg" class="img-thumbnail"/>
                     <p>You will have 3 possible answers:
                     <ul>
@@ -1138,7 +1138,7 @@ The file can be composed using Markdown or plain text.
 
 The long description will be shown in the project home page::
 
- http://crowdcrafting.org/app/flickrperson
+ http://crowdcrafting.org/project/flickrperson
 
 If you want to modify the description you have two options, edit it via the web
 interface, or modify locally the *long_description.md* file and run pbs to
@@ -1209,7 +1209,7 @@ three different ways:
 For exporting the data, all you have to do is to visit the following URL in
 your web-browser::
 
-    http://PYBOSSA-SERVER/app/slug/tasks/export
+    http://PYBOSSA-SERVER/project/slug/tasks/export
 
 You will find a simple interface that will allow you to export the Tasks and
 Task Runs to JSON_ and CSV_ formats:
@@ -1226,7 +1226,7 @@ click it all the answers for the given task will be shown in JSON format.
 
 You can check which tasks are completed, going to the project URL::
 
-    http://PYBOSSA-SERVER/app/slug
+    http://PYBOSSA-SERVER/project/slug
 
 And clicking in the **Tasks** link in the **left local navigation**, and then
 click in the **Browse** box:

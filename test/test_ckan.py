@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 from default import Test, db, with_context
 from pybossa.model.user import User
-from pybossa.model.app import App
+from pybossa.model.project import Project
 from helper import web as web_helper
 from pybossa.ckan import Ckan
 
@@ -32,7 +32,7 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestCkanWeb(web_helper.Helper):
-    url = "/app/test-app/tasks/export"
+    url = "/project/test-app/tasks/export"
 
     def setUp(self):
         super(TestCkanWeb, self).setUp()
@@ -53,7 +53,7 @@ class TestCkanWeb(web_helper.Helper):
         res = self.signin(email=self.email_addr, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "The CKAN exporter should be available for the owner of the app"
+        err_msg = "The CKAN exporter should be available for the owner of the project"
         assert dom.find(id="ckan") is not None, err_msg
 
         self.signout()
@@ -61,7 +61,7 @@ class TestCkanWeb(web_helper.Helper):
         self.signin(email=self.email_addr2, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "The CKAN exporter should be ONLY available for the owner of the app"
+        err_msg = "The CKAN exporter should be ONLY available for the owner of the project"
         assert dom.find(id="ckan") is None, err_msg
 
     @with_context
@@ -138,7 +138,7 @@ class TestCkanModule(Test, object):
                     "cache_url": None,
                     "name": "task",
                     "created": "2013-04-12T05:50:41.776512",
-                    "url": "http://localhost:5000/app/urbanpark/",
+                    "url": "http://localhost:5000/project/urbanpark/",
                     "webstore_url": None,
                     "position": 0,
                     "revision_id": "85027e11-fcbd-4362-9298-9755c99729b0",
@@ -165,7 +165,7 @@ class TestCkanModule(Test, object):
                     "cache_url": None,
                     "name": "task_run",
                     "created": "2013-04-12T05:50:45.193953",
-                    "url": "http://localhost:5000/app/urbanpark/",
+                    "url": "http://localhost:5000/project/urbanpark/",
                     "webstore_url": None,
                     "position": 1,
                     "revision_id": "a1c52da7-5f2a-4bd4-8e58-b58e3caa11b5",
@@ -181,7 +181,7 @@ class TestCkanModule(Test, object):
             "relationships_as_subject": [],
             "name": "urbanpark",
             "isopen": False,
-            "url": "http://localhost:5000/app/urbanpark/",
+            "url": "http://localhost:5000/project/urbanpark/",
             "notes": "",
             "title": "Urban Parks",
             "extras": [],
@@ -199,7 +199,7 @@ class TestCkanModule(Test, object):
                         {u'type': u'timestamp', u'id': u'created'},
                         {u'type': u'timestamp', u'id': u'finish_time'},
                         {u'type': u'int', u'id': u'calibration'},
-                        {u'type': u'int', u'id': u'app_id'},
+                        {u'type': u'int', u'id': u'project_id'},
                         {u'type': u'text', u'id': u'user_ip'},
                         {u'type': u'int', u'id': u'TaskRun_task'},
                         {u'type': u'int', u'id': u'TaskRun_user'},
@@ -219,7 +219,7 @@ class TestCkanModule(Test, object):
                             "quorum": 0,
                             "created": "2012-07-29T17:12:10.519270",
                             "calibration": 0,
-                            "app_id": 120,
+                            "project_id": 120,
                             "state": "0",
                             "id": 6345,
                             "priority_0": 0.0}],
@@ -311,16 +311,16 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_create(app=app, user=user, url="http://something.com")
+            out = self.ckan.package_create(project=project, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
 
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_create(app=app, user=user, url="http://something.com")
+                self.ckan.package_create(project=project, user=user, url="http://something.com")
             except Exception as out:
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
@@ -340,9 +340,9 @@ class TestCkanModule(Test, object):
         Mock.return_value = pkg_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            self.ckan.package_create(app=app, user=user, url="http://something.com")
+            self.ckan.package_create(project=project, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
             out = self.ckan.resource_create(name='task')
             err_msg = "It should create the task resource"
@@ -486,9 +486,9 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_update(app=app, user=user,
+            out = self.ckan.package_update(project=project, user=user,
                                            url="http://something.com",
                                            resources=self.pkg_json_found['result']['resources'])
             err_msg = "The package ID should be the same"
@@ -497,7 +497,7 @@ class TestCkanModule(Test, object):
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_update(app=app, user=user,
+                self.ckan.package_update(project=project, user=user,
                                          url="http://something.com",
                                          resources=self.pkg_json_found['result']['resources'])
             except Exception as out:
