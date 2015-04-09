@@ -21,7 +21,6 @@ import logging
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
-from flask.ext.heroku import Heroku
 from flask.ext.babel import gettext
 from pybossa import default_settings as settings
 from pybossa.extensions import *
@@ -33,8 +32,6 @@ from pybossa.util import pretty_date
 def create_app(run_as_server=True):
     """Create web app."""
     app = Flask(__name__)
-    if 'DATABASE_URL' in os.environ:  # pragma: no cover
-        Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
