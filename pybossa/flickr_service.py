@@ -42,7 +42,8 @@ class FlickrService(object):
             access_token_url='https://www.flickr.com/services/oauth/access_token',
             authorize_url='https://www.flickr.com/services/oauth/authorize',
             consumer_key=app.config['FLICKR_API_KEY'],
-            consumer_secret=app.config['FLICKR_SHARED_SECRET'])
+            consumer_secret=app.config['FLICKR_SHARED_SECRET'],
+            access_token_method='GET')
         tokengetter = functools.partial(self.get_token, session)
         self.client.tokengetter(tokengetter)
         importer_params = {'api_key': app.config['FLICKR_API_KEY']}
