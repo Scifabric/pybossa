@@ -493,85 +493,85 @@ msgstr "mit einem Wert von"
 
 #: themes/default/templates/account/_helpers.html:49
 msgid "contributed tasks"
-msgstr "erledigt Aufgaben"
+msgstr "erledigte Aufgaben"
 
 #: themes/default/templates/account/_helpers.html:57
 msgid "The user has not contributed to any tasks yet"
-msgstr "El usuario no ha contribuido tareas todavía"
+msgstr "Dieser Benutzer hat bisher noch zu keinen Aufgaben beigetragen"
 
 #: themes/default/templates/account/_helpers.html:60
 #: themes/default/templates/home/index.html:78
 msgid "Joined"
-msgstr "Se ha unido"
+msgstr "Zusammengeführt"
 
 #: themes/default/templates/account/_helpers.html:63
 msgid "API key"
-msgstr "Clave API"
+msgstr "API Schlüssel"
 
 #: themes/default/templates/account/_helpers.html:66
 msgid "Edit your profile"
-msgstr "Edita tu perfil"
+msgstr "Benutzerprofil bearbeiten"
 
 #: themes/default/templates/account/_helpers.html:90
 #: themes/default/templates/applications/_helpers.html:7
 msgid "Prev"
-msgstr "Anteriores"
+msgstr "Zurück"
 
 #: themes/default/templates/account/_helpers.html:110
 #: themes/default/templates/applications/_helpers.html:27
 msgid "Next"
-msgstr "Siguientes"
+msgstr "Vor"
 
 #: themes/default/templates/account/applications.html:16
 msgid "Published"
-msgstr "Publicadas"
+msgstr "Veröffentlicht"
 
 #: themes/default/templates/account/applications.html:22
 #: themes/default/templates/applications/index.html:15
 msgid "Draft"
-msgstr "Borrador"
+msgstr "Entwurf"
 
 #: themes/default/templates/account/applications.html:28
 msgid "You have not created a project"
-msgstr "No has creado unaproyecto"
+msgstr "Du hast noch kein Projekt angelegt"
 
 #: themes/default/templates/account/applications.html:29
 #: themes/default/templates/home/index.html:37 view/applications.py:190
 msgid "Create a Project"
-msgstr "Crea una Proyecto"
+msgstr "Projekt anlegen"
 
 #: themes/default/templates/account/index.html:14
 msgid "registered users"
-msgstr "usuarios registrados"
+msgstr "Registrierte Nutzer"
 
 #: themes/default/templates/account/index.html:14
 #: themes/default/templates/stats/global.html:49
 msgid "Leaderboard"
-msgstr "Clasificación"
+msgstr "Rangliste"
 
 #: themes/default/templates/account/password.html:13
 #: themes/default/templates/account/update.html:53
 msgid "Change your Password"
-msgstr "Cambia tu contraseña"
+msgstr "Passwort ändern"
 
 #: themes/default/templates/account/password.html:18
 msgid "my current password"
-msgstr "mi contraseña actual"
+msgstr "aktuelles Passwort"
 
 #: themes/default/templates/account/password.html:19
 #: themes/default/templates/account/password_reset.html:10
 msgid "my new password"
-msgstr "mi nueva contraseña"
+msgstr "neues Passwort"
 
 #: themes/default/templates/account/password.html:20
 #: themes/default/templates/account/password_reset.html:11
 msgid "my new password again"
-msgstr "mi nueva contraseña de nuevo"
+msgstr "neues Passwort wiederholen"
 
 #: themes/default/templates/account/password.html:22
 #: themes/default/templates/account/update.html:63
 msgid "Save the Changes"
-msgstr "Guardar los Cambios"
+msgstr "Änderungen speichern"
 
 #: themes/default/templates/account/password.html:23
 #: themes/default/templates/account/password_forgot.html:13
@@ -594,210 +594,210 @@ msgstr "Guardar los Cambios"
 #: themes/default/templates/applications/importers/epicollect.html:26
 #: themes/default/templates/applications/importers/gdocs.html:24
 msgid "Cancel"
-msgstr "Cancelar"
+msgstr "Abbrechen"
 
 #: themes/default/templates/account/password_forgot.html:6
 msgid "Reset your Password"
-msgstr "Restablecer tu contraseña"
+msgstr "Passwort zurücksetzen"
 
 #: themes/default/templates/account/password_forgot.html:10
 msgid "my e-mail"
-msgstr "mi correo electrónico"
+msgstr "E-Mail Adresse"
 
 #: themes/default/templates/account/password_forgot.html:12
 msgid "Reset my Password"
-msgstr "Restablecer mi contraseña"
+msgstr "Passwort zurücksetzen"
 
 #: themes/default/templates/account/profile.html:15
 msgid "Your Profile"
-msgstr "Tu perfil"
+msgstr "Dein Profil"
 
 #: themes/default/templates/account/profile.html:18
 msgid "Your Contributions"
-msgstr "Tus Contribuciones"
+msgstr "Deine Beiträge"
 
 #: themes/default/templates/account/profile.html:26
 msgid "Contribute!"
-msgstr "¡Contribuye!"
+msgstr "Beitragen!"
 
 #: themes/default/templates/account/register.html:6
 #: themes/default/templates/account/reset-api-key.html:14
 #: themes/default/templates/account/signin.html:6
 msgid "Note"
-msgstr "Nota"
+msgstr "Notiz"
 
 #: themes/default/templates/account/register.html:7
 #: themes/default/templates/account/signin.html:7
 msgid "By click the"
-msgstr "Haciendo click en el"
+msgstr "Durch das Anklicken"
 
 #: themes/default/templates/account/register.html:8
 msgid "Create account button"
-msgstr "En el botón de crear cuenta"
+msgstr "des Anlegen Button"
 
 #: themes/default/templates/account/register.html:9
 msgid "below you are agreeing to the"
-msgstr "de abajo estás aceptando los"
+msgstr "(siehe unten) stimmst Du den"
 
 #: themes/default/templates/account/register.html:10
 #: themes/default/templates/account/signin.html:8
 msgid "terms of use"
-msgstr "términos de uso"
+msgstr "Nutzungsbedingungen zu"
 
 #: themes/default/templates/account/register.html:10
 #: themes/default/templates/account/signin.html:8
 msgid "and"
-msgstr "y"
+msgstr "und"
 
 #: themes/default/templates/account/register.html:11
 #: themes/default/templates/account/signin.html:9
 msgid "data"
-msgstr "datos"
+msgstr "Daten"
 
 #: themes/default/templates/account/register.html:14
 #: themes/default/templates/account/register.html:24
 msgid "Create an account"
-msgstr "Crear una cuenta"
+msgstr "Konto anlegen"
 
 #: themes/default/templates/account/register.html:18
 #: themes/default/templates/account/update.html:40
 msgid "my full name"
-msgstr "mi nombre y apellidos"
+msgstr "Name"
 
 #: themes/default/templates/account/register.html:19
 #: themes/default/templates/account/update.html:41
 msgid "myusername"
-msgstr "mi nombre de usuario"
+msgstr "Nutzername"
 
 #: themes/default/templates/account/register.html:20
 #: themes/default/templates/account/update.html:42
 msgid "hello@mywebsite.org"
-msgstr "hola@miweb.org"
+msgstr "hallo@meinewebseite.org"
 
 #: themes/default/templates/account/register.html:21
 #: themes/default/templates/account/register.html:22
 msgid "my secret password"
-msgstr "my contraseña secreta"
+msgstr "mein geheimes Passwort"
 
 #: themes/default/templates/account/reset-api-key.html:12
 msgid " Reset API Key"
-msgstr " Reiniciar la clave API"
+msgstr " API Schlüssel zurücksetzen"
 
 #: themes/default/templates/account/reset-api-key.html:14
 msgid ""
 " If you reset the API key, you will need to use the new generated key for"
 " any API call."
 msgstr ""
-" Si reinicias la clave API, necesitarás utilizar la nueva clave para "
-"cualquier llamada a la API"
+" Wenn Du den API-Schlüssel zurücksetzt, musst Du den neu angelegten Schlüssel für "
+" alle API-Aufrufe nutzen."
 
 #: themes/default/templates/account/reset-api-key.html:17
 #: themes/default/templates/account/update.html:84
 msgid "Do you want to reset your personal API Key?"
-msgstr "¿Quieres reiniciar tu clave personal de la API?"
+msgstr "Möchtest Du Deinen persönlichen API-Schlüssel zurücksetzen?"
 
 #: themes/default/templates/account/reset-api-key.html:21
 #: themes/default/templates/account/update.html:88
 msgid "No, do not reset the API key!"
-msgstr "¡No, no quiero reiniciar mi clave API!"
+msgstr "Nein, den API-Schlüssel nicht zurücksetzen!"
 
 #: themes/default/templates/account/settings.html:14
 #: themes/default/templates/account/update.html:17
 msgid "Update your profile"
-msgstr "Actualiza tu perfil"
+msgstr "Profil aktualisieren"
 
 #: themes/default/templates/account/settings.html:15
 msgid "Reset the API Key"
-msgstr "Reinicia la clave API"
+msgstr "API-Schlüssel zurücksetzen"
 
 #: themes/default/templates/account/settings.html:17
 msgid " Change your Password"
-msgstr " Cambia tu Contraseña"
+msgstr " Passwort ändern"
 
 #: themes/default/templates/account/signin.html:7
 msgid "Sign in button"
-msgstr "Botón de Inicio de Sesión"
+msgstr "Einloggen Button"
 
 #: themes/default/templates/account/signin.html:7
 msgid ""
 "below you are agreeing to\n"
 "    the"
-msgstr "de debajo aceptas los"
+msgstr ""
 
 #: themes/default/templates/account/signin.html:13
 #: themes/default/templates/account/signin.html:23
 msgid "Sign in with Twitter"
-msgstr "Inicia sesión con Twitter"
+msgstr "Mit Twitter-Konto einloggen"
 
 #: themes/default/templates/account/signin.html:16
 #: themes/default/templates/account/signin.html:26
 msgid "Sign in with Facebook"
-msgstr "Inicia sesión con Facebook"
+msgstr "Mit Facebook-Konto einloggen"
 
 #: themes/default/templates/account/signin.html:19
 #: themes/default/templates/account/signin.html:29
 msgid "Sign in with Google"
-msgstr "Inicia sesión con Google"
+msgstr "Mit Google-Konto einloggen"
 
 #: themes/default/templates/account/signin.html:38
 msgid "Or Sign in with your PyBossa account"
-msgstr "O Inicia sesión con tu cuenta PyBossa"
+msgstr "Oder mit PyBossa-Konto einloggen"
 
 #: themes/default/templates/account/signin.html:40
 msgid "Sign in with your PyBossa account"
-msgstr "Inicia sesión con tu cuenta de PyBossa"
+msgstr "Logge Dich mit Deinem PyBossa-Konto ein"
 
 #: themes/default/templates/account/signin.html:52
 msgid " Create a new account!"
-msgstr " ¡Únete ya!"
+msgstr " Neues Konto anlegen!"
 
 #: themes/default/templates/account/signin.html:53
 msgid "Forgot Password"
-msgstr "¿Has olvidado tu contraseña?"
+msgstr "Passwort vergessen"
 
 #: themes/default/templates/account/update.html:31
 #: themes/default/templates/applications/update.html:28
 msgid "Upload"
-msgstr "Subir"
+msgstr "Hochladen"
 
 #: themes/default/templates/account/update.html:46
 #: themes/default/templates/account/update.html:76
 msgid "Save the changes"
-msgstr "Guardar los cambios"
+msgstr "Änderungen speichern"
 
 #: themes/default/templates/admin/_helpers.html:12
 msgid "Remove from admin group"
-msgstr "Quitar del grupo de administradores"
+msgstr "Aus der Gruppe der Administratoren entfernen"
 
 #: themes/default/templates/admin/_helpers.html:16
 msgid "Add to admin group"
-msgstr "Añadir al grupo de administradores"
+msgstr "Zur Gruppe der Administratoren hinzufügen"
 
 #: themes/default/templates/admin/applications.html:13
 msgid "Manage featured projects"
-msgstr "Organizar los proyectos destacados"
+msgstr "Gefeaturete Projekte verwalten"
 
 #: themes/default/templates/admin/categories.html:13
 msgid "Manage Categories"
-msgstr "Administrar Categorías"
+msgstr "Kategorien verwalten"
 
 #: themes/default/templates/admin/categories.html:20
 #: themes/default/templates/admin/update_category.html:19
 msgid "Category name"
-msgstr "Nombre de la categoría"
+msgstr "Name der Kategorie"
 
 #: themes/default/templates/admin/categories.html:21
 #: themes/default/templates/admin/update_category.html:20
 msgid "Category description"
-msgstr "Descrición de la categoría"
+msgstr "Beschreibung der Kategorie"
 
 #: themes/default/templates/admin/categories.html:23
 msgid "Add Category"
-msgstr "Añadir Categoría"
+msgstr "Kategorie hinzufügen"
 
 #: themes/default/templates/admin/categories.html:30
 msgid "List of Available Categories"
-msgstr "Todas las categorías disponibles"
+msgstr "Liste der verfügbaren Kategorien"
 
 #: themes/default/templates/admin/categories.html:39
 msgid "Edit Category Name"
