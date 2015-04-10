@@ -204,7 +204,8 @@ def new():
         if len(text_desc) >= 252:
             text_desc = text_desc[:-3]
             text_desc += "..."
-        return blank_space_regex.sub(" ", text_desc)
+        description = blank_space_regex.sub(" ", text_desc)
+        return description if description else " "
 
     if request.method != 'POST':
         return respond(False)
