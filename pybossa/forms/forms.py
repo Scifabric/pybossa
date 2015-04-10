@@ -30,6 +30,8 @@ import validator as pb_validator
 
 
 EMAIL_MAX_LENGTH = 254
+USER_NAME_MAX_LENGTH = 35
+USER_FULLNAME_MAX_LENGTH = 35
 
 ### Forms for projects view
 
@@ -215,13 +217,13 @@ class RegisterForm(Form):
     err_msg = lazy_gettext("Full name must be between 3 and 35 "
                            "characters long")
     fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
+                         [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('User name'),
-                         [validators.Length(min=3, max=35, message=err_msg),
+                         [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
                           pb_validator.NotAllowedChars(),
                           pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                           pb_validator.ReservedName('account', current_app)])
@@ -253,13 +255,13 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("Full name must be between 3 and 35 "
                            "characters long")
     fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
+                         [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('Username'),
-                     [validators.Length(min=3, max=35, message=err_msg),
+                     [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                       pb_validator.ReservedName('account', current_app)])
