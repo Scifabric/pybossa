@@ -29,7 +29,7 @@ from pybossa.core import project_repo, user_repo
 import validator as pb_validator
 
 
-EMAIL_MAX_LENGTH = 35
+EMAIL_MAX_LENGTH = 254
 
 ### Forms for projects view
 
