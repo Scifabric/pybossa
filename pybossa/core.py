@@ -62,6 +62,8 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
+    plugin_manager.init_app(app)
+    plugin_manager.install_plugins()
     return app
 
 
