@@ -42,7 +42,7 @@ class ProjectForm(Form):
                             pb_validator.Unique(project_repo.get_by, 'short_name',
                                 message=lazy_gettext(
                                     "Short Name is already taken.")),
-                            pb_validator.ReservedName('app', current_app)])
+                            pb_validator.ReservedName('project', current_app)])
     long_description = TextAreaField(lazy_gettext('Long Description'),
                                      [validators.Required()])
 
