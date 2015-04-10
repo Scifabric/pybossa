@@ -21,7 +21,8 @@ from nose.tools import raises
 from flask import current_app
 
 from default import Test, db, with_context
-from pybossa.forms.forms import RegisterForm, LoginForm
+from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
+    USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH)
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
@@ -116,9 +117,10 @@ class TestRegisterForm(Test):
     def test_register_name_length(self):
         self.fill_in_data['name'] = 'a'
         form = RegisterForm(**self.fill_in_data)
+        error_message = "User name must be between 3 and %s characters long" % USER_NAME_MAX_LENGTH
 
         assert not form.validate()
-        assert "User name must be between 3 and 35 characters long" in form.errors['name'], form.errors
+        assert error_message in form.errors['name'], form.errors
 
     @with_context
     def test_register_name_allowed_chars(self):
@@ -149,9 +151,10 @@ class TestRegisterForm(Test):
     def test_register_email_length(self):
         self.fill_in_data['email_addr'] = ''
         form = RegisterForm(**self.fill_in_data)
+        error_message = "Email must be between 3 and %s characters long" % EMAIL_MAX_LENGTH
 
         assert not form.validate()
-        assert "Email must be between 3 and 35 characters long" in form.errors['email_addr'], form.errors
+        assert error_message in form.errors['email_addr'], form.errors
 
     @with_context
     def test_register_email_valid_format(self):
@@ -165,9 +168,10 @@ class TestRegisterForm(Test):
     def test_register_fullname_length(self):
         self.fill_in_data['fullname'] = 'a'
         form = RegisterForm(**self.fill_in_data)
+        error_message = "Full name must be between 3 and %s characters long" % USER_FULLNAME_MAX_LENGTH
 
         assert not form.validate()
-        assert "Full name must be between 3 and 35 characters long" in form.errors['fullname'], form.errors
+        assert error_message in form.errors['fullname'], form.errors
 
     @with_context
     def test_register_password_required(self):
