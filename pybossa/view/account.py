@@ -43,7 +43,7 @@ from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
 from pybossa.core import signer, mail, uploader, sentinel, newsletter, ldap
-from pybossa.util import Pagination, pretty_date
+from pybossa.util import Pagination
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.cache import apps as cached_apps
@@ -126,8 +126,11 @@ def signin():
         password = form.password.data
         email = form.email.data
         try:
-            if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS_OBJECT'] and app.config['LDAP_USERNAME_PATH']):
-                ldap_response_object = ldap.base_connection.search(app.config['LDAP_SEARCH_OBJECT'].replace("##ACCOUNT_NAME##",email), base_dn=app.config['LDAP_BASE_SEARCH_DN'])[0]
+            if (app.config['LDAP_SERVER'] and app.config['LDAP_CONNECTION_ACCOUNT'] and app.config['LDAP_CONNECTION_PASSWORD'] and 
+               app.config['LDAP_BASE_SEARCH_DN'] and app.config['LDAP_SEARCH_OBJECT'] and app.config['LDAP_NAME_OBJECT'] and 
+               app.config['LDAP_FULLNAME_OBJECT'] and app.config['LDAP_EMAIL_ADDRESS_OBJECT'] and app.config['LDAP_USERNAME_PATH']):
+                ldap_response_object = ldap.base_connection.search(app.config['LDAP_SEARCH_OBJECT'].replace("##ACCOUNT_NAME##",email), 
+                   base_dn=app.config['LDAP_BASE_SEARCH_DN'])[0]
                 user = user_repo.get_by(name=ldap_response_object[app.config['LDAP_NAME_OBJECT']][0])
                 if user and ldap.base_connection.authenticate(ldap_response_object[app.config['LDAP_USERNAME_PATH']][0], password):
                     msg_1 = gettext("Welcome back") + " " + user.fullname
@@ -139,7 +142,7 @@ def signin():
                     msg_1 = gettext("Welcome to PYBOSSA") + " " + user.fullname
                     flash(msg_1, 'success')
                     return _sign_in_user(user)
-        except:
+        except Exception as inst:
             user = user_repo.get_by(email_addr=email)
             if user and user.check_password(password):
                 msg_1 = gettext("Welcome back") + " " + user.fullname
@@ -208,7 +211,8 @@ def ldap_signup(userobject):
     """
     Registers an LDAP user to the pybossa database
     """
-    account = User(fullname=userobject[app.config['LDAP_FULLNAME_OBJECT']][0], name=userobject[app.config['LDAP_NAME_OBJECT']][0], email_addr=userobject[app.config['LDAP_EMAIL_ADDRESS_OBJECT']][0])
+    account = User(fullname=userobject[app.config['LDAP_FULLNAME_OBJECT']][0], 
+      name=userobject[app.config['LDAP_NAME_OBJECT']][0], email_addr=userobject[app.config['LDAP_EMAIL_ADDRESS_OBJECT']][0])
     user_repo.save(account)
     return account
 

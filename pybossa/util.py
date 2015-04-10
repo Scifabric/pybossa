@@ -250,7 +250,8 @@ class Ldap(object):
             self.init_app()
 
     def init_app(self, app):
-        self.base_connection = simpleldap.Connection(app.config['LDAP_SERVER'], dn=app.config['LDAP_CONNECTION_ACCOUNT'], password=app.config['LDAP_CONNECTION_PASSWORD'])
+        self.base_connection = simpleldap.Connection(app.config['LDAP_SERVER'], dn=app.config['LDAP_CONNECTION_ACCOUNT'],
+          password=app.config['LDAP_CONNECTION_PASSWORD'])
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # This code is taken from http://docs.python.org/library/csv.html#examples
