@@ -801,67 +801,67 @@ msgstr "Liste der verfügbaren Kategorien"
 
 #: themes/default/templates/admin/categories.html:39
 msgid "Edit Category Name"
-msgstr "Editar el nombre de la Categoría"
+msgstr "Name der Kategorie bearbeiten"
 
 #: themes/default/templates/admin/categories.html:41
 #: themes/default/templates/admin/categories.html:43
 #: themes/default/templates/admin/del_category.html:17 view/admin.py:318
 msgid "Delete Category"
-msgstr "Borrar Categoría"
+msgstr "Kategorie löschen"
 
 #: themes/default/templates/admin/del_category.html:15
 #: themes/default/templates/applications/delete.html:14
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid "Danger Zone!"
-msgstr "¡Zona de Peligro!"
+msgstr "Achtung!"
 
 #: themes/default/templates/admin/del_category.html:15
 msgid ""
 "Deleting the category will remove it from all the projects! This "
 "operation cannot be undone!"
 msgstr ""
-"Si borras esta categoría, se borrará de todos los proyectos. Esta acción "
-"no puede ser deshecha."
+"Wenn Sie diese Kategorie löschen, dann wird diese Kategorie aus allen Projekten entfernt! Diese "
+"Operation kann nicht rückgängig gemacht werden."
 
 #: themes/default/templates/admin/index.html:15
 #: themes/default/templates/applications/index.html:33
 msgid "Featured Projects"
-msgstr "Proyectos Destacados"
+msgstr "Gefeaturete Projekte"
 
 #: themes/default/templates/admin/index.html:16
 msgid "Show projects on the front page"
-msgstr "Mostrar proyectos en la página principal"
+msgstr "Zeige Projekte auf der Hauptseite"
 
 #: themes/default/templates/admin/index.html:18
 #: themes/default/templates/admin/index.html:25
 #: themes/default/templates/admin/index.html:34
 msgid "Manage"
-msgstr "Administrar"
+msgstr "Verwalten"
 
 #: themes/default/templates/admin/index.html:22 view/admin.py:297
 msgid "Categories"
-msgstr "Categorías"
+msgstr "Kategorien"
 
 #: themes/default/templates/admin/index.html:23
 msgid "Manage project categories"
-msgstr "Organizar los proyectos de portada"
+msgstr "Kategorien des Projektes verwalten"
 
 #: themes/default/templates/admin/index.html:31
 msgid "Administrators"
-msgstr "Administradores"
+msgstr "Adminstratoren"
 
 #: themes/default/templates/admin/index.html:32
 msgid "Manage administrators"
-msgstr "Organizar los administradores"
+msgstr "Administratoren verwalten"
 
 #: themes/default/templates/admin/index.html:38
 #: themes/default/templates/applications/stats.html:225
 msgid "Users"
-msgstr "Usuario"
+msgstr "Benutzer"
 
 #: themes/default/templates/admin/index.html:39
 msgid "Export a list of users"
-msgstr "Exportar lista de usuarios"
+msgstr "Liste der Benutzer exportieren"
 
 #: themes/default/templates/admin/index.html:41
 msgid "JSON"
@@ -874,35 +874,35 @@ msgstr "CSV"
 #: themes/default/templates/admin/update_category.html:22 view/admin.py:355
 #: view/admin.py:376
 msgid "Update Category"
-msgstr "Actualizar Categoría"
+msgstr "Kategorie aktualisieren"
 
 #: themes/default/templates/admin/users.html:14 view/admin.py:137
 #: view/admin.py:141
 msgid "Manage Admin Users"
-msgstr "Organizar los Administradores"
+msgstr "Administratoren verwalten"
 
 #: themes/default/templates/admin/users.html:19
 msgid "Try with the full name or nick"
-msgstr "Inténtalo con el nombre completo o nombre de usuario"
+msgstr "Versuche es mit dem Namen oder dem Nicknamen"
 
 #: themes/default/templates/admin/users.html:20
 msgid "Search"
-msgstr "Búsqueda"
+msgstr "Suchen"
 
 #: themes/default/templates/admin/users.html:31
 msgid "Current Users with Admin privileges"
-msgstr "Usuarios con privilegios de administrador"
+msgstr "Aktuelle Nutzer mit Adminrechten"
 
 #: themes/default/templates/applications/_helpers.html:36
 #: themes/default/templates/applications/_helpers.html:216
 #: themes/default/templates/home/index.html:18
 msgid "Info"
-msgstr "Información"
+msgstr "Information"
 
 #: themes/default/templates/applications/_helpers.html:37
 #: themes/default/templates/applications/presenter.html:15
 msgid "Contribute"
-msgstr "Contribuir"
+msgstr "Beitragen"
 
 #: themes/default/templates/applications/_helpers.html:38
 #: themes/default/templates/applications/_helpers.html:61
@@ -916,13 +916,13 @@ msgstr "Contribuir"
 #: themes/default/templates/applications/tasks_browse.html:62
 #: themes/default/templates/home/index.html:84
 msgid "Tasks"
-msgstr "Tareas"
+msgstr "Aufgaben"
 
 #: themes/default/templates/applications/_helpers.html:39
 #: themes/default/templates/applications/stats.html:32
 #: themes/default/templates/home/_about.html:21
 msgid "Statistics"
-msgstr "Estadísticas"
+msgstr "Statistik"
 
 #: themes/default/templates/applications/_helpers.html:41
 #: themes/default/templates/applications/_helpers.html:83
@@ -931,7 +931,7 @@ msgstr "Estadísticas"
 #: themes/default/templates/applications/tasks.html:37
 #: themes/default/templates/applications/tasks.html:41
 msgid "Settings"
-msgstr "Configuración"
+msgstr "Einstellungen"
 
 #: themes/default/templates/applications/_helpers.html:43
 msgid "Blog"
@@ -944,56 +944,56 @@ msgstr "ID"
 #: themes/default/templates/applications/_helpers.html:58
 #: themes/default/templates/applications/_helpers.html:126
 msgid "Creation Date"
-msgstr "Creado"
+msgstr "Anlegedatum"
 
 #: themes/default/templates/applications/_helpers.html:59
 #: themes/default/templates/applications/_helpers.html:128
 msgid "Last Activity"
-msgstr "Actualizado"
+msgstr "Letzte Aktivität"
 
 #: themes/default/templates/applications/_helpers.html:60
 #: themes/default/templates/applications/_helpers.html:131
 #: themes/default/templates/applications/_helpers.html:193
 msgid "Overall progress"
-msgstr "Progreso Total"
+msgstr "Gesamtfortschritt"
 
 #: themes/default/templates/applications/_helpers.html:60
 #: themes/default/templates/applications/_helpers.html:193
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid "completed"
-msgstr "completado"
+msgstr "beendet"
 
 #: themes/default/templates/applications/_helpers.html:64
 #: themes/default/templates/applications/_helpers.html:66
 msgid "Hidden"
-msgstr "Oculta"
+msgstr "Versteckt"
 
 #: themes/default/templates/applications/_helpers.html:99
 #: themes/default/templates/applications/_helpers.html:109
 msgid "Remove from Featured!"
-msgstr "¡Eliminar de Destacados!"
+msgstr "Von den gefeatureten Projekten entfernt!"
 
 #: themes/default/templates/applications/_helpers.html:102
 #: themes/default/templates/applications/_helpers.html:106
 msgid "Add to Featured!"
-msgstr "¡En Destacados!"
+msgstr "Zu gefeatureten Projekten hinzugefügt!"
 
 #: themes/default/templates/applications/_helpers.html:133
 #: themes/default/templates/applications/_helpers.html:135
 msgid "Created by"
-msgstr "Creado por"
+msgstr "Angelegt von"
 
 #: themes/default/templates/applications/_helpers.html:133
 msgid "Me"
-msgstr "Yo"
+msgstr "Mir"
 
 #: themes/default/templates/applications/_helpers.html:138
 msgid "Try it!"
-msgstr "¡Participa!"
+msgstr "Probier es aus!"
 
 #: themes/default/templates/applications/_helpers.html:195
 msgid "Start Contributing Now!"
-msgstr "¡Participa!"
+msgstr "Jetzt beitragen!"
 
 #: themes/default/templates/applications/actions.html:9
 #: themes/default/templates/applications/settings.html:18
@@ -1003,19 +1003,19 @@ msgstr "Edita los detalles del proyecto"
 #: themes/default/templates/applications/actions.html:10
 #: themes/default/templates/applications/tasks.html:33
 msgid "Edit the task presenter"
-msgstr "Edita el presentador de tareas"
+msgstr "Task Presenter bearbeiten"
 
 #: themes/default/templates/applications/actions.html:11
 #: themes/default/templates/applications/importers/csv.html:14
 #: themes/default/templates/applications/importers/epicollect.html:14
 #: themes/default/templates/applications/importers/gdocs.html:14
 msgid "Import tasks"
-msgstr "Importa tareas"
+msgstr "Aufgaben importieren"
 
 #: themes/default/templates/applications/actions.html:12
 #: themes/default/templates/applications/settings.html:20
 msgid "Delete the project"
-msgstr "Crear un proyecto"
+msgstr "Projekt löschen"
 
 #: themes/default/templates/applications/app.html:31
 #: themes/default/templates/applications/blog.html:33
