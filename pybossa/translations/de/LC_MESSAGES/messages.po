@@ -1028,7 +1028,7 @@ msgstr "Projekt löschen"
 #: themes/default/templates/applications/tasks.html:71
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
-msgstr "¡Perdón! Este proyecto no existe"
+msgstr "Sorry! Dieses Projekt existiert nicht."
 
 #: themes/default/templates/applications/blog.html:27
 msgid "Sorry! No posts so far."
