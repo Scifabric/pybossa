@@ -29,6 +29,8 @@ from pybossa.core import project_repo, user_repo
 import validator as pb_validator
 
 
+EMAIL_MAX_LENGTH = 35
+
 ### Forms for projects view
 
 class ProjectForm(Form):
@@ -227,7 +229,9 @@ class RegisterForm(Form):
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = EmailField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
+                           [validators.Length(min=3,
+                                              max=EMAIL_MAX_LENGTH,
+                                              message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
 
@@ -263,7 +267,9 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = EmailField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
+                           [validators.Length(min=3,
+                                              max=EMAIL_MAX_LENGTH,
+                                              message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
     subscribed = BooleanField(lazy_gettext('Get email notifications'))
@@ -319,7 +325,9 @@ class ForgotPasswordForm(Form):
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     email_addr = EmailField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
+                           [validators.Length(min=3,
+                                              max=EMAIL_MAX_LENGTH,
+                                              message=err_msg),
                             validators.Email()])
 
 
