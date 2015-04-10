@@ -228,6 +228,31 @@ them.
 .. _`GOOGLE_CLIENT_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L57
 
 
+LDAP
+~~~
+
+If you want to enable LDAP authentication, instead of local authentication, you will need to track down
+LDAP configuration information and copy and paste the following into these variables as appropriate:
+`LDAP_SERVER`_ (the FQDN of your DNS server), `LDAP_CONNECTION_ACCOUNT`_ (the username of an account 
+authorized to query the LDAP server), `LDAP_CONNECTION_PASSWORD`_ (the password of that account),
+`LDAP_BASE_SEARCH_DN`_ (where the system should search for your user objects), `LDAP_SEARCH_OBJECT`_ 
+(LDAP search string. Add the string ##ACCOUNT_NAME## at the location of your looked up account name), 
+`LDAP_NAME_OBJECT`_ (the location, in the retrieved object, of the name field), `LDAP_FULLNAME_OBJECT`_ 
+(the location, in the retrieved object, of the user's full name), `LDAP_EMAIL_ADDRESS_OBJECT`_ (the 
+location, in the retrieved object, of the user's email address), `LDAP_USERNAME_PATH`_ (the location, 
+in the retrieved object, of the user's fullly qualified LDAP path, to be used for authentication).
+
+
+.. _`LDAP_SERVER`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L58  
+.. _`LDAP_CONNECTION_ACCOUNT`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L59
+.. _`LDAP_CONNECTION_PASSWORD`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L60
+.. _`LDAP_BASE_SEARCH_DN`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L61
+.. _`LDAP_SEARCH_OBJECT`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L62  #Your LDAP search string. Add the string ##ACCOUNT_NAME## at the location of your looked up account name
+.. _`LDAP_NAME_OBJECT`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L63  #The LDAP property name you want to use as your name property
+.. _`LDAP_FULLNAME_OBJECT`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L64  #The LDAP property name you want to use as your full name property
+.. _`LDAP_EMAIL_ADDRESS_OBJECT`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L65  #The LDAP property name you want to use as your email property
+.. _`LDAP_USERNAME_PATH`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L66
+
 Receiving e-mails with errors
 =============================
 
