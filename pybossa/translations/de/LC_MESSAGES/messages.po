@@ -1032,7 +1032,7 @@ msgstr "Sorry! Dieses Projekt existiert nicht."
 
 #: themes/default/templates/applications/blog.html:27
 msgid "Sorry! No posts so far."
-msgstr "Vaya, todavía no hay ningún artículo publicado."
+msgstr "Sorry! Bisher keine Posts veröffentlicht."
 
 #: themes/default/templates/applications/blog_post.html:15
 msgid "Author: "
@@ -1040,119 +1040,119 @@ msgstr "Autor: "
 
 #: themes/default/templates/applications/blog_post.html:17
 msgid "Written: "
-msgstr "Escrito: "
+msgstr "Geschrieben: "
 
 #: themes/default/templates/applications/blog_post.html:31
 #: themes/default/templates/applications/task_settings.html:31
 msgid "Delete"
-msgstr "Borrar"
+msgstr "Löschen"
 
 #: themes/default/templates/applications/blog_post.html:32
 msgid "Edit"
-msgstr "Editar"
+msgstr "Bearbeiten"
 
 #: themes/default/templates/applications/blog_post.html:36
 #: themes/default/templates/applications/blog_post.html:41
 msgid "Back"
-msgstr "Atrás"
+msgstr "Zurück"
 
 #: themes/default/templates/applications/blog_post.html:40
 msgid "Sorry! This blogpost does not exist."
-msgstr "¡Perdón! Este artículo no existe"
+msgstr "Sorry! Dieser Blogpost existiert nicht."
 
 #: themes/default/templates/applications/delete.html:14
 msgid "If you delete the project and its tasks, it will be gone forever!"
-msgstr "¡Si borras el proyecto y sus tareas, se borrarán para siempre!"
+msgstr "Das Projekt und alle zugehörige Tasks können nach dem Löschen nicht wieder hergestellt werden!"
 
 #: themes/default/templates/applications/delete.html:20
 msgid ""
 "Are you sure you want to delete this project and all its tasks and "
 "associated task runs?"
 msgstr ""
-"¿Estás seguro que quieres eliminar este proyecto y todas las tareas y\""
+"Bist Du sicher, dass Du dieses Projekte und alle \""
 "\n"
-"\" respuestas asociadas a ella?"
+"\" zughörigen Aufgaben löschen möchtest?"
 
 #: themes/default/templates/applications/delete.html:23
 msgid "No, do not delete it!"
-msgstr "¡No, no la borres!"
+msgstr "Nein, nicht löschen!"
 
 #: themes/default/templates/applications/export.html:13
 msgid "Export All Tasks and Task Runs"
-msgstr "Exportar Todas las Tareas y Respuestas"
+msgstr "Alle Aufgaben und Antworten exportieren"
 
 #: themes/default/templates/applications/export.html:14
 msgid "You can export and download"
-msgstr "Puedes exportar y descargar"
+msgstr "Du kannst exportieren und herunterladen"
 
 #: themes/default/templates/applications/export.html:14
 msgid "all the available"
-msgstr "todas las"
+msgstr "alle verfügbaren"
 
 #: themes/default/templates/applications/export.html:14
 msgid ""
 "Tasks and Task Runs (the submitted answers by the users) in CSV or JSON "
 "formats."
-msgstr "Tareas y Repuestas (enviadas por los usuarios) en el formato CSV o JSON"
+msgstr "Aufgaben und Antworten (der Nutzer) in CSV oder JSON Format."
 
 #: themes/default/templates/applications/export.html:17
 msgid "Export in CSV format"
-msgstr "Exportar en formato CSV"
+msgstr "Export im CSV-Format"
 
 #: themes/default/templates/applications/export.html:19
 #: themes/default/templates/applications/export.html:24
 #: themes/default/templates/applications/export.html:39
 msgid "Task Runs"
-msgstr "Respuestas"
+msgstr "Antworten"
 
 #: themes/default/templates/applications/export.html:22
 msgid "Export in JSON format"
-msgstr "Exportar en formato JSON"
+msgstr "Export im JSON-Format"
 
 #: themes/default/templates/applications/import_options.html:13
 #: themes/default/templates/applications/tasks.html:20
 msgid "Import Tasks"
-msgstr "Importa Tareas"
+msgstr "Tasks importieren"
 
 #: themes/default/templates/applications/index.html:35
 msgid "A special selection of the most interesting projects"
-msgstr "Una selección especial de los proyectos más interesantes"
+msgstr "Eine Auswahl der interessantesten Projekte"
 
 #: themes/default/templates/applications/index.html:38
 #: themes/default/templates/stats/global.html:93
 msgid "Draft Projects"
-msgstr "Crear un Proyecto"
+msgstr "Projekte im Entwurf"
 
 #: themes/default/templates/applications/index.html:39
 msgid "Work in progress projects"
-msgstr "Proyectos en desarrollo"
+msgstr "Projekte in Bearbeitung"
 
 #: themes/default/templates/applications/index.html:58
 msgid "Sorry, there are no published projects for this category yet"
-msgstr "Vaya, todavía no hay proyectos en esta categoría"
+msgstr "Sorry, es gibt bisher keine veröffentlichten Projekte für die Kategorie"
 
 #: themes/default/templates/applications/new.html:13
 msgid "Project"
-msgstr "Nombre del Proyecto"
+msgstr "Name des Projektes"
 
 #: themes/default/templates/applications/new.html:13
 msgid "Create a new project"
-msgstr "Crear un proyecto"
+msgstr "Projekt anlegen"
 
 #: themes/default/templates/applications/new.html:17
 #: themes/default/templates/applications/update.html:37
 msgid "The name of the project"
-msgstr "El nombre del proyecto"
+msgstr "Der Name des Projektes"
 
 #: themes/default/templates/applications/new.html:18
 #: themes/default/templates/applications/update.html:38
 msgid "Short name or slug for the project"
-msgstr "El nombre corto o slug del proyecto"
+msgstr "Abkürzung des Projektes"
 
 #: themes/default/templates/applications/new.html:18
 #: themes/default/templates/applications/update.html:38
 msgid "Project slug:"
-msgstr "Slug del proyecto"
+msgstr "Projektkürzel:"
 
 #: themes/default/templates/applications/new.html:19
 msgid ""
@@ -1172,32 +1172,29 @@ msgid ""
 "                                                             \n"
 "            (you can use Markdown to give format to your description!)"
 msgstr ""
-"Explica tu proyecto"
+"Beschreibe Dein Projekt"
 "                                                             \n"
-"                · ¿Por qué? Por qué estás creando este proyecto, qué "
-"quiere                                                             \n"
-"                · ¿Cómo? Explica cómo funciona tu proyecto"
+"                · Warum? Warum legst Du dieses Projekt an, was möchtest Du "
+"mit dem Projekt erreichen?                                                             \n"
+"                · Wie? Erkläre wie Dein Projekt funktioniert"
 "                                                             \n"
-"                · ¿Cómo puedo ayudar?: Explica a los voluntarios cómo "
-"puedencontribuir a tu proyecto"
+"                · Was wird das Projekt verbessern? Erkläre den Beitragenden, inwiefern "
+"freiwillige Beiträge für Dein Projekt wichtig sind und welche Änderungen Deine Ergebnisse bewirken können!"
 "                                                             \n"
-"                · ¿Tu contribución será útil? Explica a los voluntarios "
-"por qué su contribución es tan importante para los objetivos de tu "
-"proyecto.                                                             \n"
-"            (Puedes utilizar Markdown para escribir la descripción.)"
+
 
 #: themes/default/templates/applications/new.html:26
 msgid "Create the project"
-msgstr "Crear un proyecto"
+msgstr "Projekt anlegen"
 
 #: themes/default/templates/applications/new_blogpost.html:14
 msgid "Write a new blog post for ad"
-msgstr "Escribe un artículo nuevo para "
+msgstr "Schreibe einen neuen Blogpost als Werbung "
 
 #: themes/default/templates/applications/new_blogpost.html:18
 #: themes/default/templates/applications/update_blogpost.html:20
 msgid "The title of your post"
-msgstr "El título de tu artículo"
+msgstr "Titel des Blogposts"
 
 #: themes/default/templates/applications/new_blogpost.html:19
 #: themes/default/templates/applications/update_blogpost.html:21
