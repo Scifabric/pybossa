@@ -328,7 +328,7 @@ def resize_avatars():
                         u.info['container'] = "user_%s" % u.id
                         db.session.commit()
                         # Save the user.id to avoid downloading it again.
-            f = open('user_id_updated_avatars.txt', 'a')
+                        f = open('user_id_updated_avatars.txt', 'a')
                         f.write("%s\n" % u.id)
                         # delete old avatar
                         obj = cont.get_object(old_avatar)
