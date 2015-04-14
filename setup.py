@@ -26,7 +26,7 @@ requirements = [
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
-    "redis>=2.9, <2.10",
+    "redis>=2.10, <2.10.1",
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
