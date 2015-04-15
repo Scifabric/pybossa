@@ -185,7 +185,7 @@ class TestAuditlogAPI(Test):
 
         owner_id = project.owner.id
         owner_name = project.owner.name
-        data = {'info': {'sched': 'random'}}
+        data = {'info': {'sched': 'depth_first'}}
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -207,7 +207,7 @@ class TestAuditlogAPI(Test):
 
         owner_id = project.owner.id
         owner_name = project.owner.name
-        data = {'info': {'sched': 'random', 'task_presenter': 'new'}}
+        data = {'info': {'sched': 'depth_first', 'task_presenter': 'new'}}
         attributes = data['info'].keys()
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -546,7 +546,7 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'sched'
 
-        new_string = 'random'
+        new_string = 'depth_first'
 
         old_value = 'default'
 
