@@ -33,7 +33,6 @@ def new_task(project_id, sched, user_id=None, user_ip=None, offset=0):
         'default': get_depth_first_task,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
-        'random': get_random_task,
         'incremental': get_incremental_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, offset=offset)
@@ -122,17 +121,6 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
             return None
 
 
-def get_random_task(project_id, user_id=None, user_ip=None,
-                    n_answers=30, offset=0):
-    """Return a random task for the user."""
-    app = session.query(Project).get(project_id)
-    from random import choice
-    if len(app.tasks) > 0:
-        return choice(app.tasks)
-    else:
-        return None
-
-
 def get_incremental_task(project_id, user_id=None, user_ip=None,
                          n_answers=30, offset=0):
     """Get a new task for a given project with its last given answer.
@@ -190,3 +178,8 @@ def get_candidate_tasks(project_id, user_id=None, user_ip=None,
     for t in rows:
         tasks.append(session.query(Task).get(t.id))
     return tasks
+
+
+def sched_variants():
+    return [('default', 'Default'), ('breadth_first', 'Breadth First'),
+            ('depth_first', 'Depth First')]
