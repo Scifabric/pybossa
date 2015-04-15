@@ -1199,154 +1199,154 @@ msgstr "Titel des Blogposts"
 #: themes/default/templates/applications/new_blogpost.html:19
 #: themes/default/templates/applications/update_blogpost.html:21
 msgid "Write your post here. You can use Markdown!"
-msgstr "Escribe tu artículo aquí. Puedes utilizar Markdown."
+msgstr "Schreibe hier Deinen Blogpost. Du kannst Markdown zum formatieren verwenden."
 
 #: themes/default/templates/applications/password.html:14
 msgid "Enter the password to contribute to this project:"
-msgstr "Introduce la contraseña para contribuir a este proyecto:"
+msgstr "Gib das Passwort an, um zu diesem Projekt beizutragen:"
 
 #: themes/default/templates/applications/password.html:18
 msgid "Project password"
-msgstr "Contraseña del proyecto"
+msgstr "Passwort des Projektes"
 
 #: themes/default/templates/applications/password.html:21
 msgid "Submit"
-msgstr "Enviar"
+msgstr "Absenden"
 
 #: themes/default/templates/applications/presenter.html:22
 msgid ""
 "Sorry, you've contributed to all the tasks for this project, but this "
 "project still needs more volunteers, so please spread the word!"
 msgstr ""
-"Vaya, ya has contribuiod a todas las tareas de este proyecto, pero "
-"todavía puedes ayudar invitando a otros voluntarios a que participen."
+"Super, Du hast zu allen Aufgaben dieses Projektes beigetragen, aber dieser "
+"Projekt braucht noch mehr Freiwillige, hilf dabei diese zu finden!"
 
 #: themes/default/templates/applications/settings.html:16
 msgid "Project Settings"
-msgstr "Configuración del Proyecto"
+msgstr "Projekteinstellungen"
 
 #: themes/default/templates/applications/settings.html:19
 #: themes/default/templates/applications/task_settings.html:13
 msgid "Task Settings"
-msgstr "Configuración de las Tareas"
+msgstr "Aufgabeneinstellungen"
 
 #: themes/default/templates/applications/settings.html:21
 msgid "Write a blog post"
-msgstr "Escribe un artículo"
+msgstr "Schreibe einen Blogpost"
 
 #: themes/default/templates/applications/stats.html:39
 #: themes/default/templates/applications/task_priority.html:21
 msgid "Important"
-msgstr "Importante"
+msgstr "Importieren"
 
 #: themes/default/templates/applications/stats.html:39
 msgid "Data have been"
-msgstr "Los datos han sido"
+msgstr "Daten wurden"
 
 #: themes/default/templates/applications/stats.html:39
 msgid "anonymized"
-msgstr "anonimizados"
+msgstr "anonymisiert"
 
 #: themes/default/templates/applications/stats.html:47
 msgid "Distribution of Answers per Hour"
-msgstr "Distribución de Respuestas por Hora"
+msgstr "Verteilung der Antworten pro Stunde"
 
 #: themes/default/templates/applications/stats.html:77
 msgid "Completed Tasks in the last 15 days"
-msgstr "Tareas completadas en los últimos 15 días"
+msgstr "Beendete Aufgaben in den letzten 15 Tagen"
 
 #: themes/default/templates/applications/stats.html:77
 #: themes/default/templates/applications/stats.html:148
 msgid "select an area to zoom, click to reset the chart"
-msgstr "selecciona un área para hacer zoom, click para reiniciar"
+msgstr "Wähle eine Region zum hereinzoomen und clicke um die Grafik zu aktualisieren"
 
 #: themes/default/templates/applications/stats.html:148
 msgid "Answers per day"
-msgstr "Respuestas por día"
+msgstr "Antworten pro Tag"
 
 #: themes/default/templates/applications/stats.html:160
 msgid "answers were submitted this day"
-msgstr "respuestas enviadas este día"
+msgstr "Antworten heute"
 
 #: themes/default/templates/applications/stats.html:218
 msgid "Distribution of Answers"
-msgstr "Distribución de Respuestas"
+msgstr "Verteilung der Antworten"
 
 #: themes/default/templates/applications/stats.html:224
 msgid "Type"
-msgstr "Tipo"
+msgstr "Typ"
 
 #: themes/default/templates/applications/stats.html:226
 msgid "Percentage"
-msgstr "Porcentaje"
+msgstr "Prozentualer Anteil"
 
 #: themes/default/templates/applications/stats.html:265
 msgid "Details about Anonymous Users"
-msgstr "Detalles sobre los Usuarios Anónimos"
+msgstr "Details über anonyme Nutzer"
 
 #: themes/default/templates/applications/stats.html:268
 msgid "anonymous users have"
-msgstr "usuarios anónimos han"
+msgstr "anonyme Nutzer haben"
 
 #: themes/default/templates/applications/stats.html:268
 #: themes/default/templates/applications/stats.html:359
 msgid "participated"
-msgstr "participado"
+msgstr "teilgenommen"
 
 #: themes/default/templates/applications/stats.html:275
 msgid "Country"
-msgstr "País"
+msgstr "Land"
 
 #: themes/default/templates/applications/stats.html:276
 msgid "City"
-msgstr "Ciudad"
+msgstr "Stadt"
 
 #: themes/default/templates/applications/stats.html:317
 #: themes/default/templates/stats/global.html:169
 msgid "This page includes GeoLite data created by MaxMind, available from"
-msgstr "Esta página incluye datos del producto GeoLite de MaxMind, disponible en"
+msgstr "Diese Seite beinhaltet GeoLite Daten des Unternehmens Maxmind, verfügbar unter"
 
 #: themes/default/templates/applications/stats.html:356
 msgid "Details about Authenticated Users"
-msgstr "Detalles sobre los Usuarios Autenticados"
+msgstr "Details über authentizierte Nutzer"
 
 #: themes/default/templates/applications/stats.html:359
 msgid "authenticated users have"
-msgstr "usuarios autenticados han"
+msgstr "authentizierte Nutzer haben"
 
 #: themes/default/templates/applications/stats.html:361
 msgid "Top 5 users"
-msgstr "Los 5 mejores Usuarios"
+msgstr "Top 5 Nutzer"
 
 #: themes/default/templates/applications/task_n_answers.html:14
 #: themes/default/templates/applications/task_settings.html:34
 msgid "Task Redundancy"
-msgstr "Redundancia de las tareas"
+msgstr "Aufgabenredundanz"
 
 #: themes/default/templates/applications/task_n_answers.html:18
 msgid "The number of answers per tasks that you want for the project"
-msgstr "Número de respuestas por tarea que quieres para tu proyecto"
+msgstr "Die Anzahl der Antworten pro Aufgaben, die Du für dieses Projekt möchtest"
 
 #: themes/default/templates/applications/task_n_answers.html:20
 #: themes/default/templates/applications/task_scheduler.html:34
 msgid "Set redundancy"
-msgstr "Establecer la redundancia"
+msgstr "Redundanz einstellen"
 
 #: themes/default/templates/applications/task_presenter_editor.html:28
 msgid "Task Presenter Editor"
-msgstr "Editor del Presentador de Tareas"
+msgstr "Editor für die Präsentation der Aufgaben"
 
 #: themes/default/templates/applications/task_presenter_editor.html:28
 msgid "Help"
-msgstr "Ayuda"
+msgstr "Hilfe"
 
 #: themes/default/templates/applications/task_presenter_editor.html:34
 msgid "Update the project task presenter"
-msgstr "Actualizar el presentador de las tareas"
+msgstr "Aktualisiere die Aufgabenpräsentation dieses Projektes"
 
 #: themes/default/templates/applications/task_presenter_editor.html:35
 msgid "Preview the task presenter"
-msgstr "Vista preliminar del presentador de tareas"
+msgstr "Vorschau der Aufgabenpräsentation"
 
 #: themes/default/templates/applications/task_presenter_editor.html:45
 msgid "&times;"
@@ -1354,25 +1354,28 @@ msgstr "&times;"
 
 #: themes/default/templates/applications/task_presenter_editor.html:46
 msgid "Task Presenter Preview"
-msgstr "Vista preliminar del Presentador de Tareas"
+msgstr "Vorschau der Aufgabenpräsentation"
 
 #: themes/default/templates/applications/task_presenter_editor.html:52
 msgid "Close"
-msgstr "Cerrar"
+msgstr "Schließen"
 
 #: themes/default/templates/applications/task_priority.html:14
 #: themes/default/templates/applications/task_settings.html:22
 #: view/applications.py:1288
 msgid "Task Priority"
-msgstr "Prioridad de las tareas"
+msgstr "Priorität der Aufgaben"
 
 #: themes/default/templates/applications/task_priority.html:15
 msgid "You can change the"
-msgstr "Puedes cambiar la"
+msgstr "Du kannst die"
 
 #: themes/default/templates/applications/task_priority.html:16
 msgid "priority"
-msgstr "Prioridad"
+msgstr "Priorität"
+
+
+#################################
 
 #: themes/default/templates/applications/task_priority.html:16
 msgid ""
@@ -1381,8 +1384,8 @@ msgid ""
 "lowest\n"
 "                priority is"
 msgstr ""
-"de una o más tareas, \n"
-"                proporcionando una lista de identificadores separados por"
+"einer oder mehrerer Aufgaben ändern, \n"
+"                durch eine komma-separierte Liste mit Aufgaben IDs "
 " comas. La prioridad\n"
 " más baja es"
 
