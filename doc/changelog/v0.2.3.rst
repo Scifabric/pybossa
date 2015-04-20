@@ -20,12 +20,24 @@ The most interesting changes are the following:
  * Passwords in apps: the owner of the app can set a password so both anonymous
    and authenticated users are required to know it if they want to contribute to
    the app.
- * Background jobs: now PyBossa computes the statistics of projects in the
-   background.
+ * Background jobs: cache warm, large tasks import, email, etc, are handled now
+   as job executed in the background.
+ * Background jobs dashboard: admins can manage background jobs with a dashboard.
  * Audit log for projects: admin users can see the changes that a project has
    gone through.
  * Newsletters: a PyBossa project can now show a newsletter subscription page
    to a Mailchimp list.
+ * Export tasks and taskruns changes: creation of CSV and JSON files for both
+   task and task runs are now handled in the background regularly, and served
+   as static .zip files.
+ * Flickr importer: import tasks for image classification projects directly from
+   a Flickr account.
+ * Dropbox importer: import tasks directly from public files in a Dropbox account.
+ * Apps are now projects: URL for projects have been renamed from /app/aproject to
+   /project/aproject in all the code, both front-end and back-end, including
+   database and API.
+ * Plugins system: support for creating custom plugins and add them to a PyBossa
+   server has been added.
 
 For a full list of changes, see associated `Github milestone`_.
 
