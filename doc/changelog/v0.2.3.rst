@@ -35,7 +35,7 @@ The most interesting changes are the following:
  * Dropbox importer: import tasks directly from public files in a Dropbox account.
  * Apps are now projects: URL for projects have been renamed from /app/aproject to
    /project/aproject in all the code, both front-end and back-end, including
-   database including API.
+   database and API.
  * Plugins system: support for creating custom plugins and add them to a PyBossa
    server has been added.
 
