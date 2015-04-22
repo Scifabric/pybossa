@@ -47,23 +47,37 @@ And now enable the new locale in the server local_settings.py file. Check for
 the LOCALES config variable and add your locale.
 
 
-Adding new strings to the translation
-=====================================
+Updating translation and adding new strings to the translation
+==============================================================
 
-From time to time, the PyBossa framework will add new strings to translate. In
-order to add the new strings (or update previous ones) you only have to follow
-this step:
+From time to time, the PyBossa framework will have new strings to translate. In
+order to add the new strings (or update previous ones) you have to follow
+this 3 simple steps.
+
+Step 1, extract new strings which should be translated:
+
+.. code-block:: bash
+
+    $ pybabel extract . -F babel.cfg -k lazy_gettext -o translations/messages.pot
+
+Step 2, update existing translation files:
 
 .. code-block:: bash
 
     $ pybabel update -i translations/messages.pot -d translations
 
-This will update your French translation file (messages.po) and will try to
+This will update all translation file (messages.po) and will try to
 guess some of the translations for saving you time. While this feature is
-really good, somtimes the translation is not good enough, so you will get the
+really good, sometimes the translation is not good enough, so you will get the
 word: **fuzzy** on top of the translation. Check all the **fuzzy** translations
 and fix them. When you are done, remove the line with the word **fuzzy** and
 re-compile the translations.
+
+Step 3, recompile translation files:
+
+.. code-block:: bash
+
+    $ pybabel compile -d translations
 
 Contributing your translation to the upstream repository
 ========================================================
