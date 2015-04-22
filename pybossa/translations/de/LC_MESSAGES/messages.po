@@ -11,16 +11,16 @@
 # *|----------------------------------------------------------------------------------------------
 # German translations for PROJECT.
 # This file is distributed under the same license as the PyBossa project.
-# Stefan Hahmann <stefan.hahmann@geog.uni-heidelberg.de>, 2015.
+# Stefan Hahmann, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: stefan.hahmann@geog.uni-heidelberg.de\n"
+"Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-03 19:46+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Stefan Hahmann "
-"<stefan.hahmann@geog.uni-heidelberg.de>\n"
+"\n"
 "Language-Team: de <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
@@ -1375,7 +1375,7 @@ msgid "priority"
 msgstr "Priorität"
 
 
-#################################
+##################################
 
 #: themes/default/templates/applications/task_priority.html:16
 msgid ""
@@ -1386,42 +1386,42 @@ msgid ""
 msgstr ""
 "einer oder mehrerer Aufgaben ändern, \n"
 "                durch eine komma-separierte Liste mit Aufgaben IDs "
-" comas. La prioridad\n"
-" más baja es"
+" Die niedrigste \n"
+" Priorität entspricht"
 
 #: themes/default/templates/applications/task_priority.html:19
 msgid "and the highest priority is"
-msgstr "y la más alta es"
+msgstr "und die höchste Priorität entspricht"
 
 #: themes/default/templates/applications/task_priority.html:21
 msgid ""
 "The priority value is only\n"
 "                respected by the"
-msgstr "La prioridad solo funciona con el"
+msgstr "Der Prioritätswert wird nur berücksichtigt von"
 
 #: themes/default/templates/applications/task_priority.html:22
 msgid "default scheduler"
-msgstr "gestor por defecto"
+msgstr "Normale Aufgabenverteilung"
 
 #: themes/default/templates/applications/task_priority.html:27
 msgid "Comma separated Task.IDs i.e.: 3, 532, 100"
-msgstr "Valores separados por comas: 3, 532, 100"
+msgstr "Komma separierte Aufgaben.IDs, z.B.: 3, 532, 100"
 
 #: themes/default/templates/applications/task_priority.html:28
 msgid "Priority value between 0.0 and 1.0"
-msgstr "Valor de la prioridad entre 0.0 y 1.0"
+msgstr "Prioritäswerte zwischen 0.0 und 1.0"
 
 #: themes/default/templates/applications/task_priority.html:30
 msgid "Change Priority"
-msgstr "Cambiar la Prioridad"
+msgstr "Priorität ändern"
 
 #: themes/default/templates/applications/task_scheduler.html:15
 msgid "You can choose from the following schedulers"
-msgstr "Puedes escoger los siguientes gestores"
+msgstr "Du kannst aus den folgenden Aufgabenverteilung wählen"
 
 #: themes/default/templates/applications/task_scheduler.html:17
 msgid "or"
-msgstr "o"
+msgstr "oder"
 
 #: themes/default/templates/applications/task_scheduler.html:18
 msgid ""
@@ -1430,8 +1430,8 @@ msgid ""
 "answers has\n"
 "                    not achieved) excluding the current user"
 msgstr ""
-"devuelve una tarea que no ha sido completada (no se ha alcanzado el "
-"número de respuestas para la tarea) excluyendo al propio usuario"
+"liefert eine Aufgabe, die noch nicht abgeschlossen wurde (die Zahl der "
+"Antworten wurde nicht erreicht) ohne Berücksichtigung des aktuellen Nutzers"
 
 #: themes/default/templates/applications/task_scheduler.html:21
 msgid ""
@@ -1440,8 +1440,9 @@ msgid ""
 "(answers)\n"
 "                    excluding the current user"
 msgstr ""
-"devuelve una tarea que tiene el menor número de respuestas, excluyendo al"
-" propio usuario"
+"liefert die Aufgabe, die die geringste Anzahl an Antworten hat "
+"(Anworten) "
+" ohne Berücksichtigung des aktuellen Nutzers"
 
 #: themes/default/templates/applications/task_scheduler.html:24
 msgid ""
@@ -1450,62 +1451,61 @@ msgid ""
 "more\n"
 "                    times"
 msgstr ""
-"devuelve un tarea aleatoriamente --un usuario puede hacer la misma tarea "
-"varias veces"
+"liefert eine zufällige Aufgabe -- eine Nutzer könnte somit auch die gleiche Aufgabe zwei- oder mehrfach erhalten "
 
 #: themes/default/templates/applications/task_settings.html:18
 msgid "Change how the tasks are delivered to volunteers"
-msgstr "Cambiar la gestión de las tareas"
+msgstr "Ändere die Aufgabenverteilung an die Beitragenden"
 
 #: themes/default/templates/applications/task_settings.html:19
 msgid "Scheduler"
-msgstr "Gestor de Tareas"
+msgstr "Aufgabenverteilung"
 
 #: themes/default/templates/applications/task_settings.html:23
 msgid "Change the priority of the tasks"
-msgstr "Cambiar la prioridad de las tareas"
+msgstr "Ändere die Priorität der Aufgaben"
 
 #: themes/default/templates/applications/task_settings.html:29
 msgid "Delete Tasks"
-msgstr "Eliminar las Tareas"
+msgstr "Löschen Aufgaben"
 
 #: themes/default/templates/applications/task_settings.html:30
 msgid "Delete all the tasks and associated answers"
-msgstr "Borrar todas las tareas y sus respuestas"
+msgstr "Lösche alle Aufgaben und zugehörige Antworten"
 
 #: themes/default/templates/applications/task_settings.html:35
 msgid "Change the redundancy level for the tasks"
-msgstr "Cambiar el nivel de redundancia para las tareas"
+msgstr "Ändere die Anzahl der Antworten je Aufgabe"
 
 #: themes/default/templates/applications/tasks.html:21
 msgid "Import tasks from templates, GDrive, or CSV"
-msgstr "Importar las tareas de las plantillas, GDrive, o CSV"
+msgstr "Importiere Aufgaben aus Templates, GoogleDrive oder CSV"
 
 #: themes/default/templates/applications/tasks.html:22
 #: themes/default/templates/applications/importers/csv.html:23
 #: themes/default/templates/applications/importers/epicollect.html:25
 #: themes/default/templates/applications/importers/gdocs.html:23
 msgid "Import"
-msgstr "Importar"
+msgstr "Importieren"
 
 #: themes/default/templates/applications/tasks.html:25
 #: themes/default/templates/applications/tasks.html:61
 msgid "Export Tasks"
-msgstr "Exportar tareas"
+msgstr "Aufgaben exportieren"
 
 #: themes/default/templates/applications/tasks.html:26
 #: themes/default/templates/applications/tasks.html:62
 msgid "Export tasks to JSON, CSV or a CKAN server"
-msgstr "Exportar tareas en JSON, CSV o a un servidor CKAN"
+msgstr "Exportiere Aufgaben nach JSON, CSV oder CKAN Server"
 
 #: themes/default/templates/applications/tasks.html:27
 #: themes/default/templates/applications/tasks.html:63 view/applications.py:853
 msgid "Export"
-msgstr "Exportar"
+msgstr "Exportieren"
 
 #: themes/default/templates/applications/tasks.html:32
 msgid "Task Presenter"
-msgstr "Edita el presentador de tareas"
+msgstr "Aufgabendarstellung"
 
 #: themes/default/templates/applications/tasks.html:34
 msgid "Editor"
@@ -1513,97 +1513,94 @@ msgstr "Editor"
 
 #: themes/default/templates/applications/tasks.html:38
 msgid "Configure the task scheduler, redundancy, etc."
-msgstr "Configure el gestor de tareas, redundancia, etc."
+msgstr "Konfiguriere die Aufgabenverteilung, Anzahl der Antworten, etc."
 
 #: themes/default/templates/applications/tasks.html:46
 #: themes/default/templates/applications/tasks.html:49
 #: themes/default/templates/applications/tasks.html:55
 #: themes/default/templates/applications/tasks.html:58
 msgid "Browse"
-msgstr "Navegar"
+msgstr "Navigieren"
 
 #: themes/default/templates/applications/tasks.html:47
 #: themes/default/templates/applications/tasks.html:56
 msgid "Check the status of the tasks"
-msgstr "Comprueba el estado de las tareas"
+msgstr "Den Status der Aufgaben kontrollieren"
 
 #: themes/default/templates/applications/tasks_browse.html:13
 msgid "Browse tasks"
-msgstr "Explorar tareas"
+msgstr "Aufgaben durchsuchen"
 
 #: themes/default/templates/applications/tasks_browse.html:15
 msgid "This page shows all the available tasks for this project"
-msgstr "Esta página muestra todas las tareas disponibles para este proyecto"
+msgstr "Diese Seite zeigt alle verfügbaren Aufgaben für diese Projekt"
 
 #: themes/default/templates/applications/tasks_browse.html:16
 msgid "For each task, you can find the following information"
-msgstr "Para cada tarea se proporciona la siguiente información"
+msgstr "Für jede Aufgabe, gibt es die folgenden Informationen"
 
 #: themes/default/templates/applications/tasks_browse.html:18
 #: themes/default/templates/applications/tasks_browse.html:29
 #: themes/default/templates/applications/tasks_browse.html:31
 msgid "Task"
-msgstr "Tarea"
+msgstr "Aufgabe"
 
 #: themes/default/templates/applications/tasks_browse.html:18
 msgid "This number identifies the task for the project and it is unique"
-msgstr "Este número identifica la tarea del proyecto y es único"
+msgstr "Diese Zahl identifiziert die Aufgabe für das Projekt. Sie ist eindeutig."
 
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid ""
 "The first number shows how many answers have been submitted for the task "
 "and the"
 msgstr ""
-"El primer número muestra cuantas respuestas se han conseguido para la "
-"tarea\"\n"
-"\" y el"
+"Die erste Zahl zeigt an, wie viele Antworten für jede Aufgabe abgegeben wurden 
+"\" und die"
 
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid ""
 "This redundancy method will help to detect errors, typos, data forging, "
 "etc. when the task has been completed"
 msgstr ""
-"Este método de redundancia ayuda a detectar errores, fallos, "
-"falsificación\"\n"
-"\"de datos, etc. cuando una tarea ha sido completada"
+"Die Methode meherere Antworten hilft dabei, Fehler zu entdecken (Tippfehler, Datenfälschung, etc.) "
+"wenn die Aufgabe beendet ist\"\n"
 
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid "second number"
-msgstr "segundo número"
+msgstr "Zweite Zahle"
 
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid "how many need to be obtained to mark the task as"
-msgstr "cuantas deben obtenerse para marcar la tarea como"
+msgstr "wie viele Antworten müssen abgeben werden, um diese Aufgabe als beendet zu markieren"
 
 #: themes/default/templates/applications/tasks_browse.html:20
 msgid "Progress Bar"
-msgstr "Barra de Progreso"
+msgstr "Fortschrittsbalken"
 
 #: themes/default/templates/applications/tasks_browse.html:20
 msgid "The progress bar will the percentage that has been completed for the task"
 msgstr ""
-"La barra de progreso mostrará el porcentaje que ha sido completado para "
-"la tarea"
+"Der Fortschrittsbalken zeigt den Anteil der bereits vollständigen Aufgaben in% "
 
 #: themes/default/templates/applications/tasks_browse.html:48
 msgid "Download Task Results"
-msgstr "Descargar los resultados"
+msgstr "Antworten herunterladen"
 
 #: themes/default/templates/applications/tasks_browse.html:52
 msgid "Download Partial results"
-msgstr "Descargar los resultados"
+msgstr "Unvollständige Antworten herunterladen"
 
 #: themes/default/templates/applications/tasks_browse.html:55
 msgid "Nothing to download yet"
-msgstr "Nada para descargar"
+msgstr "Bisher keine Antworten"
 
 #: themes/default/templates/applications/tutorial.html:14
 msgid "Start contributing"
-msgstr "Participa"
+msgstr "Beginne mit Deinen Beiträgen"
 
 #: themes/default/templates/applications/update.html:14
 msgid "Update the project"
-msgstr "Actualizar el proyecto"
+msgstr "Projekt aktualisieren"
 
 #: themes/default/templates/applications/update.html:39
 msgid "Give some details about the project"
