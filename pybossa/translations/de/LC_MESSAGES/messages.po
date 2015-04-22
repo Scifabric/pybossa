@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2014.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
@@ -2196,4 +2195,3 @@ msgstr ""
 #: view/applications.py:1470
 msgid "Blog-Beitrag wurde aktualisiert!"
 msgstr ""
-
