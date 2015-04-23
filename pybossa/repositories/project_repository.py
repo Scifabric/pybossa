@@ -72,6 +72,8 @@ class ProjectRepository(object):
         project = self.db.session.query(Project).filter(Project.id==project.id).first()
         self.db.session.delete(project)
         self.db.session.commit()
+        cached_projects.delete_project(project.short_name)
+        cached_projects.clean(project.id)
 
 
     # Methods for Category objects

@@ -342,9 +342,6 @@ def delete(short_name):
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity)
-    # Clean cache
-    cached_projects.delete_project(project.short_name)
-    cached_projects.clean(project.id)
     project_repo.delete(project)
     _delete_zip_files_from_store(project)
     auditlogger.add_log_entry(project, None, current_user)
