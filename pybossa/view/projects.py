@@ -262,7 +262,6 @@ def task_presenter_editor(short_name):
         db_project.info = old_info
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
-        cached_projects.delete_project(project.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         return redirect(url_for('.tasks', short_name=project.short_name))
@@ -384,8 +383,6 @@ def update(short_name):
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
-        cached_projects.delete_project(short_name)
-        cached_projects.reset()
         cached_cat.reset()
         cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
