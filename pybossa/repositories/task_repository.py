@@ -96,6 +96,8 @@ class TaskRepository(object):
         cached_projects.clean_project(element.project_id)
 
     def delete_all(self, elements):
+        if not elements:
+            return
         for element in elements:
             self._validate_can_be('deleted', element)
             table = element.__class__
