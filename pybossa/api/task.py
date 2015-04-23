@@ -32,6 +32,3 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
-
-    def _refresh_cache(self, task):
-        cached_projects.clean_project(task.project_id)

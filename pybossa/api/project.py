@@ -51,9 +51,6 @@ class ProjectAPI(APIBase):
         inst.category_id = default_category.id
         return inst
 
-    def _refresh_cache(self, obj):
-        cached_projects.delete_project(obj.short_name)
-
     def _update_object(self, obj):
         if not current_user.is_anonymous():
             obj.owner_id = current_user.id

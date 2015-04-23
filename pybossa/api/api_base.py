@@ -218,7 +218,6 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             inst = self._delete_instance(oid)
-            self._refresh_cache(inst)
             return '', 204
         except Exception as e:
             return error.format_exception(
@@ -255,7 +254,6 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             inst = self._update_instance(oid)
-            self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
@@ -292,15 +290,6 @@ class APIBase(MethodView):
 
         Method to be overriden in inheriting classes which wish to update
         data dict.
-
-        """
-        pass
-
-    def _refresh_cache(self, data_dict):
-        """Refresh cache.
-
-        Method to be overriden in inheriting classes which wish to refresh
-        cache for given object.
 
         """
         pass
