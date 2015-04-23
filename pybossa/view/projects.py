@@ -433,7 +433,6 @@ def update(short_name):
                 project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
                 project_repo.save(project)
-                cached_projects.delete_project(project.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -616,7 +615,6 @@ def setup_autoimporter(short_name):
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'create', 'autoimporter',
                                   'Nothing', json.dumps(project.get_autoimporter()))
-            cached_projects.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
             return redirect(url_for('.setup_autoimporter', short_name=project.short_name))
 
@@ -656,7 +654,6 @@ def delete_autoimporter(short_name):
         project_repo.save(project)
         auditlogger.log_event(project, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
-        cached_projects.delete_project(short_name)
     return redirect(url_for('.tasks', short_name=project.short_name))
 
 
@@ -1270,7 +1267,6 @@ def task_scheduler(short_name):
         if form.sched.data:
             project.info['sched'] = form.sched.data
         project_repo.save(project)
-        cached_projects.delete_project(project.short_name)
         # Log it
         if old_sched != project.info['sched']:
             auditlogger.log_event(project, current_user, 'update', 'sched',

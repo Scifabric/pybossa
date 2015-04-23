@@ -21,14 +21,13 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from pybossa.cache import projects as cached_projects
 
 
 class ProjectRepository(object):
 
-
     def __init__(self, db):
         self.db = db
-
 
     # Methods for Project objects
     def get(self, id):
@@ -53,6 +52,7 @@ class ProjectRepository(object):
         try:
             self.db.session.add(project)
             self.db.session.commit()
+            cached_projects.delete_project(project.short_name)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -112,7 +112,6 @@ class ProjectRepository(object):
         self._validate_can_be('deleted as a Category', category, klass=Category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
-
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):
