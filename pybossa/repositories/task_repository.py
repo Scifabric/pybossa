@@ -30,7 +30,6 @@ class TaskRepository(object):
     def __init__(self, db):
         self.db = db
 
-
     # Methods for queries on Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
