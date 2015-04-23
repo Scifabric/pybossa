@@ -873,138 +873,140 @@ msgstr "Zur Administratoren-Gruppe hinzufügen"
 
 #: themes/default/templates/admin/categories.html:13
 msgid "Manage Categories"
-msgstr ""
+msgstr "Kategorien verwalten"
 
 #: themes/default/templates/admin/categories.html:20
 #: themes/default/templates/admin/update_category.html:19
 msgid "Category name"
-msgstr ""
+msgstr "Kategoriename"
 
 #: themes/default/templates/admin/categories.html:21
 #: themes/default/templates/admin/update_category.html:20
 msgid "Category description"
-msgstr ""
+msgstr "Kategoriebeschreibung"
 
 #: themes/default/templates/admin/categories.html:23
 msgid "Add Category"
-msgstr ""
+msgstr "Kategorie hinzufügen"
 
 #: themes/default/templates/admin/categories.html:30
 msgid "List of Available Categories"
-msgstr ""
+msgstr "Liste vorhandener Kategorien"
 
 #: themes/default/templates/admin/categories.html:39
 msgid "Edit Category Name"
-msgstr ""
+msgstr "Kategoriename bearbeiten"
 
 #: themes/default/templates/admin/categories.html:41
 #: themes/default/templates/admin/categories.html:43
 #: themes/default/templates/admin/del_category.html:17 view/admin.py:291
 msgid "Delete Category"
-msgstr ""
+msgstr "Kategorie löschen"
 
 #: themes/default/templates/admin/del_category.html:15
 #: themes/default/templates/projects/delete.html:14
 #: themes/default/templates/projects/tasks/delete.html:14
 msgid "Danger Zone!"
-msgstr ""
+msgstr "Vorsicht!"
 
 #: themes/default/templates/admin/del_category.html:15
 msgid ""
 "Deleting the category will remove it from all the projects! This "
 "operation cannot be undone!"
 msgstr ""
+"Wenn die Kategorie gelöscht wird, wird diese von allen Projekten entfernt! Diese Operation kann"
+" nicht rückgängig gemacht werden!"
 
 #: themes/default/templates/admin/del_category.html:21
 msgid "No, do not delete it"
-msgstr ""
+msgstr "Nein, nicht löschen"
 
 #: themes/default/templates/admin/index.html:15
 #: themes/default/templates/projects/index.html:33
 msgid "Featured Projects"
-msgstr ""
+msgstr "Hervorgehobene Projekte"
 
 #: themes/default/templates/admin/index.html:16
 msgid "Show projects on the front page"
-msgstr ""
+msgstr "Projekte auf der Hauptseite anzeigen"
 
 #: themes/default/templates/admin/index.html:18
 #: themes/default/templates/admin/index.html:25
 #: themes/default/templates/admin/index.html:34
 #: themes/default/templates/admin/index.html:53
 msgid "Manage"
-msgstr ""
+msgstr "Verwalten"
 
 #: themes/default/templates/admin/index.html:22 view/admin.py:270
 msgid "Categories"
-msgstr ""
+msgstr "Kategorien"
 
 #: themes/default/templates/admin/index.html:23
 msgid "Manage project categories"
-msgstr ""
+msgstr "Projektkategorien verwalten"
 
 #: themes/default/templates/admin/index.html:31
 msgid "Administrators"
-msgstr ""
+msgstr "Administratoren"
 
 #: themes/default/templates/admin/index.html:32
 msgid "Manage administrators"
-msgstr ""
+msgstr "Administratoren verwalten"
 
 #: themes/default/templates/admin/index.html:38
 #: themes/default/templates/projects/stats.html:225
 msgid "Users"
-msgstr ""
+msgstr "Benutzer"
 
 #: themes/default/templates/admin/index.html:39
 msgid "Export a list of users"
-msgstr ""
+msgstr "Liste der Benutzer exportieren"
 
 #: themes/default/templates/admin/index.html:41
 msgid "JSON"
-msgstr ""
+msgstr "JSON"
 
 #: themes/default/templates/admin/index.html:44
 msgid "CSV"
-msgstr ""
+msgstr "CSV"
 
 #: themes/default/templates/admin/index.html:50
 msgid "Background Jobs"
-msgstr ""
+msgstr "Hintergrund-Jobs"
 
 #: themes/default/templates/admin/index.html:51
 msgid "Monitor the background jobs"
-msgstr ""
+msgstr "Hintergrund-Jobs überwachen"
 
 #: themes/default/templates/admin/projects.html:13
 msgid "Manage featured projects"
-msgstr ""
+msgstr "Verwalte hervorgehobene Projekte"
 
 #: themes/default/templates/admin/update_category.html:22 view/admin.py:327
 #: view/admin.py:346
 msgid "Update Category"
-msgstr ""
+msgstr "Kategorie aktualisieren"
 
 #: themes/default/templates/admin/users.html:14 view/admin.py:129
 #: view/admin.py:133
 msgid "Manage Admin Users"
-msgstr ""
+msgstr "Administrationen-Benutzer verwalten"
 
 #: themes/default/templates/admin/users.html:19
 msgid "Try with the full name or nick"
-msgstr ""
+msgstr "Voller Name oder Spitzname (oder Teil davon)"
 
 #: themes/default/templates/admin/users.html:20
 msgid "Search"
-msgstr ""
+msgstr "Suchen"
 
 #: themes/default/templates/admin/users.html:24
 msgid "Found Users"
-msgstr ""
+msgstr "Gefundene Benutzer"
 
 #: themes/default/templates/admin/users.html:31
 msgid "Current Users with Admin privileges"
-msgstr ""
+msgstr "Aktuelle Benutzer mit Administrator-Privilegien"
 
 #: themes/default/templates/home/_about.html:5
 msgid ""
