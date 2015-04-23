@@ -88,10 +88,7 @@ class TaskRepository(object):
             raise DBIntegrityError(e)
 
     def delete(self, element):
-        self._validate_can_be('deleted', element)
-        table = element.__class__
-        inst = self.db.session.query(table).filter(table.id==element.id).first()
-        self.db.session.delete(inst)
+        self._delete(element)
         self.db.session.commit()
         cached_projects.clean_project(element.project_id)
 
@@ -99,10 +96,7 @@ class TaskRepository(object):
         if not elements:
             return
         for element in elements:
-            self._validate_can_be('deleted', element)
-            table = element.__class__
-            inst = self.db.session.query(table).filter(table.id==element.id).first()
-            self.db.session.delete(inst)
+            self._delete(element)
         self.db.session.commit()
         cached_projects.clean_project(element.project_id)
 
@@ -135,3 +129,9 @@ class TaskRepository(object):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def _delete(self, element):
+        self._validate_can_be('deleted', element)
+        table = element.__class__
+        inst = self.db.session.query(table).filter(table.id==element.id).first()
+        self.db.session.delete(inst)
