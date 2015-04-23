@@ -888,7 +888,6 @@ def delete_tasks(short_name):
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
         _delete_zip_files_from_store(project)
-        cached_projects.clean_project(project.id)
         return redirect(url_for('.tasks', short_name=project.short_name))
 
 
@@ -1312,7 +1311,6 @@ def task_priority(short_name):
                                               old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the project" % task_id)), 'danger')
-        cached_projects.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:

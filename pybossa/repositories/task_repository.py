@@ -22,11 +22,10 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.exc import WrongObjectError, DBIntegrityError
-
+from pybossa.cache import projects as cached_projects
 
 
 class TaskRepository(object):
-
 
     def __init__(self, db):
         self.db = db
@@ -50,7 +49,6 @@ class TaskRepository(object):
         return self.db.session.query(Task).filter_by(**filters).count()
 
 
-
     # Methods for queries on TaskRun objects
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
@@ -69,13 +67,13 @@ class TaskRepository(object):
         return self.db.session.query(TaskRun).filter_by(**filters).count()
 
 
-
     # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
         self._validate_can_be('saved', element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
+            cached_projects.clean_project(project.id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -85,6 +83,7 @@ class TaskRepository(object):
         try:
             self.db.session.merge(element)
             self.db.session.commit()
+            cached_projects.clean_project(project.id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -95,6 +94,7 @@ class TaskRepository(object):
         inst = self.db.session.query(table).filter(table.id==element.id).first()
         self.db.session.delete(inst)
         self.db.session.commit()
+        cached_projects.clean_project(project.id)
 
     def delete_all(self, elements):
         for element in elements:
@@ -103,6 +103,7 @@ class TaskRepository(object):
             inst = self.db.session.query(table).filter(table.id==element.id).first()
             self.db.session.delete(inst)
         self.db.session.commit()
+        cached_projects.clean_project(project.id)
 
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
@@ -126,7 +127,7 @@ class TaskRepository(object):
                    ''')
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
         self.db.session.commit()
-
+        cached_projects.clean_project(project.id)
 
     def _validate_can_be(self, action, element):
         if not isinstance(element, Task) and not isinstance(element, TaskRun):
