@@ -22,13 +22,10 @@ from pybossa.model.blogpost import Blogpost
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-
 class BlogRepository(object):
-
 
     def __init__(self, db):
         self.db = db
-
 
     def get(self, id):
         return self.db.session.query(Blogpost).get(id)
@@ -64,7 +61,6 @@ class BlogRepository(object):
         blog = self.db.session.query(Blogpost).filter(Blogpost.id==blogpost.id).first()
         self.db.session.delete(blog)
         self.db.session.commit()
-
 
     def _validate_can_be(self, action, blogpost):
         if not isinstance(blogpost, Blogpost):
