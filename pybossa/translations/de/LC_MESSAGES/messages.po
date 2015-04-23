@@ -129,7 +129,7 @@ msgstr "Die Anzahl der Anworten muss ein Wert zwischen 1 und 1.000 sein"
 
 #: forms/forms.py:88
 msgid "Task IDs"
-msgstr "Task IDs"
+msgstr "Aufgaben IDs"
 
 #: forms/forms.py:92 themes/default/templates/projects/task_settings.html:24
 msgid "Priority"
@@ -146,7 +146,7 @@ msgstr "Priorität muss ein Wert zwischen 0.0 und 1.0 sein"
 #: themes/default/templates/projects/task_settings.html:17
 #: view/projects.py:1244
 msgid "Task Scheduler"
-msgstr "Task Planer"
+msgstr "Aufgaben Planer"
 
 #: forms/forms.py:101 themes/default/templates/projects/task_scheduler.html:17
 msgid "Default"
@@ -797,78 +797,79 @@ msgstr "Profil aktualisieren"
 
 #: themes/default/templates/account/settings.html:15
 msgid "Reset the API Key"
-msgstr ""
+msgstr "API Schlüssel zurücksetzen"
 
 #: themes/default/templates/account/settings.html:17
 msgid " Change your Password"
-msgstr ""
+msgstr " Passwort ändern"
 
 #: themes/default/templates/account/signin.html:7
 msgid "Sign in button"
-msgstr ""
+msgstr "Anmelden Button"
 
 #: themes/default/templates/account/signin.html:7
 msgid ""
 "below you are agreeing to\n"
 "    the"
 msgstr ""
+"Unten stimmen Sie den"
 
 #: themes/default/templates/account/signin.html:13
 #: themes/default/templates/account/signin.html:23
 msgid "Sign in with Twitter"
-msgstr ""
+msgstr "Mit Twitter anmelden"
 
 #: themes/default/templates/account/signin.html:16
 #: themes/default/templates/account/signin.html:26
 msgid "Sign in with Facebook"
-msgstr ""
+msgstr "Mit Facebook anmelden"
 
 #: themes/default/templates/account/signin.html:19
 #: themes/default/templates/account/signin.html:29
 msgid "Sign in with Google"
-msgstr ""
+msgstr "Mit Google anmelden"
 
 #: themes/default/templates/account/signin.html:38
 msgid "Or Sign in with your PyBossa account"
-msgstr ""
+msgstr "Oder mit einem PyBossa-Konto anmelden"
 
 #: themes/default/templates/account/signin.html:40
 msgid "Sign in with your PyBossa account"
-msgstr ""
+msgstr "Mit PyBossa-Konto anmelden"
 
 #: themes/default/templates/account/signin.html:52
 msgid " Create a new account!"
-msgstr ""
+msgstr " Neues Konto erstellen!"
 
 #: themes/default/templates/account/signin.html:53
 msgid "Forgot Password"
-msgstr ""
+msgstr "Passwort vergessen"
 
 #: themes/default/templates/account/update.html:31
 #: themes/default/templates/projects/update.html:28
 msgid "Upload"
-msgstr ""
+msgstr "Hochladen"
 
 #: themes/default/templates/account/update.html:47
 #: themes/default/templates/account/update.html:77
 msgid "Save the changes"
-msgstr ""
+msgstr "Änderungen speichern"
 
 #: themes/default/templates/admin/_helpers.html:9
 msgid "nick"
-msgstr ""
+msgstr "Spitzname"
 
 #: themes/default/templates/admin/_helpers.html:10
 msgid "Member since"
-msgstr ""
+msgstr "Mitglied seit"
 
 #: themes/default/templates/admin/_helpers.html:14
 msgid "Remove from admin group"
-msgstr ""
+msgstr "Von der Administratoren-Gruppe entfernen"
 
 #: themes/default/templates/admin/_helpers.html:18
 msgid "Add to admin group"
-msgstr ""
+msgstr "Zur Administratoren-Gruppe hinzufügen"
 
 #: themes/default/templates/admin/categories.html:13
 msgid "Manage Categories"
