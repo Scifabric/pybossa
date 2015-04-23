@@ -73,7 +73,7 @@ class TaskRepository(object):
         try:
             self.db.session.add(element)
             self.db.session.commit()
-            cached_projects.clean_project(project.id)
+            cached_projects.clean_project(element.project_id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -83,7 +83,7 @@ class TaskRepository(object):
         try:
             self.db.session.merge(element)
             self.db.session.commit()
-            cached_projects.clean_project(project.id)
+            cached_projects.clean_project(element.project_id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -94,7 +94,7 @@ class TaskRepository(object):
         inst = self.db.session.query(table).filter(table.id==element.id).first()
         self.db.session.delete(inst)
         self.db.session.commit()
-        cached_projects.clean_project(project.id)
+        cached_projects.clean_project(element.project_id)
 
     def delete_all(self, elements):
         for element in elements:
@@ -103,7 +103,7 @@ class TaskRepository(object):
             inst = self.db.session.query(table).filter(table.id==element.id).first()
             self.db.session.delete(inst)
         self.db.session.commit()
-        cached_projects.clean_project(project.id)
+        cached_projects.clean_project(element.project_id)
 
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
