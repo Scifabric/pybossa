@@ -1008,6 +1008,7 @@ msgstr "Gefundene Benutzer"
 msgid "Current Users with Admin privileges"
 msgstr "Aktuelle Benutzer mit Administrator-Privilegien"
 
+#TODO
 #: themes/default/templates/home/_about.html:5
 msgid ""
 "PyBossa is a free, open-source crowd-sourcing and micro-tasking platform."
@@ -1019,6 +1020,7 @@ msgid ""
 "connection can contribute."
 msgstr ""
 
+#TODO
 #: themes/default/templates/home/_about.html:8
 msgid "PyBossa is different to existing efforts:"
 msgstr ""
@@ -1026,8 +1028,9 @@ msgstr ""
 #: themes/default/templates/home/_about.html:10
 #, python-format
 msgid "It's a 100%% open-source"
-msgstr ""
+msgstr "Es ist 100%% Opensource"
 
+#TODO
 #: themes/default/templates/home/_about.html:11
 msgid ""
 "Unlike, say, “mechanical turk” style projects, PyBossa is not designed to"
@@ -1035,6 +1038,7 @@ msgid ""
 "projects."
 msgstr ""
 
+#TODO
 #: themes/default/templates/home/_about.html:13
 msgid ""
 "It's designed as a platform and framework for developing deploying crowd-"
@@ -1044,6 +1048,7 @@ msgid ""
 "instance (such as"
 msgstr ""
 
+#TODO
 #: themes/default/templates/home/_about.html:13
 msgid ""
 "This way one can easily develop custom projects while using the PyBossa "
@@ -1052,64 +1057,69 @@ msgstr ""
 
 #: themes/default/templates/home/_about.html:18
 msgid "You can read more about the architecture in the"
-msgstr ""
+msgstr "Genauere Infos zur Archtektur stehen in der"
 
 #: themes/default/templates/home/_about.html:18
 msgid "PyBossa Documentation"
-msgstr ""
+msgstr "PyBossa Dokumentation"
 
 #: themes/default/templates/home/_about.html:18
 msgid "and follow the"
-msgstr ""
+msgstr "und folgen sie der"
 
+#TODO
 #: themes/default/templates/home/_about.html:18
 msgid "step-by-step tutorial to create your own projects"
-msgstr ""
+msgstr "Schritt für Schritt Anleitung um ihre eigenen Projekte zu erstellen"
 
+#TODO
 #: themes/default/templates/home/_about.html:21
 #: themes/default/templates/projects/_helpers.html:39
 #: themes/default/templates/projects/stats.html:32
 msgid "Statistics"
-msgstr ""
+msgstr "Statistiken"
 
+#TODO
 #: themes/default/templates/home/_about.html:23
 msgid ""
 " PyBossa provides individual statistics for every project in the system, "
 "as well as a"
 msgstr ""
 
+#TODO
 #: themes/default/templates/home/_about.html:23
 msgid "general overview about the system like total number of users, tasks, etc"
 msgstr ""
 
 #: themes/default/templates/home/_about.html:25
 msgid "Check the global statistics"
-msgstr ""
+msgstr "Überprüfen sie die globalen Statistiken"
 
 #: themes/default/templates/home/_about.html:27
 msgid "Contact information"
-msgstr ""
+msgstr "Kontakt Informationen"
 
 #: themes/default/templates/home/_about.html:29
 msgid "For more info, send us an e-mail to: "
-msgstr ""
+msgstr "Für mehr Infos schicken sie uns eine E-Mail an: "
 
 #: themes/default/templates/home/_about.html:29
 msgid "Follow us on Twitter!"
-msgstr ""
+msgstr "Folgen sie uns auf Twitter!"
 
 #: themes/default/templates/home/_about.html:30
 msgid "E-mail list: "
-msgstr ""
+msgstr "E-Mail Liste: "
 
 #: themes/default/templates/home/_about.html:31
 msgid "Report any bug, issue or improvement:"
-msgstr ""
+msgstr "Melden sie Bugs oder Verbesserungsvorschläge:"
 
 #: themes/default/templates/home/_about.html:33
 msgid "Github Issues"
-msgstr ""
+msgstr "Github Issues"
 
+#TODO
 #: themes/default/templates/home/_pybossa_text.html:1
 msgid ""
 "Online assistance in performing tasks that require human cognition, "
@@ -1119,61 +1129,61 @@ msgstr ""
 
 #: themes/default/templates/home/_pybossa_text.html:3
 msgid "Help advance research"
-msgstr ""
+msgstr "Hilfe zur erweiterten Suche"
 
 #: themes/default/templates/home/_pybossa_text.html:4
 msgid "Everything is open and freely usable"
-msgstr ""
+msgstr "Alles ist offen und frei benutzbar"
 
 #: themes/default/templates/home/_pybossa_text.html:5
 msgid "Things computers can't do"
-msgstr ""
+msgstr "Sachen die Computer nicht berechnen können"
 
 #: themes/default/templates/home/index.html:18
 #: themes/default/templates/projects/_helpers.html:36
 #: themes/default/templates/projects/_helpers.html:222
 msgid "Info"
-msgstr ""
+msgstr "Info"
 
 #: themes/default/templates/home/index.html:33
 msgid "Get Started"
-msgstr ""
+msgstr "Anfangen"
 
 #: themes/default/templates/home/index.html:34
 msgid "It's really simple to start contributing."
-msgstr ""
+msgstr "Es ist wirklich einfach, zu helfen."
 
 #: themes/default/templates/home/index.html:37
 msgid " Start Contributing"
-msgstr ""
+msgstr " Beitragen"
 
 #: themes/default/templates/home/index.html:42
 msgid "Most Active Projects"
-msgstr ""
+msgstr "Die aktivsten Projekte"
 
 #: themes/default/templates/home/index.html:54
 msgid "Start"
-msgstr ""
+msgstr "Starten"
 
 #: themes/default/templates/home/index.html:62
 msgid "Your project"
-msgstr ""
+msgstr "Ihr Projekt"
 
 #: themes/default/templates/home/index.html:63
 msgid "could be here!"
-msgstr ""
+msgstr "könnte hier sein!"
 
 #: themes/default/templates/home/index.html:64
 msgid "Create a project"
-msgstr ""
+msgstr "Projekt erstellen"
 
 #: themes/default/templates/home/index.html:73
 msgid "Most Active Volunteers"
-msgstr ""
+msgstr "Die aktivsten Freiwilligen"
 
 #: themes/default/templates/home/index.html:80
 msgid "Submitted Tasks"
-msgstr ""
+msgstr "Beigetragene Aufgaben"
 
 #: themes/default/templates/home/index.html:84
 #: themes/default/templates/projects/_helpers.html:38
@@ -1189,16 +1199,16 @@ msgstr ""
 #: themes/default/templates/projects/tasks.html:13
 #: themes/default/templates/projects/tasks_browse.html:62
 msgid "Tasks"
-msgstr ""
+msgstr "Aufgaben"
 
 #: themes/default/templates/home/search.html:7
 msgid "Search Results"
-msgstr ""
+msgstr "Suchergebnisse"
 
 #: themes/default/templates/projects/_helpers.html:37
 #: themes/default/templates/projects/presenter.html:15
 msgid "Contribute"
-msgstr ""
+msgstr "Beitragen"
 
 #: themes/default/templates/projects/_helpers.html:41
 #: themes/default/templates/projects/_helpers.html:89
@@ -1207,83 +1217,83 @@ msgstr ""
 #: themes/default/templates/projects/tasks.html:37
 #: themes/default/templates/projects/tasks.html:41
 msgid "Settings"
-msgstr ""
+msgstr "Einstellungen"
 
 #: themes/default/templates/projects/_helpers.html:47
 msgid "Audit Logs"
-msgstr ""
+msgstr "Audit Logs"
 
 #: themes/default/templates/projects/_helpers.html:49
 msgid "Blog"
-msgstr ""
+msgstr "Blog"
 
 #: themes/default/templates/projects/_helpers.html:61
 msgid "ID"
-msgstr ""
+msgstr "ID "
 
 #: themes/default/templates/projects/_helpers.html:64
 #: themes/default/templates/projects/_helpers.html:132
 msgid "Creation Date"
-msgstr ""
+msgstr "Erstellungsdatum"
 
 #: themes/default/templates/projects/_helpers.html:65
 #: themes/default/templates/projects/_helpers.html:134
 msgid "Last Activity"
-msgstr ""
+msgstr "Letzte Aktivität"
 
 #: themes/default/templates/projects/_helpers.html:66
 #: themes/default/templates/projects/_helpers.html:137
 #: themes/default/templates/projects/_helpers.html:199
 msgid "Overall progress"
-msgstr ""
+msgstr "Gesamtfortschritt"
 
 #: themes/default/templates/projects/_helpers.html:66
 #: themes/default/templates/projects/_helpers.html:199
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid "completed"
-msgstr ""
+msgstr "erledigt"
 
 #: themes/default/templates/projects/_helpers.html:70
 #: themes/default/templates/projects/_helpers.html:72
 msgid "Hidden"
-msgstr ""
+msgstr "Versteckt"
 
 #: themes/default/templates/projects/_helpers.html:105
 #: themes/default/templates/projects/_helpers.html:115
 msgid "Remove from Featured!"
-msgstr ""
+msgstr "Von Liste der hervorgehobenen Projekte entfernen!"
 
 #: themes/default/templates/projects/_helpers.html:108
 #: themes/default/templates/projects/_helpers.html:112
 msgid "Add to Featured!"
-msgstr ""
+msgstr "Zu Liste der hervorgehobenen Projekte hinzufügen!"
 
 #: themes/default/templates/projects/_helpers.html:139
 #: themes/default/templates/projects/_helpers.html:141
 msgid "Created by"
-msgstr ""
+msgstr "Erstellt von"
 
 #: themes/default/templates/projects/_helpers.html:139
 msgid "Me"
-msgstr ""
+msgstr "Mir"
 
 #: themes/default/templates/projects/_helpers.html:144
 msgid "Try it!"
-msgstr ""
+msgstr "Ausprobieren!"
 
 #: themes/default/templates/projects/_helpers.html:201
 msgid "Start Contributing Now!"
-msgstr ""
+msgstr "Tragen Sie jetzt bei!"
 
 #: themes/default/templates/projects/actions.html:9
 #: themes/default/templates/projects/settings.html:18
 msgid "Edit the project details"
-msgstr ""
+msgstr "Projektdetails editieren"
 
 #: themes/default/templates/projects/actions.html:10
 #: themes/default/templates/projects/tasks.html:33
 msgid "Edit the task presenter"
-msgstr ""
+msgstr "Den Task-Presenter editieren"
 
 #: themes/default/templates/projects/actions.html:11
 #: themes/default/templates/projects/importers/csv.html:14
@@ -1292,48 +1302,48 @@ msgstr ""
 #: themes/default/templates/projects/importers/flickr.html:16
 #: themes/default/templates/projects/importers/gdocs.html:14
 msgid "Import tasks"
-msgstr ""
+msgstr "Tasks importieren"
 
 #: themes/default/templates/projects/actions.html:12
 #: themes/default/templates/projects/settings.html:20
 msgid "Delete the project"
-msgstr ""
+msgstr "Projekt löschen"
 
 #: themes/default/templates/projects/auditlog.html:17
 msgid "When"
-msgstr ""
+msgstr "Wenn"
 
 #: themes/default/templates/projects/auditlog.html:18
 msgid "Who"
-msgstr ""
+msgstr "Wer"
 
 #: themes/default/templates/projects/auditlog.html:19
 msgid "Source"
-msgstr ""
+msgstr "Quelle"
 
 #: themes/default/templates/projects/auditlog.html:20
 msgid "Action"
-msgstr ""
+msgstr "Aktion"
 
 #: themes/default/templates/projects/auditlog.html:21
 msgid "Attribute"
-msgstr ""
+msgstr "Attribute"
 
 #: themes/default/templates/projects/auditlog.html:22
 msgid "Old Value"
-msgstr ""
+msgstr "Alter Wert"
 
 #: themes/default/templates/projects/auditlog.html:23
 msgid "New Value"
-msgstr ""
+msgstr "Neuer Wert"
 
 #: themes/default/templates/projects/auditlog.html:28
 msgid "You"
-msgstr ""
+msgstr "Sie"
 
 #: themes/default/templates/projects/auditlog.html:39
 msgid "Sorry! No logs so far."
-msgstr ""
+msgstr "Bisher gibt es noch keine Logs."
 
 #: themes/default/templates/projects/auditlog.html:45
 #: themes/default/templates/projects/blog.html:33
@@ -1347,79 +1357,84 @@ msgstr ""
 #: themes/default/templates/projects/tasks.html:78
 #: themes/default/templates/projects/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
-msgstr ""
+msgstr "Entschuldigung! Das Projekt existiert nicht."
 
 #: themes/default/templates/projects/blog.html:27
 msgid "Sorry! No posts so far."
-msgstr ""
+msgstr "Bisher gibt es noch keine Posts."
 
 #: themes/default/templates/projects/blog_post.html:15
 msgid "Author: "
-msgstr ""
+msgstr "Autor: "
 
 #: themes/default/templates/projects/blog_post.html:17
 msgid "Written: "
-msgstr ""
+msgstr "Geschrieben: "
 
 #: themes/default/templates/projects/blog_post.html:31
 #: themes/default/templates/projects/task_autoimporter.html:35
 #: themes/default/templates/projects/task_settings.html:31
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: themes/default/templates/projects/blog_post.html:32
 msgid "Edit"
-msgstr ""
+msgstr "Editieren"
 
 #: themes/default/templates/projects/blog_post.html:36
 #: themes/default/templates/projects/blog_post.html:41
 #: themes/default/templates/projects/task_autoimporter.html:36
 msgid "Back"
-msgstr ""
+msgstr "Zurück"
 
 #: themes/default/templates/projects/blog_post.html:40
 msgid "Sorry! This blogpost does not exist."
-msgstr ""
+msgstr "Entschuldigung! Dieser Blog-Post existiert nicht."
 
 #: themes/default/templates/projects/delete.html:12
 msgid "Delete project"
-msgstr ""
+msgstr "Projekt löschen"
 
 #: themes/default/templates/projects/delete.html:14
 msgid "If you delete the project and its tasks, it will be gone forever!"
 msgstr ""
+"Wenn Sie das Projekt und seine Tasks löschen, werden die Daten samt Beiträgen für "
+"immer verloren gehen!"
 
 #: themes/default/templates/projects/delete.html:20
 msgid ""
 "Are you sure you want to delete this project and all its tasks and "
 "associated task runs?"
 msgstr ""
+"Sind Sie sicher, dass Sie dieses Projekte, alle dazugehörigen Tasks sowie Task-Beiträge"
+" löschen wollen?"
 
 #: themes/default/templates/projects/delete.html:23
 msgid "No, do not delete it!"
-msgstr ""
+msgstr "Nein, nicht löschen!"
 
 #: themes/default/templates/projects/export.html:13
 msgid "Export All Tasks and Task Runs"
-msgstr ""
+msgstr "Alle Tasks und Task-Beiträge exportieren"
 
 #: themes/default/templates/projects/export.html:14
 msgid "You can export and download"
-msgstr ""
+msgstr "Sie können "
 
 #: themes/default/templates/projects/export.html:14
 msgid "all the available"
-msgstr ""
+msgstr "alle vorhandenen"
 
 #: themes/default/templates/projects/export.html:14
 msgid ""
 "Tasks and Task Runs (the submitted answers by the users) in CSV or JSON "
 "formats."
 msgstr ""
+"Tasks und Task-Beitrage in CSV oder JSON Format exportieren und herunterladen."
 
 #: themes/default/templates/projects/export.html:17
 msgid "Export in CSV format"
-msgstr ""
+msgstr "Im CSV Format exportieren"
 
 #: themes/default/templates/projects/export.html:24
 #: themes/default/templates/projects/export.html:26
@@ -1427,85 +1442,86 @@ msgstr ""
 #: themes/default/templates/projects/export.html:39
 #: themes/default/templates/projects/export.html:54
 msgid "Task Runs"
-msgstr ""
+msgstr "Task-Beiträge"
 
 #: themes/default/templates/projects/export.html:30
 msgid "Export in JSON format"
-msgstr ""
+msgstr "Im JSON Format exportieren"
 
 #: themes/default/templates/projects/export.html:47
 msgid "Export to the"
-msgstr ""
+msgstr "Exportieren zum"
 
 #: themes/default/templates/projects/export.html:49
 msgid "Export to a CKAN server"
-msgstr ""
+msgstr "Zum CKAN Server exportieren"
 
 #: themes/default/templates/projects/export.html:51
 msgid "IMPORTANT"
-msgstr ""
+msgstr "WICHTIG"
 
 #: themes/default/templates/projects/export.html:51
 msgid ""
 "This export option stills in beta mode and may fail in the CKAN server. "
 "If you get an error, please send an e-mail to info@pybossa.com"
-msgstr ""
+msgstr "Diese Exportfunktion befindet sich noch im Beta Stadium und kann Fehlschlagen im CKAN Server"
+"Wenn sie einen Fehler erhalten kontaktieren sie bitte info@pybossa.com"
 
 #: themes/default/templates/projects/export.html:56
 msgid "You don't have a Datahub.io API key in your"
-msgstr ""
+msgstr "Sie haben keinen Datahub.io API Schlüssel in Ihrem"
 
 #: themes/default/templates/projects/export.html:56
 msgid "account. Please,"
-msgstr ""
+msgstr "Konto. Bitte "
 
 #: themes/default/templates/projects/export.html:56
 msgid "create an account"
-msgstr ""
+msgstr "erstellen sie ein Konto"
 
 #: themes/default/templates/projects/export.html:56
 msgid "and copy/paste the API key in your profile in order to use this exporter"
-msgstr ""
+msgstr "und fügen sie ihren API Schlüssel in ihr Profil ein um diesen Exporter zu benutzen"
 
 #: themes/default/templates/projects/index.html:35
 msgid "A special selection of the most interesting projects"
-msgstr ""
+msgstr "Eine Auswahl der interessantesten Projekte"
 
 #: themes/default/templates/projects/index.html:38
 #: themes/default/templates/stats/global.html:93
 msgid "Draft Projects"
-msgstr ""
+msgstr "Projekte im Entwurf"
 
 #: themes/default/templates/projects/index.html:39
 msgid "Work in progress projects"
-msgstr ""
+msgstr "Projekte in Bearbeitung"
 
 #: themes/default/templates/projects/index.html:58
 msgid "Sorry, there are no published projects for this category yet"
-msgstr ""
+msgstr "Entschuldigung! Es gibt in dieser Kategorie derzeit keine veröffentlichten Projekte"
 
 #: themes/default/templates/projects/new.html:13
 msgid "Project"
-msgstr ""
+msgstr "Projekt"
 
 #: themes/default/templates/projects/new.html:13
 msgid "Create a new project"
-msgstr ""
+msgstr "Ein neues Projekt erstellen"
 
 #: themes/default/templates/projects/new.html:17
 #: themes/default/templates/projects/update.html:37
 msgid "The name of the project"
-msgstr ""
+msgstr "Name des Projekts"
 
 #: themes/default/templates/projects/new.html:18
 #: themes/default/templates/projects/update.html:38
 msgid "Short name or slug for the project"
-msgstr ""
+msgstr "Kurzname für das Projekt"
 
 #: themes/default/templates/projects/new.html:18
 #: themes/default/templates/projects/update.html:38
 msgid "Project slug:"
-msgstr ""
+msgstr "Projekt Kurzname:"
 
 #: themes/default/templates/projects/new.html:19
 msgid ""
@@ -1525,188 +1541,203 @@ msgid ""
 "                                                             \n"
 "            (you can use Markdown to give format to your description!)"
 msgstr ""
+"Erklären Sie Ihr Projekt"
+"                                                             \n"
+"                · Warum? Warum haben Sie dieses Projekt erstellt und was wollen Sie damit erreichen"
+"                                                             \n"
+"                · Wie? Erklären Sie, wie Ihr Projekt funktioniert"
+"                                                             \n"
+"                · Wie man helfen kann: Erklären Sie den Freiwilligen, "
+"wie Sie helfen können, Ihre Projektziele zu erreichen"
+"                                                             \n"
+"                · Wird die Hilfe etwas bringen? Erklären Sie den Freiwilligen, warum deren Beitrag"
+" wichtig ist und wie die Ergebnisse Ihres Projektes helfen können, Dinge zu ändern!""                                                             \n"
+"            (Sie können Markdown-Syntax verwenden, um Ihre Beschreibung zu formatieren!)"
 
 #: themes/default/templates/projects/new.html:26
 msgid "Create the project"
-msgstr ""
+msgstr "Das Projekt erstellen"
 
 #: themes/default/templates/projects/new_blogpost.html:14
 msgid "Write a new blog post for ad"
-msgstr ""
+msgstr "Schreiben Sie einen neuen Blog-Beitrag"
 
 #: themes/default/templates/projects/new_blogpost.html:18
 #: themes/default/templates/projects/update_blogpost.html:20
 msgid "The title of your post"
-msgstr ""
+msgstr "Titel Ihres Blog-Beitrags"
 
 #: themes/default/templates/projects/new_blogpost.html:19
 #: themes/default/templates/projects/update_blogpost.html:21
 msgid "Write your post here. You can use Markdown!"
-msgstr ""
+msgstr "Schreiben Sie hier Ihren Blog-Beitrag. Sie können zur Formatierung Markdown-Syntax verwenden!"
 
 #: themes/default/templates/projects/password.html:14
 msgid "Enter the password to contribute to this project:"
-msgstr ""
+msgstr "Geben Sie das Passwort ein, um für dieses Projekt beitragen zu können:"
 
 #: themes/default/templates/projects/password.html:18
 msgid "Project password"
-msgstr ""
+msgstr "Projekt-Passwort"
 
 #: themes/default/templates/projects/password.html:21
 msgid "Submit"
-msgstr ""
+msgstr "Abschicken"
 
 #: themes/default/templates/projects/presenter.html:22
 msgid ""
 "Sorry, you've contributed to all the tasks for this project, but this "
 "project still needs more volunteers, so please spread the word!"
 msgstr ""
+"Entschuldigung, aber Sie haben bereits zu allen Tasks des Projekts beigetragen. Dieses Projekt "
+"benötigt allerdings noch weitere Helfer - Bitte Informieren Sie Ihre Bekannten!"
+
 
 #: themes/default/templates/projects/settings.html:16
 msgid "Project Settings"
-msgstr ""
+msgstr "Projekt Einstellungen"
 
 #: themes/default/templates/projects/settings.html:19
 #: themes/default/templates/projects/task_settings.html:13
 msgid "Task Settings"
-msgstr ""
+msgstr "Task Einstellungen"
 
 #: themes/default/templates/projects/settings.html:21
 msgid "Write a blog post"
-msgstr ""
+msgstr "Blog Post verfassen"
 
 #: themes/default/templates/projects/stats.html:39
 #: themes/default/templates/projects/task_priority.html:21
 msgid "Important"
-msgstr ""
+msgstr "Wichtig"
 
 #: themes/default/templates/projects/stats.html:39
 msgid "Data have been"
-msgstr ""
+msgstr "Daten wurden"
 
 #: themes/default/templates/projects/stats.html:39
 msgid "anonymized"
-msgstr ""
+msgstr "anonymisiert"
 
 #: themes/default/templates/projects/stats.html:47
 msgid "Distribution of Answers per Hour"
-msgstr ""
+msgstr "Verteilung der Antworten pro Stunde"
 
 #: themes/default/templates/projects/stats.html:77
 msgid "Completed Tasks in the last 15 days"
-msgstr ""
+msgstr "Tasks, welche in den letzten 15 Tagen vervollständigt wurden"
 
 #: themes/default/templates/projects/stats.html:77
 #: themes/default/templates/projects/stats.html:148
 msgid "select an area to zoom, click to reset the chart"
-msgstr ""
+msgstr "Wählen Sie einen Bereich, um zu zoomen odder Klicken Sie um die Grafik zurückzusetzen"
 
 #: themes/default/templates/projects/stats.html:148
 msgid "Answers per day"
-msgstr ""
+msgstr "Antworten pro Tag"
 
 #: themes/default/templates/projects/stats.html:160
 msgid "answers were submitted this day"
-msgstr ""
+msgstr "Antworten wurden an diesem Tag abgegeben"
 
 #: themes/default/templates/projects/stats.html:218
 msgid "Distribution of Answers"
-msgstr ""
+msgstr "Verteilung der Anworten"
 
 #: themes/default/templates/projects/stats.html:224
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: themes/default/templates/projects/stats.html:226
 msgid "Percentage"
-msgstr ""
+msgstr "Prozentsatz"
 
 #: themes/default/templates/projects/stats.html:265
 msgid "Details about Anonymous Users"
-msgstr ""
+msgstr "Details über anonyme Benutzer"
 
 #: themes/default/templates/projects/stats.html:268
 msgid "anonymous users have"
-msgstr ""
+msgstr "anonyme Benutzer haben"
 
 #: themes/default/templates/projects/stats.html:268
 #: themes/default/templates/projects/stats.html:359
 msgid "participated"
-msgstr ""
+msgstr "teilgenommen"
 
 #: themes/default/templates/projects/stats.html:275
 msgid "Country"
-msgstr ""
+msgstr "Land"
 
 #: themes/default/templates/projects/stats.html:276
 msgid "City"
-msgstr ""
+msgstr "Stadt"
 
 #: themes/default/templates/projects/stats.html:317
 #: themes/default/templates/stats/global.html:169
 msgid "This page includes GeoLite data created by MaxMind, available from"
-msgstr ""
+msgstr "Diese Seite entält GeoLite-Daten, die von MaxMind erzeugt wurden und bezogen werden können von"
 
 #: themes/default/templates/projects/stats.html:356
 msgid "Details about Authenticated Users"
-msgstr ""
+msgstr "Details über authentifizierte Benutzer"
 
 #: themes/default/templates/projects/stats.html:359
 msgid "authenticated users have"
-msgstr ""
+msgstr "authentifizierte Benutzer haben"
 
 #: themes/default/templates/projects/stats.html:361
 msgid "Top 5 users"
-msgstr ""
+msgstr "Top 5 Benutzer"
 
 #: themes/default/templates/projects/task_autoimport_options.html:13
 msgid "Setup task autoimporter"
-msgstr ""
+msgstr "Aufgaben Auto Importer einstellen"
 
 #: themes/default/templates/projects/task_autoimport_options.html:16
 #: themes/default/templates/projects/task_import_options.html:16
 #: themes/default/templates/projects/snippets/options.html:4
 msgid "Use one of the following available"
-msgstr ""
+msgstr "Benutzen sie einen der folgenden verfügbaren"
 
 #: themes/default/templates/projects/task_autoimport_options.html:17
 #: themes/default/templates/projects/task_import_options.html:17
 msgid "importers"
-msgstr ""
+msgstr "Importer"
 
 #: themes/default/templates/projects/task_autoimport_options.html:17
 msgid "to setup as the autoimporter"
-msgstr ""
+msgstr "um den Autoimporter einzurichten"
 
 #: themes/default/templates/projects/task_autoimporter.html:14
 msgid "Currently configured autoimport"
-msgstr ""
+msgstr "Momentan konfigurierte Autoimporter"
 
 #: themes/default/templates/projects/task_autoimporter.html:15
 msgid "You currently have the following autoimporter configured"
-msgstr ""
+msgstr "Sie haben die folgenden Autoimporter konfiguriert"
 
 #: themes/default/templates/projects/task_import_options.html:13
 #: themes/default/templates/projects/tasks.html:20
 msgid "Import Tasks"
-msgstr ""
+msgstr "Tasks importieren"
 
 #: themes/default/templates/projects/task_import_options.html:17
 msgid "to import tasks..."
-msgstr ""
+msgstr "um Tasks zu importieren"
 
 #: themes/default/templates/projects/task_import_options.html:31
 msgid "... or import a set of"
-msgstr ""
+msgstr "... oder eine Auswahl von"
 
 #: themes/default/templates/projects/task_import_options.html:31
 msgid "template tasks"
-msgstr ""
+msgstr "Taskvorlagen"
 
 #: themes/default/templates/projects/task_n_answers.html:14
 #: themes/default/templates/projects/task_settings.html:34
 msgid "Task Redundancy"
-msgstr ""
+msgstr "Task Redundanz"
 
 #: themes/default/templates/projects/task_n_answers.html:18
 msgid "The number of answers per tasks that you want for the project"
