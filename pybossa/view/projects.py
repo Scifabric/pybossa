@@ -262,7 +262,6 @@ def task_presenter_editor(short_name):
         db_project.info = old_info
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
-        cached_projects.delete_project(project.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         return redirect(url_for('.tasks', short_name=project.short_name))
@@ -343,11 +342,7 @@ def delete(short_name):
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity)
-    # Clean cache
-    cached_projects.delete_project(project.short_name)
-    cached_projects.clean(project.id)
     project_repo.delete(project)
-    _delete_zip_files_from_store(project)
     auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -384,8 +379,6 @@ def update(short_name):
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
-        cached_projects.delete_project(short_name)
-        cached_projects.reset()
         cached_cat.reset()
         cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
@@ -433,7 +426,6 @@ def update(short_name):
                 project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
                 project_repo.save(project)
-                cached_projects.delete_project(project.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -616,7 +608,6 @@ def setup_autoimporter(short_name):
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'create', 'autoimporter',
                                   'Nothing', json.dumps(project.get_autoimporter()))
-            cached_projects.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
             return redirect(url_for('.setup_autoimporter', short_name=project.short_name))
 
@@ -656,7 +647,6 @@ def delete_autoimporter(short_name):
         project_repo.save(project)
         auditlogger.log_event(project, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
-        cached_projects.delete_project(short_name)
     return redirect(url_for('.tasks', short_name=project.short_name))
 
 
@@ -896,21 +886,7 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        _delete_zip_files_from_store(project)
-        cached_projects.clean_project(project.id)
         return redirect(url_for('.tasks', short_name=project.short_name))
-
-
-def _delete_zip_files_from_store(project):
-    json_tasks_filename = json_exporter.download_name(project, 'task')
-    csv_tasks_filename = csv_exporter.download_name(project, 'task')
-    json_taskruns_filename = json_exporter.download_name(project, 'task_run')
-    csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
-    container = "user_%s" % current_user.id
-    uploader.delete_file(json_tasks_filename, container)
-    uploader.delete_file(csv_tasks_filename, container)
-    uploader.delete_file(json_taskruns_filename, container)
-    uploader.delete_file(csv_taskruns_filename, container)
 
 
 @blueprint.route('/<short_name>/tasks/export')
@@ -1270,7 +1246,6 @@ def task_scheduler(short_name):
         if form.sched.data:
             project.info['sched'] = form.sched.data
         project_repo.save(project)
-        cached_projects.delete_project(project.short_name)
         # Log it
         if old_sched != project.info['sched']:
             auditlogger.log_event(project, current_user, 'update', 'sched',
@@ -1322,7 +1297,6 @@ def task_priority(short_name):
                                               old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the project" % task_id)), 'danger')
-        cached_projects.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:

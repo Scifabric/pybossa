@@ -25,7 +25,6 @@ This package adds GET, POST, PUT and DELETE methods for:
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
-import pybossa.cache.projects as cached_projects
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
 from pybossa.core import auditlog_repo
@@ -50,9 +49,6 @@ class ProjectAPI(APIBase):
         default_category = get_categories()[0]
         inst.category_id = default_category.id
         return inst
-
-    def _refresh_cache(self, obj):
-        cached_projects.delete_project(obj.short_name)
 
     def _update_object(self, obj):
         if not current_user.is_anonymous():

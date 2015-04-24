@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from mock import patch
+from mock import patch, call
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
@@ -646,3 +646,18 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s/newtask?offset=1000' % project.id
         res = self.app.get(url)
         assert res.data == '{}', res.data
+
+
+    @patch('pybossa.repositories.project_repository.uploader')
+    def test_project_delete_deletes_zip_files(self, uploader):
+        """Test API project delete deletes also zip files of tasks and taskruns"""
+        admin = UserFactory.create()
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        url = '/api/project/%s?api_key=%s' % (task.id, admin.api_key)
+        res = self.app.delete(url)
+        expected = [call('1_project1_task_json.zip', 'user_1'),
+                    call('1_project1_task_csv.zip', 'user_1'),
+                    call('1_project1_task_run_json.zip', 'user_1'),
+                    call('1_project1_task_run_csv.zip', 'user_1')]
+        assert uploader.delete_file.call_args_list == expected
