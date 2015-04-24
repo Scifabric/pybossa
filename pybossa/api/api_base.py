@@ -217,7 +217,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = self._delete_instance(oid)
+            self._delete_instance(oid)
             return '', 204
         except Exception as e:
             return error.format_exception(

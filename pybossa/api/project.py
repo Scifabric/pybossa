@@ -25,7 +25,6 @@ This package adds GET, POST, PUT and DELETE methods for:
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
-import pybossa.cache.projects as cached_projects
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
 from pybossa.core import auditlog_repo
