@@ -343,7 +343,6 @@ def delete(short_name):
                                overall_progress=overall_progress,
                                last_activity=last_activity)
     project_repo.delete(project)
-    _delete_zip_files_from_store(project)
     auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -887,20 +886,7 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        _delete_zip_files_from_store(project)
         return redirect(url_for('.tasks', short_name=project.short_name))
-
-
-def _delete_zip_files_from_store(project):
-    json_tasks_filename = json_exporter.download_name(project, 'task')
-    csv_tasks_filename = csv_exporter.download_name(project, 'task')
-    json_taskruns_filename = json_exporter.download_name(project, 'task_run')
-    csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
-    container = "user_%s" % current_user.id
-    uploader.delete_file(json_tasks_filename, container)
-    uploader.delete_file(csv_tasks_filename, container)
-    uploader.delete_file(json_taskruns_filename, container)
-    uploader.delete_file(csv_taskruns_filename, container)
 
 
 @blueprint.route('/<short_name>/tasks/export')

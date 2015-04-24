@@ -1137,16 +1137,16 @@ class TestWeb(web.Helper):
         res = self.delete_project(short_name=Fixtures.project_short_name)
         assert res.status_code == 403, res.status_code
 
-    @patch('pybossa.view.projects.uploader')
+    @patch('pybossa.repositories.project_repository.uploader')
     def test_delete_project_deletes_task_zip_files_too(self, uploader):
         """Test WEB delete project also deletes zip files for task and taskruns"""
         Fixtures.create()
-        self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.post('/project/test-app/delete', follow_redirects=True)
-        expected = [call('1_test-app_task_json.zip', 'user_1'),
-                    call('1_test-app_task_csv.zip', 'user_1'),
-                    call('1_test-app_task_run_json.zip', 'user_1'),
-                    call('1_test-app_task_run_csv.zip', 'user_1')]
+        expected = [call('1_test-app_task_json.zip', 'user_2'),
+                    call('1_test-app_task_csv.zip', 'user_2'),
+                    call('1_test-app_task_run_json.zip', 'user_2'),
+                    call('1_test-app_task_run_csv.zip', 'user_2')]
         assert uploader.delete_file.call_args_list == expected
 
     @with_context
@@ -3232,16 +3232,16 @@ class TestWeb(web.Helper):
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
 
-    @patch('pybossa.view.projects.uploader')
+    @patch('pybossa.repositories.task_repository.uploader')
     def test_delete_tasks_removes_existing_zip_files(self, uploader):
         """Test WEB delete tasks also deletes zip files for task and taskruns"""
         Fixtures.create()
-        self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
-        expected = [call('1_test-app_task_json.zip', 'user_1'),
-                    call('1_test-app_task_csv.zip', 'user_1'),
-                    call('1_test-app_task_run_json.zip', 'user_1'),
-                    call('1_test-app_task_run_csv.zip', 'user_1')]
+        expected = [call('1_test-app_task_json.zip', 'user_2'),
+                    call('1_test-app_task_csv.zip', 'user_2'),
+                    call('1_test-app_task_run_json.zip', 'user_2'),
+                    call('1_test-app_task_run_csv.zip', 'user_2')]
         assert uploader.delete_file.call_args_list == expected
 
     @with_context
