@@ -143,6 +143,9 @@ class TaskRepository(object):
 
     def _delete_zip_files_from_store(self, project):
         from pybossa.core import json_exporter, csv_exporter
+        global uploader
+        if uploader is None:
+            from pybossa.core import uploader
         json_tasks_filename = json_exporter.download_name(project, 'task')
         csv_tasks_filename = csv_exporter.download_name(project, 'task')
         json_taskruns_filename = json_exporter.download_name(project, 'task_run')
