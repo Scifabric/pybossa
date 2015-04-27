@@ -1741,55 +1741,55 @@ msgstr "Task Redundanz"
 
 #: themes/default/templates/projects/task_n_answers.html:18
 msgid "The number of answers per tasks that you want for the project"
-msgstr ""
+msgstr "Die Anzahl an Antworten, die Sie pro Task für dieses Projekt benötigen"
 
 #: themes/default/templates/projects/task_n_answers.html:20
 #: themes/default/templates/projects/task_scheduler.html:35
 msgid "Set redundancy"
-msgstr ""
+msgstr "Redundanz festlegen"
 
 #: themes/default/templates/projects/task_presenter_editor.html:28
 #: themes/default/templates/projects/snippets/options.html:3
 msgid "Task Presenter Editor"
-msgstr ""
+msgstr "Task-Presenter Editor"
 
 #: themes/default/templates/projects/task_presenter_editor.html:28
 msgid "Help"
-msgstr ""
+msgstr "Hilfe"
 
 #: themes/default/templates/projects/task_presenter_editor.html:34
 msgid "Update the project task presenter"
-msgstr ""
+msgstr "Aktualisieren des Task-Presenters"
 
 #: themes/default/templates/projects/task_presenter_editor.html:35
 msgid "Preview the task presenter"
-msgstr ""
+msgstr "Vorschau des Task-Presenters"
 
 #: themes/default/templates/projects/task_presenter_editor.html:45
 msgid "&times;"
-msgstr ""
+msgstr "&times;"
 
 #: themes/default/templates/projects/task_presenter_editor.html:46
 msgid "Task Presenter Preview"
-msgstr ""
+msgstr "Task-Presenter Vorschau"
 
 #: themes/default/templates/projects/task_presenter_editor.html:52
 msgid "Close"
-msgstr ""
+msgstr "Schließen"
 
 #: themes/default/templates/projects/task_priority.html:14
 #: themes/default/templates/projects/task_settings.html:22
 #: view/projects.py:1292
 msgid "Task Priority"
-msgstr ""
+msgstr "Task Priorität"
 
 #: themes/default/templates/projects/task_priority.html:15
 msgid "You can change the"
-msgstr ""
+msgstr "Sie können die"
 
 #: themes/default/templates/projects/task_priority.html:16
 msgid "priority"
-msgstr ""
+msgstr "Priorität"
 
 #: themes/default/templates/projects/task_priority.html:16
 msgid ""
@@ -1798,40 +1798,44 @@ msgid ""
 "lowest\n"
 "                priority is"
 msgstr ""
+eines oder mehrer Tasks ändern,\n"
+"                indem Sie eine Komma-separierte List von Task IDs angeben. Die niedrigste\n"
+"                Priorität ist"
 
 #: themes/default/templates/projects/task_priority.html:19
 msgid "and the highest priority is"
-msgstr ""
+msgstr "und die höchste Priorität hat"
 
 #: themes/default/templates/projects/task_priority.html:21
 msgid ""
 "The priority value is only\n"
 "                respected by the"
 msgstr ""
+"Der Prioritätswert wird nur vom\n"
 
 #: themes/default/templates/projects/task_priority.html:22
 msgid "default scheduler"
-msgstr ""
+msgstr "Standard Task-Planer berücksichtigt"
 
 #: themes/default/templates/projects/task_priority.html:27
 msgid "Comma separated Task.IDs i.e.: 3, 532, 100"
-msgstr ""
+msgstr "Komma-separierte Task-IDs, z.B.: 3, 532, 100"
 
 #: themes/default/templates/projects/task_priority.html:28
 msgid "Priority value between 0.0 and 1.0"
-msgstr ""
+msgstr "Prioritätswert zwischen 0.0 und 1.0"
 
 #: themes/default/templates/projects/task_priority.html:30
 msgid "Change Priority"
-msgstr ""
+msgstr "Priorität ändern"
 
 #: themes/default/templates/projects/task_scheduler.html:15
 msgid "You can choose from the following schedulers"
-msgstr ""
+msgstr "Sie können folgende Task-Planer auswählen"
 
 #: themes/default/templates/projects/task_scheduler.html:17
 msgid "or"
-msgstr ""
+msgstr "oder"
 
 #: themes/default/templates/projects/task_scheduler.html:18
 msgid ""
@@ -1840,6 +1844,10 @@ msgid ""
 "answers has\n"
 "                    not achieved) excluding the current user"
 msgstr ""
+"Gibt einen Task zurück, der\n"
+"                    noch nicht vervollständigt wurde (die Anzahl an vorgegebenen Antworten\n"
+"wurde noch nicht erreicht) und vom Benutzer noch nicht bearbeitet wurde
+
 
 #: themes/default/templates/projects/task_scheduler.html:21
 msgid ""
@@ -1848,6 +1856,9 @@ msgid ""
 "(answers)\n"
 "                    excluding the current user"
 msgstr ""
+"Gibt den Task zurück, der\n"
+"                    die wenigsten Beiträge (Antworten) hat\n"
+" und vom Benutzer noch nicht bearbeitet wurde"
 
 #: themes/default/templates/projects/task_scheduler.html:24
 msgid ""
@@ -1856,10 +1867,13 @@ msgid ""
 "more\n"
 "                    times"
 msgstr ""
+"Gibt einen zufälligen Task zurück, d.h. \n"
+"                    ein Benutzer kann den selben Task ein oder mehrmals bekommen"
+
 
 #: themes/default/templates/projects/task_settings.html:18
 msgid "Change how the tasks are delivered to volunteers"
-msgstr ""
+msgstr "Ändern, wie die Tasks an die Freiwilligen verteilt werden"
 
 #: themes/default/templates/projects/task_settings.html:19
 msgid "Scheduler"
