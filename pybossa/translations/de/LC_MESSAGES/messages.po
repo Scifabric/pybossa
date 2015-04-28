@@ -1877,27 +1877,27 @@ msgstr "Ändern, wie die Tasks an die Freiwilligen verteilt werden"
 
 #: themes/default/templates/projects/task_settings.html:19
 msgid "Scheduler"
-msgstr ""
+msgstr "Task-Planer"
 
 #: themes/default/templates/projects/task_settings.html:23
 msgid "Change the priority of the tasks"
-msgstr ""
+msgstr "Prioritäten der Tasks ändern"
 
 #: themes/default/templates/projects/task_settings.html:29
 msgid "Delete Tasks"
-msgstr ""
+msgstr "Tasks löschen"
 
 #: themes/default/templates/projects/task_settings.html:30
 msgid "Delete all the tasks and associated answers"
-msgstr ""
+msgstr "Alle Tasks und damit verbundene Antworten löschen"
 
 #: themes/default/templates/projects/task_settings.html:35
 msgid "Change the redundancy level for the tasks"
-msgstr ""
+msgstr "Redundanz-Wert für die Tasks ändern"
 
 #: themes/default/templates/projects/tasks.html:21
 msgid "Import tasks from templates, GDrive, or CSV"
-msgstr ""
+msgstr "Tasks von Vorlage, GDrive oder CSV importieren"
 
 #: themes/default/templates/projects/tasks.html:22
 #: themes/default/templates/projects/importers/csv.html:23
@@ -1906,112 +1906,114 @@ msgstr ""
 #: themes/default/templates/projects/importers/flickr.html:50
 #: themes/default/templates/projects/importers/gdocs.html:23
 msgid "Import"
-msgstr ""
+msgstr "Importieren"
 
 #: themes/default/templates/projects/tasks.html:25
 #: themes/default/templates/projects/tasks.html:68
 msgid "Export Tasks"
-msgstr ""
+msgstr "Tasks exportieren"
 
 #: themes/default/templates/projects/tasks.html:26
 #: themes/default/templates/projects/tasks.html:69
 msgid "Export tasks to JSON, CSV or a CKAN server"
-msgstr ""
+msgstr "Tasks nach JSON, CSV oder einem CKAN-Server exportieren"
 
 #: themes/default/templates/projects/tasks.html:27
 #: themes/default/templates/projects/tasks.html:70 view/projects.py:923
 msgid "Export"
-msgstr ""
+msgstr "Exportieren"
 
 #: themes/default/templates/projects/tasks.html:32
 msgid "Task Presenter"
-msgstr ""
+msgstr "Task-Presenter"
 
 #: themes/default/templates/projects/tasks.html:34
 msgid "Editor"
-msgstr ""
+msgstr "Editor"
 
 #: themes/default/templates/projects/tasks.html:38
 msgid "Configure the task scheduler, redundancy, etc."
-msgstr ""
+msgstr "Konfigurieren des Task-Planers, der Task-Redundanz, etc."
 
 #: themes/default/templates/projects/tasks.html:46
 #: themes/default/templates/projects/tasks.html:49
 #: themes/default/templates/projects/tasks.html:62
 #: themes/default/templates/projects/tasks.html:65
 msgid "Browse"
-msgstr ""
+msgstr "Anschauen"
 
 #: themes/default/templates/projects/tasks.html:47
 #: themes/default/templates/projects/tasks.html:63
 msgid "Check the status of the tasks"
-msgstr ""
+msgstr "Status der Tasks überprüfen"
 
 #: themes/default/templates/projects/tasks.html:53
 msgid "Auto-import Tasks"
-msgstr ""
+msgstr "Tasks anschauen"
 
 #: themes/default/templates/projects/tasks.html:54
 msgid "Import tasks regularly and automatically"
-msgstr ""
+msgstr "Tasks automatisch und regelmäßig importieren"
 
 #: themes/default/templates/projects/tasks.html:55
 msgid "Setup"
-msgstr ""
+msgstr "Einrichtung"
 
 #: themes/default/templates/projects/tasks_browse.html:13
 msgid "Browse tasks"
-msgstr ""
+msgstr "Tasks anschauen"
 
 #: themes/default/templates/projects/tasks_browse.html:15
 msgid "This page shows all the available tasks for this project"
-msgstr ""
+msgstr "Diese Seite zeigt alle vorhandenen Tasks für dieses Projekt"
 
 #: themes/default/templates/projects/tasks_browse.html:16
 msgid "For each task, you can find the following information"
-msgstr ""
+msgstr "Zu jedem Task können Sie folgende Informationen finden"
 
 #: themes/default/templates/projects/tasks_browse.html:18
 #: themes/default/templates/projects/tasks_browse.html:29
 #: themes/default/templates/projects/tasks_browse.html:31
 msgid "Task"
-msgstr ""
+msgstr "Task"
 
 #: themes/default/templates/projects/tasks_browse.html:18
 msgid "This number identifies the task for the project and it is unique"
-msgstr ""
+msgstr "Diese Zahl identifiziert den Task für das Projekt und ist eindeutig"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid ""
 "The first number shows how many answers have been submitted for the task "
 "and the"
-msgstr ""
+msgstr "Die erste Zahl zeigt die Zahl der beigetragenen Antworteten für den Task und die"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid ""
 "This redundancy method will help to detect errors, typos, data forging, "
 "etc. when the task has been completed"
 msgstr ""
+"Die Redundanz-Methode hilft, Detektions-Fehler, Vertipper, Datenfehler etc. zu vermeiden, wenn "
+"der Task verfollständigt wurde"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid "second number"
-msgstr ""
+msgstr "zweite Zahl"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid "how many need to be obtained to mark the task as"
-msgstr ""
+msgstr "wie viele erreicht werden müssen, um den Task als "
 
 #: themes/default/templates/projects/tasks_browse.html:20
 msgid "Progress Bar"
-msgstr ""
+msgstr "Fortschrittsbalken"
 
 #: themes/default/templates/projects/tasks_browse.html:20
 msgid "The progress bar will the percentage that has been completed for the task"
-msgstr ""
+msgstr "Der Fortschrittsbalken zeigt den Prozentsatz der vervollständigten Tasks an"
 
 #: themes/default/templates/projects/tasks_browse.html:48
 msgid "Download Task Results"
-msgstr ""
+msgstr "Task-Ergebnisse herunterladen"
 
 #: themes/default/templates/projects/tasks_browse.html:52
 msgid "Download Partial results"
