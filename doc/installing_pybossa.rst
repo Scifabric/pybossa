@@ -2,14 +2,14 @@
 Install your own PyBossa server
 ===============================
 
-This section covers how you can install, configure and deploy a PyBossa server 
+This section covers how you can install, configure and deploy a PyBossa server
 for your company, organization or institution using a GNU/Linux server.
 
 .. toctree::
    :maxdepth: 2
 
    install
-   apache2
+   nginx
    customizing
    admin
    translating
@@ -25,4 +25,3 @@ you could contribute to the project.
    :maxdepth: 2
 
    developer
-
