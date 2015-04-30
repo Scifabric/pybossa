@@ -38,7 +38,8 @@ requirements = [
     "rq-scheduler>=0.5.1, <0.5.2",
     "rq-dashboard",
     "unidecode>=0.04.16, <0.05",
-    "mailchimp"
+    "mailchimp",
+    "flask-plugins"
 ]
 
 setup(

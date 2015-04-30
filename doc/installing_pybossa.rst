@@ -13,6 +13,7 @@ for your company, organization or institution using a GNU/Linux server.
    customizing
    admin
    translating
+   plugins
 
 
 Contributing to the PyBossa development
