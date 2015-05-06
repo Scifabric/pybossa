@@ -21,6 +21,9 @@ requirements = [
     "pygeoip>=0.3.1, <1.0",
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
+    "pyOpenSSL>=0.15.1, <1.0",          # fix for python below 2.7.9
+    "ndg-httpsclient>=0.4.0, <1.0",     # fix for python below 2.7.9
+    "pyasn1>=0.1.7, <1.0",              # fix for python below 2.7.9
     "requests>=2.2.1, <3.0",
     "SQLAlchemy>=0.9.6, <0.9.7",
     "six>=1.9.0, <2.0.0",
@@ -40,6 +43,8 @@ requirements = [
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
     "flask-plugins"
+
+
 ]
 
 setup(
