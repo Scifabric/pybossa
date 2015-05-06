@@ -43,8 +43,6 @@ requirements = [
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
     "flask-plugins"
-
-
 ]
 
 setup(
