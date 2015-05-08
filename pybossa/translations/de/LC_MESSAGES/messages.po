@@ -1602,203 +1602,204 @@ msgstr "Beginne mit Deinen Beiträgen"
 msgid "Update the project"
 msgstr "Projekt aktualisieren"
 
+
 #: themes/default/templates/applications/update.html:39
 msgid "Give some details about the project"
-msgstr "Da algunos detalles sobre el proyecto"
+msgstr "Informationen über das Projekt angeben"
 
 #: themes/default/templates/applications/update.html:40
 msgid "Explain the project (use Markdown!)"
-msgstr "Explica el proyecto (usa Markdown)"
+msgstr "Beschreibe das Projekt (Benutze bitte Markdown!)"
 
 #: themes/default/templates/applications/update.html:44
 msgid "Do you want to hide your project?"
-msgstr "¿Quieres ocultar el proyecto?"
+msgstr "Möchtest Du Dein Projekt verstecken?"
 
 #: themes/default/templates/applications/update.html:46
 msgid "Save te changes"
-msgstr "Guardar los cambios"
+msgstr "Änderungen speichern"
 
 #: themes/default/templates/applications/update_blogpost.html:14
 msgid "Edit the blog post"
-msgstr "Edita el artículo"
+msgstr "Blogpost bearbeiten"
 
 #: themes/default/templates/applications/update_blogpost.html:23
 msgid "Update"
-msgstr "Actualizar"
+msgstr "Aktualisieren"
 
 #: themes/default/templates/applications/importers/csv.html:16
 msgid "From a CSV file"
-msgstr "De un fichero CSV"
+msgstr "Aus einer CSV Datei"
 
 #: themes/default/templates/applications/importers/csv.html:20
 msgid ""
 "Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
 " a CSV file with data for"
-msgstr "Por favor proporciona la URL (por ejemplo de DropBox) para"
-"el fichero CSV con los datos para"
+msgstr "Bitte gib eine URL an (z.B. DropBox, Ubunto One, etc. öffentlicher Link) zur"
+"CSV Datei mit den Daten für"
 
 #: themes/default/templates/applications/importers/csv.html:20
 #: themes/default/templates/applications/importers/epicollect.html:20
 #: themes/default/templates/applications/importers/gdocs.html:20
 msgid "For more information, please look at"
-msgstr "Para más información, por favor consulta"
+msgstr "Weitere Informationen in"
 
 #: themes/default/templates/applications/importers/csv.html:20
 #: themes/default/templates/applications/importers/epicollect.html:20
 #: themes/default/templates/applications/importers/gdocs.html:20
 msgid "the documentation"
-msgstr "la documentación"
+msgstr "der Dokumentation"
 
 #: themes/default/templates/applications/importers/csv.html:21
 msgid "The URL of the CSV file"
-msgstr "La URL del fichero CSV"
+msgstr "Die URL der CSV-Datei"
 
 #: themes/default/templates/applications/importers/epicollect.html:16
 msgid "From an EpiCollect Plus project"
-msgstr "Desde un proyecto EpiCollect Plus"
+msgstr "Aus einem EpiCollect Plus Projekt"
 
 #: themes/default/templates/applications/importers/epicollect.html:20
 msgid "Please provide an EpiCollect Plus project name to import its data for"
 msgstr ""
-"Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
-"importar sus datos para"
+"Bitte gib den EpiCollect Plus Projektnamen an, aus die Daten für "
+"importiert werden sollen"
 
 #: themes/default/templates/applications/importers/epicollect.html:22
 msgid "The name of the public EpiCollect Plus project"
-msgstr "El nombre del proyecto público EpiCollect Plus"
+msgstr "Der Name des EpiCollect Plus Projektes"
 
 #: themes/default/templates/applications/importers/epicollect.html:23
 msgid "The name of the project's form"
-msgstr "El nombre del formulario del proyecto"
+msgstr "Der Name des Projektformulars"
 
 #: themes/default/templates/applications/importers/gdocs.html:16
 msgid "From a Google Docs Spreadsheet"
-msgstr "Desde una hoja de cálculo de Google"
+msgstr "Aus einer Google Docs Tabelle"
 
 #: themes/default/templates/applications/importers/gdocs.html:20
 msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
 msgstr ""
-"Por favor, proporciona un enlace de una hoja de cálculo de Google Drive "
-"para"
+"Bitte gib eine URL für eine Google Drive Tabelle mit Daten für "
+"an"
 
 #: themes/default/templates/applications/snippets/options.html:4
 #: themes/default/templates/applications/tasks/options.html:3
 msgid "Use one of the following available"
-msgstr "Utiliza una de las siguientes"
+msgstr "Benutze eine der folgende"
 
 #: themes/default/templates/applications/snippets/options.html:5
 #: themes/default/templates/applications/tasks/options.html:4
 msgid "templates"
-msgstr "plantillas"
+msgstr "verfügbaren Vorlagen"
 
 #: themes/default/templates/applications/snippets/options.html:5
 msgid "for your project"
-msgstr "para tu proyeto"
+msgstr "für Dein Projekt"
 
 #: themes/default/templates/applications/tasks/csv.html:3
 msgid "Provide a public link to your own CSV file"
-msgstr "Proporciona un enlace público al CSV"
+msgstr "Gib einen öffentlichen Link zu Deiner CSV Datei an"
 
 #: themes/default/templates/applications/tasks/csv.html:5
 msgid ""
 "Use the CSV URL\n"
 "      template"
-msgstr "Usa un enlace a fichero CSV"
+msgstr "Benutze die CSV URL Vorlage"
 
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
 "If you delete all the\n"
 "            tasks and task runs they will be gone\n"
 "            forever!"
-msgstr "¡Si borras el proyecto y sus tareas, se borrarán para siempre!"
+msgstr "Wenn Du alle Aufgaben und Antworten löschst, so können diese nicht wieder hergestellt werden!"
 
 #: themes/default/templates/applications/tasks/delete.html:16
 msgid "You cannot undo this action!"
-msgstr "No se puede deshacer esta acción"
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden"
 
 #: themes/default/templates/applications/tasks/delete.html:20
 msgid ""
 "Are you sure you want to delete ALL the project tasks and associated task"
 " runs?"
 msgstr ""
-"¿Estás seguro que quieres eliminar este proyecto y todas las tareas y\"\n"
-"\" respuestas asociadas con él?"
+"Bist Du sicher, dass Du ALLE Aufgaben und Antworten des Projektes löschen möchtest?\"\n"
+"\""
 
 #: themes/default/templates/applications/tasks/delete.html:26
 msgid ""
 "No, do not delete\n"
 "              anything!"
-msgstr "No, no quiero borrar nada"
+msgstr "Nein, bitte nichts löschen!"
 
 #: themes/default/templates/applications/tasks/epicollect.html:2
 msgid "EpiCollect Plus Project"
-msgstr "Proyecto EpiCollect Plus"
+msgstr "EpiCollect Plus Projekt"
 
 #: themes/default/templates/applications/tasks/epicollect.html:3
 msgid "Use an EpiCollect Plus project"
-msgstr "Utilizar un proyecto EpiCollect Plus"
+msgstr "Benutze ein EpiCollect Plus Projekt"
 
 #: themes/default/templates/applications/tasks/epicollect.html:5
 msgid ""
 "Use an EpiCollect\n"
 "      Plus project"
-msgstr "Usar un proyecto EpiCollect Plus"
+msgstr "Benutze ein EpiCollect Plus Projekt"
 
 #: themes/default/templates/applications/tasks/gdocs-image.html:2
 msgid "Image Pattern Recognition"
-msgstr "Imágenes"
+msgstr "Mustererkennung"
 
 #: themes/default/templates/applications/tasks/gdocs-image.html:3
 msgid "Re-use the Flickr Person Finder task template"
-msgstr "Reutiliza la plantilla Flickr Person"
+msgstr "Verwende die Vorlage der Flickr Personen Finder Aufgabe"
 
 #: themes/default/templates/applications/tasks/gdocs-image.html:5
 msgid ""
 "Use the\n"
 "      Image Task template"
-msgstr "Utiliza la plantilla de Imágenes"
+msgstr "Vorlage für Bildaufgaben"
 
 #: themes/default/templates/applications/tasks/gdocs-map.html:2
 msgid "Geo-coding"
-msgstr "Geo-codificar"
+msgstr "Geocodierung"
 
 #: themes/default/templates/applications/tasks/gdocs-map.html:3
 msgid "Re-use the Urban Park Task template"
-msgstr "Reutiliza la plantilla de los parques"
+msgstr "Verwende die Vorlage der Urban Park Aufgabe"
 
 #: themes/default/templates/applications/tasks/gdocs-map.html:5
 msgid ""
 "Use the\n"
 "      Mapping template"
-msgstr "Usa la plantilla de los mapas"
+msgstr "Benutze die Kartenvorlage"
 
 #: themes/default/templates/applications/tasks/gdocs-pdf.html:2
 msgid "Transcribing documents"
-msgstr "Transcripción de documentos"
+msgstr "Dokumente transkribieren"
 
 #: themes/default/templates/applications/tasks/gdocs-pdf.html:3
 msgid "Re-use the PDF transcription template"
-msgstr "Reutiliza la plantilla de transcripción"
+msgstr "Benutze die Vorlage der PDF Transkribierung"
 
 #: themes/default/templates/applications/tasks/gdocs-pdf.html:5
 msgid ""
 "Use the\n"
 "      Transcription template"
-msgstr "Utiliza la plantilla de transcripción"
+msgstr "Benutze die Transkribierungsvorlage"
 
 #: themes/default/templates/applications/tasks/gdocs-sound.html:2
 msgid "Sound Pattern Recognition"
-msgstr "Sonido"
+msgstr "Geräuscherkennung"
 
 #: themes/default/templates/applications/tasks/gdocs-sound.html:3
 msgid "Re-use the SoundCloud task template"
-msgstr "Reutiliza la plantilla de SoundCloud"
+msgstr "Verwende die Vorlage der SoundCloud Aufgabe"
 
 #: themes/default/templates/applications/tasks/gdocs-sound.html:5
 msgid ""
 "Use the\n"
 "      Sound Task template"
-msgstr "Utilizar la plantilla de Sonido"
+msgstr "Benutze die Vorlage der Höraufgabe"
 
 #: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:2
 msgid "Google Drive Spreadsheet"
@@ -2195,140 +2196,139 @@ msgstr "Proyecto actualizado"
 
 #: view/applications.py:225
 msgid "Project created!"
-msgstr "Proyecto creado!"
+msgstr "Projekt angelegt!"
 
 #: view/applications.py:228
 msgid "You can check the "
-msgstr "Puedes comprobar la"
+msgstr "Du kannst Dir die"
 
 #: view/applications.py:230
 msgid "Guide and Documentation"
-msgstr "Guía y  Documentación"
+msgstr "Anleitung und Dokumentation ansehen zum "
 
 #: view/applications.py:232
 msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
-msgstr "para añadir tareas, un icono, utilizando PyBossa.JS, etc."
+msgstr "Hinzufügen von Aufgaben, Vorschaubildern, Verwendung von PyBossa.JS, etc."
 
 #: view/applications.py:255
 msgid "Task presenter added!"
-msgstr "Presentador de Tareas añadido!"
+msgstr "Aufgabenpräsentation hinzugefügt!"
 
 #: view/applications.py:268
 msgid "<strong>Note</strong> You will need to upload the tasks using the"
-msgstr "<strong>Nota</strong> Va a necesitar subir las tareas utilizando el"
+msgstr "<strong>Beachte</strong> Du musst Aufgaben hochladen, um den"
 
 #: view/applications.py:270
 msgid "CSV importer"
-msgstr "importador CSV"
+msgstr "CSV Import zu nutzen"
 
 #: view/applications.py:271
 msgid ""
 " or download the project bundle and run the "
 "<strong>createTasks.py</strong> script in your computer"
 msgstr ""
-" o descargar el proyecto y ejecutar el script "
-"<strong>createTasks.py</strong>  en su PC"
+" oder Projektpaket herunterladen und das Skript "
+"<strong>createTasks.py</strong> auf Deinem Computer starten"
 
 #: view/applications.py:341
 msgid "Project deleted!"
-msgstr "¡Proyecto eliminado!"
+msgstr "Projekt gelöscht!"
 
 #: view/applications.py:376
 msgid "Project updated!"
-msgstr "¡Proyecto actualizado!"
+msgstr "Projekt aktualisiert!"
 
 #: view/applications.py:422
 msgid ""
 "Your project thumbnail has been updated! It may"
 "                                   take some minutes to refresh..."
 msgstr ""
-"El avatar de tu proyecto ha sido actualizado. Puede tardar unos minutos "
-"en actualizarse"
+"Dein Projektvorschaubild wurde aktualisiert! Es kann einige Minuten dauern, bis es erscheint..."
+""
 
 #: view/applications.py:425
 msgid "You must provide a file to change the avatar"
-msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+msgstr "Du musst eine Bilddatei zur Verfügung stellen, um das Vorschaubild zu ändern"
 
 #: view/applications.py:517
 msgid "Importing tasks, this may take a while, wait..."
-msgstr "Importando tareas, esto puede llevar un rato, espera..."
+msgstr "Importiere Aufgaben, dies kann eine Weile Dauern..."
 
 #: view/applications.py:573
 msgid "Oops! It looks like the file is empty."
-msgstr "¡Uy! Parece que el fichero está vacío."
+msgstr "Uhps! Diese Datei enthält keine Einträge."
 
 #: view/applications.py:575
 msgid "Oops! It looks like there are no new records to import."
-msgstr "¡Uy! Parece que el fichero está vacío."
+msgstr "Uhps! "
 
 #: view/applications.py:577
 msgid "Tasks imported successfully!"
-msgstr "¡Tareas importadas satisfactoriamente!"
+msgstr "Aufgaben erfolgreich improtert!"
 
 #: view/applications.py:579
 msgid "Task imported successfully!"
-msgstr "Tarea importada satisfactoriamente!"
+msgstr "Aufgabe erfolgreich importiert!"
 
 #: view/applications.py:635
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
-"¡Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
-"tus contribuciones."
+"Uhps! Als nicht angemeldeter Nutzer bleiben Deine Beiträge anonym. Andere können dann nicht sehen, dass DU einen Beitrag geleistet hast."
 
 #: view/applications.py:837
 msgid "All the tasks and associated task runs have been deleted"
-msgstr "Todas las tareas y sus respuestas han sido eliminadas"
+msgstr "Alle Aufgaben und die zugehörigen Antworten wurden gelöscht"
 
 #: view/applications.py:854
 msgid "Exporting data..., this may take a while"
-msgstr "Exportando datos..., esto puede llevar un rato"
+msgstr "Daten exportieren..., das kann einen Moment dauern"
 
 #: view/applications.py:973
 msgid "Data exported to "
-msgstr "Datos exportados a "
+msgstr "Daten exportiert nach "
 
 #: view/applications.py:1031
 msgid ""
 "Oops, the project does not have tasks to                         export, "
 "if you are the owner add some tasks"
 msgstr ""
-"Uy, el proyecto no tiene tareas que exportar, si eres el dueño "
-"añade alguna"
+"Uhps, das Projekt hat keine Aufgaben, die exportiert werden können, "
+"Wenn Du der Ersteller des Projektes bist, dann füge Aufgaben hinzu"
 
 #: view/applications.py:1037
 msgid ""
 "Oops, there are no Task Runs yet to export, invite"
 "                          some users to participate"
 msgstr ""
-"Uy, no hay ninguna respuesta que exportar, invita a algunos voluntarios a"
-" participar"
+"Uhps, es gibt bisher keine Antworten, die exportiert werden können"
+" Lade Nutzer ein, zu der Aufgabe beizutragen"
 
 #: view/applications.py:1231
 msgid "Redundancy of Tasks updated!"
-msgstr "Redundancia de las tareas actualizada"
+msgstr "Redendanz der Antworten aktualisiert!"
 
 #: view/applications.py:1275
 msgid "Project Task Scheduler updated!"
-msgstr "¡Gestor de tareas actualizado!"
+msgstr "Projektaufgabenplanung aktualisiert"
 
 #: view/applications.py:1316
 msgid "Task priority has been changed"
-msgstr "Su perfil ha sido actualizado"
+msgstr "Aufgabenpriorität wurden geändert"
 
 #: view/applications.py:1388
 msgid "Write a new post"
-msgstr "Escribe un nuevo artículo"
+msgstr "Schreibe einen neuen Blogpost"
 
 #: view/applications.py:1422
 msgid "Blog post created!"
-msgstr "¡Artículo creado!"
+msgstr "Blogpost erstellt!"
 
 #: view/applications.py:1441
 msgid "Edit a post"
-msgstr "Editar artículo"
+msgstr "Blogpost bearbeiten"
 
 #: view/applications.py:1470
 msgid "Blog post updated!"
-msgstr "¡Artículo actualizado!"
+msgstr "Blogpost aktualisiert!"
