@@ -27,6 +27,8 @@ import pyrax
 import traceback
 import time
 from flask import current_app, url_for
+from pybossa.core import timeouts
+from pybossa.cache import memoize
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
 
@@ -95,6 +97,7 @@ class RackspaceUploader(Uploader):
         except pyrax.exceptions.UploadFailed:
             return False
 
+    @memoize(timeout=timeouts.get('APP_TIMEOUT'))
     def _lookup_url(self, endpoint, values):
         """Return Rackspace URL for object."""
         try:
