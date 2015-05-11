@@ -25,6 +25,8 @@ This module exports:
 """
 import sys
 from PIL import Image
+from pybossa.core import timeouts
+from pybossa.cache import memoize
 
 
 class Uploader(object):
@@ -98,6 +100,7 @@ class Uploader(object):
         else:
             return False
 
+    @memoize(timeout=timeouts.get('APP_TIMEOUT'))
     def external_url_handler(self, error, endpoint, values):
         """Build up an external URL when url_for cannot build a URL."""
         # This is an example of hooking the build_error_handler.
