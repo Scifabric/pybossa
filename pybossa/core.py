@@ -481,6 +481,7 @@ def setup_cache_timeouts(app):
     """Setup cache timeouts."""
     global timeouts
     # Apps
+    timeouts['AVATAR_TIMEOUT'] = app.config['AVATAR_TIMEOUT']
     timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
     timeouts['REGISTERED_USERS_TIMEOUT'] = \
         app.config['REGISTERED_USERS_TIMEOUT']
