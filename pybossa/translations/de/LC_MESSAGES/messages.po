@@ -1789,7 +1789,7 @@ msgstr "Benutze die Transkribierungsvorlage"
 
 #: themes/default/templates/applications/tasks/gdocs-sound.html:2
 msgid "Sound Pattern Recognition"
-msgstr "Geräuscherkennung"
+msgstr "Audio Mustererkennung"
 
 #: themes/default/templates/applications/tasks/gdocs-sound.html:3
 msgid "Re-use the SoundCloud task template"
@@ -1799,39 +1799,39 @@ msgstr "Verwende die Vorlage der SoundCloud Aufgabe"
 msgid ""
 "Use the\n"
 "      Sound Task template"
-msgstr "Benutze die Vorlage der Höraufgabe"
+msgstr "Benutze die Vorlage der Audiomustererkennung"
 
 #: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:2
 msgid "Google Drive Spreadsheet"
-msgstr "Hoja de Cálculo en Google Drive"
+msgstr "Google Drive Tabelle"
 
 #: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:3
 msgid "Import a Google Drive Spreadsheet"
-msgstr "Importar desde Google Drive"
+msgstr "Importiere Google Drive Tabelle"
 
 #: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:5
 msgid ""
 "Use the Google Drive\n"
 "      template"
-msgstr "Utilizar hoja de cálculo de Google Drive"
+msgstr "Benutze die Google Drive Vorlage"
 
 #: themes/default/templates/applications/tasks/gdocs-video.html:2
 msgid "Video Pattern Recognition"
-msgstr "Vídeos"
+msgstr "Video Mustererkennung"
 
 #: themes/default/templates/applications/tasks/gdocs-video.html:3
 msgid "Re-use the Vimeo task template"
-msgstr "Reutilizar la plantilla de Vimeo"
+msgstr "Verwende das Vimeo Aufgabentemplate"
 
 #: themes/default/templates/applications/tasks/gdocs-video.html:5
 msgid ""
 "Use the\n"
 "      Video Task template"
-msgstr "Utilizar la plantilla de vídeo"
+msgstr "Benutze das Video Aufgabentemplate"
 
 #: themes/default/templates/applications/tasks/options.html:4
 msgid "to import tasks"
-msgstr "para importar tareas"
+msgstr "um Aufgaben zu importieren"
 
 #: themes/default/templates/home/_about.html:5
 msgid ""
@@ -1843,24 +1843,21 @@ msgid ""
 "anyone around the world with some time, interest and an internet "
 "connection can contribute."
 msgstr ""
-"PyBossa es una plataforma de código abierto y gratuita para el crowd-"
-"sourcing ylas micro-tareas. La plataforma permite la creación y ejecución"
-" de proyectos en losque se requiera la ayuda del conocimiento humano para"
-" resolver tareas como por ejemplola clasificación de imágenes, "
-"transcripción de documentos, geolocalización, etc. PyBossaes una "
-"herramienta que pretende ayudar a investigadores, hackers cívicos y "
-"desarrolladoresa crear proyectos en los que cualquier persona del mundo "
-"pueda contribuir si tiene una conexión a Internet e interés en el "
-"proyecto."
+"PyBossa ist eine freie, quelloffene Crowd-Sourcing und Micro-Tasking Plattform."
+" Sie ermöglicht es, Projekte online anzulegen und zu verwalten, deren Aufgaben "
+" durch Menschen gelöst werden können. Dies kann beispielweise Mustererkennung in "
+" Bilder, Videos oder Audioaufnahmen sein, die Klassifikation und Transkribierung von Texten und vieles mehr. "
+" PyBossa unterstützt Forscher und Entwickler dabei, Projekte umzusetzten "
+" zu denen potentiell weltweit jeder mit Zeit, Interesse und Internetzugang beitragen kann."
 
 #: themes/default/templates/home/_about.html:8
 msgid "PyBossa is different to existing efforts:"
-msgstr "PyBossa es diferente a los proyectos existentes porque:"
+msgstr "PyBossa unterscheidet sich von anderen Ansätzen:"
 
 #: themes/default/templates/home/_about.html:10
 #, fuzzy, python-format
 msgid "It's a 100%% open-source"
-msgstr "Es 100%% código libre"
+msgstr "Es ist 100% open-source"
 
 #: themes/default/templates/home/_about.html:11
 msgid ""
@@ -1868,11 +1865,8 @@ msgid ""
 " handle payment or money — it is designed to support volunteer-driven "
 "projects."
 msgstr ""
-"A diferencia de otros proyectos tipo, por ejemplo “mechanical turk”, "
-"PyBossa\"\n"
-"\"PyBossa no está diseñado para manejar pagos o dinero — está diseñado "
-"para dar soporte\"\n"
-"\" a proyectos orientados alrededor de la comunidad de voluntarios."
+"Im Unterschiede z.B. zu (Amazon) “Mechanical Turk” und ähnlichen Projekten, wurde PyBossa nicht dazu konzipiert"
+" die Beitragenden zu bezahlen. Es wurde mit der Idee entwickelt, dass die Unterstützung der Projekte auf freiwilliger Basis erfolgt."
 
 #: themes/default/templates/home/_about.html:13
 msgid ""
@@ -1882,76 +1876,71 @@ msgid ""
 "snippets of Javascript and HTML which are then deployed on a PyBossa "
 "instance (such as"
 msgstr ""
-"Está diseñado como una plataforma para el desarrollo y lanzamiento \"\n"
-"\"de proyectos de micro-tareas y/o crowdsourcing más que como siendo "
-"un proyecto\"\n"
-"\"en si misma. Los proyectos individuales se crean escribiendo "
-"pequeños programas\"\n"
-"\"de Javascript y HTML que son posteriormente lanzados como instancias "
-"(como por ejemplo"
+"Sie ist als eine Plattform konzipiert für die Entwicklung und Umsetzung"
+"von crowd-sourcing und micro-tasking Projekt. PyBossa ist dabei selbst kein Crowd-sourcing Projekt "
+"Die einzelnen crowd-sourcing Projekte werden mit Hilfe einfacher Code-Schnipsel geschrieben "
+"Javascript und HTML werden verwendet. Die Code-Schnipsel werden dann als neues Projekt "
+"auf einem PyBossa Server umgesetzt"
 
 #: themes/default/templates/home/_about.html:13
 msgid ""
 "This way one can easily develop custom projects while using the PyBossa "
 "platform to store your data, manage users, and handle workflow"
 msgstr ""
-"De esta forma, se pueden desarrollar proyectos personalizados "
-"mientras\"\n"
-"\"se utiliza la plataforma PyBossa para almacenar los datos, manejar los "
-"usuarios,\"\n"
-"\" y el flujo de trabajo"
+"Dadurch können auf einfache Art eigene Projekte umgesetzt werden. "
+"Die PyBossa Plattform dient dazu, Deine Daten zu sichern und Nutzer/Workflow zu verwalten."
 
 #: themes/default/templates/home/_about.html:18
 msgid "You can read more about the architecture in the"
-msgstr "Puedes leer más sobre la arquitectura en la"
+msgstr "Du kannst mehr über die Architektur in "
 
 #: themes/default/templates/home/_about.html:18
 msgid "PyBossa Documentation"
-msgstr "documentación de PyBossa"
+msgstr "der PyBossa Dokumentation lesen"
 
 #: themes/default/templates/home/_about.html:18
 msgid "and follow the"
-msgstr "y seguir el"
+msgstr "Es gibt ein"
 
 #: themes/default/templates/home/_about.html:18
 msgid "step-by-step tutorial to create your own projects"
-msgstr "tutorial paso a paso para crear tus propios proyectos"
+msgstr "Schritt-für-Schritt Tutorial, um Dein eigenes Projekt anzulegen."
 
 #: themes/default/templates/home/_about.html:23
 msgid ""
 " PyBossa provides individual statistics for every project in the system, "
 "as well as a"
 msgstr ""
-"PyBossa proporciona estadísticas individuales para cada proyecto \"\n"
-"\" así como también para"
+" PyBossa zeigt für jedes Projekt Statistiken an "
+" sowie"
 
 #: themes/default/templates/home/_about.html:23
 msgid "general overview about the system like total number of users, tasks, etc"
-msgstr "todo el sistema: número total de usuarios, tareas, etc."
+msgstr "eine allgemeine Übersicht über das Gesamtsystem, beispielsweise Anzahl der Nutzer, Aufgaben, etc."
 
 #: themes/default/templates/home/_about.html:25
 msgid "Check the global statistics"
-msgstr "Ver las estadísticas globales"
+msgstr "Sieh Dir die globale Statistik an"
 
 #: themes/default/templates/home/_about.html:27
 msgid "Contact information"
-msgstr "Información de Contacto"
+msgstr "Kontaktinformation"
 
 #: themes/default/templates/home/_about.html:29
 msgid "For more info, send us an e-mail to: "
-msgstr "Para más información, envíanos un correo electrónico a: "
+msgstr "Für mehr Informationen, sende bitte eine E-Mail an: "
 
 #: themes/default/templates/home/_about.html:29
 msgid "Follow us on Twitter!"
-msgstr "Síguenos en Twitter!"
+msgstr "Folge uns auf Twitter!"
 
 #: themes/default/templates/home/_about.html:30
 msgid "E-mail list: "
-msgstr "Lista de correo:"
+msgstr "E-Mail Liste:"
 
 #: themes/default/templates/home/_about.html:31
 msgid "Report any bug, issue or improvement:"
-msgstr "Envíanos cualquier error, fallo o sugerencia:"
+msgstr "Einen Fehler oder Verbesserungsvorschlag berichten:"
 
 #: themes/default/templates/home/_about.html:33
 msgid "Github Issues"
@@ -1962,47 +1951,49 @@ msgid ""
 "Online assistance in performing tasks that require human cognition, "
 "knowledge or intelligence such as image classification, transcription, "
 "geocoding and more!"
-msgstr ""
+msgstr 
+"Onlinesystem zur Unterstützung von Aufgaben, die von Menschen bearbeitet werden, "
+"beispielsweise Mustererkennung, Klassifizierung und vieles mehr! "
 
 #: themes/default/templates/home/_pybossa_text.html:3
 msgid "Help advance research"
-msgstr "Ayuda a avanzar la investigación"
+msgstr "Unterstütze die Forschung"
 
 #: themes/default/templates/home/_pybossa_text.html:4
 msgid "Everything is open and freely usable"
-msgstr "Todo es código abierto y libre"
+msgstr "Alles ist offen und frei nutzbar"
 
 #: themes/default/templates/home/_pybossa_text.html:5
 msgid "Things computers can't do"
-msgstr "Resuelve problemas que los ordenadores no pueden"
+msgstr "Aufgaben, die Computer allein nicht lösen können"
 
 #: themes/default/templates/home/index.html:33
 msgid "Get Started"
-msgstr "Comenzar"
+msgstr "So fängt man an"
 
 #: themes/default/templates/home/index.html:34
 msgid "It's really simple to start contributing."
-msgstr "Es muy sencillo participar."
+msgstr "Es ist wirklich leicht, Beiträge zu machen."
 
 #: themes/default/templates/home/index.html:37
 msgid " Start Contributing"
-msgstr " Únete y Participa"
+msgstr " Trage jetzt bei"
 
 #: themes/default/templates/home/index.html:42
 msgid "Most Active Projects"
-msgstr "Proyectos más Activos"
+msgstr "Aktivste Projekte"
 
 #: themes/default/templates/home/index.html:54
 msgid "Start"
-msgstr "Comenzar"
+msgstr "Beginne"
 
 #: themes/default/templates/home/index.html:62
 msgid "Your project"
-msgstr "Tu proyecto"
+msgstr "Dein Projekt"
 
 #: themes/default/templates/home/index.html:63
 msgid "could be here!"
-msgstr "¡podría estar aquí!"
+msgstr "könnte hier sein"
 
 #: themes/default/templates/home/index.html:64
 msgid "Create a project"
@@ -2197,6 +2188,7 @@ msgstr "Proyecto actualizado"
 #: view/applications.py:225
 msgid "Project created!"
 msgstr "Projekt angelegt!"
+
 
 #: view/applications.py:228
 msgid "You can check the "
