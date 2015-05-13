@@ -12,6 +12,10 @@ Pre-requisites:
 
   * nginx
   * uwsgi
+  * supervisord
+  * Redis and sentinel as service (with supervisord)
+  * RQ-Scheduler and RQ-Worker as service (with supervisord)
+  * PyBossa as service (with supervisord)
 
 Installing nginx and uwsgi
 --------------------------
@@ -79,13 +83,13 @@ Enable the PyBossa site::
 
 And restart the server::
 
- $ sudo service nginx restart
+    sudo service nginx restart
 
 Creating the pybossa.ini file for uwsgi
 ---------------------------------------
 
-You only have to copy the **pybossa.ini.template** file to
-pybossa.ini and adapt the paths to match your configuration!
+You have to copy the **pybossa.ini.template** file to
+pybossa.ini in your PyBossa installation and adapt the paths to match your configuration!
 
 The content of this file is the following::
 
@@ -102,6 +106,21 @@ The content of this file is the following::
   listen = 2048
   stats = /tmp/pybossa-stats.sock
   buffer-size = 65535
+
+Install supervisord
+-------------------
+
+Supervisord is used to let PyBossa and its RQ system run as Daemon in the background.
+It shares some of the same goals of programs like launchd, daemontools, and runit.
+
+Install it::
+
+  sudo apt-get install supervisor
+
+Configure RQ-Scheduler and -Worker to run with supervisord
+----------------------------------------------------------
+
+
 
 Restart the web server and you should be able to see your PyBossa web
 application up and running in http://example.com
