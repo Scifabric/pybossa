@@ -9,7 +9,7 @@ server {
 
     client_max_body_size 5M;
 
-if (-f /home/chile/pybossa/503.html) {
+if (-f /home/pybossa/pybossa/503.html) {
     return 503;
 }
 
@@ -19,7 +19,7 @@ location / { try_files $uri @pybossa; }
 
 location @pybossa {
     include uwsgi_params;
-    uwsgi_pass unix:/tmp/pybossa-chile.sock;
+    uwsgi_pass unix:/tmp/pybossa.sock;
 }
 
 location  /static {
