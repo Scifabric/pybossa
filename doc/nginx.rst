@@ -37,23 +37,24 @@ installation:
  * contrib/nginx/pybossa
  * contrib/pybossa.ini
 
-The PyBossa virtual host file (**contrib/apache2/pybossa-site**) has the
+The PyBossa virtual host file (**contrib/nginx/pybossa**) has the
 following directives::
 
-    <VirtualHost *:80>
-        ServerName example.com
+    location / { try_files $uri @pybossa; }
 
-        DocumentRoot /home/user/pybossa
-        WSGIDaemonProcess pybossa user=user1 group=group1 threads=5
-        WSGIScriptAlias / /home/user/pybossa/contrib/pybossa.wsgi
+    location @pybossa {
+        include uwsgi_params;
+        uwsgi_pass unix:/tmp/pybossa.sock;
+    }
 
-        <Directory /home/user/pybossa>
-            WSGIProcessGroup pybossa
-            WSGIApplicationGroup %{GLOBAL}
-            Order deny,allow
-            Allow from all
-        </Directory>
-    </VirtualHost>
+    location  /static {
+
+                # change that to your pybossa static directory
+                alias /home/pybossa/pybossa/pybossa/themes/default/static;
+
+                autoindex on;
+                expires max;
+            }
 
 .. note:
 
@@ -64,36 +65,43 @@ You can specify a user and group from your machine with lower privileges in
 order to improve the security of the site. You can also use the www-data user
 and group name.
 
-Once you have adapted the PATH in that file, copy it into the folder::
+Once you have adapted the PATH in the alias in that file, copy it into the folder::
 
- /etc/apache2/sites-available
+    sudo cp contrib/nginx/pybossa /etc/nginx/sites-available/.
 
-Enable the site::
+please delete the default config in sites-enabled (do not worry there is a backup)::
 
-    sudo a2ensite pybossa-site
+    sudo rm /etc/nginx/sites-enabled/default
+
+Enable the PyBossa site::
+
+    sudo ln -s /etc/nginx/sites-available/pybossa /etc/nginx/sites-enabled/pybossa
 
 And restart the server::
 
- $ sudo /etc/init.d/apache2 restart
+ $ sudo service nginx restart
 
-Creating the pybossa.wsgi file
-------------------------------
+Creating the pybossa.ini file for uwsgi
+---------------------------------------
 
-Finally, you only have to copy the **pybossa.wsgi.template** file to
-pybossa.wsgie and adapt the paths to match your configuration.
+You only have to copy the **pybossa.ini.template** file to
+pybossa.ini and adapt the paths to match your configuration!
 
 The content of this file is the following::
 
-  # Check the official documentation http://flask.pocoo.org/docs/deploying/mod_wsgi/
-  # Activate the virtual env (we assume that virtualenv is in the env folder)
-  activate_this = '/home/user/pybossa/env/bin/activate_this.py'
-  execfile(activate_this, dict(__file__=activate_this))
-  # Import sys to add the path of PyBossa
-  import sys
-  sys.path.insert(0,'/home/user/pybossa')
-  # Run the web-app
-  from pybossa.web import app as application
-
+  [uwsgi]
+  socket = /tmp/pybossa.sock
+  chmod-socket = 666
+  chdir = /home/pybossa/pybossa
+  pythonpath = ..
+  virtualenv = /home/pybossa/pybossa/env
+  module = run:app
+  cpu-affinity = 1
+  processes = 2
+  threads = 2
+  listen = 2048
+  stats = /tmp/pybossa-stats.sock
+  buffer-size = 65535
 
 Restart the web server and you should be able to see your PyBossa web
 application up and running in http://example.com
