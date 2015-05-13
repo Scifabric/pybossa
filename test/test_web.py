@@ -3507,7 +3507,7 @@ class TestWeb(web.Helper):
             if i == 0:
                 # As owner
                 self.signin(email="owner@example.com")
-                sched = 'random'
+                sched = 'depth_first'
             else:
                 sched = 'default'
                 self.signin()

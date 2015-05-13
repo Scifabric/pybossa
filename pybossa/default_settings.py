@@ -63,6 +63,7 @@ REDIS_KEYPREFIX = 'pybossa_cache'
 
 ## Default cache timeouts
 # Project cache
+AVATAR_TIMEOUT = 30 * 24 * 60 * 60
 APP_TIMEOUT = 15 * 60
 REGISTERED_USERS_TIMEOUT = 15 * 60
 ANON_USERS_TIMEOUT = 5 * 60 * 60
