@@ -179,7 +179,7 @@ Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
 up the site, but also for limiting the usage of the API requests.
 
 Latest Redis can be installed by downloading the package directly from its
-official Redis_ site. Since Ubuntu 14.04 you can also use the internal package:
+official Redis_ site. Since Ubuntu 14.04 you can also use the internal package::
 
     sudo apt-get install redis-server
 
