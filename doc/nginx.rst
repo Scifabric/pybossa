@@ -103,7 +103,6 @@ The content of this file is the following::
   cpu-affinity = 1
   processes = 2
   threads = 2
-  listen = 2048
   stats = /tmp/pybossa-stats.sock
   buffer-size = 65535
 
