@@ -5,7 +5,7 @@ Welcome to PyBossa's documentation
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
-etc). 
+etc).
 
 PyBossa was inspired by the BOSSA_ crowdsourcing engine but is written in
 python (hence the name!). It can be used for any distributed tasks project
@@ -29,17 +29,17 @@ The documentation is organized as follows:
 News
 ====
 
-The latest version of PyBossa is 0.2.0 and has several changes regarding how
+The latest version of PyBossa is 0.2.2 and has several changes regarding how
 the web service caches domain objects. If you are running a previous version,
 please, be sure to read how to install Redis_ software and configure two
 instances of it:
 
-* the DB and 
+* the DB and
 * the Sentinel_ mode.
 
 .. _Redis: http://redis.io/
 .. _Sentinel: http://redis.io/topics/sentinel
-  
+
 For more information, check :ref:`pybossa-cache`.
 
 Changelog
