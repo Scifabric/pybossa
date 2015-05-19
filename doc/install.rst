@@ -61,7 +61,7 @@ has earned it a strong reputation for reliability, data integrity, and correctne
 PyBossa uses PostgreSQL_ as the main database for storing all the data, and you
 the required steps for installing it are the following::
 
-    sudo apt-get install postgresql-9.3 postgresql-server-dev-9.3
+    sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
 
 .. _PostgreSQL: http://www.postgresql.org/
 
@@ -99,7 +99,7 @@ Installing the required libraries for PyBossa is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo apt-get install python-dev swig libjpeg-dev libffi-dev libssl-dev
+    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev
 
 Then, you are ready to download the code and install the required libraries for
 running PyBossa.
