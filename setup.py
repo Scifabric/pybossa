@@ -42,7 +42,8 @@ requirements = [
     "rq-dashboard",
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
-    "flask-plugins"
+    "flask-plugins",
+    "pbr>=0.11.0, <1.0"                 # fix for Rackspace dependencies
 ]
 
 setup(
