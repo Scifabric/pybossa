@@ -116,6 +116,19 @@ Install it::
 
   sudo apt-get install supervisor
 
+Configure Redis and sentinel as service with supervisord
+--------------------------------------------------------
+
+First stop redis service and all running redis instances with::
+
+  sudo server redis-server stop
+  killall redis-server
+
+We want to run redis and sentinel with supervisord because supervisord is more
+reliable when redis crashes (which can happen when you have too less memory).
+
+
+
 Configure RQ-Scheduler and -Worker to run with supervisord
 ----------------------------------------------------------
 
