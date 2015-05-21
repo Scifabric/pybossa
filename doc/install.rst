@@ -4,6 +4,11 @@ Installing PyBossa
 
 PyBossa is a python web application built using the Flask micro-framework.
 
+You need this guide if you want to
+
+ * Create a PyBossa for development or testing purposes
+ * First step to create a production ready PyBossa. Second step for that is :doc:`nginx`.
+
 Officially supported requirements:
 
   * Ubuntu 14.04 LTS

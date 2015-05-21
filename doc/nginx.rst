@@ -1,8 +1,12 @@
-=================================================
-Deploying PyBossa with nginx web server and uwsgi
-=================================================
+======================================
+Deploying PyBossa with nginx and uwsgi
+======================================
 
 PyBossa is a python web application built using the Flask micro-framework.
+
+This guide describes how to make PyBossa run as a service or daemon permanmently
+in the background. This is useful if you want to run a production ready single
+PyBossa webserver.
 
 Pre-requisites:
 
@@ -12,6 +16,14 @@ Pre-requisites:
   * Redis and sentinel as service (with supervisord)
   * RQ-Scheduler and RQ-Worker as service (with supervisord)
   * PyBossa as service (with supervisord)
+
+First steps
+-----------
+
+If you have not done already: Please create a new user account, e.g. pybossa
+(a non root at best) which will run the PyBossa instance.
+You then have to follow the instructions from :doc:`install` first to get
+a runnable PyBossa. After you've done that please continue with this guide.
 
 Installing nginx and uwsgi
 --------------------------
@@ -214,7 +226,8 @@ Last words about Security and Scaling
 
 This guide does not cover how to secure your PyBossa installation.
 As every webserver you have to make it secure
-(like e.g. automatic Ubuntu security updates, firewall, access restrictions).
+(like e.g. strong passwords, automatic Ubuntu security updates, firewall,
+access restrictions).
 Please use guides in the Internet to do so.
 
 PyBossa can also be scaled horizontally to run with failovers and zero downtime
