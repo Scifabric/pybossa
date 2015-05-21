@@ -4,9 +4,9 @@ Deploying PyBossa with nginx and uwsgi
 
 PyBossa is a python web application built using the Flask micro-framework.
 
-This guide describes how to make PyBossa run as a service or daemon permanmently
+This guide describes how to make PyBossa run as a service or daemon permanently
 in the background. This is useful if you want to run a production ready single
-PyBossa webserver.
+PyBossa webserver. If you only want to test PyBossa please follow only :doc:`install`.
 
 Pre-requisites:
 
