@@ -6,7 +6,7 @@ PyBossa is a python web application built using the Flask micro-framework.
 
 This guide describes how to make PyBossa run as a service or daemon permanently
 in the background. This is useful if you want to run a production ready single
-PyBossa webserver. If you only want to test PyBossa please follow only :doc:`install`.
+PyBossa web server. If you only want to test PyBossa please follow only :doc:`install`.
 
 Pre-requisites:
 
@@ -225,13 +225,13 @@ Last words about Security and Scaling
 --------------------------------------
 
 This guide does not cover how to secure your PyBossa installation.
-As every webserver you have to make it secure
+As every web server you have to make it secure
 (like e.g. strong passwords, automatic Ubuntu security updates, firewall,
 access restrictions).
-Please use guides in the Internet to do so.
+Please use guides on the Internet to do so.
 
-PyBossa can also be scaled horizontally to run with failovers and zero downtime
-over many redis, db and webservers with loadbalancers in between.
+PyBossa can also be scaled horizontally to run without fail-overs and with zero
+downtime over many redis, db and web servers with load balancers in between.
 
 If you need a secure and/or scalable PyBossa installation please contact us.
 We will be glad to help you and we can even do all the hosting, customization,

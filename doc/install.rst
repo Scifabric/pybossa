@@ -292,7 +292,7 @@ PyBossa server, like sending an email with a recovery password.
 
 To allow all this, you will need two additional Python processes to run in the
 background: the **worker** and the **scheduler**. The scheduler will create the
-periodic tasks while other tasks will be created dinamycally. The worker will
+periodic tasks while other tasks will be created dynamically. The worker will
 execute every of them.
 
 To run the scheduler, just run the following command in a console::
