@@ -21,6 +21,7 @@ from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
+from pybossa.model.task_run import TaskRun
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
 import json
 
@@ -311,6 +312,16 @@ def hidden_projects_cached(user_id):
 def get_total_users():
     """Return total number of users in the server."""
     count = User.query.count()
+    return count
+
+
+@cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
+         key_prefix="site_total_active_users")
+def get_total_active_users():
+    """Return total number of users who have submitted atleast one task run"""
+    count = session.query(TaskRun.user_id)\
+                   .filter(TaskRun.user_id.isnot(None))\
+                   .distinct().count()
     return count
 
 

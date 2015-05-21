@@ -84,7 +84,7 @@ def index(page):
     """
     update_feed = get_update_feed()
     per_page = 24
-    count = cached_users.get_total_users()
+    count = cached_users.get_total_active_users()
     accounts = cached_users.get_users_page(page, per_page)
     if not accounts and page != 1:
         abort(404)
