@@ -39,6 +39,7 @@ LOCALES = ['en', 'es']
 
 ## Default THEME
 THEME = 'default'
+THEME_CUSTOM_FILTERS = 'pybossa_custom_filters.py'
 
 ## Default number of apps per page
 APPS_PER_PAGE = 20

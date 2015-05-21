@@ -458,6 +458,23 @@ def setup_jinja2_filters(app):
     def _pretty_date_filter(s):
         return pretty_date(s)
 
+    # Load custom template filters as/if defined by the theme writer
+    try:
+        import imp, inspect
+        theme_path = os.path.join('pybossa', 'themes', app.config.get('THEME'))
+        custom_filter_path = os.path.join(theme_path, app.config.get('THEME_CUSTOM_FILTERS'))
+        pybossa_custom_filters = imp.load_source('pybossa_custom_filters', custom_filter_path)
+
+        for (filter_name, filter_object) in inspect.getmembers(pybossa_custom_filters):
+            app.jinja_env.filters[filter_name] = filter_object
+    except IOError as inst:
+        print type(inst)
+        print inst.args
+        print inst
+        print "Custom Filter definition file not available"
+        log_message = 'Custom Filter definition file not available : %s' % str(inst)
+        app.logger.error(log_message)
+
 
 def setup_csrf_protection(app):
     """Setup csrf protection."""
