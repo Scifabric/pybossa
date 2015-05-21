@@ -132,8 +132,8 @@ Go to your pybossa installation directory and copy following files::
   sudo cp contrib/supervisor/redis-sentinel.conf /etc/supervisor/conf.d/
   sudo cp contrib/redis-supervisor/redis.conf /etc/redis/
   sudo cp contrib/redis-supervisor/sentinel.conf /etc/redis/
-  chown redis:redis /etc/redis/redis.conf
-  chown redis:redis /etc/redis/sentinel.conf
+  sudo chown redis:redis /etc/redis/redis.conf
+  sudo chown redis:redis /etc/redis/sentinel.conf
 
 Now we restart supervisord (please do a full stop and start as described)::
 
