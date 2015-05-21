@@ -230,7 +230,7 @@ As every web server you have to make it secure
 access restrictions).
 Please use guides on the Internet to do so.
 
-PyBossa can also be scaled horizontally to run without fail-overs and with zero
+PyBossa can also be scaled horizontally to run with redundant servers and with zero
 downtime over many redis, db and web servers with load balancers in between.
 
 If you need a secure and/or scalable PyBossa installation please contact us.
