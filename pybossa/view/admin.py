@@ -381,6 +381,7 @@ def dashboard():
     active_anon_last_week = dict(labels=labels, series=[series])
     # New projects
     sql = text('''select * from dashboard_week_project_new''')
+    results = session.execute(sql)
     new_projects_last_week = []
     for row in results:
         datum = dict(day=row.day, id=row.id, short_name=row.short_name,
