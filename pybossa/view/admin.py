@@ -354,6 +354,7 @@ def update_category(id):
         current_app.logger.error(e)
         return abort(500)
 
+
 @blueprint.route('/dashboard/')
 @login_required
 @admin_required
@@ -388,9 +389,19 @@ def dashboard():
                      p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
                      email_addr=row.email_addr)
         new_projects_last_week.append(datum)
+    # Updated projects
+    sql = text('''select * from dashboard_week_project_update''')
+    results = session.execute(sql)
+    update_projects_last_week = []
+    for row in results:
+        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
+                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
+                     email_addr=row.email_addr)
+        update_projects_last_week.append(datum)
 
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
                            active_users_last_week=active_users_last_week,
                            active_anon_last_week=active_anon_last_week,
-                           new_projects_last_week=new_projects_last_week)
+                           new_projects_last_week=new_projects_last_week,
+                           update_projects_last_week=update_projects_last_week)

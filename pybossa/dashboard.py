@@ -117,3 +117,31 @@ def dashboard_new_projects_week():
             results = db.slave_session.execute(sql)
             db.session.commit()
             return "Materialized view created"
+
+
+def dashboard_update_projects_week():
+    """Get updated projects last week."""
+    # Check first if the materialized view exists
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname='dashboard_week_project_update');''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        if row.exists:
+            sql = text('''REFRESH MATERIALIZED VIEW
+                       dashboard_week_project_update''')
+            db.session.execute(sql)
+            return "Materialized view refreshed"
+        else:
+            sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_update AS
+                       SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                       project.id, short_name, project.name,
+                       owner_id, "user".name as u_name, "user".email_addr
+                       FROM project, "user"
+                       WHERE TO_DATE(project.updated,
+                                    'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
+                                    ('1 week')::INTERVAL
+                       AND "user".id=project.owner_id
+                       GROUP BY project.id, "user".name, "user".email_addr;''')
+            results = db.slave_session.execute(sql)
+            db.session.commit()
+            return "Materialized view created"
