@@ -361,13 +361,13 @@ def dashboard():
     """Show PyBossa Dashboard."""
     from sqlalchemy.sql import text
     session = db.slave_session
-    sql = text('''with crafters_per_day as (select to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as day, user_id, count(task_run.user_id) as day_crafters from task_run where to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= now() - ('3 month'):: interval group by day, task_run.user_id) select day, count(crafters_per_day.user_id) as n_users from crafters_per_day group by day order by day;''')
+    sql = text('''select * from dashboard_week_users''')
     results = session.execute(sql)
     labels = []
     series = []
     for row in results:
         labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(row.n_users)
+        series.append(int(row.n_users))
     active_users_last_week = dict(labels=labels, series=[series])
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
