@@ -361,6 +361,7 @@ def dashboard():
     """Show PyBossa Dashboard."""
     from sqlalchemy.sql import text
     session = db.slave_session
+    # Registered users
     sql = text('''select * from dashboard_week_users''')
     results = session.execute(sql)
     labels = []
@@ -369,6 +370,17 @@ def dashboard():
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(int(row.n_users))
     active_users_last_week = dict(labels=labels, series=[series])
+    # Anon users
+    sql = text('''select * from dashboard_week_anon''')
+    results = session.execute(sql)
+    labels = []
+    series = []
+    for row in results:
+        labels.append(row.day.strftime('%Y-%m-%d'))
+        series.append(int(row.n_users))
+    active_anon_last_week = dict(labels=labels, series=[series])
+
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
-                           active_users_last_week=active_users_last_week)
+                           active_users_last_week=active_users_last_week,
+                           active_anon_last_week=active_anon_last_week)

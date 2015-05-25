@@ -114,6 +114,8 @@ def get_default_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='super')
     yield dict(name=dashboard_active_users_week, args=[], kwargs={},
               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard_active_anon_week, args=[], kwargs={},
+              timeout=(10 * MINUTE), queue='low')
 
 
 def get_export_task_jobs(queue):
@@ -439,6 +441,38 @@ def dashboard_active_users_week():
                                 >= NOW() - ('1 week'):: INTERVAL
                             GROUP BY day, task_run.user_id)
                        SELECT day, COUNT(crafters_per_day.user_id) AS n_users
+                       FROM crafters_per_day GROUP BY day ORDER BY day;''')
+            results = db.slave_session.execute(sql)
+            db.session.commit()
+            return "Materialized view created"
+
+
+def dashboard_active_anon_week():
+    """Get active anon last week."""
+    from sqlalchemy import text
+    from pybossa.core import db
+    # Check first if the materialized view exists
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname='dashboard_week_anon');''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        if row.exists:
+            sql = text('''REFRESH MATERIALIZED VIEW
+                       dashboard_week_anon''')
+            db.session.execute(sql)
+            return "Materialized view refreshed"
+        else:
+            sql = text('''CREATE MATERIALIZED VIEW dashboard_week_anon AS
+                       WITH crafters_per_day AS
+                            (select to_date(task_run.finish_time,
+                                            'YYYY-MM-DD\THH24:MI:SS.US') AS day,
+                                    user_ip, COUNT(task_run.user_ip) AS day_crafters
+                            FROM task_run
+                            WHERE to_date(task_run.finish_time,
+                                          'YYYY-MM-DD\THH24:MI:SS.US')
+                                >= NOW() - ('1 week'):: INTERVAL
+                            GROUP BY day, task_run.user_ip)
+                       SELECT day, COUNT(crafters_per_day.user_ip) AS n_users
                        FROM crafters_per_day GROUP BY day ORDER BY day;''')
             results = db.slave_session.execute(sql)
             db.session.commit()
