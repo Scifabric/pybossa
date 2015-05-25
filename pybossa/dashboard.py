@@ -21,7 +21,8 @@ from pybossa.core import db
 
 MINUTE = 60
 
-def get_dashboard_jobs(): # pragma: no cover
+
+def get_dashboard_jobs():  # pragma: no cover
     """Return dashboard jobs."""
     yield dict(name=dashboard_active_users_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
