@@ -379,8 +379,17 @@ def dashboard():
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(int(row.n_users))
     active_anon_last_week = dict(labels=labels, series=[series])
+    # New projects
+    sql = text('''select * from dashboard_week_project_new''')
+    new_projects_last_week = []
+    for row in results:
+        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
+                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
+                     email_addr=row.email_addr)
+        new_projects_last_week.append(datum)
 
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
                            active_users_last_week=active_users_last_week,
-                           active_anon_last_week=active_anon_last_week)
+                           active_anon_last_week=active_anon_last_week,
+                           new_projects_last_week=new_projects_last_week)
