@@ -30,6 +30,8 @@ def get_dashboard_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='low')
     yield dict(name=dashboard_new_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard_update_projects_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
 
 
 def dashboard_active_users_week():
