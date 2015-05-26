@@ -18,6 +18,9 @@
 
 from pybossa.dashboard import dashboard_new_projects_week
 from pybossa.dashboard import dashboard_update_projects_week
+from pybossa.core import db
+from pybossa.repositories import ProjectRepository
+from factories.project_factory import ProjectFactory
 from default import Test, with_context
 from mock import patch, MagicMock
 
@@ -73,3 +76,20 @@ class TestDashBoardUpdateProject(Test):
         res = dashboard_update_projects_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
+
+    @with_context
+    def test_update_projects_week(self):
+        """Test JOB update projects week works."""
+        p = ProjectFactory.create()
+        p.name = 'NewNameName'
+        project_repository = ProjectRepository(db)
+        project_repository.update(p)
+        dashboard_update_projects_week()
+        sql = "select * from dashboard_week_project_update;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.id == p.id
+            assert row.name == p.name
+            assert row.owner_id == p.owner_id
+            assert row.u_name == p.owner.name
+            assert row.email_addr == p.owner.email_addr
