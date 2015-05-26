@@ -155,7 +155,10 @@ class TestTaskAPI(TestAPI):
     def test_task_post_with_reserved_fields_in_info(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
-        data = dict(project_id=project.id, state='0', info={'created': 'now'})
+        info = {'created': 'today',
+                'state': 'completed',
+                'id': 222}
+        data = dict(project_id=project.id, state='0', info=info)
 
         res = self.app.post('/api/task?api_key=' + user.api_key,
                             data=json.dumps(data))
@@ -168,7 +171,9 @@ class TestTaskAPI(TestAPI):
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
         url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
-        data = dict(info={'created': 'now'})
+        data = dict(info={'created': 'today',
+                          'state': 'completed',
+                          'id': 222})
 
         res = self.app.put(url, data=json.dumps(data))
 

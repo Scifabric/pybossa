@@ -456,7 +456,9 @@ class TestTaskrunAPI(TestAPI):
             project_id=task.project_id,
             task_id=task.id,
             user_id=project.owner.id,
-            info={'created': 'today'})
+            info={'created': 'today',
+                  'finish_time': 'now',
+                  'id': 222})
         datajson = json.dumps(data)
 
         resp = self.app.post(url, data=datajson)

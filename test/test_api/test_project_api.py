@@ -664,13 +664,16 @@ class TestProjectAPI(TestAPI):
     def test_project_post_with_reserved_fields_in_info(self):
         user = UserFactory.create()
         CategoryFactory.create()
+        info = {'created': 'today', 'updated': 'now', 'contacted': False,
+                'completed': False,
+                'id': 222,}
         data = dict(
             name='name',
             short_name='name',
             description='description',
             owner_id=user.id,
             long_description=u'Long Description\n================',
-            info={'created': 'now'})
+            info=info)
         data = json.dumps(data)
         res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
 
@@ -681,7 +684,8 @@ class TestProjectAPI(TestAPI):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
-        data = dict(info={'created': 'now'})
+        data = dict(info={'created': 'today', 'updated': 'now',
+                          'contacted': False, 'completed': False,'id': 222,})
 
         res = self.app.put(url, data=json.dumps(data))
 
