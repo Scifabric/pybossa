@@ -36,6 +36,7 @@ from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import db, project_repo, user_repo
+from pybossa.view.account import get_update_feed
 import json
 from StringIO import StringIO
 
@@ -452,6 +453,8 @@ def dashboard():
 
     new_users_week = dict(labels=labels, series=[series])
 
+    update_feed = get_update_feed()
+
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
                            active_users_last_week=active_users_last_week,
@@ -460,4 +463,5 @@ def dashboard():
                            update_projects_last_week=update_projects_last_week,
                            new_tasks_week=new_tasks_week,
                            new_task_runs_week=new_task_runs_week,
-                           new_users_week=new_users_week)
+                           new_users_week=new_users_week,
+                           update_feed=update_feed)
