@@ -453,6 +453,31 @@ def dashboard():
 
     new_users_week = dict(labels=labels, series=[series])
 
+    # Returning Users
+    labels = []
+    series = []
+    for i in range(1, 8):
+        if (i == 1):
+            label = "%s day" % i
+        else:
+            label = "%s days" % i
+        sql = text('''SELECT COUNT(user_id)
+                   FROM dashboard_week_returning_users
+                   WHERE n_days=:n_days''')
+        results = session.execute(sql, dict(n_days=i))
+        total = 0
+        for row in results:
+            total = row.count
+        labels.append(label)
+        series.append(total)
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
+
+    returning_users_week = dict(labels=labels, series=[series])
+
+
     update_feed = get_update_feed()
 
     return render_template('admin/dashboard.html',
@@ -464,4 +489,5 @@ def dashboard():
                            new_tasks_week=new_tasks_week,
                            new_task_runs_week=new_task_runs_week,
                            new_users_week=new_users_week,
+                           returning_users_week=returning_users_week,
                            update_feed=update_feed)

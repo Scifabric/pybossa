@@ -38,6 +38,8 @@ def get_dashboard_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='low')
     yield dict(name=dashboard_new_users_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard_returning_users_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
 
 
 def dashboard_active_users_week():
@@ -207,7 +209,7 @@ def dashboard_new_task_runs_week():
             return "Materialized view created"
 
 def dashboard_new_users_week():
-    """Get new task_runs last week."""
+    """Get new users last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_new_users');''')
@@ -227,6 +229,35 @@ def dashboard_new_users_week():
                                                   'YYYY-MM-DD\THH24:MI:SS.US')
                                               >= now() - ('1 week'):: INTERVAL
                           GROUP BY day;''')
+            results = db.slave_session.execute(sql)
+            db.session.commit()
+            return "Materialized view created"
+
+def dashboard_returning_users_week():
+    """Get returning users last week."""
+    # Check first if the materialized view exists
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname='dashboard_week_returning_users');''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        if row.exists:
+            sql = text('''REFRESH MATERIALIZED VIEW
+                       dashboard_week_returning_users''')
+            db.session.execute(sql)
+            return "Materialized view refreshed"
+        else:
+            sql = text('''CREATE MATERIALIZED VIEW dashboard_week_returning_users AS
+                       WITH data AS (
+                        SELECT user_id, TO_DATE(task_run.created,
+                        'YYYY-MM-DD\THH24:MI:SS.US') AS day
+                       FROM task_run
+                       WHERE TO_DATE(task_run.created,
+                       'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
+                       - ('1 week')::INTERVAL GROUP BY day, task_run.user_id)
+                       SELECT user_id, COUNT(user_id) AS n_days
+                       FROM data GROUP BY user_id HAVING(count(user_id) > 1)
+                       ORDER by n_days;
+                          ''')
             results = db.slave_session.execute(sql)
             db.session.commit()
             return "Materialized view created"
