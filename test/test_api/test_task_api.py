@@ -152,6 +152,28 @@ class TestTaskAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    def test_task_post_with_reserved_fields_in_info(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = dict(project_id=project.id, state='0', info={'created': 'now'})
+
+        res = self.app.post('/api/task?api_key=' + user.api_key,
+                            data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        assert res.data == "Reserved keys in info field", res.data
+
+    def test_task_put_with_reserved_fields_in_info(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        data = dict(info={'created': 'now'})
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        assert res.data == "Reserved keys in info field", res.data
 
     @with_context
     def test_task_update(self):

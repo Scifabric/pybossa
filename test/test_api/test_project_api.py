@@ -363,7 +363,6 @@ class TestProjectAPI(TestAPI):
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
                             data=data)
         error = json.loads(res.data)
-        print error
         assert res.status_code == 415, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'POST', error
@@ -661,3 +660,30 @@ class TestProjectAPI(TestAPI):
                     call('1_project1_task_run_json.zip', 'user_1'),
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
+
+    def test_project_post_with_reserved_fields_in_info(self):
+        user = UserFactory.create()
+        CategoryFactory.create()
+        data = dict(
+            name='name',
+            short_name='name',
+            description='description',
+            owner_id=user.id,
+            long_description=u'Long Description\n================',
+            info={'created': 'now'})
+        data = json.dumps(data)
+        res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
+
+        assert res.status_code == 400, res.status_code
+        assert res.data == "Reserved keys in info field", res.data
+
+    def test_project_put_with_reserved_fields_in_info(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
+        data = dict(info={'created': 'now'})
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        assert res.data == "Reserved keys in info field", res.data
