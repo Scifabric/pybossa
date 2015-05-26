@@ -19,9 +19,10 @@
 from pybossa.dashboard import dashboard_new_users_week
 from pybossa.dashboard import dashboard_returning_users_week
 from pybossa.core import db
-from datetime import datetime
+from datetime import datetime, timedelta
 from default import Test, with_context
 from factories.user_factory import UserFactory
+from factories.taskrun_factory import TaskRunFactory
 from mock import patch, MagicMock
 
 
@@ -88,3 +89,15 @@ class TestDashBoardReturningUsers(Test):
         res = dashboard_returning_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
+
+    @with_context
+    def test_returning_users(self):
+        """Test JOB dashboard returns number of returning users."""
+        TaskRunFactory.create()
+        day = datetime.utcnow() - timedelta(days=1)
+        TaskRunFactory.create(created=day)
+        dashboard_returning_users_week()
+        sql = "select * from dashboard_week_returning_users;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.n_days == 2
