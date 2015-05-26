@@ -180,6 +180,7 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             data = json.loads(request.data)
+            self._forbidden_attributes(data)
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
@@ -269,6 +270,7 @@ class APIBase(MethodView):
             raise NotFound
         ensure_authorized_to('update', existing)
         data = json.loads(request.data)
+        self._forbidden_attributes(data)
         # Remove hateoas links
         data = self.hateoas.remove_links(data)
         # may be missing the id as we allow partial updates
@@ -315,4 +317,9 @@ class APIBase(MethodView):
 
     def _log_changes(self, old_obj, new_obj):
         """Method to be overriden by inheriting classes for logging purposes"""
+        pass
+
+    def _forbidden_attributes(self, data):
+        """Method to be overriden by inheriting classes that will not allow for
+        certain fields to be used in PUT or POST requests"""
         pass
