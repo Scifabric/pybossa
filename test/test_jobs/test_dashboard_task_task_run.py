@@ -21,6 +21,7 @@ from pybossa.dashboard import dashboard_new_task_runs_week
 from pybossa.core import db
 from datetime import datetime, timedelta
 from factories.taskrun_factory import TaskRunFactory
+from factories.task_factory import TaskFactory
 from default import Test, with_context
 from mock import patch, MagicMock
 
@@ -50,6 +51,16 @@ class TestDashBoardNewTask(Test):
         res = dashboard_new_tasks_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
+
+    @with_context
+    def test_new_tasks(self):
+        """Test JOB dashboard returns new task."""
+        TaskFactory.create()
+        dashboard_new_tasks_week()
+        sql = "select * from dashboard_week_new_task;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.day_tasks == 1, row.day_tasks
 
 class TestDashBoardNewTaskRuns(Test):
 
