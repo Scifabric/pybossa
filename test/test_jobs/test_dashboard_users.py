@@ -95,7 +95,7 @@ class TestDashBoardReturningUsers(Test):
         """Test JOB dashboard returns number of returning users."""
         task_run = TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
-        TaskRunFactory.create(created=day)
+        TaskRunFactory.create(finish_time=day.isoformat())
         dashboard_returning_users_week()
         sql = "select * from dashboard_week_returning_users;"
         results = db.session.execute(sql)
