@@ -700,3 +700,14 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should require login"
         assert "Sign in" in res.data, err_msg
+
+    @with_context
+    def test_admin_dashboard_auth_user(self):
+        """Test ADMIN dashboard requires admin"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.signout()
+        self.register(fullname="juan", name="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 403"
+        assert res.status_code == 403, err_msg
