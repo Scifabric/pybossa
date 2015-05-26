@@ -43,9 +43,8 @@ def with_context(f):
             return f(*args, **kwargs)
     return decorated_function
 
-def rebuild_db():
-    """Rebuild the DB."""
-    # Delete first the materialized views
+def delete_materialized_views():
+    """Delete materialized views."""
     sql = text('''SELECT relname
                FROM pg_class WHERE relname LIKE '%dashboard%';''')
     results = db.session.execute(sql)
@@ -53,6 +52,11 @@ def rebuild_db():
         sql = 'drop materialized view if exists %s' % row.relname
         db.session.execute(sql)
         db.session.commit()
+
+
+def rebuild_db():
+    """Rebuild the DB."""
+    delete_materialized_views()
     db.drop_all()
     db.create_all()
 
@@ -67,6 +71,7 @@ class Test(object):
 
     def tearDown(self):
         with self.flask_app.app_context():
+            delete_materialized_views()
             db.session.remove()
             self.redis_flushall()
             reset_all_pk_sequences()
