@@ -152,33 +152,32 @@ class TestTaskAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
-    def test_task_post_with_reserved_fields_in_info(self):
+    def test_task_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
-        info = {'created': 'today',
+        data = {'created': 'today',
                 'state': 'completed',
-                'id': 222}
-        data = dict(project_id=project.id, state='0', info=info)
+                'id': 222, 'project_id': project.id}
 
         res = self.app.post('/api/task?api_key=' + user.api_key,
                             data=json.dumps(data))
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in info field", res.data
+        assert res.data == "Reserved keys in payload", res.data
 
-    def test_task_put_with_reserved_fields_in_info(self):
+    def test_task_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
         url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
-        data = dict(info={'created': 'today',
-                          'state': 'completed',
-                          'id': 222})
+        data = {'created': 'today',
+                'state': 'completed',
+                'id': 222}
 
         res = self.app.put(url, data=json.dumps(data))
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in info field", res.data
+        assert res.data == "Reserved keys in payload", res.data
 
     @with_context
     def test_task_update(self):

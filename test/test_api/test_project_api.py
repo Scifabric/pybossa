@@ -661,33 +661,35 @@ class TestProjectAPI(TestAPI):
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
 
-    def test_project_post_with_reserved_fields_in_info(self):
+    def test_project_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         CategoryFactory.create()
-        info = {'created': 'today', 'updated': 'now', 'contacted': False,
-                'completed': False,
-                'id': 222,}
         data = dict(
             name='name',
             short_name='name',
             description='description',
             owner_id=user.id,
             long_description=u'Long Description\n================',
-            info=info)
+            info={},
+            id=222,
+            created='today',
+            updated='now',
+            contacted=False,
+            completed=False)
         data = json.dumps(data)
         res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in info field", res.data
+        assert res.data == "Reserved keys in payload", res.data
 
-    def test_project_put_with_reserved_fields_in_info(self):
+    def test_project_put_with_reserved_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
-        data = dict(info={'created': 'today', 'updated': 'now',
-                          'contacted': False, 'completed': False,'id': 222,})
+        data = {'created': 'today', 'updated': 'now',
+                'contacted': False, 'completed': False,'id': 222}
 
         res = self.app.put(url, data=json.dumps(data))
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in info field", res.data
+        assert res.data == "Reserved keys in payload", res.data

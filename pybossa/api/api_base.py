@@ -113,7 +113,6 @@ class APIBase(MethodView):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
             except Exception as ex: # pragma: no cover
-                print ex
                 raise
         if oid:
             ensure_authorized_to('read', query_result[0])
