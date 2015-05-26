@@ -28,6 +28,7 @@ from flask import Response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
+from datetime import datetime
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
@@ -370,6 +371,11 @@ def dashboard():
     for row in results:
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(int(row.n_users))
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
+
     active_users_last_week = dict(labels=labels, series=[series])
     # Anon users
     sql = text('''select * from dashboard_week_anon''')
@@ -379,7 +385,12 @@ def dashboard():
     for row in results:
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(int(row.n_users))
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
     active_anon_last_week = dict(labels=labels, series=[series])
+
     # New projects
     sql = text('''select * from dashboard_week_project_new''')
     results = session.execute(sql)
@@ -407,6 +418,10 @@ def dashboard():
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(row.day_tasks)
     new_tasks_week = dict(labels=labels, series=[series])
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
 
     # New task_runs
     sql = text('''select * from dashboard_week_new_task_run''')
@@ -417,7 +432,25 @@ def dashboard():
         labels.append(row.day.strftime('%Y-%m-%d'))
         series.append(row.day_task_runs)
     new_task_runs_week = dict(labels=labels, series=[series])
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
 
+    # New Users
+    sql = text('''select * from dashboard_week_new_users''')
+    results = session.execute(sql)
+    labels = []
+    series = []
+    for row in results:
+        labels.append(row.day.strftime('%Y-%m-%d'))
+        series.append(row.day_users)
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
+
+    new_users_week = dict(labels=labels, series=[series])
 
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
@@ -426,4 +459,5 @@ def dashboard():
                            new_projects_last_week=new_projects_last_week,
                            update_projects_last_week=update_projects_last_week,
                            new_tasks_week=new_tasks_week,
-                           new_task_runs_week=new_task_runs_week)
+                           new_task_runs_week=new_task_runs_week,
+                           new_users_week=new_users_week)
