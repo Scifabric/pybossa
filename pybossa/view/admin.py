@@ -398,10 +398,20 @@ def dashboard():
                      p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
                      email_addr=row.email_addr)
         update_projects_last_week.append(datum)
+    # New task
+    sql = text('''select * from dashboard_week_new_task''')
+    results = session.execute(sql)
+    labels = []
+    series = []
+    for row in results:
+        labels.append(row.day.strftime('%Y-%m-%d'))
+        series.append(row.day_tasks)
+    new_tasks_week = dict(labels=labels, series=[series])
 
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
                            active_users_last_week=active_users_last_week,
                            active_anon_last_week=active_anon_last_week,
                            new_projects_last_week=new_projects_last_week,
-                           update_projects_last_week=update_projects_last_week)
+                           update_projects_last_week=update_projects_last_week,
+                           new_tasks_week=new_tasks_week)

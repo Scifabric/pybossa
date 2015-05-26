@@ -32,6 +32,8 @@ def get_dashboard_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='low')
     yield dict(name=dashboard_update_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard_new_tasks_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
 
 
 def dashboard_active_users_week():
@@ -144,6 +146,32 @@ def dashboard_update_projects_week():
                                     ('1 week')::INTERVAL
                        AND "user".id=project.owner_id
                        GROUP BY project.id, "user".name, "user".email_addr;''')
+            results = db.slave_session.execute(sql)
+            db.session.commit()
+            return "Materialized view created"
+
+
+def dashboard_new_tasks_week():
+    """Get new tasks last week."""
+    # Check first if the materialized view exists
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname='dashboard_week_new_task');''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        if row.exists:
+            sql = text('''REFRESH MATERIALIZED VIEW
+                       dashboard_week_new_task''')
+            db.session.execute(sql)
+            return "Materialized view refreshed"
+        else:
+            sql = text('''CREATE MATERIALIZED VIEW dashboard_week_new_task AS
+                          SELECT TO_DATE(task.created,
+                                         'YYYY-MM-DD\THH24:MI:SS.US') AS day,
+                          COUNT(task.id) AS day_tasks
+                          FROM task WHERE TO_DATE(task.created,
+                                                  'YYYY-MM-DD\THH24:MI:SS.US')
+                                              >= now() - ('1 week'):: INTERVAL
+                          GROUP BY day, task.project_id;''')
             results = db.slave_session.execute(sql)
             db.session.commit()
             return "Materialized view created"
