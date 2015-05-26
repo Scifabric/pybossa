@@ -51,6 +51,20 @@ class TestDashBoardNewProject(Test):
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
+    @with_context
+    def test_new_projects_week(self):
+        """Test JOB update projects week works."""
+        p = ProjectFactory.create()
+        dashboard_new_projects_week()
+        sql = "select * from dashboard_week_project_new;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.id == p.id
+            assert row.name == p.name
+            assert row.owner_id == p.owner_id
+            assert row.u_name == p.owner.name
+            assert row.email_addr == p.owner.email_addr
+
 class TestDashBoardUpdateProject(Test):
 
     @with_context
