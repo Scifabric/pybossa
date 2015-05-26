@@ -711,3 +711,14 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 403"
         assert res.status_code == 403, err_msg
+
+    @with_context
+    def test_admin_dashboard_admin_user(self):
+        """Test ADMIN dashboard admins can access it"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert "No data" in res.data, res.data
