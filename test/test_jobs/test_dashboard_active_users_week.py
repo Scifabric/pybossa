@@ -17,6 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.dashboard import dashboard_active_users_week
+from pybossa.core import db
+from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from default import Test, with_context
 from mock import patch, MagicMock
 
@@ -46,3 +48,14 @@ class TestDashBoardActiveUsers(Test):
         res = dashboard_active_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
+
+    @with_context
+    def test_active_week(self):
+        """Test JOB dashboard returns active users week runs."""
+        TaskRunFactory.create()
+        AnonymousTaskRunFactory.create()
+        dashboard_active_users_week()
+        sql = "select * from dashboard_week_users;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.n_users == 1, row.n_users
