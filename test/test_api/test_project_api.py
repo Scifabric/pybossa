@@ -680,7 +680,8 @@ class TestProjectAPI(TestAPI):
         res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in payload", res.data
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
 
     def test_project_put_with_reserved_returns_error(self):
         user = UserFactory.create()
@@ -692,4 +693,5 @@ class TestProjectAPI(TestAPI):
         res = self.app.put(url, data=json.dumps(data))
 
         assert res.status_code == 400, res.status_code
-        assert res.data == "Reserved keys in payload", res.data
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error

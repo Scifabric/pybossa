@@ -464,5 +464,5 @@ class TestTaskrunAPI(TestAPI):
         resp = self.app.post(url, data=datajson)
 
         assert resp.status_code == 400, resp.status_code
-        assert resp.data == "Reserved keys in payload", resp.data
-
+        error = json.loads(resp.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
