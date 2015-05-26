@@ -692,3 +692,11 @@ class TestAdmin(web.Helper):
         assert category['name'] in res.data, err_msg
         output = db.session.query(Category).get(obj.id)
         assert output.id == category['id'], err_msg
+
+    @with_context
+    def test_admin_dashboard(self):
+        """Test ADMIN dashboard requires admin"""
+        url = '/admin/dashboard/'
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should require login"
+        assert "Sign in" in res.data, err_msg
