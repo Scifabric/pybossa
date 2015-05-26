@@ -93,7 +93,7 @@ class TestDashBoardReturningUsers(Test):
     @with_context
     def test_returning_users(self):
         """Test JOB dashboard returns number of returning users."""
-        TaskRunFactory.create()
+        task_run = TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
         TaskRunFactory.create(created=day)
         dashboard_returning_users_week()
@@ -101,3 +101,4 @@ class TestDashBoardReturningUsers(Test):
         results = db.session.execute(sql)
         for row in results:
             assert row.n_days == 2
+            assert row.user_id == task_run.user_id
