@@ -103,7 +103,6 @@ def get_periodic_jobs(queue):
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs]
-    _all = [dashboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
