@@ -18,7 +18,10 @@
 
 from pybossa.dashboard import dashboard_new_users_week
 from pybossa.dashboard import dashboard_returning_users_week
+from pybossa.core import db
+from datetime import datetime
 from default import Test, with_context
+from factories.user_factory import UserFactory
 from mock import patch, MagicMock
 
 
@@ -47,6 +50,18 @@ class TestDashBoardNewUsers(Test):
         res = dashboard_new_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
+
+    @with_context
+    def test_number_users(self):
+        """Test JOB dashboard returns number of users."""
+        UserFactory.create()
+        dashboard_new_users_week()
+        sql = "select * from dashboard_week_new_users;"
+        results = db.session.execute(sql)
+        for row in results:
+            assert row.day_users == 1
+            assert str(row.day) in datetime.utcnow().strftime('%Y-%m-%d')
+
 
 class TestDashBoardReturningUsers(Test):
 
