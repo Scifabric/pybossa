@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from sqlalchemy import text
 from pybossa.core import db
 from pybossa.core import create_app, sentinel
 from pybossa.model.project import Project
@@ -44,6 +45,14 @@ def with_context(f):
 
 def rebuild_db():
     """Rebuild the DB."""
+    # Delete first the materialized views
+    sql = text('''SELECT relname
+               FROM pg_class WHERE relname LIKE '%dashboard%';''')
+    results = db.session.execute(sql)
+    for row in results:
+        sql = 'drop materialized view if exists %s' % row.relname
+        db.session.execute(sql)
+        db.session.commit()
     db.drop_all()
     db.create_all()
 
