@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * tasks
 
 """
+from werkzeug.exceptions import BadRequest
 from pybossa.model.task import Task
 from api_base import APIBase
 
@@ -31,3 +32,9 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
+    reserved_keys = set(['id', 'created', 'state'])
+
+    def _forbidden_attributes(self, data):
+        for key in data.keys():
+            if key in self.reserved_keys:
+                raise BadRequest("Reserved keys in payload")

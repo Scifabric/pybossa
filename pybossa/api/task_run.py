@@ -25,7 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 from flask import request
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
@@ -37,6 +37,7 @@ class TaskRunAPI(APIBase):
     """Class API for domain object TaskRun."""
 
     __class__ = TaskRun
+    reserved_keys = set(['id', 'created', 'finish_time'])
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
@@ -54,6 +55,11 @@ class TaskRunAPI(APIBase):
             taskrun.user_ip = request.remote_addr
         else:
             taskrun.user_id = current_user.id
+
+    def _forbidden_attributes(self, data):
+        for key in data.keys():
+            if key in self.reserved_keys:
+                raise BadRequest("Reserved keys in payload")
 
 
 def _check_task_requested_by_user(taskrun, redis_conn):

@@ -61,7 +61,7 @@ class Project(db.Model, DomainObject):
     featured = Column(Boolean, nullable=False, default=False)
     # If the project is completed
     completed = Column(Boolean, nullable=False, default=False)
-    # If the project is completed
+    # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)

@@ -38,9 +38,10 @@ class ErrorStatus(object):
 
     """
 
-    error_status = {"Forbidden": 403,
-                    "NotFound": 404,
+    error_status = {"BadRequest": 400,
                     "Unauthorized": 401,
+                    "Forbidden": 403,
+                    "NotFound": 404,
                     "MethodNotAllowed": 405,
                     "TypeError": 415,
                     "ValueError": 415,
@@ -61,7 +62,7 @@ class ErrorStatus(object):
             status = self.error_status.get(exception_cls)
         else: # pragma: no cover
             status = 500
-        if exception_cls == 'Forbidden' or exception_cls == 'Unauthorized':
+        if exception_cls in ('BadRequest', 'Forbidden','Unauthorized'):
             e.message = e.description
         error = dict(action=action.upper(),
                      status="failed",

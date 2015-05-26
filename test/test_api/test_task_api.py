@@ -87,8 +87,8 @@ class TestTaskAPI(TestAPI):
         user = UserFactory.create()
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
-        data = dict(project_id=project.id, state='0', info='my task data')
-        root_data = dict(project_id=project.id, state='0', info='my root task data')
+        data = dict(project_id=project.id, info='my task data')
+        root_data = dict(project_id=project.id, info='my root task data')
 
         # anonymous user
         # no api-key
@@ -152,6 +152,34 @@ class TestTaskAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    def test_task_post_with_reserved_fields_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = {'created': 'today',
+                'state': 'completed',
+                'id': 222, 'project_id': project.id}
+
+        res = self.app.post('/api/task?api_key=' + user.api_key,
+                            data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
+    def test_task_put_with_reserved_fields_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        data = {'created': 'today',
+                'state': 'completed',
+                'id': 222}
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
 
     @with_context
     def test_task_update(self):
@@ -162,9 +190,9 @@ class TestTaskAPI(TestAPI):
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
         root_task = TaskFactory.create(project=project)
-        data = {'state': '1'}
+        data = {'n_answers': 1}
         datajson = json.dumps(data)
-        root_data = {'state': '4'}
+        root_data = {'n_answers': 4}
         root_datajson = json.dumps(root_data)
 
         ## anonymous
@@ -180,14 +208,14 @@ class TestTaskAPI(TestAPI):
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
-        assert_equal(task.state, data['state'])
+        assert_equal(task.n_answers, data['n_answers'])
         assert task.id == out['id'], out
 
         ### root
         res = self.app.put('/api/task/%s?api_key=%s' % (root_task.id, admin.api_key),
                            data=root_datajson)
         assert_equal(res.status, '200 OK', res.data)
-        assert_equal(root_task.state, root_data['state'])
+        assert_equal(root_task.n_answers, root_data['n_answers'])
 
         # PUT with not JSON data
         res = self.app.put(url, data=data)
