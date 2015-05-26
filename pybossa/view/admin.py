@@ -408,10 +408,22 @@ def dashboard():
         series.append(row.day_tasks)
     new_tasks_week = dict(labels=labels, series=[series])
 
+    # New task_runs
+    sql = text('''select * from dashboard_week_new_task_run''')
+    results = session.execute(sql)
+    labels = []
+    series = []
+    for row in results:
+        labels.append(row.day.strftime('%Y-%m-%d'))
+        series.append(row.day_task_runs)
+    new_task_runs_week = dict(labels=labels, series=[series])
+
+
     return render_template('admin/dashboard.html',
                            title=gettext('Dashboard'),
                            active_users_last_week=active_users_last_week,
                            active_anon_last_week=active_anon_last_week,
                            new_projects_last_week=new_projects_last_week,
                            update_projects_last_week=update_projects_last_week,
-                           new_tasks_week=new_tasks_week)
+                           new_tasks_week=new_tasks_week,
+                           new_task_runs_week=new_task_runs_week)
