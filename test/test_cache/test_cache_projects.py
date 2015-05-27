@@ -89,7 +89,7 @@ class TestProjectsCache(Test):
 
         fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
                   'last_activity', 'last_activity_raw', 'overall_progress',
-                   'n_tasks', 'n_volunteers', 'owner', 'info')
+                   'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
 
         ProjectFactory.create(featured=True)
 
@@ -149,7 +149,7 @@ class TestProjectsCache(Test):
 
         fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
                   'last_activity', 'last_activity_raw', 'overall_progress',
-                   'n_tasks', 'n_volunteers', 'owner', 'info')
+                   'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
 
         project = self.create_project_with_tasks(1, 0)
 
@@ -198,7 +198,7 @@ class TestProjectsCache(Test):
 
         fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
                   'last_activity', 'last_activity_raw', 'overall_progress',
-                   'n_tasks', 'n_volunteers', 'owner', 'info')
+                   'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
 
         ProjectFactory.create(info={})
 

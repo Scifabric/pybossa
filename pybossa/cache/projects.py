@@ -200,10 +200,10 @@ def _n_featured():
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_all_featured():
+def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
-    sql = text('''SELECT project.id, project.name, project.short_name, project.info, project.created,
-               project.description,
+    sql = text('''SELECT project.id, project.name, project.short_name, project.info,
+               project.created, project.updated, project.description,
                "user".fullname AS owner FROM project, "user"
                WHERE project.featured=true AND project.hidden=0
                AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
@@ -213,6 +213,7 @@ def get_all_featured():
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
+                       updated=row.updated,
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
@@ -266,10 +267,10 @@ def _n_draft():
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_all_draft():
+def get_all_draft(category=None):
     """Return list of all draft projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.created,
-               project.description, project.info, "user".fullname as owner
+               project.description, project.info, project.updated, "user".fullname as owner
                FROM "user", project LEFT JOIN task ON project.id=task.project_id
                WHERE task.project_id IS NULL
                AND project.info NOT LIKE('%task_presenter%')
@@ -281,6 +282,7 @@ def get_all_draft():
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created,
+                       updated=row.updated,
                        description=row.description,
                        owner=row.owner,
                        last_activity=pretty_date(last_activity(row.id)),
@@ -329,8 +331,8 @@ def n_count(category):
 def get_all(category):
     """Return a list of projects with at least one task and a task_presenter.
     """
-    sql = text('''SELECT project.id, project.name, project.short_name, project.description,
-               project.info, project.created,
+    sql = text('''SELECT project.id, project.name, project.short_name,
+               project.description, project.info, project.created, project.updated,
                project.category_id, project.featured, "user".fullname AS owner
                FROM "user", task, project
                LEFT OUTER JOIN category ON project.category_id=category.id
@@ -348,6 +350,7 @@ def get_all(category):
         project = dict(id=row.id,
                        name=row.name, short_name=row.short_name,
                        created=row.created,
+                       updated=row.updated,
                        description=row.description,
                        owner=row.owner,
                        featured=row.featured,
