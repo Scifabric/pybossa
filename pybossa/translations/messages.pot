@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-22 17:49+0200\n"
+"POT-Creation-Date: 2015-05-27 15:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: core.py:405
+#: core.py:407
 msgid ""
 "Please update your e-mail address in your profile page, right now it is "
 "empty!"
@@ -31,15 +31,15 @@ msgstr ""
 msgid "Oops! That file doesn't look like the right file."
 msgstr ""
 
-#: importers.py:350
+#: importers.py:349
 msgid "It looks like there were no new records to import"
 msgstr ""
 
-#: importers.py:352
+#: importers.py:351
 msgid "new tasks were imported successfully"
 msgstr ""
 
-#: importers.py:354
+#: importers.py:353
 msgid "new task was imported successfully"
 msgstr ""
 
@@ -55,287 +55,271 @@ msgid ""
 "                          some users to participate"
 msgstr ""
 
-#: forms/forms.py:39 forms/forms.py:349
+#: forms/forms.py:40 forms/forms.py:354
 #: themes/default/templates/stats/index.html:18
 msgid "Name"
 msgstr ""
 
-#: forms/forms.py:42
+#: forms/forms.py:43
 msgid "Name is already taken."
 msgstr ""
 
-#: forms/forms.py:43
+#: forms/forms.py:44
 msgid "Short Name"
 msgstr ""
 
-#: forms/forms.py:47
+#: forms/forms.py:48
 msgid "Short Name is already taken."
 msgstr ""
 
-#: forms/forms.py:50 forms/forms.py:61
+#: forms/forms.py:51 forms/forms.py:62
 msgid "Long Description"
 msgstr ""
 
-#: forms/forms.py:56 forms/forms.py:353
+#: forms/forms.py:57 forms/forms.py:358
 #: themes/default/templates/projects/_helpers.html:63
 #: themes/default/templates/projects/_helpers.html:131
 msgid "Description"
 msgstr ""
 
-#: forms/forms.py:58
+#: forms/forms.py:59
 msgid "You must provide a description."
 msgstr ""
 
-#: forms/forms.py:63
+#: forms/forms.py:64
 msgid "Allow Anonymous Contributors"
 msgstr ""
 
-#: forms/forms.py:64 themes/default/templates/projects/_helpers.html:70
+#: forms/forms.py:65 themes/default/templates/projects/_helpers.html:70
 #: themes/default/templates/projects/tasks/delete.html:24
 msgid "Yes"
 msgstr ""
 
-#: forms/forms.py:65 themes/default/templates/projects/_helpers.html:72
+#: forms/forms.py:66 themes/default/templates/projects/_helpers.html:72
 msgid "No"
 msgstr ""
 
-#: forms/forms.py:66
+#: forms/forms.py:67
 msgid "Category"
 msgstr ""
 
-#: forms/forms.py:67
+#: forms/forms.py:68
 msgid "Hide?"
 msgstr ""
 
-#: forms/forms.py:68
+#: forms/forms.py:69
 msgid "Password (leave blank for no password)"
 msgstr ""
 
-#: forms/forms.py:69
+#: forms/forms.py:70
 msgid "Webhook"
 msgstr ""
 
-#: forms/forms.py:79 themes/default/templates/projects/task_settings.html:36
-#: view/projects.py:1212
+#: forms/forms.py:80 themes/default/templates/projects/task_settings.html:36
+#: view/projects.py:1188
 msgid "Redundancy"
 msgstr ""
 
-#: forms/forms.py:83
+#: forms/forms.py:84
 msgid ""
 "Number of answers should be a"
 "                                                        value between 1 "
 "and 1,000"
 msgstr ""
 
-#: forms/forms.py:88
+#: forms/forms.py:89
 msgid "Task IDs"
 msgstr ""
 
-#: forms/forms.py:92 themes/default/templates/projects/task_settings.html:24
+#: forms/forms.py:93 themes/default/templates/projects/task_settings.html:24
 msgid "Priority"
 msgstr ""
 
-#: forms/forms.py:95
+#: forms/forms.py:96
 msgid ""
 "Priority should be a"
 "                                                        value between 0.0"
 " and 1.0"
 msgstr ""
 
-#: forms/forms.py:100 themes/default/templates/projects/task_scheduler.html:14
+#: forms/forms.py:103 themes/default/templates/projects/task_scheduler.html:14
 #: themes/default/templates/projects/task_settings.html:17
-#: view/projects.py:1244
+#: view/projects.py:1220
 msgid "Task Scheduler"
 msgstr ""
 
-#: forms/forms.py:101 themes/default/templates/projects/task_scheduler.html:17
-msgid "Default"
-msgstr ""
-
-#: forms/forms.py:102 themes/default/templates/projects/task_scheduler.html:21
-msgid "Breadth First"
-msgstr ""
-
-#: forms/forms.py:103 themes/default/templates/projects/task_scheduler.html:18
-msgid "Depth First"
-msgstr ""
-
-#: forms/forms.py:104 themes/default/templates/projects/task_scheduler.html:24
-msgid "Random"
-msgstr ""
-
-#: forms/forms.py:109
+#: forms/forms.py:114
 msgid "Title"
 msgstr ""
 
-#: forms/forms.py:110
+#: forms/forms.py:115
 msgid "You must enter a title for the post."
 msgstr ""
 
-#: forms/forms.py:112
+#: forms/forms.py:117
 msgid "Body"
 msgstr ""
 
-#: forms/forms.py:113
+#: forms/forms.py:118
 msgid "You must enter some text for the post."
 msgstr ""
 
-#: forms/forms.py:118 forms/forms.py:207
+#: forms/forms.py:123 forms/forms.py:212
 msgid "Password"
 msgstr ""
 
-#: forms/forms.py:119
+#: forms/forms.py:124
 msgid "You must enter a password"
 msgstr ""
 
-#: forms/forms.py:125 forms/forms.py:138
+#: forms/forms.py:130 forms/forms.py:143
 msgid "You must provide a URL"
 msgstr ""
 
-#: forms/forms.py:126 forms/forms.py:139
+#: forms/forms.py:131 forms/forms.py:144
 msgid "Oops! That's not a valid URL. You must provide a valid URL"
 msgstr ""
 
-#: forms/forms.py:128 forms/forms.py:141
+#: forms/forms.py:133 forms/forms.py:146
 msgid "URL"
 msgstr ""
 
-#: forms/forms.py:151
+#: forms/forms.py:156
 msgid "You must provide an EpiCollect Plus project name"
 msgstr ""
 
-#: forms/forms.py:153
+#: forms/forms.py:158
 msgid "You must provide a Form name for the project"
 msgstr ""
 
-#: forms/forms.py:155
+#: forms/forms.py:160
 msgid "Project Name"
 msgstr ""
 
-#: forms/forms.py:157
+#: forms/forms.py:162
 msgid "Form name"
 msgstr ""
 
-#: forms/forms.py:168
+#: forms/forms.py:173
 msgid "You must provide a valid Flickr album ID"
 msgstr ""
 
-#: forms/forms.py:169
+#: forms/forms.py:174
 msgid "Album ID"
 msgstr ""
 
-#: forms/forms.py:203 themes/default/templates/account/_helpers.html:41
+#: forms/forms.py:208 themes/default/templates/account/_helpers.html:41
 msgid "E-mail"
 msgstr ""
 
-#: forms/forms.py:205
+#: forms/forms.py:210
 msgid "The e-mail is required"
 msgstr ""
 
-#: forms/forms.py:209
+#: forms/forms.py:214
 msgid "You must provide a password"
-msgstr ""
-
-#: forms/forms.py:217 forms/forms.py:256
-#, python-format
-msgid "Full name must be between 3 and %s characters long"
-msgstr ""
-
-#: forms/forms.py:219 forms/forms.py:258
-msgid "Full name"
 msgstr ""
 
 #: forms/forms.py:222 forms/forms.py:261
 #, python-format
-msgid "User name must be between 3 and %s characters long"
+msgid "Full name must be between 3 and %s characters long"
 msgstr ""
 
 #: forms/forms.py:224 forms/forms.py:263
+msgid "Full name"
+msgstr ""
+
+#: forms/forms.py:227 forms/forms.py:266
+#, python-format
+msgid "User name must be between 3 and %s characters long"
+msgstr ""
+
+#: forms/forms.py:229 forms/forms.py:268
 msgid "The user name is already taken"
 msgstr ""
 
-#: forms/forms.py:225
+#: forms/forms.py:230
 msgid "User name"
 msgstr ""
 
-#: forms/forms.py:231 forms/forms.py:270 forms/forms.py:332
+#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:337
 #, python-format
 msgid "Email must be between 3 and %s characters long"
 msgstr ""
 
-#: forms/forms.py:233 forms/forms.py:272
+#: forms/forms.py:238 forms/forms.py:277
 msgid "Email is already taken"
 msgstr ""
 
-#: forms/forms.py:234 forms/forms.py:273 forms/forms.py:334
+#: forms/forms.py:239 forms/forms.py:278 forms/forms.py:339
 msgid "Email Address"
 msgstr ""
 
-#: forms/forms.py:241 forms/forms.py:307 forms/forms.py:319
+#: forms/forms.py:246 forms/forms.py:312 forms/forms.py:324
 msgid "Password cannot be empty"
 msgstr ""
 
-#: forms/forms.py:242 forms/forms.py:308 forms/forms.py:320
+#: forms/forms.py:247 forms/forms.py:313 forms/forms.py:325
 msgid "Passwords must match"
 msgstr ""
 
-#: forms/forms.py:243 forms/forms.py:321
+#: forms/forms.py:248 forms/forms.py:326
 msgid "New Password"
 msgstr ""
 
-#: forms/forms.py:247 forms/forms.py:324
+#: forms/forms.py:252 forms/forms.py:329
 msgid "Repeat Password"
 msgstr ""
 
-#: forms/forms.py:264
+#: forms/forms.py:269
 msgid "Username"
 msgstr ""
 
-#: forms/forms.py:279
+#: forms/forms.py:284
 msgid "Get email notifications"
 msgstr ""
 
-#: forms/forms.py:281
+#: forms/forms.py:286
 msgid "Language"
 msgstr ""
 
-#: forms/forms.py:282
+#: forms/forms.py:287
 msgid "CKAN API Key"
 msgstr ""
 
-#: forms/forms.py:283
+#: forms/forms.py:288
 msgid "Privacy Mode"
 msgstr ""
 
-#: forms/forms.py:290
+#: forms/forms.py:295
 msgid "English"
 msgstr ""
 
-#: forms/forms.py:292
+#: forms/forms.py:297
 msgid "Spanish"
 msgstr ""
 
-#: forms/forms.py:294
+#: forms/forms.py:299
 msgid "French"
 msgstr ""
 
-#: forms/forms.py:296
+#: forms/forms.py:301
 msgid "German"
 msgstr ""
 
-#: forms/forms.py:305
+#: forms/forms.py:310
 msgid "Current password"
 msgstr ""
 
-#: forms/forms.py:309
+#: forms/forms.py:314
 msgid "New password"
 msgstr ""
 
-#: forms/forms.py:312
+#: forms/forms.py:317
 msgid "Repeat password"
 msgstr ""
 
-#: forms/forms.py:344 themes/default/templates/account/settings.html:12
+#: forms/forms.py:349 themes/default/templates/account/settings.html:12
 #: themes/default/templates/projects/stats.html:297
 #: themes/default/templates/projects/stats.html:298
 #: themes/default/templates/projects/stats.html:299
@@ -345,7 +329,7 @@ msgstr ""
 msgid "User"
 msgstr ""
 
-#: forms/forms.py:359
+#: forms/forms.py:364
 msgid "Avatar"
 msgstr ""
 
@@ -651,7 +635,7 @@ msgstr ""
 #: themes/default/templates/projects/new_blogpost.html:22
 #: themes/default/templates/projects/password.html:20
 #: themes/default/templates/projects/task_n_answers.html:21
-#: themes/default/templates/projects/task_presenter_editor.html:36
+#: themes/default/templates/projects/task_presenter_editor.html:37
 #: themes/default/templates/projects/task_priority.html:31
 #: themes/default/templates/projects/task_scheduler.html:36
 #: themes/default/templates/projects/update.html:48
@@ -1710,38 +1694,38 @@ msgstr ""
 msgid "Set redundancy"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:28
+#: themes/default/templates/projects/task_presenter_editor.html:29
 #: themes/default/templates/projects/snippets/options.html:3
 msgid "Task Presenter Editor"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:28
+#: themes/default/templates/projects/task_presenter_editor.html:29
 msgid "Help"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:34
+#: themes/default/templates/projects/task_presenter_editor.html:35
 msgid "Update the project task presenter"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:35
+#: themes/default/templates/projects/task_presenter_editor.html:36
 msgid "Preview the task presenter"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:45
+#: themes/default/templates/projects/task_presenter_editor.html:46
 msgid "&times;"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:46
+#: themes/default/templates/projects/task_presenter_editor.html:47
 msgid "Task Presenter Preview"
 msgstr ""
 
-#: themes/default/templates/projects/task_presenter_editor.html:52
+#: themes/default/templates/projects/task_presenter_editor.html:53
 msgid "Close"
 msgstr ""
 
 #: themes/default/templates/projects/task_priority.html:14
 #: themes/default/templates/projects/task_settings.html:22
-#: view/projects.py:1292
+#: view/projects.py:1267
 msgid "Task Priority"
 msgstr ""
 
@@ -1792,7 +1776,15 @@ msgid "You can choose from the following schedulers"
 msgstr ""
 
 #: themes/default/templates/projects/task_scheduler.html:17
+msgid "Default"
+msgstr ""
+
+#: themes/default/templates/projects/task_scheduler.html:17
 msgid "or"
+msgstr ""
+
+#: themes/default/templates/projects/task_scheduler.html:18
+msgid "Depth First"
 msgstr ""
 
 #: themes/default/templates/projects/task_scheduler.html:18
@@ -1804,11 +1796,19 @@ msgid ""
 msgstr ""
 
 #: themes/default/templates/projects/task_scheduler.html:21
+msgid "Breadth First"
+msgstr ""
+
+#: themes/default/templates/projects/task_scheduler.html:21
 msgid ""
 "returns a\n"
 "                    task which has the least number of task runs "
 "(answers)\n"
 "                    excluding the current user"
+msgstr ""
+
+#: themes/default/templates/projects/task_scheduler.html:24
+msgid "Random"
 msgstr ""
 
 #: themes/default/templates/projects/task_scheduler.html:24
@@ -1867,7 +1867,7 @@ msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr ""
 
 #: themes/default/templates/projects/tasks.html:27
-#: themes/default/templates/projects/tasks.html:70 view/projects.py:923
+#: themes/default/templates/projects/tasks.html:70 view/projects.py:899
 msgid "Export"
 msgstr ""
 
@@ -2458,9 +2458,9 @@ msgstr ""
 #: view/account.py:135 view/account.py:234 view/account.py:509
 #: view/account.py:525 view/account.py:539 view/account.py:572
 #: view/admin.py:262 view/admin.py:343 view/projects.py:214
-#: view/projects.py:272 view/projects.py:417 view/projects.py:1231
-#: view/projects.py:1283 view/projects.py:1329 view/projects.py:1404
-#: view/projects.py:1449
+#: view/projects.py:271 view/projects.py:410 view/projects.py:1207
+#: view/projects.py:1258 view/projects.py:1303 view/projects.py:1378
+#: view/projects.py:1423
 msgid "Please correct the errors"
 msgstr ""
 
@@ -2576,115 +2576,115 @@ msgstr ""
 msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
 msgstr ""
 
-#: view/projects.py:266
+#: view/projects.py:265
 msgid "Task presenter added!"
 msgstr ""
 
-#: view/projects.py:279
+#: view/projects.py:278
 msgid "<strong>Note</strong> You will need to upload the tasks using the"
 msgstr ""
 
-#: view/projects.py:281
+#: view/projects.py:280
 msgid "CSV importer"
 msgstr ""
 
-#: view/projects.py:282
+#: view/projects.py:281
 msgid ""
 " or download the project bundle and run the "
 "<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 
-#: view/projects.py:352
+#: view/projects.py:347
 msgid "Project deleted!"
 msgstr ""
 
-#: view/projects.py:391
+#: view/projects.py:384
 msgid "Project updated!"
 msgstr ""
 
-#: view/projects.py:437
+#: view/projects.py:429
 msgid ""
 "Your project thumbnail has been updated! It may"
 "                                   take some minutes to refresh..."
 msgstr ""
 
-#: view/projects.py:440
+#: view/projects.py:432
 msgid "You must provide a file to change the avatar"
 msgstr ""
 
-#: view/projects.py:518
+#: view/projects.py:510
 msgid "Importing tasks, this may take a while, wait..."
 msgstr ""
 
-#: view/projects.py:576
+#: view/projects.py:568
 msgid ""
 "You're trying to import a large amount of tasks, so please be patient."
 "            You will receive an email when the tasks are ready."
 msgstr ""
 
-#: view/projects.py:620
+#: view/projects.py:611
 msgid "Success! Tasks will be imported daily."
 msgstr ""
 
-#: view/projects.py:675
+#: view/projects.py:665
 msgid "Sorry, incorrect password"
 msgstr ""
 
-#: view/projects.py:705
+#: view/projects.py:695
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 
-#: view/projects.py:897
+#: view/projects.py:887
 msgid "All the tasks and associated task runs have been deleted"
 msgstr ""
 
-#: view/projects.py:924
+#: view/projects.py:900
 msgid "Exporting data..., this may take a while"
 msgstr ""
 
-#: view/projects.py:1017
+#: view/projects.py:993
 msgid "Data exported to "
 msgstr ""
 
-#: view/projects.py:1075
+#: view/projects.py:1051
 msgid ""
 "Oops, the project does not have tasks to                     export, if "
 "you are the owner add some tasks"
 msgstr ""
 
-#: view/projects.py:1081
+#: view/projects.py:1057
 msgid ""
 "Oops, there are no Task Runs yet to export, invite                      "
 "some users to participate"
 msgstr ""
 
-#: view/projects.py:1227
+#: view/projects.py:1203
 msgid "Redundancy of Tasks updated!"
 msgstr ""
 
-#: view/projects.py:1278
+#: view/projects.py:1253
 msgid "Project Task Scheduler updated!"
 msgstr ""
 
-#: view/projects.py:1326
+#: view/projects.py:1300
 msgid "Task priority has been changed"
 msgstr ""
 
-#: view/projects.py:1383
+#: view/projects.py:1357
 msgid "Write a new post"
 msgstr ""
 
-#: view/projects.py:1415
+#: view/projects.py:1389
 msgid "Blog post created!"
 msgstr ""
 
-#: view/projects.py:1433
+#: view/projects.py:1407
 msgid "Edit a post"
 msgstr ""
 
-#: view/projects.py:1461
+#: view/projects.py:1435
 msgid "Blog post updated!"
 msgstr ""
 

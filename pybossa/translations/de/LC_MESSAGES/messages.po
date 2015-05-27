@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-04-22 17:49+0200\n"
+"POT-Creation-Date: 2015-05-27 15:50+0200\n"
 "PO-Revision-Date: 2015-04-03 12:45+0200\n"
 "Last-Translator: LUDWIG RICHTER <LUDWIG.RICHTER@STUD.UNI-HEIDELBERG.DE>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: core.py:405
+#: core.py:407
 msgid ""
 "Please update your e-mail address in your profile page, right now it is "
 "empty!"
@@ -31,15 +31,15 @@ msgstr "Die hochgeladenen Datei hat zwei Header mit dem selben Namen."
 msgid "Oops! That file doesn't look like the right file."
 msgstr "Hoppla! Diese Datei scheint nicht die richtige zu sein."
 
-#: importers.py:350
+#: importers.py:349
 msgid "It looks like there were no new records to import"
 msgstr ""
 
-#: importers.py:352
+#: importers.py:351
 msgid "new tasks were imported successfully"
 msgstr ""
 
-#: importers.py:354
+#: importers.py:353
 msgid "new task was imported successfully"
 msgstr ""
 
@@ -55,287 +55,271 @@ msgid ""
 "                          some users to participate"
 msgstr ""
 
-#: forms/forms.py:39 forms/forms.py:349
+#: forms/forms.py:40 forms/forms.py:354
 #: themes/default/templates/stats/index.html:18
 msgid "Name"
 msgstr "Name"
 
-#: forms/forms.py:42
+#: forms/forms.py:43
 msgid "Name is already taken."
 msgstr "Der Name ist bereits vergeben."
 
-#: forms/forms.py:43
+#: forms/forms.py:44
 msgid "Short Name"
 msgstr "Kurzname"
 
-#: forms/forms.py:47
+#: forms/forms.py:48
 msgid "Short Name is already taken."
 msgstr "Der Kurzname ist bereits vergeben."
 
-#: forms/forms.py:50 forms/forms.py:61
+#: forms/forms.py:51 forms/forms.py:62
 msgid "Long Description"
 msgstr "Ausführliche Beschreibung"
 
-#: forms/forms.py:56 forms/forms.py:353
+#: forms/forms.py:57 forms/forms.py:358
 #: themes/default/templates/projects/_helpers.html:63
 #: themes/default/templates/projects/_helpers.html:131
 msgid "Description"
 msgstr "Beschreibung"
 
-#: forms/forms.py:58
+#: forms/forms.py:59
 msgid "You must provide a description."
 msgstr "Sie müssen eine Beschreibung angeben."
 
-#: forms/forms.py:63
+#: forms/forms.py:64
 msgid "Allow Anonymous Contributors"
 msgstr "Anonyme Beiträge erlauben"
 
-#: forms/forms.py:64 themes/default/templates/projects/_helpers.html:70
+#: forms/forms.py:65 themes/default/templates/projects/_helpers.html:70
 #: themes/default/templates/projects/tasks/delete.html:24
 msgid "Yes"
 msgstr "Ja"
 
-#: forms/forms.py:65 themes/default/templates/projects/_helpers.html:72
+#: forms/forms.py:66 themes/default/templates/projects/_helpers.html:72
 msgid "No"
 msgstr "Nein"
 
-#: forms/forms.py:66
+#: forms/forms.py:67
 msgid "Category"
 msgstr "Kategorie"
 
-#: forms/forms.py:67
+#: forms/forms.py:68
 msgid "Hide?"
 msgstr "Verstecken?"
 
-#: forms/forms.py:68
+#: forms/forms.py:69
 msgid "Password (leave blank for no password)"
 msgstr "Passwort (leer lassen, falls kein Passwort)"
 
-#: forms/forms.py:69
+#: forms/forms.py:70
 msgid "Webhook"
 msgstr "Webhook"
 
-#: forms/forms.py:79 themes/default/templates/projects/task_settings.html:36
-#: view/projects.py:1212
+#: forms/forms.py:80 themes/default/templates/projects/task_settings.html:36
+#: view/projects.py:1188
 msgid "Redundancy"
 msgstr "Redundanz"
 
-#: forms/forms.py:83
+#: forms/forms.py:84
 msgid ""
 "Number of answers should be a"
 "                                                        value between 1 "
 "and 1,000"
 msgstr "Die Anzahl der Anworten muss ein Wert zwischen 1 und 1.000 sein"
 
-#: forms/forms.py:88
+#: forms/forms.py:89
 msgid "Task IDs"
 msgstr "Aufgaben IDs"
 
-#: forms/forms.py:92 themes/default/templates/projects/task_settings.html:24
+#: forms/forms.py:93 themes/default/templates/projects/task_settings.html:24
 msgid "Priority"
 msgstr "Priorität"
 
-#: forms/forms.py:95
+#: forms/forms.py:96
 msgid ""
 "Priority should be a"
 "                                                        value between 0.0"
 " and 1.0"
 msgstr "Priorität muss ein Wert zwischen 0.0 und 1.0 sein"
 
-#: forms/forms.py:100 themes/default/templates/projects/task_scheduler.html:14
+#: forms/forms.py:103 themes/default/templates/projects/task_scheduler.html:14
 #: themes/default/templates/projects/task_settings.html:17
-#: view/projects.py:1244
+#: view/projects.py:1220
 msgid "Task Scheduler"
 msgstr "Aufgaben Planer"
 
-#: forms/forms.py:101 themes/default/templates/projects/task_scheduler.html:17
-msgid "Default"
-msgstr "Standard"
-
-#: forms/forms.py:102 themes/default/templates/projects/task_scheduler.html:21
-msgid "Breadth First"
-msgstr "reite zuerst"
-
-#: forms/forms.py:103 themes/default/templates/projects/task_scheduler.html:18
-msgid "Depth First"
-msgstr "Tiefe zuerst"
-
-#: forms/forms.py:104 themes/default/templates/projects/task_scheduler.html:24
-msgid "Random"
-msgstr "Zufällig"
-
-#: forms/forms.py:109
+#: forms/forms.py:114
 msgid "Title"
 msgstr "Titel"
 
-#: forms/forms.py:110
+#: forms/forms.py:115
 msgid "You must enter a title for the post."
 msgstr "Sie müssen für den Post einen Titel angeben."
 
-#: forms/forms.py:112
+#: forms/forms.py:117
 msgid "Body"
 msgstr "Inhalt"
 
-#: forms/forms.py:113
+#: forms/forms.py:118
 msgid "You must enter some text for the post."
 msgstr "Sie müssen einen Text für den Post eingeben."
 
-#: forms/forms.py:118 forms/forms.py:207
+#: forms/forms.py:123 forms/forms.py:212
 msgid "Password"
 msgstr "Passwort"
 
-#: forms/forms.py:119
+#: forms/forms.py:124
 msgid "You must enter a password"
 msgstr "Sie müssen ein Passwort eingeben"
 
-#: forms/forms.py:125 forms/forms.py:138
+#: forms/forms.py:130 forms/forms.py:143
 msgid "You must provide a URL"
 msgstr "Sie müssen eine URL angeben"
 
-#: forms/forms.py:126 forms/forms.py:139
+#: forms/forms.py:131 forms/forms.py:144
 msgid "Oops! That's not a valid URL. You must provide a valid URL"
 msgstr "Hoppla! Dies ist keine gültige URL. Sie müssen eine gültige URL angeben"
 
-#: forms/forms.py:128 forms/forms.py:141
+#: forms/forms.py:133 forms/forms.py:146
 msgid "URL"
 msgstr "URL"
 
-#: forms/forms.py:151
+#: forms/forms.py:156
 msgid "You must provide an EpiCollect Plus project name"
 msgstr "Sie müssen einen EpiCollect Plus Projektname angeben"
 
-#: forms/forms.py:153
+#: forms/forms.py:158
 msgid "You must provide a Form name for the project"
 msgstr "Sie müssen einen Formnamen für das projekt angeben"
 
-#: forms/forms.py:155
+#: forms/forms.py:160
 msgid "Project Name"
 msgstr "Projektname"
 
-#: forms/forms.py:157
+#: forms/forms.py:162
 msgid "Form name"
 msgstr "Formname"
 
-#: forms/forms.py:168
+#: forms/forms.py:173
 msgid "You must provide a valid Flickr album ID"
 msgstr "Sie müssen eine gültige Flickr Album ID angeben"
 
-#: forms/forms.py:169
+#: forms/forms.py:174
 msgid "Album ID"
 msgstr "Album ID"
 
-#: forms/forms.py:203 themes/default/templates/account/_helpers.html:41
+#: forms/forms.py:208 themes/default/templates/account/_helpers.html:41
 msgid "E-mail"
 msgstr "E-Mail"
 
-#: forms/forms.py:205
+#: forms/forms.py:210
 msgid "The e-mail is required"
 msgstr "Die E-Mail Adresse ist erforderlich"
 
-#: forms/forms.py:209
+#: forms/forms.py:214
 msgid "You must provide a password"
 msgstr "Sie müssen ein Passwort angeben"
 
-#: forms/forms.py:217 forms/forms.py:256
+#: forms/forms.py:222 forms/forms.py:261
 #, python-format
 msgid "Full name must be between 3 and %s characters long"
 msgstr "Der volle Name muss zwischen 3 und %s Zeichen lang sein"
 
-#: forms/forms.py:219 forms/forms.py:258
+#: forms/forms.py:224 forms/forms.py:263
 msgid "Full name"
 msgstr "Voller Name"
 
-#: forms/forms.py:222 forms/forms.py:261
+#: forms/forms.py:227 forms/forms.py:266
 #, python-format
 msgid "User name must be between 3 and %s characters long"
 msgstr "Der Benutzername muss zwischen 3 und %s Zeichen lang sein"
 
-#: forms/forms.py:224 forms/forms.py:263
+#: forms/forms.py:229 forms/forms.py:268
 msgid "The user name is already taken"
 msgstr "Der Benutzername ist bereits vergeben"
 
-#: forms/forms.py:225
+#: forms/forms.py:230
 msgid "User name"
 msgstr "Benutzername"
 
-#: forms/forms.py:231 forms/forms.py:270 forms/forms.py:332
+#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:337
 #, python-format
 msgid "Email must be between 3 and %s characters long"
 msgstr "Die E-Mail Adresse muss zwischen 3 und %s Zeichen lang sein"
 
-#: forms/forms.py:233 forms/forms.py:272
+#: forms/forms.py:238 forms/forms.py:277
 msgid "Email is already taken"
 msgstr "Die E-Mail Adresse ist bereits vergeben"
 
-#: forms/forms.py:234 forms/forms.py:273 forms/forms.py:334
+#: forms/forms.py:239 forms/forms.py:278 forms/forms.py:339
 msgid "Email Address"
 msgstr "E-Mail Addresse"
 
-#: forms/forms.py:241 forms/forms.py:307 forms/forms.py:319
+#: forms/forms.py:246 forms/forms.py:312 forms/forms.py:324
 msgid "Password cannot be empty"
 msgstr "Das Passwort darf nicht leer sein"
 
-#: forms/forms.py:242 forms/forms.py:308 forms/forms.py:320
+#: forms/forms.py:247 forms/forms.py:313 forms/forms.py:325
 msgid "Passwords must match"
 msgstr "Die Passwörter müssen übereinstimmen"
 
-#: forms/forms.py:243 forms/forms.py:321
+#: forms/forms.py:248 forms/forms.py:326
 msgid "New Password"
 msgstr "Neues Passwort"
 
-#: forms/forms.py:247 forms/forms.py:324
+#: forms/forms.py:252 forms/forms.py:329
 msgid "Repeat Password"
 msgstr "Passwort wiederholen"
 
-#: forms/forms.py:264
+#: forms/forms.py:269
 msgid "Username"
 msgstr "Benutzername"
 
-#: forms/forms.py:279
+#: forms/forms.py:284
 msgid "Get email notifications"
 msgstr "E-Mail Benachrichtigungen"
 
-#: forms/forms.py:281
+#: forms/forms.py:286
 msgid "Language"
 msgstr "Sprache"
 
-#: forms/forms.py:282
+#: forms/forms.py:287
 msgid "CKAN API Key"
 msgstr "CKAN API Key"
 
-#: forms/forms.py:283
+#: forms/forms.py:288
 msgid "Privacy Mode"
 msgstr "Privateter Modus"
 
-#: forms/forms.py:290
+#: forms/forms.py:295
 msgid "English"
 msgstr "Englisch"
 
-#: forms/forms.py:292
+#: forms/forms.py:297
 msgid "Spanish"
 msgstr "Spanisch"
 
-#: forms/forms.py:294
+#: forms/forms.py:299
 msgid "French"
 msgstr "Französisch"
 
-#: forms/forms.py:296
+#: forms/forms.py:301
 msgid "German"
 msgstr "Deutsch"
 
-#: forms/forms.py:305
+#: forms/forms.py:310
 msgid "Current password"
 msgstr "Aktuelles Passwort"
 
-#: forms/forms.py:309
+#: forms/forms.py:314
 msgid "New password"
 msgstr "Neues Passwort"
 
-#: forms/forms.py:312
+#: forms/forms.py:317
 msgid "Repeat password"
 msgstr "Passwort wiederholen"
 
-#: forms/forms.py:344 themes/default/templates/account/settings.html:12
+#: forms/forms.py:349 themes/default/templates/account/settings.html:12
 #: themes/default/templates/projects/stats.html:297
 #: themes/default/templates/projects/stats.html:298
 #: themes/default/templates/projects/stats.html:299
@@ -345,7 +329,7 @@ msgstr "Passwort wiederholen"
 msgid "User"
 msgstr "Benutzer"
 
-#: forms/forms.py:359
+#: forms/forms.py:364
 msgid "Avatar"
 msgstr "Avatar"
 
@@ -567,13 +551,18 @@ msgid ""
 "In order to confirm your identity, we've sent an email to the address you"
 " just provided. Please, check it out and click on the link you'll find to"
 " create your account at"
-msgstr "Um ihre Identität zu bestätigen haben wir eine E-Mail an ihre Adresse gesendet. Bitte überprüfen sie ihr E-Mail-Postfach und klicken sie auf den Link um ihren Account zu aktivieren"
+msgstr ""
+"Um ihre Identität zu bestätigen haben wir eine E-Mail an ihre Adresse "
+"gesendet. Bitte überprüfen sie ihr E-Mail-Postfach und klicken sie auf "
+"den Link um ihren Account zu aktivieren"
 
 #: themes/default/templates/account/account_validation.html:9
 msgid ""
 "If you are not receiving the email, please check the junk folder. If it's"
 " not there please drop us an email to"
-msgstr "Wenn sie keine E-Mail erhalten haben überprüfen sie bitte auch ihren SPAM Ordner. Falls die E-Mail auch dort nicht ist kontaktieren sie uns bitte."
+msgstr ""
+"Wenn sie keine E-Mail erhalten haben überprüfen sie bitte auch ihren SPAM"
+" Ordner. Falls die E-Mail auch dort nicht ist kontaktieren sie uns bitte."
 
 #: themes/default/templates/account/account_validation.html:10
 msgid "In the meantime, you can check some of the amazing"
@@ -653,7 +642,7 @@ msgstr "Änderungen speichern"
 #: themes/default/templates/projects/new_blogpost.html:22
 #: themes/default/templates/projects/password.html:20
 #: themes/default/templates/projects/task_n_answers.html:21
-#: themes/default/templates/projects/task_presenter_editor.html:36
+#: themes/default/templates/projects/task_presenter_editor.html:37
 #: themes/default/templates/projects/task_priority.html:31
 #: themes/default/templates/projects/task_scheduler.html:36
 #: themes/default/templates/projects/update.html:48
@@ -777,8 +766,8 @@ msgid ""
 " If you reset the API key, you will need to use the new generated key for"
 " any API call."
 msgstr ""
-" Wenn Sie den API Schlüssel zurücksetzen, müssen Sie den neu erzeugten Schlüssel für jegliche "
-"weitere API-Aufrufe verwenden."
+" Wenn Sie den API Schlüssel zurücksetzen, müssen Sie den neu erzeugten "
+"Schlüssel für jegliche weitere API-Aufrufe verwenden."
 
 #: themes/default/templates/account/reset-api-key.html:17
 #: themes/default/templates/account/update.html:85
@@ -811,8 +800,7 @@ msgstr "Anmelden Button"
 msgid ""
 "below you are agreeing to\n"
 "    the"
-msgstr ""
-"Unten stimmen Sie den"
+msgstr "Unten stimmen Sie den"
 
 #: themes/default/templates/account/signin.html:13
 #: themes/default/templates/account/signin.html:23
@@ -914,8 +902,8 @@ msgid ""
 "Deleting the category will remove it from all the projects! This "
 "operation cannot be undone!"
 msgstr ""
-"Wenn die Kategorie gelöscht wird, wird diese von allen Projekten entfernt! Diese Operation kann"
-" nicht rückgängig gemacht werden!"
+"Wenn die Kategorie gelöscht wird, wird diese von allen Projekten "
+"entfernt! Diese Operation kann nicht rückgängig gemacht werden!"
 
 #: themes/default/templates/admin/del_category.html:21
 msgid "No, do not delete it"
@@ -1008,7 +996,6 @@ msgstr "Gefundene Benutzer"
 msgid "Current Users with Admin privileges"
 msgstr "Aktuelle Benutzer mit Administrator-Privilegien"
 
-#TODO
 #: themes/default/templates/home/_about.html:5
 msgid ""
 "PyBossa is a free, open-source crowd-sourcing and micro-tasking platform."
@@ -1020,7 +1007,6 @@ msgid ""
 "connection can contribute."
 msgstr ""
 
-#TODO
 #: themes/default/templates/home/_about.html:8
 msgid "PyBossa is different to existing efforts:"
 msgstr ""
@@ -1030,7 +1016,6 @@ msgstr ""
 msgid "It's a 100%% open-source"
 msgstr "Es ist 100%% Opensource"
 
-#TODO
 #: themes/default/templates/home/_about.html:11
 msgid ""
 "Unlike, say, “mechanical turk” style projects, PyBossa is not designed to"
@@ -1038,7 +1023,6 @@ msgid ""
 "projects."
 msgstr ""
 
-#TODO
 #: themes/default/templates/home/_about.html:13
 msgid ""
 "It's designed as a platform and framework for developing deploying crowd-"
@@ -1048,7 +1032,6 @@ msgid ""
 "instance (such as"
 msgstr ""
 
-#TODO
 #: themes/default/templates/home/_about.html:13
 msgid ""
 "This way one can easily develop custom projects while using the PyBossa "
@@ -1067,26 +1050,22 @@ msgstr "PyBossa Dokumentation"
 msgid "and follow the"
 msgstr "und folgen sie der"
 
-#TODO
 #: themes/default/templates/home/_about.html:18
 msgid "step-by-step tutorial to create your own projects"
 msgstr "Schritt für Schritt Anleitung um ihre eigenen Projekte zu erstellen"
 
-#TODO
 #: themes/default/templates/home/_about.html:21
 #: themes/default/templates/projects/_helpers.html:39
 #: themes/default/templates/projects/stats.html:32
 msgid "Statistics"
 msgstr "Statistiken"
 
-#TODO
 #: themes/default/templates/home/_about.html:23
 msgid ""
 " PyBossa provides individual statistics for every project in the system, "
 "as well as a"
 msgstr ""
 
-#TODO
 #: themes/default/templates/home/_about.html:23
 msgid "general overview about the system like total number of users, tasks, etc"
 msgstr ""
@@ -1119,7 +1098,6 @@ msgstr "Melden sie Bugs oder Verbesserungsvorschläge:"
 msgid "Github Issues"
 msgstr "Github Issues"
 
-#TODO
 #: themes/default/templates/home/_pybossa_text.html:1
 msgid ""
 "Online assistance in performing tasks that require human cognition, "
@@ -1398,16 +1376,16 @@ msgstr "Projekt löschen"
 #: themes/default/templates/projects/delete.html:14
 msgid "If you delete the project and its tasks, it will be gone forever!"
 msgstr ""
-"Wenn Sie das Projekt und seine Tasks löschen, werden die Daten samt Beiträgen für "
-"immer verloren gehen!"
+"Wenn Sie das Projekt und seine Tasks löschen, werden die Daten samt "
+"Beiträgen für immer verloren gehen!"
 
 #: themes/default/templates/projects/delete.html:20
 msgid ""
 "Are you sure you want to delete this project and all its tasks and "
 "associated task runs?"
 msgstr ""
-"Sind Sie sicher, dass Sie dieses Projekte, alle dazugehörigen Tasks sowie Task-Beiträge"
-" löschen wollen?"
+"Sind Sie sicher, dass Sie dieses Projekte, alle dazugehörigen Tasks sowie"
+" Task-Beiträge löschen wollen?"
 
 #: themes/default/templates/projects/delete.html:23
 msgid "No, do not delete it!"
@@ -1430,7 +1408,8 @@ msgid ""
 "Tasks and Task Runs (the submitted answers by the users) in CSV or JSON "
 "formats."
 msgstr ""
-"Tasks und Task-Beitrage in CSV oder JSON Format exportieren und herunterladen."
+"Tasks und Task-Beitrage in CSV oder JSON Format exportieren und "
+"herunterladen."
 
 #: themes/default/templates/projects/export.html:17
 msgid "Export in CSV format"
@@ -1464,8 +1443,10 @@ msgstr "WICHTIG"
 msgid ""
 "This export option stills in beta mode and may fail in the CKAN server. "
 "If you get an error, please send an e-mail to info@pybossa.com"
-msgstr "Diese Exportfunktion befindet sich noch im Beta Stadium und kann Fehlschlagen im CKAN Server"
-"Wenn sie einen Fehler erhalten kontaktieren sie bitte info@pybossa.com"
+msgstr ""
+"Diese Exportfunktion befindet sich noch im Beta Stadium und kann "
+"Fehlschlagen im CKAN ServerWenn sie einen Fehler erhalten kontaktieren "
+"sie bitte info@pybossa.com"
 
 #: themes/default/templates/projects/export.html:56
 msgid "You don't have a Datahub.io API key in your"
@@ -1481,7 +1462,9 @@ msgstr "erstellen sie ein Konto"
 
 #: themes/default/templates/projects/export.html:56
 msgid "and copy/paste the API key in your profile in order to use this exporter"
-msgstr "und fügen sie ihren API Schlüssel in ihr Profil ein um diesen Exporter zu benutzen"
+msgstr ""
+"und fügen sie ihren API Schlüssel in ihr Profil ein um diesen Exporter zu"
+" benutzen"
 
 #: themes/default/templates/projects/index.html:35
 msgid "A special selection of the most interesting projects"
@@ -1498,7 +1481,9 @@ msgstr "Projekte in Bearbeitung"
 
 #: themes/default/templates/projects/index.html:58
 msgid "Sorry, there are no published projects for this category yet"
-msgstr "Entschuldigung! Es gibt in dieser Kategorie derzeit keine veröffentlichten Projekte"
+msgstr ""
+"Entschuldigung! Es gibt in dieser Kategorie derzeit keine "
+"veröffentlichten Projekte"
 
 #: themes/default/templates/projects/new.html:13
 msgid "Project"
@@ -1543,16 +1528,20 @@ msgid ""
 msgstr ""
 "Erklären Sie Ihr Projekt"
 "                                                             \n"
-"                · Warum? Warum haben Sie dieses Projekt erstellt und was wollen Sie damit erreichen"
+"                · Warum? Warum haben Sie dieses Projekt erstellt und was "
+"wollen Sie damit erreichen"
 "                                                             \n"
 "                · Wie? Erklären Sie, wie Ihr Projekt funktioniert"
 "                                                             \n"
-"                · Wie man helfen kann: Erklären Sie den Freiwilligen, "
-"wie Sie helfen können, Ihre Projektziele zu erreichen"
+"                · Wie man helfen kann: Erklären Sie den Freiwilligen, wie"
+" Sie helfen können, Ihre Projektziele zu erreichen"
 "                                                             \n"
-"                · Wird die Hilfe etwas bringen? Erklären Sie den Freiwilligen, warum deren Beitrag"
-" wichtig ist und wie die Ergebnisse Ihres Projektes helfen können, Dinge zu ändern!""                                                             \n"
-"            (Sie können Markdown-Syntax verwenden, um Ihre Beschreibung zu formatieren!)"
+"                · Wird die Hilfe etwas bringen? Erklären Sie den "
+"Freiwilligen, warum deren Beitrag wichtig ist und wie die Ergebnisse "
+"Ihres Projektes helfen können, Dinge zu ändern!\"\""
+"                                                             \n"
+"            (Sie können Markdown-Syntax verwenden, um Ihre Beschreibung "
+"zu formatieren!)"
 
 #: themes/default/templates/projects/new.html:26
 msgid "Create the project"
@@ -1570,7 +1559,9 @@ msgstr "Titel Ihres Blog-Beitrags"
 #: themes/default/templates/projects/new_blogpost.html:19
 #: themes/default/templates/projects/update_blogpost.html:21
 msgid "Write your post here. You can use Markdown!"
-msgstr "Schreiben Sie hier Ihren Blog-Beitrag. Sie können zur Formatierung Markdown-Syntax verwenden!"
+msgstr ""
+"Schreiben Sie hier Ihren Blog-Beitrag. Sie können zur Formatierung "
+"Markdown-Syntax verwenden!"
 
 #: themes/default/templates/projects/password.html:14
 msgid "Enter the password to contribute to this project:"
@@ -1589,9 +1580,9 @@ msgid ""
 "Sorry, you've contributed to all the tasks for this project, but this "
 "project still needs more volunteers, so please spread the word!"
 msgstr ""
-"Entschuldigung, aber Sie haben bereits zu allen Tasks des Projekts beigetragen. Dieses Projekt "
-"benötigt allerdings noch weitere Helfer - Bitte Informieren Sie Ihre Bekannten!"
-
+"Entschuldigung, aber Sie haben bereits zu allen Tasks des Projekts "
+"beigetragen. Dieses Projekt benötigt allerdings noch weitere Helfer - "
+"Bitte Informieren Sie Ihre Bekannten!"
 
 #: themes/default/templates/projects/settings.html:16
 msgid "Project Settings"
@@ -1630,7 +1621,9 @@ msgstr "Tasks, welche in den letzten 15 Tagen vervollständigt wurden"
 #: themes/default/templates/projects/stats.html:77
 #: themes/default/templates/projects/stats.html:148
 msgid "select an area to zoom, click to reset the chart"
-msgstr "Wählen Sie einen Bereich, um zu zoomen odder Klicken Sie um die Grafik zurückzusetzen"
+msgstr ""
+"Wählen Sie einen Bereich, um zu zoomen odder Klicken Sie um die Grafik "
+"zurückzusetzen"
 
 #: themes/default/templates/projects/stats.html:148
 msgid "Answers per day"
@@ -1676,7 +1669,9 @@ msgstr "Stadt"
 #: themes/default/templates/projects/stats.html:317
 #: themes/default/templates/stats/global.html:169
 msgid "This page includes GeoLite data created by MaxMind, available from"
-msgstr "Diese Seite entält GeoLite-Daten, die von MaxMind erzeugt wurden und bezogen werden können von"
+msgstr ""
+"Diese Seite entält GeoLite-Daten, die von MaxMind erzeugt wurden und "
+"bezogen werden können von"
 
 #: themes/default/templates/projects/stats.html:356
 msgid "Details about Authenticated Users"
@@ -1748,38 +1743,38 @@ msgstr "Die Anzahl an Antworten, die Sie pro Task für dieses Projekt benötigen
 msgid "Set redundancy"
 msgstr "Redundanz festlegen"
 
-#: themes/default/templates/projects/task_presenter_editor.html:28
+#: themes/default/templates/projects/task_presenter_editor.html:29
 #: themes/default/templates/projects/snippets/options.html:3
 msgid "Task Presenter Editor"
 msgstr "Task-Presenter Editor"
 
-#: themes/default/templates/projects/task_presenter_editor.html:28
+#: themes/default/templates/projects/task_presenter_editor.html:29
 msgid "Help"
 msgstr "Hilfe"
 
-#: themes/default/templates/projects/task_presenter_editor.html:34
+#: themes/default/templates/projects/task_presenter_editor.html:35
 msgid "Update the project task presenter"
 msgstr "Aktualisieren des Task-Presenters"
 
-#: themes/default/templates/projects/task_presenter_editor.html:35
+#: themes/default/templates/projects/task_presenter_editor.html:36
 msgid "Preview the task presenter"
 msgstr "Vorschau des Task-Presenters"
 
-#: themes/default/templates/projects/task_presenter_editor.html:45
+#: themes/default/templates/projects/task_presenter_editor.html:46
 msgid "&times;"
 msgstr "&times;"
 
-#: themes/default/templates/projects/task_presenter_editor.html:46
+#: themes/default/templates/projects/task_presenter_editor.html:47
 msgid "Task Presenter Preview"
 msgstr "Task-Presenter Vorschau"
 
-#: themes/default/templates/projects/task_presenter_editor.html:52
+#: themes/default/templates/projects/task_presenter_editor.html:53
 msgid "Close"
 msgstr "Schließen"
 
 #: themes/default/templates/projects/task_priority.html:14
 #: themes/default/templates/projects/task_settings.html:22
-#: view/projects.py:1292
+#: view/projects.py:1267
 msgid "Task Priority"
 msgstr "Task Priorität"
 
@@ -1798,8 +1793,8 @@ msgid ""
 "lowest\n"
 "                priority is"
 msgstr ""
-eines oder mehrer Tasks ändern,\n"
-"                indem Sie eine Komma-separierte List von Task IDs angeben. Die niedrigste\n"
+"                indem Sie eine Komma-separierte List von Task IDs "
+"angeben. Die niedrigste\n"
 "                Priorität ist"
 
 #: themes/default/templates/projects/task_priority.html:19
@@ -1810,8 +1805,7 @@ msgstr "und die höchste Priorität hat"
 msgid ""
 "The priority value is only\n"
 "                respected by the"
-msgstr ""
-"Der Prioritätswert wird nur vom\n"
+msgstr "Der Prioritätswert wird nur vom\n"
 
 #: themes/default/templates/projects/task_priority.html:22
 msgid "default scheduler"
@@ -1834,8 +1828,16 @@ msgid "You can choose from the following schedulers"
 msgstr "Sie können folgende Task-Planer auswählen"
 
 #: themes/default/templates/projects/task_scheduler.html:17
+msgid "Default"
+msgstr "Standard"
+
+#: themes/default/templates/projects/task_scheduler.html:17
 msgid "or"
 msgstr "oder"
+
+#: themes/default/templates/projects/task_scheduler.html:18
+msgid "Depth First"
+msgstr "Tiefe zuerst"
 
 #: themes/default/templates/projects/task_scheduler.html:18
 msgid ""
@@ -1845,9 +1847,13 @@ msgid ""
 "                    not achieved) excluding the current user"
 msgstr ""
 "Gibt einen Task zurück, der\n"
-"                    noch nicht vervollständigt wurde (die Anzahl an vorgegebenen Antworten\n"
-"wurde noch nicht erreicht) und vom Benutzer noch nicht bearbeitet wurde
+"                    noch nicht vervollständigt wurde (die Anzahl an "
+"vorgegebenen Antworten\n"
+"wurde noch nicht erreicht) und vom Benutzer noch nicht bearbeitet wurd"
 
+#: themes/default/templates/projects/task_scheduler.html:21
+msgid "Breadth First"
+msgstr "reite zuerst"
 
 #: themes/default/templates/projects/task_scheduler.html:21
 msgid ""
@@ -1861,6 +1867,10 @@ msgstr ""
 " und vom Benutzer noch nicht bearbeitet wurde"
 
 #: themes/default/templates/projects/task_scheduler.html:24
+msgid "Random"
+msgstr "Zufällig"
+
+#: themes/default/templates/projects/task_scheduler.html:24
 msgid ""
 "returns a task\n"
 "                    randomly --a user could get the same task twice or "
@@ -1868,8 +1878,8 @@ msgid ""
 "                    times"
 msgstr ""
 "Gibt einen zufälligen Task zurück, d.h. \n"
-"                    ein Benutzer kann den selben Task ein oder mehrmals bekommen"
-
+"                    ein Benutzer kann den selben Task ein oder mehrmals "
+"bekommen"
 
 #: themes/default/templates/projects/task_settings.html:18
 msgid "Change how the tasks are delivered to volunteers"
@@ -1919,7 +1929,7 @@ msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr "Tasks nach JSON, CSV oder einem CKAN-Server exportieren"
 
 #: themes/default/templates/projects/tasks.html:27
-#: themes/default/templates/projects/tasks.html:70 view/projects.py:923
+#: themes/default/templates/projects/tasks.html:70 view/projects.py:899
 msgid "Export"
 msgstr "Exportieren"
 
@@ -1985,15 +1995,17 @@ msgstr "Diese Zahl identifiziert den Task für das Projekt und ist eindeutig"
 msgid ""
 "The first number shows how many answers have been submitted for the task "
 "and the"
-msgstr "Die erste Zahl zeigt die Zahl der beigetragenen Antworteten für den Task und die"
+msgstr ""
+"Die erste Zahl zeigt die Zahl der beigetragenen Antworteten für den Task "
+"und die"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid ""
 "This redundancy method will help to detect errors, typos, data forging, "
 "etc. when the task has been completed"
 msgstr ""
-"Die Redundanz-Methode hilft, Detektions-Fehler, Vertipper, Datenfehler etc. zu vermeiden, wenn "
-"der Task verfollständigt wurde"
+"Die Redundanz-Methode hilft, Detektions-Fehler, Vertipper, Datenfehler "
+"etc. zu vermeiden, wenn der Task verfollständigt wurde"
 
 #: themes/default/templates/projects/tasks_browse.html:19
 msgid "second number"
@@ -2009,7 +2021,9 @@ msgstr "Fortschrittsbalken"
 
 #: themes/default/templates/projects/tasks_browse.html:20
 msgid "The progress bar will the percentage that has been completed for the task"
-msgstr "Der Fortschrittsbalken zeigt den Prozentsatz der vervollständigten Tasks an"
+msgstr ""
+"Der Fortschrittsbalken zeigt den Prozentsatz der vervollständigten Tasks "
+"an"
 
 #: themes/default/templates/projects/tasks_browse.html:48
 msgid "Download Task Results"
@@ -2512,9 +2526,9 @@ msgstr ""
 #: view/account.py:135 view/account.py:234 view/account.py:509
 #: view/account.py:525 view/account.py:539 view/account.py:572
 #: view/admin.py:262 view/admin.py:343 view/projects.py:214
-#: view/projects.py:272 view/projects.py:417 view/projects.py:1231
-#: view/projects.py:1283 view/projects.py:1329 view/projects.py:1404
-#: view/projects.py:1449
+#: view/projects.py:271 view/projects.py:410 view/projects.py:1207
+#: view/projects.py:1258 view/projects.py:1303 view/projects.py:1378
+#: view/projects.py:1423
 msgid "Please correct the errors"
 msgstr ""
 
@@ -2630,115 +2644,115 @@ msgstr ""
 msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
 msgstr ""
 
-#: view/projects.py:266
+#: view/projects.py:265
 msgid "Task presenter added!"
 msgstr ""
 
-#: view/projects.py:279
+#: view/projects.py:278
 msgid "<strong>Note</strong> You will need to upload the tasks using the"
 msgstr ""
 
-#: view/projects.py:281
+#: view/projects.py:280
 msgid "CSV importer"
 msgstr ""
 
-#: view/projects.py:282
+#: view/projects.py:281
 msgid ""
 " or download the project bundle and run the "
 "<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 
-#: view/projects.py:352
+#: view/projects.py:347
 msgid "Project deleted!"
 msgstr ""
 
-#: view/projects.py:391
+#: view/projects.py:384
 msgid "Project updated!"
 msgstr ""
 
-#: view/projects.py:437
+#: view/projects.py:429
 msgid ""
 "Your project thumbnail has been updated! It may"
 "                                   take some minutes to refresh..."
 msgstr ""
 
-#: view/projects.py:440
+#: view/projects.py:432
 msgid "You must provide a file to change the avatar"
 msgstr ""
 
-#: view/projects.py:518
+#: view/projects.py:510
 msgid "Importing tasks, this may take a while, wait..."
 msgstr ""
 
-#: view/projects.py:576
+#: view/projects.py:568
 msgid ""
 "You're trying to import a large amount of tasks, so please be patient."
 "            You will receive an email when the tasks are ready."
 msgstr ""
 
-#: view/projects.py:620
+#: view/projects.py:611
 msgid "Success! Tasks will be imported daily."
 msgstr ""
 
-#: view/projects.py:675
+#: view/projects.py:665
 msgid "Sorry, incorrect password"
 msgstr ""
 
-#: view/projects.py:705
+#: view/projects.py:695
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 
-#: view/projects.py:897
+#: view/projects.py:887
 msgid "All the tasks and associated task runs have been deleted"
 msgstr ""
 
-#: view/projects.py:924
+#: view/projects.py:900
 msgid "Exporting data..., this may take a while"
 msgstr ""
 
-#: view/projects.py:1017
+#: view/projects.py:993
 msgid "Data exported to "
 msgstr ""
 
-#: view/projects.py:1075
+#: view/projects.py:1051
 msgid ""
 "Oops, the project does not have tasks to                     export, if "
 "you are the owner add some tasks"
 msgstr ""
 
-#: view/projects.py:1081
+#: view/projects.py:1057
 msgid ""
 "Oops, there are no Task Runs yet to export, invite                      "
 "some users to participate"
 msgstr ""
 
-#: view/projects.py:1227
+#: view/projects.py:1203
 msgid "Redundancy of Tasks updated!"
 msgstr ""
 
-#: view/projects.py:1278
+#: view/projects.py:1253
 msgid "Project Task Scheduler updated!"
 msgstr ""
 
-#: view/projects.py:1326
+#: view/projects.py:1300
 msgid "Task priority has been changed"
 msgstr ""
 
-#: view/projects.py:1383
+#: view/projects.py:1357
 msgid "Write a new post"
 msgstr ""
 
-#: view/projects.py:1415
+#: view/projects.py:1389
 msgid "Blog post created!"
 msgstr ""
 
-#: view/projects.py:1433
+#: view/projects.py:1407
 msgid "Edit a post"
 msgstr ""
 
-#: view/projects.py:1461
+#: view/projects.py:1435
 msgid "Blog post updated!"
 msgstr ""
 
@@ -3094,10 +3108,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ""
-#~ " Wenn Sie den API Schlüssel "
-#~ "zurücksetzen, müssen Sie den neu "
-#~ "erzeugten Schlüssel für jegliche weitere "
-#~ "API-Aufrufe verwenden."
 #~ msgstr ""
 
 #~ msgid "Wollen Sie Ihren persönlichen API-Schlüssel zurücksetzen"
@@ -3176,13 +3186,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Vorsicht!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Wenn die Kategorie gelöscht wird, wird"
-#~ " diese von allen Projekten entfernt! "
-#~ "Diese Operation kann nicht rückgängig "
-#~ "gemacht werden!"
 #~ msgstr ""
 
 #~ msgid "Hervorgehobene Projekte"
@@ -3299,18 +3302,6 @@ msgstr ""
 #~ msgid "Entschuldigung! Dieser Blog-Post existiert nicht."
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Wenn Sie das Projekt und seine "
-#~ "Tasks löschen, werden die Daten samt "
-#~ "Beiträgen für immer verloren gehen!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Sind Sie sicher, dass Sie dieses "
-#~ "Projekte, alle dazugehörigen Tasks sowie "
-#~ "Task-Beiträge löschen wollen?"
-#~ msgstr ""
-
 #~ msgid "Nein, nicht löschen!"
 #~ msgstr ""
 
@@ -3321,12 +3312,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "alle vorhandenen"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Tasks und Task-Beitrage in CSV "
-#~ "oder JSON Format exportieren und "
-#~ "herunterladen."
 #~ msgstr ""
 
 #~ msgid "Im CSV Format exportieren"
@@ -3347,12 +3332,6 @@ msgstr ""
 #~ msgid "Projekte in Bearbeitung"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Entschuldigung! Es gibt in dieser "
-#~ "Kategorie derzeit keine veröffentlichten "
-#~ "Projekte"
-#~ msgstr ""
-
 #~ msgid "Projekt"
 #~ msgstr ""
 
@@ -3368,32 +3347,6 @@ msgstr ""
 #~ msgid "Projekt Kurzname:"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Erklären Sie Ihr Projekt"
-#~ "                                                             \n"
-#~ "                · Warum? Warum haben Sie"
-#~ " dieses Projekt erstellt und was "
-#~ "wollen Sie damit erreichen"
-#~ "                                                             \n"
-#~ "                · Wie? Erklären Sie, wie"
-#~ " Ihr Projekt funktioniert"
-#~ "                                                             \n"
-#~ "                · Wie man helfen kann:"
-#~ " Erklären Sie den Freiwilligen, wie "
-#~ "Sie helfen können, Ihre Projektziele zu"
-#~ " erreichen"
-#~ "                                                             \n"
-#~ "                · Wird die Hilfe etwas"
-#~ " bringen? Erklären Sie den Freiwilligen,"
-#~ " warum deren Beitrag wichtig ist und"
-#~ " wie die Ergebnisse Ihres Projektes "
-#~ "helfen können, Dinge zu ändern!\"\""
-#~ "                                                             \n"
-#~ "            (Sie können Markdown-Syntax "
-#~ "verwenden, um Ihre Beschreibung zu "
-#~ "formatieren!)"
-#~ msgstr ""
-
 #~ msgid "Das Projekt erstellen"
 #~ msgstr ""
 
@@ -3403,12 +3356,6 @@ msgstr ""
 #~ msgid "Titel Ihres Blog-Beitrags"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Schreiben Sie hier Ihren Blog-Beitrag."
-#~ " Sie können zur Formatierung Markdown-"
-#~ "Syntax verwenden!"
-#~ msgstr ""
-
 #~ msgid "Geben Sie das Passwort ein, um für dieses Projekt beitragen zu können:"
 #~ msgstr ""
 
@@ -3416,14 +3363,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Abschicken"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Entschuldigung, aber Sie haben bereits "
-#~ "zu allen Tasks des Projekts beigetragen."
-#~ " Dieses Projekt benötigt allerdings noch"
-#~ " weitere Helfer - Bitte Informieren "
-#~ "Sie Ihre Bekannten!"
 #~ msgstr ""
 
 #~ msgid "Projekt Einstellungen"
@@ -3448,12 +3387,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Tasks, welche in den letzten 15 Tagen vervollständigt wurden"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Wählen Sie einen Bereich, um zu "
-#~ "zoomen odder Klicken Sie um die "
-#~ "Grafik zurückzusetzen"
 #~ msgstr ""
 
 #~ msgid "Anworten pro Tag"
@@ -3484,12 +3417,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Stadt"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Diese Seite entält GeoLite-Daten, die"
-#~ " von MaxMind erzeugt wurden und "
-#~ "bezogen werden können von"
 #~ msgstr ""
 
 #~ msgid "Details über authentifizierte Benutzer"
@@ -3534,14 +3461,6 @@ msgstr ""
 #~ msgid "Sie können die"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "eines oder mehrer Tasks ändern,\n"
-#~ "                indem Sie eine Komma-"
-#~ "separierte List von Task IDs angeben."
-#~ " Die niedrigste\n"
-#~ "                Priorität ist"
-#~ msgstr ""
-
 #~ msgid "und die höchste Priorität ist"
 #~ msgstr ""
 
@@ -3564,26 +3483,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "oder"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Gibt einen Task zurück, der\n"
-#~ "                    noch nicht vervollständigt "
-#~ "wurde (die Anzahl an vorgegebenen "
-#~ "Antworten\n"
-#~ "wurde noch nicht erreicht) und vom Benutzer noch nicht bearbeitet wurd"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Gibt den Task zurück, der\n"
-#~ "                    die wenigsten Beiträge (Antworten) hat\n"
-#~ " und vom Benutzer noch nicht bearbeitet wurde"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Gibt einen zufälligen Task zurück, d.h. \n"
-#~ "                    ein Benutzer kann den "
-#~ "selben Task ein oder mehrmals bekommen"
 #~ msgstr ""
 
 #~ msgid "Ändern, wie die Tasks an die Freiwilligen verteilt werden"
@@ -3643,19 +3542,6 @@ msgstr ""
 #~ msgid "Diese Zahl identifiziert den Task für das Projekt und ist eindeutig"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Die erste Zahl zeigt die Zahl der"
-#~ " beigetragenen Antwortetn für den Task "
-#~ "und die"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Die Redundanz-Methode hilft, Detektions-"
-#~ "Fehler, Vertipper, Datenfehler etc. zu "
-#~ "vermeiden, wenn der Task verfollständigt "
-#~ "wurde"
-#~ msgstr ""
-
 #~ msgid "zweite Zahl"
 #~ msgstr ""
 
@@ -3663,11 +3549,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Fortschrittsbalken"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Der Fortschrittsbalken zeigt den Prozentsatz"
-#~ " der vervollständigten Tasks an"
 #~ msgstr ""
 
 #~ msgid "Task-Ergebnisse herunterladen"
@@ -3688,11 +3569,6 @@ msgstr ""
 #~ msgid "Geben Sie Details zu Ihrem Projekt"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Erklären Sie das Projekt (Sie können "
-#~ "zur Formatierung Markdown-Syntax verwenden!)"
-#~ msgstr ""
-
 #~ msgid "Wollen Sie Ihr Projekt verstecken?"
 #~ msgstr ""
 
@@ -3703,13 +3579,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Von einer CSV-Datei"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Bitte geben Sie eine URL (DropBox, "
-#~ "Box, Ubuntu One, öffentlicher Link, "
-#~ "etc.) zu einer CSV-Datei an, mit"
-#~ " Daten für"
 #~ msgstr ""
 
 #~ msgid "Für weitere Informationen nutzen Sie bitte "
@@ -3736,12 +3605,6 @@ msgstr ""
 #~ msgid "Von einem Google Docs Spreadsheet"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Bitte geben Sie eine URL zu einem"
-#~ " Google Drive Spreadsheet an, mit "
-#~ "Daten für"
-#~ msgstr ""
-
 #~ msgid "Nutzen Sie eines der folgenden vorhandenen"
 #~ msgstr ""
 
@@ -3757,19 +3620,7 @@ msgstr ""
 #~ msgid "CSV URL Vorlage benutzen\n"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Wenn Sie all Tasks und zugehörige "
-#~ "Antworten löschen, werden diese für "
-#~ "immer verloren gehen!"
-#~ msgstr ""
-
 #~ msgid "Sie können diese Aktion nicht rückgängig machen!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Sind Sie sicher, dass Sie all Ihre"
-#~ " Projekt-Tasks und zugehörige Anworten "
-#~ "löschen möchten?"
 #~ msgstr ""
 
 #~ msgid "Nein, nichts löschen!"
@@ -3781,28 +3632,13 @@ msgstr ""
 #~ msgid "Ein EpiCollect Plus Projekt nutzen"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Ein EpiCollect\n"
-#~ "      Plus Projekt nutzen"
-#~ msgstr ""
-
 #~ msgid "Mustererkennung in Bildern"
 #~ msgstr ""
 
 #~ msgid "Flickr Personen-Erkenner Vorlage wiederverwenden"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Bild Task Vorlage"
-#~ msgstr ""
-
 #~ msgid "Stadtpark-Task Vorlage wiederverwenden"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Mapping Vorlage"
 #~ msgstr ""
 
 #~ msgid "Dokumente transkribieren"
@@ -3811,20 +3647,10 @@ msgstr ""
 #~ msgid "PDF Transkription Vorlage wiederverwenden"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Transcriptions-Vorlage"
-#~ msgstr ""
-
 #~ msgid "Sound Mustererkennung"
 #~ msgstr ""
 
 #~ msgid "SoundCloud Task Vorlage wiederverwenden"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Sound Task Vorlage"
 #~ msgstr ""
 
 #~ msgid "Google Drive Spreadsheet importieren"
@@ -3839,66 +3665,10 @@ msgstr ""
 #~ msgid "Vimeo Task Vorlage wiederverwenden"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Video Task Vorlage"
-#~ msgstr ""
-
 #~ msgid "m Tasks zu importieren"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "PyBossa ist eine freie, open-source "
-#~ "crowd-sourcing und mikro-tasking "
-#~ "Plattform. Sie ermöglicht es, Projekte "
-#~ "zu erstellen und durchzuführen, welche "
-#~ "Online-Unterstützung bei derAusführung von "
-#~ "Aufgaben beanspruchen, die menschliche "
-#~ "Wahrnehmungsfähigkeiten wie Bildklassifizierung, "
-#~ "Transkription, Geocoding etc. benötigen. "
-#~ "Pybossa wurde geschaffen, um Forschern, "
-#~ "Civic Hackern und Entwicklern dabei zu"
-#~ " helfen, Projekte zu erstellen, zu "
-#~ "denen jede Person weltweit, die "
-#~ "Interesse und eine Internetverbindung hat, "
-#~ "beitragen kann."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "PyBossa unterscheidet sich von existierenden"
-#~ " Ansatz in folgenden Punkten:"
-#~ msgstr ""
-
 #~ msgid "Es ist 100%% open-source"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Im Gegensatz zu etwa “mechanical turk”"
-#~ " artigen Projekten ist PyBossa nicht "
-#~ "dazu designed worden, bezahlte Dienste "
-#~ "zu vermitteln - es wurde entwickelt, "
-#~ "um Projekte auf Freiwilligenbasis zu "
-#~ "unterstützen"
-#~ msgstr ""
-
-#~ msgid ""
-#~ " Es wurde als Plattform und "
-#~ "Framework zur Erstellung und Bereitstellung"
-#~ " von crowd-sourcing und mikrotasking "
-#~ "Projekten erstellt und nicht als "
-#~ "selbstständiges crowd-sourcing Projekt. "
-#~ "Individuelle crowd-sourcing Projekte werden"
-#~ " als einfache Javascript und HTML "
-#~ "Code-Fragmente geschrieben und  von einer"
-#~ " PyBossa-Instanz bereitgestellt (wie z.B."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Dadurch kann man einfach angepasste "
-#~ "Projekte enwickeln und gleichzeitig die "
-#~ "PyBossa Plattform verwenden, um Daten zu"
-#~ " speichern, Benutzer zu Verwalten und "
-#~ "den Projekt-Worflow zu administrieren"
 #~ msgstr ""
 
 #~ msgid "Über die Architektur erfahren Sie mehr in der"
@@ -3911,18 +3681,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Schritt-für-Schritt Tutorial, um Ihre eigenen Projekte zu erstellen"
-#~ msgstr ""
-
-#~ msgid ""
-#~ " PyBossa stellt für jedes Projekt "
-#~ "im System individuelle Statistiken bereit, "
-#~ "genauso wie eine"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "generelle Übersicht über das System (wie"
-#~ " .z.B. die Anzahl der Benutzer, "
-#~ "Tasks, etc.)"
 #~ msgstr ""
 
 #~ msgid "Globale Statistiken ansehen"
@@ -3944,14 +3702,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Github Probleme"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Online Unterstützung beim Durchführen von "
-#~ "Aufgaben, welche menschliche "
-#~ "Wahrnehmungsfähigkeiten, Wissen or Intelligenz "
-#~ "benötigen (wie z.B. Bildklassifizierung, "
-#~ "Transkription, Geocoding, etc.)!"
 #~ msgstr ""
 
 #~ msgid "Helfen Sie der Forschung"
@@ -4050,12 +3800,6 @@ msgstr ""
 #~ msgid "Hoppla! Inkorrekte E-Mail oder falsches Passwort"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Hoppla Wir können Sie nicht im "
-#~ "System finden. Haben Sie sich schon "
-#~ "angemeldet?"
-#~ msgstr ""
-
 #~ msgid "Bitte beheben Sie die Fehler"
 #~ msgstr ""
 
@@ -4071,37 +3815,13 @@ msgstr ""
 #~ msgid "Profil"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Ihr Avatar wurde aktualisiert! Es kann"
-#~ " ein paar Minuten dauern, bis die "
-#~ "Änderungen wirksam sind."
-#~ msgstr ""
-
 #~ msgid "Ihr Profil wurde aktualisiert!"
 #~ msgstr ""
 
 #~ msgid "Sie haben Ihr Passwort erfolgreich geändert!"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Ihr aktuelles Passwort stimmt nicht mit"
-#~ " dem derzeit gespeicherten überein!"
-#~ msgstr ""
-
 #~ msgid "Sie haben Ihr Passwort erfolgreich zurückgesetzt!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Wir haben Ihnen eine E-Mail gesendet,"
-#~ " in den erklärt wird, wie Sie "
-#~ "ihr Konto zurücksetzen können!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Diese E-Mail-Adresse existiert nicht im"
-#~ " System. Sie haben sich evtl. mit "
-#~ "einem anderen E-Mail-Konto oder mit "
-#~ "Twitter, Facebook btw. Google angemeldet"
 #~ msgstr ""
 
 #~ msgid "Etwas ist schief gegangen! Bitte korrigieren Sie die Fehler im Formular"
@@ -4116,14 +3836,6 @@ msgstr ""
 #~ msgid "Kategorie gelöscht"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Entschuldigung! Es ist nicht möglich, "
-#~ "die einzige vorhandene Kategorie zu "
-#~ "löschen. Sie können sie jedoch nach "
-#~ "Klicken auf den Edit-Button "
-#~ "modifizieren."
-#~ msgstr ""
-
 #~ msgid "Kategorie aktualisiert"
 #~ msgstr ""
 
@@ -4136,12 +3848,6 @@ msgstr ""
 #~ msgid "Anleitung und Dokumentation"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "nachschlagen, wie Tasks oder ein "
-#~ "Vorschaubild mittels PyBossa.JS hinzugefügt "
-#~ "werden können"
-#~ msgstr ""
-
 #~ msgid "Task-Presenter wurde hinzugefügt!"
 #~ msgstr ""
 
@@ -4151,23 +3857,10 @@ msgstr ""
 #~ msgid "CSV-Importer"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "hochladen oder das Projektpaket herunterladen"
-#~ " und das <strong>createTasks.py</strong> Skript"
-#~ " auf Ihrem Computer ausführen"
-#~ msgstr ""
-
 #~ msgid "Projekt gelöscht!"
 #~ msgstr ""
 
 #~ msgid "Projekt aktualisiert!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Ihre Projekt Miniaturansicht wurde "
-#~ "aktualisiert! Es kann einige Minuten "
-#~ "dauern, bis die Änderungen übernommen "
-#~ "werden..."
 #~ msgstr ""
 
 #~ msgid "Sie müssen eine Datei angeben, um den Avatar zu ändern"
@@ -4179,22 +3872,10 @@ msgstr ""
 #~ msgid "Hoppla! Es sieht so aus, als wäre die Datei leer."
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Hoppla! Es sieht so aus, als gäbe"
-#~ " es keine neuen Einträge zu "
-#~ "importieren."
-#~ msgstr ""
-
 #~ msgid "Tasks wurden erfolgreich importiert!"
 #~ msgstr ""
 
 #~ msgid "Task wurde erfolgreich importiert!"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Hoppla! Sie sind ein anonymer Benutzer"
-#~ " und werden daher keine Punkte für"
-#~ " Ihre Beiträge erhalten."
 #~ msgstr ""
 
 #~ msgid "Alle Tasks und dazugehörige Antworten wurden gelöscht"
@@ -4204,19 +3885,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Daten wurden exportiert nach "
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Hoppla, das Projekt hat keine Tasks, "
-#~ "die exportiert werden können. Wenn Sie"
-#~ " der Projekt-Eigentümer sind, fügen "
-#~ "Sie Tasks hinzu"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Hoppla! Es gibt noch keine Task-"
-#~ "Anworten zu exportieren. Laden Sie "
-#~ "Benutzer dazu ein, beizutragen"
 #~ msgstr ""
 
 #~ msgid "Redundanz der Tasks aktualisiert!"
@@ -4236,3 +3904,4 @@ msgstr ""
 
 #~ msgid "Blog-Beitrag wurde aktualisiert!"
 #~ msgstr ""
+
