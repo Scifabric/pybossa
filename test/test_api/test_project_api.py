@@ -363,7 +363,6 @@ class TestProjectAPI(TestAPI):
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
                             data=data)
         error = json.loads(res.data)
-        print error
         assert res.status_code == 415, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'POST', error
@@ -661,3 +660,38 @@ class TestProjectAPI(TestAPI):
                     call('1_project1_task_run_json.zip', 'user_1'),
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
+
+    def test_project_post_with_reserved_fields_returns_error(self):
+        user = UserFactory.create()
+        CategoryFactory.create()
+        data = dict(
+            name='name',
+            short_name='name',
+            description='description',
+            owner_id=user.id,
+            long_description=u'Long Description\n================',
+            info={},
+            id=222,
+            created='today',
+            updated='now',
+            contacted=False,
+            completed=False)
+        data = json.dumps(data)
+        res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
+    def test_project_put_with_reserved_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
+        data = {'created': 'today', 'updated': 'now',
+                'contacted': False, 'completed': False,'id': 222}
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error

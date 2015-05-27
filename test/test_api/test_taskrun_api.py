@@ -445,3 +445,24 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 200, r_taskrun
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
+
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
+    def test_taskrun_create_with_reserved_fields_returns_error(self, requested):
+        requested.return_value = True
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            created='today',
+            finish_time='now',
+            id=222)
+        datajson = json.dumps(data)
+
+        resp = self.app.post(url, data=datajson)
+
+        assert resp.status_code == 400, resp.status_code
+        error = json.loads(resp.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
