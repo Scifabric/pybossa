@@ -142,7 +142,6 @@ def n_anonymous_volunteers(project_id):
     return n_anonymous_volunteers
 
 
-@memoize()
 def n_volunteers(project_id):
     """Return total number of volunteers of a project."""
     total = (n_anonymous_volunteers(project_id) +
