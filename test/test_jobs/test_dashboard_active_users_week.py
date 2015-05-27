@@ -72,3 +72,15 @@ class TestDashBoardActiveUsers(Test):
         assert res['labels'][0] == day
         assert len(res['series']) == 1
         assert res['series'][0][0] == 1, res['series'][0][0]
+
+    @with_context
+    def test_format_users_week_empty(self):
+        """Test format users week empty works."""
+        AnonymousTaskRunFactory.create()
+        dashboard_active_users_week()
+        res = format_users_week()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 0, res['series'][0][0]
