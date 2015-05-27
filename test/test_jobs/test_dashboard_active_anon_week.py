@@ -72,3 +72,15 @@ class TestDashBoardActiveAnon(Test):
         assert res['labels'][0] == day
         assert len(res['series']) == 1
         assert res['series'][0][0] == 1, res['series'][0][0]
+
+    @with_context
+    def test_format_anon_week_empty(self):
+        """Test format anon week empty works."""
+        TaskRunFactory.create()
+        dashboard_active_anon_week()
+        res = format_anon_week()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 0, res['series'][0][0]
