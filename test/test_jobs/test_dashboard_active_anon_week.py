@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_active_anon_week
+from pybossa.dashboard import dashboard_active_anon_week, format_anon_week
 from pybossa.core import db
 from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
+from datetime import datetime
 from default import Test, with_context
 from mock import patch, MagicMock
 
@@ -59,3 +60,15 @@ class TestDashBoardActiveAnon(Test):
         results = db.session.execute(sql)
         for row in results:
             assert row.n_users == 1, row.n_users
+
+    @with_context
+    def test_format_anon_week(self):
+        """Test format anon week works."""
+        AnonymousTaskRunFactory.create()
+        dashboard_active_anon_week()
+        res = format_anon_week()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 1, res['series'][0][0]
