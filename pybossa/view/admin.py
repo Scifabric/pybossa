@@ -39,6 +39,7 @@ from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import db, project_repo, user_repo
 from pybossa.view.account import get_update_feed
+from pybossa import dashboard as dashb
 import json
 from StringIO import StringIO
 
@@ -365,134 +366,27 @@ def update_category(id):
 def dashboard():
     """Show PyBossa Dashboard."""
     try:
-       session = db.slave_session
-       # Registered users
-       sql = text('''select * from dashboard_week_users''')
-       results = session.execute(sql)
-       labels = []
-       series = []
-       for row in results:
-           labels.append(row.day.strftime('%Y-%m-%d'))
-           series.append(int(row.n_users))
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
+        active_users_last_week = dashb.format_users_week()
+        active_anon_last_week = dashb.format_anon_week()
+        new_projects_last_week = dashb.format_new_projects()
+        update_projects_last_week = dashb.format_update_projects()
+        new_tasks_week = dashb.format_new_tasks()
+        new_task_runs_week = dashb.format_new_task_runs()
+        new_users_week = dashb.format_new_users()
+        returning_users_week = dashb.format_returning_users()
+        update_feed = get_update_feed()
 
-       active_users_last_week = dict(labels=labels, series=[series])
-       # Anon users
-       sql = text('''select * from dashboard_week_anon''')
-       results = session.execute(sql)
-       labels = []
-       series = []
-       for row in results:
-           labels.append(row.day.strftime('%Y-%m-%d'))
-           series.append(int(row.n_users))
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
-       active_anon_last_week = dict(labels=labels, series=[series])
-
-       # New projects
-       sql = text('''select * from dashboard_week_project_new''')
-       results = session.execute(sql)
-       new_projects_last_week = []
-       for row in results:
-           datum = dict(day=row.day, id=row.id, short_name=row.short_name,
-                        p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
-                        email_addr=row.email_addr)
-           new_projects_last_week.append(datum)
-       # Updated projects
-       sql = text('''select * from dashboard_week_project_update''')
-       results = session.execute(sql)
-       update_projects_last_week = []
-       for row in results:
-           datum = dict(day=row.day, id=row.id, short_name=row.short_name,
-                        p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
-                        email_addr=row.email_addr)
-           update_projects_last_week.append(datum)
-       # New task
-       sql = text('''select * from dashboard_week_new_task''')
-       results = session.execute(sql)
-       labels = []
-       series = []
-       for row in results:
-           labels.append(row.day.strftime('%Y-%m-%d'))
-           series.append(row.day_tasks)
-       new_tasks_week = dict(labels=labels, series=[series])
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
-
-       # New task_runs
-       sql = text('''select * from dashboard_week_new_task_run''')
-       results = session.execute(sql)
-       labels = []
-       series = []
-       for row in results:
-           labels.append(row.day.strftime('%Y-%m-%d'))
-           series.append(row.day_task_runs)
-       new_task_runs_week = dict(labels=labels, series=[series])
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
-
-       # New Users
-       sql = text('''select * from dashboard_week_new_users''')
-       results = session.execute(sql)
-       labels = []
-       series = []
-       for row in results:
-           labels.append(row.day.strftime('%Y-%m-%d'))
-           series.append(row.day_users)
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
-
-       new_users_week = dict(labels=labels, series=[series])
-
-       # Returning Users
-       labels = []
-       series = []
-       for i in range(1, 8):
-           if (i == 1):
-               label = "%s day" % i
-           else:
-               label = "%s days" % i
-           sql = text('''SELECT COUNT(user_id)
-                      FROM dashboard_week_returning_users
-                      WHERE n_days=:n_days''')
-           results = session.execute(sql, dict(n_days=i))
-           total = 0
-           for row in results:
-               total = row.count
-           labels.append(label)
-           series.append(total)
-       if len(labels) == 0:
-           labels.append(datetime.now().strftime('%Y-%m-%d'))
-       if len(series) == 0:
-           series.append(0)
-
-       returning_users_week = dict(labels=labels, series=[series])
-
-
-       update_feed = get_update_feed()
-
-       return render_template('admin/dashboard.html',
-                              title=gettext('Dashboard'),
-                              active_users_last_week=active_users_last_week,
-                              active_anon_last_week=active_anon_last_week,
-                              new_projects_last_week=new_projects_last_week,
-                              update_projects_last_week=update_projects_last_week,
-                              new_tasks_week=new_tasks_week,
-                              new_task_runs_week=new_task_runs_week,
-                              new_users_week=new_users_week,
-                              returning_users_week=returning_users_week,
-                              update_feed=update_feed)
+        return render_template('admin/dashboard.html',
+                               title=gettext('Dashboard'),
+                               active_users_last_week=active_users_last_week,
+                               active_anon_last_week=active_anon_last_week,
+                               new_projects_last_week=new_projects_last_week,
+                               update_projects_last_week=update_projects_last_week,
+                               new_tasks_week=new_tasks_week,
+                               new_task_runs_week=new_task_runs_week,
+                               new_users_week=new_users_week,
+                               returning_users_week=returning_users_week,
+                               update_feed=update_feed)
     except ProgrammingError:
         session.rollback()
         return render_template('admin/dashboard.html',
