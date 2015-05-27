@@ -722,3 +722,22 @@ class TestAdmin(web.Helper):
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
         assert "No data" in res.data, res.data
+
+    @with_context
+    def test_admin_dashboard_admin_user_data(self):
+        """Test ADMIN dashboard admins can access it with data"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        from pybossa.dashboard import *
+        dashboard_active_anon_week()
+        dashboard_active_users_week()
+        dashboard_new_tasks_week()
+        dashboard_new_task_runs_week()
+        dashboard_new_projects_week()
+        dashboard_update_projects_week()
+        dashboard_returning_users_week()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert "No data" not in res.data, res.data
