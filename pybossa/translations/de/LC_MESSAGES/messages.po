@@ -1997,102 +1997,102 @@ msgstr "könnte hier sein"
 
 #: themes/default/templates/home/index.html:64
 msgid "Create a project"
-msgstr "Crear un proyecto"
+msgstr "Ein Projekt anlegen"
 
 #: themes/default/templates/home/index.html:73
 msgid "Most Active Volunteers"
-msgstr "Voluntarios más Activos"
+msgstr "Aktivste Beitragende"
 
 #: themes/default/templates/home/index.html:80
 msgid "Submitted Tasks"
-msgstr "Respuestas Contribuidas"
+msgstr "Abgeschlossene Aufgaben"
 
 #: themes/default/templates/home/search.html:7
 msgid "Search Results"
-msgstr "Buscar Resultados"
+msgstr "Suchergebnisse"
 
 #: themes/default/templates/stats/global.html:38
 msgid "General Statistics"
-msgstr "Ver las estadísticas globales"
+msgstr "Allgemeine Statistik"
 
 #: themes/default/templates/stats/global.html:46
 msgid "Anonymous users"
-msgstr "usuarios anónimos han"
+msgstr "Anonyme Benutzer"
 
 #: themes/default/templates/stats/global.html:47
 msgid "Authenticated users"
-msgstr "usuarios autenticados han"
+msgstr "Authentifizierte Benutzer"
 
 #: themes/default/templates/stats/global.html:48
 #: themes/default/templates/stats/global.html:94
 msgid "Total"
-msgstr "Total"
+msgstr "Insgesamt"
 
 #: themes/default/templates/stats/global.html:52
 msgid "Top 5 Users in the last 24 hours"
-msgstr "Los 5 mejores usuarios en las últimas 24 horas"
+msgstr "Top 5 Beitragende in den letzten 24 Stunden"
 
 #: themes/default/templates/stats/global.html:55
 msgid "with"
-msgstr "con"
+msgstr "mit"
 
 #: themes/default/templates/stats/global.html:55
 msgid "contributed answers"
-msgstr "tareas contribuidas"
+msgstr "erledigten Aufgaben"
 
 #: themes/default/templates/stats/global.html:60
 msgid "No active users in the last 24 hours"
-msgstr "No hay usuarios activos en las últimas 24 horas"
+msgstr "Keine aktiven Beitragenden in den letzten 24 Stunden"
 
 #: themes/default/templates/stats/global.html:92
 msgid "Published Projects"
-msgstr "Proyectos Publicados"
+msgstr "Veröffentlichte Projekte"
 
 #: themes/default/templates/stats/global.html:97
 msgid "Top 5 projects in the last 24 hours"
-msgstr "Los 5 proyectos más activos en las últimas 24 horas"
+msgstr "Top 5 Projekte der letzten 24 Stunden"
 
 #: themes/default/templates/stats/global.html:105
 msgid "No active project in the last 24 hours"
-msgstr "No hay proyectos activos en las últimas 24 horas"
+msgstr "Keine aktiven Projekte in den letzten 24 Stunden"
 
 #: themes/default/templates/stats/global.html:135
 msgid "Tasks and Answers"
-msgstr "Exportar Tareas y Respuestas"
+msgstr "Aufgaben und Antworten"
 
 #: themes/default/templates/stats/global.html:138
 msgid "Number of Tasks"
-msgstr "Número de tareas"
+msgstr "Anzahl der Aufgaben"
 
 #: themes/default/templates/stats/global.html:139
 msgid "Number of Task Runs"
-msgstr "Número de Respuestas"
+msgstr "Anzahl der Antworten"
 
 #: themes/default/templates/stats/global.html:167
 msgid "Anonymous Volunteers"
-msgstr "usuarios anónimos han"
+msgstr "Anonyme Beitragende"
 
 #: themes/default/templates/stats/index.html:13
 msgid "Community Leaderboard"
-msgstr "Clasificación"
+msgstr "Community Leaderboard"
 
 #: themes/default/templates/stats/index.html:19
 msgid "Score"
-msgstr "Puntuación"
+msgstr "Wertung"
 
 #: view/account.py:118
 msgid "Welcome back"
-msgstr "Bienvenido de nuevo"
+msgstr "Willkommen zurück"
 
 #: view/account.py:124
 msgid "Ooops, Incorrect email/password"
-msgstr "Uy! Contraseña y/o correo electrónico incorrecto"
+msgstr "Uups, falsche E-Mail oder falsches Passwort"
 
 #: view/account.py:129
 msgid ""
 "Ooops, we didn't find you in the system,                           did "
 "you sign in?"
-msgstr "Uy, no te hemos encontrado en el sistema, ¿has creado una cuenta?"
+msgstr "Uups, wir haben Dich nicht im System gefunden. Hast Du Dich schon angemeldet?"
 
 #: view/account.py:134 view/account.py:190 view/account.py:406
 #: view/account.py:445 view/account.py:466 view/account.py:511
@@ -2101,76 +2101,74 @@ msgstr "Uy, no te hemos encontrado en el sistema, ¿has creado una cuenta?"
 #: view/applications.py:1279 view/applications.py:1319
 #: view/applications.py:1410 view/applications.py:1457
 msgid "Please correct the errors"
-msgstr "Por favor, corrija los siguientes errores"
+msgstr "Bitte korrigiere die Fehler"
 
 #: view/account.py:162
 msgid "You are now signed out"
-msgstr "Acabas de cerrar la sesión"
+msgstr "Du bist jetzt abgemeldet"
 
 #: view/account.py:192
 msgid "Register"
-msgstr "Registrarse"
+msgstr "Registrieren"
 
 #: view/account.py:211
 msgid "Thanks for signing-up"
-msgstr "Gracias por registrarte"
+msgstr "Danke für die Anmeldung"
 
 #: view/account.py:271
 msgid "Profile"
-msgstr "Perfíl"
+msgstr "Profil"
 
 #: view/account.py:377
 msgid ""
 "Your avatar has been updated! It may                               take "
 "some minutes to refresh..."
-msgstr "Tu avatar ha sido actualizado. Puede tardar unos minutos en refrescarse"
+msgstr "Dein Avatar wurde aktualisiert. Es kann unter Umständen wenige Minuten dauern, bis es verfügbar ist..."
 
 #: view/account.py:403 view/account.py:463
 msgid "Your profile has been updated!"
-msgstr "Tu perfil ha sido actualizado"
+msgstr "Dein Profil wurde aktualisiert"
 
 #: view/account.py:430
 msgid "Yay, you changed your password succesfully!"
-msgstr "¡Genial, has cambiado tu contraseña!"
+msgstr "Du hast Dein Passwort erfolgreich geändert."
 
 #: view/account.py:434
 msgid "Your current password doesn't match the one in our records"
-msgstr "La contraseña actual no coincide con la que tenemos en nuestro sistema"
+msgstr "Dein aktuelles Passwort stimmt nicht mit dem Passwort in unserem System überein"
 
 #: view/account.py:508
 msgid "You reset your password successfully!"
-msgstr "¡Has reiniciado la contraseña satisfactoriamente!"
+msgstr "Du hast Dein Passwort erfolgreich zurückgesetzt!"
 
 #: view/account.py:553
 msgid "We've send you email with account recovery instructions!"
 msgstr ""
-"¡Te hemos enviado un correo electrónico con instrucciones para recuperar "
-"la cuenta!"
+"Wir haben Dir eine E-Mail gesendet mit einer Anleitung zur Wiederherstellung Deines Kontos."
 
 #: view/account.py:557
 msgid ""
 "We don't have this email in our records. You may have signed up with a "
 "different email or used Twitter, Facebook, or Google to sign-in"
 msgstr ""
-"No encontramos este correo electrónico en nuestros registros. Puede que  "
-"te registraras con un correo diferente o utilizaras Twitter, Facebook o  "
-"Google para iniciar sesión"
+"Diese E-Mail Adresse existiert nicht in unserem System. Möglicherweise hast Du Dich mit einer anderen  "
+"E-Mail Adresse angemeldet oder Twitter, Facebook, Google genutzt, um Dich anzumelden  "
 
 #: view/account.py:562
 msgid "Something went wrong, please correct the errors on the form"
-msgstr "Algo ha ido mal, por favor corrige los errores del formulario"
+msgstr "Ein Fehler ist aufgetreten. Bitte berichtige die Fehler im Formular"
 
 #: view/account.py:585
 msgid "New API-KEY generated"
-msgstr "Nueva clave API creada"
+msgstr "Neuer API-Schlüssel generiert"
 
 #: view/admin.py:287
 msgid "Category added"
-msgstr "Categoría añadida"
+msgstr "Kategorie hinzugefügt"
 
 #: view/admin.py:323
 msgid "Category deleted"
-msgstr "Proyecto eliminado"
+msgstr "Kategorie gelöscht"
 
 #: view/admin.py:328
 msgid ""
@@ -2178,16 +2176,16 @@ msgid ""
 "                                    available category. You can modify "
 "it, click the                                    edit button"
 msgstr ""
-"Vaya, no es posible eliminar la única categoría disponible. Puedes "
-"modificarlahaciendo click en el botón Editar"
+"Es ist nicht möglich, die einzige verfügbare Kategorie zu löschen. Du kannst die Kategorie ändern, "
+"indem Du die Schaltfläche Bearbeiten anklickst"
 
 #: view/admin.py:369
 msgid "Category updated"
-msgstr "Proyecto actualizado"
+msgstr "Kategorie aktualisiert"
 
 #: view/applications.py:225
 msgid "Project created!"
-msgstr "Projekt angelegt!"
+msgstr "Projekt angelegt"
 
 
 #: view/applications.py:228
