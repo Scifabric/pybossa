@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.dashboard import dashboard_new_users_week
-from pybossa.dashboard import dashboard_returning_users_week
+from pybossa.dashboard import dashboard_returning_users_week, format_new_users
 from pybossa.core import db
 from datetime import datetime, timedelta
 from default import Test, with_context
@@ -63,6 +63,28 @@ class TestDashBoardNewUsers(Test):
             assert row.day_users == 1
             assert str(row.day) in datetime.utcnow().strftime('%Y-%m-%d')
 
+    @with_context
+    def test_format_new_users(self):
+        """Test format new users works."""
+        UserFactory.create()
+        dashboard_new_users_week()
+        res = format_new_users()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 1, res['series'][0][0]
+
+    @with_context
+    def test_format_new_users_empty(self):
+        """Test format new users empty works."""
+        dashboard_new_users_week()
+        res = format_new_users()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 0, res['series'][0][0]
 
 class TestDashBoardReturningUsers(Test):
 
