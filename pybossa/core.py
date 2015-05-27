@@ -62,6 +62,8 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
+    plugin_manager.init_app(app)
+    plugin_manager.install_plugins()
     return app
 
 
@@ -479,6 +481,7 @@ def setup_cache_timeouts(app):
     """Setup cache timeouts."""
     global timeouts
     # Apps
+    timeouts['AVATAR_TIMEOUT'] = app.config['AVATAR_TIMEOUT']
     timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
     timeouts['REGISTERED_USERS_TIMEOUT'] = \
         app.config['REGISTERED_USERS_TIMEOUT']

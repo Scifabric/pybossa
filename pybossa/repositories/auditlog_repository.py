@@ -22,13 +22,10 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-
 class AuditlogRepository(object):
-
 
     def __init__(self, db):
         self.db = db
-
 
     def get(self, id):
         return self.db.session.query(Auditlog).get(id)

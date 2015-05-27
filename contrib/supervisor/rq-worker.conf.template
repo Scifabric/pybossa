@@ -1,0 +1,12 @@
+[program:rq-worker]
+command=/home/pybossa/pybossa/env/bin/python app_context_rqworker.py scheduled_jobs super high medium low
+directory=/home/pybossa/pybossa
+autostart=true
+autorestart=true
+priority=997
+user=pybossa
+log_stdout=true
+log_stderr=true
+logfile=/var/log/rq-worker.log
+logfile_maxbytes=10MB
+logfile_backups=2

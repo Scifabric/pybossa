@@ -69,9 +69,9 @@ Database username and password
 PyBossa uses the SQLAlchemy_ SQL toolkit to access the DB. In the settings
 file, you only need to modify the name of the user, password and database name
 so it fits your needs in the field `SQLALCHEMY_DATABASE_URI`_::
-    
+
     'postgresql://username:userpassword@localhost/databasename'
-    
+
 .. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L28
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 
@@ -96,7 +96,7 @@ It's dangerous, so better sign this
 
 PyBossa uses the `It's dangerous` Python library that allows you to send some
 data to untrusted environments, but signing it. Basically, it uses a key that
-the server only knows and uses it for signing the data. 
+the server only knows and uses it for signing the data.
 
 This library is used to send the recovery password e-mails to your PyBossa
 users, sending a link with a signed key that will be verified in the server.
@@ -208,7 +208,7 @@ Facebook
 
 If you want to enable Facebook, you will need to create an application in
 Facebook_ and copy and paste the **app ID/API Key and secret** into the next
-variables: `FACEBOOK_APP_ID`_ and `FACEBOOK_APP_SECRET`_ and uncomment them.  
+variables: `FACEBOOK_APP_ID`_ and `FACEBOOK_APP_SECRET`_ and uncomment them.
 
 .. _Facebook: https://developers.facebook.com/apps
 .. _`FACEBOOK_APP_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L54
@@ -241,7 +241,7 @@ Enabling Logging
 
 PyBossa can log errors to a file_ or to a Sentry_ server. If none of the above
 configurations are used, you will get the errors in the log file of the web server that you
-are using (i.e. in Apache2 the errors will be in */var/log/apache2/err.log*).
+are using (i.e. in nginx the errors will be in /var/log/nginx/error.log*).
 
 .. _file: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L75
 .. _Sentry: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L73
@@ -263,7 +263,7 @@ browsing the server. For example, an scheduled shutdown for installing new
 hardware.
 
 PyBossa provides a general solution for these announcements via the
-`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_ 
+`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_
 configuration file. The announcement feature allows
 you to send messages to the following type of users:
 
@@ -278,12 +278,12 @@ is to modify the **ANNOUNCEMENT** variable to display the message for the given
 type of users:
 
 .. code-block:: python
-    
+
     ANNOUNCEMENT = {'root': 'Your secret message'}
-    
+
 
 There is an example of the **ANNOUNCEMENT** variable in the
-`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_ 
+`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_
 file, so you can easily adapt it for your own server. Basically, the
 announcement variable has a **key** and an associated **message**. The
 supported keys are:
@@ -293,7 +293,7 @@ supported keys are:
  * **owner**: for all registered users that have one or more projects
 
 .. note::
-    
+
     You can use a mix of messages at the same time without problems, so for
     example you can display a message for Admins and Owners at the same time.
 
@@ -405,7 +405,7 @@ Tracking the server with Google Analytics
 
 PyBossa provides an easy way to integrate Google Analytics with your PyBossa
 server. In order to enable it you only have to create a file with the name:
-**_ga.html** in the **pybossa/template** folder with the Google Tracking code. 
+**_ga.html** in the **pybossa/template** folder with the Google Tracking code.
 PyBossa will be including your Google Analytics tracking code in every page
 since that moment.
 
@@ -415,7 +415,7 @@ The file **_ga.html** should contain something like this::
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-XXXXXXXX-X']);
       _gaq.push(['_trackPageview']);
-    
+
       (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
@@ -514,7 +514,7 @@ Using your own Privacy Policy
 =============================
 
 PyBossa has a blank privacy policy page. We recommend you to add one, so your
-users know how you are using their data. To add it, just create a file named 
+users know how you are using their data. To add it, just create a file named
 **_privacy_policy.html** file in the **custom** folder.
 
 .. _config-ckan:
@@ -565,13 +565,13 @@ all these pages. If your project needs this type of protection you can enable
 it by changing the following config variable in your **settings_local.py** file from:
 
 .. code-block:: python
-    
+
     ENFORCE_PRIVACY = False
 
 To:
 
 .. code-block:: python
-    
+
     ENFORCE_PRIVACY = True
 
 
@@ -586,7 +586,7 @@ PyBossa supports different types of templates that you can offer for every
 project. By default, PyBossa comes with the following templates:
 
  * **Basic**: the most basic template. It only has the basic structure to
-   develop your project. 
+   develop your project.
  * **Image**: this template is for image pattern recognition.
  * **Sound**: similar to the image template, but for sound clips hosted in
    SoundCloud.

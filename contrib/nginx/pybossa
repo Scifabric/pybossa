@@ -1,0 +1,50 @@
+server {
+    listen      80;
+    server_name  _;
+    large_client_header_buffers 4 32k;
+    real_ip_header X-Forwarded-For;
+
+    # change that to your pybossa directory
+    root /home/pybossa/pybossa;
+
+    client_max_body_size 5M;
+
+if (-f /home/pybossa/pybossa/503.html) {
+    return 503;
+}
+
+error_page 503 @maintenance;
+
+location / { try_files $uri @pybossa; }
+
+location @pybossa {
+    include uwsgi_params;
+    uwsgi_pass unix:/tmp/pybossa.sock;
+}
+
+location  /static {
+
+            # change that to your pybossa static directory
+            alias /home/pybossa/pybossa/pybossa/themes/default/static;
+
+            autoindex on;
+            expires max;
+        }
+
+location ~ /api/app {
+        rewrite ^/api/app /api/project$1 permanent;
+}
+
+location ~ /app {
+        rewrite ^/app(.*) /project$1 permanent;
+}
+
+error_page 503 @maintenance;
+
+location @maintenance {
+    if ($uri !~ ^/static/) {
+          rewrite ^(.*)$ /503.html break;
+        }
+}
+
+}

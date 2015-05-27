@@ -36,6 +36,7 @@
         - libjpeg-dev
         - libssl-dev
         - swig
+        - libffi-dev
 
     - name: install PostgreSQL
       apt: name={{item}} state=latest

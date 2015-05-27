@@ -23,13 +23,10 @@ from pybossa.model.user import User
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-
 class UserRepository(object):
-
 
     def __init__(self, db):
         self.db = db
-
 
     def get(self, id):
         return self.db.session.query(User).get(id)
@@ -75,7 +72,6 @@ class UserRepository(object):
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
-
 
     def _validate_can_be(self, action, user):
         if not isinstance(user, User):

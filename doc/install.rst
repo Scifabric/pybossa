@@ -4,30 +4,21 @@ Installing PyBossa
 
 PyBossa is a python web application built using the Flask micro-framework.
 
-Pre-requisites:
+Officially supported requirements:
 
-  * Python >= 2.7.2, <3.0
-  * PostgreSQL version 9.1 and the Python bindings for PostgreSQL database.
+  * Ubuntu 14.04 LTS
+  * Python >= 2.7.6, <3.0
+  * PostgreSQL >= 9.3
   * Redis >= 2.6
-  * pip for installing python packages (e.g. on ubuntu python-pip)
+  * pip >= 6.1
 
-.. note::
+It may also run with older software but we do not officially support it:
 
-    We recommend to install PyBossa using a `virtualenv`_ as it will create a an
-    isolated Python environment, helping you to manage different dependencies and
-    versions without having to deal with root permissions in your server machine.
-
-    virtualenv_ creates an environment that has its own installation directories,
-    that doesn't share libraries with other virtualenv environments (and
-    optionally doesn't access the globally installed libraries either).
-
-
-    You can install the software if you want at the system level if you have root
-    privileges, however this may lead to broken dependencies in the OS for all your
-    Python packages, so if possible, avoid this solution and use the virtualenv_
-    solution.
-
-.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+  * Ubuntu 12.04 LTS
+  * Python >= 2.7.2, <3.0
+  * PostgreSQL >= 9.1
+  * Redis >= 2.6
+  * pip >= 6.1
 
 Setting things up
 =================
@@ -36,12 +27,15 @@ Before proceeding to install PyBossa you will need to configure some other
 applications and libraries in your system. In this page, you will get a step by
 step guide about how to install all the required packages and libraries for
 PyBossa using the latest `Ubuntu Server Long Term Support`_ version available at
-the moment.
+the moment:
+
+  * `Ubuntu 14.04 LTS`_
 
 .. _`Ubuntu Server Long Term Support`: https://wiki.ubuntu.com/LTS
+.. _`Ubuntu 14.04 LTS`: http://www.ubuntu.com/download/server
 
-Installing git -a distributed version control system
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing git - a distributed version control system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyBossa uses the git_ distributed version control system for handling the
 PyBossa server source code as well as the template projects.
@@ -55,7 +49,7 @@ handle everything from small to very large projects with seepd and efficiency.
 
 In order to install the software, all you have to do is::
 
-    sudo apt-get install git
+    sudo apt-get install git-core
 
 Installing the PostgreSQL database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +61,7 @@ has earned it a strong reputation for reliability, data integrity, and correctne
 PyBossa uses PostgreSQL_ as the main database for storing all the data, and you
 the required steps for installing it are the following::
 
-    sudo apt-get install postgresql-9.1
+    sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
 
 .. _PostgreSQL: http://www.postgresql.org/
 
@@ -96,6 +90,8 @@ After installing the software, now you will be able to create independent virtua
 environments for the PyBossa installation as well as for the template
 projects (see :doc:`user/tutorial`).
 
+.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+
 Installing the PyBossa Python requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,7 +99,7 @@ Installing the required libraries for PyBossa is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo apt-get install postgresql-server-dev-9.1 python-dev swig libjpeg-dev
+    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev
 
 Then, you are ready to download the code and install the required libraries for
 running PyBossa.
@@ -182,9 +178,10 @@ Installing Redis
 Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
 up the site, but also for limiting the usage of the API requests.
 
-Redis can be installed via your GNU/Linux distribution package system (check
-that it is at least version 2.6) or downloading the package directly from its
-official Redis_ site.
+Latest Redis can be installed by downloading the package directly from its
+official Redis_ site. Since Ubuntu 14.04 you can also use the internal package::
+
+    sudo apt-get install redis-server
 
 Once you have downloaded it, and installed it, you will need to run two
 instances:
@@ -374,7 +371,7 @@ need to upgrade the DB structure to a new version, all you have to do is to::
 
   git pull origin master
   pip install -U pip
-  pip install -r requirements.txt
+  pip install -U -r requirements.txt
   alembic upgrade head
 
 
@@ -407,7 +404,7 @@ In order to avoid this, you can run a simple script to convert all the DB projec
 commands::
 
   pip install -U pip
-  pip install -r requirements.txt
+  pip install -U -r requirements.txt
   python cli.py markdown_db_migrate
 
 The first command will install a Python package that will handle the HTML to

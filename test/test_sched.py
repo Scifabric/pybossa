@@ -427,22 +427,6 @@ class TestGetBreadthFirst(Test):
         user = self.create_users()[0]
         self._test_get_breadth_first_task(user)
 
-    @with_context
-    def test_get_random_task(self):
-        self._test_get_random_task()
-
-    def _test_get_random_task(self, user=None):
-        task = pybossa.sched.get_random_task(project_id=1)
-        assert task is not None, task
-
-        tasks = db.session.query(Task).all()
-        for t in tasks:
-            db.session.delete(t)
-        db.session.commit()
-        task = pybossa.sched.get_random_task(project_id=1)
-        assert task is None, task
-
-
     def _test_get_breadth_first_task(self, user=None):
         self.del_task_runs()
         if user:

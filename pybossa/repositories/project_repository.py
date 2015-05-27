@@ -21,14 +21,14 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from pybossa.cache import projects as cached_projects
+from pybossa.core import uploader
 
 
 class ProjectRepository(object):
 
-
     def __init__(self, db):
         self.db = db
-
 
     # Methods for Project objects
     def get(self, id):
@@ -53,6 +53,7 @@ class ProjectRepository(object):
         try:
             self.db.session.add(project)
             self.db.session.commit()
+            cached_projects.delete_project(project.short_name)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -62,6 +63,7 @@ class ProjectRepository(object):
         try:
             self.db.session.merge(project)
             self.db.session.commit()
+            cached_projects.delete_project(project.short_name)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -71,6 +73,9 @@ class ProjectRepository(object):
         project = self.db.session.query(Project).filter(Project.id==project.id).first()
         self.db.session.delete(project)
         self.db.session.commit()
+        cached_projects.delete_project(project.short_name)
+        cached_projects.clean(project.id)
+        self._delete_zip_files_from_store(project)
 
 
     # Methods for Category objects
@@ -113,9 +118,23 @@ class ProjectRepository(object):
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
 
-
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def _delete_zip_files_from_store(self, project):
+        from pybossa.core import json_exporter, csv_exporter
+        global uploader
+        if uploader is None:
+            from pybossa.core import uploader
+        json_tasks_filename = json_exporter.download_name(project, 'task')
+        csv_tasks_filename = csv_exporter.download_name(project, 'task')
+        json_taskruns_filename = json_exporter.download_name(project, 'task_run')
+        csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
+        container = "user_%s" % project.owner_id
+        uploader.delete_file(json_tasks_filename, container)
+        uploader.delete_file(csv_tasks_filename, container)
+        uploader.delete_file(json_taskruns_filename, container)
+        uploader.delete_file(csv_taskruns_filename, container)

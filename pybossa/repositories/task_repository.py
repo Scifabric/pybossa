@@ -22,15 +22,14 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.exc import WrongObjectError, DBIntegrityError
-
+from pybossa.cache import projects as cached_projects
+from pybossa.core import uploader
 
 
 class TaskRepository(object):
 
-
     def __init__(self, db):
         self.db = db
-
 
     # Methods for queries on Task objects
     def get_task(self, id):
@@ -48,7 +47,6 @@ class TaskRepository(object):
 
     def count_tasks_with(self, **filters):
         return self.db.session.query(Task).filter_by(**filters).count()
-
 
 
     # Methods for queries on TaskRun objects
@@ -69,13 +67,13 @@ class TaskRepository(object):
         return self.db.session.query(TaskRun).filter_by(**filters).count()
 
 
-
     # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
         self._validate_can_be('saved', element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
+            cached_projects.clean_project(element.project_id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -85,24 +83,27 @@ class TaskRepository(object):
         try:
             self.db.session.merge(element)
             self.db.session.commit()
+            cached_projects.clean_project(element.project_id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
     def delete(self, element):
-        self._validate_can_be('deleted', element)
-        table = element.__class__
-        inst = self.db.session.query(table).filter(table.id==element.id).first()
-        self.db.session.delete(inst)
+        self._delete(element)
+        project = element.project
         self.db.session.commit()
+        cached_projects.clean_project(element.project_id)
+        self._delete_zip_files_from_store(project)
 
     def delete_all(self, elements):
+        if not elements:
+            return
         for element in elements:
-            self._validate_can_be('deleted', element)
-            table = element.__class__
-            inst = self.db.session.query(table).filter(table.id==element.id).first()
-            self.db.session.delete(inst)
+            self._delete(element)
+        project = elements[0].project
         self.db.session.commit()
+        cached_projects.clean_project(element.project_id)
+        self._delete_zip_files_from_store(project)
 
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
@@ -126,10 +127,31 @@ class TaskRepository(object):
                    ''')
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
         self.db.session.commit()
-
+        cached_projects.clean_project(project.id)
 
     def _validate_can_be(self, action, element):
         if not isinstance(element, Task) and not isinstance(element, TaskRun):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def _delete(self, element):
+        self._validate_can_be('deleted', element)
+        table = element.__class__
+        inst = self.db.session.query(table).filter(table.id==element.id).first()
+        self.db.session.delete(inst)
+
+    def _delete_zip_files_from_store(self, project):
+        from pybossa.core import json_exporter, csv_exporter
+        global uploader
+        if uploader is None:
+            from pybossa.core import uploader
+        json_tasks_filename = json_exporter.download_name(project, 'task')
+        csv_tasks_filename = csv_exporter.download_name(project, 'task')
+        json_taskruns_filename = json_exporter.download_name(project, 'task_run')
+        csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
+        container = "user_%s" % project.owner_id
+        uploader.delete_file(json_tasks_filename, container)
+        uploader.delete_file(csv_tasks_filename, container)
+        uploader.delete_file(json_taskruns_filename, container)
+        uploader.delete_file(csv_taskruns_filename, container)

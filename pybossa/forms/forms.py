@@ -26,6 +26,7 @@ from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
 from pybossa.core import project_repo, user_repo
+from pybossa.sched import sched_variants
 import validator as pb_validator
 
 
@@ -97,11 +98,15 @@ class TaskPriorityForm(Form):
 
 
 class TaskSchedulerForm(Form):
-    sched = SelectField(lazy_gettext('Task Scheduler'),
-                        choices=[('default', lazy_gettext('Default')),
-                                 ('breadth_first', lazy_gettext('Breadth First')),
-                                 ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))])
+    _translate_names = lambda variant: (variant[0], lazy_gettext(variant[1]))
+    _choices = map(_translate_names, sched_variants())
+    sched = SelectField(lazy_gettext('Task Scheduler'), choices=_choices)
+
+    @classmethod
+    def update_sched_options(cls, new_options):
+        _translate_names = lambda variant: (variant[0], lazy_gettext(variant[1]))
+        _choices = map(_translate_names, new_options)
+        cls.sched.kwargs['choices'] = _choices
 
 
 class BlogpostForm(Form):

@@ -37,7 +37,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'newsletter', 'importer',
-           'flickr']
+           'flickr', 'plugin_manager']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -46,7 +46,7 @@ sentinel = Sentinel()
 # DB
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
-db.slave_session = None
+db.slave_session = db.session
 
 # Repositories
 user_repo = None
@@ -117,3 +117,6 @@ importer = Importer()
 # Flickr OAuth integration for importer
 from pybossa.flickr_service import FlickrService
 flickr = FlickrService()
+
+from flask.ext.plugins import PluginManager
+plugin_manager = PluginManager()
