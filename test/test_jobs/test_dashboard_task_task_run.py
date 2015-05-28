@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_tasks_week
-from pybossa.dashboard import dashboard_new_task_runs_week
+from pybossa.dashboard import dashboard_new_tasks_week, format_new_task_runs
+from pybossa.dashboard import dashboard_new_task_runs_week, format_new_tasks
 from pybossa.core import db
 from datetime import datetime, timedelta
 from factories.taskrun_factory import TaskRunFactory
@@ -61,6 +61,18 @@ class TestDashBoardNewTask(Test):
         results = db.session.execute(sql)
         for row in results:
             assert row.day_tasks == 1, row.day_tasks
+
+    @with_context
+    def test_format_new_tasks_emtpy(self):
+        """Test format new tasks empty works."""
+        dashboard_new_tasks_week()
+        res = format_new_tasks()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 0, res['series'][0][0]
+
 
 class TestDashBoardNewTaskRuns(Test):
 
