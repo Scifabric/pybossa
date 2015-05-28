@@ -249,10 +249,10 @@ def dashboard_returning_users_week():
         else:
             sql = text('''CREATE MATERIALIZED VIEW dashboard_week_returning_users AS
                        WITH data AS (
-                        SELECT user_id, TO_DATE(task_run.created,
+                        SELECT user_id, TO_DATE(task_run.finish_time,
                         'YYYY-MM-DD\THH24:MI:SS.US') AS day
                        FROM task_run
-                       WHERE TO_DATE(task_run.created,
+                       WHERE TO_DATE(task_run.finish_time,
                        'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
                        - ('1 week')::INTERVAL GROUP BY day, task_run.user_id)
                        SELECT user_id, COUNT(user_id) AS n_days
