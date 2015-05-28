@@ -403,10 +403,6 @@ def format_returning_users():
             total = row.count
         labels.append(label)
         series.append(total)
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
 
     returning_users_week = dict(labels=labels, series=[series])
     return returning_users_week
