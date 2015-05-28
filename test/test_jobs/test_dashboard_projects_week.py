@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_projects_week
+from pybossa.dashboard import dashboard_new_projects_week, format_new_projects
 from pybossa.dashboard import dashboard_update_projects_week
 from pybossa.core import db
 from pybossa.repositories import ProjectRepository
 from factories.project_factory import ProjectFactory
 from default import Test, with_context
 from mock import patch, MagicMock
+from datetime import datetime
 
 
 class TestDashBoardNewProject(Test):
@@ -64,6 +65,23 @@ class TestDashBoardNewProject(Test):
             assert row.owner_id == p.owner_id
             assert row.u_name == p.owner.name
             assert row.email_addr == p.owner.email_addr
+
+    @with_context
+    def test_format_new_projects(self):
+        """Test format new projects works."""
+        p = ProjectFactory.create()
+        dashboard_new_projects_week()
+        res = format_new_projects()
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        res = res[0]
+        assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+        assert res['id'] == p.id
+        assert res['short_name'] == p.short_name
+        assert res['p_name'] == p.name
+        assert res['email_addr'] == p.owner.email_addr
+        assert res['owner_id'] == p.owner.id
+        assert res['u_name'] == p.owner.name
+
 
 class TestDashBoardUpdateProject(Test):
 
