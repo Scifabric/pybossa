@@ -147,7 +147,6 @@ class TestDashBoardReturningUsers(Test):
     def test_format_returning_users(self):
         """Test format returning users works."""
         u = UserFactory.create()
-        print u.id
         TaskRunFactory.create(user=u)
         TaskRunFactory.create(user=u)
         TaskRunFactory.create(user=u)
