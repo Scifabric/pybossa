@@ -26,6 +26,7 @@ from pybossa.model.user import User
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
+from factories.taskrun_factory import TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -727,8 +728,7 @@ class TestAdmin(web.Helper):
     def test_admin_dashboard_admin_user_data(self):
         """Test ADMIN dashboard admins can access it with data"""
         url = '/admin/dashboard/'
-        self.register()
-        self.new_project()
+        TaskRunFactory.create()
         from pybossa.dashboard import *
         dashboard_active_anon_week()
         dashboard_active_users_week()
