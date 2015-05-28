@@ -125,3 +125,23 @@ class TestDashBoardUpdateProject(Test):
             assert row.owner_id == p.owner_id
             assert row.u_name == p.owner.name
             assert row.email_addr == p.owner.email_addr
+
+    @with_context
+    def test_format_updated_projects(self):
+        """Test format updated projects works."""
+        p = ProjectFactory.create()
+        p.name = 'NewNewNew'
+        project_repo = ProjectRepository(db)
+        project_repo.update(p)
+        dashboard_new_projects_week()
+        res = format_new_projects()
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        res = res[0]
+        assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+        assert res['id'] == p.id
+        assert res['short_name'] == p.short_name
+        assert res['p_name'] == p.name
+        assert res['email_addr'] == p.owner.email_addr
+        assert res['owner_id'] == p.owner.id
+        assert res['u_name'] == p.owner.name
+
