@@ -73,6 +73,17 @@ class TestDashBoardNewTask(Test):
         assert len(res['series']) == 1
         assert res['series'][0][0] == 0, res['series'][0][0]
 
+    @with_context
+    def test_format_new_tasks(self):
+        """Test format new tasks works."""
+        TaskFactory.create()
+        dashboard_new_tasks_week()
+        res = format_new_tasks()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 1, res['series'][0][0]
 
 class TestDashBoardNewTaskRuns(Test):
 
