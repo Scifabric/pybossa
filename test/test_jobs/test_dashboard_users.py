@@ -77,8 +77,10 @@ class TestDashBoardNewUsers(Test):
         assert res['series'][0][0] == 1, res['series'][0][0]
 
     @with_context
-    def test_format_new_users_empty(self):
+    @patch('pybossa.dashboard.db')
+    def test_format_new_users_empty(self, db_mock):
         """Test format new users empty works."""
+        db_mock.slave_session.execute.return_value = []
         dashboard_new_users_week()
         res = format_new_users()
         assert len(res['labels']) == 1
@@ -127,8 +129,10 @@ class TestDashBoardReturningUsers(Test):
             assert row.user_id == task_run.user_id
 
     @with_context
-    def test_format_returning_users_emtpy(self):
+    @patch('pybossa.dashboard.db')
+    def test_format_returning_users_emtpy(self, db_mock):
         """Test format returning users works."""
+        db_mock.slave_session.execute.return_value = []
         TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
         TaskRunFactory.create(finish_time=day.isoformat())

@@ -74,8 +74,10 @@ class TestDashBoardActiveAnon(Test):
         assert res['series'][0][0] == 1, res['series'][0][0]
 
     @with_context
-    def test_format_anon_week_empty(self):
+    @patch('pybossa.dashboard.db')
+    def test_format_anon_week_empty(self, db_mock):
         """Test format anon week empty works."""
+        db_mock.slave_session.execute.return_value = []
         TaskRunFactory.create()
         dashboard_active_anon_week()
         res = format_anon_week()

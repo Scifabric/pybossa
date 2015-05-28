@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_projects_week, format_new_projects
+from pybossa.dashboard import dashboard_new_projects_week
 from pybossa.dashboard import dashboard_update_projects_week
+from pybossa.dashboard import format_new_projects, format_update_projects
 from pybossa.core import db
 from pybossa.repositories import ProjectRepository
 from factories.project_factory import ProjectFactory
@@ -133,8 +134,8 @@ class TestDashBoardUpdateProject(Test):
         p.name = 'NewNewNew'
         project_repo = ProjectRepository(db)
         project_repo.update(p)
-        dashboard_new_projects_week()
-        res = format_new_projects()
+        dashboard_update_projects_week()
+        res = format_update_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
         res = res[0]
         assert res['day'].strftime('%Y-%m-%d') == day, res['day']

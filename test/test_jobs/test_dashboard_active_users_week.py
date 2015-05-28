@@ -74,8 +74,10 @@ class TestDashBoardActiveUsers(Test):
         assert res['series'][0][0] == 1, res['series'][0][0]
 
     @with_context
-    def test_format_users_week_empty(self):
+    @patch('pybossa.dashboard.db')
+    def test_format_users_week_empty(self, db_mock):
         """Test format users week empty works."""
+        db_mock.slave_session.execute.return_value = []
         AnonymousTaskRunFactory.create()
         dashboard_active_users_week()
         res = format_users_week()
