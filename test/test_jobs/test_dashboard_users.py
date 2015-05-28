@@ -24,6 +24,7 @@ from default import Test, with_context
 from factories.user_factory import UserFactory
 from factories.taskrun_factory import TaskRunFactory
 from mock import patch, MagicMock
+from sqlalchemy import text
 
 
 class TestDashBoardNewUsers(Test):
@@ -126,7 +127,7 @@ class TestDashBoardReturningUsers(Test):
             assert row.user_id == task_run.user_id
 
     @with_context
-    def test_format_returning_users(self):
+    def test_format_returning_users_emtpy(self):
         """Test format returning users works."""
         TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
@@ -141,3 +142,37 @@ class TestDashBoardReturningUsers(Test):
             err = "%s != %s" % (res['labels'][i - 1], day)
             assert res['labels'][i - 1] == day, err
             assert res['series'][0][i - 1] == 0, res['series'][i][0]
+
+    @with_context
+    def test_format_returning_users(self):
+        """Test format returning users works."""
+        u = UserFactory.create()
+        print u.id
+        TaskRunFactory.create(user=u)
+        TaskRunFactory.create(user=u)
+        TaskRunFactory.create(user=u)
+        TaskRunFactory.create(user=u)
+        TaskRunFactory.create(user=u)
+        TaskRunFactory.create(user=u)
+        day = datetime.utcnow() - timedelta(days=2)
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        day = datetime.utcnow() - timedelta(days=1)
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        dashboard_returning_users_week()
+        res = format_returning_users()
+        for i in range(1,8):
+            if i == 1:
+                day = '%s day' % i
+            else:
+                day = "%s days" % i
+            err = "%s != %s" % (res['labels'][i - 1], day)
+            assert res['labels'][i - 1] == day, err
+            if day == '3 days':
+                assert res['labels'][i - 1] == day, day
+                assert res['series'][0][i - 1] == 1, res['series'][0][i - 1]
+            else:
+                assert res['series'][0][i - 1] == 0, res
