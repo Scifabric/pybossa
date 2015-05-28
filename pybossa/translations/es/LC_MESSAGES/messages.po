@@ -120,7 +120,7 @@ msgstr "Contraseña (dejar en blanco para no usar contraseña)"
 
 #: forms/forms.py:70
 msgid "Webhook"
-msgstr ""
+msgstr "Webhook"
 
 #: forms/forms.py:80 themes/default/templates/projects/task_settings.html:36
 #: view/projects.py:1188
@@ -213,7 +213,7 @@ msgstr "Debe proporcionar un ID de álbum de Flickr válido"
 
 #: forms/forms.py:174
 msgid "Album ID"
-msgstr ""
+msgstr "ID del Álbum"
 
 #: forms/forms.py:208 themes/default/templates/account/_helpers.html:41
 msgid "E-mail"
@@ -284,7 +284,7 @@ msgstr "Nombre de usuario"
 
 #: forms/forms.py:284
 msgid "Get email notifications"
-msgstr ""
+msgstr "Recibir notificaciones por correo electrónico"
 
 #: forms/forms.py:286
 msgid "Language"
@@ -351,15 +351,15 @@ msgstr "Solo se permiten valores separados por comas, no espacios"
 
 #: forms/validator.py:86
 msgid "Invalid URL"
-msgstr ""
+msgstr "URL inválida"
 
 #: forms/validator.py:98
 msgid "Connection error"
-msgstr ""
+msgstr "Error de conexión"
 
 #: forms/validator.py:108
 msgid "This name is used by the system."
-msgstr ""
+msgstr "Este nombre es usado por el sistema"
 
 #: themes/default/templates/_navbar.html:12
 #: themes/default/templates/account/index.html:14
@@ -547,7 +547,7 @@ msgstr "Siguientes"
 
 #: themes/default/templates/account/account_validation.html:7
 msgid "Just one more step, please"
-msgstr ""
+msgstr "Sólo un paso más, por favor"
 
 #: themes/default/templates/account/account_validation.html:8
 msgid ""
@@ -555,16 +555,21 @@ msgid ""
 " just provided. Please, check it out and click on the link you'll find to"
 " create your account at"
 msgstr ""
+"Para confirmar tu identidad, hemos enviado un correo electrónico a la dirección"
+" que acabas de indicar. Por favor, revísalo y haz click en el enlace que"
+" encontrarás en el mismo para crear tu cuenta en"
 
 #: themes/default/templates/account/account_validation.html:9
 msgid ""
 "If you are not receiving the email, please check the junk folder. If it's"
 " not there please drop us an email to"
 msgstr ""
+"Si no recibes el correo, revisa la carpeta de spam, por favor."
+" Si no está ahí, contáctanos en"
 
 #: themes/default/templates/account/account_validation.html:10
 msgid "In the meantime, you can check some of the amazing"
-msgstr ""
+msgstr "Mientras, puedes echar un vistazo a alguno de los increíbles"
 
 #: themes/default/templates/account/account_validation.html:10
 msgid "projects"
@@ -572,7 +577,7 @@ msgstr "proyectos"
 
 #: themes/default/templates/account/account_validation.html:10
 msgid "and contribute to them as anonymous"
-msgstr ""
+msgstr "y contribuir en ellos como usuario anónimo"
 
 #: themes/default/templates/account/index.html:14
 msgid "registered users"
@@ -592,14 +597,16 @@ msgid ""
 "If you want to be updated with our new features, projects, and\n"
 "        scientific projects, subscribe to our newsletter."
 msgstr ""
+"Si quieres estar al tanto de nuestras nuevas funcionalidades, proyectos y\n"
+" proyectos científicos, suscríbete a nuestro boletín."
 
 #: themes/default/templates/account/newsletter.html:15
 msgid "Sign me up!"
-msgstr ""
+msgstr "¡Suscríbeme!"
 
 #: themes/default/templates/account/newsletter.html:18
 msgid "Not interested"
-msgstr ""
+msgstr "No estoy interesado"
 
 #: themes/default/templates/account/password.html:13
 #: themes/default/templates/account/update.html:54
@@ -956,11 +963,11 @@ msgstr "CSV"
 
 #: themes/default/templates/admin/index.html:50
 msgid "Background Jobs"
-msgstr ""
+msgstr "Trabajos en segundo plano"
 
 #: themes/default/templates/admin/index.html:51
 msgid "Monitor the background jobs"
-msgstr ""
+msgstr "Monitor de trabajos en segundo plano"
 
 #: themes/default/templates/admin/projects.html:13
 msgid "Manage featured projects"
@@ -1127,6 +1134,9 @@ msgid ""
 "knowledge or intelligence such as image classification, transcription, "
 "geocoding and more!"
 msgstr ""
+"Asistencia en línea para realizar tareas que requieren de capacidades, "
+"conocimiento o inteligencia humanas, tales como clasificación de imágenes, "
+"transcripción de documentos, geolocalización y otras."
 
 #: themes/default/templates/home/_pybossa_text.html:3
 msgid "Help advance research"
@@ -1222,7 +1232,7 @@ msgstr "Configuración"
 
 #: themes/default/templates/projects/_helpers.html:47
 msgid "Audit Logs"
-msgstr ""
+msgstr "Audit Logs"
 
 #: themes/default/templates/projects/_helpers.html:49
 msgid "Blog"
@@ -1463,18 +1473,20 @@ msgid ""
 "This export option stills in beta mode and may fail in the CKAN server. "
 "If you get an error, please send an e-mail to info@pybossa.com"
 msgstr ""
+"Esta opción de exportar está en fase beta y puede que falle en el servidor CKAN"
+"Si recibes un error, por favor, envía un correo a info@pybossa.com"
 
 #: themes/default/templates/projects/export.html:56
 msgid "You don't have a Datahub.io API key in your"
-msgstr ""
+msgstr "No tienes una clave API de Datahub.io en tu"
 
 #: themes/default/templates/projects/export.html:56
 msgid "account. Please,"
-msgstr ""
+msgstr "cuenta. Por favor,"
 
 #: themes/default/templates/projects/export.html:56
 msgid "create an account"
-msgstr "crear una cuenta"
+msgstr "crea una cuenta"
 
 #: themes/default/templates/projects/export.html:56
 msgid "and copy/paste the API key in your profile in order to use this exporter"
@@ -1689,7 +1701,7 @@ msgstr "Los 5 mejores Usuarios"
 
 #: themes/default/templates/projects/task_autoimport_options.html:13
 msgid "Setup task autoimporter"
-msgstr ""
+msgstr "Configurar un autoimportador de tareas"
 
 #: themes/default/templates/projects/task_autoimport_options.html:16
 #: themes/default/templates/projects/task_import_options.html:16
@@ -2549,7 +2561,7 @@ msgstr "Acabas de cerrar la sesión"
 msgid ""
 "An e-mail has been sent to                        validate your e-mail "
 "address."
-msgstr ""
+msgstr "Se te ha enviado un correo electrónico para que verifiques la dirección"
 
 #: view/account.py:236
 msgid "Register"
@@ -2583,7 +2595,8 @@ msgid ""
 "An email has been sent to verify your                           new "
 "email: %s. Once you verify it, it will                           be "
 "updated.email_addr"
-msgstr ""
+msgstr "Se te ha enviado un correo electrónico para que verifiques la nueva "
+"dirección: %s. Una vez que lo hayas hecho, se actualizará.email_addr"
 
 #: view/account.py:507 view/account.py:537
 msgid "Your profile has been updated!"
@@ -2709,10 +2722,12 @@ msgid ""
 "You're trying to import a large amount of tasks, so please be patient."
 "            You will receive an email when the tasks are ready."
 msgstr ""
+"Estás tratando de importar una gran cantidad de tareas, por favor, ten paciencia."
+"Recibirás un correo electrónico cuando estén listas."
 
 #: view/projects.py:611
 msgid "Success! Tasks will be imported daily."
-msgstr ""
+msgstr "¡Todo ha ido bien! Las tareas se importarán diariamente."
 
 #: view/projects.py:665
 msgid "Sorry, incorrect password"
