@@ -728,10 +728,13 @@ class TestAdmin(web.Helper):
     def test_admin_dashboard_admin_user_data(self):
         """Test ADMIN dashboard admins can access it with data"""
         url = '/admin/dashboard/'
-        TaskRunFactory.create()
+        self.register()
+        self.new_project()
+        self.new_task(1)
         from pybossa.dashboard import *
         dashboard_active_anon_week()
         dashboard_active_users_week()
+        dashboard_new_users_week()
         dashboard_new_tasks_week()
         dashboard_new_task_runs_week()
         dashboard_new_projects_week()
@@ -741,3 +744,4 @@ class TestAdmin(web.Helper):
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
         assert "No data" not in res.data, res.data
+        assert "New Users" in res.data, res.data
