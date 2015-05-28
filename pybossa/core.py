@@ -461,17 +461,18 @@ def setup_jinja2_filters(app):
     # Load custom template filters as/if defined by the theme writer
     try:
         import imp, inspect
-        theme_path = os.path.join('pybossa', 'themes', app.config.get('THEME'))
+        here = os.path.abspath(os.path.dirname(__file__))
+        theme_path = os.path.join(here, 'themes', app.config.get('THEME'))
         custom_filter_path = os.path.join(theme_path, app.config.get('THEME_CUSTOM_FILTERS'))
         pybossa_custom_filters = imp.load_source('pybossa_custom_filters', custom_filter_path)
 
         for (filter_name, filter_object) in inspect.getmembers(pybossa_custom_filters):
-            app.jinja_env.filters[filter_name] = filter_object
+            # Ignore internal functions which start with '__'
+            if not filter_name.startswith("__"):
+                app.jinja_env.filters[filter_name] = filter_object
+                log_message = 'Loading Custom Filter : "%s" form file %s' % (filter_name, custom_filter_path)
+                app.logger.info(log_message)
     except IOError as inst:
-        print type(inst)
-        print inst.args
-        print inst
-        print "Custom Filter definition file not available"
         log_message = 'Custom Filter definition file not available : %s' % str(inst)
         app.logger.error(log_message)
 

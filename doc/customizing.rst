@@ -152,6 +152,25 @@ order of the elements of the navigation bar: the first element should be the
 About link, then you will have to modify the files included in the templates
 folder.
 
+You also have the option of defining custom jinja2 filters for your templates.
+Suppose you want to define a custom filter by the name `pybossa_md5` which computes the
+md5 hash of a string. In that case, you will have to create a file called
+`pybossa_custom_filters.py` at the root of your theme folder, and define the custom filter
+in the file as:
+```python
+"""
+    Adds a md5 filter for all jinja2 templates
+"""
+def pybossa_md5(s):
+    import hashlib
+    return hashlib.md5(s).hexdigest()
+# Note : function names starting with `__` will be ignored.
+```
+You can define as many filters as you want in the file above.
+Also, if for some reason, you want to define the filters in a different file,
+you can point to that file by setting the relative path(relative to THEME root folder)
+of the file to the `THEME_CUSTOM_FILTERS` option in `settings_local.py`.
+
 As you can see, you will be able to give a full personality to your own PyBossa
 server without problems.
 
