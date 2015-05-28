@@ -386,7 +386,8 @@ def dashboard():
                                new_task_runs_week=new_task_runs_week,
                                new_users_week=new_users_week,
                                returning_users_week=returning_users_week,
-                               update_feed=update_feed)
+                               update_feed=update_feed,
+                               wait=False)
     except ProgrammingError:
         db.slave_session.rollback()
         return render_template('admin/dashboard.html',
