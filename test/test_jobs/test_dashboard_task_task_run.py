@@ -20,7 +20,7 @@ from pybossa.dashboard import dashboard_new_tasks_week, format_new_task_runs
 from pybossa.dashboard import dashboard_new_task_runs_week, format_new_tasks
 from pybossa.core import db
 from datetime import datetime, timedelta
-from factories.taskrun_factory import TaskRunFactory
+from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from factories.task_factory import TaskFactory
 from default import Test, with_context
 from mock import patch, MagicMock
@@ -123,3 +123,27 @@ class TestDashBoardNewTaskRuns(Test):
         results = db.session.execute(sql)
         for row in results:
             assert row.day_task_runs == 1, row.day_task_runs
+
+    @with_context
+    def test_format_new_task_runs_emtpy(self):
+        """Test format new task_runs empty works."""
+        dashboard_new_task_runs_week()
+        res = format_new_task_runs()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 0, res['series'][0][0]
+
+    @with_context
+    def test_format_new_task_runs(self):
+        """Test format new task_runs works."""
+        TaskRunFactory.create()
+        AnonymousTaskRunFactory.create()
+        dashboard_new_tasks_week()
+        res = format_new_tasks()
+        assert len(res['labels']) == 1
+        day = datetime.utcnow().strftime('%Y-%m-%d')
+        assert res['labels'][0] == day
+        assert len(res['series']) == 1
+        assert res['series'][0][0] == 2, res['series'][0][0]
