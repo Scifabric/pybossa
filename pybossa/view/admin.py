@@ -388,7 +388,7 @@ def dashboard():
                                returning_users_week=returning_users_week,
                                update_feed=update_feed)
     except ProgrammingError:
-        session.rollback()
+        db.slave_session.rollback()
         return render_template('admin/dashboard.html',
                                title=gettext('Dashboard'),
                                wait=True)
