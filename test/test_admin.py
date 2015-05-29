@@ -26,6 +26,7 @@ from pybossa.model.user import User
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
+from factories.taskrun_factory import TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -692,3 +693,55 @@ class TestAdmin(web.Helper):
         assert category['name'] in res.data, err_msg
         output = db.session.query(Category).get(obj.id)
         assert output.id == category['id'], err_msg
+
+    @with_context
+    def test_admin_dashboard(self):
+        """Test ADMIN dashboard requires admin"""
+        url = '/admin/dashboard/'
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should require login"
+        assert "Sign in" in res.data, err_msg
+
+    @with_context
+    def test_admin_dashboard_auth_user(self):
+        """Test ADMIN dashboard requires admin"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.signout()
+        self.register(fullname="juan", name="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 403"
+        assert res.status_code == 403, err_msg
+
+    @with_context
+    def test_admin_dashboard_admin_user(self):
+        """Test ADMIN dashboard admins can access it"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert "No data" in res.data, res.data
+
+    @with_context
+    def test_admin_dashboard_admin_user_data(self):
+        """Test ADMIN dashboard admins can access it with data"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        self.new_task(1)
+        from pybossa.dashboard import *
+        dashboard_active_anon_week()
+        dashboard_active_users_week()
+        dashboard_new_users_week()
+        dashboard_new_tasks_week()
+        dashboard_new_task_runs_week()
+        dashboard_new_projects_week()
+        dashboard_update_projects_week()
+        dashboard_returning_users_week()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert "No data" not in res.data, res.data
+        assert "New Users" in res.data, res.data

@@ -22,6 +22,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
+from pybossa.dashboard import get_dashboard_jobs
 
 
 MINUTE = 60
@@ -99,8 +100,9 @@ def get_periodic_jobs(queue):
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
+    dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-            engage_jobs, non_contrib_jobs]
+            engage_jobs, non_contrib_jobs, dashboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 

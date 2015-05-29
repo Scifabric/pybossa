@@ -75,6 +75,25 @@ def markdown_db_migrate():
                            WHERE id=:id''')
                 db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
+def fix_task_date():
+    """Fix Date format in Task."""
+    import re
+    from datetime import datetime
+    with app.app_context():
+        query = text('''SELECT id, created FROM task WHERE created LIKE ('%Date%')''')
+        results = db.engine.execute(query)
+        tasks = results.fetchall()
+        for task in tasks:
+            # It's in miliseconds
+            timestamp = int(re.findall(r'\d+', task.created)[0])
+            print timestamp
+            # Postgresql expects this format 2015-05-21T13:19:06.471074
+            fixed_created = datetime.fromtimestamp(timestamp/1000)\
+                                    .replace(microsecond=timestamp%1000*1000)\
+                                    .strftime('%Y-%m-%dT%H:%M:%S.%f')
+            query = text('''UPDATE task SET created=:created WHERE id=:id''')
+            db.engine.execute(query, created=fixed_created, id=task.id)
+
 
 def delete_hard_bounces():
     '''Delete fake accounts from hard bounces.'''
