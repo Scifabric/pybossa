@@ -21,7 +21,7 @@ It may also run with older software but we do not officially support it:
 
   * Ubuntu 12.04 LTS
   * Python >= 2.7.2, <3.0
-  * PostgreSQL >= 9.1
+  * PostgreSQL >= 9.3
   * Redis >= 2.6
   * pip >= 6.1
 
