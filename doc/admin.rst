@@ -115,3 +115,27 @@ The section will let you know the following information:
 
 .. note::
     Only admins and users marked as *pro* can see the audit log.
+
+Dashboard
+=========
+
+The dashboard allows you to see what's going on in your PyBossa server.
+
+.. image:: http://i.imgur.com/CpgclS1.png
+
+.. note::
+    This feature requires PostgreSQL >= 9.3. Please upgrade as soon as possible your
+    server to have this feature.
+
+The dashboard shows the following information for the last 7 days:
+
+- **Active users**: Number of users that have contributed at least 1 task_run in the last 7 days.
+- **Active anonymous users**: Number of anonymous users that have contributed at least 1 task_run in the last 7 days.
+- **New projects**: Projects created in the last 7 days.
+- **Updated projects**: Updated projects in the last 7 days.
+- **Updated projects**: Updated projects in the last 7 days.
+- **New users**: Number of new users registered in the last 7 days.
+- **Number of returning users**: Number of returning users in the last 7 days classified by number of days coming back.
+- **Recent activity feed**: Last events in real time of the server.
+
+The dashboard is updated every 24 hours via the background jobs. These jobs are scheduled in the *low* queue.
