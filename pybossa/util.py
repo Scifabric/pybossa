@@ -412,8 +412,8 @@ def rank(projects):
             points += 50
         if 'test' in project['name'] or 'test' in project['short_name']:
             points -= 50
-        points += _points_by_number_of_tasks(project['n_tasks'])
-        points += _points_by_number_of_crafters(project['n_volunteers'])
+        points += _points_by_interval(project['n_tasks'], weight=1)
+        points += _points_by_interval(project['n_volunteers'], weight=2)
         return points
     for project in projects:
         project['points'] = earned_points(project)
@@ -421,28 +421,16 @@ def rank(projects):
     projects.sort(key=lambda p: p['points'], reverse=True)
     return projects
 
-def _points_by_number_of_tasks(n_tasks):
-    if n_tasks > 100:
-        return 20
-    if n_tasks > 50:
-        return 15
-    if n_tasks > 20:
-        return 10
-    if n_tasks > 10:
-        return 5
-    if n_tasks > 0:
-        return 1
-    return 0
 
-def _points_by_number_of_crafters(n_volunteers):
-    if n_volunteers > 100:
-        return 20*2
-    if n_volunteers > 50:
-        return 15*2
-    if n_volunteers > 20:
-        return 10*2
-    if n_volunteers > 10:
-        return 5*2
-    if n_volunteers > 0:
-        return 1*2
+def _points_by_interval(value, weight=1):
+    if value > 100:
+        return 20 * weight
+    if value > 50:
+        return 15 * weight
+    if value > 20:
+        return 10 * weight
+    if value > 10:
+        return 5 * weight
+    if value > 0:
+        return 1 * weight
     return 0
