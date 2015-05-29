@@ -355,7 +355,6 @@ def get_port():
 
 def get_user_id_or_ip():
     """Return the id of the current user if is authenticated.
-
     Otherwise returns its IP address (defaults to 127.0.0.1).
     """
     user_id = current_user.id if current_user.is_authenticated() else None
@@ -366,7 +365,6 @@ def get_user_id_or_ip():
 
 def with_cache_disabled(f):
     """Decorator that disables the cache for the execution of a function.
-
     It enables it back when the function call is done.
     """
     import os
@@ -401,3 +399,50 @@ def username_from_full_name(username):
     if type(username) == str:
         return username.decode('ascii', 'ignore').lower().replace(' ', '')
     return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')
+
+
+def rank(projects):
+    """Takes a list of (published) projects (as dicts) and orders them by
+    activity, number of volunteers, number of tasks and other criteria."""
+    def earned_points(project):
+        points = 0
+        if project['info'].get('thumbnail'):
+            points += 50
+        if project['overall_progress'] != 100L:
+            points += 50
+        if 'test' in project['name'] or 'test' in project['short_name']:
+            points -= 50
+        points += _points_by_number_of_tasks(project['n_tasks'])
+        points += _points_by_number_of_crafters(project['n_volunteers'])
+        return points
+    for project in projects:
+        project['points'] = earned_points(project)
+        print earned_points(project)
+    projects.sort(key=lambda p: p['points'], reverse=True)
+    return projects
+
+def _points_by_number_of_tasks(n_tasks):
+    if n_tasks > 100:
+        return 20
+    if n_tasks > 50:
+        return 15
+    if n_tasks > 20:
+        return 10
+    if n_tasks > 10:
+        return 5
+    if n_tasks > 0:
+        return 1
+    return 0
+
+def _points_by_number_of_crafters(n_volunteers):
+    if n_volunteers > 100:
+        return 20*2
+    if n_volunteers > 50:
+        return 15*2
+    if n_volunteers > 20:
+        return 10*2
+    if n_volunteers > 10:
+        return 5*2
+    if n_volunteers > 0:
+        return 1*2
+    return 0

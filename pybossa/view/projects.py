@@ -40,7 +40,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
-from pybossa.util import Pagination, admin_required, get_user_id_or_ip
+from pybossa.util import Pagination, admin_required, get_user_id_or_ip, rank
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
@@ -117,7 +117,7 @@ def redirect_old_draft(page):
 def index(page):
     """List projects in the system"""
     if cached_projects.n_count('featured') > 0:
-        return project_index(page, cached_projects.get_featured, 'featured',
+        return project_index(page, cached_projects.get_all_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_all()
@@ -130,7 +130,10 @@ def project_index(page, lookup, category, fallback, use_count):
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    projects = lookup(category, page, per_page)
+    ranked_projects = rank(lookup(category))
+    offset = (page - 1) * per_page
+    projects = ranked_projects[offset:offset+per_page]
+
     count = cached_projects.n_count(category)
 
     data = []
@@ -174,7 +177,7 @@ def project_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft projects"""
-    return project_index(page, cached_projects.get_draft, 'draft',
+    return project_index(page, cached_projects.get_all_draft, 'draft',
                      False, True)
 
 
@@ -182,7 +185,7 @@ def draft(page):
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
-    return project_index(page, cached_projects.get, category, False, True)
+    return project_index(page, cached_projects.get_all, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
