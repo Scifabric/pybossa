@@ -21,7 +21,7 @@ It may also run with older software but we do not officially support it:
 
   * Ubuntu 12.04 LTS
   * Python >= 2.7.2, <3.0
-  * PostgreSQL >= 9.1
+  * PostgreSQL >= 9.3
   * Redis >= 2.6
   * pip >= 6.1
 
@@ -418,3 +418,11 @@ Markdown conversion, while the second one will convert your DB entries.
 .. note::
     As always, if you are using the virtualenv_ be sure to activate it before
     running the pip install command.
+
+.. note::
+    The latest version of PyBossa requires PostgreSQL >= 9.3 as it is using materialized
+    views for the dashboard. This feature is only available from PostgreSQL 9.3, so please
+    upgrade the DB as soon as possible. For more information about upgrading the PostgreSQL
+    database check this page_.
+
+.. _page: http://www.postgresql.org/docs/9.3/static/upgrading.html
