@@ -203,7 +203,7 @@ def _n_featured():
 def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
-               project.created, project.updated, project.completed, project.description,
+               project.created, project.updated, project.description,
                "user".fullname AS owner FROM project, "user"
                WHERE project.featured=true AND project.hidden=0
                AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
@@ -213,7 +213,7 @@ def get_all_featured(category=None):
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
-                       updated=row.updated, completed=row.completed,
+                       updated=row.updated,
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
@@ -284,7 +284,6 @@ def get_all_draft(category=None):
                        created=row.created,
                        updated=row.updated,
                        description=row.description,
-                       completed=False,
                        owner=row.owner,
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
@@ -334,8 +333,7 @@ def get_all(category):
     """
     sql = text('''SELECT project.id, project.name, project.short_name,
                project.description, project.info, project.created, project.updated,
-               project.category_id, project.featured,
-               project.completed, "user".fullname AS owner
+               project.category_id, project.featured, "user".fullname AS owner
                FROM "user", task, project
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
@@ -354,7 +352,6 @@ def get_all(category):
                        created=row.created,
                        updated=row.updated,
                        description=row.description,
-                       completed=row.completed,
                        owner=row.owner,
                        featured=row.featured,
                        last_activity=pretty_date(last_activity(row.id)),
