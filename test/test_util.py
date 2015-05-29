@@ -335,8 +335,8 @@ class TestUsernameFromFullnameFunction(object):
 class TestRankProjects(object):
 
     def test_it_gives_priority_to_projects_with_an_avatar(self):
-        projects = [{'info': {}, 'n_tasks': 4L, 'short_name': u'avatar', 'created': u'2015-04-10T11:36:14.814137', 'n_volunteers': 0L, 'updated': u'2015-05-27T11:06:52.530033', 'last_activity_raw': None, 'overall_progress': 0L, 'id': 19, 'name': u'without avatar'},
-                    {'info': {u'container': u'user_7', u'thumbnail': u'avatar.png'}, 'n_tasks': 246L, 'short_name': u'noavatar', 'created': u'2015-05-27T10:55:06.922018', 'n_volunteers': 0L, 'updated': u'2015-05-27T11:06:51.705126', 'last_activity_raw': None, 'overall_progress': 0L, 'id': 48, 'name': u'with avatar'}]
+        projects = [{'info': {}, 'n_tasks': 4L, 'short_name': 'noavatar', 'name': u'with avatar', 'overall_progress': 0L, 'n_volunteers': 1L},
+                    {'info': {u'container': u'user_7', u'thumbnail': u'avatar.png'}, 'n_tasks': 4L, 'short_name': 'avatar', 'name': u'without avatar', 'overall_progress': 100L, 'n_volunteers': 1L}]
         ranked = util.rank(projects)
 
         assert ranked[0]['name'] == "with avatar"
