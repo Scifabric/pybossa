@@ -415,10 +415,8 @@ def rank(projects):
         points += _points_by_interval(project['n_tasks'], weight=1)
         points += _points_by_interval(project['n_volunteers'], weight=2)
         return points
-    for project in projects:
-        project['points'] = earned_points(project)
-        print earned_points(project)
-    projects.sort(key=lambda p: p['points'], reverse=True)
+
+    projects.sort(key=earned_points, reverse=True)
     return projects
 
 
