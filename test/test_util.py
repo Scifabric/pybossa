@@ -387,3 +387,22 @@ class TestRankProjects(object):
         assert ranked[3]['name'] == 'fourth'
         assert ranked[4]['name'] == 'fifth'
         assert ranked[5]['name'] == 'last'
+
+    def test_rank_by_recent_updates_or_contributions(self):
+        today = datetime.utcnow()
+        yesterday = today - timedelta(1)
+        two_days_ago = today - timedelta(2)
+        three_days_ago = today - timedelta(3)
+        four_days_ago = today - timedelta(4)
+        projects = [{'info': {}, 'n_tasks': 1L, 'name': u'last', 'short_name': u'a', 'overall_progress': 0L, 'n_volunteers': 1L, 'last_activity_raw': four_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'fourth', 'short_name': u'c', 'overall_progress': 0L, 'n_volunteers': 1L, 'last_activity_raw': three_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'third', 'short_name': u'd', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': two_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'second', 'short_name': u'e', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': yesterday.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'first', 'short_name': u'e', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': today.strftime('%Y-%m-%dT%H:%M:%S.%f')}]
+        ranked = util.rank(projects)
+
+        assert ranked[0]['name'] == 'first', ranked[0]['name']
+        assert ranked[1]['name'] == 'second', ranked[1]['name']
+        assert ranked[2]['name'] == 'third', ranked[2]['name']
+        assert ranked[3]['name'] == 'fourth', ranked[3]['name']
+        assert ranked[4]['name'] == 'last', ranked[4]['name']

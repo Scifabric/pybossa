@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PyBossa utils."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import update_wrapper
 import csv
 import codecs
@@ -107,7 +107,6 @@ def pretty_date(time=False):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc.
     """
-    from datetime import datetime
     import dateutil.parser
     now = datetime.now()
     if type(time) is str or type(time) is unicode:
@@ -414,10 +413,31 @@ def rank(projects):
             points -= 50
         points += _points_by_interval(project['n_tasks'], weight=1)
         points += _points_by_interval(project['n_volunteers'], weight=2)
+        points += _last_activity_points(project)
         return points
 
     projects.sort(key=earned_points, reverse=True)
     return projects
+
+
+def _last_activity_points(project):
+    default = datetime(1970, 1, 1, 0, 0).strftime('%Y-%m-%dT%H:%M:%S.%f')
+    updated = datetime.strptime(project.get('updated', default), '%Y-%m-%dT%H:%M:%S.%f')
+    last_activity = datetime.strptime(project.get('last_activity_raw', default),
+                                      '%Y-%m-%dT%H:%M:%S.%f')
+    most_recent = max(updated, last_activity)
+
+    days_since_modified = (datetime.utcnow() - most_recent).days
+
+    if days_since_modified < 1:
+        return 50
+    if days_since_modified < 2:
+        return 20
+    if days_since_modified < 3:
+        return 10
+    if days_since_modified < 4:
+        return 5
+    return 0
 
 
 def _points_by_interval(value, weight=1):
