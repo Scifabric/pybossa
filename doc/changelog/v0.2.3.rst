@@ -38,6 +38,7 @@ The most interesting changes are the following:
    database and API.
  * Plugins system: support for creating custom plugins and add them to a PyBossa
    server has been added.
+ * PyBossa dashboard: see what's going on in your server. **REQUIRES POSTGRESQL >= 9.3**
 
 For a full list of changes, see associated `Github milestone`_.
 
