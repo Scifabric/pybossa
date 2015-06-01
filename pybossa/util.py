@@ -405,12 +405,13 @@ def rank(projects):
     activity, number of volunteers, number of tasks and other criteria."""
     def earned_points(project):
         points = 0
-        if project['info'].get('thumbnail'):
-            points += 50
         if project['overall_progress'] != 100L:
-            points += 50
-        if 'test' in project['name'] or 'test' in project['short_name']:
-            points -= 50
+            points += 1000
+        if not ('test' in project['name'].lower()
+                or 'test' in project['short_name'].lower()):
+            points += 500
+        if project['info'].get('thumbnail'):
+            points += 200
         points += _points_by_interval(project['n_tasks'], weight=1)
         points += _points_by_interval(project['n_volunteers'], weight=2)
         points += _last_activity_points(project)
