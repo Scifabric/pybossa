@@ -421,11 +421,13 @@ def rank(projects):
 
 
 def _last_activity_points(project):
-    default = datetime(1970, 1, 1, 0, 0).strftime('%Y-%m-%dT%H:%M:%S.%f')
-    updated_datetime = project.get('updated') or default
-    last_activity_datetime = project.get('last_activity_raw') or default
-    updated = datetime.strptime(updated_datetime, '%Y-%m-%dT%H:%M:%S.%f')
-    last_activity = datetime.strptime(last_activity_datetime, '%Y-%m-%dT%H:%M:%S.%f')
+    default = datetime(1970, 1, 1, 0, 0).strftime('%Y-%m-%dT%H:%M:%S')
+    updated_datetime = (project.get('updated') or default)
+    last_activity_datetime = (project.get('last_activity_raw') or default)
+    updated_datetime = updated_datetime.split('.')[0]
+    last_activity_datetime = last_activity_datetime.split('.')[0]
+    updated = datetime.strptime(updated_datetime, '%Y-%m-%dT%H:%M:%S')
+    last_activity = datetime.strptime(last_activity_datetime, '%Y-%m-%dT%H:%M:%S')
     most_recent = max(updated, last_activity)
 
     days_since_modified = (datetime.utcnow() - most_recent).days
