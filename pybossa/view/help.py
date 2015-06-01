@@ -29,9 +29,9 @@ blueprint = Blueprint('help', __name__)
 def api():
     """Render help/api page."""
     categories = cached_cat.get_used()
-    apps = cached_projects.get(categories[0]['short_name'])
-    if len(apps) > 0:
-        project_id = choice(apps)['id']
+    projects = cached_projects.get(categories[0]['short_name'])
+    if len(projects) > 0:
+        project_id = choice(projects)['id']
     else:  # pragma: no cover
         project_id = None
     return render_template('help/api.html', title="Help: API",

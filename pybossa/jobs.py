@@ -323,7 +323,7 @@ def warm_cache():  # pragma: no cover
     for p in projects:
         warm_project(p['id'], p['short_name'])
     for page in pages:
-        projects = cached_projects.get_featured('featured', page,
+        projects = cached_projects.get_all_featured('featured', page,
                                                 app.config['APPS_PER_PAGE'])
         for p in projects:
             warm_project(p['id'], p['short_name'], featured=True)
@@ -332,7 +332,7 @@ def warm_cache():  # pragma: no cover
     categories = cached_cat.get_used()
     for c in categories:
         for page in pages:
-            projects = cached_projects.get(c['short_name'],
+            projects = cached_projects.get_all(c['short_name'],
                                            page,
                                            app.config['APPS_PER_PAGE'])
             for p in projects:
