@@ -78,7 +78,7 @@ class TestActivityFeed(Test):
         assert update_feed[0]['id'] == task_run.user.id, err_msg
         assert update_feed[0]['name'] == task_run.user.name, err_msg
         assert update_feed[0]['fullname'] == task_run.user.fullname, err_msg
-        assert update_feed[0]['app_name'] == task_run.project.name, err_msg
+        assert update_feed[0]['project_name'] == task_run.project.name, err_msg
         assert update_feed[0]['project_short_name'] == task_run.project.short_name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
