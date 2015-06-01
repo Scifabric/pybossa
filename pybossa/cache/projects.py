@@ -393,10 +393,10 @@ def reset():
     delete_cached('number_featured_projects')
     delete_cached('number_published_projects')
     delete_cached('number_draft_projects')
-    delete_memoized(get_featured)
-    delete_memoized(get_draft)
+    delete_memoized(get_all_featured)
+    delete_memoized(get_all_draft)
     delete_memoized(n_count)
-    delete_memoized(get)
+    delete_memoized(get_all)
 
 
 def delete_project(short_name):
