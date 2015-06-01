@@ -395,9 +395,9 @@ class TestRankProjects(object):
         three_days_ago = today - timedelta(3)
         four_days_ago = today - timedelta(4)
         projects = [{'info': {}, 'n_tasks': 1L, 'name': u'last', 'short_name': u'a', 'overall_progress': 0L, 'n_volunteers': 1L, 'last_activity_raw': four_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
-                    {'info': {}, 'n_tasks': 1L, 'name': u'fourth', 'short_name': u'c', 'overall_progress': 0L, 'n_volunteers': 1L, 'last_activity_raw': three_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'fourth', 'short_name': u'c', 'overall_progress': 0L, 'n_volunteers': 1L, 'last_activity_raw': three_days_ago.strftime('%Y-%m-%dT%H:%M:%S')},
                     {'info': {}, 'n_tasks': 1L, 'name': u'third', 'short_name': u'd', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': two_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
-                    {'info': {}, 'n_tasks': 1L, 'name': u'second', 'short_name': u'e', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': yesterday.strftime('%Y-%m-%dT%H:%M:%S.%f')},
+                    {'info': {}, 'n_tasks': 1L, 'name': u'second', 'short_name': u'e', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': yesterday.strftime('%Y-%m-%dT%H:%M:%S')},
                     {'info': {}, 'n_tasks': 1L, 'name': u'first', 'short_name': u'e', 'overall_progress': 0L, 'n_volunteers': 1L, 'updated': today.strftime('%Y-%m-%dT%H:%M:%S.%f')}]
         ranked = util.rank(projects)
 
