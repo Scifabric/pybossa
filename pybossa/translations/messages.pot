@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-03 11:19+0200\n"
+"POT-Creation-Date: 2015-06-03 11:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,7 +55,7 @@ msgid ""
 "                          some users to participate"
 msgstr ""
 
-#: forms/forms.py:40 forms/forms.py:354
+#: forms/forms.py:40 forms/forms.py:356
 #: themes/default/templates/stats/index.html:18
 msgid "Name"
 msgstr ""
@@ -76,7 +76,7 @@ msgstr ""
 msgid "Long Description"
 msgstr ""
 
-#: forms/forms.py:57 forms/forms.py:358
+#: forms/forms.py:57 forms/forms.py:360
 #: themes/default/templates/projects/_helpers.html:63
 #: themes/default/templates/projects/_helpers.html:131
 msgid "Description"
@@ -116,7 +116,7 @@ msgid "Webhook"
 msgstr ""
 
 #: forms/forms.py:80 themes/default/templates/projects/task_settings.html:36
-#: view/projects.py:1188
+#: view/projects.py:1192
 msgid "Redundancy"
 msgstr ""
 
@@ -144,7 +144,7 @@ msgstr ""
 
 #: forms/forms.py:103 themes/default/templates/projects/task_scheduler.html:14
 #: themes/default/templates/projects/task_settings.html:17
-#: view/projects.py:1220
+#: view/projects.py:1224
 msgid "Task Scheduler"
 msgstr ""
 
@@ -242,7 +242,7 @@ msgstr ""
 msgid "User name"
 msgstr ""
 
-#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:337
+#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:339
 #, python-format
 msgid "Email must be between 3 and %s characters long"
 msgstr ""
@@ -251,23 +251,23 @@ msgstr ""
 msgid "Email is already taken"
 msgstr ""
 
-#: forms/forms.py:239 forms/forms.py:278 forms/forms.py:339
+#: forms/forms.py:239 forms/forms.py:278 forms/forms.py:341
 msgid "Email Address"
 msgstr ""
 
-#: forms/forms.py:246 forms/forms.py:312 forms/forms.py:324
+#: forms/forms.py:246 forms/forms.py:314 forms/forms.py:326
 msgid "Password cannot be empty"
 msgstr ""
 
-#: forms/forms.py:247 forms/forms.py:313 forms/forms.py:325
+#: forms/forms.py:247 forms/forms.py:315 forms/forms.py:327
 msgid "Passwords must match"
 msgstr ""
 
-#: forms/forms.py:248 forms/forms.py:326
+#: forms/forms.py:248 forms/forms.py:328
 msgid "New Password"
 msgstr ""
 
-#: forms/forms.py:252 forms/forms.py:329
+#: forms/forms.py:252 forms/forms.py:331
 msgid "Repeat Password"
 msgstr ""
 
@@ -307,19 +307,23 @@ msgstr ""
 msgid "German"
 msgstr ""
 
-#: forms/forms.py:310
+#: forms/forms.py:303
+msgid "Italian"
+msgstr ""
+
+#: forms/forms.py:312
 msgid "Current password"
 msgstr ""
 
-#: forms/forms.py:314
+#: forms/forms.py:316
 msgid "New password"
 msgstr ""
 
-#: forms/forms.py:317
+#: forms/forms.py:319
 msgid "Repeat password"
 msgstr ""
 
-#: forms/forms.py:349 themes/default/templates/account/settings.html:12
+#: forms/forms.py:351 themes/default/templates/account/settings.html:12
 #: themes/default/templates/projects/stats.html:297
 #: themes/default/templates/projects/stats.html:298
 #: themes/default/templates/projects/stats.html:299
@@ -329,7 +333,7 @@ msgstr ""
 msgid "User"
 msgstr ""
 
-#: forms/forms.py:364
+#: forms/forms.py:366
 msgid "Avatar"
 msgstr ""
 
@@ -367,7 +371,7 @@ msgstr ""
 #: themes/default/templates/base.html:78
 #: themes/default/templates/account/projects.html:13
 #: themes/default/templates/stats/global.html:89 view/account.py:385
-#: view/projects.py:160
+#: view/projects.py:164
 msgid "Projects"
 msgstr ""
 
@@ -687,7 +691,7 @@ msgid "You have not created a project"
 msgstr ""
 
 #: themes/default/templates/account/projects.html:29
-#: themes/default/templates/home/index.html:37 view/projects.py:195
+#: themes/default/templates/home/index.html:37 view/projects.py:199
 msgid "Create a Project"
 msgstr ""
 
@@ -878,8 +882,41 @@ msgstr ""
 
 #: themes/default/templates/admin/categories.html:41
 #: themes/default/templates/admin/categories.html:43
-#: themes/default/templates/admin/del_category.html:17 view/admin.py:291
+#: themes/default/templates/admin/del_category.html:17 view/admin.py:296
 msgid "Delete Category"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:20
+msgid "Dashboard last 7 days"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:98
+msgid "Recent activity"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:105
+msgid "new project created"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:109
+msgid "has published a blog post"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:113
+msgid "has added new tasks"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:117
+msgid "has completed a task"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:121
+msgid "has contributed to"
+msgstr ""
+
+#: themes/default/templates/admin/dashboard.html:129
+#: themes/default/templates/admin/dashboard.html:139
+msgid "has joined"
 msgstr ""
 
 #: themes/default/templates/admin/del_category.html:15
@@ -898,74 +935,87 @@ msgstr ""
 msgid "No, do not delete it"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:15
+#: themes/default/templates/admin/index.html:15 view/admin.py:380
+#: view/admin.py:394
+msgid "Dashboard"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:16
+msgid "Internal Statistics"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:18
+msgid "Go"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:22
+msgid "Background Jobs"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:23
+msgid "Monitor the background jobs"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:25
+#: themes/default/templates/admin/index.html:34
+#: themes/default/templates/admin/index.html:41
+#: themes/default/templates/admin/index.html:50
+msgid "Manage"
+msgstr ""
+
+#: themes/default/templates/admin/index.html:31
 #: themes/default/templates/projects/index.html:33
 msgid "Featured Projects"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:16
+#: themes/default/templates/admin/index.html:32
 msgid "Show projects on the front page"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:18
-#: themes/default/templates/admin/index.html:25
-#: themes/default/templates/admin/index.html:34
-#: themes/default/templates/admin/index.html:53
-msgid "Manage"
-msgstr ""
-
-#: themes/default/templates/admin/index.html:22 view/admin.py:270
+#: themes/default/templates/admin/index.html:38 view/admin.py:275
 msgid "Categories"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:23
+#: themes/default/templates/admin/index.html:39
 msgid "Manage project categories"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:31
+#: themes/default/templates/admin/index.html:47
 msgid "Administrators"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:32
+#: themes/default/templates/admin/index.html:48
 msgid "Manage administrators"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:38
+#: themes/default/templates/admin/index.html:54
 #: themes/default/templates/projects/stats.html:225
 msgid "Users"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:39
+#: themes/default/templates/admin/index.html:55
 msgid "Export a list of users"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:41
+#: themes/default/templates/admin/index.html:57
 msgid "JSON"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:44
+#: themes/default/templates/admin/index.html:60
 msgid "CSV"
-msgstr ""
-
-#: themes/default/templates/admin/index.html:50
-msgid "Background Jobs"
-msgstr ""
-
-#: themes/default/templates/admin/index.html:51
-msgid "Monitor the background jobs"
 msgstr ""
 
 #: themes/default/templates/admin/projects.html:13
 msgid "Manage featured projects"
 msgstr ""
 
-#: themes/default/templates/admin/update_category.html:22 view/admin.py:327
-#: view/admin.py:346
+#: themes/default/templates/admin/update_category.html:22 view/admin.py:332
+#: view/admin.py:351
 msgid "Update Category"
 msgstr ""
 
-#: themes/default/templates/admin/users.html:14 view/admin.py:129
-#: view/admin.py:133
+#: themes/default/templates/admin/users.html:14 view/admin.py:134
+#: view/admin.py:138
 msgid "Manage Admin Users"
 msgstr ""
 
@@ -1725,7 +1775,7 @@ msgstr ""
 
 #: themes/default/templates/projects/task_priority.html:14
 #: themes/default/templates/projects/task_settings.html:22
-#: view/projects.py:1267
+#: view/projects.py:1271
 msgid "Task Priority"
 msgstr ""
 
@@ -1867,7 +1917,7 @@ msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr ""
 
 #: themes/default/templates/projects/tasks.html:27
-#: themes/default/templates/projects/tasks.html:70 view/projects.py:899
+#: themes/default/templates/projects/tasks.html:70 view/projects.py:903
 msgid "Export"
 msgstr ""
 
@@ -2457,10 +2507,10 @@ msgstr ""
 
 #: view/account.py:135 view/account.py:234 view/account.py:509
 #: view/account.py:525 view/account.py:539 view/account.py:572
-#: view/admin.py:262 view/admin.py:343 view/projects.py:214
-#: view/projects.py:271 view/projects.py:410 view/projects.py:1207
-#: view/projects.py:1258 view/projects.py:1303 view/projects.py:1378
-#: view/projects.py:1423
+#: view/admin.py:267 view/admin.py:348 view/projects.py:218
+#: view/projects.py:275 view/projects.py:414 view/projects.py:1211
+#: view/projects.py:1262 view/projects.py:1307 view/projects.py:1382
+#: view/projects.py:1427
 msgid "Please correct the errors"
 msgstr ""
 
@@ -2542,149 +2592,149 @@ msgstr ""
 msgid "New API-KEY generated"
 msgstr ""
 
-#: view/admin.py:259
+#: view/admin.py:264
 msgid "Category added"
 msgstr ""
 
-#: view/admin.py:295
+#: view/admin.py:300
 msgid "Category deleted"
 msgstr ""
 
-#: view/admin.py:300
+#: view/admin.py:305
 msgid ""
 "Sorry, it is not possible to delete the only available category. You can "
 "modify it,  click the edit button"
 msgstr ""
 
-#: view/admin.py:339
+#: view/admin.py:344
 msgid "Category updated"
 msgstr ""
 
-#: view/projects.py:230
+#: view/projects.py:234
 msgid "Project created!"
 msgstr ""
 
-#: view/projects.py:233
+#: view/projects.py:237
 msgid "You can check the "
 msgstr ""
 
-#: view/projects.py:235
+#: view/projects.py:239
 msgid "Guide and Documentation"
 msgstr ""
 
-#: view/projects.py:237
+#: view/projects.py:241
 msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
 msgstr ""
 
-#: view/projects.py:265
+#: view/projects.py:269
 msgid "Task presenter added!"
 msgstr ""
 
-#: view/projects.py:278
+#: view/projects.py:282
 msgid "<strong>Note</strong> You will need to upload the tasks using the"
 msgstr ""
 
-#: view/projects.py:280
+#: view/projects.py:284
 msgid "CSV importer"
 msgstr ""
 
-#: view/projects.py:281
+#: view/projects.py:285
 msgid ""
 " or download the project bundle and run the "
 "<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 
-#: view/projects.py:347
+#: view/projects.py:351
 msgid "Project deleted!"
 msgstr ""
 
-#: view/projects.py:384
+#: view/projects.py:388
 msgid "Project updated!"
 msgstr ""
 
-#: view/projects.py:429
+#: view/projects.py:433
 msgid ""
 "Your project thumbnail has been updated! It may"
 "                                   take some minutes to refresh..."
 msgstr ""
 
-#: view/projects.py:432
+#: view/projects.py:436
 msgid "You must provide a file to change the avatar"
 msgstr ""
 
-#: view/projects.py:510
+#: view/projects.py:514
 msgid "Importing tasks, this may take a while, wait..."
 msgstr ""
 
-#: view/projects.py:568
+#: view/projects.py:572
 msgid ""
 "You're trying to import a large amount of tasks, so please be patient."
 "            You will receive an email when the tasks are ready."
 msgstr ""
 
-#: view/projects.py:611
+#: view/projects.py:615
 msgid "Success! Tasks will be imported daily."
 msgstr ""
 
-#: view/projects.py:665
+#: view/projects.py:669
 msgid "Sorry, incorrect password"
 msgstr ""
 
-#: view/projects.py:695
+#: view/projects.py:699
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 
-#: view/projects.py:887
+#: view/projects.py:891
 msgid "All the tasks and associated task runs have been deleted"
 msgstr ""
 
-#: view/projects.py:900
+#: view/projects.py:904
 msgid "Exporting data..., this may take a while"
 msgstr ""
 
-#: view/projects.py:993
+#: view/projects.py:997
 msgid "Data exported to "
 msgstr ""
 
-#: view/projects.py:1051
+#: view/projects.py:1055
 msgid ""
 "Oops, the project does not have tasks to                     export, if "
 "you are the owner add some tasks"
 msgstr ""
 
-#: view/projects.py:1057
+#: view/projects.py:1061
 msgid ""
 "Oops, there are no Task Runs yet to export, invite                      "
 "some users to participate"
 msgstr ""
 
-#: view/projects.py:1203
+#: view/projects.py:1207
 msgid "Redundancy of Tasks updated!"
 msgstr ""
 
-#: view/projects.py:1253
+#: view/projects.py:1257
 msgid "Project Task Scheduler updated!"
 msgstr ""
 
-#: view/projects.py:1300
+#: view/projects.py:1304
 msgid "Task priority has been changed"
 msgstr ""
 
-#: view/projects.py:1357
+#: view/projects.py:1361
 msgid "Write a new post"
 msgstr ""
 
-#: view/projects.py:1389
+#: view/projects.py:1393
 msgid "Blog post created!"
 msgstr ""
 
-#: view/projects.py:1407
+#: view/projects.py:1411
 msgid "Edit a post"
 msgstr ""
 
-#: view/projects.py:1435
+#: view/projects.py:1439
 msgid "Blog post updated!"
 msgstr ""
 
