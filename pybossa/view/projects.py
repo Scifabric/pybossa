@@ -30,16 +30,17 @@ from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from rq import Queue
 
-import pybossa.model as model
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
     csv_exporter, importer, flickr)
 from pybossa.model.project import Project
+from pybossa.model.category import Category
 from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
-from pybossa.util import Pagination, admin_required, get_user_id_or_ip
+from pybossa.util import Pagination, admin_required, get_user_id_or_ip, rank
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
@@ -116,7 +117,7 @@ def redirect_old_draft(page):
 def index(page):
     """List projects in the system"""
     if cached_projects.n_count('featured') > 0:
-        return project_index(page, cached_projects.get_featured, 'featured',
+        return project_index(page, cached_projects.get_all_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_all()
@@ -129,7 +130,10 @@ def project_index(page, lookup, category, fallback, use_count):
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    projects = lookup(category, page, per_page)
+    ranked_projects = rank(lookup(category))
+    offset = (page - 1) * per_page
+    projects = ranked_projects[offset:offset+per_page]
+
     count = cached_projects.n_count(category)
 
     data = []
@@ -140,15 +144,15 @@ def project_index(page, lookup, category, fallback, use_count):
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_all()
     # Check for pre-defined categories featured and draft
-    featured_cat = model.category.Category(name='Featured',
-                                           short_name='featured',
-                                           description='Featured projects')
+    featured_cat = Category(name='Featured',
+                            short_name='featured',
+                            description='Featured projects')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
-        active_cat = model.category.Category(name='Draft',
-                                             short_name='draft',
-                                             description='Draft projects')
+        active_cat = Category(name='Draft',
+                              short_name='draft',
+                              description='Draft projects')
     else:
         active_cat = project_repo.get_category_by(short_name=category)
 
@@ -173,7 +177,7 @@ def project_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft projects"""
-    return project_index(page, cached_projects.get_draft, 'draft',
+    return project_index(page, cached_projects.get_all_draft, 'draft',
                      False, True)
 
 
@@ -181,7 +185,7 @@ def draft(page):
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
-    return project_index(page, cached_projects.get, category, False, True)
+    return project_index(page, cached_projects.get_all, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
@@ -1052,7 +1056,7 @@ def export_to(short_name):
                     "Oops, the project does not have tasks to \
                     export, if you are the owner add some tasks")),
             "task_run": (
-                model.task_run.TaskRun, handle_task_run,
+                TaskRun, handle_task_run,
                 (lambda x: True),
                 gettext(
                     "Oops, there are no Task Runs yet to export, invite \

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PyBossa utils."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import update_wrapper
 import csv
 import codecs
@@ -107,7 +107,6 @@ def pretty_date(time=False):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc.
     """
-    from datetime import datetime
     import dateutil.parser
     now = datetime.now()
     if type(time) is str or type(time) is unicode:
@@ -355,7 +354,6 @@ def get_port():
 
 def get_user_id_or_ip():
     """Return the id of the current user if is authenticated.
-
     Otherwise returns its IP address (defaults to 127.0.0.1).
     """
     user_id = current_user.id if current_user.is_authenticated() else None
@@ -366,7 +364,6 @@ def get_user_id_or_ip():
 
 def with_cache_disabled(f):
     """Decorator that disables the cache for the execution of a function.
-
     It enables it back when the function call is done.
     """
     import os
@@ -401,3 +398,61 @@ def username_from_full_name(username):
     if type(username) == str:
         return username.decode('ascii', 'ignore').lower().replace(' ', '')
     return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')
+
+
+def rank(projects):
+    """Takes a list of (published) projects (as dicts) and orders them by
+    activity, number of volunteers, number of tasks and other criteria."""
+    def earned_points(project):
+        points = 0
+        if project['overall_progress'] != 100L:
+            points += 1000
+        if not ('test' in project['name'].lower()
+                or 'test' in project['short_name'].lower()):
+            points += 500
+        if project['info'].get('thumbnail'):
+            points += 200
+        points += _points_by_interval(project['n_tasks'], weight=1)
+        points += _points_by_interval(project['n_volunteers'], weight=2)
+        points += _last_activity_points(project)
+        return points
+
+    projects.sort(key=earned_points, reverse=True)
+    return projects
+
+
+def _last_activity_points(project):
+    default = datetime(1970, 1, 1, 0, 0).strftime('%Y-%m-%dT%H:%M:%S')
+    updated_datetime = (project.get('updated') or default)
+    last_activity_datetime = (project.get('last_activity_raw') or default)
+    updated_datetime = updated_datetime.split('.')[0]
+    last_activity_datetime = last_activity_datetime.split('.')[0]
+    updated = datetime.strptime(updated_datetime, '%Y-%m-%dT%H:%M:%S')
+    last_activity = datetime.strptime(last_activity_datetime, '%Y-%m-%dT%H:%M:%S')
+    most_recent = max(updated, last_activity)
+
+    days_since_modified = (datetime.utcnow() - most_recent).days
+
+    if days_since_modified < 1:
+        return 50
+    if days_since_modified < 2:
+        return 20
+    if days_since_modified < 3:
+        return 10
+    if days_since_modified < 4:
+        return 5
+    return 0
+
+
+def _points_by_interval(value, weight=1):
+    if value > 100:
+        return 20 * weight
+    if value > 50:
+        return 15 * weight
+    if value > 20:
+        return 10 * weight
+    if value > 10:
+        return 5 * weight
+    if value > 0:
+        return 1 * weight
+    return 0

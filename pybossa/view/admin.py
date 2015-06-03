@@ -28,13 +28,18 @@ from flask import Response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
+from datetime import datetime
+from sqlalchemy.exc import ProgrammingError, InternalError
+from sqlalchemy.sql import text
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import project_repo, user_repo
+from pybossa.core import db, project_repo, user_repo
+from pybossa.view.account import get_update_feed
+from pybossa import dashboard as dashb
 import json
 from StringIO import StringIO
 
@@ -353,3 +358,38 @@ def update_category(id):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+
+@blueprint.route('/dashboard/')
+@login_required
+@admin_required
+def dashboard():
+    """Show PyBossa Dashboard."""
+    try:
+        active_users_last_week = dashb.format_users_week()
+        active_anon_last_week = dashb.format_anon_week()
+        new_projects_last_week = dashb.format_new_projects()
+        update_projects_last_week = dashb.format_update_projects()
+        new_tasks_week = dashb.format_new_tasks()
+        new_task_runs_week = dashb.format_new_task_runs()
+        new_users_week = dashb.format_new_users()
+        returning_users_week = dashb.format_returning_users()
+        update_feed = get_update_feed()
+
+        return render_template('admin/dashboard.html',
+                               title=gettext('Dashboard'),
+                               active_users_last_week=active_users_last_week,
+                               active_anon_last_week=active_anon_last_week,
+                               new_projects_last_week=new_projects_last_week,
+                               update_projects_last_week=update_projects_last_week,
+                               new_tasks_week=new_tasks_week,
+                               new_task_runs_week=new_task_runs_week,
+                               new_users_week=new_users_week,
+                               returning_users_week=returning_users_week,
+                               update_feed=update_feed,
+                               wait=False)
+    except ProgrammingError:
+        db.slave_session.rollback()
+        return render_template('admin/dashboard.html',
+                               title=gettext('Dashboard'),
+                               wait=True)

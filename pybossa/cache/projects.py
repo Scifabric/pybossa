@@ -142,7 +142,6 @@ def n_anonymous_volunteers(project_id):
     return n_anonymous_volunteers
 
 
-@memoize()
 def n_volunteers(project_id):
     """Return total number of volunteers of a project."""
     total = (n_anonymous_volunteers(project_id) +
@@ -201,22 +200,20 @@ def _n_featured():
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_featured(category=None, page=1, per_page=5):
+def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
-    sql = text('''SELECT project.id, project.name, project.short_name, project.info, project.created,
-               project.description,
+    sql = text('''SELECT project.id, project.name, project.short_name, project.info,
+               project.created, project.updated, project.description,
                "user".fullname AS owner FROM project, "user"
                WHERE project.featured=true AND project.hidden=0
-               AND "user".id=project.owner_id GROUP BY project.id, "user".id
-               OFFSET(:offset) LIMIT(:limit);
-               ''')
+               AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
 
-    offset = (page - 1) * per_page
-    results = session.execute(sql, dict(limit=per_page, offset=offset))
+    results = session.execute(sql)
     projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
+                       updated=row.updated,
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
@@ -226,6 +223,12 @@ def get_featured(category=None, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
+
+
+def get_featured(category=None, page=1, per_page=5):
+    """Return a list of featured project with a pagination."""
+    offset = (page - 1) * per_page
+    return get_all_featured()[offset:offset+per_page]
 
 
 @cache(key_prefix="number_published_projects",
@@ -264,24 +267,22 @@ def _n_draft():
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_draft(category=None, page=1, per_page=5):
-    """Return list of draft projects."""
+def get_all_draft(category=None):
+    """Return list of all draft projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.created,
-               project.description, project.info, "user".fullname as owner
+               project.description, project.info, project.updated, "user".fullname as owner
                FROM "user", project LEFT JOIN task ON project.id=task.project_id
                WHERE task.project_id IS NULL
                AND project.info NOT LIKE('%task_presenter%')
                AND project.hidden=0
-               AND project.owner_id="user".id
-               OFFSET :offset
-               LIMIT :limit;''')
+               AND project.owner_id="user".id;''')
 
-    offset = (page - 1) * per_page
-    results = session.execute(sql, dict(limit=per_page, offset=offset))
+    results = session.execute(sql)
     projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created,
+                       updated=row.updated,
                        description=row.description,
                        owner=row.owner,
                        last_activity=pretty_date(last_activity(row.id)),
@@ -292,6 +293,11 @@ def get_draft(category=None, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
+
+def get_draft(category=None, page=1, per_page=5):
+    """Return a list of draft project with a pagination."""
+    offset = (page - 1) * per_page
+    return get_all_draft()[offset:offset+per_page]
 
 
 @memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
@@ -322,13 +328,11 @@ def n_count(category):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get(category, page=1, per_page=5):
+def get_all(category):
     """Return a list of projects with at least one task and a task_presenter.
-
-    It also returns  a pagination for a given category.
     """
-    sql = text('''SELECT project.id, project.name, project.short_name, project.description,
-               project.info, project.created,
+    sql = text('''SELECT project.id, project.name, project.short_name,
+               project.description, project.info, project.created, project.updated,
                project.category_id, project.featured, "user".fullname AS owner
                FROM "user", task, project
                LEFT OUTER JOIN category ON project.category_id=category.id
@@ -338,18 +342,15 @@ def get(category, page=1, per_page=5):
                AND "user".id=project.owner_id
                AND project.info LIKE('%task_presenter%')
                AND task.project_id=project.id
-               GROUP BY project.id, "user".id ORDER BY project.name
-               OFFSET :offset
-               LIMIT :limit;''')
+               GROUP BY project.id, "user".id ORDER BY project.name;''')
 
-    offset = (page - 1) * per_page
-    results = session.execute(sql, dict(category=category,
-                                        limit=per_page, offset=offset))
+    results = session.execute(sql, dict(category=category))
     projects = []
     for row in results:
         project = dict(id=row.id,
                        name=row.name, short_name=row.short_name,
                        created=row.created,
+                       updated=row.updated,
                        description=row.description,
                        owner=row.owner,
                        featured=row.featured,
@@ -361,6 +362,14 @@ def get(category, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
+
+
+def get(category, page=1, per_page=5):
+    """Return a list of projects with at least one task and a task_presenter.
+    It also returns  a pagination for a given category.
+    """
+    offset = (page - 1) * per_page
+    return get_all(category)[offset:offset+per_page]
 
 
 # TODO: find a convenient cache timeout and cache, if needed
@@ -384,10 +393,10 @@ def reset():
     delete_cached('number_featured_projects')
     delete_cached('number_published_projects')
     delete_cached('number_draft_projects')
-    delete_memoized(get_featured)
-    delete_memoized(get_draft)
+    delete_memoized(get_all_featured)
+    delete_memoized(get_all_draft)
     delete_memoized(n_count)
-    delete_memoized(get)
+    delete_memoized(get_all)
 
 
 def delete_project(short_name):

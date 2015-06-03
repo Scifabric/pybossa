@@ -22,6 +22,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
+from pybossa.dashboard import get_dashboard_jobs
 
 
 MINUTE = 60
@@ -99,8 +100,9 @@ def get_periodic_jobs(queue):
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
+    dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-            engage_jobs, non_contrib_jobs]
+            engage_jobs, non_contrib_jobs, dashboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -293,13 +295,12 @@ def warm_cache():  # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
-    # Cache 3 pages
     projects_cached = []
-    pages = range(1, 4)
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.categories as cached_cat
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
+    from pybossa.util import rank
 
     def warm_project(_id, short_name, featured=False):
         if _id not in projects_cached:
@@ -320,21 +321,19 @@ def warm_cache():  # pragma: no cover
     projects = cached_projects.get_top()
     for p in projects:
         warm_project(p['id'], p['short_name'])
-    for page in pages:
-        projects = cached_projects.get_featured('featured', page,
-                                                app.config['APPS_PER_PAGE'])
-        for p in projects:
-            warm_project(p['id'], p['short_name'], featured=True)
+
+    # Cache 3 pages
+    to_cache = 3 * app.config['APPS_PER_PAGE']
+    projects = rank(cached_projects.get_all_featured('featured'))[:to_cache]
+    for p in projects:
+        warm_project(p['id'], p['short_name'], featured=True)
 
     # Categories
     categories = cached_cat.get_used()
     for c in categories:
-        for page in pages:
-            projects = cached_projects.get(c['short_name'],
-                                           page,
-                                           app.config['APPS_PER_PAGE'])
-            for p in projects:
-                warm_project(p['id'], p['short_name'])
+        projects = rank(cached_projects.get_all(c['short_name']))[:to_cache]
+        for p in projects:
+            warm_project(p['id'], p['short_name'])
     # Users
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
     for user in users:
