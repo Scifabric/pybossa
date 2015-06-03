@@ -2852,3 +2852,5 @@ msgstr "¡Artículo actualizado!"
 #~ msgid "Task imported successfully!"
 #~ msgstr "Tarea importada satisfactoriamente!"
 
+#~ msgstr "Tarea importada satisfactoriamente!"
+
