@@ -3764,3 +3764,52 @@ msgstr ""
 #~ msgid "Task imported successfully!"
 #~ msgstr "Tâches importées avec succès !"
 
+#~ msgid ""
+#~ "Use the\n"
+#~ "      Transcription template"
+#~ msgstr ""
+
+#~ msgid "Re-use the SoundCloud task template"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Use the\n"
+#~ "      Sound Task template"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Use the Google Drive\n"
+#~ "      template"
+#~ msgstr ""
+
+#~ msgid "Re-use the Vimeo task template"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Use the\n"
+#~ "      Video Task template"
+#~ msgstr ""
+
+#~ msgid "to import tasks"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Your avatar has been updated! It "
+#~ "may                               take some minutes"
+#~ " to refresh..."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Sorry, it is not possible to "
+#~ "delete the only                                    "
+#~ "available category. You can modify it,"
+#~ " click the                                    edit "
+#~ "button"
+#~ msgstr ""
+
+#~ msgid "Oops! It looks like the file is empty."
+#~ msgstr "Oups ! Votre fichier a l'air vide."
+
+#~ msgid "Task imported successfully!"
+#~ msgstr "Tâches importées avec succès !"
+
