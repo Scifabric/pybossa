@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-03 10:36+0200\n"
+"POT-Creation-Date: 2015-06-03 11:19+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Marvin Reimer <marvin@scifabric.com>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -2278,8 +2278,9 @@ msgid "HTML, JavaScript and Geo expertise"
 msgstr ""
 
 #: themes/default/templates/projects/presenters/map.html:6
-msgid "Use the Mprojecting template"
-msgstr ""
+#, fuzzy
+msgid "Use the Maps project template"
+msgstr "Verwende das Vimeo Aufgabentemplate"
 
 #: themes/default/templates/projects/presenters/pdf.html:2
 #: themes/default/templates/projects/tasks/gdocs-pdf.html:2
@@ -2833,4 +2834,7 @@ msgstr "Blogpost aktualisiert!"
 
 #~ msgid "Task imported successfully!"
 #~ msgstr "Aufgabe erfolgreich importiert!"
+
+#~ msgid "Use the Mprojecting template"
+#~ msgstr ""
 

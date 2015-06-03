@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2015-06-03 10:36+0200\n"
+"POT-Creation-Date: 2015-06-03 11:19+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -249,7 +249,7 @@ msgstr "El nombre de usuario ya está registrado"
 msgid "User name"
 msgstr "Nombre de usuario"
 
-#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:335
+#: forms/forms.py:236 forms/forms.py:275 forms/forms.py:337
 #, python-format
 msgid "Email must be between 3 and %s characters long"
 msgstr "El correo debe tener entre 3 y 35 caracteres"
@@ -559,17 +559,17 @@ msgid ""
 " just provided. Please, check it out and click on the link you'll find to"
 " create your account at"
 msgstr ""
-"Para confirmar tu identidad, hemos enviado un correo electrónico a la dirección"
-" que acabas de indicar. Por favor, revísalo y haz click en el enlace que"
-" encontrarás en el mismo para crear tu cuenta en"
+"Para confirmar tu identidad, hemos enviado un correo electrónico a la "
+"dirección que acabas de indicar. Por favor, revísalo y haz click en el "
+"enlace que encontrarás en el mismo para crear tu cuenta en"
 
 #: themes/default/templates/account/account_validation.html:9
 msgid ""
 "If you are not receiving the email, please check the junk folder. If it's"
 " not there please drop us an email to"
 msgstr ""
-"Si no recibes el correo, revisa la carpeta de spam, por favor."
-" Si no está ahí, contáctanos en"
+"Si no recibes el correo, revisa la carpeta de spam, por favor. Si no está"
+" ahí, contáctanos en"
 
 #: themes/default/templates/account/account_validation.html:10
 msgid "In the meantime, you can check some of the amazing"
@@ -601,7 +601,8 @@ msgid ""
 "If you want to be updated with our new features, projects, and\n"
 "        scientific projects, subscribe to our newsletter."
 msgstr ""
-"Si quieres estar al tanto de nuestras nuevas funcionalidades, proyectos y\n"
+"Si quieres estar al tanto de nuestras nuevas funcionalidades, proyectos y"
+"\n"
 " proyectos científicos, suscríbete a nuestro boletín."
 
 #: themes/default/templates/account/newsletter.html:15
@@ -1139,8 +1140,8 @@ msgid ""
 "geocoding and more!"
 msgstr ""
 "Asistencia en línea para realizar tareas que requieren de capacidades, "
-"conocimiento o inteligencia humanas, tales como clasificación de imágenes, "
-"transcripción de documentos, geolocalización y otras."
+"conocimiento o inteligencia humanas, tales como clasificación de "
+"imágenes, transcripción de documentos, geolocalización y otras."
 
 #: themes/default/templates/home/_pybossa_text.html:3
 msgid "Help advance research"
@@ -1477,8 +1478,9 @@ msgid ""
 "This export option stills in beta mode and may fail in the CKAN server. "
 "If you get an error, please send an e-mail to info@pybossa.com"
 msgstr ""
-"Esta opción de exportar está en fase beta y puede que falle en el servidor CKAN"
-"Si recibes un error, por favor, envía un correo a info@pybossa.com"
+"Esta opción de exportar está en fase beta y puede que falle en el "
+"servidor CKANSi recibes un error, por favor, envía un correo a "
+"info@pybossa.com"
 
 #: themes/default/templates/projects/export.html:56
 msgid "You don't have a Datahub.io API key in your"
@@ -2158,7 +2160,9 @@ msgstr "Anular permiso acceso"
 
 #: themes/default/templates/projects/importers/flickr.html:23
 msgid "Grant Crowdcrafting access to your Flickr albums to select one..."
-msgstr "Permitir a Crowdcraftint acceso a tus álbumes de Flickr para seleccionar uno..."
+msgstr ""
+"Permitir a Crowdcraftint acceso a tus álbumes de Flickr para seleccionar "
+"uno..."
 
 #: themes/default/templates/projects/importers/flickr.html:25
 msgid "Log in Flickr"
@@ -2266,8 +2270,9 @@ msgid "HTML, JavaScript and Geo expertise"
 msgstr "HTML, JavaScript y mapas/GIS"
 
 #: themes/default/templates/projects/presenters/map.html:6
-msgid "Use the Mprojecting template"
-msgstr ""
+#, fuzzy
+msgid "Use the Maps project template"
+msgstr "Reutilizar la plantilla de imágenes"
 
 #: themes/default/templates/projects/presenters/pdf.html:2
 #: themes/default/templates/projects/tasks/gdocs-pdf.html:2
@@ -2331,10 +2336,6 @@ msgstr "Esta tarea no pertenece a"
 #: themes/default/templates/projects/task/wrong.html:9
 msgid "Try with another one"
 msgstr "Prueba con otra"
-
-#: themes/default/templates/projects/tasks/csv.html:3
-msgid "Provide a public link to your own CSV file"
-msgstr "Proporciona un enlace público al CSV"
 
 #: themes/default/templates/projects/tasks/csv.html:3
 msgid "Provide a public link to your own CSV file"
@@ -2451,7 +2452,6 @@ msgstr "Utilizar las tareas de Sonido"
 #: themes/default/templates/projects/tasks/gdocs-video.html:3
 msgid "Re-use the Vimeo tasks"
 msgstr "Reutilizar las tareas de Vimeo"
-
 
 #: themes/default/templates/projects/tasks/gdocs-video.html:5
 msgid ""
@@ -2610,7 +2610,8 @@ msgid ""
 "An email has been sent to verify your                           new "
 "email: %s. Once you verify it, it will                           be "
 "updated.email_addr"
-msgstr "Se te ha enviado un correo electrónico para que verifiques la nueva "
+msgstr ""
+"Se te ha enviado un correo electrónico para que verifiques la nueva "
 "dirección: %s. Una vez que lo hayas hecho, se actualizará.email_addr"
 
 #: view/account.py:507 view/account.py:537
@@ -2738,8 +2739,8 @@ msgid ""
 "You're trying to import a large amount of tasks, so please be patient."
 "            You will receive an email when the tasks are ready."
 msgstr ""
-"Estás tratando de importar una gran cantidad de tareas, por favor, ten paciencia."
-"Recibirás un correo electrónico cuando estén listas."
+"Estás tratando de importar una gran cantidad de tareas, por favor, ten "
+"paciencia.Recibirás un correo electrónico cuando estén listas."
 
 #: view/projects.py:611
 msgid "Success! Tasks will be imported daily."
@@ -2816,8 +2817,6 @@ msgid "Blog post updated!"
 msgstr "¡Artículo actualizado!"
 
 #~ msgid ""
-#~ "Use the CSV URL\n"
-#~ "      template"
 #~ msgstr "Usa un enlace a fichero CSV"
 
 #~ msgid "Oops! It looks like the file is empty."
@@ -2825,4 +2824,7 @@ msgstr "¡Artículo actualizado!"
 
 #~ msgid "Task imported successfully!"
 #~ msgstr "Tarea importada satisfactoriamente!"
+
+#~ msgid "Use the Mprojecting template"
+#~ msgstr ""
 

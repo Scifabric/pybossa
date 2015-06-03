@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-03 10:36+0200\n"
+"POT-Creation-Date: 2015-06-03 11:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2175,7 +2175,7 @@ msgid "HTML, JavaScript and Geo expertise"
 msgstr ""
 
 #: themes/default/templates/projects/presenters/map.html:6
-msgid "Use the Mprojecting template"
+msgid "Use the Maps project template"
 msgstr ""
 
 #: themes/default/templates/projects/presenters/pdf.html:2
