@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-27 15:45+0200\n"
+"POT-Creation-Date: 2015-06-03 10:36+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Marvin Reimer <marvin@scifabric.com>\n"
 "Language-Team: de <LL@li.org>\n"
@@ -63,7 +63,7 @@ msgstr ""
 "Uhps, es gibt bisher keine Antworten, die exportiert werden können. Lade "
 "Nutzer ein, zu der Aufgabe beizutragen"
 
-#: forms/forms.py:40 forms/forms.py:352
+#: forms/forms.py:40 forms/forms.py:354
 #: themes/default/templates/stats/index.html:18
 msgid "Name"
 msgstr "Name"
@@ -84,7 +84,7 @@ msgstr "Diese Kurzbezeichnung wird bereits verwendet"
 msgid "Long Description"
 msgstr "Ausführliche Beschreibung"
 
-#: forms/forms.py:57 forms/forms.py:356
+#: forms/forms.py:57 forms/forms.py:358
 #: themes/default/templates/projects/_helpers.html:63
 #: themes/default/templates/projects/_helpers.html:131
 msgid "Description"
@@ -311,7 +311,11 @@ msgstr "Spanisch"
 msgid "French"
 msgstr "Französisch"
 
-#: forms/forms.py:308
+#: forms/forms.py:301
+msgid "German"
+msgstr ""
+
+#: forms/forms.py:310
 msgid "Current password"
 msgstr "Aktuelles Passwort"
 
@@ -2822,8 +2826,6 @@ msgstr "Blogpost aktualisiert!"
 #~ msgstr "Deutsch"
 
 #~ msgid ""
-#~ "Use the CSV URL\n"
-#~ "      template"
 #~ msgstr "Benutze die CSV URL Vorlage"
 
 #~ msgid "Oops! It looks like the file is empty."

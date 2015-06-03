@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-05-27 15:50+0200\n"
+"POT-Creation-Date: 2015-06-03 10:36+0200\n"
 "PO-Revision-Date: 2013-08-07 15:01+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: fr <LL@li.org>\n"
@@ -3756,55 +3756,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "to import tasks"
-#~ msgstr ""
-
-#~ msgid "Oops! It looks like the file is empty."
-#~ msgstr "Oups ! Votre fichier a l'air vide."
-
-#~ msgid "Task imported successfully!"
-#~ msgstr "Tâches importées avec succès !"
-
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Transcription template"
-#~ msgstr ""
-
-#~ msgid "Re-use the SoundCloud task template"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Sound Task template"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Use the Google Drive\n"
-#~ "      template"
-#~ msgstr ""
-
-#~ msgid "Re-use the Vimeo task template"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Use the\n"
-#~ "      Video Task template"
-#~ msgstr ""
-
-#~ msgid "to import tasks"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Your avatar has been updated! It "
-#~ "may                               take some minutes"
-#~ " to refresh..."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Sorry, it is not possible to "
-#~ "delete the only                                    "
-#~ "available category. You can modify it,"
-#~ " click the                                    edit "
-#~ "button"
 #~ msgstr ""
 
 #~ msgid "Oops! It looks like the file is empty."
