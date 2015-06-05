@@ -22,7 +22,7 @@ from datetime import datetime
 
 
 def active_users_week():
-    """Get active users last week."""
+    """Create or update active users last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_users');''')
@@ -53,7 +53,7 @@ def active_users_week():
 
 
 def active_anon_week():
-    """Get active anon last week."""
+    """Create or update active anon last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_anon');''')
@@ -84,7 +84,7 @@ def active_anon_week():
 
 
 def new_projects_week():
-    """Get new created projects last week."""
+    """Create or update new created projects last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_project_new');''')
@@ -113,7 +113,7 @@ def new_projects_week():
 
 
 def update_projects_week():
-    """Get updated projects last week."""
+    """Create or update updated projects last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_project_update');''')
@@ -142,7 +142,7 @@ def update_projects_week():
 
 
 def new_tasks_week():
-    """Get new tasks last week."""
+    """Create or update new tasks last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_new_task');''')
@@ -169,7 +169,7 @@ def new_tasks_week():
 
 
 def new_task_runs_week():
-    """Get new task_runs last week."""
+    """Create or update new task_runs last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_new_task_run');''')
@@ -196,7 +196,7 @@ def new_task_runs_week():
 
 
 def new_users_week():
-    """Get new users last week."""
+    """Create or update new users last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_new_users');''')
@@ -223,7 +223,7 @@ def new_users_week():
 
 
 def returning_users_week():
-    """Get returning users last week."""
+    """Create or update returning users last week materialized view."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
                relname='dashboard_week_returning_users');''')
