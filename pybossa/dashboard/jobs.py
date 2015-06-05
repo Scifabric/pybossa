@@ -29,14 +29,17 @@ def _exists_materialized_view(view):
     return False
 
 
+def _refresh_materialized_view(view):
+    sql = text('REFRESH MATERIALIZED VIEW %s' % view)
+    db.session.execute(sql)
+    db.session.commit()
+    return "Materialized view refreshed"
+
+
 def active_users_week():
     """Create or update active users last week materialized view."""
     if _exists_materialized_view('dashboard_week_users'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_users''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_users')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_users AS
                    WITH crafters_per_day AS
@@ -58,11 +61,7 @@ def active_users_week():
 def active_anon_week():
     """Create or update active anon last week materialized view."""
     if _exists_materialized_view('dashboard_week_anon'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_anon''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_anon')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_anon AS
                    WITH crafters_per_day AS
@@ -84,11 +83,7 @@ def active_anon_week():
 def new_projects_week():
     """Create or update new created projects last week materialized view."""
     if _exists_materialized_view('dashboard_week_project_new'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_project_new''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_project_new')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_new AS
                    SELECT TO_DATE(project.created, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
@@ -108,11 +103,7 @@ def new_projects_week():
 def update_projects_week():
     """Create or update updated projects last week materialized view."""
     if _exists_materialized_view('dashboard_week_project_update'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_project_update''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_project_update')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_update AS
                    SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
@@ -132,11 +123,7 @@ def update_projects_week():
 def new_tasks_week():
     """Create or update new tasks last week materialized view."""
     if _exists_materialized_view('dashboard_week_new_task'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_new_task''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_new_task')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_new_task AS
                       SELECT TO_DATE(task.created,
@@ -154,11 +141,7 @@ def new_tasks_week():
 def new_task_runs_week():
     """Create or update new task_runs last week materialized view."""
     if _exists_materialized_view('dashboard_week_new_task_run'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_new_task_run''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_new_task_run')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_new_task_run AS
                       SELECT TO_DATE(task_run.finish_time,
@@ -176,11 +159,7 @@ def new_task_runs_week():
 def new_users_week():
     """Create or update new users last week materialized view."""
     if _exists_materialized_view('dashboard_week_new_users'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_new_users''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_new_users')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_new_users AS
                       SELECT TO_DATE("user".created,
@@ -198,11 +177,7 @@ def new_users_week():
 def returning_users_week():
     """Create or update returning users last week materialized view."""
     if _exists_materialized_view('dashboard_week_returning_users'):
-        sql = text('''REFRESH MATERIALIZED VIEW
-                   dashboard_week_returning_users''')
-        db.session.execute(sql)
-        db.session.commit()
-        return "Materialized view refreshed"
+        return _refresh_materialized_view('dashboard_week_returning_users')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_returning_users AS
                    WITH data AS (
