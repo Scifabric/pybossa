@@ -20,28 +20,6 @@ from sqlalchemy import text
 from pybossa.core import db
 from datetime import datetime
 
-MINUTE = 60
-
-
-def get_dashboard_jobs():  # pragma: no cover
-    """Return dashboard jobs."""
-    yield dict(name=dashboard_active_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_active_anon_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_new_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_update_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_new_tasks_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_new_task_runs_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_new_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-    yield dict(name=dashboard_returning_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
-
 
 def dashboard_active_users_week():
     """Get active users last week."""
@@ -103,6 +81,7 @@ def dashboard_active_anon_week():
             results = db.session.execute(sql)
             db.session.commit()
             return "Materialized view created"
+
 
 def dashboard_new_projects_week():
     """Get new created projects last week."""
@@ -215,6 +194,7 @@ def dashboard_new_task_runs_week():
             db.session.commit()
             return "Materialized view created"
 
+
 def dashboard_new_users_week():
     """Get new users last week."""
     # Check first if the materialized view exists
@@ -240,6 +220,7 @@ def dashboard_new_users_week():
             results = db.session.execute(sql)
             db.session.commit()
             return "Materialized view created"
+
 
 def dashboard_returning_users_week():
     """Get returning users last week."""
@@ -271,6 +252,7 @@ def dashboard_returning_users_week():
             db.session.commit()
             return "Materialized view created"
 
+
 def format_users_week():
     """Return a variable with users data."""
     session = db.slave_session
@@ -288,6 +270,7 @@ def format_users_week():
         series.append(0)
     active_users_last_week = dict(labels=labels, series=[series])
     return active_users_last_week
+
 
 def format_anon_week():
     """Return a variable with anon data."""
@@ -307,6 +290,7 @@ def format_anon_week():
     active_anon_last_week = dict(labels=labels, series=[series])
     return active_anon_last_week
 
+
 def format_new_projects():
     """Return new projects data."""
     session = db.slave_session
@@ -321,6 +305,7 @@ def format_new_projects():
         new_projects_last_week.append(datum)
     return new_projects_last_week
 
+
 def format_update_projects():
     """Return updated projects data."""
     session = db.slave_session
@@ -334,6 +319,7 @@ def format_update_projects():
                      email_addr=row.email_addr)
         update_projects_last_week.append(datum)
     return update_projects_last_week
+
 
 def format_new_tasks():
     """Return new tasks data."""
@@ -352,6 +338,7 @@ def format_new_tasks():
         series.append(0)
     new_tasks_week = dict(labels=labels, series=[series])
     return new_tasks_week
+
 
 def format_new_task_runs():
     """Return new task runs data."""
@@ -390,6 +377,7 @@ def format_new_users():
 
     new_users_week = dict(labels=labels, series=[series])
     return new_users_week
+
 
 def format_returning_users():
     """Return returning users data."""

@@ -22,7 +22,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
-from pybossa.dashboard import get_dashboard_jobs
+import pybossa.dashboard as dashboard
 
 
 MINUTE = 60
@@ -198,6 +198,26 @@ def get_inactive_users_jobs(queue='quaterly'):
                        timeout=(10 * MINUTE),
                        queue=queue)
             yield job
+
+
+def get_dashboard_jobs():  # pragma: no cover
+    """Return dashboard jobs."""
+    yield dict(name=dashboard.dashboard_active_users_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_active_anon_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_new_projects_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_update_projects_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_new_tasks_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_new_task_runs_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_new_users_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=dashboard.dashboard_returning_users_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
 
 
 def get_non_contributors_users_jobs(queue='quaterly'):
