@@ -68,7 +68,7 @@ class _BulkTaskCSVImport(_BulkTaskImport):
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
         field_header_index = []
-
+        row_number = 0
         for row in csvreader:
             if not headers:
                 headers = row
@@ -76,10 +76,18 @@ class _BulkTaskCSVImport(_BulkTaskImport):
                     msg = gettext('The file you uploaded has '
                                   'two headers with the same name.')
                     raise BulkImportException(msg)
+                if "" in map(lambda string: string.strip(), headers):
+                    position = map(lambda string: string.strip(), headers).index("")
+                    msg = gettext("The file you uploaded has an empty header on column %s." % (position+1))
+                    raise BulkImportException(msg)
                 field_headers = set(headers) & fields
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
+                row_number += 1
+                if len(headers) != len(row):
+                    msg = gettext("The file you uploaded has an extra value on row %s." % (row_number+1))
+                    raise BulkImportException(msg)
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:

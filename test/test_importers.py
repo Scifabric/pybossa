@@ -552,8 +552,8 @@ class Test_BulkTaskCSVImport(object):
 
     def test_tasks_raises_exception_if_dup_header(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -566,10 +566,42 @@ class Test_BulkTaskCSVImport(object):
         finally:
             assert raised, "Exception not raised"
 
+    def test_tasks_raises_exception_if_empty_headers(self, request):
+        csv_file = FakeResponse(text='Foo,Bar,\n1,2,3', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
+        request.return_value = csv_file
+        msg = "The file you uploaded has an empty header on column 3."
+
+        raised = False
+        try:
+            self.importer.tasks(csv_url=self.url).next()
+        except BulkImportException as e:
+            raised = True
+            assert e[0] == msg, e
+        finally:
+            assert raised, "Exception not raised"
+
+    def test_tasks_raises_exception_if_headers_row_mismatch(self, request):
+        csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3,4', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
+        request.return_value = csv_file
+        msg = "The file you uploaded has an extra value on row 2."
+
+        raised = False
+        try:
+            self.importer.tasks(csv_url=self.url).next()
+        except BulkImportException as e:
+            raised = True
+            assert e[0] == msg, e
+        finally:
+            assert raised, "Exception not raised"
+
     def test_tasks_return_tasks_with_only_info_fields(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(csv_url=self.url)
@@ -579,9 +611,9 @@ class Test_BulkTaskCSVImport(object):
 
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
-                                  status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(csv_url=self.url)
@@ -592,8 +624,8 @@ class Test_BulkTaskCSVImport(object):
 
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
         csv_file = FakeResponse(text=u'Foo\nM\xc3\xbcnchen', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='ISO-8859-1')
+                                headers={'content-type': 'text/plain'},
+                                encoding='ISO-8859-1')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(csv_url=self.url)
@@ -696,8 +728,8 @@ class Test_BulkTaskGDImport(object):
 
     def test_tasks_raises_exception_if_dup_header(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -712,8 +744,8 @@ class Test_BulkTaskGDImport(object):
 
     def test_tasks_return_tasks_with_only_info_fields(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
@@ -723,9 +755,9 @@ class Test_BulkTaskGDImport(object):
 
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
-                                  status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='utf-8')
+                                status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
@@ -736,8 +768,8 @@ class Test_BulkTaskGDImport(object):
 
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
         csv_file = FakeResponse(text=u'Foo\nM\xc3\xbcnchen', status_code=200,
-                                  headers={'content-type': 'text/plain'},
-                                  encoding='ISO-8859-1')
+                                headers={'content-type': 'text/plain'},
+                                encoding='ISO-8859-1')
         request.return_value = csv_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
