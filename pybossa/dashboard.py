@@ -21,7 +21,7 @@ from pybossa.core import db
 from datetime import datetime
 
 
-def dashboard_active_users_week():
+def active_users_week():
     """Get active users last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -52,7 +52,7 @@ def dashboard_active_users_week():
             return "Materialized view created"
 
 
-def dashboard_active_anon_week():
+def active_anon_week():
     """Get active anon last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -83,7 +83,7 @@ def dashboard_active_anon_week():
             return "Materialized view created"
 
 
-def dashboard_new_projects_week():
+def new_projects_week():
     """Get new created projects last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -112,7 +112,7 @@ def dashboard_new_projects_week():
             return "Materialized view created"
 
 
-def dashboard_update_projects_week():
+def update_projects_week():
     """Get updated projects last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -141,7 +141,7 @@ def dashboard_update_projects_week():
             return "Materialized view created"
 
 
-def dashboard_new_tasks_week():
+def new_tasks_week():
     """Get new tasks last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -168,7 +168,7 @@ def dashboard_new_tasks_week():
             return "Materialized view created"
 
 
-def dashboard_new_task_runs_week():
+def new_task_runs_week():
     """Get new task_runs last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -195,7 +195,7 @@ def dashboard_new_task_runs_week():
             return "Materialized view created"
 
 
-def dashboard_new_users_week():
+def new_users_week():
     """Get new users last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
@@ -222,7 +222,7 @@ def dashboard_new_users_week():
             return "Materialized view created"
 
 
-def dashboard_returning_users_week():
+def returning_users_week():
     """Get returning users last week."""
     # Check first if the materialized view exists
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE

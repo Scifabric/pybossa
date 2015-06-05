@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_projects_week
-from pybossa.dashboard import dashboard_update_projects_week
+from pybossa.dashboard import new_projects_week
+from pybossa.dashboard import update_projects_week
 from pybossa.dashboard import format_new_projects, format_update_projects
 from pybossa.core import db
 from pybossa.repositories import ProjectRepository
@@ -37,7 +37,7 @@ class TestDashBoardNewProject(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_projects_week()
+        res = new_projects_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -49,7 +49,7 @@ class TestDashBoardNewProject(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_projects_week()
+        res = new_projects_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -57,7 +57,7 @@ class TestDashBoardNewProject(Test):
     def test_new_projects_week(self):
         """Test JOB update projects week works."""
         p = ProjectFactory.create()
-        dashboard_new_projects_week()
+        new_projects_week()
         sql = "select * from dashboard_week_project_new;"
         results = db.session.execute(sql)
         for row in results:
@@ -71,7 +71,7 @@ class TestDashBoardNewProject(Test):
     def test_format_new_projects(self):
         """Test format new projects works."""
         p = ProjectFactory.create()
-        dashboard_new_projects_week()
+        new_projects_week()
         res = format_new_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
         res = res[0]
@@ -94,7 +94,7 @@ class TestDashBoardUpdateProject(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_update_projects_week()
+        res = update_projects_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -106,7 +106,7 @@ class TestDashBoardUpdateProject(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_update_projects_week()
+        res = update_projects_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -117,7 +117,7 @@ class TestDashBoardUpdateProject(Test):
         p.name = 'NewNameName'
         project_repository = ProjectRepository(db)
         project_repository.update(p)
-        dashboard_update_projects_week()
+        update_projects_week()
         sql = "select * from dashboard_week_project_update;"
         results = db.session.execute(sql)
         for row in results:
@@ -134,7 +134,7 @@ class TestDashBoardUpdateProject(Test):
         p.name = 'NewNewNew'
         project_repo = ProjectRepository(db)
         project_repo.update(p)
-        dashboard_update_projects_week()
+        update_projects_week()
         res = format_update_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
         res = res[0]

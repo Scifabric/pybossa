@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_tasks_week, format_new_task_runs
-from pybossa.dashboard import dashboard_new_task_runs_week, format_new_tasks
+from pybossa.dashboard import new_tasks_week, format_new_task_runs
+from pybossa.dashboard import new_task_runs_week, format_new_tasks
 from pybossa.core import db
 from datetime import datetime, timedelta
 from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
@@ -36,7 +36,7 @@ class TestDashBoardNewTask(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_tasks_week()
+        res = new_tasks_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -48,7 +48,7 @@ class TestDashBoardNewTask(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_tasks_week()
+        res = new_tasks_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -56,7 +56,7 @@ class TestDashBoardNewTask(Test):
     def test_new_tasks(self):
         """Test JOB dashboard returns new task."""
         TaskFactory.create()
-        dashboard_new_tasks_week()
+        new_tasks_week()
         sql = "select * from dashboard_week_new_task;"
         results = db.session.execute(sql)
         for row in results:
@@ -67,7 +67,7 @@ class TestDashBoardNewTask(Test):
     def test_format_new_tasks_emtpy(self, db_mock):
         """Test format new tasks empty works."""
         db_mock.slave_session.execute.return_value = []
-        dashboard_new_tasks_week()
+        new_tasks_week()
         res = format_new_tasks()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -79,7 +79,7 @@ class TestDashBoardNewTask(Test):
     def test_format_new_tasks(self):
         """Test format new tasks works."""
         TaskFactory.create()
-        dashboard_new_tasks_week()
+        new_tasks_week()
         res = format_new_tasks()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -97,7 +97,7 @@ class TestDashBoardNewTaskRuns(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_task_runs_week()
+        res = new_task_runs_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -109,7 +109,7 @@ class TestDashBoardNewTaskRuns(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_task_runs_week()
+        res = new_task_runs_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -120,7 +120,7 @@ class TestDashBoardNewTaskRuns(Test):
         TaskRunFactory.create(finish_time=day.isoformat())
         day = datetime.utcnow() - timedelta(days=1)
         TaskRunFactory.create(finish_time=day.isoformat())
-        dashboard_new_task_runs_week()
+        new_task_runs_week()
         sql = "select * from dashboard_week_new_task_run;"
         results = db.session.execute(sql)
         for row in results:
@@ -131,7 +131,7 @@ class TestDashBoardNewTaskRuns(Test):
     def test_format_new_task_runs_emtpy(self, db_mock):
         """Test format new task_runs empty works."""
         db_mock.slave_session.execute.return_value = []
-        dashboard_new_task_runs_week()
+        new_task_runs_week()
         res = format_new_task_runs()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -144,7 +144,7 @@ class TestDashBoardNewTaskRuns(Test):
         """Test format new task_runs works."""
         TaskRunFactory.create()
         AnonymousTaskRunFactory.create()
-        dashboard_new_task_runs_week()
+        new_task_runs_week()
         res = format_new_task_runs()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')

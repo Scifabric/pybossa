@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_active_users_week, format_users_week
+from pybossa.dashboard import active_users_week, format_users_week
 from pybossa.core import db
 from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from default import Test, with_context
@@ -34,7 +34,7 @@ class TestDashBoardActiveUsers(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_active_users_week()
+        res = active_users_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -46,7 +46,7 @@ class TestDashBoardActiveUsers(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_active_users_week()
+        res = active_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -55,7 +55,7 @@ class TestDashBoardActiveUsers(Test):
         """Test JOB dashboard returns active users week runs."""
         TaskRunFactory.create()
         AnonymousTaskRunFactory.create()
-        dashboard_active_users_week()
+        active_users_week()
         sql = "select * from dashboard_week_users;"
         results = db.session.execute(sql)
         for row in results:
@@ -65,7 +65,7 @@ class TestDashBoardActiveUsers(Test):
     def test_format_users_week(self):
         """Test format users week works."""
         TaskRunFactory.create()
-        dashboard_active_users_week()
+        active_users_week()
         res = format_users_week()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -79,7 +79,7 @@ class TestDashBoardActiveUsers(Test):
         """Test format users week empty works."""
         db_mock.slave_session.execute.return_value = []
         AnonymousTaskRunFactory.create()
-        dashboard_active_users_week()
+        active_users_week()
         res = format_users_week()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')

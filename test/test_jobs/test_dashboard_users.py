@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import dashboard_new_users_week, format_returning_users
-from pybossa.dashboard import dashboard_returning_users_week, format_new_users
+from pybossa.dashboard import new_users_week, format_returning_users
+from pybossa.dashboard import returning_users_week, format_new_users
 from pybossa.core import db
 from datetime import datetime, timedelta
 from default import Test, with_context
@@ -37,7 +37,7 @@ class TestDashBoardNewUsers(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_users_week()
+        res = new_users_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -49,7 +49,7 @@ class TestDashBoardNewUsers(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_new_users_week()
+        res = new_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -57,7 +57,7 @@ class TestDashBoardNewUsers(Test):
     def test_number_users(self):
         """Test JOB dashboard returns number of users."""
         UserFactory.create()
-        dashboard_new_users_week()
+        new_users_week()
         sql = "select * from dashboard_week_new_users;"
         results = db.session.execute(sql)
         for row in results:
@@ -68,7 +68,7 @@ class TestDashBoardNewUsers(Test):
     def test_format_new_users(self):
         """Test format new users works."""
         UserFactory.create()
-        dashboard_new_users_week()
+        new_users_week()
         res = format_new_users()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -81,7 +81,7 @@ class TestDashBoardNewUsers(Test):
     def test_format_new_users_empty(self, db_mock):
         """Test format new users empty works."""
         db_mock.slave_session.execute.return_value = []
-        dashboard_new_users_week()
+        new_users_week()
         res = format_new_users()
         assert len(res['labels']) == 1
         day = datetime.utcnow().strftime('%Y-%m-%d')
@@ -99,7 +99,7 @@ class TestDashBoardReturningUsers(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_returning_users_week()
+        res = returning_users_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -111,7 +111,7 @@ class TestDashBoardReturningUsers(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = dashboard_returning_users_week()
+        res = returning_users_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
@@ -121,7 +121,7 @@ class TestDashBoardReturningUsers(Test):
         task_run = TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
         TaskRunFactory.create(finish_time=day.isoformat())
-        dashboard_returning_users_week()
+        returning_users_week()
         sql = "select * from dashboard_week_returning_users;"
         results = db.session.execute(sql)
         for row in results:
@@ -136,7 +136,7 @@ class TestDashBoardReturningUsers(Test):
         TaskRunFactory.create()
         day = datetime.utcnow() - timedelta(days=1)
         TaskRunFactory.create(finish_time=day.isoformat())
-        dashboard_returning_users_week()
+        returning_users_week()
         res = format_returning_users()
         for i in range(1,8):
             if i == 1:
@@ -165,7 +165,7 @@ class TestDashBoardReturningUsers(Test):
         TaskRunFactory.create(user=u, finish_time=day.isoformat())
         TaskRunFactory.create(user=u, finish_time=day.isoformat())
         TaskRunFactory.create(user=u, finish_time=day.isoformat())
-        dashboard_returning_users_week()
+        returning_users_week()
         res = format_returning_users()
         for i in range(1,8):
             if i == 1:

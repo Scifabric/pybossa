@@ -731,15 +731,15 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_project()
         self.new_task(1)
-        from pybossa.dashboard import *
-        dashboard_active_anon_week()
-        dashboard_active_users_week()
-        dashboard_new_users_week()
-        dashboard_new_tasks_week()
-        dashboard_new_task_runs_week()
-        dashboard_new_projects_week()
-        dashboard_update_projects_week()
-        dashboard_returning_users_week()
+        import pybossa.dashboard as dashboard
+        dashboard.active_anon_week()
+        dashboard.active_users_week()
+        dashboard.new_users_week()
+        dashboard.new_tasks_week()
+        dashboard.new_task_runs_week()
+        dashboard.new_projects_week()
+        dashboard.update_projects_week()
+        dashboard.returning_users_week()
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
