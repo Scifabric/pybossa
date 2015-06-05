@@ -17,16 +17,31 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Dashboard queries to be used in admin dashboard view."""
 from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db
 from datetime import datetime
 
 
+def _select_from_materialized_view(view, n_days=None):
+    if n_days is None:
+        sql = text("select * from %s" % view)
+        options = {}
+    else:
+        sql = text("""SELECT COUNT(user_id)
+                   FROM %s
+                   WHERE n_days=:n_days""" % view)
+        options = dict(n_days=n_days)
+    try:
+        session = db.slave_session
+        return session.execute(sql, options)
+    except ProgrammingError:
+        db.slave_session.rollback()
+        raise
+
+
 def format_users_week():
     """Return a variable with users data."""
-    session = db.slave_session
-    # Registered users
-    sql = text('''select * from dashboard_week_users''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_users')
     labels = []
     series = []
     for row in results:
@@ -42,10 +57,7 @@ def format_users_week():
 
 def format_anon_week():
     """Return a variable with anon data."""
-    session = db.slave_session
-    # Anon users
-    sql = text('''select * from dashboard_week_anon''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_anon')
     labels = []
     series = []
     for row in results:
@@ -61,10 +73,7 @@ def format_anon_week():
 
 def format_new_projects():
     """Return new projects data."""
-    session = db.slave_session
-    # New projects
-    sql = text('''select * from dashboard_week_project_new''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_project_new')
     new_projects_last_week = []
     for row in results:
         datum = dict(day=row.day, id=row.id, short_name=row.short_name,
@@ -76,10 +85,7 @@ def format_new_projects():
 
 def format_update_projects():
     """Return updated projects data."""
-    session = db.slave_session
-    # Updated projects
-    sql = text('''select * from dashboard_week_project_update''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_project_update')
     update_projects_last_week = []
     for row in results:
         datum = dict(day=row.day, id=row.id, short_name=row.short_name,
@@ -92,9 +98,7 @@ def format_update_projects():
 def format_new_tasks():
     """Return new tasks data."""
     session = db.slave_session
-    # New task
-    sql = text('''select * from dashboard_week_new_task''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_new_task')
     labels = []
     series = []
     for row in results:
@@ -110,10 +114,7 @@ def format_new_tasks():
 
 def format_new_task_runs():
     """Return new task runs data."""
-    session = db.slave_session
-    # New task_runs
-    sql = text('''select * from dashboard_week_new_task_run''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_new_task_run')
     labels = []
     series = []
     for row in results:
@@ -129,10 +130,7 @@ def format_new_task_runs():
 
 def format_new_users():
     """Return new registered users data."""
-    session = db.slave_session
-    # New Users
-    sql = text('''select * from dashboard_week_new_users''')
-    results = session.execute(sql)
+    results = _select_from_materialized_view('dashboard_week_new_users')
     labels = []
     series = []
     for row in results:
@@ -149,7 +147,6 @@ def format_new_users():
 
 def format_returning_users():
     """Return returning users data."""
-    session = db.slave_session
     # Returning Users
     labels = []
     series = []
@@ -158,10 +155,8 @@ def format_returning_users():
             label = "%s day" % i
         else:
             label = "%s days" % i
-        sql = text('''SELECT COUNT(user_id)
-                   FROM dashboard_week_returning_users
-                   WHERE n_days=:n_days''')
-        results = session.execute(sql, dict(n_days=i))
+        results = _select_from_materialized_view('dashboard_week_returning_users',
+                                                 n_days=i)
         total = 0
         for row in results:
             total = row.count

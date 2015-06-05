@@ -29,15 +29,13 @@ from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 from datetime import datetime
-from sqlalchemy.exc import ProgrammingError, InternalError
-from sqlalchemy.sql import text
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import db, project_repo, user_repo
+from pybossa.core import project_repo, user_repo
 from pybossa.view.account import get_update_feed
 import pybossa.dashboard.data as dashb
 import json
@@ -388,8 +386,8 @@ def dashboard():
                                returning_users_week=returning_users_week,
                                update_feed=update_feed,
                                wait=False)
-    except ProgrammingError:
-        db.slave_session.rollback()
+    except Exception as e:
+        current_app.logger.error(e)
         return render_template('admin/dashboard.html',
                                title=gettext('Dashboard'),
                                wait=True)
