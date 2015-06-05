@@ -72,22 +72,14 @@ class _BulkTaskCSVImport(_BulkTaskImport):
         for row in csvreader:
             if not headers:
                 headers = row
-                if len(headers) != len(set(headers)):
-                    msg = gettext('The file you uploaded has '
-                                  'two headers with the same name.')
-                    raise BulkImportException(msg)
-                if "" in map(lambda string: string.strip(), headers):
-                    position = map(lambda string: string.strip(), headers).index("")
-                    msg = gettext("The file you uploaded has an empty header on column %s." % (position+1))
-                    raise BulkImportException(msg)
+                self._check_no_duplicated_headers(headers)
+                self._check_no_empty_headers(headers)
                 field_headers = set(headers) & fields
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
                 row_number += 1
-                if len(headers) != len(row):
-                    msg = gettext("The file you uploaded has an extra value on row %s." % (row_number+1))
-                    raise BulkImportException(msg)
+                self._check_valid_row_length(row, row_number, headers)
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
@@ -95,6 +87,25 @@ class _BulkTaskCSVImport(_BulkTaskImport):
                     else:
                         task_data["info"][headers[idx]] = cell
                 yield task_data
+
+    def _check_no_duplicated_headers(self, headers):
+        if len(headers) != len(set(headers)):
+            msg = gettext('The file you uploaded has '
+                          'two headers with the same name.')
+            raise BulkImportException(msg)
+
+    def _check_no_empty_headers(self, headers):
+        if "" in map(lambda string: string.strip(), headers):
+            position = map(lambda string: string.strip(), headers).index("")
+            msg = gettext("The file you uploaded has an empty header on "
+                          "column %s." % (position+1))
+            raise BulkImportException(msg)
+
+    def _check_valid_row_length(self, row, row_number, headers):
+        if len(headers) != len(row):
+            msg = gettext("The file you uploaded has an extra value on "
+                          "row %s." % (row_number+1))
+            raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
         """Get CSV data from a request."""
