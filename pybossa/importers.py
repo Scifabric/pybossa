@@ -95,8 +95,9 @@ class _BulkTaskCSVImport(_BulkTaskImport):
             raise BulkImportException(msg)
 
     def _check_no_empty_headers(self, headers):
-        if "" in map(lambda string: string.strip(), headers):
-            position = map(lambda string: string.strip(), headers).index("")
+        stripped_headers = [header.strip() for header in headers]
+        if "" in stripped_headers:
+            position = stripped_headers.index("")
             msg = gettext("The file you uploaded has an empty header on "
                           "column %s." % (position+1))
             raise BulkImportException(msg)
