@@ -22,7 +22,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
-import pybossa.dashboard as dashboard
+import pybossa.dashboard.jobs as dashboard
 
 
 MINUTE = 60

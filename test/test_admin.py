@@ -731,7 +731,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_project()
         self.new_task(1)
-        import pybossa.dashboard as dashboard
+        import pybossa.dashboard.jobs as dashboard
         dashboard.active_anon_week()
         dashboard.active_users_week()
         dashboard.new_users_week()

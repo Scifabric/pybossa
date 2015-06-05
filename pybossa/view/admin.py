@@ -39,7 +39,7 @@ from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import db, project_repo, user_repo
 from pybossa.view.account import get_update_feed
-from pybossa import dashboard as dashb
+import pybossa.dashboard.data as dashb
 import json
 from StringIO import StringIO
 

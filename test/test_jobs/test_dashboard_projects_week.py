@@ -16,9 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import new_projects_week
-from pybossa.dashboard import update_projects_week
-from pybossa.dashboard import format_new_projects, format_update_projects
+from pybossa.dashboard.jobs import new_projects_week, update_projects_week
+from pybossa.dashboard.data import format_new_projects, format_update_projects
 from pybossa.core import db
 from pybossa.repositories import ProjectRepository
 from factories.project_factory import ProjectFactory
@@ -30,7 +29,7 @@ from datetime import datetime
 class TestDashBoardNewProject(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -42,7 +41,7 @@ class TestDashBoardNewProject(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()
@@ -87,7 +86,7 @@ class TestDashBoardNewProject(Test):
 class TestDashBoardUpdateProject(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -99,7 +98,7 @@ class TestDashBoardUpdateProject(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()

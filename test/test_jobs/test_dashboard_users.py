@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import new_users_week, format_returning_users
-from pybossa.dashboard import returning_users_week, format_new_users
+from pybossa.dashboard.jobs import new_users_week, returning_users_week
+from pybossa.dashboard.data import format_new_users, format_returning_users
 from pybossa.core import db
 from datetime import datetime, timedelta
 from default import Test, with_context
@@ -30,7 +30,7 @@ from sqlalchemy import text
 class TestDashBoardNewUsers(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -42,7 +42,7 @@ class TestDashBoardNewUsers(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()
@@ -77,7 +77,7 @@ class TestDashBoardNewUsers(Test):
         assert res['series'][0][0] == 1, res['series'][0][0]
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.data.db')
     def test_format_new_users_empty(self, db_mock):
         """Test format new users empty works."""
         db_mock.slave_session.execute.return_value = []
@@ -92,7 +92,7 @@ class TestDashBoardNewUsers(Test):
 class TestDashBoardReturningUsers(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -104,7 +104,7 @@ class TestDashBoardReturningUsers(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()
@@ -129,7 +129,7 @@ class TestDashBoardReturningUsers(Test):
             assert row.user_id == task_run.user_id
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.data.db')
     def test_format_returning_users_emtpy(self, db_mock):
         """Test format returning users works."""
         db_mock.slave_session.execute.return_value = []

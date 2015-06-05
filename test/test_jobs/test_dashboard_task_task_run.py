@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard import new_tasks_week, format_new_task_runs
-from pybossa.dashboard import new_task_runs_week, format_new_tasks
+from pybossa.dashboard.jobs import new_tasks_week, new_task_runs_week
+from pybossa.dashboard.data import format_new_task_runs, format_new_tasks
 from pybossa.core import db
 from datetime import datetime, timedelta
 from factories.taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
@@ -29,7 +29,7 @@ from mock import patch, MagicMock
 class TestDashBoardNewTask(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -41,7 +41,7 @@ class TestDashBoardNewTask(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()
@@ -63,7 +63,7 @@ class TestDashBoardNewTask(Test):
             assert row.day_tasks == 1, row.day_tasks
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.data.db')
     def test_format_new_tasks_emtpy(self, db_mock):
         """Test format new tasks empty works."""
         db_mock.slave_session.execute.return_value = []
@@ -90,7 +90,7 @@ class TestDashBoardNewTask(Test):
 class TestDashBoardNewTaskRuns(Test):
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_refreshed(self, db_mock):
         """Test JOB dashboard materialized view is refreshed."""
         result = MagicMock()
@@ -102,7 +102,7 @@ class TestDashBoardNewTaskRuns(Test):
         assert res == 'Materialized view refreshed'
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.jobs.db')
     def test_materialized_view_created(self, db_mock):
         """Test JOB dashboard materialized view is created."""
         result = MagicMock()
@@ -127,7 +127,7 @@ class TestDashBoardNewTaskRuns(Test):
             assert row.day_task_runs == 1, row.day_task_runs
 
     @with_context
-    @patch('pybossa.dashboard.db')
+    @patch('pybossa.dashboard.data.db')
     def test_format_new_task_runs_emtpy(self, db_mock):
         """Test format new task_runs empty works."""
         db_mock.slave_session.execute.return_value = []
