@@ -745,3 +745,27 @@ class TestAdmin(web.Helper):
         assert res.status_code == 200, err_msg
         assert "No data" not in res.data, res.data
         assert "New Users" in res.data, res.data
+
+    @with_context
+    @patch('pybossa.view.admin.dashboard_queue')
+    def test_admin_dashboard_admin_refresh_user_data(self, mock):
+        """Test ADMIN dashboard admins refresh can access it with data"""
+        url = '/admin/dashboard/?refresh=1'
+        self.register()
+        self.new_project()
+        self.new_task(1)
+        import pybossa.dashboard.jobs as dashboard
+        dashboard.active_anon_week()
+        dashboard.active_users_week()
+        dashboard.new_users_week()
+        dashboard.new_tasks_week()
+        dashboard.new_task_runs_week()
+        dashboard.new_projects_week()
+        dashboard.update_projects_week()
+        dashboard.returning_users_week()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert "No data" not in res.data, res.data
+        assert "New Users" in res.data, res.data
+        assert mock.enqueue.called
