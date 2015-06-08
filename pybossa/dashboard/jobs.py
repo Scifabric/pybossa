@@ -53,7 +53,7 @@ def active_users_week():
                         GROUP BY day, task_run.user_id)
                    SELECT day, COUNT(crafters_per_day.user_id) AS n_users
                    FROM crafters_per_day GROUP BY day ORDER BY day;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -75,7 +75,7 @@ def active_anon_week():
                         GROUP BY day, task_run.user_ip)
                    SELECT day, COUNT(crafters_per_day.user_ip) AS n_users
                    FROM crafters_per_day GROUP BY day ORDER BY day;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -95,7 +95,7 @@ def new_projects_week():
                                 ('1 week')::INTERVAL
                    AND "user".id=project.owner_id
                    GROUP BY project.id, "user".name, "user".email_addr;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -115,7 +115,7 @@ def update_projects_week():
                                 ('1 week')::INTERVAL
                    AND "user".id=project.owner_id
                    GROUP BY project.id, "user".name, "user".email_addr;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -133,7 +133,7 @@ def new_tasks_week():
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
                       GROUP BY day;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -151,7 +151,7 @@ def new_task_runs_week():
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
                       GROUP BY day;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -169,7 +169,7 @@ def new_users_week():
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
                       GROUP BY day;''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
 
@@ -191,6 +191,6 @@ def returning_users_week():
                    FROM data GROUP BY user_id HAVING(count(user_id) > 1)
                    ORDER by n_days;
                       ''')
-        results = db.session.execute(sql)
+        db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"

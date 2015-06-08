@@ -97,7 +97,6 @@ def format_update_projects():
 
 def format_new_tasks():
     """Return new tasks data."""
-    session = db.slave_session
     results = _select_from_materialized_view('dashboard_week_new_task')
     labels = []
     series = []
@@ -151,7 +150,7 @@ def format_returning_users():
     labels = []
     series = []
     for i in range(1, 8):
-        if (i == 1):
+        if i == 1:
             label = "%s day" % i
         else:
             label = "%s days" % i
