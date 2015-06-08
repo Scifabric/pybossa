@@ -69,17 +69,17 @@ def update_task_state(mapper, conn, target):
     sql_query = ('select name, short_name, webhook, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    app_obj = dict(id=target.project_id,
+    project_obj = dict(id=target.project_id,
                    name=None,
                    short_name=None,
                    info=None,
                    webhook=None,
                    action_updated='TaskCompleted')
     for r in results:
-        app_obj['name'] = r.name
-        app_obj['short_name'] = r.short_name
-        app_obj['info'] = r.info
-        app_obj['webhook'] = r.webhook
+        project_obj['name'] = r.name
+        project_obj['short_name'] = r.short_name
+        project_obj['info'] = r.info
+        project_obj['webhook'] = r.webhook
 
     # Check if user is Authenticated
     if target.user_id is not None:
@@ -91,8 +91,8 @@ def update_task_state(mapper, conn, target):
                        name=r.name,
                        fullname=r.fullname,
                        info=r.info,
-                       app_name=app_obj['name'],
-                       project_short_name=app_obj['short_name'],
+                       project_name=project_obj['name'],
+                       project_short_name=project_obj['short_name'],
                        action_updated='UserContribution')
         # Add the event
         update_redis(obj)
@@ -107,15 +107,15 @@ def update_task_state(mapper, conn, target):
         sql_query = ("UPDATE task SET state=\'completed\' \
                      where id=%s") % target.task_id
         conn.execute(sql_query)
-        update_redis(app_obj)
+        update_redis(project_obj)
         # PUSH changes via the webhook
-        if app_obj['webhook']:
+        if project_obj['webhook']:
             payload = dict(event="task_completed",
-                           project_short_name=app_obj['short_name'],
+                           project_short_name=project_obj['short_name'],
                            project_id=target.project_id,
                            task_id=target.task_id,
                            fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-            webhook_queue.enqueue(webhook, app_obj['webhook'], payload)
+            webhook_queue.enqueue(webhook, project_obj['webhook'], payload)
 
 
 
