@@ -28,7 +28,7 @@ from flask import Response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
-from datetime import datetime
+from sqlalchemy.exc import ProgrammingError
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
@@ -386,8 +386,10 @@ def dashboard():
                                returning_users_week=returning_users_week,
                                update_feed=update_feed,
                                wait=False)
-    except Exception as e:
-        current_app.logger.error(e)
+    except ProgrammingError as e:
         return render_template('admin/dashboard.html',
                                title=gettext('Dashboard'),
                                wait=True)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)
