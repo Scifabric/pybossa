@@ -10,7 +10,7 @@ ignore-paths:
     - update.py
 pylint:
     disable:
-        - E0611
+        - no-name-in-module
         - F0401
         - W0613
         - R0401
