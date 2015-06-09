@@ -36,8 +36,8 @@ def n_tasks(project_id):
 
     Data is cached for one day.
     """
-    from .projects import n_tasks
-    return n_tasks(project_id)
+    from pybossa.cache import projects
+    return projects.n_tasks(project_id)
 
 
 @memoize(timeout=ONE_DAY)

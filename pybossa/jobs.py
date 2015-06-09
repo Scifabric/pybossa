@@ -200,24 +200,24 @@ def get_inactive_users_jobs(queue='quaterly'):
             yield job
 
 
-def get_dashboard_jobs():  # pragma: no cover
+def get_dashboard_jobs(queue='low'):  # pragma: no cover
     """Return dashboard jobs."""
     yield dict(name=dashboard.active_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.active_anon_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.update_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_tasks_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_task_runs_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.returning_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
 
 
 def get_non_contributors_users_jobs(queue='quaterly'):
