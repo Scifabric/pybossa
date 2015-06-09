@@ -5,6 +5,9 @@ ignore-paths:
     - alembic
     - app_context_rqworker.py
     - warm.py
+    - run.py
+    - settings_local.py
+    - update.py
 pylint:
     disable:
         - E0611
@@ -13,3 +16,5 @@ pylint:
         - R0401
         - W0614
         - W1401
+    options:
+        dummy-variables-rgx: _|dummy

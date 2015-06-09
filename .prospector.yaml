@@ -1,3 +1,13 @@
+ignore-paths:
+    - doc
+    - cli.py
+    - test
+    - alembic
+    - app_context_rqworker.py
+    - warm.py
+    - run.py
+    - settings_local.py
+    - ./update.py
 pylint:
     disable:
         - E0611
