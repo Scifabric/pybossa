@@ -747,7 +747,7 @@ class TestAdmin(web.Helper):
         assert "New Users" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.admin.dashboard_queue')
+    @patch('pybossa.view.admin.DASHBOARD_QUEUE')
     def test_admin_dashboard_admin_refresh_user_data(self, mock):
         """Test ADMIN dashboard admins refresh can access it with data"""
         url = '/admin/dashboard/?refresh=1'
