@@ -48,7 +48,7 @@ from pybossa.forms.admin_view_forms import *
 
 blueprint = Blueprint('admin', __name__)
 
-dashboard_queue = Queue('super', connection=sentinel.master)
+DASHBOARD_QUEUE = Queue('super', connection=sentinel.master)
 
 def format_error(msg, status_code):
     """Return error as a JSON response."""
@@ -379,7 +379,7 @@ def dashboard():
         if request.args.get('refresh') == '1':
             db_jobs = get_dashboard_jobs()
             for j in db_jobs:
-                dashboard_queue.enqueue(j['name'])
+                DASHBOARD_QUEUE.enqueue(j['name'])
             msg = gettext('Dashboard jobs enqueued,'
                           ' refresh page in a few minutes')
             flash(msg)
