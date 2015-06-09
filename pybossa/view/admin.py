@@ -367,6 +367,13 @@ def update_category(id):
 def dashboard():
     """Show PyBossa Dashboard."""
     try:
+        if request.args.get('refresh') == '1':
+            db_jobs = get_dashboard_jobs()
+            for j in db_jobs:
+                DASHBOARD_QUEUE.enqueue(j['name'])
+            msg = gettext('Dashboard jobs enqueued,'
+                          ' refresh page in a few minutes')
+            flash(msg)
         active_users_last_week = dashb.format_users_week()
         active_anon_last_week = dashb.format_anon_week()
         new_projects_last_week = dashb.format_new_projects()
@@ -376,13 +383,6 @@ def dashboard():
         new_users_week = dashb.format_new_users()
         returning_users_week = dashb.format_returning_users()
         update_feed = get_update_feed()
-        if request.args.get('refresh') == '1':
-            db_jobs = get_dashboard_jobs()
-            for j in db_jobs:
-                DASHBOARD_QUEUE.enqueue(j['name'])
-            msg = gettext('Dashboard jobs enqueued,'
-                          ' refresh page in a few minutes')
-            flash(msg)
 
         return render_template('admin/dashboard.html',
                                title=gettext('Dashboard'),

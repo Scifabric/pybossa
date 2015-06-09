@@ -132,7 +132,7 @@ def new_tasks_week():
                       FROM task WHERE TO_DATE(task.created,
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
-                      GROUP BY day;''')
+                      GROUP BY day ORDER BY day ASC;''')
         db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
