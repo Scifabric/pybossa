@@ -19,6 +19,7 @@
 from datetime import datetime
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import event
 from rq import Queue
 
@@ -52,7 +53,7 @@ class TaskRun(db.Model, DomainObject):
     timeout = Column(Integer)
     calibration = Column(Integer)
     #: Value of the answer.
-    info = Column(JSONType, default=dict)
+    info = Column(JSON)
     '''General writable field that should be used by clients to record results\
     of a TaskRun. Usually a template for this will be provided by Task
     For example::
