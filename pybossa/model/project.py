@@ -19,6 +19,7 @@
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import event
 
 
@@ -72,7 +73,7 @@ class Project(db.Model, DomainObject):
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
-    info = Column(JSONEncodedDict, default=dict)
+    info = Column(JSON)
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='project')
     task_runs = relationship(TaskRun, backref='project',

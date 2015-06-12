@@ -220,7 +220,7 @@ def get_all_featured(category=None):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
+                       info=row.info)
         projects.append(project)
     return projects
 
