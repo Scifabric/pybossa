@@ -1,6 +1,6 @@
-==================
-Installing PyBossa
-==================
+==========================
+Installing PyBossa by hand
+==========================
 
 PyBossa is a python web application built using the Flask micro-framework.
 
