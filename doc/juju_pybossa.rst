@@ -108,41 +108,22 @@ Prepare Juju for initial usage:
     juju bootstrap
 
 
-PostgreSQL
-----------
+PyBossa bundle
+--------------
 
-Install the PostgreSQL charm, as PyBossa uses PostgreSQL to store its data
+Install the Pybossa charm bundle which will install PyBossa charm and PostgreSQL charm and connect them to eachother.
 
 ::
 
-    juju deploy postgresql
+    juju deployer -c bundle.yaml
 
 
 Once is installed, we can install PyBossa and connect both of them.
 
-PyBossa deployment with Juju
-----------------------------
+Access PyBossa
+--------------
 
-Now we deploy PyBossa directly from git:
-
-::
-
-    juju git-deploy github.com/PyBossa/pybossa-jujucharm
-
-
-.. note::
-    You can also install PyBossa using the official Juju store charm. Run the following
-    command: juju deploy cs:~therealmarv/trusty/pybossa
-
-
-You can watch progress of installation in detail (for debugging):
-
-::
-
-    tail -f /var/log/juju-vagrant-local/unit-pybossa-0.log
-
-
-wait until PyBossa is deployed and you see a public IP on
+Look for the machine IP of PyBossa service here:
 
 ::
 
@@ -152,18 +133,12 @@ Copy & Paste the IP and pass it to the following script
 
 ::
 
-    sudo ./natpybossa.sh 10.0.3.x
+    sudo natpybossa 10.0.3.x
 
 
 Which will map the PyBossa server port to your localhost's port 7000.
 
-Now connect the database and PyBossa
-
-::
-
-    juju add-relation pybossa postgresql:db-admin
-
-Finally, you can now view PyBossa in your browser:
+You can now view PyBossa in your browser:
 
 ::
 
@@ -234,7 +209,7 @@ Then, copy & paste the IP and pass it as an argument to the following script
 
 ::
 
-    sudo ./natgui.sh 10.0.3.x
+    sudo natgui 10.0.3.x
 
 This file will map the Juju-GUI to your localhost's port 8000, and return the password
 for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
