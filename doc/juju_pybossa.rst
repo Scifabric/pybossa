@@ -170,6 +170,21 @@ Finally, you can now view PyBossa in your browser:
     https://localhost:7000
 
 
+Email server
+------------
+
+PyBossa does not need an email server by default, but we encourage you to install one.
+
+Sending email properly is a bit complicated, as nowadays you have configure several authentication methods
+so your emails are not marked as SPAM or black listed. This configuration involves not only modifying the 
+config file of your email server, but also the DNS entries of your server so you can include the proper
+DKIM_ and SPF_ entries. Therefore, the Juju charm only installs a testing server. 
+
+Please, use the official documentation of your preferred server to configure the email properly.
+
+.. _DKIM: https://en.wikipedia.org/wiki/Email_authentication#Authentication_methods
+.. _SPF: https://en.wikipedia.org/wiki/Email_authentication#Authentication_methods
+
 sshuttle whole network mapping (optional)
 -----------------------------------------
 
