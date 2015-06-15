@@ -1,40 +1,67 @@
-==================================
-Testing PyBossa charm with Vagrant
-==================================
+============================
+Installing PyBossa with Juju
+============================
 
-With this guide you can test the PyBossa Juju charm inside a Virtualbox
-VM. Vagrant will help us to setup a new VM. This should work on all
-supported OSes where Vagrant and Virtualbox runs (Windows, OS X,
-Ubuntu).
+With this guide you can deploy PyBossa using the Juju_ technology inside a Virtualbox
+Virtual Machine (VM) locally. We will use Vagrant_  as it will help us to setup the 
+new VM. This should work on all supported OSes where Vagrant and Virtualbox run: 
+Windows, OS X, GNU/Linux.
 
-Follow these steps:
--------------------
+.. _Juju: https://jujucharms.com/docs/stable/getting-started
+.. _Vagrant: https://www.vagrantup.com/
+
+
+.. note::
+
+    We use the local installation, but you can use any cloud provider supported by
+    Juju_. If you want to use a cloud provider, you only have to instruct Juju to use
+    a specific cloud one. The charm will work in any of them without problems.
+    Please check the official documentation for information about how to
+    configure Juju_ for `Amazon EC2`_ or `Openstack`_.
+
 
 Install Virtualbox & Vagrant
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
+
+We will install PyBossa in a local virtual machine so you can delete it afterwards
+if you want. This will ensure that your computer is not polluted with libraries that
+you will not need any future, containing everything within the virtual machine.
+
+.. note::
+    If you have access to a cloud service provider like `Amazon EC2`_ or any 
+    Openstack_
+    solution, you can just skip this section. Be sure to configure juju with your cloud
+    credentials. You can find more guides and cloud provider configurations here_.
+
+.. _`Amazon EC2`: https://jujucharms.com/docs/stable/config-aws
+.. _Openstack: https://jujucharms.com/docs/stable/config-openstack
+.. _here: https://jujucharms.com/docs/stable/getting-started
 
 Install Vagrant and Virtualbox if they are not available on your
 machine.
 
-    Ubuntu example:
+Ubuntu
+~~~~~~
 
-    ::
+Just install it using the package manager
 
-        sudo apt-get update 
-        sudo apt-get -y install virtualbox vagrant
+::
 
-    Windows & OS X example:
+    sudo apt-get update 
+    sudo apt-get -y install virtualbox vagrant
 
-    Install and download `Virtualbox <https://www.virtualbox.org>`__ and
-    `Vagrant <http://www.vagrantup.com>`__ manually.
+Windows & OS X
+~~~~~~~~~~~~~~
 
-Get the source code
-~~~~~~~~~~~~~~~~~~~
+Install and download `Virtualbox <https://www.virtualbox.org>`__ and
+`Vagrant <http://www.vagrantup.com>`__ manually.
 
-| If you do not have git installed you can simply download and extract a
-  ZIP file of the source
-| https://github.com/PyBossa/pybossa-jujucharm/archive/master.zip and
-  extract it.
+Get latest version of PyBossa Juju charm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You have two options to get the latest version of PyBossa Juju charm. 
+You get a ZIP file with the latest version from this link:
+https://github.com/PyBossa/pybossa-jujucharm/archive/master.zip
 
 Or you use git to clone it:
 
@@ -42,11 +69,16 @@ Or you use git to clone it:
 
     git clone https://github.com/PyBossa/pybossa-jujucharm.git
 
+.. note::
+    If you use the ZIP file, please unzip it before proceeding.
+
+
 Go the source code folder
 
 ::
 
     cd pybossa-jujucharm
+
 
 Start the VM
 ~~~~~~~~~~~~
@@ -56,6 +88,7 @@ This is very easy:
 ::
 
     vagrant up
+
 
 Setup Juju
 ~~~~~~~~~~
@@ -74,40 +107,21 @@ Prepare Juju for initial usage:
     juju switch local
     juju bootstrap
 
-    Explanation of the commands: \* Generate config files for Juju \*
-    Switch Juju to local usage (LXC) \* Bootstrap Juju so that it is
-    ready to use
 
-Juju GUI (optional)
--------------------
+PostgreSQL
+----------
 
-::
-
-    juju deploy juju-gui
-
-    This will setup a new Linux container (LXC) with its own network and
-    resources. So you can say this will make a VM in a VM ;)
-
-wait till juju-gui is deployed and you see a public IP (can take some
-time):
+Install the PostgreSQL charm, as PyBossa uses PostgreSQL to store its data
 
 ::
 
-    juju status
+    juju deploy postgresql
 
-copy&paste the IP here:
 
-::
+Once is installed, we can install PyBossa and connect both of them.
 
-    sudo ./natgui.sh 10.0.3.x
-
-which will map the Juju-GUI to your localhost's port 8000.
-
-| You can now view Juju-GUI in your browser:
-| https://localhost:8000
-
-PyBossa
--------
+PyBossa deployment with Juju
+----------------------------
 
 Now we deploy PyBossa directly from git:
 
@@ -115,89 +129,66 @@ Now we deploy PyBossa directly from git:
 
     juju git-deploy github.com/PyBossa/pybossa-jujucharm
 
-    You can watch progress of installation in detail (for debugging):
 
-    ::
+.. note::
+    You can also install PyBossa using the official Juju store charm. Run the following
+    command: juju deploy cs:~therealmarv/trusty/pybossa
 
-        tail -f /var/log/juju-vagrant-local/unit-pybossa-0.log
 
-wait till pybossa is deployed and you see an public IP on
+You can watch progress of installation in detail (for debugging):
+
+::
+
+    tail -f /var/log/juju-vagrant-local/unit-pybossa-0.log
+
+
+wait until PyBossa is deployed and you see a public IP on
 
 ::
 
     juju status
 
-copy&paste the IP here:
+Copy & Paste the IP and pass it to the following script 
 
 ::
 
     sudo ./natpybossa.sh 10.0.3.x
 
-which will map the Juju-GUI to your localhost's port 7000.
 
-| You can now view PyBossa in your browser:
-| https://localhost:7000
+Which will map the PyBossa server port to your localhost's port 7000.
 
-PostgreSQL
-----------
-
-Install the PostgreSQL charm and connect PyBossa with the database:
+Now connect the database and PyBossa
 
 ::
 
-    juju deploy postgresql
     juju add-relation pybossa postgresql:db-admin
 
-HAProxy (optional)
-------------------
-
-HAProxy is a load balancer and necessary once more than one running
-PyBossa charm can connect to the DB (not supported yet).
-
-Deploy HAProxy and connect it to the PyBossa instance. Also expose it so
-that it is reachable from the outside.
+Finally, you can now view PyBossa in your browser:
 
 ::
 
-    juju deploy haproxy
-    juju add-relation haproxy pybossa
-    juju expose haproxy
+    https://localhost:7000
 
-Wait till HAProxy IP is visible:
-
-::
-
-    juju status
-
-copy&paste the IP here:
-
-::
-
-    sudo ./natpybossa.sh 10.0.3.x
-
-| which will map the HAProxy to your localhost's port 7001.
-| You can now view HAProxy in front of PyBossa in your browser:
-| https://localhost:7001
 
 sshuttle whole network mapping (optional)
 -----------------------------------------
 
-This is an alternative for using the shell scripts used for NAT used
-above. You need to install sshuttle in Ubuntu with apt-get or in OS X
-with Homebrew.
+This is an alternative way for mapping internal ports to the VM ones. Instead of 
+using the shell scripts that you have seen before for NAT configuration, you can use 
+**sshuttle**. In Ubuntu you can install it with apt-get or in OS X with Homebrew.
 
 The Virtualbox network is only internally visible on the VM side. If you
 want to see it on your local browser you need to redirect the VBox
-network with your network (make sure the 10.x.x.x is not already used!).
-The VBox is typically 10.0.3.xxx. Open a new console on your local
+network with your current network (make sure the 10.x.x.x is not already used!).
+
+The VBox is typically on 10.0.3.xxx. Open a new console on your local
 machine and type:
 
 ::
 
     sshuttle -r vagrant@localhost:2222 10.0.3.0/24
 
-| ``sshuttle`` maybe asks for local sudo password.
-| If it asks for vagrant's password: ``vagrant``
+``sshuttle`` maybe asks for local sudo password. If it asks for vagrant's password: ``vagrant``
 
 Finally open your browser with the IP you got from ``juju status`` and
 HAProxy, e.g.:
@@ -205,3 +196,35 @@ HAProxy, e.g.:
 ::
 
     http://10.0.3.89
+
+Juju GUI (optional)
+-------------------
+
+If you prefer a graphical interface, you are covered. Juju provides a very nice web
+interface from where you can handle PyBossa services. To use it, follow these steps:
+
+::
+
+    juju deploy juju-gui
+
+When juju-gui is deployed (can take some time), the command will return a public IP. 
+You can check the IP also with this command as well as the status of the deployment
+of the GUI:
+
+::
+
+    juju status
+
+Then, copy & paste the IP and pass it as an argument to the following script 
+
+::
+
+    sudo ./natgui.sh 10.0.3.x
+
+This file will map the Juju-GUI to your localhost's port 8000, and return the password
+for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
+
+:: 
+
+    https://localhost:8000
+
