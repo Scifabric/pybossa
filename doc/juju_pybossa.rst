@@ -120,6 +120,64 @@ Install the Pybossa charm bundle which will install PyBossa charm and PostgreSQL
 
 Once is installed, we can install PyBossa and connect both of them.
 
+Sentinel and Redis
+------------------
+
+You can also install Redis and Sentinel at a later stage using Juju. This will allow
+you to add new Redis slave nodes as well as Sentinels to manage the Redis infrastructure
+using the load-balanced solution of Sentinel.
+
+Adding Redis Master and Slave nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First you need to deploy at least two nodes of Redis: a master and a slave:
+
+::
+
+    juju deploy cs:~juju-gui/trusty/redis-1
+    juju deploy cs:~juju-gui/trusty/redis-1 redis2
+
+Then, you need link them:
+
+::
+
+    juju add-relation redis:master redis2:slave
+
+Adding Sentinel node
+~~~~~~~~~~~~~~~~~~~~
+
+Now you can add the Sentinel
+
+:: 
+
+    juju git-deploy PyBossa/redis-sentinel-jujucharm
+
+.. note::
+   If you don't have the git-deploy command for juju, you can install it with these commands:
+   :: 
+
+    sudo apt-get install python3-pip
+    sudo pip install juju-git-deploy
+
+And monitor Redis master
+
+::
+
+    juju add-relation redis-sentinel redis:master
+
+Finally, you can link PyBossa to sentinel
+
+::
+
+    juju add-relation pybossa redis-sentinel
+
+.. note::
+    For more info regarding the Juju charm for Sentinel, please
+    check the official site_.
+
+
+.. _site: https://github.com/PyBossa/redis-sentinel-jujucharm/
+
 Access PyBossa
 --------------
 
@@ -217,4 +275,8 @@ for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
 :: 
 
     https://localhost:8000
+
+If you've used Sentinel, Redis, PostgreSQL, HAProxy and PyBossa, your GUI should show something similar to this:
+
+.. image:: http://i.imgur.com/Hqeryrw.png
 
