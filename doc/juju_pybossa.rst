@@ -278,5 +278,5 @@ for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
 
 If you've used Sentinel, Redis, PostgreSQL, HAProxy and PyBossa, your GUI should show something similar to this:
 
-.. image:: http://i.imgur.com/Hqeryrw.png
+.. image:: http://i.imgur.com/XraGePO.png
 
