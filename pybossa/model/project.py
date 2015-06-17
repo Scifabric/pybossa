@@ -59,8 +59,6 @@ class Project(db.Model, DomainObject):
     hidden = Column(Integer, default=0)
     # If the project is featured
     featured = Column(Boolean, nullable=False, default=False)
-    # If the project is completed
-    completed = Column(Boolean, nullable=False, default=False)
     # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
