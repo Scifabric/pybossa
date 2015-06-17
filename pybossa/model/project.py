@@ -117,17 +117,6 @@ class Project(db.Model, DomainObject):
         del self.info['autoimporter']
 
 
-@event.listens_for(Project, 'before_update')
-@event.listens_for(Project, 'before_insert')
-def empty_string_to_none(mapper, conn, target):
-    if target.name == '':
-        target.name = None
-    if target.short_name == '':
-        target.short_name = None
-    if target.description == '':
-        target.description = None
-
-
 @event.listens_for(Project, 'after_insert')
 def add_event(mapper, conn, target):
     """Update PyBossa feed with new project."""
