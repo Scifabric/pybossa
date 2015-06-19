@@ -54,7 +54,7 @@ class TaskRun(db.Model, DomainObject):
     timeout = Column(Integer)
     calibration = Column(Integer)
     #: Value of the answer.
-    info = Column(MutableDict.as_mutable(JSON))
+    info = Column(JSON)
     '''General writable field that should be used by clients to record results\
     of a TaskRun. Usually a template for this will be provided by Task
     For example::
