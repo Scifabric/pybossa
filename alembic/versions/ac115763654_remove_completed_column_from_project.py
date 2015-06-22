@@ -24,3 +24,25 @@ def downgrade():
     query = 'UPDATE project SET completed=false;'
     op.execute(query)
     op.alter_column('project', 'completed', nullable=False)
+
+    update_completed = '''
+        WITH completed_tasks AS (
+        SELECT project.id, COUNT(task.id) as n_completed_tasks FROM project, task
+        WHERE task.state='completed' AND task.project_id=project.id
+        GROUP BY project.id
+        ), total_tasks AS (
+        SELECT project.id, COUNT(task.id) as n_tasks FROM project, task
+        WHERE task.project_id=project.id
+        GROUP BY project.id
+        )
+        UPDATE project SET completed=true WHERE project.id IN (
+            SELECT total_tasks.id
+            FROM completed_tasks INNER JOIN total_tasks ON completed_tasks.id=total_tasks.id
+        );
+    '''
+
+    op.execute(update_completed)
+    # sql = sa.sql.text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
+    #             WHERE task.project_id=:project_id AND task.state=\'completed\';''')
+    # sql = sa.sql.text('''SELECT COUNT(task.id) AS n_tasks FROM task
+    #               WHERE task.project_id=:project_id''')
