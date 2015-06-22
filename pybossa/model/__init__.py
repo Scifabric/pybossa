@@ -22,18 +22,9 @@ import uuid
 import requests
 
 from sqlalchemy import Text
-from sqlalchemy.orm import relationship, backref, class_mapper
+from sqlalchemy.orm import class_mapper
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import TypeDecorator
-from sqlalchemy import event
-from sqlalchemy.engine import reflection
-from sqlalchemy.schema import (
-    MetaData,
-    Table,
-    DropTable,
-    ForeignKeyConstraint,
-    DropConstraint,
-    )
 
 import logging
 from time import time

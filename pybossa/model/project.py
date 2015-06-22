@@ -59,8 +59,6 @@ class Project(db.Model, DomainObject):
     hidden = Column(Integer, default=0)
     # If the project is featured
     featured = Column(Boolean, nullable=False, default=False)
-    # If the project is completed
-    completed = Column(Boolean, nullable=False, default=False)
     # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
@@ -115,17 +113,6 @@ class Project(db.Model, DomainObject):
 
     def delete_autoimporter(self):
         del self.info['autoimporter']
-
-
-@event.listens_for(Project, 'before_update')
-@event.listens_for(Project, 'before_insert')
-def empty_string_to_none(mapper, conn, target):
-    if target.name == '':
-        target.name = None
-    if target.short_name == '':
-        target.short_name = None
-    if target.description == '':
-        target.description = None
 
 
 @event.listens_for(Project, 'after_insert')
