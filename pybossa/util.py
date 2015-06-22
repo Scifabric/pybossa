@@ -336,11 +336,16 @@ def get_user_signup_method(user):
             msg += " <strong>It seems like you signed up with your Twitter account.</strong>"
             msg += "<br/>You can try and sign in by clicking in the Twitter button."
             return (msg, 'twitter')
-    # Local account
+        # Local account
+        else:
+            msg += " <strong>It seems that you created an account locally.</strong>"
+            msg += " <br/>You can reset your password if you don't remember it."
+            return (msg, 'local')
     else:
         msg += " <strong>It seems that you created an account locally.</strong>"
         msg += " <br/>You can reset your password if you don't remember it."
         return (msg, 'local')
+
 
 
 def get_port():
