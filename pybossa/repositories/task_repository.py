@@ -36,7 +36,23 @@ class TaskRepository(object):
         return self.db.session.query(Task).get(id)
 
     def get_task_by(self, **attributes):
-        return self.db.session.query(Task).filter_by(**attributes).first()
+        if (attributes.get('info') and attributes.get('project_id')
+                and len(attributes.keys()) == 2):
+            info = attributes.get('info')
+            project_id = attributes.get('project_id')
+            query = ""
+            for k in info.keys():
+                query += " AND (info->>'%s')='%s'" % (k, info[k])
+            sql = 'SELECT * FROM task WHERE project_id=%s' % project_id
+            sql += query
+            results = self.db.session.execute(sql)
+            for row in results:
+                if row.id and row.info:
+                    return self.db.session.query(Task).get(row.id)
+                else:
+                    return None
+        else:
+            return self.db.session.query(Task).filter_by(**attributes).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False, **filters):
         query = self.db.session.query(Task).filter_by(**filters)
