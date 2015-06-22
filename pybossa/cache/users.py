@@ -220,8 +220,8 @@ def published_projects(user_id):
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
                project.hidden=0 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -252,8 +252,8 @@ def draft_projects(user_id):
                WHERE project.owner_id=:user_id
                AND (project.info->>'task_presenter') IS NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -284,8 +284,7 @@ def hidden_projects(user_id):
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
                project.hidden=1 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
