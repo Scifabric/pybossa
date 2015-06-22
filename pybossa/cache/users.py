@@ -218,7 +218,7 @@ def published_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=0 AND project.info LIKE('%task_presenter%')
+               project.hidden=0 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
                project.description,
                project.info;''')
@@ -250,7 +250,7 @@ def draft_projects(user_id):
                project.info
                FROM project
                WHERE project.owner_id=:user_id
-               AND project.info NOT LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NULL
                GROUP BY project.id, project.name, project.short_name,
                project.description,
                project.info;''')
@@ -282,7 +282,7 @@ def hidden_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=1 AND project.info LIKE('%task_presenter%')
+               project.hidden=1 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
                project.description,
                project.info;''')
