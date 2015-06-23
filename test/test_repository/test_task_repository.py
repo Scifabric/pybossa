@@ -201,11 +201,16 @@ class TestTaskRepositoryForTaskrunQueries(Test):
     def test_get_task_run_by(self):
         """Test get_task_run_by returns a taskrun with the specified attribute"""
 
-        taskrun = TaskRunFactory.create(info='info')
+        taskrun = TaskRunFactory.create(info=dict(foo='bar'))
 
-        retrieved_taskrun = self.task_repo.get_task_run_by(info=taskrun.info)
+        retrieved_taskrun = self.task_repo.get_task_run_by(TaskRun.info==taskrun.info)
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
+
+        retrieved_taskrun = self.task_repo.get_task_run_by(TaskRun.info['foo'].astext=='bar')
+
+        assert taskrun == retrieved_taskrun, retrieved_taskrun
+
 
 
     def test_get_task_run_by_returns_none_if_no_task_run(self):
@@ -213,7 +218,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        taskrun = self.task_repo.get_task_run_by(info='other info')
+        taskrun = self.task_repo.get_task_run_by(TaskRun.info=='"other info"')
 
         assert taskrun is None, taskrun
 
@@ -224,7 +229,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        retrieved_taskruns = self.task_repo.filter_task_runs_by(info='other')
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(TaskRun.info=='"other"')
 
         assert isinstance(retrieved_taskruns, list)
         assert len(retrieved_taskruns) == 0, retrieved_taskruns
@@ -249,8 +254,8 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         TaskRunFactory.create(info='info', user_ip='8.8.8.8')
         taskrun = TaskRunFactory.create(info='info', user_ip='1.1.1.1')
 
-        retrieved_taskruns = self.task_repo.filter_task_runs_by(info='info',
-                                                                user_ip='1.1.1.1')
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(TaskRun.info=='"info"',
+                                                                TaskRun.user_ip=='1.1.1.1')
 
         assert len(retrieved_taskruns) == 1, retrieved_taskruns
         assert taskrun in retrieved_taskruns, retrieved_taskruns

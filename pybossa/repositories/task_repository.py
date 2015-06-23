@@ -75,15 +75,38 @@ class TaskRepository(object):
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
 
-    def get_task_run_by(self, **attributes):
-        return self.db.session.query(TaskRun).filter_by(**attributes).first()
+    def get_task_run_by(self, *filters):
+        try:
+            return self.db.session.query(TaskRun).filter(*filters).first()
+        except ProgrammingError:
+            self.db.session.rollback()
+            for f in filters:
+                if f.left == TaskRun.info:
+                    f.left = cast(TaskRun.info, Text)
+            return self.db.session.query(TaskRun).filter(*filters).first()
 
-    def filter_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
-        query = self.db.session.query(TaskRun).filter_by(**filters)
-        query = query.order_by(TaskRun.id).limit(limit).offset(offset)
-        if yielded:
-            return query.yield_per(1)
-        return query.all()
+
+    def filter_task_runs_by(self, *filters, **kwargs):
+        try:
+            limit = kwargs.get('limit')
+            offset = kwargs.get('offset') or 0
+            yielded = kwargs.get('yielded') or False
+            query = self.db.session.query(TaskRun).filter(*filters)
+            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
+            if yielded:
+                return query.yield_per(1)
+            return query.all()
+        except ProgrammingError:
+            self.db.session.rollback()
+            for f in filters:
+                if f.left == TaskRun.info:
+                    f.left = cast(TaskRun.info, Text)
+            query = self.db.session.query(TaskRun).filter(*filters)
+            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
+            if yielded:
+                return query.yield_per(1)
+            return query.all()
+
 
     def count_task_runs_with(self, *filters):
         try:
