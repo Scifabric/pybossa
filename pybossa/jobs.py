@@ -433,6 +433,7 @@ def import_tasks(project_id, **form_data):
 
 def webhook(url, payload=None):
     """Post to a webhook."""
+    import json
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     if url:
         return requests.post(url, data=json.dumps(payload), headers=headers)

@@ -38,7 +38,7 @@ class TestWebHooks(Test):
 
 
     @with_context
-    @patch('pybossa.model.requests')
+    @patch('pybossa.jobs.requests')
     def test_webhooks(self, mock):
         """Test WEBHOOK works."""
         mock.post.return_value = True
@@ -48,7 +48,7 @@ class TestWebHooks(Test):
         assert mock.post.called, err_msg
 
     @with_context
-    @patch('pybossa.model.requests')
+    @patch('pybossa.jobs.requests')
     def test_webhooks_without_url(self, mock):
         """Test WEBHOOK without url works."""
         mock.post.return_value = True
