@@ -303,7 +303,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         TaskRunFactory.create_batch(3, info='info')
         should_be_missing = TaskRunFactory.create(info='other info')
 
-        count = self.task_repo.count_task_runs_with(info='info')
+        count = self.task_repo.count_task_runs_with(TaskRun.info=='"info"')
 
         assert count == 3, count
 
