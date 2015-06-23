@@ -37,6 +37,13 @@ class TaskRepository(object):
     def query(self):
         return self.db.session.query(Task)
 
+    def _cast_task_run_info_json_as_text(self, *filters):
+        for f in filters:
+            if f.left == TaskRun.info:
+                f.left = cast(TaskRun.info, Text)
+        return filters
+
+
     # Methods for queries on Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
@@ -80,9 +87,7 @@ class TaskRepository(object):
             return self.db.session.query(TaskRun).filter(*filters).first()
         except ProgrammingError:
             self.db.session.rollback()
-            for f in filters:
-                if f.left == TaskRun.info:
-                    f.left = cast(TaskRun.info, Text)
+            filters = self._cast_task_run_info_json_as_text(*filters)
             return self.db.session.query(TaskRun).filter(*filters).first()
 
 
@@ -98,9 +103,7 @@ class TaskRepository(object):
             return query.all()
         except ProgrammingError:
             self.db.session.rollback()
-            for f in filters:
-                if f.left == TaskRun.info:
-                    f.left = cast(TaskRun.info, Text)
+            filters = self._cast_task_run_info_json_as_text(*filters)
             query = self.db.session.query(TaskRun).filter(*filters)
             query = query.order_by(TaskRun.id).limit(limit).offset(offset)
             if yielded:
@@ -113,9 +116,7 @@ class TaskRepository(object):
             return self.db.session.query(TaskRun).filter(*filters).count()
         except ProgrammingError:
             self.db.session.rollback()
-            for f in filters:
-                if f.left == TaskRun.info:
-                    f.left = cast(TaskRun.info, Text)
+            filters = self._cast_task_run_info_json_as_text(*filters)
             return self.db.session.query(TaskRun).filter(*filters).count()
 
 
