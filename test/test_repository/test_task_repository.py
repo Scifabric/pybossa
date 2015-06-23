@@ -22,6 +22,7 @@ from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from pybossa.model.task_run import TaskRun
 
 
 class TestTaskRepositoryForTaskQueries(Test):
@@ -290,7 +291,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        count = self.task_repo.count_task_runs_with(info='other info')
+        count = self.task_repo.count_task_runs_with(TaskRun.info=='"other info"')
 
         assert count == 0, count
 
@@ -311,10 +312,11 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         """Test count_task_runs_with supports multiple-condition queries"""
 
         TaskRunFactory.create(info='info', user_ip='8.8.8.8')
-        taskrun = TaskRunFactory.create(info='info', user_ip='1.1.1.1')
+        taskrun = TaskRunFactory.create(info='bar', user_ip='1.1.1.1')
 
-        count = self.task_repo.count_task_runs_with(info='info',
-                                                    user_ip='1.1.1.1')
+
+        count = self.task_repo.count_task_runs_with(TaskRun.info=='"bar"',
+                                                    TaskRun.user_ip=='1.1.1.1')
 
         assert count == 1, count
 
