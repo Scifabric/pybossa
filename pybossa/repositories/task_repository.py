@@ -17,7 +17,9 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
+from sqlalchemy import cast
+from sqlalchemy import Text
 
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -30,6 +32,10 @@ class TaskRepository(object):
 
     def __init__(self, db):
         self.db = db
+
+    @property
+    def query(self):
+        return self.db.session.query(Task)
 
     # Methods for queries on Task objects
     def get_task(self, id):
@@ -79,8 +85,15 @@ class TaskRepository(object):
             return query.yield_per(1)
         return query.all()
 
-    def count_task_runs_with(self, **filters):
-        return self.db.session.query(TaskRun).filter_by(**filters).count()
+    def count_task_runs_with(self, *filters):
+        try:
+            return self.db.session.query(TaskRun).filter(*filters).count()
+        except ProgrammingError:
+            self.db.session.rollback()
+            for f in filters:
+                if f.left == TaskRun.info:
+                    f.left = cast(TaskRun.info, Text)
+            return self.db.session.query(TaskRun).filter(*filters).count()
 
 
     # Methods for saving, deleting and updating both Task and TaskRun objects
