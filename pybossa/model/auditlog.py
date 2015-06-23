@@ -23,7 +23,6 @@ from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 
 
-
 class Auditlog(db.Model, DomainObject):
     '''A Table with Audit logs for Projects.'''
 

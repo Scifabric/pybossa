@@ -27,19 +27,9 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import TypeDecorator
 
 import logging
-from time import time
 
-
-try:
-    import cPickle as pickle
-except ImportError:  # pragma: no cover
-    import pickle
-
-
-from pybossa.core import sentinel
 
 log = logging.getLogger(__name__)
-
 
 
 class DomainObject(object):
@@ -149,14 +139,6 @@ def make_timestamp():
 
 def make_uuid():
     return str(uuid.uuid4())
-
-
-def update_redis(obj):
-    """Add domain object to update feed in Redis."""
-    p = sentinel.master.pipeline()
-    tmp = pickle.dumps(obj)
-    p.zadd('pybossa_feed', time(), tmp)
-    p.execute()
 
 
 def update_project_timestamp(mapper, conn, target):

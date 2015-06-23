@@ -23,10 +23,9 @@ from sqlalchemy import event
 
 from pybossa.core import db
 from pybossa.model import DomainObject, JSONType, JSONEncodedDict, \
-    make_timestamp, update_redis, update_project_timestamp
+    make_timestamp, update_project_timestamp
 from pybossa.model.task_run import TaskRun
-
-
+from pybossa.feed import update_feed
 
 
 class Task(db.Model, DomainObject):
@@ -79,7 +78,7 @@ def add_event(mapper, conn, target):
         obj['name'] = r.name
         obj['short_name'] = r.short_name
         obj['info'] = r.info
-    update_redis(obj)
+    update_feed(obj)
 
 
 @event.listens_for(Task, 'after_insert')

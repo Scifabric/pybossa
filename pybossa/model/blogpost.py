@@ -21,9 +21,8 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, make_timestamp, update_redis, \
-    update_project_timestamp
-
+from pybossa.model import DomainObject, make_timestamp, update_project_timestamp
+from pybossa.feed import update_feed
 
 
 class Blogpost(db.Model, DomainObject):
@@ -60,7 +59,7 @@ def add_event(mapper, conn, target):
         obj['name'] = r.name
         obj['short_name'] = r.short_name
         obj['info'] = r.info
-    update_redis(obj)
+    update_feed(obj)
 
 
 @event.listens_for(Blogpost, 'after_insert')

@@ -21,13 +21,13 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 
-
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
+from pybossa.feed import update_feed
 
 
 class Project(db.Model, DomainObject):
@@ -122,4 +122,4 @@ def add_event(mapper, conn, target):
                name=target.name,
                short_name=target.short_name,
                action_updated='Project')
-    update_redis(obj)
+    update_feed(obj)

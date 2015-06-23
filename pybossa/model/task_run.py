@@ -23,8 +23,9 @@ from sqlalchemy import event
 from rq import Queue
 
 from pybossa.core import db, sentinel
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
-    update_project_timestamp, webhook
+from pybossa.model import DomainObject, JSONType, make_timestamp, webhook, \
+    update_project_timestamp
+from pybossa.feed import update_feed
 
 
 webhook_queue = Queue('high', connection=sentinel.master)
@@ -95,7 +96,7 @@ def update_task_state(mapper, conn, target):
                        project_short_name=project_obj['short_name'],
                        action_updated='UserContribution')
         # Add the event
-        update_redis(obj)
+        update_feed(obj)
     # Check if Task.state should be updated
     sql_query = ('select count(id) from task_run \
                  where task_run.task_id=%s') % target.task_id
@@ -107,7 +108,7 @@ def update_task_state(mapper, conn, target):
         sql_query = ("UPDATE task SET state=\'completed\' \
                      where id=%s") % target.task_id
         conn.execute(sql_query)
-        update_redis(project_obj)
+        update_feed(project_obj)
         # PUSH changes via the webhook
         if project_obj['webhook']:
             payload = dict(event="task_completed",
