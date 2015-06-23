@@ -23,9 +23,10 @@ from sqlalchemy import event
 from rq import Queue
 
 from pybossa.core import db, sentinel
-from pybossa.model import DomainObject, JSONType, make_timestamp, webhook, \
+from pybossa.model import DomainObject, JSONType, make_timestamp, \
     update_project_timestamp
 from pybossa.feed import update_feed
+from pybossa.jobs import webhook
 
 
 webhook_queue = Queue('high', connection=sentinel.master)

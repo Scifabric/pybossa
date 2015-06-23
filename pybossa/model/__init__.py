@@ -19,7 +19,6 @@
 import datetime
 import json
 import uuid
-import requests
 
 from sqlalchemy import Text
 from sqlalchemy.orm import class_mapper
@@ -146,12 +145,3 @@ def update_project_timestamp(mapper, conn, target):
     sql_query = ("update project set updated='%s' where id=%s" %
                  (make_timestamp(), target.project_id))
     conn.execute(sql_query)
-
-
-def webhook(url, payload=None):
-    """Post to a webhook."""
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    if url:
-        return requests.post(url, data=json.dumps(payload), headers=headers)
-    else:
-        return False

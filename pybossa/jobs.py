@@ -18,6 +18,7 @@
 """Jobs module for running background tasks in PyBossa server."""
 from datetime import datetime
 import math
+import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
@@ -428,3 +429,12 @@ def import_tasks(project_id, **form_data):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
+
+
+def webhook(url, payload=None):
+    """Post to a webhook."""
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    if url:
+        return requests.post(url, data=json.dumps(payload), headers=headers)
+    else:
+        return False
