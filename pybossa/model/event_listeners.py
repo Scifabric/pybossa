@@ -34,7 +34,7 @@ webhook_queue = Queue('high', connection=sentinel.master)
 
 
 @event.listens_for(Blogpost, 'after_insert')
-def add_event(mapper, conn, target):
+def add_blog_event(mapper, conn, target):
     """Update PyBossa feed with new blog post."""
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
@@ -51,15 +51,8 @@ def add_event(mapper, conn, target):
     update_feed(obj)
 
 
-@event.listens_for(Blogpost, 'after_insert')
-@event.listens_for(Blogpost, 'after_update')
-def update_project(mapper, conn, target):
-    """Update project updated timestamp."""
-    update_project_timestamp(mapper, conn, target)
-
-
 @event.listens_for(Project, 'after_insert')
-def add_event(mapper, conn, target):
+def add_project_event(mapper, conn, target):
     """Update PyBossa feed with new project."""
     obj = dict(id=target.id,
                name=target.name,
@@ -69,7 +62,7 @@ def add_event(mapper, conn, target):
 
 
 @event.listens_for(Task, 'after_insert')
-def add_event(mapper, conn, target):
+def add_task_event(mapper, conn, target):
     """Update PyBossa feed with new task."""
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
@@ -86,11 +79,13 @@ def add_event(mapper, conn, target):
     update_feed(obj)
 
 
-@event.listens_for(Task, 'after_insert')
-@event.listens_for(Task, 'after_update')
-def update_project(mapper, conn, target):
-    """Update project updated timestamp."""
-    update_project_timestamp(mapper, conn, target)
+@event.listens_for(User, 'after_insert')
+def add_user_event(mapper, conn, target):
+    """Update PyBossa feed with new user."""
+    obj = target.dictize()
+    obj['action_updated']='User'
+    update_feed(obj)
+
 
 def add_user_contributed_to_feed(conn, user_id, project_obj):
     if user_id is not None:
@@ -160,6 +155,10 @@ def on_taskrun_submit(mapper, conn, target):
         push_webhook(project_obj, target.task_id)
 
 
+@event.listens_for(Blogpost, 'after_insert')
+@event.listens_for(Blogpost, 'after_update')
+@event.listens_for(Task, 'after_insert')
+@event.listens_for(Task, 'after_update')
 @event.listens_for(TaskRun, 'after_insert')
 @event.listens_for(TaskRun, 'after_update')
 def update_project(mapper, conn, target):
@@ -172,11 +171,3 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
-
-
-@event.listens_for(User, 'after_insert')
-def add_event(mapper, conn, target):
-    """Update PyBossa feed with new user."""
-    obj = target.dictize()
-    obj['action_updated']='User'
-    update_feed(obj)
