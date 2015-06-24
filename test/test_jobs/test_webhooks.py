@@ -56,7 +56,7 @@ class TestWebHooks(Test):
         assert webhook(None) is False, err_msg
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_without_url(self):
         """Test WEBHOOK is triggered without url."""
         project = ProjectFactory.create()
@@ -66,7 +66,7 @@ class TestWebHooks(Test):
         queue.reset_mock()
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_with_url_not_completed_task(self):
         """Test WEBHOOK is not triggered for uncompleted tasks."""
         import random
@@ -80,7 +80,7 @@ class TestWebHooks(Test):
 
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_with_url(self):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
