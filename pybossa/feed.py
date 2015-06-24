@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+import json
 from time import time
 from pybossa.core import sentinel
 try:
@@ -31,3 +32,15 @@ def update_feed(obj):
     serialized_object = pickle.dumps(obj)
     pipeline.zadd(FEED_KEY, time(), serialized_object)
     pipeline.execute()
+
+def get_update_feed():
+    """Return update feed list."""
+    data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
+    feed = []
+    for u in data:
+        tmp = pickle.loads(u[0])
+        tmp['updated'] = u[1]
+        if tmp.get('info') and type(tmp.get('info')) == unicode:
+            tmp['info'] = json.loads(tmp['info'])
+        feed.append(tmp)
+    return feed
