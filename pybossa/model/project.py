@@ -27,7 +27,6 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
-from pybossa.feed import update_feed
 
 
 class Project(db.Model, DomainObject):
@@ -113,13 +112,3 @@ class Project(db.Model, DomainObject):
 
     def delete_autoimporter(self):
         del self.info['autoimporter']
-
-
-@event.listens_for(Project, 'after_insert')
-def add_event(mapper, conn, target):
-    """Update PyBossa feed with new project."""
-    obj = dict(id=target.id,
-               name=target.name,
-               short_name=target.short_name,
-               action_updated='Project')
-    update_feed(obj)

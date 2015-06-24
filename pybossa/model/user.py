@@ -19,7 +19,6 @@
 from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import event
 from flask.ext.login import UserMixin
 
 from pybossa.core import db, signer
@@ -27,7 +26,6 @@ from pybossa.model import DomainObject, make_timestamp, JSONEncodedDict, make_uu
 from pybossa.model.project import Project
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
-from pybossa.feed import update_feed
 
 
 class User(db.Model, DomainObject, UserMixin):
@@ -82,19 +80,3 @@ class User(db.Model, DomainObject, UserMixin):
         if self.passwd_hash:
             return signer.check_password_hash(self.passwd_hash, password)
         return False
-
-
-
-@event.listens_for(User, 'before_insert')
-def make_admin(mapper, conn, target):
-    users = conn.scalar('select count(*) from "user"')
-    if users == 0:
-        target.admin = True
-
-
-@event.listens_for(User, 'after_insert')
-def add_event(mapper, conn, target):
-    """Update PyBossa feed with new user."""
-    obj = target.dictize()
-    obj['action_updated']='User'
-    update_feed(obj)
