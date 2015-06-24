@@ -114,9 +114,9 @@ def is_task_completed(conn, task_id):
 
 
 def update_task_state(conn, task_id):
-        sql_query = ("UPDATE task SET state=\'completed\' \
-                     where id=%s") % task_id
-        conn.execute(sql_query)
+    sql_query = ("UPDATE task SET state=\'completed\' \
+                 where id=%s") % task_id
+    conn.execute(sql_query)
 
 
 def push_webhook(project_obj, task_id):
