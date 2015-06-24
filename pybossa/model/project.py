@@ -19,7 +19,6 @@
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import event
 
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp
