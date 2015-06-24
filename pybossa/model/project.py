@@ -21,7 +21,7 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp
+from pybossa.model import DomainObject, JSONEncodedDict, make_timestamp
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
