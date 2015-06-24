@@ -49,11 +49,6 @@ from pybossa.feed import get_update_feed
 
 from pybossa.forms.account_view_forms import *
 
-try:
-    import cPickle as pickle
-except ImportError:  # pragma: no cover
-    import pickle
-
 
 blueprint = Blueprint('account', __name__)
 
