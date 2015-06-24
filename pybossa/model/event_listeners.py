@@ -15,7 +15,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+from datetime import datetime
+
+from rq import Queue
 from sqlalchemy import event
+
 from pybossa.feed import update_feed
 from pybossa.model import update_project_timestamp
 from pybossa.model.blogpost import Blogpost
@@ -25,7 +29,6 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.jobs import webhook
 from pybossa.core import sentinel
-from rq import Queue
 
 webhook_queue = Queue('high', connection=sentinel.master)
 
