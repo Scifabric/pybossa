@@ -19,7 +19,6 @@
 import datetime
 import json
 import uuid
-import requests
 
 from sqlalchemy import Text
 from sqlalchemy.orm import class_mapper
@@ -27,19 +26,9 @@ from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import TypeDecorator
 
 import logging
-from time import time
 
-
-try:
-    import cPickle as pickle
-except ImportError:  # pragma: no cover
-    import pickle
-
-
-from pybossa.core import sentinel
 
 log = logging.getLogger(__name__)
-
 
 
 class DomainObject(object):
@@ -151,25 +140,8 @@ def make_uuid():
     return str(uuid.uuid4())
 
 
-def update_redis(obj):
-    """Add domain object to update feed in Redis."""
-    p = sentinel.master.pipeline()
-    tmp = pickle.dumps(obj)
-    p.zadd('pybossa_feed', time(), tmp)
-    p.execute()
-
-
 def update_project_timestamp(mapper, conn, target):
     """Update method to be used by the relationship objects."""
     sql_query = ("update project set updated='%s' where id=%s" %
                  (make_timestamp(), target.project_id))
     conn.execute(sql_query)
-
-
-def webhook(url, payload=None):
-    """Post to a webhook."""
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    if url:
-        return requests.post(url, data=json.dumps(payload), headers=headers)
-    else:
-        return False

@@ -19,11 +19,9 @@
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import event
-
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONEncodedDict, make_timestamp
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
@@ -113,13 +111,3 @@ class Project(db.Model, DomainObject):
 
     def delete_autoimporter(self):
         del self.info['autoimporter']
-
-
-@event.listens_for(Project, 'after_insert')
-def add_event(mapper, conn, target):
-    """Update PyBossa feed with new project."""
-    obj = dict(id=target.id,
-               name=target.name,
-               short_name=target.short_name,
-               action_updated='Project')
-    update_redis(obj)
