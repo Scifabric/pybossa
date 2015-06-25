@@ -24,6 +24,7 @@ from flask import render_template
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
+from pybossa.util import rank
 
 
 blueprint = Blueprint('home', __name__)
@@ -45,14 +46,14 @@ def home():
     d['categories_projects'] = {}
     for c in categories:
         tmp_projects = cached_projects.get(c['short_name'], page, per_page)
-        d['categories_projects'][c['short_name']] = tmp_projects
+        d['categories_projects'][c['short_name']] = rank(tmp_projects)
 
     # Add featured
     tmp_projects = cached_projects.get_featured('featured', page, per_page)
     if len(tmp_projects) > 0:
         featured = Category(name='Featured', short_name='featured')
         d['categories'].insert(0, featured)
-        d['categories_projects']['featured'] = tmp_projects
+        d['categories_projects']['featured'] = rank(tmp_projects)
 
     if (current_app.config['ENFORCE_PRIVACY']
             and current_user.is_authenticated()):
