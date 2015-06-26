@@ -112,10 +112,10 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
     if total_remaining == 0:
         return None
     if (offset == 0):
-        return candidate_tasks[0]
+        return session.query(Task).get(candidate_tasks[0])
     else:
         if (offset < len(candidate_tasks)):
-            return candidate_tasks[offset]
+            return session.query(Task).get(candidate_tasks[offset])
         else:
             return None
 
@@ -133,7 +133,8 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
     if total_remaining == 0:
         return None
     rand = random.randrange(0, total_remaining)
-    task = candidate_tasks[rand]
+    task_id = candidate_tasks[rand]
+    task = session.query(Task).get(task_id)
     # Find last answer for the task
     q = session.query(TaskRun)\
         .filter(TaskRun.task_id == task.id)\
@@ -173,10 +174,7 @@ def get_candidate_tasks(project_id, user_id=None, user_ip=None,
         rows = session.execute(query, dict(project_id=project_id,
                                            user_ip=user_ip))
 
-    tasks = []
-    for t in rows:
-        tasks.append(session.query(Task).get(t.id))
-    return tasks
+    return [t.id for t in rows]
 
 
 def sched_variants():
