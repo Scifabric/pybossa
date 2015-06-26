@@ -49,7 +49,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
     """
     # Uncomment the next three lines to profile the sched function
     # import timeit
-    # T = timeit.Timer(lambda: get_candidate_tasks(project_id, user_id,
+    # T = timeit.Timer(lambda: get_candidate_task_ids(project_id, user_id,
     #                   user_ip, n_answers))
     # print "First algorithm: %s" % T.timeit(number=1)
     if user_id and not user_ip:
@@ -102,20 +102,20 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
     """Get a new task for a given project."""
     # Uncomment the next three lines to profile the sched function
     # import timeit
-    # T = timeit.Timer(lambda: get_candidate_tasks(project_id, user_id,
+    # T = timeit.Timer(lambda: get_candidate_task_ids(project_id, user_id,
     #                   user_ip, n_answers))
     # print "First algorithm: %s" % T.timeit(number=1)
-    candidate_tasks = get_candidate_tasks(project_id, user_id, user_ip,
-                                          n_answers, offset=offset)
-    total_remaining = len(candidate_tasks)
+    candidate_task_ids = get_candidate_task_ids(project_id, user_id, user_ip,
+                                                n_answers, offset=offset)
+    total_remaining = len(candidate_task_ids)
     # print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
     if (offset == 0):
-        return session.query(Task).get(candidate_tasks[0])
+        return session.query(Task).get(candidate_task_ids[0])
     else:
-        if (offset < len(candidate_tasks)):
-            return session.query(Task).get(candidate_tasks[offset])
+        if (offset < len(candidate_task_ids)):
+            return session.query(Task).get(candidate_task_ids[offset])
         else:
             return None
 
@@ -127,13 +127,13 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
     It is an important strategy when dealing with large tasks, as
     transcriptions.
     """
-    candidate_tasks = get_candidate_tasks(project_id, user_id, user_ip,
-                                          n_answers, offset=0)
-    total_remaining = len(candidate_tasks)
+    candidate_task_ids = get_candidate_task_ids(project_id, user_id, user_ip,
+                                                n_answers, offset=0)
+    total_remaining = len(candidate_task_ids)
     if total_remaining == 0:
         return None
     rand = random.randrange(0, total_remaining)
-    task_id = candidate_tasks[rand]
+    task_id = candidate_task_ids[rand]
     task = session.query(Task).get(task_id)
     # Find last answer for the task
     q = session.query(TaskRun)\
@@ -147,7 +147,7 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
     return task
 
 
-def get_candidate_tasks(project_id, user_id=None, user_ip=None,
+def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                         n_answers=30, offset=0):
     """Get all available tasks for a given project and user."""
     rows = None
