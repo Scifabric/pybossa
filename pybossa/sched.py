@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PyBossa tasks."""
 from sqlalchemy.sql import text
-from sqlalchemy import exists, select
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.core import db
@@ -152,55 +151,31 @@ def get_candidate_tasks(project_id, user_id=None, user_ip=None,
     """Get all available tasks for a given project and user."""
     rows = None
     if user_id and not user_ip:
-        tasks = (session.query(Task)
-                .filter(
-                ~exists(
-                    select([TaskRun.task_id])
-                    .where(TaskRun.project_id == project_id)
-                    .where(TaskRun.user_id == user_id)
-                    .where(TaskRun.task_id == Task.id),
-                Task.project_id == project_id,
-                Task.state != 'completed'))
-                .order_by(Task.priority_0.desc())
-                .order_by(Task.id.asc())
-                .limit(10)).all()
-        # query = text('''
-        #              SELECT id FROM task WHERE NOT EXISTS
-        #              (SELECT task_id FROM task_run WHERE
-        #              project_id=:project_id AND user_id=:user_id
-        #                 AND task_id=task.id)
-        #              AND project_id=:project_id AND state !='completed'
-        #              ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        # rows = session.execute(query, dict(project_id=project_id,
-        #                                    user_id=user_id))
+        query = text('''
+                     SELECT id FROM task WHERE NOT EXISTS
+                     (SELECT task_id FROM task_run WHERE
+                     project_id=:project_id AND user_id=:user_id
+                        AND task_id=task.id)
+                     AND project_id=:project_id AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+        rows = session.execute(query, dict(project_id=project_id,
+                                           user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
-        # query = text('''
-        #              SELECT id FROM task WHERE NOT EXISTS
-        #              (SELECT task_id FROM task_run WHERE
-        #              project_id=:project_id AND user_ip=:user_ip
-        #                 AND task_id=task.id)
-        #              AND project_id=:project_id AND state !='completed'
-        #              ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        # rows = session.execute(query, dict(project_id=project_id,
-        #                                    user_ip=user_ip))
-        tasks = (session.query(Task)
-                .filter(
-                ~exists(
-                    select([TaskRun.task_id])
-                    .where(TaskRun.project_id == project_id)
-                    .where(TaskRun.user_ip == user_ip)
-                    .where(TaskRun.task_id == Task.id),
-                Task.project_id == project_id,
-                Task.state != 'completed'))
-                .order_by(Task.priority_0.desc())
-                .order_by(Task.id.asc())
-                .limit(10)).all()
+        query = text('''
+                     SELECT id FROM task WHERE NOT EXISTS
+                     (SELECT task_id FROM task_run WHERE
+                     project_id=:project_id AND user_ip=:user_ip
+                        AND task_id=task.id)
+                     AND project_id=:project_id AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+        rows = session.execute(query, dict(project_id=project_id,
+                                           user_ip=user_ip))
 
-    # tasks = []
-    # for t in rows:
-    #     tasks.append(session.query(Task).get(t.id))
+    tasks = []
+    for t in rows:
+        tasks.append(session.query(Task).get(t.id))
     return tasks
 
 
