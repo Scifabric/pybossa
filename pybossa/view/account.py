@@ -28,7 +28,6 @@ This module exports the following endpoints:
 """
 from itsdangerous import BadData
 from markdown import markdown
-import json
 import time
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
@@ -46,31 +45,14 @@ from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
+from pybossa.feed import get_update_feed
 
 from pybossa.forms.account_view_forms import *
-
-try:
-    import cPickle as pickle
-except ImportError:  # pragma: no cover
-    import pickle
 
 
 blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('super', connection=sentinel.master)
-
-
-def get_update_feed():
-    """Return update feed list."""
-    data = sentinel.slave.zrevrange('pybossa_feed', 0, 99, withscores=True)
-    update_feed = []
-    for u in data:
-        tmp = pickle.loads(u[0])
-        tmp['updated'] = u[1]
-        if tmp.get('info') and type(tmp.get('info')) == unicode:
-            tmp['info'] = json.loads(tmp['info'])
-        update_feed.append(tmp)
-    return update_feed
 
 
 @blueprint.route('/', defaults={'page': 1})

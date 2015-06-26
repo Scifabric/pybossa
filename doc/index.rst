@@ -21,6 +21,7 @@ The documentation is organized as follows:
    admin
    installing_pybossa
    vagrant_pybossa
+   juju_pybossa
    faq
 
 .. _BOSSA: http://bossa.berkeley.edu/

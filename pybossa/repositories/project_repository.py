@@ -50,6 +50,7 @@ class ProjectRepository(object):
 
     def save(self, project):
         self._validate_can_be('saved', project)
+        self._empty_strings_to_none(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -60,6 +61,7 @@ class ProjectRepository(object):
 
     def update(self, project):
         self._validate_can_be('updated', project)
+        self._empty_strings_to_none(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -117,6 +119,14 @@ class ProjectRepository(object):
         self._validate_can_be('deleted as a Category', category, klass=Category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
+
+    def _empty_strings_to_none(self, project):
+        if project.name == '':
+            project.name = None
+        if project.short_name == '':
+            project.short_name = None
+        if project.description == '':
+            project.description = None
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

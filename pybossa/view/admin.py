@@ -37,7 +37,7 @@ from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo, sentinel
-from pybossa.view.account import get_update_feed
+from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
 import json

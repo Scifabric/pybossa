@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import webhook
+from pybossa.jobs import webhook
 from default import Test, with_context
 from factories import ProjectFactory
 from factories import TaskFactory
@@ -38,7 +38,7 @@ class TestWebHooks(Test):
 
 
     @with_context
-    @patch('pybossa.model.requests')
+    @patch('pybossa.jobs.requests')
     def test_webhooks(self, mock):
         """Test WEBHOOK works."""
         mock.post.return_value = True
@@ -48,7 +48,7 @@ class TestWebHooks(Test):
         assert mock.post.called, err_msg
 
     @with_context
-    @patch('pybossa.model.requests')
+    @patch('pybossa.jobs.requests')
     def test_webhooks_without_url(self, mock):
         """Test WEBHOOK without url works."""
         mock.post.return_value = True
@@ -56,7 +56,7 @@ class TestWebHooks(Test):
         assert webhook(None) is False, err_msg
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_without_url(self):
         """Test WEBHOOK is triggered without url."""
         project = ProjectFactory.create()
@@ -66,7 +66,7 @@ class TestWebHooks(Test):
         queue.reset_mock()
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_with_url_not_completed_task(self):
         """Test WEBHOOK is not triggered for uncompleted tasks."""
         import random
@@ -80,7 +80,7 @@ class TestWebHooks(Test):
 
 
     @with_context
-    @patch('pybossa.model.task_run.webhook_queue', new=queue)
+    @patch('pybossa.model.event_listeners.webhook_queue', new=queue)
     def test_trigger_webhook_with_url(self):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
