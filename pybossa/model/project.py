@@ -20,7 +20,6 @@ from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.ext.mutable import MutableDict
 
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp
@@ -70,7 +69,7 @@ class Project(db.Model, DomainObject):
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
-    info = Column(MutableDict.as_mutable(JSON))
+    info = Column(JSON)
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='project')
     task_runs = relationship(TaskRun, backref='project',

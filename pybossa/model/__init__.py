@@ -17,13 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-import json
 import uuid
 
 from sqlalchemy import Text
 from sqlalchemy.orm import class_mapper
-from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy.types import TypeDecorator
 
 import logging
 
