@@ -1,14 +1,14 @@
 """text to JSON
 
 Revision ID: 151b2f642877
-Revises: aee7291c81
+Revises: ac115763654
 Create Date: 2015-06-12 14:40:56.956657
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '151b2f642877'
-down_revision = 'aee7291c81'
+down_revision = 'ac115763654'
 
 from alembic import op
 import sqlalchemy as sa
