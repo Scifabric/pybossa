@@ -341,7 +341,7 @@ def get_all(category):
                category.short_name=:category
                AND project.hidden=0
                AND "user".id=project.owner_id
-               AND (project.info->'task_presenter') IS NOT NULL
+               AND (project.info->>'task_presenter') IS NOT NULL
                AND task.project_id=project.id
                GROUP BY project.id, "user".id ORDER BY project.name;''')
 
