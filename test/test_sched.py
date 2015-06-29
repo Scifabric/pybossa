@@ -45,7 +45,6 @@ class TestSched(sched.Helper):
         TaskFactory.create(project=project, info='hola')
 
         res = self.app.get('api/project/%s/newtask' %project.id)
-        print res.data
         data = json.loads(res.data)
         assert data['info'] == 'hola', data
 
