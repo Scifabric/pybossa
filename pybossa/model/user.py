@@ -20,6 +20,7 @@ from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
 
 from pybossa.core import db, signer
@@ -59,7 +60,7 @@ class User(db.Model, DomainObject, UserMixin):
     valid_email = Column(Boolean, default=False)
     confirmation_email_sent = Column(Boolean, default=False)
     subscribed = Column(Boolean, default=True)
-    info = Column(JSON)
+    info = Column(MutableDict.as_mutable(JSON))
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
