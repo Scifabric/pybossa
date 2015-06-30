@@ -168,16 +168,12 @@ def user_progress(project_id=None, short_name=None):
 
         if project:
             # For now, keep this version, but wait until redis cache is used here for task_runs too
-            # query_attrs = dict(project_id=project.id)
-            query_attrs = (model.TaskRun.project_id == project.id)
+            query_attrs = dict(project_id=project.id)
             if current_user.is_anonymous():
-                #query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
-                ip = request.remote_addr or '127.0.0.1'
-                query_attrs += (model.TaskRun.user_ip == ip, )
+                query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
             else:
-                #query_attrs['user_id'] = current_user.id
-                query_attrs += (model.TaskRun.user_id == current_user.id, )
-            taskrun_count = task_repo.count_task_runs_with(*query_attrs)
+                query_attrs['user_id'] = current_user.id
+            taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             tmp = dict(done=taskrun_count, total=n_tasks(project.id))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:

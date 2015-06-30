@@ -22,7 +22,6 @@ from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
-from pybossa.model.task_run import TaskRun
 
 
 class TestTaskRepositoryForTaskQueries(Test):
@@ -165,8 +164,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         TaskFactory.create(state='done', n_answers=17)
         task = TaskFactory.create(state='done', n_answers=99)
 
-        count = self.task_repo.count_tasks_with(state='done',
-                                                         n_answers=99)
+        count = self.task_repo.count_tasks_with(state='done', n_answers=99)
 
         assert count == 1, count
 
@@ -201,16 +199,11 @@ class TestTaskRepositoryForTaskrunQueries(Test):
     def test_get_task_run_by(self):
         """Test get_task_run_by returns a taskrun with the specified attribute"""
 
-        taskrun = TaskRunFactory.create(info=dict(foo='bar'))
+        taskrun = TaskRunFactory.create(info='info')
 
-        retrieved_taskrun = self.task_repo.get_task_run_by(TaskRun.info==taskrun.info)
-
-        assert taskrun == retrieved_taskrun, retrieved_taskrun
-
-        retrieved_taskrun = self.task_repo.get_task_run_by(TaskRun.info['foo'].astext=='bar')
+        retrieved_taskrun = self.task_repo.get_task_run_by(info=taskrun.info)
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
-
 
 
     def test_get_task_run_by_returns_none_if_no_task_run(self):
@@ -218,7 +211,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        taskrun = self.task_repo.get_task_run_by(TaskRun.info=='"other info"')
+        taskrun = self.task_repo.get_task_run_by(info='other info')
 
         assert taskrun is None, taskrun
 
@@ -229,7 +222,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        retrieved_taskruns = self.task_repo.filter_task_runs_by(TaskRun.info=='"other"')
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info='other')
 
         assert isinstance(retrieved_taskruns, list)
         assert len(retrieved_taskruns) == 0, retrieved_taskruns
@@ -254,8 +247,8 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         TaskRunFactory.create(info='info', user_ip='8.8.8.8')
         taskrun = TaskRunFactory.create(info='info', user_ip='1.1.1.1')
 
-        retrieved_taskruns = self.task_repo.filter_task_runs_by(TaskRun.info=='"info"',
-                                                                TaskRun.user_ip=='1.1.1.1')
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info='info',
+                                                                user_ip='1.1.1.1')
 
         assert len(retrieved_taskruns) == 1, retrieved_taskruns
         assert taskrun in retrieved_taskruns, retrieved_taskruns
@@ -296,7 +289,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         TaskRunFactory.create(info='info')
 
-        count = self.task_repo.count_task_runs_with(TaskRun.info=='"other info"')
+        count = self.task_repo.count_task_runs_with(info='other info')
 
         assert count == 0, count
 
@@ -308,7 +301,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         TaskRunFactory.create_batch(3, info='info')
         should_be_missing = TaskRunFactory.create(info='other info')
 
-        count = self.task_repo.count_task_runs_with(TaskRun.info=='"info"')
+        count = self.task_repo.count_task_runs_with(info='info')
 
         assert count == 3, count
 
@@ -317,11 +310,10 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         """Test count_task_runs_with supports multiple-condition queries"""
 
         TaskRunFactory.create(info='info', user_ip='8.8.8.8')
-        taskrun = TaskRunFactory.create(info='bar', user_ip='1.1.1.1')
+        taskrun = TaskRunFactory.create(info='info', user_ip='1.1.1.1')
 
-
-        count = self.task_repo.count_task_runs_with(TaskRun.info=='"bar"',
-                                                    TaskRun.user_ip=='1.1.1.1')
+        count = self.task_repo.count_task_runs_with(info='info',
+                                                    user_ip='1.1.1.1')
 
         assert count == 1, count
 
