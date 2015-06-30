@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import types
 from sqlalchemy.sql import text, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.base import _entity_descriptor

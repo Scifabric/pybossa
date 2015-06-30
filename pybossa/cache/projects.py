@@ -22,8 +22,6 @@ from pybossa.model.project import Project
 from pybossa.util import pretty_date
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 
-import json
-
 
 session = db.slave_session
 

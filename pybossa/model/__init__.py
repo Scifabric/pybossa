@@ -19,7 +19,6 @@
 import datetime
 import uuid
 
-from sqlalchemy import Text
 from sqlalchemy.orm import class_mapper
 
 import logging
