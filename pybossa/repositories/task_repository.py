@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy.sql import text
-from sqlalchemy.exc import IntegrityError, ProgrammingError
+import json
+import types
+from sqlalchemy.sql import text, and_
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.base import _entity_descriptor
 from sqlalchemy import cast
 from sqlalchemy import Text
 
@@ -28,96 +31,61 @@ from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 
 
+def generate_query_from_keywords(model, **kwargs):
+    clauses = [_entity_descriptor(model, key) == value
+                   for key, value in kwargs.items()
+                   if key != 'info']
+    if 'info' in kwargs.keys():
+        info = json.dumps(kwargs['info'])
+        clauses.append(cast(_entity_descriptor(model, 'info'), Text) == info)
+    return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+
+
 class TaskRepository(object):
 
     def __init__(self, db):
         self.db = db
-
-    @property
-    def query(self):
-        return self.db.session.query(Task)
-
-    def _cast_task_run_info_json_as_text(self, *filters):
-        for f in filters:
-            if f.left == TaskRun.info:
-                f.left = cast(TaskRun.info, Text)
-        return filters
-
 
     # Methods for queries on Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
 
     def get_task_by(self, **attributes):
-        if (attributes.get('info') and attributes.get('project_id')
-                and len(attributes.keys()) == 2):
-            info = attributes.get('info')
-            project_id = attributes.get('project_id')
-            query = ""
-            for k in info.keys():
-                query += " AND (info->>'%s')='%s'" % (k, info[k])
-            sql = 'SELECT * FROM task WHERE project_id=%s' % project_id
-            sql += query
-            results = self.db.session.execute(sql)
-            for row in results:
-                if row.id and row.info:
-                    return self.db.session.query(Task).get(row.id)
-                else:
-                    return None
-        else:
-            return self.db.session.query(Task).filter_by(**attributes).first()
+        filters = generate_query_from_keywords(Task, **attributes)
+        return self.db.session.query(Task).filter(*filters).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False, **filters):
-        query = self.db.session.query(Task).filter_by(**filters)
+        query_args = generate_query_from_keywords(Task, **filters)
+        query = self.db.session.query(Task).filter(*query_args)
         query = query.order_by(Task.id).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
 
     def count_tasks_with(self, **filters):
-        return self.db.session.query(Task).filter_by(**filters).count()
+        query_args = generate_query_from_keywords(Task, **filters)
+        return self.db.session.query(Task).filter(*query_args).count()
 
 
     # Methods for queries on TaskRun objects
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
 
-    def get_task_run_by(self, *filters):
-        try:
-            return self.db.session.query(TaskRun).filter(*filters).first()
-        except ProgrammingError:
-            self.db.session.rollback()
-            filters = self._cast_task_run_info_json_as_text(*filters)
-            return self.db.session.query(TaskRun).filter(*filters).first()
+    def get_task_run_by(self, **attributes):
+        filters = generate_query_from_keywords(TaskRun, **attributes)
+        return self.db.session.query(TaskRun).filter(*filters).first()
 
+    def filter_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
+        query_args = generate_query_from_keywords(TaskRun, **filters)
+        query = self.db.session.query(TaskRun).filter(*query_args)
+        query = query.order_by(TaskRun.id).limit(limit).offset(offset)
+        if yielded:
+            return query.yield_per(1)
+        return query.all()
 
-    def filter_task_runs_by(self, *filters, **kwargs):
-        try:
-            limit = kwargs.get('limit')
-            offset = kwargs.get('offset') or 0
-            yielded = kwargs.get('yielded') or False
-            query = self.db.session.query(TaskRun).filter(*filters)
-            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
-            if yielded:
-                return query.yield_per(1)
-            return query.all()
-        except ProgrammingError:
-            self.db.session.rollback()
-            filters = self._cast_task_run_info_json_as_text(*filters)
-            query = self.db.session.query(TaskRun).filter(*filters)
-            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
-            if yielded:
-                return query.yield_per(1)
-            return query.all()
-
-
-    def count_task_runs_with(self, *filters):
-        try:
-            return self.db.session.query(TaskRun).filter(*filters).count()
-        except ProgrammingError:
-            self.db.session.rollback()
-            filters = self._cast_task_run_info_json_as_text(*filters)
-            return self.db.session.query(TaskRun).filter(*filters).count()
+    def count_task_runs_with(self, **filters):
+        query_args = generate_query_from_keywords(TaskRun, **filters)
+        return self.db.session.query(TaskRun).filter(*query_args).count()
 
 
     # Methods for saving, deleting and updating both Task and TaskRun objects

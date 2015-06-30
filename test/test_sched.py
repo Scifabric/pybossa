@@ -54,7 +54,7 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # Get a Task until scheduler returns None
         project = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(3, project=project)
+        tasks = TaskFactory.create_batch(3, project=project, info={})
         res = self.app.get('api/project/%s/newtask' %project.id)
         data = json.loads(res.data)
         while data.get('info') is not None:

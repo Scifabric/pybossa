@@ -19,7 +19,6 @@
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.ext.mutable import MutableDict
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
