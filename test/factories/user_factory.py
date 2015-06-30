@@ -40,3 +40,4 @@ class UserFactory(BaseFactory):
     subscribed = True
     privacy_mode = True
     api_key =  factory.Sequence(lambda n: u'api-key%d' % n)
+    info = dict(foo='bar')
