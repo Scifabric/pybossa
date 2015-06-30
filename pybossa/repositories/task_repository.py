@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+import types
 from sqlalchemy.sql import text, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.base import _entity_descriptor
@@ -34,8 +36,8 @@ def generate_query_from_keywords(model, **kwargs):
                    for key, value in kwargs.items()
                    if key != 'info']
     if 'info' in kwargs.keys():
-        info = kwargs['info']
-        clauses.append(cast(_entity_descriptor(model, 'info'), Text) == ('"'+info+'"') )
+        info = json.dumps(kwargs['info'])
+        clauses.append(cast(_entity_descriptor(model, 'info'), Text) == info)
     return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
 
 
