@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for site statistics."""
-import json
 import pygeoip
 from sqlalchemy.sql import text
 from flask import current_app
@@ -96,7 +95,7 @@ def get_top5_projects_24_hours():
     top5_apps_24_hours = []
     for row in results:
         tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
+                   info=row.info, n_answers=row.n_answers)
         top5_apps_24_hours.append(tmp)
     return top5_apps_24_hours
 

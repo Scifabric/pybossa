@@ -22,7 +22,6 @@ from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
-import json
 
 
 session = db.slave_session
@@ -57,7 +56,7 @@ def get_leaderboard(n, user_id):
             name=row.name,
             fullname=row.fullname,
             email_addr=row.email_addr,
-            info=dict(json.loads(row.info)),
+            info=row.info,
             score=row.score)
         top_users.append(user)
     if (user_id != 'anonymous'):
@@ -93,7 +92,7 @@ def get_leaderboard(n, user_id):
                     name=row.name,
                     fullname=row.fullname,
                     email_addr=row.email_addr,
-                    info=dict(json.loads(row.info)),
+                    info=row.info,
                     score=row.score)
             top_users.append(user)
 
@@ -117,7 +116,7 @@ def get_top(n=10):
                     email_addr=row.email_addr,
                     created=row.created,
                     task_runs=row.task_runs,
-                    info=dict(json.loads(row.info)))
+                    info=row.info)
         top_users.append(user)
     return top_users
 
@@ -144,7 +143,7 @@ def get_user_summary(name):
                     twitter_user_id=row.twitter_user_id,
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
-                    info=dict(json.loads(row.info)),
+                    info=row.info,
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
@@ -199,7 +198,7 @@ def projects_contributed(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_contributed.append(project)
     return projects_contributed
 
@@ -218,10 +217,10 @@ def published_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=0 AND project.info LIKE('%task_presenter%')
+               project.hidden=0 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -231,7 +230,7 @@ def published_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_published.append(project)
     return projects_published
 
@@ -250,10 +249,10 @@ def draft_projects(user_id):
                project.info
                FROM project
                WHERE project.owner_id=:user_id
-               AND project.info NOT LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -263,7 +262,7 @@ def draft_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_draft.append(project)
     return projects_draft
 
@@ -282,10 +281,9 @@ def hidden_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=1 AND project.info LIKE('%task_presenter%')
+               project.hidden=1 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -295,7 +293,7 @@ def hidden_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_published.append(project)
     return projects_published
 
@@ -329,7 +327,7 @@ def get_users_page(page, per_page=24):
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
-                    task_runs=row.task_runs, info=dict(json.loads(row.info)),
+                    task_runs=row.task_runs, info=row.info,
                     registered_ago=pretty_date(row.created))
         accounts.append(user)
     return accounts

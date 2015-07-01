@@ -22,8 +22,6 @@ from pybossa.model.project import Project
 from pybossa.util import pretty_date
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 
-import json
-
 
 session = db.slave_session
 
@@ -49,7 +47,7 @@ def get_top(n=4):
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        description=row.description,
-                       info=json.loads(row.info),
+                       info=row.info,
                        n_volunteers=n_volunteers(row.id),
                        n_completed_tasks=n_completed_tasks(row.id))
         top_projects.append(project)
@@ -220,7 +218,7 @@ def get_all_featured(category=None):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
+                       info=row.info)
         projects.append(project)
     return projects
 
@@ -238,8 +236,9 @@ def n_published():
     sql = text('''
                WITH published_projects as
                (SELECT project.id FROM project, task WHERE
-               project.id=task.project_id AND project.hidden=0 AND project.info
-               LIKE('%task_presenter%') GROUP BY project.id)
+               project.id=task.project_id AND project.hidden=0 AND
+               (project.info->>'task_presenter') IS NOT NULL
+               GROUP BY project.id)
                SELECT COUNT(id) FROM published_projects;
                ''')
 
@@ -257,7 +256,7 @@ def _n_draft():
     sql = text('''SELECT COUNT(project.id) FROM project
                LEFT JOIN task on project.id=task.project_id
                WHERE task.project_id IS NULL
-               AND project.info NOT LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NULL
                AND project.hidden=0;''')
 
     results = session.execute(sql)
@@ -273,7 +272,7 @@ def get_all_draft(category=None):
                project.description, project.info, project.updated, "user".fullname as owner
                FROM "user", project LEFT JOIN task ON project.id=task.project_id
                WHERE task.project_id IS NULL
-               AND project.info NOT LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NULL
                AND project.hidden=0
                AND project.owner_id="user".id;''')
 
@@ -290,7 +289,7 @@ def get_all_draft(category=None):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
+                       info=row.info)
         projects.append(project)
     return projects
 
@@ -314,7 +313,7 @@ def n_count(category):
                WHERE
                category.short_name=:category
                AND project.hidden=0
-               AND project.info LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NOT NULL
                AND task.project_id=project.id
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
@@ -340,7 +339,7 @@ def get_all(category):
                category.short_name=:category
                AND project.hidden=0
                AND "user".id=project.owner_id
-               AND project.info LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NOT NULL
                AND task.project_id=project.id
                GROUP BY project.id, "user".id ORDER BY project.name;''')
 
@@ -359,7 +358,7 @@ def get_all(category):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
+                       info=row.info)
         projects.append(project)
     return projects
 
