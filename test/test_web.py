@@ -713,7 +713,7 @@ class TestWeb(web.Helper):
         msg = "Project: Sample Project"
         assert self.html_title(msg) in res.data, res
         err_msg = "There should be a contribute button"
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
@@ -722,7 +722,7 @@ class TestWeb(web.Helper):
         # Now as an anonymous user
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
         err_msg = "Anonymous user should be redirected to sign in page"
@@ -732,7 +732,7 @@ class TestWeb(web.Helper):
         self.register(fullname="Perico Palotes", name="perico")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
