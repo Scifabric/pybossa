@@ -1503,7 +1503,7 @@ class TestWeb(web.Helper):
         """Test WEB tutorials work as signed in user"""
         self.create()
         project1 = db.session.query(Project).get(1)
-        project1.info = dict(tutorial="some help")
+        project1.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         self.register()
         # First time accessing the project should redirect me to the tutorial
@@ -1533,7 +1533,7 @@ class TestWeb(web.Helper):
         """Test WEB tutorials work as an anonymous user"""
         self.create()
         project = db.session.query(Project).get(1)
-        project.info = dict(tutorial="some help")
+        project.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
@@ -1585,6 +1585,18 @@ class TestWeb(web.Helper):
         # Second time accessing the project should show the presenter
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         assert "the real presenter" in res.data, err_msg
+
+    def test_not_found_if_contributing_to_project_without_presenter(self):
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(project=project)
+        newtask_url = '/project/%s/newtask' % project.short_name
+        task_url = '/project/%s/task/%s' % (project.short_name, task.id)
+
+        newtask_response = self.app.get(newtask_url, follow_redirects=True)
+        task_response = self.app.get(task_url, follow_redirects=True)
+
+        assert newtask_response.status_code == 404, newtask_response.status_code
+        assert task_response.status_code == 404, task_response.status_code
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
