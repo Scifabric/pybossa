@@ -62,7 +62,7 @@ class Hateoas(object):
                                               title='category', rel='category'))
             return links, link
         elif cls == 'user':
-            link = self.create_link(item.id)
+            link = self.create_link(item.id, title='user')
             # TODO: add the projects created by the user as the
             # links with rel=? (maybe 'project'??)
             return None, link
