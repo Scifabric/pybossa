@@ -128,6 +128,10 @@ For example, you can get a list of registered Projects like this::
 
     GET http://{pybossa-site-url}/api/project
 
+Or a list of Categories:: 
+
+    GET http://{pybossa-site-url}/api/category
+
 Or a list of Tasks::
 
     GET http://{pybossa-site-url}/api/task
@@ -153,10 +157,18 @@ Finally, you can get a list of users by doing::
     get more items at once it won't work.
 
 .. note::
+    **DEPRECATED (see next Note for a better and faster solution)**
     You can use the keyword **offset=N** in any **GET** query to skip that many 
     rows before beginning to get rows. If both **offset** and **limit** appear, 
     then **offset** rows are skipped before starting to count the **limit** rows 
     that are returned.
+
+.. note::
+    You can paginate the results of any GET query using the last ID of the
+    domain object that you have received and the parameter: **last_id**. For 
+    example, to get the next 20 items
+    after the last project ID that you've received you will write the query
+    like this: GET /api/project?last_id={{last_id}}.
 
 Get
 ~~~
