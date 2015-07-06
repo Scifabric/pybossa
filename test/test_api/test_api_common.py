@@ -44,7 +44,15 @@ class TestApiCommon(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
+        # DEPRECATED
         res = self.app.get('/api/project?limit=10&offset=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('name') == projects[10].name, data[0]
+
+        # Keyset pagination
+        url = '/api/project?limit=10&last_id=%s' % projects[9].id
+        res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == projects[10].name, data[0]
