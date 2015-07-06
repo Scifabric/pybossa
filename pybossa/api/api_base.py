@@ -102,8 +102,8 @@ class APIBase(MethodView):
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
-        if len (query_result) == 1 and query_result[0] is None:
-            raise abort(404)
+        # if len (query_result) == 1 and query_result[0] is None:
+        #     raise abort(404)
         items = []
         for item in query_result:
             try:
@@ -112,12 +112,15 @@ class APIBase(MethodView):
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
-            except Exception as ex: # pragma: no cover
+            except Exception:  # pragma: no cover
                 raise
         if oid:
             ensure_authorized_to('read', query_result[0])
             items = items[0]
-        return json.dumps(items)
+        if len(items) == 0:
+            return abort(404)
+        else:
+            return json.dumps(items)
 
     def _create_dict_from_model(self, model):
         return self._select_attributes(self._add_hateoas_links(model))
@@ -146,14 +149,20 @@ class APIBase(MethodView):
     def _filter_query(self, repo_info, limit, offset):
         filters = {}
         for k in request.args.keys():
-            if k not in ['limit', 'offset', 'api_key']:
+            if k not in ['limit', 'offset', 'api_key', 'last_id']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
-        results = getattr(repo, query_func)(limit=limit, offset=offset, **filters)
+        last_id = request.args.get('last_id')
+        if last_id:
+            results = getattr(repo, query_func)(limit=limit, last_id=last_id,
+                                                yielded=True, **filters)
+        else:
+            results = getattr(repo, query_func)(limit=limit, offset=offset,
+                                                yielded=True, **filters)
         return results
 
     def _set_limit_and_offset(self):
