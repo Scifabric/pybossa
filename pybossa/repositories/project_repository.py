@@ -43,9 +43,17 @@ class ProjectRepository(object):
     def get_all(self):
         return self.db.session.query(Project).all()
 
-    def filter_by(self, limit=None, offset=0, **filters):
+    def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
+                  **filters):
         query = self.db.session.query(Project).filter_by(**filters)
-        query = query.order_by(Project.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(Project.id > last_id)
+            query = query.order_by(Project.id).limit(limit)
+        else:
+            query = query.order_by(Project.id).limit(limit).offset(offset)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def save(self, project):
