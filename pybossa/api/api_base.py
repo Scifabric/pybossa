@@ -115,7 +115,7 @@ class APIBase(MethodView):
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
-            ensure_authorized_to('read', items[0])
+            ensure_authorized_to('read', query_result[0])
             items = items[0]
         return json.dumps(items)
 
