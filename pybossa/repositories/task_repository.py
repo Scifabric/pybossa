@@ -53,12 +53,18 @@ class TaskRepository(object):
         filters = generate_query_from_keywords(Task, **attributes)
         return self.db.session.query(Task).filter(*filters).first()
 
-    def filter_tasks_by(self, limit=None, offset=0, yielded=False, **filters):
+    def filter_tasks_by(self, limit=None, offset=0, yielded=False,
+                        last_id=None, **filters):
         query_args = generate_query_from_keywords(Task, **filters)
         query = self.db.session.query(Task).filter(*query_args)
-        query = query.order_by(Task.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(Task.id > last_id)
+            query = query.order_by(Task.id).limit(limit)
+        else:
+            query = query.order_by(Task.id).limit(limit).offset(offset)
         if yielded:
-            return query.yield_per(1)
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def count_tasks_with(self, **filters):
@@ -74,12 +80,18 @@ class TaskRepository(object):
         filters = generate_query_from_keywords(TaskRun, **attributes)
         return self.db.session.query(TaskRun).filter(*filters).first()
 
-    def filter_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
+    def filter_task_runs_by(self, limit=None, offset=0, last_id=None,
+                            yielded=False, **filters):
         query_args = generate_query_from_keywords(TaskRun, **filters)
         query = self.db.session.query(TaskRun).filter(*query_args)
-        query = query.order_by(TaskRun.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(TaskRun.id > last_id)
+            query = query.order_by(TaskRun.id).limit(limit)
+        else:
+            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
         if yielded:
-            return query.yield_per(1)
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def count_task_runs_with(self, **filters):
