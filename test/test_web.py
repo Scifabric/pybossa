@@ -1586,17 +1586,19 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         assert "the real presenter" in res.data, err_msg
 
-    def test_not_found_if_contributing_to_project_without_presenter(self):
+    def test_message_is_flashed_contributing_to_project_without_presenter(self):
         project = ProjectFactory.create(info={})
         task = TaskFactory.create(project=project)
         newtask_url = '/project/%s/newtask' % project.short_name
         task_url = '/project/%s/task/%s' % (project.short_name, task.id)
+        message = ("Sorry, but this project is still a draft and does "
+                    "not have a task presenter.")
 
         newtask_response = self.app.get(newtask_url, follow_redirects=True)
         task_response = self.app.get(task_url, follow_redirects=True)
 
-        assert newtask_response.status_code == 404, newtask_response.status_code
-        assert task_response.status_code == 404, task_response.status_code
+        assert message in newtask_response.data
+        assert message in task_response.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

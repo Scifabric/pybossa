@@ -679,7 +679,7 @@ def task_presenter(short_name, task_id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
-    if task is None or has_no_presenter(project):
+    if task is None:
         raise abort(404)
     ensure_authorized_to('read', project)
     redirect_to_password = _check_if_redirect_to_password(project)
@@ -714,6 +714,9 @@ def task_presenter(short_name, task_id):
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
+    if has_no_presenter(project):
+        flash(gettext("Sorry, but this project is still a draft and does "
+                      "not have a task presenter."), "error")
     return respond('/projects/presenter.html')
 
 
@@ -736,9 +739,6 @@ def presenter(short_name):
 
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-
-    if has_no_presenter(project):
-        raise abort(404)
 
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
@@ -766,6 +766,9 @@ def presenter(short_name):
         resp.set_cookie(project.short_name + 'tutorial', 'seen')
         return resp
     else:
+        if has_no_presenter(project):
+            flash(gettext("Sorry, but this project is still a draft and does "
+                          "not have a task presenter."), "error")
         return respond('/projects/presenter.html')
 
 
