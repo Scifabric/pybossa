@@ -46,7 +46,7 @@ class TestTaskrunAPI(TestAPI):
     def test_query_taskrun(self):
         """Test API query for taskrun with params works"""
         project = ProjectFactory.create()
-        TaskRunFactory.create_batch(10, project=project)
+        task_runs = TaskRunFactory.create_batch(10, project=project)
         # Test for real field
         res = self.app.get("/api/taskrun?project_id=1")
         data = json.loads(res.data)
@@ -75,6 +75,15 @@ class TestTaskrunAPI(TestAPI):
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs[5].id, data[0]['id']
 
 
     @with_context
