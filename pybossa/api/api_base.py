@@ -102,8 +102,8 @@ class APIBase(MethodView):
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
-        # if len (query_result) == 1 and query_result[0] is None:
-        #     raise abort(404)
+        if len (query_result) == 1 and query_result[0] is None:
+            raise abort(404)
         items = []
         for item in query_result:
             try:
@@ -114,13 +114,10 @@ class APIBase(MethodView):
                 items.pop()
             except Exception:  # pragma: no cover
                 raise
-        if oid:
-            ensure_authorized_to('read', query_result[0])
+        if oid is not None:
+            ensure_authorized_to('read', items[0])
             items = items[0]
-        if len(items) == 0:
-            return abort(404)
-        else:
-            return json.dumps(items)
+        return json.dumps(items)
 
     def _create_dict_from_model(self, model):
         return self._select_attributes(self._add_hateoas_links(model))
@@ -159,10 +156,10 @@ class APIBase(MethodView):
         last_id = request.args.get('last_id')
         if last_id:
             results = getattr(repo, query_func)(limit=limit, last_id=last_id,
-                                                yielded=True, **filters)
+                                                **filters)
         else:
             results = getattr(repo, query_func)(limit=limit, offset=offset,
-                                                yielded=True, **filters)
+                                                **filters)
         return results
 
     def _set_limit_and_offset(self):
