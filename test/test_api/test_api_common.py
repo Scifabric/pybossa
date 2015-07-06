@@ -73,14 +73,18 @@ class TestApiCommon(TestAPI):
 
         res = self.app.get('/api/user?limit=10')
         data = json.loads(res.data)
-        print data
         assert len(data) == 10, len(data)
 
+        # DEPRECATED
         res = self.app.get('/api/user?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user11', data
 
+        res = self.app.get('/api/user?limit=10&last_id=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('name') == 'user11', data
 
     @with_context
     def test_get_query_with_api_key(self):
