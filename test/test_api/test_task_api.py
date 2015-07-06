@@ -86,8 +86,6 @@ class TestTaskAPI(TestAPI):
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
-        for t  in tasks:
-            print t.id
         assert data[0]['id'] == tasks[5].id, data
 
 
