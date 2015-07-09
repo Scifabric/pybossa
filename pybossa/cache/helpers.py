@@ -86,11 +86,12 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
 
 def has_no_presenter(project):
     """Return if a project has no presenter."""
+    empty_presenters = ('', None)
     try:
-        return project.info.get('task_presenter') in ('', None)
+        return project.info.get('task_presenter') in empty_presenters
     except AttributeError:
         try:
-            return project.get('info').get('task_presenter') in ('', None)
+            return project.get('info').get('task_presenter') in empty_presenters
         except AttributeError:
             return True
 
