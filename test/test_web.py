@@ -1361,9 +1361,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/">Next &raquo;</a>' in page1.data
+        assert '<a href="/project/category/cat/page/2/" rel="nofollow">Next &raquo;</a>' in page1.data
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/">&laquo; Prev </a>' in page2.data
+        assert '<a href="/project/category/cat/" rel="nofollow">&laquo; Prev </a>' in page2.data
 
 
     @with_context
