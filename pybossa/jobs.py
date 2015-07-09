@@ -287,6 +287,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     cached_projects.last_activity(_id)
     cached_projects.n_completed_tasks(_id)
     cached_projects.n_volunteers(_id)
+    cached_projects.browse_tasks(_id)
     stats.get_stats(_id, current_app.config.get('GEO'))
 
 
@@ -332,6 +333,7 @@ def warm_cache():  # pragma: no cover
             cached_projects.last_activity(_id)
             cached_projects.n_completed_tasks(_id)
             cached_projects.n_volunteers(_id)
+            cached_projects.browse_tasks(_id)
             if n_task_runs >= 1000 or featured:
                 # print ("Getting stats for %s as it has %s task runs" %
                 #        (short_name, n_task_runs))

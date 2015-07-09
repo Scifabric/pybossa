@@ -61,6 +61,16 @@ class TestCategoryAPI(TestAPI):
             assert item['short_name'] == 'thinking', item
         assert len(data) == 1, data
 
+        # Keyset pagination
+        CategoryFactory.create(name='computing', short_name='computing')
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        tmp = '?limit=1&last_id=%s' % data[0]['id']
+        res = self.app.get(url + tmp)
+        data_new = json.loads(res.data)
+        assert len(data_new) == 1, data_new
+        assert data_new[0]['id'] == data[1]['id']
+
         # Errors
         res = self.app.get(url + "?something")
         err = json.loads(res.data)

@@ -49,7 +49,7 @@ class TestTaskAPI(TestAPI):
     def test_task_query_with_params(self):
         """Test API query for task with params works"""
         project = ProjectFactory.create()
-        TaskFactory.create_batch(10, project=project)
+        tasks = TaskFactory.create_batch(10, project=project)
         # Test for real field
         res = self.app.get("/api/task?project_id=1")
         data = json.loads(res.data)
@@ -78,6 +78,15 @@ class TestTaskAPI(TestAPI):
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
+
+        # Keyset pagination
+        url = "/api/task?project_id=1&limit=5&last_id=%s" % tasks[4].id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == tasks[5].id, data
 
 
     @with_context

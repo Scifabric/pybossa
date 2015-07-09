@@ -40,9 +40,17 @@ class UserRepository(object):
     def get_all(self):
         return self.db.session.query(User).all()
 
-    def filter_by(self, limit=None, offset=0, **filters):
+    def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
+                  **filters):
         query = self.db.session.query(User).filter_by(**filters)
-        query = query.order_by(User.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(User.id > last_id)
+            query = query.order_by(User.id).limit(limit)
+        else:
+            query = query.order_by(User.id).limit(limit).offset(offset)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def search_by_name(self, keyword):
