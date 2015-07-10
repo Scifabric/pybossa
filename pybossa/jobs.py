@@ -28,6 +28,7 @@ import pybossa.dashboard.jobs as dashboard
 
 MINUTE = 60
 HOUR = 60 * 60
+IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
 def schedule_job(function, scheduler):
@@ -266,7 +267,7 @@ def get_autoimport_jobs(queue='low'):
             job = dict(name=import_tasks,
                        args=[project.id],
                        kwargs=project.get_autoimporter(),
-                       timeout=(10 * MINUTE),
+                       timeout=IMPORT_TASKS_TIMEOUT,
                        queue=queue)
             yield job
 

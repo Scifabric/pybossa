@@ -50,7 +50,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks
+from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 
@@ -61,11 +61,10 @@ from pybossa.api import mark_task_as_requested_by_user
 blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-MINUTE = 60
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
                        connection=sentinel.master,
-                       default_timeout=(10 * MINUTE))
+                       default_timeout=IMPORT_TASKS_TIMEOUT)
 
 def project_title(project, page_name):
     if not project:  # pragma: no cover
