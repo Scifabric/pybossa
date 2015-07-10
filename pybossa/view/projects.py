@@ -62,7 +62,6 @@ blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MINUTE = 60
-HOUR = 60 * MINUTE
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
                        connection=sentinel.master,
