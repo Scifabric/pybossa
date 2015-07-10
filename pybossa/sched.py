@@ -76,31 +76,19 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None, offset=0):
         rows = session.execute(sql,
                                dict(project_id=project_id, user_ip=user_ip))
     task_ids = [x[0] for x in rows]
-    if task_ids:
-        if (offset == 0):
-            return session.query(Task).get(task_ids[0])
-        else:
-            if (offset < len(task_ids)):
-                return session.query(Task).get(task_ids[offset])
-            else:
-                return None
-    else:  # pragma: no cover
+    total_remaining = len(task_ids) - offset
+    if total_remaining <= 0:
         return None
+    return session.query(Task).get(task_ids[offset])
 
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None, offset=0):
     """Get a new task for a given project."""
     candidate_task_ids = get_candidate_task_ids(project_id, user_id, user_ip)
-    total_remaining = len(candidate_task_ids)
-    if total_remaining == 0:
+    total_remaining = len(candidate_task_ids) - offset
+    if total_remaining <= 0:
         return None
-    if (offset == 0):
-        return session.query(Task).get(candidate_task_ids[0])
-    else:
-        if (offset < len(candidate_task_ids)):
-            return session.query(Task).get(candidate_task_ids[offset])
-        else:
-            return None
+    return session.query(Task).get(candidate_task_ids[offset])
 
 
 def get_incremental_task(project_id, user_id=None, user_ip=None, offset=0):
