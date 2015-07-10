@@ -60,10 +60,13 @@ from pybossa.api import mark_task_as_requested_by_user
 
 blueprint = Blueprint('project', __name__)
 
-auditlogger = AuditLogger(auditlog_repo, caller='web')
-importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-HOUR = 60 * 60
+MINUTE = 60
+HOUR = 60 * MINUTE
+auditlogger = AuditLogger(auditlog_repo, caller='web')
+importer_queue = Queue('medium',
+                       connection=sentinel.master,
+                       default_timeout=(10 * MINUTE))
 
 def project_title(project, page_name):
     if not project:  # pragma: no cover

@@ -515,7 +515,7 @@ def setup_scheduled_jobs(app):  # pragma: no cover
     JOBS = [dict(name=enqueue_periodic_jobs, args=['super'], kwargs={},
                  interval=(10 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['high'], kwargs={},
-                 interval=HOUR, timeout=(10 * MINUTE)),
+                 interval=(1 * HOUR), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['medium'], kwargs={},
                  interval=(12 * HOUR), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['low'], kwargs={},
