@@ -713,7 +713,7 @@ class TestWeb(web.Helper):
         msg = "Project: Sample Project"
         assert self.html_title(msg) in res.data, res
         err_msg = "There should be a contribute button"
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
@@ -722,7 +722,7 @@ class TestWeb(web.Helper):
         # Now as an anonymous user
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
         err_msg = "Anonymous user should be redirected to sign in page"
@@ -732,7 +732,7 @@ class TestWeb(web.Helper):
         self.register(fullname="Perico Palotes", name="perico")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Start Contributing Now" in res.data, err_msg
+        assert "Draft project, complete it!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
@@ -1361,9 +1361,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/">Next &raquo;</a>' in page1.data
+        assert '<a href="/project/category/cat/page/2/" rel="nofollow">Next &raquo;</a>' in page1.data
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/">&laquo; Prev </a>' in page2.data
+        assert '<a href="/project/category/cat/" rel="nofollow">&laquo; Prev </a>' in page2.data
 
 
     @with_context
@@ -1503,7 +1503,7 @@ class TestWeb(web.Helper):
         """Test WEB tutorials work as signed in user"""
         self.create()
         project1 = db.session.query(Project).get(1)
-        project1.info = dict(tutorial="some help")
+        project1.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         self.register()
         # First time accessing the project should redirect me to the tutorial
@@ -1533,7 +1533,7 @@ class TestWeb(web.Helper):
         """Test WEB tutorials work as an anonymous user"""
         self.create()
         project = db.session.query(Project).get(1)
-        project.info = dict(tutorial="some help")
+        project.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
@@ -1585,6 +1585,20 @@ class TestWeb(web.Helper):
         # Second time accessing the project should show the presenter
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         assert "the real presenter" in res.data, err_msg
+
+    def test_message_is_flashed_contributing_to_project_without_presenter(self):
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(project=project)
+        newtask_url = '/project/%s/newtask' % project.short_name
+        task_url = '/project/%s/task/%s' % (project.short_name, task.id)
+        message = ("Sorry, but this project is still a draft and does "
+                    "not have a task presenter.")
+
+        newtask_response = self.app.get(newtask_url, follow_redirects=True)
+        task_response = self.app.get(task_url, follow_redirects=True)
+
+        assert message in newtask_response.data
+        assert message in task_response.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

@@ -45,7 +45,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
-from pybossa.cache.helpers import add_custom_contrib_button_to
+from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
@@ -714,6 +714,9 @@ def task_presenter(short_name, task_id):
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
+    if has_no_presenter(project):
+        flash(gettext("Sorry, but this project is still a draft and does "
+                      "not have a task presenter."), "error")
     return respond('/projects/presenter.html')
 
 
@@ -736,6 +739,7 @@ def presenter(short_name):
 
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
+
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project)}
@@ -762,6 +766,9 @@ def presenter(short_name):
         resp.set_cookie(project.short_name + 'tutorial', 'seen')
         return resp
     else:
+        if has_no_presenter(project):
+            flash(gettext("Sorry, but this project is still a draft and does "
+                          "not have a task presenter."), "error")
         return respond('/projects/presenter.html')
 
 
