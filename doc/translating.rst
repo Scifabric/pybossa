@@ -19,7 +19,7 @@ the following: creating a symlink to the translations folders:
 
 .. code-block:: bash
 
-    $ ln -s pybossa/themes/defaul/translations pybossa/translations
+    $ cd pybossa && ln -s themes/defaul/translations
 
 This will use the default translations of PyBossa for your server. We recommend to use
 these translations with the default theme. 
