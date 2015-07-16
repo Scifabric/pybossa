@@ -126,6 +126,25 @@ name of the file.
 
 .. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L40
 
+Multiple languages
+==================
+
+By default PyBossa only speaks English, however the default theme comes with a few
+translations (Spanish, French, Italian and German). 
+
+You can enable those translations (mostly user interface strings and actions) by doing
+the following: creating a symlink to the translations folders:
+
+.. code-block:: bash
+
+    $ cd pybossa && ln -s themes/defaul/translations
+
+This will use the default translations of PyBossa for your server. We recommend to use
+these translations with the default theme. If you use your own theme, the best thing is
+to do your own translation, (see :ref:`translating`), as you might want to name things 
+differently on the templates.
+
+
 Creating your own theme
 =======================
 
