@@ -70,7 +70,7 @@ class Project(db.Model, DomainObject):
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
-    info = Column(MutableDict.as_mutable(JSON))
+    info = Column(MutableDict.as_mutable(JSON), default=dict())
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='project')
     task_runs = relationship(TaskRun, backref='project',
