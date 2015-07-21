@@ -77,12 +77,17 @@ def check_contributing_state(project, user_id=None, user_ip=None):
 
 def add_custom_contrib_button_to(project, user_id_or_ip):
     """Add a customized contrib button for a project."""
-    n_blogposts = len(project.blogposts)
     if type(project) != dict:
         project = project.dictize()
     project['contrib_button'] = check_contributing_state(project,
                                                          **user_id_or_ip)
-    project['n_blogposts'] = n_blogposts
+    query = text('''
+                 SELECT COUNT(id) as ct from blogpost
+                 WHERE project_id=:project_id;
+                 ''')
+    results = session.execute(query, dict(project_id=project['id']))
+    for row in results:
+        project['n_blogposts'] = row.ct
     return project
 
 
