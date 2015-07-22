@@ -21,7 +21,7 @@ import math
 import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
-from pybossa.core import mail, blog_repo, task_repo, importer
+from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
 import pybossa.dashboard.jobs as dashboard
 
@@ -460,6 +460,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     """Send email with new blog post."""
     from sqlalchemy.sql import text
     from pybossa.core import db
+    from pybossa.core import blog_repo
     blog = blog_repo.get(blog_id)
     sql = text('''
                SELECT email_addr, name from "user", task_run
@@ -469,6 +470,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
                GROUP BY email_addr, name, subscribed;
                ''')
     results = db.slave_session.execute(sql, dict(project_id=project_id))
+    users = 0
     for row in results:
         subject = "Project Update: %s by %s" % (blog.project.name,
                                                 blog.project.owner.fullname)
@@ -491,4 +493,6 @@ def notify_blog_users(blog_id, project_id, queue='high'):
                    timeout=(10 * MINUTE),
                    queue=queue)
         enqueue_job(job)
-        break
+        users += 1
+    msg = "%s users notified by email" % users
+    return msg
