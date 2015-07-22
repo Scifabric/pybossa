@@ -67,6 +67,18 @@ def get_quarterly_date(now):
     return datetime.combine(execute_date, now.time())
 
 
+def enqueue_job(job):
+    """Enqueues a job."""
+    from pybossa.core import sentinel
+    from rq import Queue
+    redis_conn = sentinel.master
+    queue = Queue(job['queue'], connection=redis_conn)
+    queue.enqueue_call(func=job['name'],
+                           args=job['args'],
+                           kwargs=job['kwargs'],
+                           timeout=job['timeout'])
+    return True
+
 def enqueue_periodic_jobs(queue_name):
     """Enqueue all PyBossa periodic jobs."""
     from pybossa.core import sentinel
@@ -442,3 +454,46 @@ def webhook(url, payload=None):
         return requests.post(url, data=json.dumps(payload), headers=headers)
     else:
         return False
+
+
+def notify_blog_users(blog_id, project_id, queue='high'):
+    """Send email with new blog post."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    from pybossa.core import blog_repo
+    blog = blog_repo.get(blog_id)
+    users = 0
+    if blog.project.featured or blog.project.owner.pro:
+        sql = text('''
+                   SELECT email_addr, name from "user", task_run
+                   WHERE task_run.project_id=:project_id
+                   AND task_run.user_id="user".id
+                   AND "user".subscribed=true
+                   GROUP BY email_addr, name, subscribed;
+                   ''')
+        results = db.slave_session.execute(sql, dict(project_id=project_id))
+        for row in results:
+            subject = "Project Update: %s by %s" % (blog.project.name,
+                                                    blog.project.owner.fullname)
+            body = render_template('/account/email/blogupdate.md',
+                                   user_name=row.name,
+                                   blog=blog,
+                                   config=current_app.config)
+            html = render_template('/account/email/blogupdate.html',
+                                   user_name=row.name,
+                                   blog=blog,
+                                   config=current_app.config)
+            mail_dict = dict(recipients=[row.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            enqueue_job(job)
+            users += 1
+    msg = "%s users notified by email" % users
+    return msg
