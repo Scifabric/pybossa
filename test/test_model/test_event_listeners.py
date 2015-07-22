@@ -29,8 +29,9 @@ from pybossa.jobs import notify_blog_users
 class TestModelEventListeners(Test):
 
     @with_context
+    @patch('pybossa.model.event_listeners.update_feed')
     @patch('pybossa.model.event_listeners.mail_queue')
-    def test_add_blog_event(self, mock_queue):
+    def test_add_blog_event(self, mock_queue, mock_update_feed):
         """Test add_blog_event is called."""
         conn = MagicMock()
         target = MagicMock()
@@ -45,3 +46,4 @@ class TestModelEventListeners(Test):
         mock_queue.enqueue.assert_called_with(notify_blog_users,
                                               blog_id=target.id,
                                               project_id=target.project_id)
+        assert mock_update_feed.called
