@@ -57,3 +57,17 @@ class TestNotifyBlogUsers(Test):
         res = notify_blog_users(blog.id, blog.project.id)
         msg = "1 users notified by email"
         assert res == msg, res
+
+    @with_context
+    @patch('pybossa.jobs.requests')
+    def test_notify_blog_users(self, mock):
+        """Test Notify Blog users without pro or featured works."""
+        owner = UserFactory.create(pro=False)
+        user = UserFactory.create(subscribed=False)
+        project = ProjectFactory.create(owner=owner, featured=False)
+        TaskRunFactory.create(project=project)
+        TaskRunFactory.create(project=project, user=user)
+        blog = BlogpostFactory.create(project=project)
+        res = notify_blog_users(blog.id, blog.project.id)
+        msg = "0 users notified by email"
+        assert res == msg, res
