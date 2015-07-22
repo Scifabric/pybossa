@@ -18,7 +18,7 @@
 
 from default import Test, with_context
 from mock import patch, MagicMock
-from pybossa.model.event_listeners import add_blog_event
+from pybossa.model.event_listeners import *
 from pybossa.jobs import notify_blog_users
 
 
@@ -46,4 +46,20 @@ class TestModelEventListeners(Test):
         mock_queue.enqueue.assert_called_with(notify_blog_users,
                                               blog_id=target.id,
                                               project_id=target.project_id)
+        assert mock_update_feed.called
+
+    @with_context
+    @patch('pybossa.model.event_listeners.update_feed')
+    def test_add_project_event(self, mock_update_feed):
+        """Test add_project_event is called."""
+        conn = MagicMock()
+        target = MagicMock()
+        target.id = 1
+        target.project_id = 1
+        tmp = MagicMock()
+        tmp.name = 'name'
+        tmp.short_name = 'short_name'
+        tmp.info = dict()
+        conn.execute.return_value = [tmp]
+        add_project_event(None, conn, target)
         assert mock_update_feed.called
