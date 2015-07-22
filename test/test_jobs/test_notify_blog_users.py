@@ -21,6 +21,7 @@ from default import Test, with_context
 from factories import BlogpostFactory
 from factories import TaskRunFactory
 from factories import ProjectFactory
+from factories import UserFactory
 from mock import patch, MagicMock
 
 queue = MagicMock()
@@ -34,8 +35,10 @@ class TestNotifyBlogUsers(Test):
     @patch('pybossa.jobs.requests')
     def test_notify_blog_users(self, mock):
         """Test Notify Blog users works."""
+        user = UserFactory.create(subscribed=False)
         project = ProjectFactory.create()
         TaskRunFactory.create(project=project)
+        TaskRunFactory.create(project=project, user=user)
         blog = BlogpostFactory.create(project=project)
         res = notify_blog_users(blog.id, blog.project.id)
         msg = "1 users notified by email"
