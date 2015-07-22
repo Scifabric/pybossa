@@ -64,11 +64,10 @@ class TestModelEventListeners(Test):
         add_project_event(None, conn, target)
         assert mock_update_feed.called
 
-
     @with_context
     @patch('pybossa.model.event_listeners.update_feed')
     def test_add_task_event(self, mock_update_feed):
-        """Test add_project_event is called."""
+        """Test add_task_event is called."""
         conn = MagicMock()
         target = MagicMock()
         target.id = 1
@@ -79,4 +78,20 @@ class TestModelEventListeners(Test):
         tmp.info = dict()
         conn.execute.return_value = [tmp]
         add_task_event(None, conn, target)
+        assert mock_update_feed.called
+
+    @with_context
+    @patch('pybossa.model.event_listeners.update_feed')
+    def test_add_user_event(self, mock_update_feed):
+        """Test add_user_event is called."""
+        conn = MagicMock()
+        target = MagicMock()
+        target.id = 1
+        target.project_id = 1
+        tmp = MagicMock()
+        tmp.name = 'name'
+        tmp.short_name = 'short_name'
+        tmp.info = dict()
+        conn.execute.return_value = [tmp]
+        add_user_event(None, conn, target)
         assert mock_update_feed.called
