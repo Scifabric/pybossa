@@ -33,10 +33,24 @@ class TestNotifyBlogUsers(Test):
 
     @with_context
     @patch('pybossa.jobs.requests')
-    def test_notify_blog_users(self, mock):
-        """Test Notify Blog users works."""
+    def test_notify_blog_users_featured_project(self, mock):
+        """Test Notify Blog users with featured project works."""
         user = UserFactory.create(subscribed=False)
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(featured=True)
+        TaskRunFactory.create(project=project)
+        TaskRunFactory.create(project=project, user=user)
+        blog = BlogpostFactory.create(project=project)
+        res = notify_blog_users(blog.id, blog.project.id)
+        msg = "1 users notified by email"
+        assert res == msg, res
+
+    @with_context
+    @patch('pybossa.jobs.requests')
+    def test_notify_blog_users_pro_owner(self, mock):
+        """Test Notify Blog users with pro owner project works."""
+        owner = UserFactory.create(pro=True)
+        user = UserFactory.create(subscribed=False)
+        project = ProjectFactory.create(owner=owner)
         TaskRunFactory.create(project=project)
         TaskRunFactory.create(project=project, user=user)
         blog = BlogpostFactory.create(project=project)
