@@ -27,10 +27,11 @@ from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.jobs import webhook
+from pybossa.jobs import webhook, notify_blog_users
 from pybossa.core import sentinel
 
 webhook_queue = Queue('high', connection=sentinel.master)
+mail_queue = Queue('super', connection=sentinel.master)
 
 
 @event.listens_for(Blogpost, 'after_insert')
@@ -49,6 +50,10 @@ def add_blog_event(mapper, conn, target):
         obj['short_name'] = r.short_name
         obj['info'] = r.info
     update_feed(obj)
+    # Notify volunteers
+    mail_queue.enqueue(notify_blog_users,
+                       blog_id=target.id,
+                       project_id=target.project_id)
 
 
 @event.listens_for(Project, 'after_insert')
