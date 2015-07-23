@@ -91,12 +91,15 @@ class TestProjectsStatsCache(Test):
         d = date.today() - timedelta(days=6)
         task = TaskFactory.create(n_answers=1, created=d)
         TaskRunFactory.create(project=pr, task=task, created=d, finish_time=d)
-        d = date.today() - timedelta(days=16)
-        AnonymousTaskRunFactory.create(project=pr, created=d, finish_time=d)
+        dd = date.today() - timedelta(days=16)
+        AnonymousTaskRunFactory.create(project=pr, created=dd, finish_time=dd)
         dates, dates_anon, dates_auth = stats_dates(pr.id, '1 week')
         assert len(dates) == 7, len(dates)
-        assert len(dates_anon) == 0, len(dates_anon)
-        assert len(dates_auth) == 1, len(dates_auth)
+        assert len(dates_anon) == 7, len(dates_anon)
+        assert len(dates_auth) == 7, len(dates_auth)
+        assert dates[d.strftime('%Y-%m-%d')] == 1
+        assert dates_anon[d.strftime('%Y-%m-%d')] == 0
+        assert dates_auth[d.strftime('%Y-%m-%d')] == 1
 
     def test_stats_hours(self):
         """Test CACHE PROJECT STATS hours works."""
