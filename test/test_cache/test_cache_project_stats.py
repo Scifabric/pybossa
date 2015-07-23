@@ -113,15 +113,22 @@ class TestProjectsStatsCache(Test):
         assert max_hours_auth == 1
 
 
-    # def test_stats_hours_with_period(self):
-    #     """Test CACHE PROJECT STATS hours with period works."""
-    #     pr = ProjectFactory.create()
-    #     d = date.today() - timedelta(days=6)
-    #     task = TaskFactory.create(n_answers=1, created=d)
-    #     TaskRunFactory.create(project=pr, task=task, created=d, finish_time=d)
-    #     d = date.today() - timedelta(days=16)
-    #     AnonymousTaskRunFactory.create(project=pr, created=d, finish_time=d)
-    #     dates, dates_anon, dates_auth = stats_dates(pr.id, '1 week')
-    #     assert len(dates) == 7, len(dates)
-    #     assert len(dates_anon) == 0, len(dates_anon)
-    #     assert len(dates_auth) == 1, len(dates_auth)
+    def test_stats_hours_with_period(self):
+        """Test CACHE PROJECT STATS hours with period works."""
+        pr = ProjectFactory.create()
+        today = datetime.now(pytz.utc)
+        d = date.today() - timedelta(days=6)
+        task = TaskFactory.create(n_answers=1, created=d)
+        TaskRunFactory.create(project=pr, task=task, created=d, finish_time=d)
+        d = date.today() - timedelta(days=16)
+        AnonymousTaskRunFactory.create(project=pr, created=d, finish_time=d)
+        hours, hours_anon, hours_auth, max_hours, \
+            max_hours_anon, max_hours_auth = stats_hours(pr.id)
+        assert len(hours) == 24, len(hours)
+        # We use 00 as the timedelta sets the hour to 00
+        assert hours['00'] == 1, hours[today.strftime('%H')]
+        assert hours_anon['00'] == 0, hours_anon[today.strftime('%H')]
+        assert hours_auth['00'] == 1, hours_auth[today.strftime('%H')]
+        assert max_hours == 1
+        assert max_hours_anon is None
+        assert max_hours_auth == 1
