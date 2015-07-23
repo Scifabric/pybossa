@@ -205,8 +205,9 @@ def stats_dates(project_id, period='15 day'):
                 tmp_date = base - datetime.timedelta(days=x)
                 if tmp_date.strftime('%Y-%m-%d') not in days:
                     obj[tmp_date.strftime('%Y-%m-%d')] = 0
+        return obj
 
-    _fill_empty_days(dates.keys(), dates)
+    dates = _fill_empty_days(dates.keys(), dates)
 
     # Get all answers per date for auth
     sql = text('''
@@ -225,6 +226,8 @@ def stats_dates(project_id, period='15 day'):
     for row in results:
         dates_auth[row.d] = row.count
 
+    dates_auth = _fill_empty_days(dates_auth.keys(), dates_auth)
+
     # Get all answers per date for anon
     sql = text('''
                 WITH myquery AS (
@@ -241,6 +244,9 @@ def stats_dates(project_id, period='15 day'):
     results = session.execute(sql, params)
     for row in results:
         dates_anon[row.d] = row.count
+
+
+    dates_anon = _fill_empty_days(dates_anon.keys(), dates_anon)
 
     print dates, dates_anon, dates_auth
     return dates, dates_anon, dates_auth

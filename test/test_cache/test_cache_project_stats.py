@@ -73,13 +73,17 @@ class TestProjectsStatsCache(Test):
         """Test CACHE PROJECT STATS date works."""
         pr = ProjectFactory.create()
         task = TaskFactory.create(n_answers=1)
+        today = datetime.now(pytz.utc)
         TaskFactory.create()
         TaskRunFactory.create(project=pr, task=task)
         AnonymousTaskRunFactory.create(project=pr)
         dates, dates_anon, dates_auth = stats_dates(pr.id)
         assert len(dates) == 15, len(dates)
-        assert len(dates_anon) == 1, len(dates_anon)
-        assert len(dates_auth) == 1, len(dates_auth)
+        assert len(dates_anon) == 15, len(dates_anon)
+        assert len(dates_auth) == 15, len(dates_auth)
+        assert dates[today.strftime('%Y-%m-%d')] == 1
+        assert dates_anon[today.strftime('%Y-%m-%d')] == 1
+        assert dates_auth[today.strftime('%Y-%m-%d')] == 1
 
     def test_stats_dates_with_period(self):
         """Test CACHE PROJECT STATS dates with period works."""
