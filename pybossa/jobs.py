@@ -497,3 +497,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
             users += 1
     msg = "%s users notified by email" % users
     return msg
+
+def weekly_stats_update(project_id):
+    """Send email with weekly stats update for project owner."""
+    pass

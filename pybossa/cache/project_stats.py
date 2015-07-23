@@ -41,21 +41,36 @@ def n_tasks(project_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_users(project_id):
+def stats_users(project_id, period=None):
     """Return users's stats for a given project_id."""
     users = {}
     auth_users = []
     anon_users = []
 
     # Get Authenticated Users
+    params = dict(project_id=project_id)
     sql = text('''SELECT task_run.user_id AS user_id,
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
                task_run.project_id=:project_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
-               LIMIT 5;''')
-    results = session.execute(sql, dict(project_id=project_id))
+               LIMIT 5;''')\
+        .execution_options(stream=True)
+    if period:
+        sql = text('''SELECT task_run.user_id AS user_id,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   GROUP BY task_run.user_id ORDER BY n_tasks DESC
+                   LIMIT 5;''')\
+            .execution_options(stream=True)
+        params['period'] = period
+
+    results = session.execute(sql, params)
 
     for row in results:
         auth_users.append([row.user_id, row.n_tasks])
@@ -64,8 +79,16 @@ def stats_users(project_id):
                FROM task_run WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
                task_run.project_id=:project_id;''')
+    if period:
+        sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id
+                   FROM task_run WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   ;''')
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         users['n_auth'] = row[0]
 
@@ -77,7 +100,19 @@ def stats_users(project_id):
                task_run.project_id=:project_id
                GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
         .execution_options(stream=True)
-    results = session.execute(sql, dict(project_id=project_id))
+
+    if period:
+        sql = text('''SELECT task_run.user_ip AS user_ip,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
+            .execution_options(stream=True)
+
+    results = session.execute(sql, params)
 
     for row in results:
         anon_users.append([row.user_ip, row.n_tasks])
@@ -86,8 +121,16 @@ def stats_users(project_id):
                FROM task_run WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
                task_run.project_id=:project_id;''')
+    if period:
+        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip
+                   FROM task_run WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   ;''')
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         users['n_anon'] = row[0]
