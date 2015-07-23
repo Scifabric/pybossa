@@ -57,12 +57,9 @@ class TestProjectsStatsCache(Test):
         TaskRunFactory.create(project=pr, task=task)
         AnonymousTaskRunFactory.create(project=pr)
         dates, dates_anon, dates_auth = stats_dates(pr.id)
-        print dates
-        print dates_anon
-        print dates_auth
         assert len(dates) == 15, len(dates)
-        assert len(dates_anon) == 15, len(dates_anon)
-        assert len(dates_auth) == 15, len(dates_auth)
+        assert len(dates_anon) == 1, len(dates_anon)
+        assert len(dates_auth) == 1, len(dates_auth)
 
     # def test_stats_dates_with_period(self):
     #     """Test CACHE PROJECT STATS dates with period works."""
