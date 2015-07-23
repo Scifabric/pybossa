@@ -48,3 +48,30 @@ class TestProjectsStatsCache(Test):
         assert len(users) == 2, len(users)
         assert len(anon_users) == 0, len(anon_users)
         assert len(auth_users) == 1, len(auth_users)
+
+    def test_stats_dates(self):
+        """Test CACHE PROJECT STATS date works."""
+        pr = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1)
+        TaskFactory.create()
+        TaskRunFactory.create(project=pr, task=task)
+        AnonymousTaskRunFactory.create(project=pr)
+        dates, dates_anon, dates_auth = stats_dates(pr.id)
+        print dates
+        print dates_anon
+        print dates_auth
+        assert len(dates) == 15, len(dates)
+        assert len(dates_anon) == 15, len(dates_anon)
+        assert len(dates_auth) == 15, len(dates_auth)
+
+    # def test_stats_dates_with_period(self):
+    #     """Test CACHE PROJECT STATS dates with period works."""
+    #     pr = ProjectFactory.create()
+    #     d = date.today() - timedelta(days=6)
+    #     TaskRunFactory.create(project=pr, created=d, finish_time=d)
+    #     d = date.today() - timedelta(days=16)
+    #     AnonymousTaskRunFactory.create(project=pr, created=d, finish_time=d)
+    #     users, anon_users, auth_users = stats_users(pr.id, '1 week')
+    #     assert len(users) == 2, len(users)
+    #     assert len(anon_users) == 0, len(anon_users)
+    #     assert len(auth_users) == 1, len(auth_users)
