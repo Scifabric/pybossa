@@ -210,11 +210,14 @@ def stats_dates(project_id, period='15 day'):
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY d)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY d)
                 SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         dates_auth[row.d] = row.count
 
@@ -224,11 +227,14 @@ def stats_dates(project_id, period='15 day'):
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY d)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY d)
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         dates_anon[row.d] = row.count
 
