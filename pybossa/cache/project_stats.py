@@ -198,12 +198,15 @@ def stats_dates(project_id, period='15 day'):
         dates[row.day] = row.completed_tasks
 
     # No completed tasks in the last period
-    if len(dates.keys()) < convert_period_to_days(period):
-        base = datetime.datetime.today()
-        for x in range(0, convert_period_to_days(period)):
-            tmp_date = base - datetime.timedelta(days=x)
-            if tmp_date.strftime('%Y-%m-%d') not in dates.keys():
-                dates[tmp_date.strftime('%Y-%m-%d')] = 0
+    def _fill_empty_days(days, obj):
+        if len(days) < convert_period_to_days(period):
+            base = datetime.datetime.today()
+            for x in range(0, convert_period_to_days(period)):
+                tmp_date = base - datetime.timedelta(days=x)
+                if tmp_date.strftime('%Y-%m-%d') not in days:
+                    obj[tmp_date.strftime('%Y-%m-%d')] = 0
+
+    _fill_empty_days(dates.keys(), dates)
 
     # Get all answers per date for auth
     sql = text('''
@@ -239,6 +242,7 @@ def stats_dates(project_id, period='15 day'):
     for row in results:
         dates_anon[row.d] = row.count
 
+    print dates, dates_anon, dates_auth
     return dates, dates_anon, dates_auth
 
 
