@@ -20,6 +20,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY
+from flask.ext.babel import gettext
 
 import pygeoip
 import operator
@@ -386,22 +387,18 @@ def stats_hours(project_id, period='2 week'):
 @memoize(timeout=ONE_DAY)
 def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format."""
-    dayNewStats = dict(label="Anon + Auth", values=[])
-    dayTotalTasks = dict(label="Total Tasks", values=[])
-    dayCompletedTasks = dict(label="Completed Tasks",
+    dayNewStats = dict(label=gettext("Anon + Auth"), values=[])
+    dayTotalTasks = dict(label=gettext("Total Tasks"), values=[])
+    dayCompletedTasks = dict(label=gettext("Completed Tasks"),
                              disabled="True", values=[])
-    dayNewAnonStats = dict(label="Anonymous", values=[])
-    dayNewAuthStats = dict(label="Authenticated", values=[])
+    dayNewAnonStats = dict(label=gettext("Anonymous"), values=[])
+    dayNewAuthStats = dict(label=gettext("Authenticated"), values=[])
 
     answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
     total = 0
 
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
-        dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-             n_tasks(project_id)])
-
         # Total tasks completed per day
         total = total + dates[d]
         dayCompletedTasks['values'].append(
@@ -423,16 +420,18 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), auth_ans])
 
     return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
-        dayCompletedTasks, dayTotalTasks
+        dayCompletedTasks
 
 
 @memoize(timeout=ONE_DAY)
 def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format."""
-    hourNewStats = dict(label="Anon + Auth", disabled="True", values=[], max=0)
-    hourNewAnonStats = dict(label="Anonymous", values=[], max=0)
-    hourNewAuthStats = dict(label="Authenticated", values=[], max=0)
+    hourNewStats = dict(label=gettext("Anon + Auth"),
+                        disabled="True", values=[], max=0)
+    hourNewAnonStats = dict(label=gettext("Anonymous"), values=[], max=0)
+    hourNewAuthStats = dict(label=gettext("Authenticated"),
+                            values=[], max=0)
 
     hourNewStats['max'] = max_hours
     hourNewAnonStats['max'] = max_hours_anon
