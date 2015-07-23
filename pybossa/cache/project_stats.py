@@ -138,14 +138,31 @@ def stats_users(project_id, period=None):
     return users, anon_users, auth_users
 
 
+def convert_period_to_days(period):
+    """Convert SQL period into integer days."""
+    if 'day' in period:
+        int_period = int(period.split(' ')[0])
+    elif 'week' in period:
+        int_period = int(period.split(' ')[0] * 7)
+    elif 'month' in period:
+        int_period = int(period.split(' ')[0] * 30)
+    elif 'year' in period:
+        int_period = int(period.split(' ')[0] * 365)
+    else:
+        int_period = 0
+    return int_period
+
+
 @memoize(timeout=ONE_DAY)
-def stats_dates(project_id):
+def stats_dates(project_id, period='15 day'):
     """Return statistics with dates for a project."""
     dates = {}
     dates_anon = {}
     dates_auth = {}
 
     n_tasks(project_id)
+
+    params = dict(project_id=project_id, period=period)
 
     # Get all completed tasks
     sql = text('''
@@ -157,7 +174,7 @@ def stats_dates(project_id):
              FROM task_run, task WHERE task_run.project_id=:project_id
              AND task.id=task_run.task_id AND
              TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
-               - '2 week':: INTERVAL GROUP BY day, task.id)
+               - :period :: INTERVAL GROUP BY day, task.id)
             SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day,
                COUNT(task_id) AS completed_tasks FROM (
                 SELECT MIN(day) AS day_of_completion, task_id FROM (
@@ -172,16 +189,17 @@ def stats_dates(project_id):
             GROUP BY day;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         dates[row.day] = row.completed_tasks
 
-    # No completed tasks in the last 15 days
-    if len(dates.keys()) == 0:
+    # No completed tasks in the last period
+    if len(dates.keys()) < convert_period_to_days(period):
         base = datetime.datetime.today()
-        for x in range(0, 15):
+        for x in range(0, convert_period_to_days(period)):
             tmp_date = base - datetime.timedelta(days=x)
-            dates[tmp_date.strftime('%Y-%m-%d')] = 0
+            if tmp_date.strftime('%Y-%m-%d') not in dates.keys():
+                dates[tmp_date.strftime('%Y-%m-%d')] = 0
 
     # Get all answers per date for auth
     sql = text('''
