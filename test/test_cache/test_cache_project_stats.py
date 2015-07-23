@@ -72,7 +72,7 @@ class TestProjectsStatsCache(Test):
     def test_stats_dates(self):
         """Test CACHE PROJECT STATS date works."""
         pr = ProjectFactory.create()
-        task = TaskFactory.create(n_answers=1)
+        task = TaskFactory.create(project=pr, n_answers=1)
         today = datetime.now(pytz.utc)
         TaskFactory.create()
         TaskRunFactory.create(project=pr, task=task)
@@ -89,7 +89,7 @@ class TestProjectsStatsCache(Test):
         """Test CACHE PROJECT STATS dates with period works."""
         pr = ProjectFactory.create()
         d = date.today() - timedelta(days=6)
-        task = TaskFactory.create(n_answers=1, created=d)
+        task = TaskFactory.create(project=pr, n_answers=1, created=d)
         TaskRunFactory.create(project=pr, task=task, created=d, finish_time=d)
         dd = date.today() - timedelta(days=16)
         AnonymousTaskRunFactory.create(project=pr, created=dd, finish_time=dd)
