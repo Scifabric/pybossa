@@ -248,7 +248,6 @@ def stats_dates(project_id, period='15 day'):
 
     dates_anon = _fill_empty_days(dates_anon.keys(), dates_anon)
 
-    print dates, dates_anon, dates_auth
     return dates, dates_anon, dates_auth
 
 
