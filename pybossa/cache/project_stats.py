@@ -140,15 +140,18 @@ def stats_users(project_id, period=None):
 
 def convert_period_to_days(period):
     """Convert SQL period into integer days."""
-    if 'day' in period:
-        int_period = int(period.split(' ')[0])
-    elif 'week' in period:
-        int_period = int(period.split(' ')[0] * 7)
-    elif 'month' in period:
-        int_period = int(period.split(' ')[0] * 30)
-    elif 'year' in period:
-        int_period = int(period.split(' ')[0] * 365)
-    else:
+    try:
+        if 'day' in period:
+            int_period = int(period.split(' ')[0])
+        elif 'week' in period:
+            int_period = int(period.split(' ')[0]) * 7
+        elif 'month' in period:
+            int_period = int(period.split(' ')[0]) * 30
+        elif 'year' in period:
+            int_period = int(period.split(' ')[0]) * 365
+        else:
+            int_period = 0
+    except ValueError:
         int_period = 0
     return int_period
 
