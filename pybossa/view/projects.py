@@ -1137,9 +1137,15 @@ def show_stats(short_name):
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         project.id,
-        current_app.config['GEO'])
-    anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
-                            (users_stats['n_anon'] + users_stats['n_auth']))
+        current_app.config['GEO'],
+        period='2 week')
+    tmp_total = (users_stats['n_anon'] + users_stats['n_auth'])
+    if tmp_total > 0:
+        anon_pct_taskruns = int((users_stats['n_anon'] * 100) / tmp_total)
+        auth_pct_taskruns = 100 - anon_pct_taskruns
+    else:
+        anon_pct_taskruns = 0
+        auth_pct_taskruns = 0
     userStats = dict(
         geo=current_app.config['GEO'],
         anonymous=dict(
@@ -1150,7 +1156,7 @@ def show_stats(short_name):
         authenticated=dict(
             users=users_stats['n_auth'],
             taskruns=users_stats['n_auth'],
-            pct_taskruns=100 - anon_pct_taskruns,
+            pct_taskruns=auth_pct_taskruns,
             top5=users_stats['auth']['top5']))
 
     tmp = dict(userStats=users_stats['users'],

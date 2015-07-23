@@ -39,7 +39,10 @@ class TestStats(Test):
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
         assert len(dates.keys()) == 15, "There should be 15 days."
         for d in dates.keys():
-            assert dates[d] == 0, "There should be 0 completed tasks."
+            if d == today:
+                assert dates[d] == 4, "There should be 4 completed tasks."
+            else:
+                assert dates[d] == 0, "There should be 0 completed tasks."
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 4, dates_auth[today]
 
@@ -52,7 +55,7 @@ class TestStats(Test):
         today = unicode(datetime.date.today())
         TaskRunFactory.create(task=self.project.tasks[1])
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
-        assert dates[today] == 1, dates
+        assert dates[today] == 4, dates
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 5, dates_auth[today]
 
@@ -98,17 +101,17 @@ class TestStats(Test):
         dates_stats, hours_stats, user_stats = stats.get_stats(self.project.id)
         for item in dates_stats:
             if item['label'] == 'Anon + Auth':
-                assert item['values'][0][0] == date_ms, item['values'][0][0]
-                assert item['values'][0][1] == 10, "There should be 10 answers"
+                assert item['values'][-1][0] == date_ms, item['values'][0][0]
+                assert item['values'][-1][1] == 10, "There should be 10 answers"
             if item['label'] == 'Anonymous':
-                assert item['values'][0][0] == date_ms, item['values'][0][0]
-                anon = item['values'][0][1]
+                assert item['values'][-1][0] == date_ms, item['values'][0][0]
+                anon = item['values'][-1][1]
             if item['label'] == 'Authenticated':
-                assert item['values'][0][0] == date_ms, item['values'][0][0]
-                auth = item['values'][0][1]
+                assert item['values'][-1][0] == date_ms, item['values'][0][0]
+                auth = item['values'][-1][1]
             if item['label'] == 'Total Tasks':
-                assert item['values'][0][0] == date_ms, item['values'][0][0]
-                assert item['values'][0][1] == 4, "There should be 4 tasks"
+                assert item['values'][-1][0] == date_ms, item['values'][0][0]
+                assert item['values'][-1][1] == 4, "There should be 4 tasks"
             if item['label'] == 'Expected Answers':
                 assert item['values'][0][0] == date_ms, item['values'][0][0]
                 for i in item['values']:
