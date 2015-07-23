@@ -539,12 +539,12 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
 
 
 @memoize(timeout=ONE_DAY)
-def get_stats(project_id, geo=False):
+def get_stats(project_id, geo=False, period='2 week'):
     """Return the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
-        max_hours_anon, max_hours_auth = stats_hours(project_id)
-    users, anon_users, auth_users = stats_users(project_id)
-    dates, dates_anon, dates_auth = stats_dates(project_id)
+        max_hours_anon, max_hours_auth = stats_hours(project_id, period)
+    users, anon_users, auth_users = stats_users(project_id, period)
+    dates, dates_anon, dates_auth = stats_dates(project_id, period)
 
     n_tasks(project_id)
     sum(dates.values())
