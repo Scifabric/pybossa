@@ -170,32 +170,28 @@ def stats_dates(project_id, period='15 day'):
 
     # Get all completed tasks
     sql = text('''
-            WITH answers AS (
-             SELECT
-             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-             AS day, task.id, task.n_answers AS n_answers,
-             COUNT(task_run.id) AS day_answers
-             FROM task_run, task WHERE task_run.project_id=:project_id
-             AND task.id=task_run.task_id AND
-             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
-               - :period :: INTERVAL GROUP BY day, task.id)
-            SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day,
-               COUNT(task_id) AS completed_tasks FROM (
-                SELECT MIN(day) AS day_of_completion, task_id FROM (
-                    SELECT ans1.day, ans1.id as task_id,
-                    floor(avg(ans1.n_answers)) AS n_answers,
-                    sum(ans2.day_answers) AS accum_answers
-                    FROM answers AS ans1 INNER JOIN answers AS ans2
-                    ON ans1.id=ans2.id WHERE ans1.day >= ans2.day
-                    GROUP BY ans1.id, ans1.day) AS answers_day_task
-                WHERE n_answers <= accum_answers
-                GROUP BY task_id) AS completed_tasks_by_day
-            GROUP BY day;
+               WITH myquery AS (
+               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers
+               FROM task LEFT OUTER JOIN
+               (SELECT task_id, COUNT(id) AS ct FROM task_run
+               WHERE project_id=:project_id AND
+               TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - :period :: INTERVAL
+               GROUP BY task_id) AS log_counts
+               ON task.id=log_counts.task_id
+               WHERE task.project_id=:project_id ORDER BY id ASC)
+               select myquery.id, max(task_run.finish_time) as day
+               from task_run, myquery where task_run.task_id=myquery.id
+               group by myquery.id order by day;
                ''').execution_options(stream=True)
 
     results = session.execute(sql, params)
     for row in results:
-        dates[row.day] = row.completed_tasks
+        day = row.day[:10]
+        if day in dates.keys():
+            dates[day] += 1
+        else:
+            dates[day] = 1
 
     # No completed tasks in the last period
     def _fill_empty_days(days, obj):
@@ -244,7 +240,6 @@ def stats_dates(project_id, period='15 day'):
     results = session.execute(sql, params)
     for row in results:
         dates_anon[row.d] = row.count
-
 
     dates_anon = _fill_empty_days(dates_anon.keys(), dates_anon)
 
@@ -397,7 +392,6 @@ def stats_hours(project_id, period='2 week'):
 def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format."""
     dayNewStats = dict(label=gettext("Anon + Auth"), values=[])
-    dayTotalTasks = dict(label=gettext("Total Tasks"), values=[])
     dayCompletedTasks = dict(label=gettext("Completed Tasks"),
                              disabled="True", values=[])
     dayNewAnonStats = dict(label=gettext("Anonymous"), values=[])
