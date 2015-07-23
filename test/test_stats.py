@@ -52,7 +52,7 @@ class TestStats(Test):
         today = unicode(datetime.date.today())
         TaskRunFactory.create(task=self.project.tasks[1])
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
-        assert dates[today] == 1, dates
+        assert dates[today] == 4, dates
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 5, dates_auth[today]
 
