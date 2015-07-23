@@ -242,7 +242,7 @@ def stats_dates(project_id, period='15 day'):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_hours(project_id):
+def stats_hours(project_id, period='2 week'):
     """Return statistics of a project per hours."""
     hours = {}
     hours_anon = {}
@@ -257,6 +257,7 @@ def stats_hours(project_id):
         hours_anon[str(i).zfill(2)] = 0
         hours_auth[str(i).zfill(2)] = 0
 
+    params = dict(project_id=project_id, period=period)
     # Get hour stats for all users
     sql = text('''
                WITH myquery AS
@@ -265,11 +266,14 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE project_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours[row.h] = row.count
@@ -282,11 +286,14 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE project_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id  AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours = row.max
 
@@ -299,11 +306,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY h)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours_anon[row.h] = row.count
@@ -317,11 +327,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY h)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours_anon = row.max
 
@@ -334,11 +347,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY h)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours_auth[row.h] = row.count
@@ -352,11 +368,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY h)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours_auth = row.max
 
