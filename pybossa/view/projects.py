@@ -1138,7 +1138,7 @@ def show_stats(short_name):
     dates_stats, hours_stats, users_stats = stats.get_stats(
         project.id,
         current_app.config['GEO'],
-        period='1 year')
+        period='2 week')
     tmp_total = (users_stats['n_anon'] + users_stats['n_auth'])
     if tmp_total > 0:
         anon_pct_taskruns = int((users_stats['n_anon'] * 100) / tmp_total)
