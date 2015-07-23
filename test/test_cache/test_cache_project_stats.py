@@ -21,6 +21,7 @@ from pybossa.cache.project_stats import *
 from factories import UserFactory, ProjectFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
+from datetime import date, timedelta
 
 
 class TestProjectsStatsCache(Test):
@@ -39,9 +40,11 @@ class TestProjectsStatsCache(Test):
     def test_stats_users_with_period(self):
         """Test CACHE PROJECT STATS user stats with period works."""
         pr = ProjectFactory.create()
-        TaskRunFactory.create(project=pr)
-        AnonymousTaskRunFactory.create(project=pr)
+        d = date.today() - timedelta(days=6)
+        TaskRunFactory.create(project=pr, created=d, finish_time=d)
+        d = date.today() - timedelta(days=16)
+        AnonymousTaskRunFactory.create(project=pr, created=d, finish_time=d)
         users, anon_users, auth_users = stats_users(pr.id, '1 week')
         assert len(users) == 2, len(users)
-        assert len(anon_users) == 1, len(anon_users)
+        assert len(anon_users) == 0, len(anon_users)
         assert len(auth_users) == 1, len(auth_users)
