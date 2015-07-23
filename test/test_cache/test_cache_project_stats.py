@@ -104,12 +104,6 @@ class TestProjectsStatsCache(Test):
         AnonymousTaskRunFactory.create(project=pr)
         hours, hours_anon, hours_auth, max_hours, \
             max_hours_anon, max_hours_auth = stats_hours(pr.id)
-        print hours
-        print hours_anon
-        print hours_auth
-        print max_hours
-        print max_hours_anon
-        print max_hours_auth
         assert len(hours) == 24, len(hours)
         assert hours[today.strftime('%H')] == 2, hours[today.strftime('%H')]
         assert hours_anon[today.strftime('%H')] == 1, hours_anon[today.strftime('%H')]
