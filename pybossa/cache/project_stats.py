@@ -182,6 +182,9 @@ def stats_dates(project_id, period='15 day'):
                WHERE task.project_id=:project_id ORDER BY id ASC)
                select myquery.id, max(task_run.finish_time) as day
                from task_run, myquery where task_run.task_id=myquery.id
+               and
+               TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - :period :: INTERVAL
                group by myquery.id order by day;
                ''').execution_options(stream=True)
 
@@ -539,6 +542,7 @@ def get_stats(project_id, geo=False, period='2 week'):
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
     users, anon_users, auth_users = stats_users(project_id, period)
     dates, dates_anon, dates_auth = stats_dates(project_id, period)
+
 
     n_tasks(project_id)
     sum(dates.values())
