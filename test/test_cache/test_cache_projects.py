@@ -297,6 +297,22 @@ class TestProjectsCache(Test):
         assert completed_tasks == 4, err_msg
 
 
+    def test_n_tasks_returns_number_of_total_tasks(self):
+        project = self.create_project_with_tasks(completed_tasks=1, ongoing_tasks=1)
+
+        tasks = cached_projects.n_tasks(project.id)
+
+        assert tasks == 2, tasks
+
+
+    def test_n_task_runs_returns_number_of_total_taskruns(self):
+        project = self.create_project_with_contributors(anonymous=1, registered=1)
+
+        taskruns = cached_projects.n_task_runs(project.id)
+
+        assert taskruns == 2, taskruns
+
+
     def test_n_registered_volunteers(self):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
@@ -398,7 +414,7 @@ class TestProjectsCache(Test):
         assert len(browse_tasks) == 2, browse_tasks
 
 
-    def test_browse_tasks_returns_tasks(self):
+    def test_browse_tasks_returns_required_attributes(self):
         """Test CACHE PROJECTS browse_tasks returns a list with objects
         with the required task attributes"""
 
@@ -531,3 +547,41 @@ class TestProjectsCache(Test):
 
         for field in fields:
             assert field in pro_owned_projects[0].keys(), field
+
+
+    def test_overall_progress_returns_0_if_no_tasks(self):
+        project = ProjectFactory.create()
+
+        progress = cached_projects.overall_progress(project.id)
+
+        assert progress == 0, progress
+
+
+    def test_overall_progres_returns_actual_progress_percentage(self):
+        total_tasks = 4
+        completed_tasks = 2
+        project = self.create_project_with_tasks(
+                            completed_tasks=completed_tasks,
+                            ongoing_tasks=total_tasks-completed_tasks)
+
+        progress = cached_projects.overall_progress(project.id)
+
+        assert progress == 50, progress
+
+
+    def test_last_activity_returns_None_if_no_contributions(self):
+        project = ProjectFactory.create()
+
+        activity = cached_projects.last_activity(project.id)
+
+        assert activity is None, activity
+
+
+    def test_last_activity_returns_date_of_latest_contribution(self):
+        project = ProjectFactory.create()
+        first_task_run = TaskRunFactory.create(project=project)
+        last_task_run = TaskRunFactory.create(project=project)
+
+        activity = cached_projects.last_activity(project.id)
+
+        assert activity == last_task_run.finish_time, last_task_run
