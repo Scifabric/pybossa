@@ -118,7 +118,7 @@ def get_periodic_jobs(queue):
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs]
-    #_all = [weekly_update_jobs]
+    _all = [weekly_update_jobs]
     print _all
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
@@ -510,8 +510,11 @@ def get_weekly_stats_update_projects():
     if datetime.today().strftime('%A') == 'Friday':
         sql = text('''
                    SELECT project.id
-                   FROM project, "user"
+                   FROM project, "user", task
                    WHERE "user".pro=true AND "user".id=project.owner_id
+                   AND "user".subscribed=true
+                   AND task.project_id=project.id
+                   AND task.state!='completed'
                    UNION
                    SELECT project.id
                    FROM project
@@ -530,9 +533,14 @@ def send_weekly_stats_project(project_id):
     from pybossa.cache.project_stats import get_stats
     from pybossa.core import project_repo
     from datetime import datetime
-    dates_stats, hours_stats, users_stats = get_stats(project_id, '1 week')
     project = project_repo.get(project_id)
-    subject = 'Weekly Stats of: %s' % project.name,
+    if project.owner.subscribed is False:
+        return "Owner does not want updates by email"
+    dates_stats, hours_stats, users_stats = get_stats(project_id,
+                                                      geo=True,
+                                                      period='1 year')
+    subject = "Weekly Update: %s" % project.name
+
     # Max number of completed tasks
     n_completed_tasks = 0
     xy = zip(*dates_stats[3]['values'])
