@@ -585,3 +585,17 @@ class TestProjectsCache(Test):
         activity = cached_projects.last_activity(project.id)
 
         assert activity == last_task_run.finish_time, last_task_run
+
+
+    def test_n_published_counts_projects_with_presenter_tasks_and_not_hidden(self):
+        published_project = ProjectFactory.create()
+        TaskFactory.create(project=published_project)
+        hidden_project = ProjectFactory.create(hidden=1)
+        TaskFactory.create(project=hidden_project)
+        project_without_tasks = ProjectFactory.create()
+        project_without_presenter = ProjectFactory.create(info={})
+        TaskFactory.create(project=project_without_presenter)
+
+        number_of_published = cached_projects.n_published()
+
+        assert number_of_published == 1, number_of_published
