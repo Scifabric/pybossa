@@ -280,3 +280,61 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in hidden_projects[0].keys(), field
+
+
+    def test_get_leaderboard_no_users_returns_empty_list(self):
+        """Test CACHE USERS get_leaderboard returns an empty list if there are no
+        users"""
+
+        users = cached_users.get_leaderboard(10)
+
+        assert users == [], users
+
+
+    def test_get_leaderboard_returns_users_ordered_by_rank(self):
+        leader = UserFactory.create()
+        second = UserFactory.create()
+        third = UserFactory.create()
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project)
+        i = 3
+        for user in [leader, second, third]:
+            TaskRunFactory.create_batch(i, user=user, task=tasks[i-1])
+            i -= 1
+
+        leaderboard = cached_users.get_leaderboard(3)
+
+        assert leaderboard[0]['id'] == leader.id
+        assert leaderboard[1]['id'] == second.id
+        assert leaderboard[2]['id'] == third.id
+
+
+    def test_get_leaderboard_includes_specific_user_even_is_not_in_top(self):
+        leader = UserFactory.create()
+        second = UserFactory.create()
+        third = UserFactory.create()
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project)
+        i = 3
+        for user in [leader, second, third]:
+            TaskRunFactory.create_batch(i, user=user, task=tasks[i-1])
+            i -= 1
+        user_out_of_top = UserFactory.create()
+
+        leaderboard = cached_users.get_leaderboard(3, user_id=user_out_of_top.id)
+
+        assert len(leaderboard) is 4
+        assert leaderboard[-1]['id'] == user_out_of_top.id
+
+
+    def test_get_leaderboard_returns_fields(self):
+        """Test CACHE USERS get_leaderboard returns user fields"""
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        fields = ('rank', 'id', 'name', 'fullname', 'email_addr',
+                 'info', 'created', 'score')
+
+        leaderboard = cached_users.get_leaderboard(1)
+
+        for field in fields:
+            assert field in leaderboard[0].keys(), field

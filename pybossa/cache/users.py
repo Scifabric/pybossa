@@ -85,6 +85,7 @@ def get_leaderboard(n, user_id=None):
                 fullname=u.fullname,
                 email_addr=u.email_addr,
                 info=u.info,
+                created=row.created,
                 score=-1)
             for row in user_rank:  # pragma: no cover
                 user = dict(
