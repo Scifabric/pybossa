@@ -338,6 +338,7 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in leaderboard[0].keys(), field
+        assert len(leaderboard[0].keys()) == len(fields)
 
 
     def test_get_total_users_returns_0_if_no_users(self):
@@ -353,3 +354,36 @@ class TestUsersCache(Test):
         total_users = cached_users.get_total_users()
 
         assert total_users == expected_number_of_users, total_users
+
+
+    def test_get_users_page_only_returns_users_with_contributions(self):
+        users = UserFactory.create_batch(2)
+        TaskRunFactory.create(user=users[0])
+
+        users_with_contrib = cached_users.get_users_page(1)
+
+        assert len(users_with_contrib) == 1, users_with_contrib
+
+
+    def test_get_users_page_supports_pagination(self):
+        users = UserFactory.create_batch(3)
+        for user in users:
+            TaskRunFactory.create(user=user)
+
+        paginated_users = cached_users.get_users_page(page=2, per_page=1)
+
+        assert len(paginated_users) == 1, paginated_users
+        assert paginated_users[0]['id'] == users[1].id
+
+
+    def test_get_users_page_returns_fields(self):
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        fields = ('id', 'name', 'fullname', 'email_addr', 'created',
+                  'task_runs', 'info', 'registered_ago')
+
+        users = cached_users.get_users_page(1)
+
+        for field in fields:
+            assert field in users[0].keys(), field
+        assert len(users[0].keys()) == len(fields)
