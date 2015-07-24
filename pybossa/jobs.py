@@ -115,8 +115,11 @@ def get_periodic_jobs(queue):
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs]
+    _all = [weekly_update_jobs]
+    print _all
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -498,6 +501,32 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     msg = "%s users notified by email" % users
     return msg
 
-def weekly_stats_update(project_id):
+def get_weekly_stats_update_projects():
     """Send email with weekly stats update for project owner."""
-    pass
+    from datetime import datetime
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    # 0 is Sunday
+    if datetime.today().strftime('%w') == '0':
+        sql = text('''
+                   SELECT project.id
+                   FROM project, "user"
+                   WHERE "user".pro=true AND "user".id=project.owner_id
+                   UNION
+                   SELECT project.id
+                   FROM project
+                   WHERE project.featured=true;
+                   ''')
+        results = db.slave_session.execute(sql)
+        for row in results:
+            job = dict(name=send_weekly_stats_project,
+                       args=[row.id],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue='low')
+            yield job
+
+def send_weekly_stats_project(project_id):
+    from pybossa.cache.project_stats import get_stats
+    dates_stats, hours_stats, users_stats = get_stats(project_id, '1 week')
+    return dates_stats
