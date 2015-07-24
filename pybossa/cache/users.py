@@ -28,7 +28,7 @@ session = db.slave_session
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def get_leaderboard(n, user_id):
+def get_leaderboard(n, user_id=None):
     """Return the top n users with their rank."""
     sql = text('''
                WITH global_rank AS (
@@ -60,7 +60,7 @@ def get_leaderboard(n, user_id):
             created=row.created,
             score=row.score)
         top_users.append(user)
-    if (user_id != 'anonymous'):
+    if (user_id is not None):
         if not user_in_top:
             sql = text('''
                        WITH global_rank AS (

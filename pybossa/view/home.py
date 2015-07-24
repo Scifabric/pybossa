@@ -58,9 +58,9 @@ def home():
     if (current_app.config['ENFORCE_PRIVACY']
             and current_user.is_authenticated()):
         if current_user.admin:
-            d['top_users'] = cached_users.get_leaderboard(10, 'anonymous')
+            d['top_users'] = cached_users.get_leaderboard(10)
     if not current_app.config['ENFORCE_PRIVACY']:
-        d['top_users'] = cached_users.get_leaderboard(10, 'anonymous')
+        d['top_users'] = cached_users.get_leaderboard(10)
     return render_template('/home/index.html', **d)
 
 
