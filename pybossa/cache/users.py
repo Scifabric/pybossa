@@ -37,7 +37,7 @@ def get_leaderboard(n, user_id):
                         WHERE user_id IS NOT NULL GROUP BY user_id)
                     SELECT user_id, score, rank() OVER (ORDER BY score desc)
                     FROM scores)
-               SELECT rank, id, name, fullname, email_addr, info,
+               SELECT rank, id, name, fullname, email_addr, info, created,
                score FROM global_rank
                JOIN public."user" on (user_id=public."user".id) ORDER BY rank
                LIMIT :limit;
@@ -57,6 +57,7 @@ def get_leaderboard(n, user_id):
             fullname=row.fullname,
             email_addr=row.email_addr,
             info=row.info,
+            created=row.created,
             score=row.score)
         top_users.append(user)
     if (user_id != 'anonymous'):
@@ -69,7 +70,7 @@ def get_leaderboard(n, user_id):
                             SELECT user_id, score, rank() OVER
                                 (ORDER BY score desc)
                             FROM scores)
-                       SELECT rank, id, name, fullname, email_addr, info,
+                       SELECT rank, id, name, fullname, email_addr, info, created,
                               score FROM global_rank
                        JOIN public."user" on (user_id=public."user".id)
                        WHERE user_id=:user_id ORDER BY rank;
@@ -93,31 +94,10 @@ def get_leaderboard(n, user_id):
                     fullname=row.fullname,
                     email_addr=row.email_addr,
                     info=row.info,
+                    created=row.created,
                     score=row.score)
             top_users.append(user)
 
-    return top_users
-
-
-@cache(key_prefix="front_page_top_users",
-       timeout=timeouts.get('USER_TOP_TIMEOUT'))
-def get_top(n=10):
-    """Return the n=10 top users."""
-    sql = text('''SELECT "user".id, "user".name,
-               "user".fullname, "user".email_addr,
-               "user".created, "user".info,
-               COUNT(task_run.id) AS task_runs FROM task_run, "user"
-               WHERE "user".id=task_run.user_id GROUP BY "user".id
-               ORDER BY task_runs DESC LIMIT :limit''')
-    results = session.execute(sql, dict(limit=n))
-    top_users = []
-    for row in results:
-        user = dict(id=row.id, name=row.name, fullname=row.fullname,
-                    email_addr=row.email_addr,
-                    created=row.created,
-                    task_runs=row.task_runs,
-                    info=row.info)
-        top_users.append(user)
     return top_users
 
 

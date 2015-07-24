@@ -379,8 +379,6 @@ def warm_cache():  # pragma: no cover
         cached_users.published_projects_cached(user['id'])
         cached_users.draft_projects_cached(user['id'])
 
-    cached_users.get_top()
-
     return True
 
 
