@@ -338,3 +338,18 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in leaderboard[0].keys(), field
+
+
+    def test_get_total_users_returns_0_if_no_users(self):
+        total_users = cached_users.get_total_users()
+
+        assert total_users == 0, total_users
+
+
+    def test_get_total_users_returns_number_of_users(self):
+        expected_number_of_users = 3
+        UserFactory.create_batch(expected_number_of_users)
+
+        total_users = cached_users.get_total_users()
+
+        assert total_users == expected_number_of_users, total_users
