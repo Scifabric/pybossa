@@ -118,7 +118,7 @@ def get_periodic_jobs(queue):
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs]
-    _all = [weekly_update_jobs]
+    #_all = [weekly_update_jobs]
     print _all
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
@@ -507,7 +507,7 @@ def get_weekly_stats_update_projects():
     from sqlalchemy.sql import text
     from pybossa.core import db
     # 0 is Sunday
-    if datetime.today().strftime('%w') == '0':
+    if datetime.today().strftime('%A') == 'Friday':
         sql = text('''
                    SELECT project.id
                    FROM project, "user"
@@ -528,5 +528,43 @@ def get_weekly_stats_update_projects():
 
 def send_weekly_stats_project(project_id):
     from pybossa.cache.project_stats import get_stats
+    from pybossa.core import project_repo
+    from datetime import datetime
     dates_stats, hours_stats, users_stats = get_stats(project_id, '1 week')
-    return dates_stats
+    project = project_repo.get(project_id)
+    subject = 'Weekly Stats of: %s' % project.name,
+    # Max number of completed tasks
+    n_completed_tasks = 0
+    xy = zip(*dates_stats[3]['values'])
+    n_completed_tasks = max(xy[1])
+    # Most active day
+    xy = zip(*dates_stats[0]['values'])
+    active_day = [xy[0][xy[1].index(max(xy[1]))], max(xy[1])]
+    active_day[0] = datetime.fromtimestamp(active_day[0]/1000).strftime('%A')
+    body = render_template('/account/email/weeklystats.md',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           n_completed_tasks=n_completed_tasks,
+                           active_day=active_day,
+                           config=current_app.config)
+    html = render_template('/account/email/weeklystats.html',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           active_day=active_day,
+                           n_completed_tasks=n_completed_tasks,
+                           config=current_app.config)
+    mail_dict = dict(recipients=[project.owner.email_addr],
+                     subject=str(subject),
+                     body=body,
+                     html=html)
+
+    job = dict(name=send_mail,
+               args=[mail_dict],
+               kwargs={},
+               timeout=(10 * MINUTE),
+               queue='high')
+    enqueue_job(job)
