@@ -663,6 +663,17 @@ with this configuration parameter::
 
     ACCOUNT_CONFIRMATION_DISABLED = True
 
+Sending weekly email stats to project owners
+============================================
+
+Project owners that have the pro flag set to True can receive every week an
+update with the latest statistics about their projects in their email box.
+
+By default this email is sent every Sunday. You can modify it in the settings
+file by changing it to another day:
+
+WEEKLY_UPDATE_STATS = 'Tuesday'
+
 Newsletters with Mailchimp
 ==========================
 
