@@ -1,0 +1,64 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2015 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
+from default import Test, with_context
+from pybossa.jobs import get_weekly_stats_update_projects
+from pybossa.jobs import send_weekly_stats_project
+from factories import TaskRunFactory, UserFactory, ProjectFactory, TaskFactory
+from mock import patch, MagicMock
+from nose.tools import assert_raises
+
+
+class TestWeeklyStats(Test):
+
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_only_on_sunday(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works only on Sunday."""
+        user = UserFactory.create(pro=True)
+        pr = ProjectFactory(owner=user)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Monday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_stats_update_projects()
+        assert_raises(StopIteration, jobs.next)
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_only_on_sunday_variant(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works only on Sunday."""
+        user = UserFactory.create(pro=True)
+        pr = ProjectFactory(owner=user)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Sunday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_stats_update_projects()
+        for job in jobs:
+            assert type(job) == dict, type(job)
+            assert job['name'] == send_weekly_stats_project
+            assert job['args'] == [pr.id]
+            assert job['kwargs'] == {}
+            assert job['timeout'] == (10 * 60)
+            assert job['queue'] == 'low'
