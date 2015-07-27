@@ -42,6 +42,7 @@ requirements = [
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
     "flask-plugins",
+    "humanize",
     "pbr>=0.11.0, <1.0"                 # fix for Rackspace dependencies
 ]
 
