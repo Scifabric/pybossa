@@ -501,12 +501,12 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     return msg
 
 def get_weekly_stats_update_projects():
-    """Send email with weekly stats update for project owner."""
-    from datetime import datetime
+    """Return email jobs with weekly stats update for project owner."""
     from sqlalchemy.sql import text
     from pybossa.core import db
-    send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS'):
-    if datetime.today().strftime('%A') == send_emails_date
+    send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
+    today = datetime.today().strftime('%A').lower()
+    if  today.lower() == send_emails_date.lower():
         sql = text('''
                    SELECT project.id
                    FROM project, "user", task
@@ -527,6 +527,7 @@ def get_weekly_stats_update_projects():
                        timeout=(10 * MINUTE),
                        queue='low')
             yield job
+
 
 def send_weekly_stats_project(project_id):
     from pybossa.cache.project_stats import get_stats
