@@ -126,3 +126,13 @@ class TestWeeklyStats(Test):
         send_weekly_stats_project(pr.id)
         assert mock.called
 
+    @with_context
+    @patch('pybossa.jobs.enqueue_job')
+    def test_send_email_not_subscribed(self, mock):
+        """Test JOB send email not subscribed works."""
+        user = UserFactory.create(pro=False, subscribed=False)
+        pr = ProjectFactory(owner=user, featured=True)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        res = send_weekly_stats_project(pr.id)
+        assert res == "Owner does not want updates by email", res
