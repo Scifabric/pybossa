@@ -115,8 +115,10 @@ def get_periodic_jobs(queue):
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-            engage_jobs, non_contrib_jobs, dashboard_jobs]
+            engage_jobs, non_contrib_jobs, dashboard_jobs,
+            weekly_update_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -496,6 +498,79 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     msg = "%s users notified by email" % users
     return msg
 
-def weekly_stats_update(project_id):
-    """Send email with weekly stats update for project owner."""
-    pass
+def get_weekly_stats_update_projects():
+    """Return email jobs with weekly stats update for project owner."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
+    today = datetime.today().strftime('%A').lower()
+    if  today.lower() == send_emails_date.lower():
+        sql = text('''
+                   SELECT project.id
+                   FROM project, "user", task
+                   WHERE "user".pro=true AND "user".id=project.owner_id
+                   AND "user".subscribed=true
+                   AND task.project_id=project.id
+                   AND task.state!='completed'
+                   UNION
+                   SELECT project.id
+                   FROM project
+                   WHERE project.featured=true;
+                   ''')
+        results = db.slave_session.execute(sql)
+        for row in results:
+            job = dict(name=send_weekly_stats_project,
+                       args=[row.id],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue='low')
+            yield job
+
+def send_weekly_stats_project(project_id):
+    from pybossa.cache.project_stats import get_stats
+    from pybossa.core import project_repo
+    from datetime import datetime
+    project = project_repo.get(project_id)
+    if project.owner.subscribed is False:
+        return "Owner does not want updates by email"
+    dates_stats, hours_stats, users_stats = get_stats(project_id,
+                                                      geo=True,
+                                                      period='1 year')
+    subject = "Weekly Update: %s" % project.name
+
+    # Max number of completed tasks
+    n_completed_tasks = 0
+    xy = zip(*dates_stats[3]['values'])
+    n_completed_tasks = max(xy[1])
+    # Most active day
+    xy = zip(*dates_stats[0]['values'])
+    active_day = [xy[0][xy[1].index(max(xy[1]))], max(xy[1])]
+    active_day[0] = datetime.fromtimestamp(active_day[0]/1000).strftime('%A')
+    body = render_template('/account/email/weeklystats.md',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           n_completed_tasks=n_completed_tasks,
+                           active_day=active_day,
+                           config=current_app.config)
+    html = render_template('/account/email/weeklystats.html',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           active_day=active_day,
+                           n_completed_tasks=n_completed_tasks,
+                           config=current_app.config)
+    print html
+    mail_dict = dict(recipients=[project.owner.email_addr],
+                     subject=subject,
+                     body=body,
+                     html=html)
+
+    job = dict(name=send_mail,
+               args=[mail_dict],
+               kwargs={},
+               timeout=(10 * MINUTE),
+               queue='high')
+    enqueue_job(job)

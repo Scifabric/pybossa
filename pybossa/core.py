@@ -18,6 +18,7 @@
 """Core module for PyBossa."""
 import os
 import logging
+import humanize
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
@@ -459,6 +460,10 @@ def setup_jinja2_filters(app):
     def _pretty_date_filter(s):
         return pretty_date(s)
 
+    @app.template_filter('humanize_intword')
+    def _humanize_intword(obj):
+        return humanize.intword(obj)
+
 
 def setup_csrf_protection(app):
     """Setup csrf protection."""
@@ -520,8 +525,6 @@ def setup_scheduled_jobs(app):  # pragma: no cover
                  interval=(12 * HOUR), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['low'], kwargs={},
                  interval=(24 * HOUR), timeout=(10 * MINUTE)),
-            dict(name=enqueue_periodic_jobs, args=['weekly'], kwargs={},
-                 interval=(7 * 24 * HOUR), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['monthly'], kwargs={},
                  interval=(1 * MONTH), timeout=(30 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['quaterly'], kwargs={},
