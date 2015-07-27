@@ -62,3 +62,19 @@ class TestWeeklyStats(Test):
             assert job['kwargs'] == {}
             assert job['timeout'] == (10 * 60)
             assert job['queue'] == 'low'
+
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_no_pro(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works only for pros."""
+        user = UserFactory.create(pro=False)
+        pr = ProjectFactory(owner=user)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Monday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_stats_update_projects()
+        assert_raises(StopIteration, jobs.next)
