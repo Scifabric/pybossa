@@ -19,7 +19,8 @@
 import datetime
 from default import Test
 from pybossa.cache import site_stats as stats
-from factories import UserFactory, ProjectFactory, AnonymousTaskRunFactory, TaskRunFactory, TaskFactory
+from factories import (UserFactory, ProjectFactory, AnonymousTaskRunFactory,
+    TaskRunFactory, TaskFactory)
 
 
 class TestSiteStatsCache(Test):
@@ -105,3 +106,43 @@ class TestSiteStatsCache(Test):
 
         assert recently_contributed_project.id in top5_ids
         assert long_ago_contributed_project.id not in top5_ids
+
+    def test_get_top5_projects_24_hours_returns_required_fields(self):
+        fields = ('id', 'name', 'short_name', 'info', 'n_answers')
+        TaskRunFactory.create()
+
+        top5 = stats.get_top5_projects_24_hours()
+
+        for field in fields:
+            assert field in top5[0].keys()
+
+    def test_get_top5_users_24_hours_returns_best_5_users_only(self):
+        users = UserFactory.create_batch(5)
+        i = 5
+        for user in users:
+            TaskRunFactory.create_batch(i, user=user)
+            i -= 1
+
+        worst_user = UserFactory.create()
+
+        top5 = stats.get_top5_users_24_hours()
+        top5_ids = [top['id'] for top in top5]
+
+        assert len(top5) == 5
+        assert worst_user.id not in top5_ids
+        for i in range(len(top5)):
+            assert users[i].id == top5_ids[i]
+
+    def test_get_top5_users_24_hours_considers_last_24_hours_contributions_only(self):
+        recently_contributing_user = UserFactory.create()
+        long_ago_contributing_user = UserFactory.create()
+        two_days_ago = (datetime.datetime.utcnow() -  datetime.timedelta(2)).isoformat()
+
+        TaskRunFactory.create(user=recently_contributing_user)
+        TaskRunFactory.create(user=long_ago_contributing_user, finish_time=two_days_ago)
+
+        top5 = stats.get_top5_users_24_hours()
+        top5_ids = [top['id'] for top in top5]
+
+        assert recently_contributing_user.id in top5_ids
+        assert long_ago_contributing_user.id not in top5_ids
