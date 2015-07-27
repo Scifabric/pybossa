@@ -18,6 +18,7 @@
 """Core module for PyBossa."""
 import os
 import logging
+import humanize
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
@@ -458,6 +459,10 @@ def setup_jinja2_filters(app):
     @app.template_filter('pretty_date')
     def _pretty_date_filter(s):
         return pretty_date(s)
+
+    @app.template_filter('humanize_intword')
+    def _humanize_intword(obj):
+        return humanize.intword(obj)
 
 
 def setup_csrf_protection(app):

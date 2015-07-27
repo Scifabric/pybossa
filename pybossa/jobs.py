@@ -564,6 +564,7 @@ def send_weekly_stats_project(project_id):
                            active_day=active_day,
                            n_completed_tasks=n_completed_tasks,
                            config=current_app.config)
+    print html
     mail_dict = dict(recipients=[project.owner.email_addr],
                      subject=subject,
                      body=body,
