@@ -45,7 +45,7 @@ class TestWeeklyStats(Test):
     @with_context
     @patch('pybossa.jobs.datetime')
     def test_get_jobs_only_on_sunday_variant(self, mock_datetime):
-        """Test JOB get jobs for weekly stats works only on Sunday."""
+        """Test JOB get jobs for weekly stats works only on Sunday variant."""
         user = UserFactory.create(pro=True)
         pr = ProjectFactory(owner=user)
         task = TaskFactory.create(project=pr)
@@ -78,3 +78,39 @@ class TestWeeklyStats(Test):
 
         jobs = get_weekly_stats_update_projects()
         assert_raises(StopIteration, jobs.next)
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_no_featured(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works only for featured."""
+        user = UserFactory.create(pro=False)
+        pr = ProjectFactory(owner=user, featured=False)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Sunday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_stats_update_projects()
+        assert_raises(StopIteration, jobs.next)
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_only_on_featured_variant(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works for featured."""
+        user = UserFactory.create(pro=False)
+        pr = ProjectFactory(owner=user, featured=True)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Sunday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_stats_update_projects()
+        for job in jobs:
+            assert type(job) == dict, type(job)
+            assert job['name'] == send_weekly_stats_project
+            assert job['args'] == [pr.id]
+            assert job['kwargs'] == {}
+            assert job['timeout'] == (10 * 60)
+            assert job['queue'] == 'low'
