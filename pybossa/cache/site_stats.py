@@ -125,7 +125,7 @@ def get_top5_users_24_hours():
 @cache(timeout=ONE_DAY, key_prefix="site_locs")
 def get_locs():
     """Return locations (latitude, longitude) for anonymous users."""
-    # All IP addresses from anonymous users to create a map
+    # All IP addresses from anonymous users
     locs = []
     if current_app.config['GEO']:
         sql = '''SELECT DISTINCT(user_ip) FROM task_run
