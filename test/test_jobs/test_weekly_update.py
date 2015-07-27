@@ -114,3 +114,15 @@ class TestWeeklyStats(Test):
             assert job['kwargs'] == {}
             assert job['timeout'] == (10 * 60)
             assert job['queue'] == 'low'
+
+    @with_context
+    @patch('pybossa.jobs.enqueue_job')
+    def test_send_email(self, mock):
+        """Test JOB send email works."""
+        user = UserFactory.create(pro=False)
+        pr = ProjectFactory(owner=user, featured=True)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        send_weekly_stats_project(pr.id)
+        assert mock.called
+

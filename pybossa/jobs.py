@@ -528,7 +528,6 @@ def get_weekly_stats_update_projects():
                        queue='low')
             yield job
 
-
 def send_weekly_stats_project(project_id):
     from pybossa.cache.project_stats import get_stats
     from pybossa.core import project_repo
@@ -566,7 +565,7 @@ def send_weekly_stats_project(project_id):
                            n_completed_tasks=n_completed_tasks,
                            config=current_app.config)
     mail_dict = dict(recipients=[project.owner.email_addr],
-                     subject=str(subject),
+                     subject=subject,
                      body=body,
                      html=html)
 
