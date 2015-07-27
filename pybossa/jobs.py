@@ -373,15 +373,13 @@ def warm_cache():  # pragma: no cover
         for p in projects:
             warm_project(p['id'], p['short_name'])
     # Users
-    users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
         # print "Getting stats for %s" % user['name']
         cached_users.get_user_summary(user['name'])
         cached_users.projects_contributed_cached(user['id'])
         cached_users.published_projects_cached(user['id'])
         cached_users.draft_projects_cached(user['id'])
-
-    cached_users.get_top()
 
     return True
 
