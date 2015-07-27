@@ -73,7 +73,7 @@ class TestWeeklyStats(Test):
         task = TaskFactory.create(project=pr)
         TaskRunFactory.create(project=pr, task=task)
         mock_date = MagicMock()
-        mock_date.strftime.return_value = 'Monday'
+        mock_date.strftime.return_value = 'Sunday'
         mock_datetime.today.return_value = mock_date
 
         jobs = get_weekly_stats_update_projects()
