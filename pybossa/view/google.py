@@ -37,7 +37,7 @@ def login():  # pragma: no cover
     """Login with Google."""
     if request.args.get("next"):
         request_token_params = {
-            'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+            'scope': 'profile email',
             'response_type': 'code'}
         google.oauth.request_token_params = request_token_params
     return google.oauth.authorize(callback=url_for('.oauth_authorized',
