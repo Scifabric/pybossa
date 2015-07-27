@@ -26,6 +26,7 @@ import pygeoip
 import operator
 import time
 import datetime
+import os
 
 
 session = db.slave_session
@@ -493,6 +494,9 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
+    if geo:
+        if os.path.isfile(geolite) is False:
+            geo = False
     if geo:  # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
