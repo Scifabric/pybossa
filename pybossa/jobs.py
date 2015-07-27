@@ -117,9 +117,8 @@ def get_periodic_jobs(queue):
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-            engage_jobs, non_contrib_jobs, dashboard_jobs]
-    _all = [weekly_update_jobs]
-    print _all
+            engage_jobs, non_contrib_jobs, dashboard_jobs,
+            weekly_update_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -506,8 +505,8 @@ def get_weekly_stats_update_projects():
     from datetime import datetime
     from sqlalchemy.sql import text
     from pybossa.core import db
-    # 0 is Sunday
-    if datetime.today().strftime('%A') == 'Friday':
+    send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS'):
+    if datetime.today().strftime('%A') == send_emails_date
         sql = text('''
                    SELECT project.id
                    FROM project, "user", task
