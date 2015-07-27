@@ -68,7 +68,7 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     states = ('completed', 'draft', 'can_contribute', 'cannot_contribute')
     if overall_progress(project_id) >= 100:
         return states[0]
-    if _has_no_presenter(project) or _has_no_tasks(project_id):
+    if has_no_presenter(project) or _has_no_tasks(project_id):
         return states[1]
     if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
         return states[2]
@@ -81,16 +81,24 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
         project = project.dictize()
     project['contrib_button'] = check_contributing_state(project,
                                                          **user_id_or_ip)
+    query = text('''
+                 SELECT COUNT(id) as ct from blogpost
+                 WHERE project_id=:project_id;
+                 ''')
+    results = session.execute(query, dict(project_id=project['id']))
+    for row in results:
+        project['n_blogposts'] = row.ct
     return project
 
 
-def _has_no_presenter(project):
+def has_no_presenter(project):
     """Return if a project has no presenter."""
+    empty_presenters = ('', None)
     try:
-        return 'task_presenter' not in project.info
+        return project.info.get('task_presenter') in empty_presenters
     except AttributeError:
         try:
-            return 'task_presenter' not in project.get('info')
+            return project.get('info').get('task_presenter') in empty_presenters
         except AttributeError:
             return True
 

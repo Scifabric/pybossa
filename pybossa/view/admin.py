@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Admin view for PyBossa."""
+from rq import Queue
 from flask import Blueprint
 from flask import render_template
 from flask import request
@@ -35,9 +36,10 @@ from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import project_repo, user_repo
-from pybossa.view.account import get_update_feed
+from pybossa.core import project_repo, user_repo, sentinel
+from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
+from pybossa.jobs import get_dashboard_jobs
 import json
 from StringIO import StringIO
 
@@ -46,6 +48,7 @@ from pybossa.forms.admin_view_forms import *
 
 blueprint = Blueprint('admin', __name__)
 
+DASHBOARD_QUEUE = Queue('super', connection=sentinel.master)
 
 def format_error(msg, status_code):
     """Return error as a JSON response."""
@@ -364,6 +367,13 @@ def update_category(id):
 def dashboard():
     """Show PyBossa Dashboard."""
     try:
+        if request.args.get('refresh') == '1':
+            db_jobs = get_dashboard_jobs()
+            for j in db_jobs:
+                DASHBOARD_QUEUE.enqueue(j['name'])
+            msg = gettext('Dashboard jobs enqueued,'
+                          ' refresh page in a few minutes')
+            flash(msg)
         active_users_last_week = dashb.format_users_week()
         active_anon_last_week = dashb.format_anon_week()
         new_projects_last_week = dashb.format_new_projects()

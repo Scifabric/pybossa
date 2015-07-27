@@ -20,11 +20,13 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY
+from flask.ext.babel import gettext
 
 import pygeoip
 import operator
 import time
 import datetime
+import os
 
 
 session = db.slave_session
@@ -36,26 +38,41 @@ def n_tasks(project_id):
 
     Data is cached for one day.
     """
-    from .projects import n_tasks
-    return n_tasks(project_id)
+    from pybossa.cache import projects
+    return projects.n_tasks(project_id)
 
 
 @memoize(timeout=ONE_DAY)
-def stats_users(project_id):
+def stats_users(project_id, period=None):
     """Return users's stats for a given project_id."""
     users = {}
     auth_users = []
     anon_users = []
 
     # Get Authenticated Users
+    params = dict(project_id=project_id)
     sql = text('''SELECT task_run.user_id AS user_id,
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
                task_run.project_id=:project_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
-               LIMIT 5;''')
-    results = session.execute(sql, dict(project_id=project_id))
+               LIMIT 5;''')\
+        .execution_options(stream=True)
+    if period:
+        sql = text('''SELECT task_run.user_id AS user_id,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   GROUP BY task_run.user_id ORDER BY n_tasks DESC
+                   LIMIT 5;''')\
+            .execution_options(stream=True)
+        params['period'] = period
+
+    results = session.execute(sql, params)
 
     for row in results:
         auth_users.append([row.user_id, row.n_tasks])
@@ -64,8 +81,16 @@ def stats_users(project_id):
                FROM task_run WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
                task_run.project_id=:project_id;''')
+    if period:
+        sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id
+                   FROM task_run WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   ;''')
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         users['n_auth'] = row[0]
 
@@ -77,7 +102,19 @@ def stats_users(project_id):
                task_run.project_id=:project_id
                GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
         .execution_options(stream=True)
-    results = session.execute(sql, dict(project_id=project_id))
+
+    if period:
+        sql = text('''SELECT task_run.user_ip AS user_ip,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
+            .execution_options(stream=True)
+
+    results = session.execute(sql, params)
 
     for row in results:
         anon_users.append([row.user_ip, row.n_tasks])
@@ -86,8 +123,16 @@ def stats_users(project_id):
                FROM task_run WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
                task_run.project_id=:project_id;''')
+    if period:
+        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip
+                   FROM task_run WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.project_id=:project_id AND
+                   TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                   >= NOW() - :period ::INTERVAL
+                   ;''')
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         users['n_anon'] = row[0]
@@ -95,8 +140,26 @@ def stats_users(project_id):
     return users, anon_users, auth_users
 
 
+def convert_period_to_days(period):
+    """Convert SQL period into integer days."""
+    try:
+        if 'day' in period:
+            int_period = int(period.split(' ')[0])
+        elif 'week' in period:
+            int_period = int(period.split(' ')[0]) * 7
+        elif 'month' in period:
+            int_period = int(period.split(' ')[0]) * 30
+        elif 'year' in period:
+            int_period = int(period.split(' ')[0]) * 365
+        else:
+            int_period = 0
+    except ValueError:
+        int_period = 0
+    return int_period
+
+
 @memoize(timeout=ONE_DAY)
-def stats_dates(project_id):
+def stats_dates(project_id, period='15 day'):
     """Return statistics with dates for a project."""
     dates = {}
     dates_anon = {}
@@ -104,41 +167,47 @@ def stats_dates(project_id):
 
     n_tasks(project_id)
 
+    params = dict(project_id=project_id, period=period)
+
     # Get all completed tasks
     sql = text('''
-            WITH answers AS (
-             SELECT
-             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-             AS day, task.id, task.n_answers AS n_answers,
-             COUNT(task_run.id) AS day_answers
-             FROM task_run, task WHERE task_run.project_id=:project_id
-             AND task.id=task_run.task_id AND
-             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
-               - '2 week':: INTERVAL GROUP BY day, task.id)
-            SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day,
-               COUNT(task_id) AS completed_tasks FROM (
-                SELECT MIN(day) AS day_of_completion, task_id FROM (
-                    SELECT ans1.day, ans1.id as task_id,
-                    floor(avg(ans1.n_answers)) AS n_answers,
-                    sum(ans2.day_answers) AS accum_answers
-                    FROM answers AS ans1 INNER JOIN answers AS ans2
-                    ON ans1.id=ans2.id WHERE ans1.day >= ans2.day
-                    GROUP BY ans1.id, ans1.day) AS answers_day_task
-                WHERE n_answers <= accum_answers
-                GROUP BY task_id) AS completed_tasks_by_day
-            GROUP BY day;
+               WITH myquery AS (
+               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers
+               FROM task LEFT OUTER JOIN
+               (SELECT task_id, COUNT(id) AS ct FROM task_run
+               WHERE project_id=:project_id AND
+               TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - :period :: INTERVAL
+               GROUP BY task_id) AS log_counts
+               ON task.id=log_counts.task_id
+               WHERE task.project_id=:project_id ORDER BY id ASC)
+               select myquery.id, max(task_run.finish_time) as day
+               from task_run, myquery where task_run.task_id=myquery.id
+               and
+               TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - :period :: INTERVAL
+               group by myquery.id order by day;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
-        dates[row.day] = row.completed_tasks
+        day = row.day[:10]
+        if day in dates.keys():
+            dates[day] += 1
+        else:
+            dates[day] = 1
 
-    # No completed tasks in the last 15 days
-    if len(dates.keys()) == 0:
-        base = datetime.datetime.today()
-        for x in range(0, 15):
-            tmp_date = base - datetime.timedelta(days=x)
-            dates[tmp_date.strftime('%Y-%m-%d')] = 0
+    # No completed tasks in the last period
+    def _fill_empty_days(days, obj):
+        if len(days) < convert_period_to_days(period):
+            base = datetime.datetime.today()
+            for x in range(0, convert_period_to_days(period)):
+                tmp_date = base - datetime.timedelta(days=x)
+                if tmp_date.strftime('%Y-%m-%d') not in days:
+                    obj[tmp_date.strftime('%Y-%m-%d')] = 0
+        return obj
+
+    dates = _fill_empty_days(dates.keys(), dates)
 
     # Get all answers per date for auth
     sql = text('''
@@ -146,13 +215,18 @@ def stats_dates(project_id):
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY d)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY d)
                 SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         dates_auth[row.d] = row.count
+
+    dates_auth = _fill_empty_days(dates_auth.keys(), dates_auth)
 
     # Get all answers per date for anon
     sql = text('''
@@ -160,19 +234,24 @@ def stats_dates(project_id):
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY d)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY d)
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         dates_anon[row.d] = row.count
+
+    dates_anon = _fill_empty_days(dates_anon.keys(), dates_anon)
 
     return dates, dates_anon, dates_auth
 
 
 @memoize(timeout=ONE_DAY)
-def stats_hours(project_id):
+def stats_hours(project_id, period='2 week'):
     """Return statistics of a project per hours."""
     hours = {}
     hours_anon = {}
@@ -187,6 +266,7 @@ def stats_hours(project_id):
         hours_anon[str(i).zfill(2)] = 0
         hours_auth[str(i).zfill(2)] = 0
 
+    params = dict(project_id=project_id, period=period)
     # Get hour stats for all users
     sql = text('''
                WITH myquery AS
@@ -195,11 +275,14 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE project_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours[row.h] = row.count
@@ -212,11 +295,14 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE project_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id  AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours = row.max
 
@@ -229,11 +315,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY h)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours_anon[row.h] = row.count
@@ -247,11 +336,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_id IS NULL GROUP BY h)
+                    AND user_id IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours_anon = row.max
 
@@ -264,11 +356,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY h)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
 
     for row in results:
         hours_auth[row.h] = row.count
@@ -282,11 +377,14 @@ def stats_hours(project_id):
                     ),
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id
-                    AND user_ip IS NULL GROUP BY h)
+                    AND user_ip IS NULL AND
+                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    >= NOW() - :period :: INTERVAL
+                    GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, params)
     for row in results:
         max_hours_auth = row.max
 
@@ -297,22 +395,17 @@ def stats_hours(project_id):
 @memoize(timeout=ONE_DAY)
 def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format."""
-    dayNewStats = dict(label="Anon + Auth", values=[])
-    dayTotalTasks = dict(label="Total Tasks", values=[])
-    dayCompletedTasks = dict(label="Completed Tasks",
+    dayNewStats = dict(label=gettext("Anon + Auth"), values=[])
+    dayCompletedTasks = dict(label=gettext("Completed Tasks"),
                              disabled="True", values=[])
-    dayNewAnonStats = dict(label="Anonymous", values=[])
-    dayNewAuthStats = dict(label="Authenticated", values=[])
+    dayNewAnonStats = dict(label=gettext("Anonymous"), values=[])
+    dayNewAuthStats = dict(label=gettext("Authenticated"), values=[])
 
     answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
     total = 0
 
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
-        dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-             n_tasks(project_id)])
-
         # Total tasks completed per day
         total = total + dates[d]
         dayCompletedTasks['values'].append(
@@ -334,16 +427,18 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), auth_ans])
 
     return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
-        dayCompletedTasks, dayTotalTasks
+        dayCompletedTasks
 
 
 @memoize(timeout=ONE_DAY)
 def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format."""
-    hourNewStats = dict(label="Anon + Auth", disabled="True", values=[], max=0)
-    hourNewAnonStats = dict(label="Anonymous", values=[], max=0)
-    hourNewAuthStats = dict(label="Authenticated", values=[], max=0)
+    hourNewStats = dict(label=gettext("Anon + Auth"),
+                        disabled="True", values=[], max=0)
+    hourNewAnonStats = dict(label=gettext("Anonymous"), values=[], max=0)
+    hourNewAuthStats = dict(label=gettext("Authenticated"),
+                            values=[], max=0)
 
     hourNewStats['max'] = max_hours
     hourNewAnonStats['max'] = max_hours_anon
@@ -399,6 +494,9 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
+    if geo:
+        if os.path.isfile(geolite) is False:
+            geo = False
     if geo:  # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
@@ -442,12 +540,13 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
 
 
 @memoize(timeout=ONE_DAY)
-def get_stats(project_id, geo=False):
+def get_stats(project_id, geo=False, period='2 week'):
     """Return the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
-        max_hours_anon, max_hours_auth = stats_hours(project_id)
-    users, anon_users, auth_users = stats_users(project_id)
-    dates, dates_anon, dates_auth = stats_dates(project_id)
+        max_hours_anon, max_hours_auth = stats_hours(project_id, period)
+    users, anon_users, auth_users = stats_users(project_id, period)
+    dates, dates_anon, dates_auth = stats_dates(project_id, period)
+
 
     n_tasks(project_id)
     sum(dates.values())

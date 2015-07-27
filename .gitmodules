@@ -1,9 +1,9 @@
 [submodule "doc/_themes/sphinx-theme-okfn"]
 	path = doc/_themes/sphinx-theme-okfn
-	url = git://github.com/okfn/sphinx-theme-okfn.git
+	url = https://github.com/okfn/sphinx-theme-okfn.git
 [submodule "pybossa/themes/default"]
 	path = pybossa/themes/default
-	url = git://github.com/PyBossa/pybossa-default-theme
+	url = https://github.com/PyBossa/pybossa-default-theme.git
 [submodule "doc/_themes/sphinx-theme-pybossa"]
 	path = doc/_themes/sphinx-theme-pybossa
-	url = git://github.com/PyBossa/sphinx-theme-pybossa.git
+	url = https://github.com/PyBossa/sphinx-theme-pybossa.git

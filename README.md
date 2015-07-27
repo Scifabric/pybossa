@@ -26,7 +26,7 @@ Database Migration scripts, as new changes could introduce new tables,
 columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/en/latest/install.html#updating-pybossa) from the
 documentation**
 
-See [installation instructions](http://docs.pybossa.com/en/latest/install.html).
+See [installation instructions](http://docs.pybossa.com/en/latest/installing_pybossa.html).
 
 # Running Tests
 
@@ -58,7 +58,7 @@ It has the instructions to become a contributor.
 
 ## Copyright / License
 
-Copyright 2014 SF Isle of Man Limited.
+Copyright 2015 SF Isle of Man Limited.
 
 Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)

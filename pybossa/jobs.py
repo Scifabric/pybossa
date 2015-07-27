@@ -18,6 +18,7 @@
 """Jobs module for running background tasks in PyBossa server."""
 from datetime import datetime
 import math
+import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
@@ -27,6 +28,7 @@ import pybossa.dashboard.jobs as dashboard
 
 MINUTE = 60
 HOUR = 60 * 60
+IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
 def schedule_job(function, scheduler):
@@ -65,6 +67,18 @@ def get_quarterly_date(now):
     return datetime.combine(execute_date, now.time())
 
 
+def enqueue_job(job):
+    """Enqueues a job."""
+    from pybossa.core import sentinel
+    from rq import Queue
+    redis_conn = sentinel.master
+    queue = Queue(job['queue'], connection=redis_conn)
+    queue.enqueue_call(func=job['name'],
+                           args=job['args'],
+                           kwargs=job['kwargs'],
+                           timeout=job['timeout'])
+    return True
+
 def enqueue_periodic_jobs(queue_name):
     """Enqueue all PyBossa periodic jobs."""
     from pybossa.core import sentinel
@@ -101,8 +115,10 @@ def get_periodic_jobs(queue):
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-            engage_jobs, non_contrib_jobs, dashboard_jobs]
+            engage_jobs, non_contrib_jobs, dashboard_jobs,
+            weekly_update_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -200,24 +216,24 @@ def get_inactive_users_jobs(queue='quaterly'):
             yield job
 
 
-def get_dashboard_jobs():  # pragma: no cover
+def get_dashboard_jobs(queue='low'):  # pragma: no cover
     """Return dashboard jobs."""
     yield dict(name=dashboard.active_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.active_anon_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.update_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_tasks_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_task_runs_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.new_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.returning_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=(10 * MINUTE), queue=queue)
 
 
 def get_non_contributors_users_jobs(queue='quaterly'):
@@ -265,7 +281,7 @@ def get_autoimport_jobs(queue='low'):
             job = dict(name=import_tasks,
                        args=[project.id],
                        kwargs=project.get_autoimporter(),
-                       timeout=(10 * MINUTE),
+                       timeout=IMPORT_TASKS_TIMEOUT,
                        queue=queue)
             yield job
 
@@ -286,6 +302,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     cached_projects.last_activity(_id)
     cached_projects.n_completed_tasks(_id)
     cached_projects.n_volunteers(_id)
+    cached_projects.browse_tasks(_id)
     stats.get_stats(_id, current_app.config.get('GEO'))
 
 
@@ -331,6 +348,7 @@ def warm_cache():  # pragma: no cover
             cached_projects.last_activity(_id)
             cached_projects.n_completed_tasks(_id)
             cached_projects.n_volunteers(_id)
+            cached_projects.browse_tasks(_id)
             if n_task_runs >= 1000 or featured:
                 # print ("Getting stats for %s as it has %s task runs" %
                 #        (short_name, n_task_runs))
@@ -355,15 +373,13 @@ def warm_cache():  # pragma: no cover
         for p in projects:
             warm_project(p['id'], p['short_name'])
     # Users
-    users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
         # print "Getting stats for %s" % user['name']
         cached_users.get_user_summary(user['name'])
         cached_users.projects_contributed_cached(user['id'])
         cached_users.published_projects_cached(user['id'])
         cached_users.draft_projects_cached(user['id'])
-
-    cached_users.get_top()
 
     return True
 
@@ -428,3 +444,133 @@ def import_tasks(project_id, **form_data):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
+
+
+def webhook(url, payload=None):
+    """Post to a webhook."""
+    import json
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    if url:
+        return requests.post(url, data=json.dumps(payload), headers=headers)
+    else:
+        return False
+
+
+def notify_blog_users(blog_id, project_id, queue='high'):
+    """Send email with new blog post."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    from pybossa.core import blog_repo
+    blog = blog_repo.get(blog_id)
+    users = 0
+    if blog.project.featured or blog.project.owner.pro:
+        sql = text('''
+                   SELECT email_addr, name from "user", task_run
+                   WHERE task_run.project_id=:project_id
+                   AND task_run.user_id="user".id
+                   AND "user".subscribed=true
+                   GROUP BY email_addr, name, subscribed;
+                   ''')
+        results = db.slave_session.execute(sql, dict(project_id=project_id))
+        for row in results:
+            subject = "Project Update: %s by %s" % (blog.project.name,
+                                                    blog.project.owner.fullname)
+            body = render_template('/account/email/blogupdate.md',
+                                   user_name=row.name,
+                                   blog=blog,
+                                   config=current_app.config)
+            html = render_template('/account/email/blogupdate.html',
+                                   user_name=row.name,
+                                   blog=blog,
+                                   config=current_app.config)
+            mail_dict = dict(recipients=[row.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            enqueue_job(job)
+            users += 1
+    msg = "%s users notified by email" % users
+    return msg
+
+def get_weekly_stats_update_projects():
+    """Return email jobs with weekly stats update for project owner."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
+    today = datetime.today().strftime('%A').lower()
+    if  today.lower() == send_emails_date.lower():
+        sql = text('''
+                   SELECT project.id
+                   FROM project, "user", task
+                   WHERE "user".pro=true AND "user".id=project.owner_id
+                   AND "user".subscribed=true
+                   AND task.project_id=project.id
+                   AND task.state!='completed'
+                   UNION
+                   SELECT project.id
+                   FROM project
+                   WHERE project.featured=true;
+                   ''')
+        results = db.slave_session.execute(sql)
+        for row in results:
+            job = dict(name=send_weekly_stats_project,
+                       args=[row.id],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue='low')
+            yield job
+
+def send_weekly_stats_project(project_id):
+    from pybossa.cache.project_stats import get_stats
+    from pybossa.core import project_repo
+    from datetime import datetime
+    project = project_repo.get(project_id)
+    if project.owner.subscribed is False:
+        return "Owner does not want updates by email"
+    dates_stats, hours_stats, users_stats = get_stats(project_id,
+                                                      geo=True,
+                                                      period='1 year')
+    subject = "Weekly Update: %s" % project.name
+
+    # Max number of completed tasks
+    n_completed_tasks = 0
+    xy = zip(*dates_stats[3]['values'])
+    n_completed_tasks = max(xy[1])
+    # Most active day
+    xy = zip(*dates_stats[0]['values'])
+    active_day = [xy[0][xy[1].index(max(xy[1]))], max(xy[1])]
+    active_day[0] = datetime.fromtimestamp(active_day[0]/1000).strftime('%A')
+    body = render_template('/account/email/weeklystats.md',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           n_completed_tasks=n_completed_tasks,
+                           active_day=active_day,
+                           config=current_app.config)
+    html = render_template('/account/email/weeklystats.html',
+                           project=project,
+                           dates_stats=dates_stats,
+                           hours_stats=hours_stats,
+                           users_stats=users_stats,
+                           active_day=active_day,
+                           n_completed_tasks=n_completed_tasks,
+                           config=current_app.config)
+    print html
+    mail_dict = dict(recipients=[project.owner.email_addr],
+                     subject=subject,
+                     body=body,
+                     html=html)
+
+    job = dict(name=send_mail,
+               args=[mail_dict],
+               kwargs={},
+               timeout=(10 * MINUTE),
+               queue='high')
+    enqueue_job(job)

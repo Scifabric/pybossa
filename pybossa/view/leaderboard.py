@@ -30,7 +30,7 @@ def index():
     if current_user.is_authenticated():
         user_id = current_user.id
     else:
-        user_id = 'anonymous'
+        user_id = None
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id)
 

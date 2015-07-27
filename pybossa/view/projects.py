@@ -45,12 +45,12 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
-from pybossa.cache.helpers import add_custom_contrib_button_to
+from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks
+from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 
@@ -60,10 +60,11 @@ from pybossa.api import mark_task_as_requested_by_user
 
 blueprint = Blueprint('project', __name__)
 
-auditlogger = AuditLogger(auditlog_repo, caller='web')
-importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-HOUR = 60 * 60
+auditlogger = AuditLogger(auditlog_repo, caller='web')
+importer_queue = Queue('medium',
+                       connection=sentinel.master,
+                       default_timeout=IMPORT_TASKS_TIMEOUT)
 
 def project_title(project, page_name):
     if not project:  # pragma: no cover
@@ -714,6 +715,9 @@ def task_presenter(short_name, task_id):
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
+    if has_no_presenter(project):
+        flash(gettext("Sorry, but this project is still a draft and does "
+                      "not have a task presenter."), "error")
     return respond('/projects/presenter.html')
 
 
@@ -736,6 +740,7 @@ def presenter(short_name):
 
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
+
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project)}
@@ -762,6 +767,9 @@ def presenter(short_name):
         resp.set_cookie(project.short_name + 'tutorial', 'seen')
         return resp
     else:
+        if has_no_presenter(project):
+            flash(gettext("Sorry, but this project is still a draft and does "
+                          "not have a task presenter."), "error")
         return respond('/projects/presenter.html')
 
 
@@ -1129,9 +1137,15 @@ def show_stats(short_name):
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         project.id,
-        current_app.config['GEO'])
-    anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
-                            (users_stats['n_anon'] + users_stats['n_auth']))
+        current_app.config['GEO'],
+        period='2 week')
+    tmp_total = (users_stats['n_anon'] + users_stats['n_auth'])
+    if tmp_total > 0:
+        anon_pct_taskruns = int((users_stats['n_anon'] * 100) / tmp_total)
+        auth_pct_taskruns = 100 - anon_pct_taskruns
+    else:
+        anon_pct_taskruns = 0
+        auth_pct_taskruns = 0
     userStats = dict(
         geo=current_app.config['GEO'],
         anonymous=dict(
@@ -1142,7 +1156,7 @@ def show_stats(short_name):
         authenticated=dict(
             users=users_stats['n_auth'],
             taskruns=users_stats['n_auth'],
-            pct_taskruns=100 - anon_pct_taskruns,
+            pct_taskruns=auth_pct_taskruns,
             top5=users_stats['auth']['top5']))
 
     tmp = dict(userStats=users_stats['users'],

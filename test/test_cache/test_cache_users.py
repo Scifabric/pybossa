@@ -280,3 +280,110 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in hidden_projects[0].keys(), field
+
+
+    def test_get_leaderboard_no_users_returns_empty_list(self):
+        """Test CACHE USERS get_leaderboard returns an empty list if there are no
+        users"""
+
+        users = cached_users.get_leaderboard(10)
+
+        assert users == [], users
+
+
+    def test_get_leaderboard_returns_users_ordered_by_rank(self):
+        leader = UserFactory.create()
+        second = UserFactory.create()
+        third = UserFactory.create()
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project)
+        i = 3
+        for user in [leader, second, third]:
+            TaskRunFactory.create_batch(i, user=user, task=tasks[i-1])
+            i -= 1
+
+        leaderboard = cached_users.get_leaderboard(3)
+
+        assert leaderboard[0]['id'] == leader.id
+        assert leaderboard[1]['id'] == second.id
+        assert leaderboard[2]['id'] == third.id
+
+
+    def test_get_leaderboard_includes_specific_user_even_is_not_in_top(self):
+        leader = UserFactory.create()
+        second = UserFactory.create()
+        third = UserFactory.create()
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project)
+        i = 3
+        for user in [leader, second, third]:
+            TaskRunFactory.create_batch(i, user=user, task=tasks[i-1])
+            i -= 1
+        user_out_of_top = UserFactory.create()
+
+        leaderboard = cached_users.get_leaderboard(3, user_id=user_out_of_top.id)
+
+        assert len(leaderboard) is 4
+        assert leaderboard[-1]['id'] == user_out_of_top.id
+
+
+    def test_get_leaderboard_returns_fields(self):
+        """Test CACHE USERS get_leaderboard returns user fields"""
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        fields = ('rank', 'id', 'name', 'fullname', 'email_addr',
+                 'info', 'created', 'score')
+
+        leaderboard = cached_users.get_leaderboard(1)
+
+        for field in fields:
+            assert field in leaderboard[0].keys(), field
+        assert len(leaderboard[0].keys()) == len(fields)
+
+
+    def test_get_total_users_returns_0_if_no_users(self):
+        total_users = cached_users.get_total_users()
+
+        assert total_users == 0, total_users
+
+
+    def test_get_total_users_returns_number_of_users(self):
+        expected_number_of_users = 3
+        UserFactory.create_batch(expected_number_of_users)
+
+        total_users = cached_users.get_total_users()
+
+        assert total_users == expected_number_of_users, total_users
+
+
+    def test_get_users_page_only_returns_users_with_contributions(self):
+        users = UserFactory.create_batch(2)
+        TaskRunFactory.create(user=users[0])
+
+        users_with_contrib = cached_users.get_users_page(1)
+
+        assert len(users_with_contrib) == 1, users_with_contrib
+
+
+    def test_get_users_page_supports_pagination(self):
+        users = UserFactory.create_batch(3)
+        for user in users:
+            TaskRunFactory.create(user=user)
+
+        paginated_users = cached_users.get_users_page(page=2, per_page=1)
+
+        assert len(paginated_users) == 1, paginated_users
+        assert paginated_users[0]['id'] == users[1].id
+
+
+    def test_get_users_page_returns_fields(self):
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        fields = ('id', 'name', 'fullname', 'email_addr', 'created',
+                  'task_runs', 'info', 'registered_ago')
+
+        users = cached_users.get_users_page(1)
+
+        for field in fields:
+            assert field in users[0].keys(), field
+        assert len(users[0].keys()) == len(fields)

@@ -43,13 +43,22 @@ class ProjectRepository(object):
     def get_all(self):
         return self.db.session.query(Project).all()
 
-    def filter_by(self, limit=None, offset=0, **filters):
+    def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
+                  **filters):
         query = self.db.session.query(Project).filter_by(**filters)
-        query = query.order_by(Project.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(Project.id > last_id)
+            query = query.order_by(Project.id).limit(limit)
+        else:
+            query = query.order_by(Project.id).limit(limit).offset(offset)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def save(self, project):
         self._validate_can_be('saved', project)
+        self._empty_strings_to_none(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -60,6 +69,7 @@ class ProjectRepository(object):
 
     def update(self, project):
         self._validate_can_be('updated', project)
+        self._empty_strings_to_none(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -90,9 +100,17 @@ class ProjectRepository(object):
     def get_all_categories(self):
         return self.db.session.query(Category).all()
 
-    def filter_categories_by(self, limit=None, offset=0, **filters):
+    def filter_categories_by(self, limit=None, offset=0, yielded=False,
+                             last_id=None, **filters):
         query = self.db.session.query(Category).filter_by(**filters)
-        query = query.order_by(Category.id).limit(limit).offset(offset)
+        if last_id:
+            query = query.filter(Category.id > last_id)
+            query = query.order_by(Category.id).limit(limit)
+        else:
+            query = query.order_by(Category.id).limit(limit).offset(offset)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
 
     def save_category(self, category):
@@ -117,6 +135,14 @@ class ProjectRepository(object):
         self._validate_can_be('deleted as a Category', category, klass=Category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
+
+    def _empty_strings_to_none(self, project):
+        if project.name == '':
+            project.name = None
+        if project.short_name == '':
+            project.short_name = None
+        if project.description == '':
+            project.description = None
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

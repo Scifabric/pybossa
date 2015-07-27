@@ -19,14 +19,11 @@
 from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import event
+from sqlalchemy.dialects.postgresql import JSON
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, JSONEncodedDict, \
-    make_timestamp, update_redis, update_project_timestamp
+from pybossa.model import DomainObject, make_timestamp
 from pybossa.model.task_run import TaskRun
-
-
 
 
 class Task(db.Model, DomainObject):
@@ -50,7 +47,7 @@ class Task(db.Model, DomainObject):
     #: Priority of the task from 0.0 to 1.0
     priority_0 = Column(Float, default=0)
     #: Task.info field in JSON with the data for the task.
-    info = Column(JSONType, default=dict)
+    info = Column(JSON)
     #: Number of answers to collect for this task.
     n_answers = Column(Integer, default=30)
 
@@ -63,27 +60,3 @@ class Task(db.Model, DomainObject):
             return float(len(self.task_runs)) / self.n_answers
         else:  # pragma: no cover
             return float(0)
-
-@event.listens_for(Task, 'after_insert')
-def add_event(mapper, conn, target):
-    """Update PyBossa feed with new task."""
-    sql_query = ('select name, short_name, info from project \
-                 where id=%s') % target.project_id
-    results = conn.execute(sql_query)
-    obj = dict(id=target.project_id,
-               name=None,
-               short_name=None,
-               info=None,
-               action_updated='Task')
-    for r in results:
-        obj['name'] = r.name
-        obj['short_name'] = r.short_name
-        obj['info'] = r.info
-    update_redis(obj)
-
-
-@event.listens_for(Task, 'after_insert')
-@event.listens_for(Task, 'after_update')
-def update_project(mapper, conn, target):
-    """Update project updated timestamp."""
-    update_project_timestamp(mapper, conn, target)

@@ -112,9 +112,9 @@ class APIBase(MethodView):
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
-            except Exception as ex: # pragma: no cover
+            except Exception:  # pragma: no cover
                 raise
-        if oid:
+        if oid is not None:
             ensure_authorized_to('read', query_result[0])
             items = items[0]
         return json.dumps(items)
@@ -146,14 +146,20 @@ class APIBase(MethodView):
     def _filter_query(self, repo_info, limit, offset):
         filters = {}
         for k in request.args.keys():
-            if k not in ['limit', 'offset', 'api_key']:
+            if k not in ['limit', 'offset', 'api_key', 'last_id']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
-        results = getattr(repo, query_func)(limit=limit, offset=offset, **filters)
+        last_id = request.args.get('last_id')
+        if last_id:
+            results = getattr(repo, query_func)(limit=limit, last_id=last_id,
+                                                **filters)
+        else:
+            results = getattr(repo, query_func)(limit=limit, offset=offset,
+                                                **filters)
         return results
 
     def _set_limit_and_offset(self):

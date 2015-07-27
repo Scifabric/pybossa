@@ -164,8 +164,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         TaskFactory.create(state='done', n_answers=17)
         task = TaskFactory.create(state='done', n_answers=99)
 
-        count = self.task_repo.count_tasks_with(state='done',
-                                                         n_answers=99)
+        count = self.task_repo.count_tasks_with(state='done', n_answers=99)
 
         assert count == 1, count
 

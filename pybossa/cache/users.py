@@ -22,14 +22,13 @@ from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
-import json
 
 
 session = db.slave_session
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def get_leaderboard(n, user_id):
+def get_leaderboard(n, user_id=None):
     """Return the top n users with their rank."""
     sql = text('''
                WITH global_rank AS (
@@ -38,7 +37,7 @@ def get_leaderboard(n, user_id):
                         WHERE user_id IS NOT NULL GROUP BY user_id)
                     SELECT user_id, score, rank() OVER (ORDER BY score desc)
                     FROM scores)
-               SELECT rank, id, name, fullname, email_addr, info,
+               SELECT rank, id, name, fullname, email_addr, info, created,
                score FROM global_rank
                JOIN public."user" on (user_id=public."user".id) ORDER BY rank
                LIMIT :limit;
@@ -57,10 +56,11 @@ def get_leaderboard(n, user_id):
             name=row.name,
             fullname=row.fullname,
             email_addr=row.email_addr,
-            info=dict(json.loads(row.info)),
+            info=row.info,
+            created=row.created,
             score=row.score)
         top_users.append(user)
-    if (user_id != 'anonymous'):
+    if (user_id is not None):
         if not user_in_top:
             sql = text('''
                        WITH global_rank AS (
@@ -70,7 +70,7 @@ def get_leaderboard(n, user_id):
                             SELECT user_id, score, rank() OVER
                                 (ORDER BY score desc)
                             FROM scores)
-                       SELECT rank, id, name, fullname, email_addr, info,
+                       SELECT rank, id, name, fullname, email_addr, info, created,
                               score FROM global_rank
                        JOIN public."user" on (user_id=public."user".id)
                        WHERE user_id=:user_id ORDER BY rank;
@@ -85,6 +85,7 @@ def get_leaderboard(n, user_id):
                 fullname=u.fullname,
                 email_addr=u.email_addr,
                 info=u.info,
+                created=row.created,
                 score=-1)
             for row in user_rank:  # pragma: no cover
                 user = dict(
@@ -93,32 +94,11 @@ def get_leaderboard(n, user_id):
                     name=row.name,
                     fullname=row.fullname,
                     email_addr=row.email_addr,
-                    info=dict(json.loads(row.info)),
+                    info=row.info,
+                    created=row.created,
                     score=row.score)
             top_users.append(user)
 
-    return top_users
-
-
-@cache(key_prefix="front_page_top_users",
-       timeout=timeouts.get('USER_TOP_TIMEOUT'))
-def get_top(n=10):
-    """Return the n=10 top users."""
-    sql = text('''SELECT "user".id, "user".name,
-               "user".fullname, "user".email_addr,
-               "user".created, "user".info,
-               COUNT(task_run.id) AS task_runs FROM task_run, "user"
-               WHERE "user".id=task_run.user_id GROUP BY "user".id
-               ORDER BY task_runs DESC LIMIT :limit''')
-    results = session.execute(sql, dict(limit=n))
-    top_users = []
-    for row in results:
-        user = dict(id=row.id, name=row.name, fullname=row.fullname,
-                    email_addr=row.email_addr,
-                    created=row.created,
-                    task_runs=row.task_runs,
-                    info=dict(json.loads(row.info)))
-        top_users.append(user)
     return top_users
 
 
@@ -144,7 +124,7 @@ def get_user_summary(name):
                     twitter_user_id=row.twitter_user_id,
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
-                    info=dict(json.loads(row.info)),
+                    info=row.info,
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
@@ -199,7 +179,7 @@ def projects_contributed(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_contributed.append(project)
     return projects_contributed
 
@@ -218,10 +198,10 @@ def published_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=0 AND project.info LIKE('%task_presenter%')
+               project.hidden=0 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -231,7 +211,7 @@ def published_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_published.append(project)
     return projects_published
 
@@ -250,10 +230,10 @@ def draft_projects(user_id):
                project.info
                FROM project
                WHERE project.owner_id=:user_id
-               AND project.info NOT LIKE('%task_presenter%')
+               AND (project.info->>'task_presenter') IS NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;
+               ''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -263,7 +243,7 @@ def draft_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_draft.append(project)
     return projects_draft
 
@@ -282,10 +262,9 @@ def hidden_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=1 AND project.info LIKE('%task_presenter%')
+               project.hidden=1 AND (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
-               project.description,
-               project.info;''')
+               project.description;''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -295,7 +274,7 @@ def hidden_projects(user_id):
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
-                       info=json.loads(row.info))
+                       info=row.info)
         projects_published.append(project)
     return projects_published
 
@@ -329,7 +308,7 @@ def get_users_page(page, per_page=24):
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
-                    task_runs=row.task_runs, info=dict(json.loads(row.info)),
+                    task_runs=row.task_runs, info=row.info,
                     registered_ago=pretty_date(row.created))
         accounts.append(user)
     return accounts

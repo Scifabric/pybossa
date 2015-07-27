@@ -57,8 +57,10 @@ CONTACT_TWITTER = 'PyBossa'
 # GOOGLE_CLIENT_SECRET=''
 
 ## Supported Languages
-
-LOCALES = ['en', 'es', 'fr', 'de', 'it']
+## NOTE: You need to create a symbolic link to the translations folder, otherwise
+## this wont work.
+## ln -s pybossa/themes/your-theme/translations pybossa/translations
+# LOCALES = ['en', 'es', 'fr', 'de', 'it']
 
 ## list of administrator emails to which error emails get sent
 # ADMINS = ['me@sysadmin.org']
@@ -151,3 +153,6 @@ ACCOUNT_CONFIRMATION_DISABLED = True
 
 # DROPBOX APP KEY
 # DROPBOX_APP_KEY = 'your-key'
+
+# Send emails weekly update every
+# WEEKLY_UPDATE_STATS = 'Sunday'

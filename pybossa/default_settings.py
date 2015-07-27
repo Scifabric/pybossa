@@ -105,3 +105,6 @@ PER = 15 * 60
 
 # Disable new account confirmation (via email)
 ACCOUNT_CONFIRMATION_DISABLED = True
+
+# Send emails weekly update every
+WEEKLY_UPDATE_STATS = 'Sunday'

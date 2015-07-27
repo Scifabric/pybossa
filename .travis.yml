@@ -19,6 +19,7 @@ before_install:
 - export PATH=${PATH}:`pwd`/$SWIG/vendor/bin
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
+- cd pybossa && ln -s themes/default/translations && cd ..
 install:
 - pip install -U pip
 - pip install -r requirements.txt
