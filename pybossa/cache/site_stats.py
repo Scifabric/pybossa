@@ -81,7 +81,7 @@ def n_task_runs_site():
 @cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
 def get_top5_projects_24_hours():
     """Return the top 5 projects more active in the last 24 hours."""
-    # Top 5 Most active apps in last 24 hours
+    # Top 5 Most active projects in last 24 hours
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                COUNT(task_run.project_id) AS n_answers FROM project, task_run
                WHERE project.id=task_run.project_id
@@ -123,7 +123,7 @@ def get_top5_users_24_hours():
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_locs")
-def get_locs():  # pragma: no cover
+def get_locs():
     """Return locations (latitude, longitude) for anonymous users."""
     # All IP addresses from anonymous users to create a map
     locs = []
