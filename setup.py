@@ -43,7 +43,7 @@ requirements = [
     "mailchimp",
     "flask-plugins",
     "humanize",
-    "pbr>=0.11.0, <1.0"                 # fix for Rackspace dependencies
+    "pbr>=1.0, <2.0"                    # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
 ]
 
 setup(
