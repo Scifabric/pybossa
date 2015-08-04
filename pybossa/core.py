@@ -220,7 +220,11 @@ def setup_babel(app):
         if current_user.is_authenticated():
             lang = current_user.locale
         else:
+            user_lang = request.accept_languages.best_match(app.config.get('LOCALES'))
             lang = request.cookies.get('language')
+        if (lang is None or lang == '' or
+            lang.lower() not in app.config.get('LOCALES')):
+            lang = user_lang
         if (lang is None or lang == '' or
                 lang.lower() not in app.config['LOCALES']):
             lang = 'en'
