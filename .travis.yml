@@ -7,7 +7,7 @@ env:
 services:
 - redis-server
 addons:
-  postgresql: "9.3"
+  postgresql: "9.4"
 before_install:
 # Install swig by compiling (sudo not allowed)
 - wget http://prdownloads.sourceforge.net/swig/$SWIG.tar.gz
