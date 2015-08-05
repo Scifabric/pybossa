@@ -35,26 +35,31 @@ class TestFacebook(Test):
         }
         self.name = username_from_full_name(self.user_data['name'])
 
-    def test_manage_user_with_email(self):
-        """Test FACEBOOK manage_user works."""
-        # First with a new user
+    def test_manage_user_with_email_new_user(self):
+        """Test FACEBOOK manage_user works for a new user."""
         token = 't'
         user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
+        assert user.info['facebook_token'] == dict(oauth_token=token), user
 
-        # Second with the same user
-        user = manage_user(token, self.user_data)
+    def test_manage_user_with_email_facebook_account_user_registered(self):
+        """Test FACEBOOK manage_user works for a user already registered with Facebook."""
+        token = 't'
+        manage_user(token, self.user_data)
+        new_token = 'new_token'
+        user = manage_user(new_token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
+        assert user.info['facebook_token'] == dict(oauth_token=new_token), user
 
-    def test_manage_user_without_email(self):
-        """Test FACEBOOK manage_user without e-mail works."""
-        # First with a new user
+    def test_manage_user_without_email_new_user(self):
+        """Test FACEBOOK manage_user works for a new user without email in his
+        FB account."""
         del self.user_data['email']
         token = 't'
         user = manage_user(token, self.user_data)
@@ -62,13 +67,21 @@ class TestFacebook(Test):
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
+        assert user.info['facebook_token'] == dict(oauth_token=token), user
 
-        # Second with the same user
-        user = manage_user(token, self.user_data)
+    def test_manage_user_without_email_facebook_account_user_registered(self):
+        """Test FACEBOOK manage_user works for a user already registered with
+        Facebook without email on his FB account."""
+        del self.user_data['email']
+        token = 't'
+        manage_user(token, self.user_data)
+        new_token = 'new_token'
+        user = manage_user(new_token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
+        assert user.info['facebook_token'] == dict(oauth_token=new_token), user
 
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_with_email_newsletter(self, newsletter):
