@@ -24,9 +24,8 @@ from factories import UserFactory
 
 class TestTwitter(Test):
 
-    def test_manage_user(self):
-        """Test TWITTER manage_user works."""
-        # First with a new user
+    def test_manage_user_new_user(self):
+        """Test TWITTER manage_user with a new user"""
         user_data = dict(user_id=1, screen_name='twitter')
         token = dict(oauth_token='token', oauth_token_secret='secret')
         user = manage_user(token, user_data)
@@ -34,21 +33,30 @@ class TestTwitter(Test):
         assert user.name == user_data['screen_name'], user
         assert user.fullname == user_data['screen_name'], user
         assert user.twitter_user_id == user_data['user_id'], user
+        assert user.info['twitter_token'] == token, user
 
-        # Second with the same user
-        user = manage_user(token, user_data)
+    def test_manage_user_twitter_registered_user(self):
+        """Test TWITTER manage_user with an existing user registered with Twitter"""
+        user_data = dict(user_id=1, screen_name='twitter')
+        initial_token = dict(oauth_token='token', oauth_token_secret='secret')
+        manage_user(initial_token, user_data)
+        updated_token = dict(oauth_token='token2', oauth_token_secret='secret2')
+        user = manage_user(updated_token, user_data)
         assert user.email_addr == user_data['screen_name'], user
         assert user.name == user_data['screen_name'], user
         assert user.fullname == user_data['screen_name'], user
         assert user.twitter_user_id == user_data['user_id'], user
+        assert user.info['twitter_token'] == updated_token, user
 
-        # Finally with a user that already is in the system
+    def test_manage_user_with_existing_non_twitter_account_user(self):
+        """Test TWITTER manage_user user with a username that already exists
+        and registered without Twitter"""
         user_data = dict(user_id=10, screen_name=self.name)
         token = dict(oauth_token='token2', oauth_token_secret='secret2')
         user = manage_user(token, user_data)
         err_msg = "It should return the same user"
         assert user.twitter_user_id == 10, err_msg
-
+        assert user.info['twitter_token'] == token, user
 
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
