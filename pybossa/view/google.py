@@ -93,10 +93,10 @@ def manage_user(access_token, user_data):
     # We have to store the oauth_token in the session to get the USER fields
 
     user = user_repo.get_by(google_user_id=user_data['id'])
+    google_token = dict(oauth_token=access_token)
 
     # user never signed on
     if user is None:
-        google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
         name = username_from_full_name(user_data['name'])
         user = user_repo.get_by_name(name)
@@ -116,10 +116,11 @@ def manage_user(access_token, user_data):
         else:
             return None
     else:
+        user.info['google_token'] = google_token
         # Update the name to fit with new paradigm to avoid UTF8 problems
         if type(user.name) == unicode or ' ' in user.name:
             user.name = username_from_full_name(user.name)
-            user_repo.update(user)
+        user_repo.save(user)
         return user
 
 

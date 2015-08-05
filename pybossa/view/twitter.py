@@ -78,9 +78,7 @@ def oauth_authorized(resp):  # pragma: no cover
 
     user_data = dict(screen_name=resp['screen_name'],
                      user_id=resp['user_id'])
-
     user = manage_user(access_token, user_data)
-
     return manage_user_login(user, user_data, next_url)
 
 
@@ -89,16 +87,18 @@ def manage_user(access_token, user_data):
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
-    user = user_repo.get_by(twitter_user_id=user_data['user_id'])
-
-    if user is not None:
-        return user
-
     twitter_token = dict(oauth_token=access_token['oauth_token'],
                          oauth_token_secret=access_token['oauth_token_secret'])
     info = dict(twitter_token=twitter_token)
-    user = user_repo.get_by_name(user_data['screen_name'])
 
+    user = user_repo.get_by(twitter_user_id=user_data['user_id'])
+
+    if user is not None:
+        user.info['twitter_token'] = twitter_token
+        user_repo.save(user)
+        return user
+
+    user = user_repo.get_by_name(user_data['screen_name'])
     if user is not None:
         return None
 
