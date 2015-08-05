@@ -75,9 +75,9 @@ def oauth_authorized(resp):  # pragma: no cover
 def manage_user(access_token, user_data):
     """Manage the user after signin"""
     user = user_repo.get_by(facebook_user_id=user_data['id'])
+    facebook_token = dict(oauth_token=access_token)
 
     if user is None:
-        facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
         name = username_from_full_name(user_data['name'])
         user_exists = user_repo.get_by_name(name) is not None
@@ -101,6 +101,8 @@ def manage_user(access_token, user_data):
         else:
             return None
     else:
+        user.info['facebook_token'] = facebook_token
+        user_repo.save(user)
         return user
 
 

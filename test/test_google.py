@@ -23,32 +23,39 @@ from factories import UserFactory
 
 class TestGoogle(Test):
 
-    def test_manage_user(self):
-        """Test GOOGLE manage_user works."""
-        # First with a new user
-        user_data = dict(id='1', name='google',
-                         email='g@g.com')
+    def test_manage_user_new_user(self):
+        """Test GOOGLE manage_user with a new user"""
+        user_data = dict(id='1', name='google', email='g@g.com')
         token = 't'
         user = manage_user(token, user_data)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
         assert user.google_user_id == user_data['id'], user
+        assert user.info['google_token'] == dict(oauth_token=token), user
 
-        # Second with the same user
-        user = manage_user(token, user_data)
+    def test_manage_user_twitter_registered_user(self):
+        """Test GOOGLE manage_user with an existing user registered with Google"""
+        user_data = dict(id='1', name='google', email='g@g.com')
+        token = 't'
+        manage_user(token, user_data)
+        new_token = "new_t"
+        user = manage_user(new_token, user_data)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
         assert user.google_user_id == user_data['id'], user
+        assert user.info['google_token'] == dict(oauth_token=new_token), user
 
-        # Finally with a user that already is in the system
-        user_data = dict(id='10', name=self.name,
-                         email=self.email_addr)
+    def test_manage_user_with_existing_non_twitter_account_user(self):
+        """Test GOOGLE manage_user user with a username that already exists
+        and registered without Google"""
+        user_data = dict(id='10', name=self.name, email=self.email_addr)
         token = 'tA'
         user = manage_user(token, user_data)
         err_msg = "User should be the same"
         assert user.google_user_id == '10', err_msg
+        assert user.info['google_token'] == dict(oauth_token=token), user
 
     @patch('pybossa.view.google.newsletter', autospec=True)
     def test_manage_user_with_newsletter(self, newsletter):
