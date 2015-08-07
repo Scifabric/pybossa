@@ -54,7 +54,6 @@ class Project(db.Model, DomainObject):
     webhook = Column(Text)
     #: If the project allows anonymous contributions
     allow_anonymous_contributors = Column(Boolean, default=True)
-    long_tasks = Column(Integer, default=0)
     #: If the project is hidden
     hidden = Column(Integer, default=0)
     # If the project is featured
@@ -63,10 +62,6 @@ class Project(db.Model, DomainObject):
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    time_estimate = Column(Integer, default=0)
-    time_limit = Column(Integer, default=0)
-    calibration_frac = Column(Float, default=0)
-    bolt_course_id = Column(Integer, default=0)
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
