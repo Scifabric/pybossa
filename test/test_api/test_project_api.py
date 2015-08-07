@@ -54,28 +54,28 @@ class TestProjectAPI(TestAPI):
         assert err['action'] == 'GET', err
 
 
-    def test_hidden_project(self):
-        """ Test API hidden project works. """
-        ProjectFactory.create(hidden=1)
-        res = self.app.get('/api/project')
-        data = json.loads(res.data)
+    # def test_hidden_project(self):
+    #     """ Test API hidden project works. """
+    #     ProjectFactory.create(hidden=1)
+    #     res = self.app.get('/api/project')
+    #     data = json.loads(res.data)
 
-        err_msg = "There should be zero projects listed."
-        assert len(data) == 0, err_msg
-        err_msg = "It should return 200 with an empty object"
-        assert res.status_code == 200, err_msg
+    #     err_msg = "There should be zero projects listed."
+    #     assert len(data) == 0, err_msg
+    #     err_msg = "It should return 200 with an empty object"
+    #     assert res.status_code == 200, err_msg
 
-        # Now we add a second project that it is not hidden
-        ProjectFactory.create(info={'hello': 'world'})
-        res = self.app.get('/api/project')
-        data = json.loads(res.data)
+    #     # Now we add a second project that it is not hidden
+    #     ProjectFactory.create(info={'hello': 'world'})
+    #     res = self.app.get('/api/project')
+    #     data = json.loads(res.data)
 
-        err_msg = "There should be only one project listed."
-        assert len(data) == 1, err_msg
-        err_msg = "It should return 200 with one project"
-        assert res.status_code == 200, err_msg
-        project = data[0]
-        assert project['info']['hello'] == 'world', err_msg
+    #     err_msg = "There should be only one project listed."
+    #     assert len(data) == 1, err_msg
+    #     err_msg = "It should return 200 with one project"
+    #     assert res.status_code == 200, err_msg
+    #     project = data[0]
+    #     assert project['info']['hello'] == 'world', err_msg
 
 
     @with_context

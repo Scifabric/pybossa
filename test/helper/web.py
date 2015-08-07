@@ -179,41 +179,23 @@ class Helper(Test):
                            new_category_id="1",
                            new_long_description="Long desc",
                            new_sched="random",
-                           new_hidden=False,
                            new_webhook='http://server.com',
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
-            if new_hidden:
-                return self.app.post("/project/%s/update" % short_name,
-                                     data={
-                                         'id': id,
-                                         'name': new_name,
-                                         'short_name': new_short_name,
-                                         'description': new_description,
-                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                         'category_id': new_category_id,
-                                         'long_description': new_long_description,
-                                         'sched': new_sched,
-                                         'hidden': new_hidden,
-                                         'webhook': new_webhook,
-                                         'password': new_password,
-                                         'btn': 'Save'},
-                                     follow_redirects=True)
-            else:
-                return self.app.post("/project/%s/update" % short_name,
-                                     data={'id': id, 'name': new_name,
-                                           'short_name': new_short_name,
-                                           'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                           'category_id': new_category_id,
-                                           'long_description': new_long_description,
-                                           'sched': new_sched,
-                                           'description': new_description,
-                                           'password': new_password,
-                                           'webhook': new_webhook,
-                                           'btn': 'Save'
-                                           },
-                                     follow_redirects=True)
+            return self.app.post("/project/%s/update" % short_name,
+                                 data={'id': id, 'name': new_name,
+                                       'short_name': new_short_name,
+                                       'allow_anonymous_contributors': new_allow_anonymous_contributors,
+                                       'category_id': new_category_id,
+                                       'long_description': new_long_description,
+                                       'sched': new_sched,
+                                       'description': new_description,
+                                       'password': new_password,
+                                       'webhook': new_webhook,
+                                       'btn': 'Save'
+                                       },
+                                 follow_redirects=True)
         else:
             return self.app.get("/project/%s/update" % short_name,
                                 follow_redirects=True)

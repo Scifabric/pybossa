@@ -201,7 +201,6 @@ class Test(object):
                     name=self.project_name,
                     short_name=self.project_short_name,
                     description=u'description',
-                    hidden=0,
                     category_id=category.id,
                     info=info
                 )
@@ -366,7 +365,6 @@ class Fixtures:
                 name=cls.project_name,
                 short_name=cls.project_short_name,
                 description=u'description',
-                hidden=0,
                 category_id=category.id,
                 info=info
             )

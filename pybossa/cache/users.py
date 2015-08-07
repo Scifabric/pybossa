@@ -198,7 +198,7 @@ def published_projects(user_id):
                project.info
                FROM project, task
                WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=0 AND (project.info->>'task_presenter') IS NOT NULL
+               (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id, project.name, project.short_name,
                project.description;
                ''')
@@ -252,37 +252,6 @@ def draft_projects(user_id):
 def draft_projects_cached(user_id):
     """Return draft projects (cached version)."""
     return draft_projects(user_id)
-
-
-def hidden_projects(user_id):
-    """Return hidden projects for user_id."""
-    sql = text('''
-               SELECT project.id, project.name, project.short_name, project.description,
-               project.owner_id,
-               project.info
-               FROM project, task
-               WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               project.hidden=1 AND (project.info->>'task_presenter') IS NOT NULL
-               GROUP BY project.id, project.name, project.short_name,
-               project.description;''')
-    projects_published = []
-    results = session.execute(sql, dict(user_id=user_id))
-    for row in results:
-        project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       owner_id=row.owner_id,
-                       description=row.description,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=row.info)
-        projects_published.append(project)
-    return projects_published
-
-
-@memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def hidden_projects_cached(user_id):
-    """Return hidden projects (cached version)."""
-    return hidden_projects(user_id)
 
 
 @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),

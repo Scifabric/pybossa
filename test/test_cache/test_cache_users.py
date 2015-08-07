@@ -142,14 +142,12 @@ class TestUsersCache(Test):
 
 
     def test_published_projects_only_returns_published(self):
-        """Test CACHE USERS published_projects does not return hidden, draft
+        """Test CACHE USERS published_projects does not return draft
         or another user's projects"""
         user = UserFactory.create()
         another_user_published_project = ProjectFactory.create()
         TaskFactory.create(project=another_user_published_project)
         draft_project = ProjectFactory.create(info={})
-        hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(project=hidden_project)
 
         projects_published = cached_users.published_projects(user.id)
 
@@ -206,11 +204,11 @@ class TestUsersCache(Test):
         assert len(draft_projects) == 0, draft_projects
 
 
-    def test_draft_projects_hidden(self):
+    def test_draft_projects(self):
         """Test CACHE USERS draft_projects returns a project that belongs to the
-        user and is a draft, even it's marked as hidden"""
+        user and is a draft"""
         user = UserFactory.create()
-        hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
+        draft_project = ProjectFactory.create(owner=user, info={})
 
         draft_projects = cached_users.draft_projects(user.id)
 
@@ -229,57 +227,6 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in draft_project[0].keys(), field
-
-
-    def test_hidden_projects_no_projects(self):
-        """Test CACHE USERS hidden_projects returns empty list if the user has
-        not created any hidden project"""
-        user = UserFactory.create()
-
-        hidden_projects = cached_users.hidden_projects(user.id)
-
-        assert hidden_projects == [], hidden_projects
-
-
-    def test_hidden_projects_returns_hidden(self):
-        """Test CACHE USERS hidden_projects returns a list with the user projects that
-        are no drafts but are hidden"""
-        user = UserFactory.create()
-        hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(project=hidden_project)
-
-        hidden_projects = cached_users.hidden_projects(user.id)
-
-        assert len(hidden_projects) == 1, hidden_projects
-        assert hidden_projects[0]['short_name'] == hidden_project.short_name, hidden_projects
-
-
-    def test_hidden_projects_only_returns_hidden(self):
-        """Test CACHE USERS hidden_projects does not return draft (even hidden)
-        or another user's hidden projects"""
-        user = UserFactory.create()
-        another_user_hidden_project = ProjectFactory.create(hidden=1)
-        TaskFactory.create(project=another_user_hidden_project)
-        hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
-
-        hidden_projects = cached_users.hidden_projects(user.id)
-
-        assert len(hidden_projects) == 0, hidden_projects
-
-
-    def test_hidden_projects_returns_fields(self):
-        """Test CACHE USERS hidden_projects returns the info of the projects with
-        the required fields"""
-        user = UserFactory.create()
-        hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(project=hidden_project)
-        fields = ('id', 'name', 'short_name', 'owner_id', 'description',
-                 'overall_progress', 'n_tasks', 'n_volunteers', 'info')
-
-        hidden_projects = cached_users.hidden_projects(user.id)
-
-        for field in fields:
-            assert field in hidden_projects[0].keys(), field
 
 
     def test_get_leaderboard_no_users_returns_empty_list(self):

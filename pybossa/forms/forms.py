@@ -65,7 +65,6 @@ class ProjectUpdateForm(ProjectForm):
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    hidden = BooleanField(lazy_gettext('Hide?'))
     password = TextField(lazy_gettext('Password (leave blank for no password)'))
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])

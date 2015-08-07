@@ -360,8 +360,6 @@ def update(short_name):
      n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
 
     def handle_valid_form(form):
-        hidden = int(form.hidden.data)
-
         (project, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = project_by_shortname(short_name)
 
@@ -374,7 +372,6 @@ def update(short_name):
             new_project.short_name = form.short_name.data
             new_project.description = form.description.data
             new_project.long_description = form.long_description.data
-            new_project.hidden = int(form.hidden.data)
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id

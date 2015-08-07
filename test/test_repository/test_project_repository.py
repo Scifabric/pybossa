@@ -129,12 +129,12 @@ class TestProjectRepositoryForProjects(Test):
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
-        ProjectFactory.create_batch(2, allow_anonymous_contributors=False, hidden=0)
-        project = ProjectFactory.create(allow_anonymous_contributors=False, hidden=1)
+        ProjectFactory.create_batch(2, allow_anonymous_contributors=False, featured=False)
+        project = ProjectFactory.create(allow_anonymous_contributors=False, featured=True)
 
         retrieved_projects = self.project_repo.filter_by(
                                             allow_anonymous_contributors=False,
-                                            hidden=1)
+                                            featured=True)
 
         assert len(retrieved_projects) == 1, retrieved_projects
         assert project in retrieved_projects, retrieved_projects

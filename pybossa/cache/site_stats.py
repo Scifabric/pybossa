@@ -85,7 +85,6 @@ def get_top5_projects_24_hours():
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                COUNT(task_run.project_id) AS n_answers FROM project, task_run
                WHERE project.id=task_run.project_id
-               AND project.hidden=0
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY project.id

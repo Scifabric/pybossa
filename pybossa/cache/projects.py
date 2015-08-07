@@ -40,7 +40,7 @@ def get_top(n=4):
     sql = text('''SELECT project.id, project.name, project.short_name, project.description,
                project.info,
                COUNT(project_id) AS total FROM task_run, project
-               WHERE project_id IS NOT NULL AND project.id=project_id AND project.hidden=0
+               WHERE project_id IS NOT NULL AND project.id=project_id
                GROUP BY project.id ORDER BY total DESC LIMIT :limit;''')
     results = session.execute(sql, dict(limit=n))
     top_projects = []
@@ -206,7 +206,7 @@ def get_all_featured(category=None):
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                project.created, project.updated, project.description,
                "user".fullname AS owner FROM project, "user"
-               WHERE project.featured=true AND project.hidden=0
+               WHERE project.featured=true
                AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
@@ -239,7 +239,7 @@ def n_published():
     sql = text('''
                WITH published_projects as
                (SELECT project.id FROM project, task WHERE
-               project.id=task.project_id AND project.hidden=0 AND
+               project.id=task.project_id AND
                (project.info->>'task_presenter') IS NOT NULL
                GROUP BY project.id)
                SELECT COUNT(id) FROM published_projects;
@@ -259,8 +259,7 @@ def _n_draft():
     sql = text('''SELECT COUNT(project.id) FROM project
                LEFT JOIN task on project.id=task.project_id
                WHERE task.project_id IS NULL
-               AND (project.info->>'task_presenter') IS NULL
-               AND project.hidden=0;''')
+               AND (project.info->>'task_presenter') IS NULL;''')
 
     results = session.execute(sql)
     for row in results:
@@ -276,7 +275,6 @@ def get_all_draft(category=None):
                FROM "user", project LEFT JOIN task ON project.id=task.project_id
                WHERE task.project_id IS NULL
                AND (project.info->>'task_presenter') IS NULL
-               AND project.hidden=0
                AND project.owner_id="user".id;''')
 
     results = session.execute(sql)
@@ -315,7 +313,6 @@ def n_count(category):
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
-               AND project.hidden=0
                AND (project.info->>'task_presenter') IS NOT NULL
                AND task.project_id=project.id
                GROUP BY project.id)
@@ -340,7 +337,6 @@ def get_all(category):
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
-               AND project.hidden=0
                AND "user".id=project.owner_id
                AND (project.info->>'task_presenter') IS NOT NULL
                AND task.project_id=project.id

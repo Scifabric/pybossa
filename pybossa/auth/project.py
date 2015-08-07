@@ -27,10 +27,6 @@ class ProjectAuth(object):
         return user.is_authenticated()
 
     def _read(self, user, project=None):
-        if project is None:
-            return True
-        if project.hidden:
-            return self._only_admin_or_owner(user, project)
         return True
 
     def _update(self, user, project):

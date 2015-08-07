@@ -33,8 +33,8 @@ class TestProjectsCache(Test):
         return project
 
     def create_project_with_contributors(self, anonymous, registered,
-                                     two_tasks=False, name='my_app', hidden=0):
-        project = ProjectFactory.create(name=name, hidden=hidden)
+                                     two_tasks=False, name='my_app'):
+        project = ProjectFactory.create(name=name)
         task = TaskFactory(project=project)
         if two_tasks:
             task2 = TaskFactory(project=project)
@@ -73,14 +73,14 @@ class TestProjectsCache(Test):
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_not_returns_hidden_projects(self):
-        """Test CACHE PROJECTS get_featured does not return hidden projects"""
+    # def test_get_featured_not_returns_hidden_projects(self):
+    #     """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
-        featured_project = ProjectFactory.create(hidden=1, featured=True)
+    #     featured_project = ProjectFactory.create(hidden=1, featured=True)
 
-        featured = cached_projects.get_featured()
+    #     featured = cached_projects.get_featured()
 
-        assert len(featured) is 0, featured
+    #     assert len(featured) is 0, featured
 
 
     def test_get_featured_returns_required_fields(self):
@@ -121,14 +121,14 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
-    def test_get_not_returns_hidden_projects(self):
-        """Test CACHE PROJECTS get does not return hidden projects"""
+    # def test_get_not_returns_hidden_projects(self):
+    #     """Test CACHE PROJECTS get does not return hidden projects"""
 
-        project = self.create_project_with_contributors(1, 0, hidden=1)
+    #     project = self.create_project_with_contributors(1, 0, hidden=1)
 
-        projects = cached_projects.get(project.category.short_name)
+    #     projects = cached_projects.get(project.category.short_name)
 
-        assert len(projects) is 0, projects
+    #     assert len(projects) is 0, projects
 
 
     def test_get_not_returns_draft_projects(self):
@@ -170,14 +170,14 @@ class TestProjectsCache(Test):
         assert len(drafts) is 1, drafts
 
 
-    def test_get_draft_not_returns_hidden_projects(self):
-        """Test CACHE PROJECTS get_draft does not return hidden projects"""
+    # def test_get_draft_not_returns_hidden_projects(self):
+    #     """Test CACHE PROJECTS get_draft does not return hidden projects"""
 
-        ProjectFactory.create(info={}, hidden=1)
+    #     ProjectFactory.create(info={}, hidden=1)
 
-        drafts = cached_projects.get_draft()
+    #     drafts = cached_projects.get_draft()
 
-        assert len(drafts) is 0, drafts
+    #     assert len(drafts) is 0, drafts
 
 
     def test_get_draft_not_returns_published_projects(self):
@@ -251,19 +251,19 @@ class TestProjectsCache(Test):
         assert len(top_projects) is 4, len(top_projects)
 
 
-    def test_get_top_doesnt_return_hidden_projects(self):
-        """Test CACHE PROJECTS get_top does not return projects that are hidden"""
+    # def test_get_top_doesnt_return_hidden_projects(self):
+    #     """Test CACHE PROJECTS get_top does not return projects that are hidden"""
 
-        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
-        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
-        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-        hidden_project = self.create_project_with_contributors(11, 0, name='hidden', hidden=1)
+    #     ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
+    #     ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+    #     ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+    #     hidden_project = self.create_project_with_contributors(11, 0, name='hidden', hidden=1)
 
-        top_projects = cached_projects.get_top()
+    #     top_projects = cached_projects.get_top()
 
-        assert len(top_projects) is 3, len(top_projects)
-        for project in top_projects:
-            assert project['name'] != 'hidden', project['name']
+    #     assert len(top_projects) is 3, len(top_projects)
+    #     for project in top_projects:
+    #         assert project['name'] != 'hidden', project['name']
 
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
@@ -587,11 +587,9 @@ class TestProjectsCache(Test):
         assert activity == last_task_run.finish_time, last_task_run
 
 
-    def test_n_published_counts_projects_with_presenter_tasks_and_not_hidden(self):
+    def test_n_published_counts_projects_with_presenter_and_tasks(self):
         published_project = ProjectFactory.create()
         TaskFactory.create(project=published_project)
-        hidden_project = ProjectFactory.create(hidden=1)
-        TaskFactory.create(project=hidden_project)
         project_without_tasks = ProjectFactory.create()
         project_without_presenter = ProjectFactory.create(info={})
         TaskFactory.create(project=project_without_presenter)

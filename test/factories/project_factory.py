@@ -35,8 +35,6 @@ class ProjectFactory(BaseFactory):
     short_name = factory.Sequence(lambda n: u'✓project%d' % n)
     description = u'Project description utf8=✓'
     allow_anonymous_contributors = True
-    long_tasks = 0
-    hidden = 0
     featured = False
     webhook = None
     owner = factory.SubFactory('factories.UserFactory')
