@@ -36,7 +36,7 @@ class ProjectFactory(BaseFactory):
     description = u'Project description utf8=✓'
     allow_anonymous_contributors = True
     featured = False
-    published = False
+    published = True
     webhook = None
     owner = factory.SubFactory('factories.UserFactory')
     owner_id = factory.LazyAttribute(lambda project: project.owner.id)
