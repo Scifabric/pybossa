@@ -2,11 +2,6 @@
 # vi: set ft=ruby :
 
 # PyBossas Vagrantfile
-# This Vagrantfile requires an additional plugin to work for running Ansible inside the VM.
-# Execute on your host once:
-#
-# vagrant plugin install vagrant-ansible-local
-#
 
 VAGRANTFILE_API_VERSION = "2"
 
@@ -19,15 +14,11 @@ if ! which ansible >/dev/null; then
 fi
 SCRIPT
 
-# Check if vagrant-ansible-local plugin is installed
-if !Vagrant.has_plugin?('vagrant-ansible-local')
-    puts "The vagrant-ansible-local plugin is missing!"
-    puts "Install the plugin with this command and rerun Vagrant:"
-    puts
-    puts "    vagrant plugin install vagrant-ansible-local"
-    puts
-    exit 1
-end
+$ansible_local_provisioning_script = <<SCRIPT
+export DEBIAN_FRONTEND=noninteractive
+export PYTHONUNBUFFERED=1
+ansible-playbook /vagrant/provisioning/playbook.yml --inventory=/vagrant/provisioning/ansible_hosts --connection=local
+SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "trusty32"
@@ -37,11 +28,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
   # be sure that there  is Ansible for local provisioning
   config.vm.provision "shell", inline: $ansible_install_script
-  # do the final Ansible *local* provisioning
-  config.vm.provision "ansibleLocal" do |ansible|
-    ansible.guest_folder = "/vagrant-ansible"
-    ansible.raw_arguments = "--inventory=/vagrant-ansible/ansible_hosts"
-    ansible.limit = "all"
-    ansible.playbook = "provisioning/playbook.yml"
-  end
+  # do the final Ansible local provisioning
+  config.vm.provision "shell", inline: $ansible_local_provisioning_script
 end
