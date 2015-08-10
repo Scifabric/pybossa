@@ -1,13 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# PyBossas Vagrantfile
+# PyBossa Vagrantfile
 
 VAGRANTFILE_API_VERSION = "2"
 
 # Ansible install script for Ubuntu
 $ansible_install_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
+echo Check if Ansible existing...
 if ! which ansible >/dev/null; then
   echo update package index files...
   apt-get update -qq
