@@ -17,7 +17,7 @@ SCRIPT
 $ansible_local_provisioning_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 export PYTHONUNBUFFERED=1
-ansible-playbook /vagrant/provisioning/playbook.yml --inventory=/vagrant/provisioning/ansible_hosts --connection=local
+ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
