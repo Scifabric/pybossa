@@ -163,12 +163,12 @@ def rank_and_score(user_id):
 def projects_contributed(user_id):
     """Return projects that user_id has contributed to."""
     sql = text('''
-               WITH apps_contributed as
+               WITH projects_contributed as
                     (SELECT DISTINCT(project_id) FROM task_run
                      WHERE user_id=:user_id)
                SELECT project.id, project.name, project.short_name, project.owner_id,
-               project.description, project.info FROM project, apps_contributed
-               WHERE project.id=apps_contributed.project_id ORDER BY project.name DESC;
+               project.description, project.info FROM project, projects_contributed
+               WHERE project.id=projects_contributed.project_id ORDER BY project.name DESC;
                ''')
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
@@ -196,11 +196,9 @@ def published_projects(user_id):
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
                project.info
-               FROM project, task
-               WHERE project.id=task.project_id AND project.owner_id=:user_id AND
-               (project.info->>'task_presenter') IS NOT NULL
-               GROUP BY project.id, project.name, project.short_name,
-               project.description;
+               FROM project
+               WHERE project.published=true
+               AND project.owner_id=:user_id;
                ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
@@ -226,13 +224,11 @@ def draft_projects(user_id):
     """Return draft projects for user_id."""
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
-               owner_id,
+               project.owner_id,
                project.info
                FROM project
                WHERE project.owner_id=:user_id
-               AND (project.info->>'task_presenter') IS NULL
-               GROUP BY project.id, project.name, project.short_name,
-               project.description;
+               AND project.published=false;
                ''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))

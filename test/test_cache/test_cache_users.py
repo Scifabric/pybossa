@@ -132,8 +132,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_projects returns a list with the projects that
         are published by the user"""
         user = UserFactory.create()
-        published_project = ProjectFactory.create(owner=user)
-        TaskFactory.create(project=published_project)
+        published_project = ProjectFactory.create(owner=user, published=True)
 
         projects_published = cached_users.published_projects(user.id)
 
@@ -145,9 +144,8 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_projects does not return draft
         or another user's projects"""
         user = UserFactory.create()
-        another_user_published_project = ProjectFactory.create()
-        TaskFactory.create(project=another_user_published_project)
-        draft_project = ProjectFactory.create(info={})
+        another_user_published_project = ProjectFactory.create(published=True)
+        draft_project = ProjectFactory.create(owner=user, published=False)
 
         projects_published = cached_users.published_projects(user.id)
 
@@ -158,8 +156,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_projects returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        published_project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=published_project)
+        published_project = ProjectFactory.create(owner=user, published=True)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
@@ -173,7 +170,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS draft_projects returns an empty list if the user has no
         draft projects"""
         user = UserFactory.create()
-        published_project = ProjectFactory.create(owner=user)
+        published_project = ProjectFactory.create(owner=user, published=True)
 
         draft_projects = cached_users.draft_projects(user.id)
 
@@ -183,7 +180,7 @@ class TestUsersCache(Test):
     def test_draft_projects_return_drafts(self):
         """Test CACHE USERS draft_projects returns draft belonging to the user"""
         user = UserFactory.create()
-        draft_project = ProjectFactory.create(owner=user, info={})
+        draft_project = ProjectFactory.create(owner=user, published=False)
 
         draft_projects = cached_users.draft_projects(user.id)
 
@@ -192,34 +189,22 @@ class TestUsersCache(Test):
 
 
     def test_draft_projects_only_returns_drafts(self):
-        """Test CACHE USERS draft_projects does not return any projects that are not draft
-        (published) or drafts that belong to another user"""
+        """Test CACHE USERS draft_projects does not return any pubished projects
+        or drafts that belong to another user"""
         user = UserFactory.create()
-        published_project = ProjectFactory.create(owner=user)
-        TaskFactory.create(project=published_project)
-        other_users_draft_project = ProjectFactory.create(info={})
+        published_project = ProjectFactory.create(owner=user, published=True)
+        other_users_draft_project = ProjectFactory.create(published=False)
 
         draft_projects = cached_users.draft_projects(user.id)
 
         assert len(draft_projects) == 0, draft_projects
 
 
-    def test_draft_projects(self):
-        """Test CACHE USERS draft_projects returns a project that belongs to the
-        user and is a draft"""
-        user = UserFactory.create()
-        draft_project = ProjectFactory.create(owner=user, info={})
-
-        draft_projects = cached_users.draft_projects(user.id)
-
-        assert len(draft_projects) == 1, draft_projects
-
-
     def test_draft_projects_returns_fields(self):
         """Test CACHE USERS draft_projects returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        draft_project = ProjectFactory.create(owner=user, info={})
+        draft_project = ProjectFactory.create(owner=user, published=False)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
