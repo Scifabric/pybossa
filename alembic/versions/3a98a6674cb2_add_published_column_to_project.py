@@ -23,7 +23,8 @@ def upgrade():
                WHERE project.id IN
                (SELECT project.id FROM project, task WHERE
                project.id=task.project_id AND
-               (project.info->>'task_presenter') IS NOT NULL
+               (project.info->>'task_presenter') IS NOT NULL AND
+               (project.info->>'task_presenter')!=''
                GROUP BY project.id);"""
     op.execute(query)
 
