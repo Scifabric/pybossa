@@ -9,8 +9,8 @@ VAGRANTFILE_API_VERSION = "2"
 $ansible_install_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 if ! which ansible >/dev/null; then
-  apt-get update -y
-  apt-get install -y ansible
+  apt-get update -qq
+  apt-get install -qq ansible
 fi
 SCRIPT
 
