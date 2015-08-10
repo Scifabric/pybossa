@@ -78,7 +78,6 @@ def browse_tasks(project_id):
 def _pct_status(n_task_runs, n_answers):
     """Return percentage status."""
     if n_answers != 0 and n_answers is not None:
-        # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
             return float(1)
         else:
@@ -236,14 +235,7 @@ def get_featured(category=None, page=1, per_page=5):
        timeout=timeouts.get('STATS_APP_TIMEOUT'))
 def n_published():
     """Return number of published projects."""
-    sql = text('''
-               WITH published_projects as
-               (SELECT project.id FROM project, task WHERE
-               project.id=task.project_id AND
-               (project.info->>'task_presenter') IS NOT NULL
-               GROUP BY project.id)
-               SELECT COUNT(id) FROM published_projects;
-               ''')
+    sql = text('''SELECT COUNT(id) FROM project WHERE published=true;''')
 
     results = session.execute(sql)
     for row in results:
@@ -256,10 +248,7 @@ def n_published():
        key_prefix="number_draft_projects")
 def _n_draft():
     """Return number of draft projects."""
-    sql = text('''SELECT COUNT(project.id) FROM project
-               LEFT JOIN task on project.id=task.project_id
-               WHERE task.project_id IS NULL
-               AND (project.info->>'task_presenter') IS NULL;''')
+    sql = text('''SELECT COUNT(id) FROM project WHERE published=false;''')
 
     results = session.execute(sql)
     for row in results:
@@ -272,10 +261,9 @@ def get_all_draft(category=None):
     """Return list of all draft projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.created,
                project.description, project.info, project.updated, "user".fullname as owner
-               FROM "user", project LEFT JOIN task ON project.id=task.project_id
-               WHERE task.project_id IS NULL
-               AND (project.info->>'task_presenter') IS NULL
-               AND project.owner_id="user".id;''')
+               FROM "user", project
+               WHERE project.owner_id="user".id
+               AND project.published=false;''')
 
     results = session.execute(sql)
     projects = []
@@ -309,12 +297,11 @@ def n_count(category):
         return _n_draft()
     sql = text('''
                WITH uniq AS (
-               SELECT COUNT(project.id) FROM task, project
+               SELECT COUNT(project.id) FROM project
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
-               AND (project.info->>'task_presenter') IS NOT NULL
-               AND task.project_id=project.id
+               AND project.published=true
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
                ''')
@@ -328,18 +315,17 @@ def n_count(category):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_all(category):
-    """Return a list of projects with at least one task and a task_presenter.
+    """Return a list of published projects for a given category.
     """
     sql = text('''SELECT project.id, project.name, project.short_name,
                project.description, project.info, project.created, project.updated,
                project.category_id, project.featured, "user".fullname AS owner
-               FROM "user", task, project
+               FROM "user", project
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
                AND "user".id=project.owner_id
-               AND (project.info->>'task_presenter') IS NOT NULL
-               AND task.project_id=project.id
+               AND project.published=true
                GROUP BY project.id, "user".id ORDER BY project.name;''')
 
     results = session.execute(sql, dict(category=category))
@@ -363,8 +349,7 @@ def get_all(category):
 
 
 def get(category, page=1, per_page=5):
-    """Return a list of projects with at least one task and a task_presenter.
-    It also returns  a pagination for a given category.
+    """Return a list of published projects with a pagination for a given category.
     """
     offset = (page - 1) * per_page
     return get_all(category)[offset:offset+per_page]

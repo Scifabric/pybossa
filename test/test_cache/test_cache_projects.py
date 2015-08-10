@@ -99,11 +99,11 @@ class TestProjectsCache(Test):
             assert featured.has_key(field), "%s not in project info" % field
 
 
-    def test_get_category(self):
-        """Test CACHE PROJECTS get returns projects from given category"""
+    def test_get_category_only_return_published(self):
+        """Test CACHE PROJECTS get returns only published projects"""
 
-        project = self.create_project_with_tasks(1, 0)
-
+        project = ProjectFactory.create(published=True)
+        ProjectFactory.create(category=project.category, published=False)
         projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 1, projects
@@ -112,9 +112,8 @@ class TestProjectsCache(Test):
     def test_get_only_returns_category_projects(self):
         """Test CACHE PROJECTS get returns only projects from required category"""
 
-        project = self.create_project_with_tasks(1, 0)
-        #create a non published project too
-        ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
+        ProjectFactory.create(published=True)
 
         projects = cached_projects.get(project.category.short_name)
 
@@ -131,18 +130,6 @@ class TestProjectsCache(Test):
     #     assert len(projects) is 0, projects
 
 
-    def test_get_not_returns_draft_projects(self):
-        """Test CACHE PROJECTS get does not return draft (non-published) projects"""
-
-        project = self.create_project_with_contributors(1, 0)
-        # Create a project wothout presenter
-        ProjectFactory.create(info={}, category=project.category)
-
-        projects = cached_projects.get(project.category.short_name)
-
-        assert len(projects) is 1, projects
-
-
     def test_get_returns_required_fields(self):
         """Test CACHE PROJECTS get returns the required info
         about each project"""
@@ -151,23 +138,12 @@ class TestProjectsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                   'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
 
-        project = self.create_project_with_tasks(1, 0)
+        project = ProjectFactory.create(published=True)
 
         retrieved_project = cached_projects.get(project.category.short_name)[0]
 
         for field in fields:
             assert retrieved_project.has_key(field), "%s not in project info" % field
-
-
-    def test_get_draft(self):
-        """Test CACHE PROJECTS get_draft returns draft_projects"""
-        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
-
-        ProjectFactory.create(info={})
-
-        drafts = cached_projects.get_draft()
-
-        assert len(drafts) is 1, drafts
 
 
     # def test_get_draft_not_returns_hidden_projects(self):
@@ -181,11 +157,9 @@ class TestProjectsCache(Test):
 
 
     def test_get_draft_not_returns_published_projects(self):
-        """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
+        """Test CACHE PROJECTS get_draft does not return published projects"""
 
-        project_no_presenter = ProjectFactory.create(info={})
-        TaskFactory.create(project=project_no_presenter)
-        project_no_task = ProjectFactory.create()
+        published = ProjectFactory.create(published=True)
 
         drafts = cached_projects.get_draft()
 
@@ -370,10 +344,7 @@ class TestProjectsCache(Test):
 
     def test_n_draft_no_drafts(self):
         """Test CACHE PROJECTS _n_draft returns 0 if there are no draft projects"""
-        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
-
-        project = ProjectFactory.create(info={})
-        TaskFactory.create_batch(2, project=project)
+        project = ProjectFactory.create(published=True)
 
         number_of_drafts = cached_projects._n_draft()
 
@@ -382,9 +353,7 @@ class TestProjectsCache(Test):
 
     def test_n_draft_with_drafts(self):
         """Test CACHE PROJECTS _n_draft returns 2 if there are 2 draft projects"""
-        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
-
-        ProjectFactory.create_batch(2, info={})
+        ProjectFactory.create_batch(2, published=False)
 
         number_of_drafts = cached_projects._n_draft()
 
@@ -504,9 +473,9 @@ class TestProjectsCache(Test):
     def test_n_count_with_published_projects(self):
         """Test CACHE PROJECTS n_count returns the number of published projects
         of a given category"""
-        project = self.create_project_with_tasks(1, 0)
-        #create a non published project too
-        ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
+        ProjectFactory.create(published=True)
+        ProjectFactory.create(category=project.category, published=False)
 
         n_projects = cached_projects.n_count(project.category.short_name)
 
@@ -587,13 +556,10 @@ class TestProjectsCache(Test):
         assert activity == last_task_run.finish_time, last_task_run
 
 
-    def test_n_published_counts_projects_with_presenter_and_tasks(self):
-        published_project = ProjectFactory.create()
-        TaskFactory.create(project=published_project)
-        project_without_tasks = ProjectFactory.create()
-        project_without_presenter = ProjectFactory.create(info={})
-        TaskFactory.create(project=project_without_presenter)
+    def test_n_published_counts_published_projects(self):
+        published_project = ProjectFactory.create_batch(2, published=True)
+        ProjectFactory.create(published=False)
 
         number_of_published = cached_projects.n_published()
 
-        assert number_of_published == 1, number_of_published
+        assert number_of_published == 2, number_of_published
