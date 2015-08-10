@@ -9,7 +9,9 @@ VAGRANTFILE_API_VERSION = "2"
 $ansible_install_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 if ! which ansible >/dev/null; then
+  echo update package index files...
   apt-get update -qq
+  echo install Ansible...
   apt-get install -qq ansible
 fi
 SCRIPT
@@ -17,6 +19,7 @@ SCRIPT
 $ansible_local_provisioning_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 export PYTHONUNBUFFERED=1
+echo PyBossa provisioning with Ansible...
 ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
 SCRIPT
 
