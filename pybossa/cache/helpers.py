@@ -65,10 +65,11 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     contribute more to it or not.
     """
     project_id = project['id'] if type(project) == dict else project.id
+    published = project['published'] if type(project) == dict else project.published
     states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
     if overall_progress(project_id) >= 100:
         return states[0]
-    if not project['published']:
+    if not published:
         if has_no_presenter(project) or _has_no_tasks(project_id):
             return states[1]
         return states[2]
