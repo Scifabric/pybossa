@@ -90,11 +90,12 @@
 
     # http://stackoverflow.com/a/16783253
     # psql -lqt | cut -d \| -f 1 | grep -w <db_name>
-    - name: check if pybossa DB already existing, ignore errors here...
+    - name: check if pybossa DB already existing
       sudo_user: postgres
       shell: "psql -lqt | cut -d \\| -f 1 | grep -w pybossa"
       register: pybossa_db_exists
-      ignore_errors: True
+      changed_when: False
+      failed_when: not (pybossa_db_exists.rc == 0 or pybossa_db_exists.rc == 1)
 
     - name: create DB user pybossa
       sudo_user: postgres
