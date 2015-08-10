@@ -688,6 +688,9 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         res = self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         msg = "Project: Sample Project"
@@ -1068,6 +1071,7 @@ class TestWeb(web.Helper):
 
         project = db.session.query(Project).first()
         # We use a string here to check that it works too
+        project.published = True
         task = Task(project_id=project.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
@@ -1155,6 +1159,7 @@ class TestWeb(web.Helper):
         self.new_project()
 
         project = db.session.query(Project).first()
+        project.published = True
         task = Task(project_id=project.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
@@ -1224,11 +1229,7 @@ class TestWeb(web.Helper):
         self.new_project()
         self.update_project(new_category_id="1")
         project = db.session.query(Project).first()
-        info = dict(task_presenter="some html")
-        project.info = info
-        db.session.commit()
-        task = Task(project_id=project.id, n_answers = 10)
-        db.session.add(task)
+        project.published = True
         db.session.commit()
         self.signout()
 
@@ -1460,6 +1461,9 @@ class TestWeb(web.Helper):
 
         self.register()
         self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
         self.signout()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)

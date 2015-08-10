@@ -202,6 +202,7 @@ class Test(object):
                     short_name=self.project_short_name,
                     description=u'description',
                     category_id=category.id,
+                    published=True,
                     info=info
                 )
             return project
@@ -366,6 +367,7 @@ class Fixtures:
                 short_name=cls.project_short_name,
                 description=u'description',
                 category_id=category.id,
+                published=True,
                 info=info
             )
         return project

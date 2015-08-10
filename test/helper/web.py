@@ -126,7 +126,7 @@ class Helper(Test):
 
     def delete_task_runs(self, project_id=1):
         """Deletes all TaskRuns for a given project_id"""
-        db.session.query(TaskRun).filter_by(project_id=1).delete()
+        db.session.query(TaskRun).filter_by(project_id=project_id).delete()
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',

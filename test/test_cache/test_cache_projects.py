@@ -134,7 +134,7 @@ class TestProjectsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                   'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
 
-        ProjectFactory.create(info={})
+        ProjectFactory.create(published=False)
 
         draft = cached_projects.get_draft()[0]
 
