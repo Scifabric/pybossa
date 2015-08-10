@@ -81,18 +81,6 @@ class TestSiteStatsCache(Test):
         for i in range(len(top5)):
             assert projects[i].id == top5_ids[i]
 
-    # def test_get_top5_projects_24_hours_does_not_include_hidden_projects(self):
-    #     good_project = ProjectFactory.create()
-    #     best_but_hidden_project = ProjectFactory.create(hidden=1)
-
-    #     TaskRunFactory.create(project=good_project)
-    #     TaskRunFactory.create_batch(2, project=best_but_hidden_project)
-
-    #     top5 = stats.get_top5_projects_24_hours()
-    #     top5_ids = [top['id'] for top in top5]
-
-    #     assert good_project.id in top5_ids
-    #     assert best_but_hidden_project.id not in top5_ids
 
     def test_get_top5_projects_24_hours_considers_last_24_hours_contributions_only(self):
         recently_contributed_project = ProjectFactory.create()
