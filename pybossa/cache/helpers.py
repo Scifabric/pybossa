@@ -65,14 +65,16 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     contribute more to it or not.
     """
     project_id = project['id'] if type(project) == dict else project.id
-    states = ('completed', 'draft', 'can_contribute', 'cannot_contribute')
+    states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
     if overall_progress(project_id) >= 100:
         return states[0]
-    if has_no_presenter(project) or _has_no_tasks(project_id):
-        return states[1]
-    if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
+    if not project['published']:
+        if has_no_presenter(project) or _has_no_tasks(project_id):
+            return states[1]
         return states[2]
-    return states[3]
+    if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
+        return states[3]
+    return states[4]
 
 
 def add_custom_contrib_button_to(project, user_id_or_ip):
