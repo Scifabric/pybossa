@@ -128,7 +128,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_given_blogpost(self):
         """Test anonymous users can read a given blogpost"""
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
         blogpost = BlogpostFactory.create(project=project)
 
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
@@ -138,34 +138,34 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_blogposts_for_given_project(self):
         """Test anonymous users can read blogposts of a given project"""
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_anonymous)
-    # def test_anonymous_user_read_given_blogpost_hidden_project(self):
-    #     """Test anonymous users cannot read a given blogpost of a hidden project"""
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_given_blogpost_draft_project(self):
+        """Test anonymous users cannot read a given blogpost of a draft project"""
 
-    #     project = ProjectFactory.create(hidden=1)
-    #     blogpost = BlogpostFactory.create(project=project)
+        project = ProjectFactory.create(published=False)
+        blogpost = BlogpostFactory.create(project=project)
 
-    #     assert_raises(Unauthorized, ensure_authorized_to, 'read', blogpost)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', blogpost)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_anonymous)
-    # def test_anonymous_user_read_blogposts_for_given_hidden_project(self):
-    #     """Test anonymous users cannot read blogposts of a given project if is hidden"""
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_blogposts_for_given_draft_project(self):
+        """Test anonymous users cannot read blogposts of a given project if is a draft"""
 
-    #     project = ProjectFactory.create(hidden=1)
+        project = ProjectFactory.create(published=False)
 
-    #     assert_raises(Unauthorized, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_given_blogpost(self):
         """Test authenticated user can read a given blogpost if is not the project owner"""
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
         user = UserFactory.create()
         blogpost = BlogpostFactory.create(project=project)
 
@@ -178,36 +178,36 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read blogposts of a given project if
         is not the project owner"""
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(published=True)
         user = UserFactory.create()
 
         assert self.mock_authenticated.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_authenticated)
-    # def test_non_owner_authenticated_user_read_given_blogpost_hidden_project(self):
-    #     """Test authenticated user cannot read a given blogpost of a hidden project
-    #     if is not the project owner"""
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_given_blogpost_draft_project(self):
+        """Test authenticated user cannot read a given blogpost of a draft project
+        if is not the project owner"""
 
-    #     project = ProjectFactory.create(hidden=1)
-    #     user = UserFactory.create()
-    #     blogpost = BlogpostFactory.create(project=project)
+        project = ProjectFactory.create(published=False)
+        user = UserFactory.create()
+        blogpost = BlogpostFactory.create(project=project)
 
-    #     assert self.mock_authenticated.id != project.owner.id
-    #     assert_raises(Forbidden, ensure_authorized_to, 'read', blogpost)
+        assert self.mock_authenticated.id != project.owner.id
+        assert_raises(Forbidden, ensure_authorized_to, 'read', blogpost)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_authenticated)
-    # def test_non_owner_authenticated_user_read_blogposts_for_given_hidden_project(self):
-    #     """Test authenticated user cannot read blogposts of a given project if is
-    #     hidden and is not the project owner"""
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_blogposts_for_given_draft_project(self):
+        """Test authenticated user cannot read blogposts of a given project if is
+        a draft and is not the project owner"""
 
-    #     project = ProjectFactory.create(hidden=1)
-    #     user = UserFactory.create()
+        project = ProjectFactory.create(published=False)
+        user = UserFactory.create()
 
-    #     assert self.mock_authenticated.id != project.owner.id
-    #     assert_raises(Forbidden, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+        assert self.mock_authenticated.id != project.owner.id
+        assert_raises(Forbidden, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -215,7 +215,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read a given blogpost if is the project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = ProjectFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner, published=True)
         blogpost = BlogpostFactory.create(project=project)
 
         assert self.mock_authenticated.id == project.owner.id
@@ -228,58 +228,58 @@ class TestBlogpostAuthorization(Test):
         project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = ProjectFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner, published=True)
 
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_authenticated)
-    # def test_owner_read_given_blogpost_hidden_project(self):
-    #     """Test authenticated user can read a given blogpost of a hidden project if
-    #     is the project owner"""
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_read_given_blogpost_draft_project(self):
+        """Test authenticated user can read a given blogpost of a draft project if
+        is the project owner"""
 
-    #     owner = UserFactory.create_batch(2)[1]
-    #     project = ProjectFactory.create(owner=owner, hidden=1)
-    #     blogpost = BlogpostFactory.create(project=project)
+        owner = UserFactory.create_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
+        blogpost = BlogpostFactory.create(project=project)
 
-    #     assert self.mock_authenticated.id == project.owner.id
-    #     assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
-
-
-    # @patch('pybossa.auth.current_user', new=mock_authenticated)
-    # def test_owner_read_blogposts_for_given_hidden_project(self):
-    #     """Test authenticated user can read blogposts of a given hidden project if
-    #     is the project owner"""
-
-    #     owner = UserFactory.create_batch(2)[1]
-    #     project = ProjectFactory.create(owner=owner, hidden=1)
-
-    #     assert self.mock_authenticated.id == project.owner.id
-    #     assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+        assert self.mock_authenticated.id == project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_admin)
-    # def test_admin_read_given_blogpost_hidden_project(self):
-    #     """Test admin can read a given blogpost of a hidden project"""
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_read_blogposts_for_given_draft_project(self):
+        """Test authenticated user can read blogposts of a given draft project if
+        is the project owner"""
 
-    #     admin = UserFactory.create()
-    #     project = ProjectFactory.create(hidden=1)
-    #     blogpost = BlogpostFactory.create(project=project)
+        owner = UserFactory.create_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
 
-    #     assert self.mock_admin.id != project.owner.id
-    #     assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
+        assert self.mock_authenticated.id == project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
-    # @patch('pybossa.auth.current_user', new=mock_admin)
-    # def test_admin_read_blogposts_for_given_hidden_project(self):
-    #     """Test admin can read blogposts of a given hidden project"""
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_read_given_blogpost_draft_project(self):
+        """Test admin can read a given blogpost of a draft project"""
 
-    #     admin = UserFactory.create()
-    #     project = ProjectFactory.create(hidden=1)
+        admin = UserFactory.create()
+        project = ProjectFactory.create(published=False)
+        blogpost = BlogpostFactory.create(project=project)
 
-    #     assert self.mock_admin.id != project.owner.id
-    #     assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+        assert self.mock_admin.id != project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_read_blogposts_for_given_draft_project(self):
+        """Test admin can read blogposts of a given draft project"""
+
+        admin = UserFactory.create()
+        project = ProjectFactory.create(published=False)
+
+        assert self.mock_admin.id != project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
