@@ -52,16 +52,6 @@ class TestProjectsCache(Test):
         return project
 
 
-    def test_get_featured(self):
-        """Test CACHE PROJECTS get_featured returns featured projects"""
-
-        ProjectFactory.create(featured=True)
-
-        featured = cached_projects.get_featured()
-
-        assert len(featured) is 1, featured
-
-
     def test_get_featured_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured returns only featured projects"""
 
@@ -71,16 +61,6 @@ class TestProjectsCache(Test):
         featured = cached_projects.get_featured()
 
         assert len(featured) is 1, featured
-
-
-    # def test_get_featured_not_returns_hidden_projects(self):
-    #     """Test CACHE PROJECTS get_featured does not return hidden projects"""
-
-    #     featured_project = ProjectFactory.create(hidden=1, featured=True)
-
-    #     featured = cached_projects.get_featured()
-
-    #     assert len(featured) is 0, featured
 
 
     def test_get_featured_returns_required_fields(self):
@@ -120,16 +100,6 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
-    # def test_get_not_returns_hidden_projects(self):
-    #     """Test CACHE PROJECTS get does not return hidden projects"""
-
-    #     project = self.create_project_with_contributors(1, 0, hidden=1)
-
-    #     projects = cached_projects.get(project.category.short_name)
-
-    #     assert len(projects) is 0, projects
-
-
     def test_get_returns_required_fields(self):
         """Test CACHE PROJECTS get returns the required info
         about each project"""
@@ -144,16 +114,6 @@ class TestProjectsCache(Test):
 
         for field in fields:
             assert retrieved_project.has_key(field), "%s not in project info" % field
-
-
-    # def test_get_draft_not_returns_hidden_projects(self):
-    #     """Test CACHE PROJECTS get_draft does not return hidden projects"""
-
-    #     ProjectFactory.create(info={}, hidden=1)
-
-    #     drafts = cached_projects.get_draft()
-
-    #     assert len(drafts) is 0, drafts
 
 
     def test_get_draft_not_returns_published_projects(self):
@@ -224,20 +184,6 @@ class TestProjectsCache(Test):
 
         assert len(top_projects) is 4, len(top_projects)
 
-
-    # def test_get_top_doesnt_return_hidden_projects(self):
-    #     """Test CACHE PROJECTS get_top does not return projects that are hidden"""
-
-    #     ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
-    #     ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
-    #     ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-    #     hidden_project = self.create_project_with_contributors(11, 0, name='hidden', hidden=1)
-
-    #     top_projects = cached_projects.get_top()
-
-    #     assert len(top_projects) is 3, len(top_projects)
-    #     for project in top_projects:
-    #         assert project['name'] != 'hidden', project['name']
 
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
