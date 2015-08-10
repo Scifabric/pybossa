@@ -58,7 +58,6 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_create_blogposts(self):
         """Test anonymous users cannot create any blogposts"""
 
-
         assert_raises(Unauthorized, ensure_authorized_to, 'create', Blogpost)
 
 
