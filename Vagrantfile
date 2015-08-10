@@ -1,44 +1,37 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# PyBossas Vagrantfile
-# This Vagrantfile requires an additional plugin to work for running Ansible inside the VM.
-# Execute on your host once:
-#
-# vagrant plugin install vagrant-ansible-local
-#
+# PyBossa Vagrantfile
 
 VAGRANTFILE_API_VERSION = "2"
 
 # Ansible install script for Ubuntu
 $ansible_install_script = <<SCRIPT
+export DEBIAN_FRONTEND=noninteractive
+echo Check if Ansible existing...
 if ! which ansible >/dev/null; then
-  apt-get update -y
-  apt-get install -y ansible
+  echo update package index files...
+  apt-get update -qq
+  echo install Ansible...
+  apt-get install -qq ansible
 fi
 SCRIPT
 
-# Check if vagrant-ansible-local plugin is installed
-if !Vagrant.has_plugin?('vagrant-ansible-local')
-    puts "The vagrant-ansible-local plugin is missing!"
-    puts "Install the plugin with this command and rerun Vagrant:"
-    puts
-    puts "    vagrant plugin install vagrant-ansible-local"
-    puts
-    exit 1
-end
+$ansible_local_provisioning_script = <<SCRIPT
+export DEBIAN_FRONTEND=noninteractive
+export PYTHONUNBUFFERED=1
+echo PyBossa provisioning with Ansible...
+ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
+SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "trusty32"
   config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box"
   config.vm.network :forwarded_port, host: 5000, guest: 5000
+  # turn off warning message `stdin: is not a tty error`
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
   # be sure that there  is Ansible for local provisioning
   config.vm.provision "shell", inline: $ansible_install_script
-  # do the final Ansible *local* provisioning
-  config.vm.provision "ansibleLocal" do |ansible|
-    ansible.guest_folder = "/vagrant-ansible"
-    ansible.raw_arguments = "--inventory=/vagrant-ansible/ansible_hosts"
-    ansible.limit = "all"
-    ansible.playbook = "provisioning/playbook.yml"
-  end
+  # do the final Ansible local provisioning
+  config.vm.provision "shell", inline: $ansible_local_provisioning_script
 end
