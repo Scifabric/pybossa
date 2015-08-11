@@ -15,15 +15,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-import json
-from default import db, with_context
-from collections import namedtuple
-from factories import ProjectFactory, AuditlogFactory, UserFactory, CategoryFactory
-from helper import web
+from mock import patch
 
+from default import db
+from factories import ProjectFactory, AuditlogFactory, UserFactory
+from helper import web
 from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
-from mock import patch, MagicMock
+from pybossa.view.projects import render_template
 
 project_repo = ProjectRepository(db)
 user_repo = UserRepository(db)
@@ -50,7 +49,7 @@ class TestProjectPublicationView(web.Helper):
         assert call_args[1][0][0] == 'update', call_args[1]
         assert call_args[1][0][1].id == project.id, call_args[1]
 
-    @patch('pybossa.view.projects.render_template')
+    @patch('pybossa.view.projects.render_template', wraps=render_template)
     def test_it_renders_template_when_get(self, fake_render):
         owner = UserFactory.create(email_addr='a@a.com')
         owner.set_password('1234')
@@ -60,7 +59,9 @@ class TestProjectPublicationView(web.Helper):
 
         resp = self.app.get('/project/%s/publish' % project.short_name)
 
-        fake_render.assert_any_call()
+        call_args = fake_render.call_args_list
+        assert call_args[0][0][0] == 'projects/publish.html', call_args[0]
+        assert call_args[0][1]['project'].id == project.id, call_args[0]
 
     def test_it_changes_project_to_published_after_post(self):
         owner = UserFactory.create(email_addr='a@a.com')
