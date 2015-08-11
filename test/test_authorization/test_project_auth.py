@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import ProjectFactory, UserFactory
+from factories import ProjectFactory, UserFactory, TaskFactory
 from pybossa.model.project import Project
 
 
@@ -184,3 +184,74 @@ class TestProjectAuthorization(Test):
         assert project.owner.id != self.mock_admin.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'delete', project)
 
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_publish(self):
+        """Test anonymous users cannot publish a project"""
+        project = ProjectFactory.create(published=False)
+
+        assert_raises(Unauthorized, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_cannot_publish(self):
+        """Test non-owners cannot publish a project"""
+        project = ProjectFactory.create(published=False)
+
+        assert project.owner.id != self.mock_authenticated.id, project.owner
+        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_cannot_publish_if_project_has_no_presenter(self):
+        """Test owner cannot publish a project that has no presenter"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False, info={})
+        TaskFactory.create(project=project)
+
+        assert project.owner.id == self.mock_authenticated.id, project.owner
+        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_cannot_publish_if_project_has_no_tasks(self):
+        """Test owner cannot publish a project that has no tasks"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
+
+        assert project.owner.id == self.mock_authenticated.id, project.owner
+        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_can_publish_if_project_has_tasks_and_presenter(self):
+        """Test owner can publish a project that has tasks and a presenter"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
+        TaskFactory.create(project=project)
+
+        assert project.owner.id == self.mock_authenticated.id, project.owner
+        assert_not_raises(Exception, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_cannot_publish_if_project_has_no_presenter(self):
+        """Test admins cannot publish a project that has no presenter"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False, info={})
+        TaskFactory.create(project=project)
+
+        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_cannot_publish_if_project_has_no_tasks(self):
+        """Test admins cannot publish a project that has no tasks"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
+
+        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_can_publish_if_project_has_tasks_and_presenter(self):
+        """Test admins can publish a project that has tasks and a presenter"""
+        owner = UserFactory.build_batch(2)[1]
+        project = ProjectFactory.create(owner=owner, published=False)
+        TaskFactory.create(project=project)
+
+        assert project.owner.id != self.mock_admin.id, project.owner
+        assert_not_raises(Exception, ensure_authorized_to, 'publish', project)
