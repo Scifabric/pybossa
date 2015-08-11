@@ -1503,7 +1503,7 @@ def publish(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('update', project)
+    ensure_authorized_to('publish', project)
     if request.method == 'GET':
         return render_template('projects/publish.html', project=project)
     project.published = True

@@ -72,6 +72,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_invalid_action(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
 
@@ -80,6 +81,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_calls_can_with_None_for_classes(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
         _class = User
@@ -92,6 +94,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_calls_can_with_object_for_instances(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
         instance = User()
@@ -104,6 +107,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_works_for_token_resource_too(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
 
