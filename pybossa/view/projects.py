@@ -1508,6 +1508,7 @@ def publish(short_name):
         return render_template('projects/publish.html', project=project)
     project.published = True
     project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
 

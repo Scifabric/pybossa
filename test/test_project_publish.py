@@ -77,3 +77,15 @@ class TestProjectPublicationView(web.Helper):
         assert resp.status_code == 200, resp.status_code
         assert project.published == True, project
 
+    @patch('pybossa.view.projects.auditlogger')
+    def test_it_logs_the_event_in_auditlog(self, fake_logger):
+        owner = UserFactory.create(email_addr='a@a.com')
+        owner.set_password('1234')
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner, published=False)
+        self.signin(email='a@a.com', password='1234')
+
+        resp = self.app.post('/project/%s/publish' % project.short_name,
+                             follow_redirects=True)
+
+        fake_logger.add_log_entry.assert_called()
