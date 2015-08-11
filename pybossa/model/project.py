@@ -108,3 +108,6 @@ class Project(db.Model, DomainObject):
 
     def delete_autoimporter(self):
         del self.info['autoimporter']
+
+    def has_presenter(self):
+        return self.info.get('task_presenter') not in ('', None)
