@@ -20,10 +20,15 @@ from flask import abort
 
 
 class TaskRunAuth(object):
+    _specific_actions = []
 
     def __init__(self, task_repo, project_repo):
         self.task_repo = task_repo
         self.project_repo = project_repo
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])

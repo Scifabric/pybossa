@@ -18,9 +18,14 @@
 
 
 class BlogpostAuth(object):
+    _specific_actions = []
 
     def __init__(self, project_repo):
         self.project_repo = project_repo
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, blogpost=None, project_id=None):
         action = ''.join(['_', action])

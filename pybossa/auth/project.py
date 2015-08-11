@@ -18,6 +18,14 @@
 
 
 class ProjectAuth(object):
+    _specific_actions = ['publish']
+
+    def __init__(self, task_repo):
+        self.task_repo = task_repo
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])
@@ -36,6 +44,11 @@ class ProjectAuth(object):
 
     def _delete(self, user, project):
         return self._only_admin_or_owner(user, project)
+
+    def _publish(self, user, project):
+        return (project.has_presenter() and
+            len(self.task_repo.filter_tasks_by(project_id=project.id)) > 0 and
+            self._only_admin_or_owner(user, project))
 
     def _only_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
