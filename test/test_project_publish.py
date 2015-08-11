@@ -18,7 +18,7 @@
 from mock import patch
 
 from default import db
-from factories import ProjectFactory, AuditlogFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory
 from helper import web
 from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
@@ -46,13 +46,14 @@ class TestProjectPublicationView(web.Helper):
         call_args = fake_auth.call_args_list
 
         assert fake_auth.call_count == 2, fake_auth.call_count
-        assert call_args[0][0][0] == 'update', call_args[0]
+        assert call_args[0][0][0] == 'publish', call_args[0]
         assert call_args[0][0][1].id == self.project.id, call_args[0]
-        assert call_args[1][0][0] == 'update', call_args[1]
+        assert call_args[1][0][0] == 'publish', call_args[1]
         assert call_args[1][0][1].id == self.project.id, call_args[1]
 
     @patch('pybossa.view.projects.render_template', wraps=render_template)
     def test_it_renders_template_when_get(self, fake_render):
+        TaskFactory.create(project=self.project)
         resp = self.app.get('/project/%s/publish' % self.project.short_name)
 
         call_args = fake_render.call_args_list
@@ -60,6 +61,7 @@ class TestProjectPublicationView(web.Helper):
         assert call_args[0][1]['project'].id == self.project.id, call_args[0]
 
     def test_it_changes_project_to_published_after_post(self):
+        TaskFactory.create(project=self.project)
         resp = self.app.post('/project/%s/publish' % self.project.short_name,
                              follow_redirects=True)
 
@@ -69,7 +71,8 @@ class TestProjectPublicationView(web.Helper):
 
     @patch('pybossa.view.projects.auditlogger')
     def test_it_logs_the_event_in_auditlog(self, fake_logger):
+        TaskFactory.create(project=self.project)
         resp = self.app.post('/project/%s/publish' % self.project.short_name,
                              follow_redirects=True)
 
-        fake_logger.add_log_entry.assert_called()
+        assert fake_logger.log_event.called, "Auditlog not called"
