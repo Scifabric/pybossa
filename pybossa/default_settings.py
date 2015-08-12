@@ -38,7 +38,7 @@ LOGO = ''
 DEFAULT_LOCALE = 'en'
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
-           ('ja', u'日本語')]
+           ('ja', u'日本語'), ('el', u'ελληνικά')]
 
 ## Default THEME
 THEME = 'default'

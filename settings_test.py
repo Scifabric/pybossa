@@ -22,7 +22,7 @@ MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
 ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
-           ('ja', u'日本語')]
+           ('ja', u'日本語'), ('el', u'ελληνικά')]
 ENFORCE_PRIVACY = False
 REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
