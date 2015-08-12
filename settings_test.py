@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 SERVER_NAME='localhost'
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
