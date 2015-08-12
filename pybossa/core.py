@@ -217,16 +217,17 @@ def setup_babel(app):
 
     @babel.localeselector
     def _get_locale():
+        locales = [l[0] for l in app.config.get('LOCALES')]
         if current_user.is_authenticated():
             lang = current_user.locale
         else:
-            user_lang = request.accept_languages.best_match(app.config.get('LOCALES'))
+            user_lang = request.accept_languages.best_match(locales)
             lang = request.cookies.get('language')
         if (lang is None or lang == '' or
-            lang.lower() not in app.config.get('LOCALES')):
+            lang.lower() not in locales):
             lang = user_lang
         if (lang is None or lang == '' or
-                lang.lower() not in app.config['LOCALES']):
+                lang.lower() not in locales):
             lang = 'en'
         return lang.lower()
     return babel
