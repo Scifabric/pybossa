@@ -83,6 +83,18 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
 
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_create_taskrun_for_draft_project(self):
+        """Test anonymous users cannot create a taskrun for a project that
+        is a draft"""
+
+        project = ProjectFactory.create(published=False)
+        task = TaskFactory.create(project=project)
+        taskrun = TaskRunFactory.build(task_id=task.id)
+
+        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
+
+
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_first_taskrun(self):
         """Test authenticated user can create a taskrun for a given task if he
@@ -135,6 +147,18 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Exception,
                           ensure_authorized_to, 'create', taskrun)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_authenticated_user_cannot_create_taskrun_for_draft_project(self):
+        """Test authenticated users cannot create a taskrun for a project that
+        is a draft"""
+
+        project = ProjectFactory.create(published=False)
+        task = TaskFactory.create(project=project)
+        taskrun = TaskRunFactory.build(task_id=task.id)
+
+        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
