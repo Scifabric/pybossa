@@ -22,7 +22,10 @@ from test_api import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
+from pybossa.repositories import TaskRepository
+from pybossa.core import db
 
+task_repo = TaskRepository(db)
 
 
 class TestTaskrunAPI(TestAPI):
@@ -97,6 +100,7 @@ class TestTaskrunAPI(TestAPI):
             project_id=project.id,
             task_id=task.id,
             info='my task result')
+        mock_request.data = json.dumps(data)
 
         # With wrong project_id
         mock_request.remote_addr = '127.0.0.0'
@@ -432,6 +436,8 @@ class TestTaskrunAPI(TestAPI):
             user_id=project.owner.id,
             info='my task result')
         datajson = json.dumps(data)
+        mock_request.data = datajson
+
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
 
@@ -475,3 +481,22 @@ class TestTaskrunAPI(TestAPI):
         assert resp.status_code == 400, resp.status_code
         error = json.loads(resp.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
+
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
+    def test_taskrun_not_stored_if_project_is_not_published(self, requested):
+        requested.return_value = True
+        project = ProjectFactory.create(published=False)
+        task = TaskFactory.create(project=project)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my result')
+        datajson = json.dumps(data)
+
+        resp = self.app.post(url, data=datajson)
+        task_runs = task_repo.filter_task_runs_by(project_id=data['project_id'])
+
+        assert resp.status_code == 200, resp.status_code
+        assert task_runs == [], task_runs
