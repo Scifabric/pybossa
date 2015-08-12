@@ -35,8 +35,7 @@ class TaskRunAuth(object):
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, taskrun):
-        project_id = self.task_repo.get_task(taskrun.task_id).project_id
-        project = self.project_repo.get(project_id)
+        project = self.project_repo.get(taskrun.project_id)
         if not project.published:
             raise abort(403)
         if (user.is_anonymous() and

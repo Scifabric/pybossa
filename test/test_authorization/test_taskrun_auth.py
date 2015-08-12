@@ -63,9 +63,11 @@ class TestTaskrunAuthorization(Test):
         """Test anonymous user can create a taskrun for a task even though
         he has posted taskruns for different tasks in the same project"""
 
-        tasks = TaskFactory.create_batch(2)
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(2, project=project)
         taskrun1 = AnonymousTaskRunFactory.create(task=tasks[0])
-        taskrun2 = AnonymousTaskRunFactory.build(task_id=tasks[1].id)
+        taskrun2 = AnonymousTaskRunFactory.build(task_id=tasks[1].id,
+                                                 project_id=project.id)
 
         assert_not_raises(Exception,
                           ensure_authorized_to, 'create', taskrun2)
@@ -90,7 +92,8 @@ class TestTaskrunAuthorization(Test):
 
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
-        taskrun = TaskRunFactory.build(task_id=task.id)
+        taskrun = AnonymousTaskRunFactory.build(task_id=task.id,
+                                                project_id=project.id)
 
         assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
@@ -102,6 +105,7 @@ class TestTaskrunAuthorization(Test):
 
         task = TaskFactory.create()
         taskrun = TaskRunFactory.build(task_id=task.id,
+                                       project_id=task.project_id,
                                        user_id=self.mock_authenticated.id)
 
         assert self.mock_authenticated.id == taskrun.user_id, taskrun
@@ -127,9 +131,11 @@ class TestTaskrunAuthorization(Test):
         he has posted taskruns for different tasks in the same project"""
 
         user = UserFactory.create_batch(2)[1]
-        tasks = TaskFactory.create_batch(2)
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(2, project=project)
         taskrun1 = TaskRunFactory.create(task=tasks[0], user=user)
-        taskrun2 = TaskRunFactory.build(task_id=tasks[1].id, user_id=user.id)
+        taskrun2 = TaskRunFactory.build(task_id=tasks[1].id, user_id=user.id,
+                                        project_id=tasks[1].project_id)
 
         assert self.mock_authenticated.id == taskrun2.user_id
         assert_not_raises(Exception,
@@ -143,7 +149,7 @@ class TestTaskrunAuthorization(Test):
 
         project = ProjectFactory.create(allow_anonymous_contributors=False)
         task = TaskFactory.create(project=project)
-        taskrun = TaskRunFactory.build(task_id=task.id)
+        taskrun = TaskRunFactory.build(task_id=task.id, project_id=project.id)
 
         assert_not_raises(Exception,
                           ensure_authorized_to, 'create', taskrun)
@@ -156,7 +162,7 @@ class TestTaskrunAuthorization(Test):
 
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
-        taskrun = TaskRunFactory.build(task_id=task.id)
+        taskrun = TaskRunFactory.build(task_id=task.id, project_id=project.id)
 
         assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
