@@ -35,6 +35,7 @@ DESCRIPTION = 'Set the description in your config'
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 LOGO = ''
+DEFAULT_LOCALE = 'en'
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
            ('ja', u'日本語')]

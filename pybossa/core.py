@@ -228,7 +228,7 @@ def setup_babel(app):
             lang = user_lang
         if (lang is None or lang == '' or
                 lang.lower() not in locales):
-            lang = 'en'
+            lang = app.config.get('DEFAULT_LOCALE') or 'en'
         return lang.lower()
     return babel
 
