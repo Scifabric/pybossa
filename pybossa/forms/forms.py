@@ -290,17 +290,7 @@ class UpdateProfileForm(Form):
         """Fill the locale.choices."""
         choices = []
         for locale in locales:
-            if locale == 'en':
-                lang = gettext("English")
-            if locale == 'es':
-                lang = gettext("Spanish")
-            if locale == 'fr':
-                lang = gettext("French")
-            if locale == 'de':
-                lang = gettext("German")
-            if locale == 'it':
-                lang = gettext("Italian")
-            choices.append((locale, lang))
+            choices.append(locale)
         self.locale.choices = choices
 
 
