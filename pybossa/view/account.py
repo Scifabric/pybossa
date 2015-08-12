@@ -316,8 +316,8 @@ def _show_public_profile(user):
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_created = cached_users.published_projects_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
-        pass
-        # TODO: add draft projects here for admins
+        draft_projects = cached_users.draft_projects(user.id)
+        projects_created.extend(draft_projects)
     title = "%s &middot; User Profile" % user_dict['fullname']
     return render_template('/account/public_profile.html',
                            title=title,
