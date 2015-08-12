@@ -32,6 +32,8 @@ class ProjectAuth(object):
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, project=None):
+        if project is not None and user.is_authenticated():
+            return project.published != True
         return user.is_authenticated()
 
     def _read(self, user, project=None):

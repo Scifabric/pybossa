@@ -33,30 +33,31 @@ class TestProjectAuthorization(Test):
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
-
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_create(self):
         """Test anonymous users cannot projects"""
         assert_raises(Unauthorized, ensure_authorized_to, 'create', Project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_create(self):
         """Test authenticated users can create projects"""
         assert_not_raises(Exception, ensure_authorized_to, 'create', Project)
 
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_a_project_cannot_be_created_as_published(self):
+        """Test a project cannot be created directly as published"""
+        published_project = ProjectFactory.build(published=True)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', published_project)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_all_projects(self):
         """Test anonymous users can read projects"""
         assert_not_raises(Exception, ensure_authorized_to, 'read', Project)
 
-
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read_all_projects(self):
         """Test authenticated users can read projects"""
         assert_not_raises(Exception, ensure_authorized_to, 'read', Project)
-
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_given_published(self):
@@ -65,14 +66,12 @@ class TestProjectAuthorization(Test):
 
         assert_not_raises(Exception, ensure_authorized_to, 'read', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read_given_published(self):
         """Test authenticated users can read a given published project"""
         project = ProjectFactory.create(published=True)
 
         assert_not_raises(Exception, ensure_authorized_to, 'read', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_given_draft(self):
@@ -81,7 +80,6 @@ class TestProjectAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_read_given_draft(self):
         """Test authenticated users cannot read draft projects if are not owners"""
@@ -89,7 +87,6 @@ class TestProjectAuthorization(Test):
 
         assert project.owner.id != self.mock_authenticated.id, project.owner
         assert_raises(Forbidden, ensure_authorized_to, 'read', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owners_can_read_given_draft(self):
@@ -100,7 +97,6 @@ class TestProjectAuthorization(Test):
         assert project.owner.id == self.mock_authenticated.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'read', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_read_given_draft(self):
         """Test an admin can read a project despite being a draft"""
@@ -110,14 +106,12 @@ class TestProjectAuthorization(Test):
         assert project.owner.id != self.mock_admin.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'read', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_update(self):
         """Test anonymous users cannot update a project"""
         project = ProjectFactory.create()
 
         assert_raises(Unauthorized, ensure_authorized_to, 'update', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_update(self):
@@ -126,7 +120,6 @@ class TestProjectAuthorization(Test):
 
         assert project.owner.id != self.mock_authenticated.id, project.owner
         assert_raises(Forbidden, ensure_authorized_to, 'update', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_can_update(self):
@@ -137,7 +130,6 @@ class TestProjectAuthorization(Test):
         assert project.owner.id == self.mock_authenticated.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'update', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_update(self):
         """Test an admin can update a project"""
@@ -147,14 +139,12 @@ class TestProjectAuthorization(Test):
         assert project.owner.id != self.mock_admin.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'update', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_delete(self):
         """Test anonymous users cannot delete a project"""
         project = ProjectFactory.create()
 
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_delete(self):
@@ -163,7 +153,6 @@ class TestProjectAuthorization(Test):
 
         assert project.owner.id != self.mock_authenticated.id, project.owner
         assert_raises(Forbidden, ensure_authorized_to, 'delete', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_can_delete(self):
@@ -174,7 +163,6 @@ class TestProjectAuthorization(Test):
         assert project.owner.id == self.mock_authenticated.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'delete', project)
 
-
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_delete(self):
         """Test an admin can delete a project"""
@@ -183,7 +171,6 @@ class TestProjectAuthorization(Test):
 
         assert project.owner.id != self.mock_admin.id, project.owner
         assert_not_raises(Exception, ensure_authorized_to, 'delete', project)
-
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_publish(self):
