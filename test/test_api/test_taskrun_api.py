@@ -463,6 +463,7 @@ class TestTaskrunAPI(TestAPI):
 
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_create_with_reserved_fields_returns_error(self, requested):
+        """Test API taskrun post with reserved fields raises an error"""
         requested.return_value = True
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -484,6 +485,7 @@ class TestTaskrunAPI(TestAPI):
 
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_not_stored_if_project_is_not_published(self, requested):
+        """Test API taskrun post draft project will not store the taskrun"""
         requested.return_value = True
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
