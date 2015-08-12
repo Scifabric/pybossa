@@ -130,7 +130,7 @@ Multiple languages
 ==================
 
 By default PyBossa only speaks English, however the default theme comes with a few
-translations (Spanish, French, Italian and German). 
+translations (Spanish, French, Italian, Japanese, Greek and German). 
 
 You can enable those translations (mostly user interface strings and actions) by doing
 the following: creating a symlink to the translations folders:
@@ -144,6 +144,37 @@ these translations with the default theme. If you use your own theme, the best t
 to do your own translation, (see :ref:`translating`), as you might want to name things 
 differently on the templates.
 
+You can disable/enable different languages in your config file
+**settings_local.py**. For example, to remove French you can add
+this configuration to the settings file:
+
+.. code-block:: python 
+
+    LOCALES = [('en', 'English'), ('es', u'Español'),
+               ('it', 'Italiano'), ('ja', u'日本語')]
+
+
+Also, you can always specify a different default locale using the following
+snippet in the same settings file
+
+
+.. code-block:: python 
+
+    DEFAULT_LOCALE = 'es'
+
+
+.. note::
+    PyBossa tries to first match the user preferred language from their
+    browser. This will work for anonymous users, while registered ones can
+    specify the language they want using their user preferences. 
+
+
+.. note::
+    As an alternative way to allow anonymous users to *force* a different
+    language, PyBossa looks for a cookie named **language** where it expects
+    the key of any of the supported langes in the LOCALES list. You can use
+    JavaScript to set it up.
+    
 
 Creating your own theme
 =======================

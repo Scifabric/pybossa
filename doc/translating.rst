@@ -7,7 +7,7 @@ Translating PyBossa
 
 PyBossa supports i18n locales, so you can translate the **User Interface** to
 any language. By default PyBossa comes with several languages: English,
-Spanish, Italian, French and German.
+Spanish, Italian, French, German, Greek and Japanese.
 
 Enabling multiple locales
 =========================
