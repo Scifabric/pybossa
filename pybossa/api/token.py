@@ -58,13 +58,11 @@ class TokenAPI(APIBase):
                 target=self._resource_name,
                 action='GET')
 
-
     def _get_token(self, token, user_tokens):
         token = '%s_token' % token
         if token in user_tokens:
             return {token: user_tokens[token]}
         raise NotFound
-
 
     def _get_all_tokens(self):
         tokens = {}
@@ -74,7 +72,6 @@ class TokenAPI(APIBase):
                 tokens['%s_token' % provider] = token
         return tokens
 
-
     def _create_token_for(self, provider):
         token_value = dict(current_user.info).get(provider)
         if token_value:
@@ -83,8 +80,6 @@ class TokenAPI(APIBase):
                 token['oauth_token_secret'] = token_value['oauth_token_secret']
             return token
         return None
-
-
 
     def post(self):
         raise MethodNotAllowed(valid_methods=['GET'])

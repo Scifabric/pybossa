@@ -256,7 +256,6 @@ class TestProjectAPI(TestAPI):
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'DBIntegrityError', err
 
-
         # With not JSON data
         datajson = data
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
@@ -622,7 +621,6 @@ class TestProjectAPI(TestAPI):
         res = self.app.get(url)
         assert res.data == '{}', res.data
 
-
     @patch('pybossa.repositories.project_repository.uploader')
     def test_project_delete_deletes_zip_files(self, uploader):
         """Test API project delete deletes also zip files of tasks and taskruns"""
@@ -671,3 +669,34 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 400, res.status_code
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
+
+    def test_project_post_with_published_attribute_is_forbidden(self):
+        user = UserFactory.create()
+        data = dict(
+            name='name',
+            short_name='name',
+            description='description',
+            owner_id=user.id,
+            long_description=u'Long Description\n================',
+            info={'task_presenter': '<div>'},
+            published=True)
+        data = json.dumps(data)
+
+        res = self.app.post('/api/project?api_key=' + user.api_key, data=data)
+
+        error_msg = json.loads(res.data)['exception_msg']
+        assert res.status_code == 403, res.status_code
+        assert error_msg == 'You cannot publish a project via the API', res.data
+
+    def test_project_update_with_published_attribute_is_forbidden(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = dict(published=True)
+        data = json.dumps(data)
+        url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
+
+        res = self.app.put(url, data=data)
+        print res.data
+        error_msg = json.loads(res.data)['exception_msg']
+        assert res.status_code == 403, res.status_code
+        assert error_msg == 'You cannot publish a project via the API', res.data
