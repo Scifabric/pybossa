@@ -23,7 +23,6 @@ import os
 import math
 import requests
 from StringIO import StringIO
-from functools import wraps
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
@@ -90,20 +89,6 @@ def project_by_shortname(short_name):
     else:
         cached_projects.delete_project(short_name)
         return abort(404)
-
-
-def with_project_password(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        project = project_by_shortname(kwargs['short_name'])[0]
-        cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
-        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-        if passwd_mngr.password_needed(project, get_user_id_or_ip()):
-            return redirect(url_for('.password_required',
-                                    short_name=project.short_name, next=request.path))
-        else:
-            return f(*args, **kwargs)
-    return wrapper
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -466,13 +451,16 @@ def update(short_name):
 
 
 @blueprint.route('/<short_name>/')
-@with_project_password
 def details(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
     template = '/projects/project.html'
+
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -685,7 +673,6 @@ def password_required(short_name):
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
-@with_project_password
 def task_presenter(short_name, task_id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
@@ -693,6 +680,9 @@ def task_presenter(short_name, task_id):
     if task is None:
         raise abort(404)
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     if current_user.is_anonymous():
         if not project.allow_anonymous_contributors:
@@ -730,7 +720,6 @@ def task_presenter(short_name, task_id):
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
-@with_project_password
 def presenter(short_name):
 
     def invite_new_volunteers(project):
@@ -753,6 +742,9 @@ def presenter(short_name):
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project)}
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -779,19 +771,20 @@ def presenter(short_name):
 
 
 @blueprint.route('/<short_name>/tutorial')
-@with_project_password
 def tutorial(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     title = project_title(project, "Tutorial")
 
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     return render_template('/projects/tutorial.html', title=title,
                            project=project, owner=owner)
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
-@with_project_password
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
@@ -799,6 +792,9 @@ def export(short_name, task_id):
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     # Check if the task belongs to the project and exists
     task = task_repo.get_task_by(project_id=project.id, id=task_id)
@@ -811,13 +807,15 @@ def export(short_name, task_id):
 
 
 @blueprint.route('/<short_name>/tasks/')
-@with_project_password
 def tasks(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
 
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
     return render_template('/projects/tasks.html',
@@ -834,7 +832,6 @@ def tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
-@with_project_password
 def tasks_browse(short_name, page):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
@@ -863,6 +860,9 @@ def tasks_browse(short_name, page):
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
@@ -899,7 +899,6 @@ def delete_tasks(short_name):
 
 
 @blueprint.route('/<short_name>/tasks/export')
-@with_project_password
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     (project, owner, n_tasks, n_task_runs,
@@ -910,6 +909,9 @@ def export_to(short_name):
     loading_text = gettext("Exporting data..., this may take a while")
 
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     def respond():
         return render_template('/projects/export.html',
@@ -1106,7 +1108,6 @@ def export_to(short_name):
 
 
 @blueprint.route('/<short_name>/stats')
-@with_project_password
 def show_stats(short_name):
     """Returns Project Stats"""
     (project, owner, n_tasks, n_task_runs,
@@ -1116,6 +1117,9 @@ def show_stats(short_name):
     title = project_title(project, "Statistics")
 
     ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -1316,13 +1320,15 @@ def task_priority(short_name):
 
 
 @blueprint.route('/<short_name>/blog')
-@with_project_password
 def show_blogposts(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     blogposts = blog_repo.filter_by(project_id=project.id)
     ensure_authorized_to('read', Blogpost, project_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog.html', project=project,
                            owner=owner, blogposts=blogposts,
@@ -1334,7 +1340,6 @@ def show_blogposts(short_name):
 
 
 @blueprint.route('/<short_name>/<int:id>')
-@with_project_password
 def show_blogpost(short_name, id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
@@ -1342,6 +1347,9 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     ensure_authorized_to('read', blogpost)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog_post.html',
                            project=project,
@@ -1460,15 +1468,25 @@ def delete_blogpost(short_name, id):
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
+def _check_if_redirect_to_password(project):
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(project, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                short_name=project.short_name, next=request.path))
+
+
 @blueprint.route('/<short_name>/auditlog')
 @login_required
-@with_project_password
 def auditlog(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     logs = auditlogger.get_project_logs(project.id)
     ensure_authorized_to('read', Auditlog, project_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
