@@ -17,12 +17,11 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PyBossa utils."""
 from datetime import timedelta, datetime
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 import csv
 import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
-from functools import wraps
 from flask_oauthlib.client import OAuth
 from flask.ext.login import current_user
 from math import ceil
@@ -345,7 +344,6 @@ def get_user_signup_method(user):
         msg += " <strong>It seems that you created an account locally.</strong>"
         msg += " <br/>You can reset your password if you don't remember it."
         return (msg, 'local')
-
 
 
 def get_port():
