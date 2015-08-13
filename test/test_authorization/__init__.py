@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import assert_not_raises
-from mock import Mock, patch
+from mock import Mock, patch, PropertyMock
 from pybossa.auth import ensure_authorized_to, is_authorized
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -28,9 +28,14 @@ def mock_current_user(anonymous=True, admin=None, id=None, pro=False):
     mock = Mock(spec=User)
     mock.is_anonymous.return_value = anonymous
     mock.is_authenticated.return_value = not anonymous
-    mock.admin = admin
-    mock.pro = pro
-    mock.id = id
+    if anonymous:
+        type(mock).admin = PropertyMock(side_effect=AttributeError)
+        type(mock).pro = PropertyMock(side_effect=AttributeError)
+        type(mock).id = PropertyMock(side_effect=AttributeError)
+    else:
+        mock.admin = admin
+        mock.pro = pro
+        mock.id = id
     return mock
 
 
