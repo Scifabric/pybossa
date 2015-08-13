@@ -1484,9 +1484,6 @@ def auditlog(short_name):
 
     logs = auditlogger.get_project_logs(project.id)
     ensure_authorized_to('read', Auditlog, project_id=project.id)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
