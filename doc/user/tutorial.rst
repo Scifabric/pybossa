@@ -794,6 +794,13 @@ The presenter will load one task, and you will be able to submit and save one
 answer for the current task.
 
 
+Publishing the project
+======================
+
+Once everything is working, you will need to publish the project so people can
+start contributing to it. Please, check the :ref:`publishing` section for more
+details.
+
 Creating a tutorial for the users
 =================================
 
