@@ -830,8 +830,8 @@ def tasks(short_name):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
 
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('/projects/tasks.html',
                            title=title,
                            project=project,
