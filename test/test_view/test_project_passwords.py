@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from factories import ProjectFactory, TaskFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory, BlogpostFactory
 from mock import patch
 
 from pybossa.repositories import ProjectRepository
@@ -178,7 +178,7 @@ class TestProjectPassword(Test):
 
     endpoints_requiring_password = ('/', '/tutorial', '/1/results.json',
                                     '/tasks/', '/tasks/browse', '/tasks/export',
-                                    '/stats', '/blog')
+                                    '/stats', '/blog', '/1', '/task/1')
 
 
     def test_password_required_for_anonymous_users_to_see_project(self):
@@ -186,6 +186,7 @@ class TestProjectPassword(Test):
         protected project is redirected to the password view"""
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
 
@@ -201,6 +202,7 @@ class TestProjectPassword(Test):
         protected project is able to do it"""
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
 
         for endpoint in self.endpoints_requiring_password:
             res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
@@ -214,6 +216,7 @@ class TestProjectPassword(Test):
         protected project is redirected to the password view"""
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
         user = UserFactory.create()
@@ -231,6 +234,7 @@ class TestProjectPassword(Test):
         protected project is able to do it"""
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -249,6 +253,7 @@ class TestProjectPassword(Test):
         assert mock_user.admin
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
 
@@ -268,6 +273,7 @@ class TestProjectPassword(Test):
         project = ProjectFactory.create(owner=owner)
         assert project.owner.id == owner.id
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
 
