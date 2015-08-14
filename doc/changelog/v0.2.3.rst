@@ -41,6 +41,8 @@ The most interesting changes are the following:
  * PyBossa dashboard: see what's going on in your server. **REQUIRES POSTGRESQL >= 9.3**
  * Add keyset pagination for the API: this returns results much faster than
    offsets.
+ * Remove support for hidden projects. To hide them use of password is now needed.
+ * Projects need to be published in order to be visible for the volunteers.
 
 For a full list of changes, see associated `Github milestone`_.
 
