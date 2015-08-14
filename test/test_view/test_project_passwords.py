@@ -192,3 +192,29 @@ class TestProjectPassword(Test):
             res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
                                follow_redirects=True)
             assert 'Enter the password to contribute' in res.data, endpoint
+
+
+    @patch('pybossa.view.projects.ensure_authorized_to')
+    def test_password_protection_overrides_normal_auth(self, fake_authorizer):
+        """Test if a project is password protected, that is the only authorization
+        required for it to be seen"""
+        project = ProjectFactory.create(published=False)
+        TaskFactory.create(project=project)
+        project.set_password('mysecret')
+        project_repo.update(project)
+
+        self.app.get('/project/%s' % project.short_name, follow_redirects=True)
+
+        assert fake_authorizer.called == False
+
+
+    @patch('pybossa.view.projects.ensure_authorized_to')
+    def test_normal_auth_used_if_no_password_protected(self, fake_authorizer):
+        """Test if a project is password protected, that is the only authorization
+        required for it to be seen"""
+        project = ProjectFactory.create()
+        TaskFactory.create(project=project)
+
+        self.app.get('/project/%s' % project.short_name, follow_redirects=True)
+
+        assert fake_authorizer.called == True
