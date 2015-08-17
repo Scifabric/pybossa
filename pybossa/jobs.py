@@ -21,7 +21,8 @@ import math
 import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
-from pybossa.core import mail, task_repo, importer
+from pybossa.core import mail, task_repo, webhook_repo, importer
+from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled
 import pybossa.dashboard.jobs as dashboard
 
@@ -451,7 +452,14 @@ def webhook(url, payload=None):
     import json
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     if url:
-        return requests.post(url, data=json.dumps(payload), headers=headers)
+        response = requests.post(url, data=json.dumps(payload), headers=headers)
+        webhook = Webhook(project_id=payload['project_id'],
+                          payload=payload,
+                          response=response.text,
+                          response_status_code=response.status_code,
+                          response_headers=response.headers)
+        webhook_repo.save(webhook)
+        return response
     else:
         return False
 

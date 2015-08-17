@@ -26,6 +26,7 @@ These objects are an abstraction layer between the ORM and the application:
     * blog_repo
     * task_repo
     * auditlog_repo
+    * webhook_repo
 
 The responsibility of these repositories is only fetching one or many objects of
 a kind and/or saving them to the DB by calling the ORM apropriate methods.
