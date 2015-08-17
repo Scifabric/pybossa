@@ -43,5 +43,3 @@ class Webhook(db.Model, DomainObject):
     response = Column(Text)
     #: Webhook response status code
     response_status_code = Column(Integer)
-    #: Webhook response headers
-    response_headers = Column(JSON)

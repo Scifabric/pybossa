@@ -28,8 +28,7 @@ def upgrade():
                               sa.ForeignKey('project.id')),
                     sa.Column('payload', JSON),
                     sa.Column('response', sa.Text),
-                    sa.Column('response_status_code', sa.Integer),
-                    sa.Column('response_headers', JSON),
+                    sa.Column('response_status_code', sa.Integer)
                     )
 
 

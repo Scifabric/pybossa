@@ -456,8 +456,7 @@ def webhook(url, payload=None):
         webhook = Webhook(project_id=payload['project_id'],
                           payload=payload,
                           response=response.text,
-                          response_status_code=response.status_code,
-                          response_headers=response.headers)
+                          response_status_code=response.status_code)
         webhook_repo.save(webhook)
         return response
     else:
