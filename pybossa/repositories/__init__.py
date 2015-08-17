@@ -40,9 +40,11 @@ from user_repository import UserRepository
 from blog_repository import BlogRepository
 from task_repository import TaskRepository
 from auditlog_repository import AuditlogRepository
+from webhook_repository import WebhookRepository
 
 assert ProjectRepository
 assert UserRepository
 assert BlogRepository
 assert TaskRepository
 assert AuditlogRepository
+assert WebhookRepository
