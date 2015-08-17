@@ -33,7 +33,7 @@ class Webhook(db.Model, DomainObject):
     #: Webhook created (aka triggered)
     created = Column(Text, default=make_timestamp)
     #: Webhook updated
-    created = Column(Text, default=make_timestamp)
+    updated = Column(Text, default=make_timestamp)
     #: Webhook project.id
     project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'),
                         nullable=False)
