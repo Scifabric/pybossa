@@ -39,6 +39,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.auditlog import Auditlog
+from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip, rank
 from pybossa.auth import ensure_authorized_to
@@ -50,11 +51,12 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT
+from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+from pybossa.core import webhook_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
 from pybossa.api import mark_task_as_requested_by_user
 
@@ -65,6 +67,7 @@ auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=IMPORT_TASKS_TIMEOUT)
+webhook_queue = Queue('high', connection=sentinel.master)
 
 def project_title(project, page_name):
     if not project:  # pragma: no cover
@@ -1493,6 +1496,35 @@ def auditlog(short_name):
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
+
+
+@blueprint.route('/<short_name>/webhook', defaults={'oid': None})
+@blueprint.route('/<short_name>/webhook/<int:oid>', methods=['GET', 'POST'])
+@login_required
+def webhook_handler(short_name, oid=None):
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+
+    responses = webhook_repo.filter_by(project_id=project.id)
+    if request.method == 'POST' and oid:
+        tmp = webhook_repo.get(oid)
+        if tmp:
+            webhook_queue.enqueue(webhook, project.webhook, tmp.payload)
+        else:
+            abort(404)
+
+    ensure_authorized_to('read', Webhook, project_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/webhook.html', project=project,
+                           owner=owner, responses=responses,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
