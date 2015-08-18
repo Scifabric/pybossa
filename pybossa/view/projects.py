@@ -1514,7 +1514,9 @@ def webhook_handler(short_name, oid=None):
     if request.method == 'POST' and oid:
         tmp = webhook_repo.get(oid)
         if tmp:
-            webhook_queue.enqueue(webhook, project.webhook, tmp.payload)
+            webhook_queue.enqueue(webhook, project.webhook,
+                                  tmp.payload, tmp.id)
+            return json.dumps(tmp.dictize())
         else:
             abort(404)
 

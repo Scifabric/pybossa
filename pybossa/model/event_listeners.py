@@ -21,11 +21,12 @@ from rq import Queue
 from sqlalchemy import event
 
 from pybossa.feed import update_feed
-from pybossa.model import update_project_timestamp
+from pybossa.model import update_project_timestamp, update_target_timestamp
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.core import sentinel
@@ -169,6 +170,11 @@ def on_taskrun_submit(mapper, conn, target):
 def update_project(mapper, conn, target):
     """Update project updated timestamp."""
     update_project_timestamp(mapper, conn, target)
+
+@event.listens_for(Webhook, 'after_update')
+def update_timestamp(mapper, conn, target):
+    """Update domain object with timestamp."""
+    update_target_timestamp(mapper, conn, target)
 
 
 @event.listens_for(User, 'before_insert')

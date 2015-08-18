@@ -447,20 +447,30 @@ def import_tasks(project_id, **form_data):
     return msg
 
 
-def webhook(url, payload=None):
+def webhook(url, payload=None, oid=None):
     """Post to a webhook."""
-    import json
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    if url:
-        response = requests.post(url, data=json.dumps(payload), headers=headers)
+    try:
+        import json
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         webhook = Webhook(project_id=payload['project_id'],
-                          payload=payload,
-                          response=response.text,
-                          response_status_code=response.status_code)
-        webhook_repo.save(webhook)
-        return response
-    else:
-        return False
+                              payload=payload)
+        if url:
+            response = requests.post(url, data=json.dumps(payload), headers=headers)
+            webhook.response = response.text
+            webhook.response_status_code = response.status_code
+        else:
+            return False
+    except requests.exceptions.ConnectionError:
+            webhook.response = 'Connection Error'
+            webhook.response_status_code = None
+    finally:
+        if oid:
+            webhook.id = oid
+            webhook_repo.update(webhook)
+        else:
+            webhook_repo.save(webhook)
+        return webhook
+
 
 
 def notify_blog_users(blog_id, project_id, queue='high'):

@@ -47,6 +47,15 @@ class WebhookRepository(object):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
+    def update(self, webhook):
+        self._validate_can_be('updated', webhook)
+        try:
+            self.db.session.merge(webhook)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
     def _validate_can_be(self, action, webhook):
         if not isinstance(webhook, Webhook):
             name = webhook.__class__.__name__
