@@ -33,7 +33,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-    csv_exporter, importer, flickr)
+    csv_exporter, importer, flickr, sentinel)
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -1501,6 +1501,38 @@ def auditlog(short_name):
                            n_task_runs=n_task_runs,
                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
                            n_volunteers=cached_projects.n_volunteers(project.get('id')))
+
+
+def project_event_stream(short_name, channel_type):
+    """Event stream for pub/sub notifications."""
+    pubsub = sentinel.master.pubsub()
+    channel = "channel_%s_%s" % (channel_type, short_name)
+    pubsub.subscribe(channel)
+    for message in pubsub.listen():
+        print message
+        yield 'data: %s\n\n' % message['data']
+
+
+@blueprint.route('/<short_name>/privatestream')
+@login_required
+def project_stream_uri_private(short_name):
+    """Returns stream."""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    if (current_user.id == project.owner_id or current_user.admin):
+        return Response(project_event_stream(short_name, 'private'),
+                        mimetype="text/event-stream")
+    else:
+        return abort(403)
+
+
+@blueprint.route('/<short_name>/publicstream')
+def project_stream_uri_public(short_name):
+    """Returns stream."""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+    return Response(project_event_stream(short_name, 'public'),
+                    mimetype="text/event-stream")
 
 
 @blueprint.route('/<short_name>/webhook', defaults={'oid': None})

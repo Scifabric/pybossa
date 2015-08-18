@@ -451,6 +451,7 @@ def webhook(url, payload=None, oid=None):
     """Post to a webhook."""
     try:
         import json
+        from pybossa.core import sentinel
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         webhook = Webhook(project_id=payload['project_id'],
                               payload=payload)
@@ -469,6 +470,8 @@ def webhook(url, payload=None, oid=None):
             webhook_repo.update(webhook)
         else:
             webhook_repo.save(webhook)
+        channel = "channel_private_%s" % payload['project_short_name']
+        sentinel.master.publish(channel, json.dumps(webhook.dictize()))
         return webhook
 
 
