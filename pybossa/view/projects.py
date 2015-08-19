@@ -1509,7 +1509,6 @@ def project_event_stream(short_name, channel_type):
     channel = "channel_%s_%s" % (channel_type, short_name)
     pubsub.subscribe(channel)
     for message in pubsub.listen():
-        print message
         yield 'data: %s\n\n' % message['data']
 
 
@@ -1521,7 +1520,8 @@ def project_stream_uri_private(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
     if (current_user.id == project.owner_id or current_user.admin):
         return Response(project_event_stream(short_name, 'private'),
-                        mimetype="text/event-stream")
+                        mimetype="text/event-stream",
+                        direct_passthrough=True)
     else:
         return abort(403)
 
