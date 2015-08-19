@@ -305,11 +305,11 @@ def resize_avatars():
             try:
                 if u.info.get('container'):
                     cont = cf.get_container(u.info['container'])
-                    if cont.cdn_uri:
-                    	avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                    if cont.cdn_ssl_uri:
+                    	avatar_url = "%s/%s" % (cont.cdn_ssl_uri, u.info['avatar'])
                     else:
                         cont.make_public()
-                        avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                        avatar_url = "%s/%s" % (cont.cdn_ssl_uri, u.info['avatar'])
                     r = requests.get(avatar_url, stream=True)
                     if r.status_code == 200:
                         print "Downloading avatar for %s ..." % u.name
@@ -399,7 +399,7 @@ def resize_project_avatars():
             try:
                 if a.info.get('container'):
                    cont = cf.get_container(a.info['container'])
-                   avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
+                   avatar_url = "%s/%s" % (cont.cdn_ssl_uri, a.info['thumbnail'])
                    r = requests.get(avatar_url, stream=True)
                    if r.status_code == 200:
                        print "Downloading avatar for %s ..." % a.short_name
