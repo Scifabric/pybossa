@@ -471,7 +471,9 @@ def webhook(url, payload=None, oid=None):
         else:
             webhook_repo.save(webhook)
         channel = "channel_private_%s" % payload['project_short_name']
-        sentinel.master.publish(channel, json.dumps(webhook.dictize()))
+        msg = dict(type='webhook',
+                   data=webhook.dictize())
+        sentinel.master.publish(channel, json.dumps(msg))
         return webhook
 
 
