@@ -99,7 +99,7 @@ class _BulkTaskCSVImport(_BulkTaskImport):
         if "" in stripped_headers:
             position = stripped_headers.index("")
             msg = gettext("The file you uploaded has an empty header on "
-                          "column %s." % (position+1))
+                          "column %(pos)s.", pos=(position+1))
             raise BulkImportException(msg)
 
     def _check_valid_row_length(self, row, row_number, headers):
