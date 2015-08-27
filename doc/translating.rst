@@ -77,7 +77,7 @@ Step 1, extract new strings which should be translated:
 .. code-block:: bash
 
     $ cd pybossa
-    $ pybabel extract . -F translations/babel.cfg -k lazy_gettext -o translations/messages.pot
+    $ pybabel extract . -F translations/../babel.cfg -k lazy_gettext -o translations/messages.pot
 
 Step 2, update existing translation files:
 
