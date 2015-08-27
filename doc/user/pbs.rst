@@ -131,7 +131,7 @@ Therefore, adding tasks to your project is as simple as this command:
 
 .. code-block:: bash
 
-    pbs add_tasks --tasks-file tasks_file.json --tasks-type=json
+    pbs add_tasks --tasks-file tasks_file.json
 
 If you want to see all the available
 options, please check the **--help** command:
