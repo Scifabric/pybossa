@@ -32,7 +32,7 @@ requirements = [
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
-    "pyrax==1.9.4",
+    "pyrax>=1.9.5, <2.0",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
@@ -44,7 +44,6 @@ requirements = [
     "flask-plugins",
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
-    "python-novaclient==2.26.0"         # https://github.com/rackspace/pyrax/issues/575
 ]
 
 setup(
