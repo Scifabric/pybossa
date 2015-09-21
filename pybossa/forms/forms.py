@@ -60,10 +60,7 @@ class ProjectUpdateForm(ProjectForm):
                                     "You must provide a description.")),
                              validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
-    allow_anonymous_contributors = SelectField(
-        lazy_gettext('Allow Anonymous Contributors'),
-        choices=[('True', lazy_gettext('Yes')),
-                 ('False', lazy_gettext('No'))])
+    allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
     password = TextField(lazy_gettext('Password (leave blank for no password)'))
