@@ -50,9 +50,7 @@ It has the instructions to become a contributor.
 
 ## Acknowledgments
 
-* [Daniel Lombraña González](http://daniellombrana.es) - [Citizen Cyberscience Centre](http://citizencyberscience.net/), [Shuttleworth Fellow](http://www.shuttleworthfoundation.org/fellows/daniel-lombrana/)
-* Rufus Pollock - [Open Knowledge Foundation](http://okfn.org/)
-
+* [Open Knowledge Foundation](http://okfn.org/)
 * [FontAwesome fonts](http://fortawesome.github.com/Font-Awesome/)
 * [GeoLite data by MaxMind](http://www.maxmind.com)
 
