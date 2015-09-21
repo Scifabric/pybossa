@@ -1018,9 +1018,9 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner)
 
         self.update_project(id=project.id, short_name=project.short_name,
-                                new_password='mysecret')
+                            new_protect=True, new_password='mysecret')
 
-        assert project.needs_password(), 'Password not set"'
+        assert project.needs_password(), 'Password not set'
 
 
     @with_context

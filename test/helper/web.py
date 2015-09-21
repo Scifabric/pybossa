@@ -175,12 +175,13 @@ class Helper(Test):
     def update_project(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
-                           new_allow_anonymous_contributors="False",
+                           new_allow_anonymous_contributors=False,
                            new_category_id="1",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False,
                            new_webhook='http://server.com',
+                           new_protect=False,
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
@@ -197,6 +198,7 @@ class Helper(Test):
                                          'sched': new_sched,
                                          'hidden': new_hidden,
                                          'webhook': new_webhook,
+                                         'protect': new_protect,
                                          'password': new_password,
                                          'btn': 'Save'},
                                      follow_redirects=True)
@@ -209,6 +211,7 @@ class Helper(Test):
                                            'long_description': new_long_description,
                                            'sched': new_sched,
                                            'description': new_description,
+                                           'protect': new_protect,
                                            'password': new_password,
                                            'webhook': new_webhook,
                                            'btn': 'Save'

@@ -63,7 +63,8 @@ class ProjectUpdateForm(ProjectForm):
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
-    password = TextField(lazy_gettext('Password (leave blank for no password)'))
+    protect = BooleanField(lazy_gettext('Protect with a password?'))
+    password = TextField(lazy_gettext('Password'))
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
 
