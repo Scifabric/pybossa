@@ -67,10 +67,10 @@ setup(
     long_description = '''PyBossa is an open source crowdsourcing solution for volunteer computing, thinking and sensing ''',
     license = 'AGPLv3',
     url = 'http://pybossa.com',
-    download_url = 'https://github.com/PyBossa/pybossa'',
+    download_url = 'https://github.com/PyBossa/pybossa',
     include_package_data = True,
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero v3',
