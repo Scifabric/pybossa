@@ -541,7 +541,7 @@ Crowdcrafting team.
                            queue='medium')
                 enqueue_job(job)
                 project.set_password(password)
-                project_repo.update(project)
+                project_repo.save(project)
             else:
                 raise Exception("Project %s owner has not a valid email, check manually!" % project.name)
 
