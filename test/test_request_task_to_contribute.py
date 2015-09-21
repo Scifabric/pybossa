@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2015 SciFabric LTD.
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -121,7 +121,7 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_authenticated_deletes_key(self, user):
-        """_check_task_requested_by_user deletes the key after checking that 
+        """_check_task_requested_by_user deletes the key after checking that
         an authenticated user requested the task"""
         user.return_value = {'user_id': 33, 'user_ip': None}
         taskrun = TaskRun(task_id=22)

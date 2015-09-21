@@ -48,7 +48,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '0.2.4',
+    version = '1.0.0',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
@@ -62,15 +62,15 @@ setup(
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
     # TODO: change
-    author_email = 'info@pybossa.com',
+    author_email = 'info@scifabric.com',
     description = 'Open Source CrowdSourcing framework',
     long_description = '''PyBossa is an open source crowdsourcing solution for volunteer computing, thinking and sensing ''',
     license = 'AGPLv3',
-    url = 'https://github.com/PyBossa/pybossa',
-    download_url = '',
+    url = 'http://pybossa.com',
+    download_url = 'https://github.com/PyBossa/pybossa',
     include_package_data = True,
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero v3',
