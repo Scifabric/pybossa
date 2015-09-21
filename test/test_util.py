@@ -171,8 +171,8 @@ class TestPybossaUtil(object):
                 for item in row:
                     assert item in fake_csv[0], err_msg
 
-    def test_publish_channel(self):
-        """Test publish_channel method works."""
+    def test_publish_channel_private(self):
+        """Test publish_channel private method works."""
         sentinel = MagicMock()
         master = MagicMock()
         sentinel.master = master
@@ -183,6 +183,20 @@ class TestPybossaUtil(object):
         channel = 'channel_private_project'
         msg = dict(type='webhook', data=data)
         master.publish.assert_called_with(channel, json.dumps(msg))
+
+    def test_publish_channel_public(self):
+        """Test publish_channel public method works."""
+        sentinel = MagicMock()
+        master = MagicMock()
+        sentinel.master = master
+
+        data = dict(foo='bar')
+        util.publish_channel(sentinel, 'project', data,
+                             type='webhook', private=False)
+        channel = 'channel_public_project'
+        msg = dict(type='webhook', data=data)
+        master.publish.assert_called_with(channel, json.dumps(msg))
+
 
 
 
