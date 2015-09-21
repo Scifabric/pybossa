@@ -179,9 +179,9 @@ class TestPybossaUtil(object):
 
         data = dict(foo='bar')
         util.publish_channel(sentinel, 'project', data,
-                             type='webhook', private=True)
+                             type='foobar', private=True)
         channel = 'channel_private_project'
-        msg = dict(type='webhook', data=data)
+        msg = dict(type='foobar', data=data)
         master.publish.assert_called_with(channel, json.dumps(msg))
 
     def test_publish_channel_public(self):
@@ -192,9 +192,9 @@ class TestPybossaUtil(object):
 
         data = dict(foo='bar')
         util.publish_channel(sentinel, 'project', data,
-                             type='webhook', private=False)
+                             type='foobar', private=False)
         channel = 'channel_public_project'
-        msg = dict(type='webhook', data=data)
+        msg = dict(type='foobar', data=data)
         master.publish.assert_called_with(channel, json.dumps(msg))
 
 
