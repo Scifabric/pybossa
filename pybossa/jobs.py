@@ -23,7 +23,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, webhook_repo, importer
 from pybossa.model.webhook import Webhook
-from pybossa.util import with_cache_disabled
+from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
 
 
@@ -470,10 +470,9 @@ def webhook(url, payload=None, oid=None):
             webhook_repo.update(webhook)
         else:
             webhook_repo.save(webhook)
-        channel = "channel_private_%s" % payload['project_short_name']
-        msg = dict(type='webhook',
-                   data=webhook.dictize())
-        sentinel.master.publish(channel, json.dumps(msg))
+        publish_channel(sentinel, payload['project_short_name'],
+                        data=webhook.dictize(), type='webhook',
+                        private=True)
         return webhook
 
 
