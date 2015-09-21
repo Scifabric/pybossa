@@ -465,7 +465,7 @@ def _points_by_interval(value, weight=1):
 
 
 def publish_channel(sentinel, project_short_name, data, type, private=True):
-    """Publish in a channel some data."""
+    """Publish in a channel some JSON data as a string."""
     if private:
         channel = "channel_%s_%s" % ("private", project_short_name)
     else:
