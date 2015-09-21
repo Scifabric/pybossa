@@ -231,7 +231,7 @@ following:
 
 .. code-block:: bash
 
-    pbs add_tasks --tasks-file flickr_tasks.csv --tasks-type=csv
+    pbs add_tasks --tasks-file flickr_tasks.csv
 
 After running this program, you will see a progress bar that will let you know
 when all the tasks will be added to your project.
@@ -249,7 +249,7 @@ project:
 
 .. code-block:: bash
 
-    pbs add_tasks --tasks-file flickr_tasks.json --tasks-type=json
+    pbs add_tasks --tasks-file flickr_tasks.json
 
 Done! Again, a progress bar will show us how long it takes to add all the
 tasks. Once it's completed, we can actually move to the next step on the
@@ -300,7 +300,7 @@ ten, run the following:
 
 .. code-block:: bash
 
-    pbs add_tasks --tasks-file file --tasks-type=type --redundancy 10
+    pbs add_tasks --tasks-file file --redundancy 10
 
 In this case the **n_answers** field will make :ref:`task-scheduler` to try and 
 obtain 10 different answers from different users for each task in the file.
@@ -322,7 +322,7 @@ available ones, you can do it with pbs. Run the following command:
 
 .. code-block:: bash
 
-    pbs add_tasks --tasks-file file --tasks-type=type --priority 1
+    pbs add_tasks --tasks-file file --priority 1
 
 
 The priority is a number between 0.0 and 1.0. The highest priority is 1.0 and

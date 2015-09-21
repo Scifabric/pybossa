@@ -110,13 +110,13 @@ class RackspaceUploader(Uploader):
                                        filename='img/placeholder.project.png')
             cont = self.get_container(values['container'])
             if cont.cdn_enabled:
-                return "%s/%s" % (cont.cdn_uri, values['filename'])
+                return "%s/%s" % (cont.cdn_ssl_uri, values['filename'])
             else:
                 msg = ("Rackspace Container %s was not public"
                        % values['container'])
                 current_app.logger.warning(msg)
                 cont.make_public()
-                return "%s/%s" % (cont.cdn_uri, values['filename'])
+                return "%s/%s" % (cont.cdn_ssl_uri, values['filename'])
         except:
             current_app.logger.error(traceback.print_exc())
             return failover_url

@@ -218,13 +218,13 @@ class RegisterForm(Form):
 
     """Register Form Class for creating an account in PyBossa."""
 
-    err_msg = lazy_gettext("Full name must be between 3 and %s "
-                           "characters long" % USER_FULLNAME_MAX_LENGTH)
+    err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
+                           "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
     fullname = TextField(lazy_gettext('Full name'),
                          [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
-    err_msg = lazy_gettext("User name must be between 3 and %s "
-                           "characters long" % USER_NAME_MAX_LENGTH)
+    err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
+                           "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
@@ -232,8 +232,8 @@ class RegisterForm(Form):
                           pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                           pb_validator.ReservedName('account', current_app)])
 
-    err_msg = lazy_gettext("Email must be between 3 and %s "
-                           "characters long" % EMAIL_MAX_LENGTH)
+    err_msg = lazy_gettext("Email must be between 3 and %(email_length)s "
+                           "characters long", email_length=EMAIL_MAX_LENGTH)
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3,
@@ -257,13 +257,13 @@ class UpdateProfileForm(Form):
 
     id = IntegerField(label=None, widget=HiddenInput())
 
-    err_msg = lazy_gettext("Full name must be between 3 and %s "
-                           "characters long" % USER_FULLNAME_MAX_LENGTH)
+    err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
+                           "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
     fullname = TextField(lazy_gettext('Full name'),
                          [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
-    err_msg = lazy_gettext("User name must be between 3 and %s "
-                           "characters long" % USER_NAME_MAX_LENGTH)
+    err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
+                           "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
@@ -271,8 +271,8 @@ class UpdateProfileForm(Form):
                       pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                       pb_validator.ReservedName('account', current_app)])
 
-    err_msg = lazy_gettext("Email must be between 3 and %s "
-                           "characters long" % EMAIL_MAX_LENGTH)
+    err_msg = lazy_gettext("Email must be between 3 and %(email_length)s "
+                           "characters long", email_length=EMAIL_MAX_LENGTH)
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3,
@@ -325,8 +325,8 @@ class ForgotPasswordForm(Form):
 
     """Form Class for forgotten password."""
 
-    err_msg = lazy_gettext("Email must be between 3 and %s "
-                           "characters long" % EMAIL_MAX_LENGTH)
+    err_msg = lazy_gettext("Email must be between 3 and %(email_length)s "
+                           "characters long", email_length=EMAIL_MAX_LENGTH)
     email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3,
                                               max=EMAIL_MAX_LENGTH,
