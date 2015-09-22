@@ -533,22 +533,14 @@ Crowdcrafting team.
             message = dict(recipients=[project.owner.email_addr],
                            subject=subject,
                            body=content)
-            if '@' in project.owner.email_addr:
-                job = dict(name=send_mail,
-                           args=[message],
-                           kwargs={},
-                           timeout=(600),
-                           queue='medium')
-                enqueue_job(job)
-                project.set_password(password)
-                project_repo.save(project)
-            else:
-                raise Exception("Project %s owner has not a valid email, check manually!" % project.name)
-
-
-
-
-
+            job = dict(name=send_mail,
+                       args=[message],
+                       kwargs={},
+                       timeout=(600),
+                       queue='medium')
+            enqueue_job(job)
+            project.set_password(password)
+            project_repo.save(project)
 
 
 ## ==================================================
