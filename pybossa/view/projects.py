@@ -383,7 +383,7 @@ def update(short_name):
 
         if form.protect.data and form.password.data:
             new_project.set_password(form.password.data)
-        else:
+        if not form.protect.data:
             new_project.set_password("")
 
         project_repo.update(new_project)
