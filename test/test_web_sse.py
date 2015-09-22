@@ -17,7 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from helper import web
 from default import with_context
-from factories import ProjectFactory
+from factories import ProjectFactory, UserFactory
+from pybossa.core import user_repo
 
 class TestWebSse(web.Helper):
 
@@ -30,3 +31,15 @@ class TestWebSse(web.Helper):
         res = self.app.get(private_uri, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert 'Please sign in to access this page' in res.data, res.data
+
+    @with_context
+    def test_stream_uri_private_auth(self):
+        """Test stream URI private auth but not owner works."""
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user)
+        self.signout()
+        self.register(fullname='Juan', name='juan', password='juana')
+        private_uri = '/project/%s/privatestream' % project.short_name
+        res = self.app.get(private_uri, follow_redirects=True)
+        assert res.status_code == 403, res.data
