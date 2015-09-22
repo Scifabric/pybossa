@@ -175,13 +175,13 @@ class Helper(Test):
     def update_project(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
-                           new_allow_anonymous_contributors=False,
+                           new_allow_anonymous_contributors='false',
                            new_category_id="1",
                            new_long_description="Long desc",
                            new_sched="random",
-                           new_hidden=False,
+                           new_hidden='false',
                            new_webhook='http://server.com',
-                           new_protect=False,
+                           new_protect='false',
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
