@@ -198,8 +198,6 @@ class TestPybossaUtil(object):
         master.publish.assert_called_with(channel, json.dumps(msg))
 
 
-
-
 class TestIsReservedName(object):
     from flask import Flask
     from pybossa.core import setup_blueprints, create_app
