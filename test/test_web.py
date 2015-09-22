@@ -1037,7 +1037,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
 
         self.update_project(id=project.id, short_name=project.short_name,
-                                new_password='')
+                            new_protect=False, new_password='')
 
         assert not project.needs_password(), 'Password not deleted'
 
