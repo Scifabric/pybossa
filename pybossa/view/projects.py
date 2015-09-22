@@ -384,7 +384,11 @@ def update(short_name):
             new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
             new_project.category_id = form.category_id.data
 
-        new_project.set_password(form.password.data)
+        if form.protect.data and form.password.data:
+            new_project.set_password(form.password.data)
+        if not form.protect.data:
+            new_project.set_password("")
+
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_cat.reset()
@@ -405,6 +409,7 @@ def update(short_name):
         if project.category_id is None:
             project.category_id = categories[0].id
         form.populate_obj(project)
+        form.protect.data = project.needs_password()
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
