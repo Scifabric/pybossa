@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 from pybossa.jobs import webhook
-from default import Test, with_context
+from default import Test, with_context, FakeResponse
 from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
@@ -35,25 +36,32 @@ class TestWebHooks(Test):
         super(TestWebHooks, self).setUp()
         self.connection = StrictRedis()
         self.connection.flushall()
+        self.project = ProjectFactory.create()
+        self.webhook_payload = dict(project_id=self.project.id,
+                                    project_short_name=self.project.short_name)
 
 
     @with_context
-    @patch('pybossa.jobs.requests')
+    @patch('pybossa.jobs.requests.post')
     def test_webhooks(self, mock):
         """Test WEBHOOK works."""
-        mock.post.return_value = True
+        mock.return_value = FakeResponse(text=json.dumps(dict(foo='bar')),
+                                                              status_code=200)
         err_msg = "The webhook should return True from patched method"
-        assert webhook('url'), err_msg
+        assert webhook('url', self.webhook_payload), err_msg
         err_msg = "The post method should be called"
-        assert mock.post.called, err_msg
+        assert mock.called, err_msg
 
     @with_context
-    @patch('pybossa.jobs.requests')
+    @patch('pybossa.jobs.requests.post')
     def test_webhooks_without_url(self, mock):
         """Test WEBHOOK without url works."""
         mock.post.return_value = True
-        err_msg = "The webhook should return False"
-        assert webhook(None) is False, err_msg
+        err_msg = "The webhook should return Connection Error"
+        res = webhook(None, self.webhook_payload, None)
+        print res
+        assert res.response == 'Connection Error', err_msg
+        assert res.response_status_code is None, err_msg
 
     @with_context
     @patch('pybossa.model.event_listeners.webhook_queue', new=queue)

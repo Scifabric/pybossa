@@ -21,7 +21,7 @@ import math
 import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
-from pybossa.core import mail, task_repo, webhook_repo, importer
+from pybossa.core import mail, task_repo, importer
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
@@ -451,29 +451,32 @@ def webhook(url, payload=None, oid=None):
     """Post to a webhook."""
     try:
         import json
-        from pybossa.core import sentinel
+        from pybossa.core import sentinel, webhook_repo
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        webhook = Webhook(project_id=payload['project_id'],
+        if oid:
+            webhook = webhook_repo.get(oid)
+        else:
+            webhook = Webhook(project_id=payload['project_id'],
                               payload=payload)
         if url:
             response = requests.post(url, data=json.dumps(payload), headers=headers)
             webhook.response = response.text
             webhook.response_status_code = response.status_code
         else:
-            return False
-    except requests.exceptions.ConnectionError:
-            webhook.response = 'Connection Error'
-            webhook.response_status_code = None
-    finally:
+            raise requests.exceptions.ConnectionError('Not URL')
         if oid:
-            webhook.id = oid
             webhook_repo.update(webhook)
+            webhook = webhook_repo.get(oid)
+            print webhook
         else:
             webhook_repo.save(webhook)
-        publish_channel(sentinel, payload['project_short_name'],
-                        data=webhook.dictize(), type='webhook',
-                        private=True)
-        return webhook
+    except requests.exceptions.ConnectionError:
+        webhook.response = 'Connection Error'
+        webhook.response_status_code = None
+    publish_channel(sentinel, payload['project_short_name'],
+                    data=webhook.dictize(), type='webhook',
+                    private=True)
+    return webhook
 
 
 
