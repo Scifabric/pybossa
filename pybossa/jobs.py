@@ -467,7 +467,6 @@ def webhook(url, payload=None, oid=None):
         if oid:
             webhook_repo.update(webhook)
             webhook = webhook_repo.get(oid)
-            print webhook
         else:
             webhook_repo.save(webhook)
     except requests.exceptions.ConnectionError:
@@ -477,7 +476,6 @@ def webhook(url, payload=None, oid=None):
                     data=webhook.dictize(), type='webhook',
                     private=True)
     return webhook
-
 
 
 def notify_blog_users(blog_id, project_id, queue='high'):
