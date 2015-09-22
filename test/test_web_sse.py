@@ -21,15 +21,10 @@ from factories import ProjectFactory
 
 class TestWebSse(web.Helper):
 
-    #def setUp(self):
-        #super(TestWebSse, self).setUp()
-        #self.project = ProjectFactory.create()
-        #self.private_uri = '/project/%s/privatestream' % self.project.short_name
-        #self.public_uri = '/project/%s/publictream' % self.project.short_name
 
     @with_context
-    def test_stream_uri_private(self):
-        """Test stream URI private works."""
+    def test_stream_uri_private_anon(self):
+        """Test stream URI private anon works."""
         project = ProjectFactory.create()
         private_uri = '/project/%s/privatestream' % project.short_name
         res = self.app.get(private_uri, follow_redirects=True)
