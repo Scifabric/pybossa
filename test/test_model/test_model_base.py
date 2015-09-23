@@ -78,12 +78,6 @@ class TestModelBase(Test):
         assert project.name == u'My New Project', project
         # year would start with 201...
         assert project.created.startswith('201'), project.created
-        assert project.long_tasks == 0, project.long_tasks
-        assert project.hidden == 0, project.hidden
-        assert project.time_estimate == 0, project
-        assert project.time_limit == 0, project
-        assert project.calibration_frac == 0, project
-        assert project.bolt_course_id == 0
         assert len(project.tasks) == 1, project
         assert project.owner.name == username, project
         out_task = project.tasks[0]

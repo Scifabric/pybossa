@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import assert_not_raises
-from mock import Mock, patch
+from mock import Mock, patch, PropertyMock
 from pybossa.auth import ensure_authorized_to, is_authorized
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -28,9 +28,14 @@ def mock_current_user(anonymous=True, admin=None, id=None, pro=False):
     mock = Mock(spec=User)
     mock.is_anonymous.return_value = anonymous
     mock.is_authenticated.return_value = not anonymous
-    mock.admin = admin
-    mock.pro = pro
-    mock.id = id
+    if anonymous:
+        type(mock).admin = PropertyMock(side_effect=AttributeError)
+        type(mock).pro = PropertyMock(side_effect=AttributeError)
+        type(mock).id = PropertyMock(side_effect=AttributeError)
+    else:
+        mock.admin = admin
+        mock.pro = pro
+        mock.id = id
     return mock
 
 
@@ -72,6 +77,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_invalid_action(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
 
@@ -80,6 +86,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_calls_can_with_None_for_classes(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
         _class = User
@@ -92,6 +99,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_calls_can_with_object_for_instances(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
         instance = User()
@@ -104,6 +112,7 @@ class TestAuthorizationFunctions(object):
     @patch('pybossa.auth._authorizer_for')
     def test_is_authorized_works_for_token_resource_too(self, auth_factory):
         authorizer = Mock()
+        authorizer.specific_actions = []
         auth_factory.return_value = authorizer
         user = self.mock_authenticated
 

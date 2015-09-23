@@ -54,41 +54,6 @@ class TestBlogpostView(web.Helper):
         assert 'titletwo' in res.data
 
 
-    def test_blogposts_get_all_with_hidden_project(self):
-        """Test blogpost GET does not show hidden projects"""
-        self.register()
-        admin = user_repo.get(1)
-        self.signout()
-        self.register(name='user', email='user@user.com')
-        user = user_repo.get(2)
-        project = ProjectFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(project=project, title='title')
-
-        url = "/project/%s/blog" % project.short_name
-
-        # As project owner
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
-
-        # As authenticated
-        self.signout()
-        self.register(name='notowner', email='user2@user.com')
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-
-        # As anonymous
-        self.signout()
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        # As admin
-        self.signin()
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
-
-
     def test_blogpost_get_all_errors(self):
         """Test blogpost GET all raises error if the project does not exist"""
         url = "/project/non-existing-project/blog"
@@ -111,40 +76,6 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.register()
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
-
-
-    def test_blogpost_get_one_with_hidden_project(self):
-        """Test blogpost GET a given post id with hidden project does not show the post"""
-        self.register()
-        admin = user_repo.get(1)
-        self.signout()
-        self.register(name='user', email='user@user.com')
-        user = user_repo.get(2)
-        project = ProjectFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(project=project, title='title')
-        url = "/project/%s/%s" % (project.short_name, blogpost.id)
-
-        # As project owner
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
-
-        # As authenticated
-        self.signout()
-        self.register(name='notowner', email='user2@user.com')
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-
-        # As anonymous
-        self.signout()
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        # As admin
-        self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert 'title' in res.data

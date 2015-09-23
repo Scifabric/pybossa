@@ -122,6 +122,9 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured projects add-remove works as an admin user"""
         self.register()
         self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
         self.update_project()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)

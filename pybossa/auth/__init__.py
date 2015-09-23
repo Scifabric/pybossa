@@ -52,13 +52,14 @@ _auth_classes = {'project': project.ProjectAuth,
 
 
 def is_authorized(user, action, resource, **kwargs):
-    assert action in _actions, "%s is not a valid action" % action
     is_class = inspect.isclass(resource)
     name = resource.__name__ if is_class else resource.__class__.__name__
     if resource == 'token':
         name = resource
     resource = None if is_class else resource
     auth = _authorizer_for(name.lower())
+    actions = _actions + auth.specific_actions
+    assert action in actions, "%s is not a valid action" % action
     return auth.can(user, action, resource, **kwargs)
 
 
@@ -74,8 +75,8 @@ def ensure_authorized_to(action, resource, **kwargs):
 
 def _authorizer_for(resource_name):
     kwargs = {}
-    if resource_name == 'taskrun':
-        kwargs = {'task_repo': task_repo, 'project_repo': project_repo}
-    if resource_name in ['auditlog', 'blogpost', 'task']:
-        kwargs = {'project_repo': project_repo}
+    if resource_name in ('project', 'taskrun'):
+        kwargs.update({'task_repo': task_repo})
+    if resource_name in ('auditlog', 'blogpost', 'task', 'taskrun'):
+        kwargs.update({'project_repo': project_repo})
     return _auth_classes[resource_name](**kwargs)

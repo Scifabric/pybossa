@@ -119,7 +119,7 @@ class TestHelpersCache(Test):
         n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
         assert n_available_tasks == 1, n_available_tasks
 
-    def test_n_available_some_all_tasks_answered_by_anonymous_user(self):
+    def test_n_available_tasks_some_tasks_answered_by_anonymous_user(self):
         """Test n_available_tasks returns 1 for anonymous user if he has
         submitted taskruns for one of the tasks but there is still another task"""
         project = ProjectFactory.create()
@@ -131,7 +131,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 1, n_available_tasks
 
-    def test_n_available_tasks_task_answered_by_another_user(self):
+    def test_n_available_tasks_some_task_answered_by_another_user(self):
         """Test n_available_tasks returns 1 for a user if another
         user has submitted taskruns for the task but he hasn't"""
         project = ProjectFactory.create()
@@ -197,7 +197,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_draft(self):
         """Test check_contributing_state returns 'draft' for a project that has
         ongoing tasks but has no presenter"""
-        project = ProjectFactory.create(info={})
+        project = ProjectFactory.create(published=False, info={})
         task = TaskFactory.create(project=project)
         user = UserFactory.create()
 
@@ -210,7 +210,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_draft_presenter(self):
         """Test check_contributing_state returns 'draft' for a project that has
         no tasks but has a presenter"""
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(published=False)
         user = UserFactory.create()
 
         contributing_state = helpers.check_contributing_state(project=project,
@@ -218,3 +218,16 @@ class TestHelpersCache(Test):
 
         assert 'task_presenter' in project.info
         assert contributing_state == 'draft', contributing_state
+
+    def test_check_contributing_state_publish(self):
+        """Test check_contributing_state returns 'publish' for a project that is
+        not published but is ready to be validated for publication (i.e. has both
+        tasks and a task presenter"""
+        project = ProjectFactory.create(published=False)
+        task = TaskFactory.create(project=project)
+        user = UserFactory.create()
+
+        contributing_state = helpers.check_contributing_state(project=project,
+                                                              user_id=user.id)
+
+        assert contributing_state == 'publish', contributing_state

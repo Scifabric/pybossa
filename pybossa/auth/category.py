@@ -18,6 +18,11 @@
 
 
 class CategoryAuth(object):
+    _specific_actions = []
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, category=None):
         action = ''.join(['_', action])

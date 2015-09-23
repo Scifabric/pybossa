@@ -360,8 +360,6 @@ def update(short_name):
      n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
 
     def handle_valid_form(form):
-        hidden = int(form.hidden.data)
-
         (project, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = project_by_shortname(short_name)
 
@@ -374,7 +372,6 @@ def update(short_name):
             new_project.short_name = form.short_name.data
             new_project.description = form.description.data
             new_project.long_description = form.long_description.data
-            new_project.hidden = int(form.hidden.data)
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
@@ -463,12 +460,14 @@ def details(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('read', project)
-    template = '/projects/project.html'
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    template = '/projects/project.html'
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -687,10 +686,12 @@ def task_presenter(short_name, task_id):
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
     if current_user.is_anonymous():
         if not project.allow_anonymous_contributors:
@@ -746,13 +747,16 @@ def presenter(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
+
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project)}
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
 
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -784,10 +788,13 @@ def tutorial(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
     title = project_title(project, "Tutorial")
 
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
+
     return render_template('/projects/tutorial.html', title=title,
                            project=project, owner=owner)
 
@@ -799,10 +806,12 @@ def export(short_name, task_id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
     # Check if the task belongs to the project and exists
     task = task_repo.get_task_by(project_id=project.id, id=task_id)
@@ -820,12 +829,14 @@ def tasks(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
 
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('/projects/tasks.html',
                            title=title,
                            project=project,
@@ -867,10 +878,12 @@ def tasks_browse(short_name, page):
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
@@ -916,10 +929,12 @@ def export_to(short_name):
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
     def respond():
         return render_template('/projects/export.html',
@@ -1124,10 +1139,12 @@ def show_stats(short_name):
     n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Statistics")
 
-    ensure_authorized_to('read', project)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -1333,10 +1350,12 @@ def show_blogposts(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     blogposts = blog_repo.filter_by(project_id=project.id)
-    ensure_authorized_to('read', Blogpost, project_id=project.id)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', Blogpost, project_id=project.id)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog.html', project=project,
                            owner=owner, blogposts=blogposts,
@@ -1354,10 +1373,12 @@ def show_blogpost(short_name, id):
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
-    ensure_authorized_to('read', blogpost)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', blogpost)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog_post.html',
                            project=project,
@@ -1492,9 +1513,6 @@ def auditlog(short_name):
 
     logs = auditlogger.get_project_logs(project.id)
     ensure_authorized_to('read', Auditlog, project_id=project.id)
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
@@ -1503,3 +1521,20 @@ def auditlog(short_name):
                            n_task_runs=n_task_runs,
                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
                            n_volunteers=cached_projects.n_volunteers(project.get('id')))
+
+
+@blueprint.route('/<short_name>/publish', methods=['GET', 'POST'])
+@login_required
+def publish(short_name):
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+
+    ensure_authorized_to('publish', project)
+    if request.method == 'GET':
+        return render_template('projects/publish.html', project=project)
+    project.published = True
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'published', False, True)
+    flash(gettext('Project published! Volunteers will now be able to help you!'))
+    return redirect(url_for('.details', short_name=project.short_name))
+

@@ -18,9 +18,14 @@
 
 
 class BlogpostAuth(object):
+    _specific_actions = []
 
     def __init__(self, project_repo):
         self.project_repo = project_repo
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, blogpost=None, project_id=None):
         action = ''.join(['_', action])
@@ -36,11 +41,11 @@ class BlogpostAuth(object):
 
     def _read(self, user, blogpost=None, project_id=None):
         project = self._get_project(blogpost, project_id)
-        if project and not project.hidden:
-            return True
+        if project:
+            return (project.published or self._is_admin_or_owner(user, project))
         if user.is_anonymous() or (blogpost is None and project_id is None):
             return False
-        return user.admin or user.id == project.owner_id
+        return self._is_admin_or_owner(user, project)
 
     def _update(self, user, blogpost, project_id=None):
         if user.is_anonymous():
@@ -56,3 +61,7 @@ class BlogpostAuth(object):
         if blogpost is not None:
             return self.project_repo.get(blogpost.project_id)
         return self.project_repo.get(project_id)
+
+    def _is_admin_or_owner(self, user, project):
+        return (not user.is_anonymous() and
+                (project.owner_id == user.id or user.admin))
