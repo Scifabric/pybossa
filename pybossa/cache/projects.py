@@ -326,6 +326,7 @@ def get_all(category):
                category.short_name=:category
                AND "user".id=project.owner_id
                AND project.published=true
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id, "user".id ORDER BY project.name;''')
 
     results = session.execute(sql, dict(category=category))
