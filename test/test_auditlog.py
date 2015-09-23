@@ -234,7 +234,7 @@ class TestAuditlogWEB(web.Helper):
                      'name': 'Sample Project',
                      'short_name': 'sampleapp',
                      'description': 'Long Description',
-                     'allow_anonymous_contributors': 'True',
+                     'allow_anonymous_contributors': 'true',
                      'category_id': 1,
                      'long_description': 'Long Description\n================',
                      'btn': 'Save'}
@@ -360,11 +360,11 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'allow_anonymous_contributors'
 
-        new_string = 'False'
+        new_value = 'false'
 
         old_value = self.data[attribute]
 
-        self.data[attribute] = new_string
+        self.data[attribute] = new_value
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -372,8 +372,8 @@ class TestAuditlogWEB(web.Helper):
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
-            assert log.old_value == old_value, log.old_value
-            assert log.new_value == new_string, log.new_value
+            assert log.old_value == old_value.capitalize(), log.old_value
+            assert log.new_value == new_value.capitalize(), log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
@@ -456,6 +456,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = None
 
         self.data[attribute] = new_string
+        self.data['protect'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 

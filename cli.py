@@ -481,6 +481,66 @@ def resize_project_avatars():
         #                print "Something failed, this project will use the placehoder."
 
 
+def password_protect_hidden_projects():
+    import random
+    from pybossa.core import project_repo, user_repo, mail
+    from pybossa.jobs import enqueue_job, send_mail
+
+
+    def generate_random_password():
+        CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        password = ''
+        for i in range(8):
+            password += random.choice(CHARS)
+        return password
+
+    def generate_email_for(project_name, owner_name, password):
+        subject = "Changes in your hidden project %s" % project_name
+        content = (
+"""
+Dear %s,
+
+We are writing you to let you know that, due to recent changes in Crowdcrafting,
+hidden projects will soon no longer be supported. However, you can still
+protect your project with a password, allowing only people with it to
+access and contribute to it.
+
+We have checked that your project %s is hidden. We don't want to expose it
+to the public, so we have protected it with a password instead. The current
+password for your project is:
+
+%s
+
+You will be able to change it on your project settings page.
+
+You can find more information about passwords in the documentation
+(http://docs.pybossa.com/en/latest/user/tutorial.html#protecting-the-project-with-a-password).
+
+If you have any doubts, please contact us and we will be pleased to help you!
+
+Best regards,
+
+Crowdcrafting team.
+""" % (owner_name, project_name, password))
+
+        return subject, content
+
+
+    with app.app_context():
+        for project in project_repo.filter_by(hidden=1):
+            password = generate_random_password()
+            subject, content = generate_email_for(project.name, project.owner.name, password)
+            message = dict(recipients=[project.owner.email_addr],
+                           subject=subject,
+                           body=content)
+            job = dict(name=send_mail,
+                       args=[message],
+                       kwargs={},
+                       timeout=(600),
+                       queue='medium')
+            enqueue_job(job)
+            project.set_password(password)
+            project_repo.save(project)
 
 
 ## ==================================================
