@@ -19,7 +19,8 @@ from helper import web
 from default import with_context
 from factories import ProjectFactory
 from pybossa.core import user_repo
-from mock import patch
+from pybossa.view.projects import project_event_stream
+from mock import patch, MagicMock
 
 
 class TestWebSse(web.Helper):
@@ -150,3 +151,15 @@ class TestWebSse(web.Helper):
         assert mock_sse.called_once_with(project.short_name, 'public')
         assert res.status_code == 200
         assert res.data == self.fake_sse_response, res.data
+
+    @patch('pybossa.view.projects.sentinel.master.pubsub')
+    def test_project_event_stream(self, mock_pubsub):
+        """Test project_event_stream works."""
+        tmp = MagicMock()
+        def gen():
+            yield dict(data='foobar')
+        tmp.listen.return_value = gen()
+        mock_pubsub.return_value = tmp
+        res = project_event_stream('foo', 'public')
+        expected = 'data: %s\n\n' % 'foobar'
+        assert next(res) == expected, next(res)
