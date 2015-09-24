@@ -89,6 +89,16 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
+    def test_get_dont_return_projects_with_password(self):
+        """Test CACHE PROJECTS get does not return projects with a password"""
+
+        project = ProjectFactory.create(published=True, info={'passwd_hash': '2'})
+        ProjectFactory.create(category=project.category, published=True)
+        projects = cached_projects.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
     def test_get_only_returns_projects_from_category(self):
         """Test CACHE PROJECTS get returns only projects from required category"""
 
