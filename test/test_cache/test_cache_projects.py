@@ -33,8 +33,8 @@ class TestProjectsCache(Test):
         return project
 
     def create_project_with_contributors(self, anonymous, registered,
-                                     two_tasks=False, name='my_app'):
-        project = ProjectFactory.create(name=name)
+                                     two_tasks=False, name='my_app', info={}):
+        project = ProjectFactory.create(name=name, info=info)
         task = TaskFactory(project=project)
         if two_tasks:
             task2 = TaskFactory(project=project)
@@ -178,6 +178,18 @@ class TestProjectsCache(Test):
         top_projects = cached_projects.get_top(n=2)
 
         assert len(top_projects) is 2, len(top_projects)
+
+
+    def test_get_top_returns_only_projects_without_password(self):
+        """Test CACHE PROJECTS get_top returns projects that don't have a password"""
+
+        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+        ranked_1_project = self.create_project_with_contributors(
+            10, 0, name='one', info={'passwd_hash': 'something'})
+
+        top_projects = cached_projects.get_top()
+
+        assert len(top_projects) is 1, len(top_projects)
 
 
     def test_n_completed_tasks_no_completed_tasks(self):
