@@ -174,25 +174,10 @@ class TestProjectsCache(Test):
         ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
         ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
         ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
 
         top_projects = cached_projects.get_top(n=2)
 
         assert len(top_projects) is 2, len(top_projects)
-
-
-    def test_get_top_returns_four_projects_by_default(self):
-        """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
-
-        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
-        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
-        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
-        ranked_5_project = self.create_project_with_contributors(7, 0, name='five')
-
-        top_projects = cached_projects.get_top()
-
-        assert len(top_projects) is 4, len(top_projects)
 
 
     def test_n_completed_tasks_no_completed_tasks(self):
