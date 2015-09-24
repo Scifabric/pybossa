@@ -39,8 +39,11 @@ def get_top(n=4):
     """Return top n=4 projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.description,
                project.info,
-               COUNT(project_id) AS total FROM task_run, project
-               WHERE project_id IS NOT NULL AND project.id=project_id
+               COUNT(project_id) AS total
+               FROM task_run, project
+               WHERE project_id IS NOT NULL
+               AND project.id=project_id
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id ORDER BY total DESC LIMIT :limit;''')
     results = session.execute(sql, dict(limit=n))
     top_projects = []
@@ -204,9 +207,11 @@ def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                project.created, project.updated, project.description,
-               "user".fullname AS owner FROM project, "user"
+               "user".fullname AS owner
+               FROM project, "user"
                WHERE project.featured=true
-               AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
+               AND "user".id=project.owner_id
+               GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
     projects = []
@@ -302,6 +307,7 @@ def n_count(category):
                WHERE
                category.short_name=:category
                AND project.published=true
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
                ''')
