@@ -24,6 +24,7 @@ from mock import patch
 
 class TestWebSse(web.Helper):
 
+    fake_sse_response = "data: This is the first message.\n\n"
 
     @with_context
     def test_stream_uri_private_anon(self):
@@ -51,6 +52,7 @@ class TestWebSse(web.Helper):
     @patch('flask.Response', autospec=True)
     def test_stream_uri_private_owner(self, mock_response, mock_sse):
         """Test stream URI private owner works."""
+        mock_sse.return_value = self.fake_sse_response
         self.register()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
@@ -58,3 +60,24 @@ class TestWebSse(web.Helper):
         self.app.get(private_uri, follow_redirects=True)
         assert mock_sse.called
         assert mock_sse.called_once_with(project.short_name, 'private')
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_private_admin(self, mock_response, mock_sse):
+        """Test stream URI private admin but not owner works."""
+        mock_sse.return_value = self.fake_sse_response
+        self.register()
+        self.signout()
+        self.register(fullname="name", name="name")
+        user = user_repo.get(2)
+        project = ProjectFactory.create(owner=user)
+        private_uri = '/project/%s/privatestream' % project.short_name
+        self.signout()
+        # Sign in as admin
+        self.signin()
+        res = self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'private')
+        assert res.status_code == 200
+        assert res.data == self.fake_sse_response, res.data
