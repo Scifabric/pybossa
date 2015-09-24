@@ -79,7 +79,7 @@ class TestProjectsCache(Test):
             assert featured.has_key(field), "%s not in project info" % field
 
 
-    def test_get_category_only_return_published(self):
+    def test_get_only_return_published(self):
         """Test CACHE PROJECTS get returns only published projects"""
 
         project = ProjectFactory.create(published=True)
@@ -89,7 +89,7 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
-    def test_get_only_returns_category_projects(self):
+    def test_get_only_returns_projects_from_category(self):
         """Test CACHE PROJECTS get returns only projects from required category"""
 
         project = ProjectFactory.create(published=True)
