@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from helper import web
-from default import with_context, FakeResponse
+from default import with_context
 from factories import ProjectFactory
 from pybossa.core import user_repo
 from mock import patch
@@ -79,5 +79,74 @@ class TestWebSse(web.Helper):
         res = self.app.get(private_uri, follow_redirects=True)
         assert mock_sse.called
         assert mock_sse.called_once_with(project.short_name, 'private')
+        assert res.status_code == 200
+        assert res.data == self.fake_sse_response, res.data
+
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_public_admin(self, mock_response, mock_sse):
+        """Test stream URI public admin but not owner works."""
+        mock_sse.return_value = self.fake_sse_response
+        self.register()
+        self.signout()
+        self.register(fullname="name", name="name")
+        user = user_repo.get(2)
+        project = ProjectFactory.create(owner=user)
+        private_uri = '/project/%s/publicstream' % project.short_name
+        self.signout()
+        # Sign in as admin
+        self.signin()
+        res = self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'public')
+        assert res.status_code == 200
+        assert res.data == self.fake_sse_response, res.data
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_public_owner(self, mock_response, mock_sse):
+        """Test stream URI public owner works."""
+        mock_sse.return_value = self.fake_sse_response
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user)
+        private_uri = '/project/%s/publicstream' % project.short_name
+        self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'public')
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_public_anon(self, mock_response, mock_sse):
+        """Test stream URI public anon works."""
+        mock_sse.return_value = self.fake_sse_response
+        project = ProjectFactory.create()
+        private_uri = '/project/%s/publicstream' % project.short_name
+        self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'public')
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_public_auth_not_admin_not_owner(self, mock_response,
+                                                        mock_sse):
+        """Test stream URI public auth but not owner or admin works."""
+        mock_sse.return_value = self.fake_sse_response
+        self.register()
+        self.signout()
+        self.register(fullname="name", name="name")
+        user = user_repo.get(2)
+        project = ProjectFactory.create(owner=user)
+        self.signout()
+        self.register(fullname="name2", name="name2")
+        private_uri = '/project/%s/publicstream' % project.short_name
+        res = self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'public')
         assert res.status_code == 200
         assert res.data == self.fake_sse_response, res.data
