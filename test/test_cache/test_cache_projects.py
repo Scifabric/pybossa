@@ -33,8 +33,8 @@ class TestProjectsCache(Test):
         return project
 
     def create_project_with_contributors(self, anonymous, registered,
-                                     two_tasks=False, name='my_app'):
-        project = ProjectFactory.create(name=name)
+                                     two_tasks=False, name='my_app', info={}):
+        project = ProjectFactory.create(name=name, info=info)
         task = TaskFactory(project=project)
         if two_tasks:
             task2 = TaskFactory(project=project)
@@ -79,7 +79,7 @@ class TestProjectsCache(Test):
             assert featured.has_key(field), "%s not in project info" % field
 
 
-    def test_get_category_only_return_published(self):
+    def test_get_only_return_published(self):
         """Test CACHE PROJECTS get returns only published projects"""
 
         project = ProjectFactory.create(published=True)
@@ -89,7 +89,17 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
-    def test_get_only_returns_category_projects(self):
+    def test_get_dont_return_projects_with_password(self):
+        """Test CACHE PROJECTS get does not return projects with a password"""
+
+        project = ProjectFactory.create(published=True, info={'passwd_hash': '2'})
+        ProjectFactory.create(category=project.category, published=True)
+        projects = cached_projects.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_only_returns_projects_from_category(self):
         """Test CACHE PROJECTS get returns only projects from required category"""
 
         project = ProjectFactory.create(published=True)
@@ -164,25 +174,22 @@ class TestProjectsCache(Test):
         ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
         ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
         ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
 
         top_projects = cached_projects.get_top(n=2)
 
         assert len(top_projects) is 2, len(top_projects)
 
 
-    def test_get_top_returns_four_projects_by_default(self):
-        """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
+    def test_get_top_returns_only_projects_without_password(self):
+        """Test CACHE PROJECTS get_top returns projects that don't have a password"""
 
-        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
         ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
-        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
-        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
-        ranked_5_project = self.create_project_with_contributors(7, 0, name='five')
+        ranked_1_project = self.create_project_with_contributors(
+            10, 0, name='one', info={'passwd_hash': 'something'})
 
         top_projects = cached_projects.get_top()
 
-        assert len(top_projects) is 4, len(top_projects)
+        assert len(top_projects) is 1, len(top_projects)
 
 
     def test_n_completed_tasks_no_completed_tasks(self):
@@ -422,6 +429,17 @@ class TestProjectsCache(Test):
         project = ProjectFactory.create(published=True)
         ProjectFactory.create(published=True)
         ProjectFactory.create(category=project.category, published=False)
+
+        n_projects = cached_projects.n_count(project.category.short_name)
+
+        assert n_projects == 1, n_projects
+
+
+    def test_n_count_with_password_protected_projects(self):
+        """Test CACHE PROJECTS n_count returns the number of published projects
+        of a given category, excluding projects with a password"""
+        project = ProjectFactory.create(published=True, info={'passwd_hash': '2'})
+        ProjectFactory.create(category=project.category, published=True)
 
         n_projects = cached_projects.n_count(project.category.short_name)
 
