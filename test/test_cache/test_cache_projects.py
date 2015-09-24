@@ -435,6 +435,17 @@ class TestProjectsCache(Test):
         assert n_projects == 1, n_projects
 
 
+    def test_n_count_with_password_protected_projects(self):
+        """Test CACHE PROJECTS n_count returns the number of published projects
+        of a given category, excluding projects with a password"""
+        project = ProjectFactory.create(published=True, info={'passwd_hash': '2'})
+        ProjectFactory.create(category=project.category, published=True)
+
+        n_projects = cached_projects.n_count(project.category.short_name)
+
+        assert n_projects == 1, n_projects
+
+
     def test_get_from_pro_user_projects_no_projects(self):
         """Test CACHE PROJECTS get_from_pro_user returns empty list if no projects
         with 'pro' owners"""
