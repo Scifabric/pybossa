@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from helper import web
-from default import with_context
-from factories import ProjectFactory, UserFactory
+from default import with_context, FakeResponse
+from factories import ProjectFactory
 from pybossa.core import user_repo
+from mock import patch
+
 
 class TestWebSse(web.Helper):
 
@@ -43,3 +45,16 @@ class TestWebSse(web.Helper):
         private_uri = '/project/%s/privatestream' % project.short_name
         res = self.app.get(private_uri, follow_redirects=True)
         assert res.status_code == 403, res.data
+
+    @with_context
+    @patch('pybossa.view.projects.project_event_stream')
+    @patch('flask.Response', autospec=True)
+    def test_stream_uri_private_owner(self, mock_response, mock_sse):
+        """Test stream URI private owner works."""
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user)
+        private_uri = '/project/%s/privatestream' % project.short_name
+        self.app.get(private_uri, follow_redirects=True)
+        assert mock_sse.called
+        assert mock_sse.called_once_with(project.short_name, 'private')
