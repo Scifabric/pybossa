@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Flickr view for PyBossa."""
-from flask import Blueprint, request, url_for, flash, redirect, session, current_app
+import json
+from flask import (Blueprint, request, url_for, flash, redirect, session,
+    current_app, Response)
 from pybossa.core import flickr
 from flask_oauthlib.client import OAuthException
 
@@ -55,3 +57,8 @@ def oauth_authorized():
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
     flickr.save_credentials(session, flickr_token, flickr_user)
     return redirect(next_url)
+
+@blueprint.route('/albums')
+def user_albums():
+    albums = flickr.get_user_albums(session)
+    return Response(json.dumps(albums), mimetype='application/json')
