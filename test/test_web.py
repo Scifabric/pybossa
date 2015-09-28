@@ -3860,11 +3860,3 @@ class TestWeb(web.Helper):
         message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
         assert message not in res.data
         self.signout()
-
-    @with_context
-    def webhook_handler_anon(self):
-        """Test WEBHOOK view works for anons."""
-        project = ProjectFactory.create()
-        url = "/%s/webhook" % project.short_name
-        res = self.app.get(url, follow_redirects=True)
-        assert "Sign in" in res.data, res.data
