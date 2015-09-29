@@ -63,6 +63,19 @@ class TestWebSse(web.Helper):
         assert mock_sse.called_once_with(project.short_name, 'private')
 
     @with_context
+    def test_stream_uri_private_owner_404(self):
+        """Test stream URI private return 404 when SSE disabled
+        for owner works."""
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user)
+        private_uri = '/project/%s/privatestream' % project.short_name
+        with patch.dict(self.flask_app.config, {'SSE': False}):
+            res = self.app.get(private_uri, follow_redirects=True)
+            assert res.status_code == 404
+
+
+    @with_context
     @patch('pybossa.view.projects.project_event_stream')
     @patch('flask.Response', autospec=True)
     def test_stream_uri_private_admin(self, mock_response, mock_sse):
