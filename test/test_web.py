@@ -2893,27 +2893,6 @@ class TestWeb(web.Helper):
 
         assert login_url in res.data
 
-    @patch('pybossa.view.projects.flickr')
-    def test_flickr_importer_page_shows_albums_and_revoke_access_option(
-            self, flickr):
-        flickr.get_user_albums.return_value = [{'photos': u'1',
-                                               'thumbnail_url': u'fake-url',
-                                               'id': u'my-fake-ID',
-                                               'title': u'my-fake-title'}]
-        self.register()
-        owner = db.session.query(User).first()
-        project = ProjectFactory.create(owner=owner)
-        url = "/project/%s/tasks/import?type=flickr" % project.short_name
-
-        res = self.app.get(url)
-        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fimport%3Ftype%3Dflickr'
-
-        assert '1 photos' in res.data
-        assert 'src="fake-url"' in res.data
-        assert 'id="my-fake-ID"' in res.data
-        assert 'my-fake-title' in res.data
-        assert revoke_url in res.data
-
     def test_bulk_dropbox_import_works(self):
         """Test WEB bulk Dropbox import works"""
         dropbox_file_data = (u'{"bytes":286,'
