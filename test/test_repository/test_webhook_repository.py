@@ -36,23 +36,30 @@ class TestWebhookRepository(Test):
         webhook = Webhook(project_id=1, payload=self.payload)
         self.webhook_repo.save(webhook)
 
-
     def test_get_return_none_if_no_webhook(self):
         """Test get method returns None if there is no log with the
         specified id."""
-
         assert self.webhook_repo.get(2) is None
 
     def test_get_return_obj(self):
         """Test get method returns obj."""
-
         tmp = self.webhook_repo.get(1)
         assert tmp.id == 1
         assert tmp.project_id == 1
 
     def test_get_by_return_obj(self):
         """Test get_by method returns obj."""
-
         tmp = self.webhook_repo.get_by(project_id=1)
         assert tmp.id == 1
         assert tmp.project_id == 1
+
+    def test_filter_by_return_obj(self):
+        """Test filter_by method returns obj."""
+        tmp = self.webhook_repo.filter_by(project_id=1)
+        assert len(tmp) == 1
+        tmp = tmp[0]
+        assert tmp.id == 1
+        assert tmp.project_id == 1
+
+        tmp = self.webhook_repo.filter_by(limit=1, offset=1, project_id=1)
+        assert len(tmp) == 0
