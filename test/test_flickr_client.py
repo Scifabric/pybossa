@@ -17,12 +17,12 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, MagicMock
+import json
 from flask import Response, session
 from default import flask_app
 from pybossa.flickr_client import FlickrClient
 
-class TestFlickrOauthBlueprint(object):
-
+class TestFlickrOauth(object):
 
     @patch('pybossa.view.flickr.flickr')
     def test_flickr_login_specifies_callback_and_read_permissions(self, flickr):
@@ -98,6 +98,16 @@ class TestFlickrOauthBlueprint(object):
 
         redirect.assert_called_with('http://next')
 
+
+class TestFlickrAPI(object):
+
+    @patch('pybossa.view.flickr.flickr')
+    def test_albums_endpoint_returns_user_albums_in_JSON_format(self, client):
+        albums = ['one album', 'another album']
+        client.get_user_albums.return_value = albums
+        resp = flask_app.test_client().get('/flickr/albums')
+
+        assert resp.data == json.dumps(albums), resp.data
 
 
 class TestFlickrClient(object):
