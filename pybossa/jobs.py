@@ -449,6 +449,7 @@ def import_tasks(project_id, **form_data):
 
 def webhook(url, payload=None, oid=None):
     """Post to a webhook."""
+    from flask import current_app
     try:
         import json
         from pybossa.core import sentinel, webhook_repo
@@ -472,9 +473,10 @@ def webhook(url, payload=None, oid=None):
     except requests.exceptions.ConnectionError:
         webhook.response = 'Connection Error'
         webhook.response_status_code = None
-    publish_channel(sentinel, payload['project_short_name'],
-                    data=webhook.dictize(), type='webhook',
-                    private=True)
+    if current_app.config.get('SSE'):
+        publish_channel(sentinel, payload['project_short_name'],
+                        data=webhook.dictize(), type='webhook',
+                        private=True)
     return webhook
 
 
