@@ -33,7 +33,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-    csv_exporter, importer, flickr)
+    csv_exporter, importer)
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -558,8 +558,6 @@ def import_task(short_name):
             template_args['available_importers'] = map(importer_wrap, all_importers)
             return render_template('/projects/task_import_options.html',
                                    **template_args)
-        if importer_type == 'flickr':
-            template_args['albums'] = flickr.get_user_albums(session)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
             template = request.args.get('template')
             form.googledocs_url.data = template_tasks.get(template)
@@ -626,8 +624,6 @@ def setup_autoimporter(short_name):
             template_args['available_importers'] = map(wrap, all_importers)
             return render_template('projects/task_autoimport_options.html',
                                    **template_args)
-        if importer_type == 'flickr':
-            template_args['albums'] = flickr.get_user_albums(session)
     return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 

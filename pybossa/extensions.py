@@ -115,8 +115,8 @@ from importers import Importer
 importer = Importer()
 
 # Flickr OAuth integration for importer
-from pybossa.flickr_service import FlickrService
-flickr = FlickrService()
+from pybossa.flickr_client import FlickrClient
+flickr = FlickrClient()
 
 from flask.ext.plugins import PluginManager
 plugin_manager = PluginManager()

@@ -20,7 +20,7 @@ from flask_oauthlib.client import OAuth
 import functools
 
 
-class FlickrService(object):
+class FlickrClient(object):
 
     """Class for Flickr integration."""
 
