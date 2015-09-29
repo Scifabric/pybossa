@@ -78,9 +78,10 @@ class TestWebhookView(web.Helper):
                           response='OK', response_status_code=200)
         webhook_repo.save(webhook)
         webhook = webhook_repo.get(1)
-        url = "/project/%s/webhook" % project.short_name
-        res = self.app.get(url)
+        url = "/project/%s/webhook/%s" % (project.short_name, webhook.id)
+        res = self.app.post(url)
+        tmp = json.loads(res.data)
         assert res.status_code == 200, res.status_code
-        assert "Created" in res.data
-        assert "Payload" in res.data
-        assert 'fired_at' in res.data
+        assert tmp['payload']['project_short_name'] == project.short_name
+        assert tmp['payload']['project_id'] == project.id
+        assert tmp['payload']['task_id'] == task.id
