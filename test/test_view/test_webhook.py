@@ -85,3 +85,19 @@ class TestWebhookView(web.Helper):
         assert tmp['payload']['project_short_name'] == project.short_name
         assert tmp['payload']['project_id'] == project.id
         assert tmp['payload']['task_id'] == task.id
+
+    @with_context
+    def test_webhook_handler_post_oid_404(self):
+        """Test WEBHOOK post oid 404 works."""
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project, n_answers=1)
+        AnonymousTaskRunFactory.create(project=project, task=task)
+        payload = self.payload(project, task)
+        webhook = Webhook(project_id=project.id, payload=payload,
+                          response='OK', response_status_code=200)
+        webhook_repo.save(webhook)
+        url = "/project/%s/webhook/%s" % (project.short_name, 9999)
+        res = self.app.post(url)
+        assert res.status_code == 404, res.status_code
