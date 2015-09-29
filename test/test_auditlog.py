@@ -18,7 +18,7 @@
 import json
 from default import db, Test, with_context
 from collections import namedtuple
-from factories import ProjectFactory, AuditlogFactory, UserFactory, CategoryFactory
+from factories import ProjectFactory, TaskFactory, UserFactory, CategoryFactory
 from helper import web
 
 from pybossa.repositories import UserRepository
@@ -36,7 +36,6 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_project_create(self):
         """Test Auditlog API project create works."""
-        # project = ProjectFactory.create()
         CategoryFactory.create()
         user = UserFactory.create()
 
@@ -82,7 +81,6 @@ class TestAuditlogAPI(Test):
             assert log.attribute == 'project', log.attribute
             assert log.old_value == 'Saved', log.old_value
             assert log.new_value == 'Deleted', log.new_value
-
 
     @with_context
     def test_project_update_attributes(self):
@@ -239,7 +237,6 @@ class TestAuditlogWEB(web.Helper):
                      'allow_anonymous_contributors': 'true',
                      'category_id': 1,
                      'long_description': 'Long Description\n================',
-                     'hidden': 'false',
                      'btn': 'Save'}
         self.editor = {'editor': 'Some HTML code!'}
 
@@ -277,7 +274,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.action == 'delete', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
-
 
     @with_context
     def test_project_update_name(self):
@@ -354,7 +350,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
-
     @with_context
     def test_project_allow_anonymous_contributors(self):
         self.register()
@@ -385,24 +380,28 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
     @with_context
-    def test_project_hidden(self):
-        self.register()
-        self.new_project()
-        short_name = 'sampleapp'
+    def test_project_published(self):
+        owner = UserFactory.create(email_addr='a@a.com', pro=True)
+        owner.set_password('1234')
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner, published=False)
+        self.signin(email='a@a.com', password='1234')
+        TaskFactory.create(project=project)
+        short_name = project.short_name
 
-        url = "/project/%s/update" % short_name
+        url = "/project/%s/publish" % short_name
 
-        attribute = 'hidden'
+        attribute = 'published'
 
-        new_string = '1'
+        new_string = 'true'
 
-        old_value = 'False'
+        old_value = 'false'
 
         self.data[attribute] = new_string
 
-        self.app.post(url, data=self.data, follow_redirects=True)
+        self.app.post(url, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(project_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -410,9 +409,8 @@ class TestAuditlogWEB(web.Helper):
             assert log.new_value == self.data[attribute], log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
-            assert log.user_name == 'johndoe', log.user_name
-            assert log.user_id == 1, log.user_id
-
+            assert log.user_name == owner.name, log.user_name
+            assert log.user_id == owner.id, log.user_id
 
     @with_context
     def test_project_long_description(self):
@@ -442,7 +440,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
-
 
     @with_context
     def test_project_password(self):
@@ -650,7 +647,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
-
     def test_project_auditlog_autoimporter_create(self):
         self.register()
         self.new_project()
@@ -679,7 +675,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
-
     def test_project_auditlog_autoimporter_delete(self):
         self.register()
         owner = user_repo.get(1)
@@ -707,7 +702,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
-
     @with_context
     def test_project_auditlog_access_anon(self):
         # Admin
@@ -721,7 +715,6 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert "Sign in" in res.data, res.data
-
 
     @with_context
     def test_project_auditlog_access_owner(self):
@@ -738,7 +731,6 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
-
 
     @with_context
     def test_project_auditlog_access_pro(self):
@@ -759,7 +751,6 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
-
 
     @with_context
     def test_project_auditlog_access_admin(self):

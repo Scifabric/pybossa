@@ -17,19 +17,19 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, MagicMock
+import json
 from flask import Response, session
 from default import flask_app
-from pybossa.flickr_service import FlickrService
+from pybossa.flickr_client import FlickrClient
 
-class TestFlickrOauthBlueprint(object):
-
+class TestFlickrOauth(object):
 
     @patch('pybossa.view.flickr.flickr')
     def test_flickr_login_specifies_callback_and_read_permissions(self, flickr):
         flickr.authorize.return_value = Response(302)
         flask_app.test_client().get('/flickr/')
         flickr.authorize.assert_called_with(
-            callback='/flickr/oauth-authorized',perms='read')
+            callback='/flickr/oauth-authorized', perms='read')
 
 
     def test_logout_removes_token_and_user_from_session(self):
@@ -99,18 +99,28 @@ class TestFlickrOauthBlueprint(object):
         redirect.assert_called_with('http://next')
 
 
+class TestFlickrAPI(object):
 
-class TestFlickrService(object):
+    @patch('pybossa.view.flickr.flickr')
+    def test_albums_endpoint_returns_user_albums_in_JSON_format(self, client):
+        albums = ['one album', 'another album']
+        client.get_user_albums.return_value = albums
+        resp = flask_app.test_client().get('/flickr/albums')
+
+        assert resp.data == json.dumps(albums), resp.data
+
+
+class TestFlickrClient(object):
     class Res(object):
         def __init__(self, status, data):
             self.status = status
             self.data = data
 
     def setUp(self):
-        self.flickr = FlickrService()
+        self.flickr = FlickrClient()
         self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
-        self.flickr = FlickrService()
+        self.flickr = FlickrClient()
         self.flickr.client = MagicMock()
         self.flickr.app = MagicMock()
 

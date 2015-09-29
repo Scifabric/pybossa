@@ -126,7 +126,7 @@ class Helper(Test):
 
     def delete_task_runs(self, project_id=1):
         """Deletes all TaskRuns for a given project_id"""
-        db.session.query(TaskRun).filter_by(project_id=1).delete()
+        db.session.query(TaskRun).filter_by(project_id=project_id).delete()
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',
@@ -179,44 +179,26 @@ class Helper(Test):
                            new_category_id="1",
                            new_long_description="Long desc",
                            new_sched="random",
-                           new_hidden='false',
                            new_webhook='http://server.com',
                            new_protect='false',
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
-            if new_hidden:
-                return self.app.post("/project/%s/update" % short_name,
-                                     data={
-                                         'id': id,
-                                         'name': new_name,
-                                         'short_name': new_short_name,
-                                         'description': new_description,
-                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                         'category_id': new_category_id,
-                                         'long_description': new_long_description,
-                                         'sched': new_sched,
-                                         'hidden': new_hidden,
-                                         'webhook': new_webhook,
-                                         'protect': new_protect,
-                                         'password': new_password,
-                                         'btn': 'Save'},
-                                     follow_redirects=True)
-            else:
-                return self.app.post("/project/%s/update" % short_name,
-                                     data={'id': id, 'name': new_name,
-                                           'short_name': new_short_name,
-                                           'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                           'category_id': new_category_id,
-                                           'long_description': new_long_description,
-                                           'sched': new_sched,
-                                           'description': new_description,
-                                           'protect': new_protect,
-                                           'password': new_password,
-                                           'webhook': new_webhook,
-                                           'btn': 'Save'
-                                           },
-                                     follow_redirects=True)
+            return self.app.post("/project/%s/update" % short_name,
+                                 data={
+                                    'id': id,
+                                    'name': new_name,
+                                    'short_name': new_short_name,
+                                    'description': new_description,
+                                    'allow_anonymous_contributors': new_allow_anonymous_contributors,
+                                    'category_id': new_category_id,
+                                    'long_description': new_long_description,
+                                    'sched': new_sched,
+                                    'webhook': new_webhook,
+                                    'protect': new_protect,
+                                    'password': new_password,
+                                    'btn': 'Save'},
+                                 follow_redirects=True)
         else:
             return self.app.get("/project/%s/update" % short_name,
                                 follow_redirects=True)

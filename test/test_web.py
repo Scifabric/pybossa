@@ -124,26 +124,6 @@ class TestWeb(web.Helper):
         assert self.html_title("Community Leaderboard") in res.data, res
         assert user.name in res.data, res.data
 
-        # With hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        url = '/project/%s/stats' % project.short_name
-        res = self.app.get(url)
-        assert res.status_code == 200, res.status_code
-        assert "Distribution" in res.data, res.data
-        self.signout()
-
-        self.create()
-        # As anonymous
-        url = '/project/%s/stats' % project.short_name
-        res = self.app.get(url)
-        assert res.status_code == 401, res.status_code
-        # As another user, but not owner
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        url = '/project/%s/stats' % project.short_name
-        res = self.app.get(url)
-        assert res.status_code == 403, res.status_code
 
     @with_context
     def test_03_account_index(self):
@@ -708,12 +688,16 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         res = self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
+        TaskFactory.create(project=project)
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         msg = "Project: Sample Project"
         assert self.html_title(msg) in res.data, res
         err_msg = "There should be a contribute button"
-        assert "Draft project, complete it!" in res.data, err_msg
+        assert "Start Contributing Now!" in res.data, err_msg
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
@@ -722,7 +706,7 @@ class TestWeb(web.Helper):
         # Now as an anonymous user
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Draft project, complete it!" in res.data, err_msg
+        assert "Start Contributing Now!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
         err_msg = "Anonymous user should be redirected to sign in page"
@@ -732,7 +716,7 @@ class TestWeb(web.Helper):
         self.register(fullname="Perico Palotes", name="perico")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert self.html_title("Project: Sample Project") in res.data, res
-        assert "Draft project, complete it!" in res.data, err_msg
+        assert "Start Contributing Now!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
@@ -875,16 +859,14 @@ class TestWeb(web.Helper):
         res = self.update_project(new_name="",
                                       new_short_name="",
                                       new_description="New description",
-                                      new_long_description='New long desc',
-                                      new_hidden=True)
+                                      new_long_description='New long desc')
         assert "Please correct the errors" in res.data, res.data
 
         # Update the project
         res = self.update_project(new_name="New Sample Project",
                                       new_short_name="newshortname",
                                       new_description="New description",
-                                      new_long_description='New long desc',
-                                      new_hidden=True)
+                                      new_long_description='New long desc')
         project = db.session.query(Project).first()
         assert "Project updated!" in res.data, res.data
         err_msg = "Project name not updated %s" % project.name
@@ -895,48 +877,6 @@ class TestWeb(web.Helper):
         assert project.description == "New description", err_msg
         err_msg = "Project long description not updated %s" % project.long_description
         assert project.long_description == "New long desc", err_msg
-        err_msg = "Project hidden not updated %s" % project.hidden
-        assert project.hidden == 1, err_msg
-
-
-        # Check that the owner can access it even though is hidden
-
-        user = db.session.query(User).filter_by(name='johndoe').first()
-        user.admin = False
-        db.session.add(user)
-        db.session.commit()
-        res = self.app.get('/project/newshortname/')
-        err_msg = "Owner should be able to see his hidden project"
-        assert project.name in res.data, err_msg
-        self.signout()
-
-        res = self.register(fullname='Paco', name='paco')
-        url = '/project/newshortname/'
-        res = self.app.get(url, follow_redirects=True)
-        assert "Forbidden" in res.data, res.data
-        assert res.status_code == 403
-
-        tmp = db.session.query(Project).first()
-        tmp.hidden = 0
-        db.session.add(tmp)
-        db.session.commit()
-
-        url = '/project/newshortname/update'
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-
-        tmp.hidden = 1
-        db.session.add(tmp)
-        db.session.commit()
-
-
-        user = db.session.query(User).filter_by(name='paco').first()
-        user.admin = True
-        db.session.add(user)
-        db.session.commit()
-        res = self.app.get('/project/newshortname/')
-        err_msg = "Root user should be able to see his hidden project"
-        assert project.name in res.data, err_msg
 
 
     @with_context
@@ -1065,51 +1005,6 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.ckan.requests.get')
-    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_13_hidden_applications(self, Mock, mock):
-        """Test WEB hidden project works"""
-        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
-                                    status_code=200,
-                                    headers={'content-type': 'application/json'},
-                                    encoding='utf-8')
-        Mock.return_value = html_request
-        self.register()
-        self.new_project()
-        self.update_project(new_hidden=True)
-        self.signout()
-
-        res = self.app.get('/project/', follow_redirects=True)
-        assert "Sample Project" not in res.data, res
-
-        res = self.app.get('/project/sampleapp', follow_redirects=True)
-        err_msg = "Hidden apps should return a 403"
-        res.status_code == 403, err_msg
-
-    @with_context
-    @patch('pybossa.ckan.requests.get')
-    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_13a_hidden_applications_owner(self, Mock, mock):
-        """Test WEB hidden projects are shown to their owners"""
-        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
-                                    status_code=200,
-                                    headers={'content-type': 'application/json'},
-                                    encoding='utf-8')
-        Mock.return_value = html_request
-
-        self.register()
-        self.new_project()
-        self.update_project(new_hidden=True)
-
-        res = self.app.get('/project/', follow_redirects=True)
-        assert "Sample Project" not in res.data, ("Projects should be hidden"
-                                              "in the index")
-
-        res = self.app.get('/project/sampleapp', follow_redirects=True)
-        assert "Sample Project" in res.data, ("Project should be shown to"
-                                          "the owner")
-
-    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_14_delete_application(self, mock):
         """Test WEB delete project works"""
@@ -1122,9 +1017,6 @@ class TestWeb(web.Helper):
         assert "No, do not delete it" in res.data, res
 
         project = db.session.query(Project).filter_by(short_name='sampleapp').first()
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
         res = self.delete_project(method="GET")
         msg = "Project: Sample Project &middot; Delete"
         assert self.html_title(msg) in res.data, res
@@ -1180,6 +1072,7 @@ class TestWeb(web.Helper):
 
         project = db.session.query(Project).first()
         # We use a string here to check that it works too
+        project.published = True
         task = Task(project_id=project.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
@@ -1228,19 +1121,6 @@ class TestWeb(web.Helper):
         err_msg = "Download Full results button should be shown"
         assert dom.find(id='fulldownload') is not None, err_msg
 
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('project/%s/tasks/browse' % (project.short_name),
-                           follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        self.create()
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('project/%s/tasks/browse' % (project.short_name),
-                           follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
@@ -1271,31 +1151,6 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        # Check with hidden project: owner should have access to it
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('project/%s/%s/results.json' % (project.short_name, 1),
-                           follow_redirects=True)
-        data = json.loads(res.data)
-        assert len(data) == 10, data
-        for tr in data:
-            assert tr['info']['answer'] == 1, tr
-        self.signout()
-
-        # Check with hidden project: non-owner should not have access to it
-        self.register(fullname="Non Owner", name="nonowner")
-        res = self.app.get('project/%s/%s/results.json' % (project.short_name, 1),
-                           follow_redirects=True)
-        assert res.status_code == 403, res.data
-        assert "Forbidden" in res.data, res.data
-
-        # Check with hidden project: anonymous should not have access to it
-        self.signout()
-        res = self.app.get('project/%s/%s/results.json' % (project.short_name, 1),
-                           follow_redirects=True)
-        assert res.status_code == 401, res.data
-        assert "Unauthorized" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -1305,6 +1160,7 @@ class TestWeb(web.Helper):
         self.new_project()
 
         project = db.session.query(Project).first()
+        project.published = True
         task = Task(project_id=project.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
@@ -1374,11 +1230,7 @@ class TestWeb(web.Helper):
         self.new_project()
         self.update_project(new_category_id="1")
         project = db.session.query(Project).first()
-        info = dict(task_presenter="some html")
-        project.info = info
-        db.session.commit()
-        task = Task(project_id=project.id, n_answers = 10)
-        db.session.add(task)
+        project.published = True
         db.session.commit()
         self.signout()
 
@@ -1435,17 +1287,8 @@ class TestWeb(web.Helper):
         msg = "?next=%2Fproject%2F" + project.short_name + "%2Ftask%2F" + str(task.id)
         assert msg in res.data, res.data
 
-        # Try with a hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
-                           follow_redirects=True)
-        assert 'Unauthorized' in res.data, res.data
-        assert res.status_code == 401, res.status_code
         # Try with only registered users
         project.allow_anonymous_contributors = False
-        project.hidden = 0
         db.session.add(project)
         db.session.commit()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
@@ -1519,14 +1362,6 @@ class TestWeb(web.Helper):
         err_msg = "There should be some tutorial for the project"
         assert "some help" in res.data, err_msg
 
-        # Hidden project
-        project1.hidden = 1
-        db.session.add(project1)
-        db.session.commit()
-        url = '/project/%s/tutorial' % project1.short_name
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-
 
     @with_context
     def test_27_tutorial_anonymous_user(self):
@@ -1548,12 +1383,6 @@ class TestWeb(web.Helper):
         err_msg = "There should be some tutorial for the project"
         assert "some help" in res.data, err_msg
 
-        # Hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('/project/test-app/tutorial', follow_redirects=True)
-        assert res.status_code == 401, res.status_code
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
@@ -1633,6 +1462,9 @@ class TestWeb(web.Helper):
 
         self.register()
         self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
         self.signout()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
@@ -2033,27 +1865,6 @@ class TestWeb(web.Helper):
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
-        project = db.session.query(Project).first()
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        # As owner
-        res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert "Edit the task presenter" in res.data, \
-            "Task Presenter Editor should be an option"
-        self.signout()
-        # As anonymous
-        res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        self.create()
-
-        # As another user, but not owner
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        self.signout()
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -2101,36 +1912,6 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
         assert "Some HTML code" in res.data, res.data
-
-        # Now with hidden apps
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor?template=basic',
-                           follow_redirects=True)
-        assert "var editor" in res.data, "CodeMirror Editor not found"
-        assert "Task Presenter" in res.data, "CodeMirror Editor not found"
-        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
-
-        res = self.app.post('/project/sampleapp/tasks/taskpresentereditor',
-                            data={'editor': 'Some HTML code!'},
-                            follow_redirects=True)
-        assert "Sample Project" in res.data, "Does not return to project details"
-        project = db.session.query(Project).first()
-        err_msg = "Task Presenter failed to update"
-        assert project.info['task_presenter'] == 'Some HTML code!', err_msg
-
-        # Check it loads the previous posted code:
-        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
-                           follow_redirects=True)
-        assert "Some HTML code" in res.data, res.data
-
-        self.signout()
-        self.create()
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor?template=basic',
-                           follow_redirects=True)
-        assert res.status_code == 403
 
 
     @patch('pybossa.ckan.requests.get')
@@ -2274,22 +2055,6 @@ class TestWeb(web.Helper):
         content_disposition = 'attachment; filename=%d_test-app_task_json.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        res = self.app.get('project/%s/tasks/export' % (project.short_name),
-                           follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('project/%s/tasks/export' % (project.short_name),
-                           follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        # Owner
-        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-        res = self.app.get('project/%s/tasks/export' % (project.short_name),
-                           follow_redirects=True)
-        assert res.status_code == 200, res.status_code
 
     def test_export_task_json_support_non_latin1_project_names(self):
         project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
@@ -3128,27 +2893,6 @@ class TestWeb(web.Helper):
 
         assert login_url in res.data
 
-    @patch('pybossa.view.projects.flickr')
-    def test_flickr_importer_page_shows_albums_and_revoke_access_option(
-            self, flickr):
-        flickr.get_user_albums.return_value = [{'photos': u'1',
-                                               'thumbnail_url': u'fake-url',
-                                               'id': u'my-fake-ID',
-                                               'title': u'my-fake-title'}]
-        self.register()
-        owner = db.session.query(User).first()
-        project = ProjectFactory.create(owner=owner)
-        url = "/project/%s/tasks/import?type=flickr" % project.short_name
-
-        res = self.app.get(url)
-        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fimport%3Ftype%3Dflickr'
-
-        assert '1 photos' in res.data
-        assert 'src="fake-url"' in res.data
-        assert 'id="my-fake-ID"' in res.data
-        assert 'my-fake-title' in res.data
-        assert revoke_url in res.data
-
     def test_bulk_dropbox_import_works(self):
         """Test WEB bulk Dropbox import works"""
         dropbox_file_data = (u'{"bytes":286,'
@@ -3400,36 +3144,8 @@ class TestWeb(web.Helper):
         assert project.name in res.data, err_msg
         self.signout()
 
-        # However if the project is hidden, it should be forbidden
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-
-        # As Anonymous user
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401, res.status_code
-
-        # As registered user
-        self.signin()
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        self.signout()
-
-        # As admin
-        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        self.signout()
-
-        # As owner
-        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        self.signout()
-
         # Now only allow authenticated users
         project.allow_anonymous_contributors = False
-        project.hidden = 0
         db.session.add(project)
         db.session.commit()
         res = self.app.get(url, follow_redirects=True)
@@ -3551,21 +3267,6 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
-        # With hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        self.register(fullname="daniel", name="daniel")
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        self.signout()
-        self.signin()
-        res = self.app.get(url, follow_redirects=True)
-        dom = BeautifulSoup(res.data)
-        # Correct values
-        err_msg = "There should be a %s section" % form_id
-        assert dom.find(id=form_id) is not None, err_msg
-
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -3633,20 +3334,6 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
-        # With hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        self.register(fullname="daniel", name="daniel")
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        self.signout()
-        self.signin()
-        res = self.app.get(url, follow_redirects=True)
-        dom = BeautifulSoup(res.data)
-        # Correct values
-        err_msg = "There should be a %s section" % form_id
-        assert dom.find(id=form_id) is not None, err_msg
 
     @with_context
     def test_task_redundancy_update_updates_task_state(self):
@@ -3756,21 +3443,6 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
-
-        # With hidden project
-        project.hidden = 1
-        db.session.add(project)
-        db.session.commit()
-        self.register(fullname="daniel", name="daniel")
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
-        self.signout()
-        self.signin()
-        res = self.app.get(url, follow_redirects=True)
-        dom = BeautifulSoup(res.data)
-        # Correct values
-        err_msg = "There should be a %s section" % form_id
-        assert dom.find(id=form_id) is not None, err_msg
 
 
     @with_context

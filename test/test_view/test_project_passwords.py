@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from factories import ProjectFactory, TaskFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory, BlogpostFactory
 from mock import patch
 
 from pybossa.repositories import ProjectRepository
@@ -176,102 +176,45 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' not in res.data
 
 
-    endpoints_requiring_password = ('/', '/tutorial', '/1/results.json',
-                                    '/tasks/', '/tasks/browse', '/tasks/export',
-                                    '/stats', '/blog')
-
-
-    def test_password_required_for_anonymous_users_to_see_project(self):
-        """Test when an anonymous user wants to visit a password
-        protected project is redirected to the password view"""
+    def test_endpoints_with_password_protection(self):
+        """Test all the endpoints for "reading" a project use password protection """
+        endpoints_requiring_password = (
+            '/', '/tutorial', '/1/results.json',
+            '/tasks/', '/tasks/browse', '/tasks/export',
+            '/stats', '/blog', '/1', '/task/1')
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
+        BlogpostFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
 
-        for endpoint in self.endpoints_requiring_password:
+        for endpoint in endpoints_requiring_password:
             res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
                                follow_redirects=True)
             assert 'Enter the password to contribute' in res.data, endpoint
 
 
-
-    def test_password_not_required_for_anonymous_users_to_see_project(self):
-        """Test when an anonymous user wants to visit a non-password
-        protected project is able to do it"""
-        project = ProjectFactory.create()
-        TaskFactory.create(project=project)
-
-        for endpoint in self.endpoints_requiring_password:
-            res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
-                               follow_redirects=True)
-            assert 'Enter the password to contribute' not in res.data, endpoint
-
-
-    @patch('pybossa.password_manager.current_user')
-    def test_password_required_for_authenticated_users_to_see_project(self, mock_user):
-        """Test when an authenticated user wants to visit a password
-        protected project is redirected to the password view"""
-        project = ProjectFactory.create()
-        TaskFactory.create(project=project)
-        project.set_password('mysecret')
-        project_repo.update(project)
-        user = UserFactory.create()
-        configure_mock_current_user_from(user, mock_user)
-
-        for endpoint in self.endpoints_requiring_password:
-            res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
-                               follow_redirects=True)
-            assert 'Enter the password to contribute' in res.data, endpoint
-
-
-    @patch('pybossa.password_manager.current_user')
-    def test_password_not_required_for_authenticated_users_to_see_project(self, mock_user):
-        """Test when an authenticated user wants to visit a non-password
-        protected project is able to do it"""
-        project = ProjectFactory.create()
-        TaskFactory.create(project=project)
-        user = UserFactory.create()
-        configure_mock_current_user_from(user, mock_user)
-
-        for endpoint in self.endpoints_requiring_password:
-            res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
-                               follow_redirects=True)
-            assert 'Enter the password to contribute' not in res.data, endpoint
-
-
-    @patch('pybossa.password_manager.current_user')
-    def test_password_not_required_for_admins_to_see_project(self, mock_user):
-        """Test when an admin wants to visit a password
-        protected project is able to do it"""
-        user = UserFactory.create()
-        configure_mock_current_user_from(user, mock_user)
-        assert mock_user.admin
-        project = ProjectFactory.create()
+    @patch('pybossa.view.projects.ensure_authorized_to')
+    def test_password_protection_overrides_normal_auth(self, fake_authorizer):
+        """Test if a project is password protected, that is the only authorization
+        required for it to be seen"""
+        project = ProjectFactory.create(published=False)
         TaskFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
 
-        for endpoint in self.endpoints_requiring_password:
-            res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
-                               follow_redirects=True)
-            assert 'Enter the password to contribute' not in res.data, endpoint
+        self.app.get('/project/%s' % project.short_name, follow_redirects=True)
+
+        assert fake_authorizer.called == False
 
 
-    @patch('pybossa.password_manager.current_user')
-    def test_password_not_required_for_owner_to_see_project(self, mock_user):
-        """Test when the owner wants to visit a password
-        protected project is able to do it"""
-        owner = UserFactory.create_batch(2)[1]
-        configure_mock_current_user_from(owner, mock_user)
-        assert owner.admin is False
-        project = ProjectFactory.create(owner=owner)
-        assert project.owner.id == owner.id
+    @patch('pybossa.view.projects.ensure_authorized_to')
+    def test_normal_auth_used_if_no_password_protected(self, fake_authorizer):
+        """Test if a project is password protected, that is the only authorization
+        required for it to be seen"""
+        project = ProjectFactory.create()
         TaskFactory.create(project=project)
-        project.set_password('mysecret')
-        project_repo.update(project)
 
-        for endpoint in self.endpoints_requiring_password:
-            res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
-                               follow_redirects=True)
-            assert 'Enter the password to contribute' not in res.data, endpoint
+        self.app.get('/project/%s' % project.short_name, follow_redirects=True)
+
+        assert fake_authorizer.called == True

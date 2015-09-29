@@ -190,8 +190,7 @@ class TestProjectPasswdManager(object):
 
 
     def test_validates(self):
-        """Test validates tells the project to check the password (not too much
-        logic in here)"""
+        """Test validates tells the project to check the password"""
         password = '1234'
 
         self.psswd_mngr.validates(password, self.project)

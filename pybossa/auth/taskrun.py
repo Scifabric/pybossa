@@ -20,18 +20,24 @@ from flask import abort
 
 
 class TaskRunAuth(object):
+    _specific_actions = []
 
     def __init__(self, task_repo, project_repo):
         self.task_repo = task_repo
         self.project_repo = project_repo
+
+    @property
+    def specific_actions(self):
+        return self._specific_actions
 
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, taskrun):
-        project_id = self.task_repo.get_task(taskrun.task_id).project_id
-        project = self.project_repo.get(project_id)
+        project = self.project_repo.get(taskrun.project_id)
+        if not project.published:
+            raise abort(403)
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
             return False

@@ -39,8 +39,11 @@ def get_top(n=4):
     """Return top n=4 projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.description,
                project.info,
-               COUNT(project_id) AS total FROM task_run, project
-               WHERE project_id IS NOT NULL AND project.id=project_id AND project.hidden=0
+               COUNT(project_id) AS total
+               FROM task_run, project
+               WHERE project_id IS NOT NULL
+               AND project.id=project_id
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id ORDER BY total DESC LIMIT :limit;''')
     results = session.execute(sql, dict(limit=n))
     top_projects = []
@@ -78,7 +81,6 @@ def browse_tasks(project_id):
 def _pct_status(n_task_runs, n_answers):
     """Return percentage status."""
     if n_answers != 0 and n_answers is not None:
-        # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
             return float(1)
         else:
@@ -205,9 +207,11 @@ def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                project.created, project.updated, project.description,
-               "user".fullname AS owner FROM project, "user"
-               WHERE project.featured=true AND project.hidden=0
-               AND "user".id=project.owner_id GROUP BY project.id, "user".id;''')
+               "user".fullname AS owner
+               FROM project, "user"
+               WHERE project.featured=true
+               AND "user".id=project.owner_id
+               GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
     projects = []
@@ -236,14 +240,7 @@ def get_featured(category=None, page=1, per_page=5):
        timeout=timeouts.get('STATS_APP_TIMEOUT'))
 def n_published():
     """Return number of published projects."""
-    sql = text('''
-               WITH published_projects as
-               (SELECT project.id FROM project, task WHERE
-               project.id=task.project_id AND project.hidden=0 AND
-               (project.info->>'task_presenter') IS NOT NULL
-               GROUP BY project.id)
-               SELECT COUNT(id) FROM published_projects;
-               ''')
+    sql = text('''SELECT COUNT(id) FROM project WHERE published=true;''')
 
     results = session.execute(sql)
     for row in results:
@@ -256,11 +253,7 @@ def n_published():
        key_prefix="number_draft_projects")
 def _n_draft():
     """Return number of draft projects."""
-    sql = text('''SELECT COUNT(project.id) FROM project
-               LEFT JOIN task on project.id=task.project_id
-               WHERE task.project_id IS NULL
-               AND (project.info->>'task_presenter') IS NULL
-               AND project.hidden=0;''')
+    sql = text('''SELECT COUNT(id) FROM project WHERE published=false;''')
 
     results = session.execute(sql)
     for row in results:
@@ -273,11 +266,9 @@ def get_all_draft(category=None):
     """Return list of all draft projects."""
     sql = text('''SELECT project.id, project.name, project.short_name, project.created,
                project.description, project.info, project.updated, "user".fullname as owner
-               FROM "user", project LEFT JOIN task ON project.id=task.project_id
-               WHERE task.project_id IS NULL
-               AND (project.info->>'task_presenter') IS NULL
-               AND project.hidden=0
-               AND project.owner_id="user".id;''')
+               FROM "user", project
+               WHERE project.owner_id="user".id
+               AND project.published=false;''')
 
     results = session.execute(sql)
     projects = []
@@ -311,13 +302,12 @@ def n_count(category):
         return _n_draft()
     sql = text('''
                WITH uniq AS (
-               SELECT COUNT(project.id) FROM task, project
+               SELECT COUNT(project.id) FROM project
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
-               AND project.hidden=0
-               AND (project.info->>'task_presenter') IS NOT NULL
-               AND task.project_id=project.id
+               AND project.published=true
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
                ''')
@@ -331,19 +321,18 @@ def n_count(category):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_all(category):
-    """Return a list of projects with at least one task and a task_presenter.
+    """Return a list of published projects for a given category.
     """
     sql = text('''SELECT project.id, project.name, project.short_name,
                project.description, project.info, project.created, project.updated,
                project.category_id, project.featured, "user".fullname AS owner
-               FROM "user", task, project
+               FROM "user", project
                LEFT OUTER JOIN category ON project.category_id=category.id
                WHERE
                category.short_name=:category
-               AND project.hidden=0
                AND "user".id=project.owner_id
-               AND (project.info->>'task_presenter') IS NOT NULL
-               AND task.project_id=project.id
+               AND project.published=true
+               AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id, "user".id ORDER BY project.name;''')
 
     results = session.execute(sql, dict(category=category))
@@ -367,8 +356,7 @@ def get_all(category):
 
 
 def get(category, page=1, per_page=5):
-    """Return a list of projects with at least one task and a task_presenter.
-    It also returns  a pagination for a given category.
+    """Return a list of published projects with a pagination for a given category.
     """
     offset = (page - 1) * per_page
     return get_all(category)[offset:offset+per_page]

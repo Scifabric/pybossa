@@ -33,13 +33,14 @@ A project can be created using two different methods:
 Using the Web Interface
 =======================
 
-Creating a project using the web interface involves three steps:
+Creating a project using the web interface involves four steps:
 
     1. Create the project,
     2. Import the tasks using the *simple built-in* :ref:`task-creator` 
        (uploading a CSV file or Google Spreadsheet link exported
-       as CSV), and
-    3. Write the :ref:`task-presenter` for the users.
+       as CSV),
+    3. Write the :ref:`task-presenter` for the users, and
+    4. Publish the project.
 
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~
@@ -101,12 +102,12 @@ your mind and wanted to change any of them) plus the following:
   authenticated users can participate in all the projects, however
   you can change it to only allow authenticated volunteers to
   participate.
-* **Password**: If you want to control who can contribute to your project, you
-  can set a password here to share with those you allow to do it.
+* **Password**: If you want to control who can contribute or access to your
+  project, you can set a password here to share with those you allow to do it.
+  If you leave it blank, then no password will protect your project!
 * **Category**: Select a category that fits your project.
   :ref:`categories`
   are added and managed by the server :ref:`administrators`.
-* **Hide**: Click in this field if you want to hide the project.
 * In addition, you will be able to select and upload an **image** from your
   local computer to set it as the project image thoroughout the server.
 
@@ -377,13 +378,11 @@ available:
 
 For audio files (.mp4, .m4a, .mp3, .ogg, .oga, .webm and .wav extensions):
 
-* audio_url: raw link to the audio file, which can be used inside an HTML 5 <audio>
-tag and supports CORS.
+* audio_url: raw link to the audio file, which can be used inside an HTML 5 <audio> tag and supports CORS.
 
 For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
 
-* audio_url: raw link to the video file, which can be used inside an HTML 5 <video>
-tag and supports CORS.
+* audio_url: raw link to the video file, which can be used inside an HTML 5 <video> tag and supports CORS.
 
 The tasks created with the Dropbox importer are ready to be used with the template
 project presenters available in PyBossa, as they include the described fields.
@@ -503,13 +502,6 @@ Click in the **Preview button** to get an idea about how it will look like your
 .. image:: http://i.imgur.com/daRJyLa.png
     :width: 100%
 
-After saving it, you will be able to access your project using the slug, or
-under your account in the *Published* projects section:
-
-.. image:: http://i.imgur.com/BXtsCba.png
-    :alt: Project Published
-    :width: 100%
-
 We recommend to read the 
 :doc:`Step by step tutorial on
 creating a Project <tutorial>`, as you will understand
@@ -517,16 +509,51 @@ how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
 
-.. _api-interface:
+.. _publishing
+Publishing the project
+~~~~~~~~~~~~~~~~~~~~~~
 
+After completing the previous three steps, your project will be almost ready.
+The final step is to *publish* it, because now it will still be a draft, and it
+will be hidden to everyone but you (and admins).
+
+When your project is a draft, you can contribute to it but the answers will not
+be stored, so don't be afraid and try it as much as you can until you are sure
+that everything works as expected. Once you think the project is ready for the
+world to see it, just go to the project main page and you will see the button:
+
+.. image:: http://i.imgur.com/lfhahgE.png
+
+.. note::
+    Publishing a project *cannot* be undone, so please double check everything
+    before taking the step.
+
+.. note::
+    You can allow other users to give you feedback and let them try and see your
+    project before it has been published. In order to do so, just protect it with
+    a password, and people will be able to access it (as long as they have the
+    password, of course).
+
+After publishing it, you will be able to access your project using the slug, or
+under your account in the *Published* projects section:
+
+.. image:: http://i.imgur.com/BXtsCba.png
+    :alt: Project Published
+    :width: 100%
+
+Also, answers will begin to be stored. Enjoy!
+
+.. _api-interface:
 
 Using the API
 =============
-Creating a project using the API involves also three steps:
+Creating a project using the API involves also four steps:
 
     1. Create the project,
     2. Create the :ref:`task-creator`, and 
     3. Create the :ref:`task-presenter` for the users.
+    4. Publish it. This needs to be done via the web interface. For more details
+    please refer to :ref:`publishing`.
 
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~

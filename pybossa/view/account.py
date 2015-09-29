@@ -316,8 +316,8 @@ def _show_public_profile(user):
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_created = cached_users.published_projects_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
-        projects_hidden = cached_users.hidden_projects(user.id)
-        projects_created.extend(projects_hidden)
+        draft_projects = cached_users.draft_projects(user.id)
+        projects_created.extend(draft_projects)
     title = "%s &middot; User Profile" % user_dict['fullname']
     return render_template('/account/public_profile.html',
                            title=title,
@@ -333,7 +333,6 @@ def _show_own_profile(user):
     user.total = cached_users.get_total_users()
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
-    projects_published.extend(cached_users.hidden_projects(user.id))
     cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
@@ -361,7 +360,6 @@ def projects(name):
 
     user = user_repo.get(current_user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
-    projects_published.extend(cached_users.hidden_projects(user.id))
 
     return render_template('account/projects.html',
                            title=gettext("Projects"),
