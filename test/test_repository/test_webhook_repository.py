@@ -63,3 +63,25 @@ class TestWebhookRepository(Test):
 
         tmp = self.webhook_repo.filter_by(limit=1, offset=1, project_id=1)
         assert len(tmp) == 0
+
+    def test_save(self):
+        """Test save."""
+        webhook = self.webhook_repo.get(1)
+        assert webhook.id == 1
+
+    def test_save_fails_if_integrity_error(self):
+        """Test save raises a DBIntegrityError if the instance to be saved lacks
+        a required value"""
+
+        wh = Webhook(project_id=None)
+
+        assert_raises(DBIntegrityError, self.webhook_repo.save, wh)
+
+
+    def test_save_only_saves_webhooks(self):
+        """Test save raises a WrongObjectError when an object which is not
+        a Webhok instance is saved"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.webhook_repo.save, bad_object)
