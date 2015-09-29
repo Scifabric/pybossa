@@ -63,6 +63,7 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
+    setup_sse(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -88,6 +89,15 @@ def configure_app(app):
         print "Slave binds are misssing, adding Master as slave too."
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
+
+
+def setup_sse(app):
+    if app.config['SSE']:
+        msg = "WARNING: async mode is required as Server Sent Events are enabled."
+        app.logger.warning(msg)
+    else:
+        msg = "INFO: async mode is disabled."
+        app.logger.info(msg)
 
 
 def setup_theme(app):

@@ -111,3 +111,6 @@ ACCOUNT_CONFIRMATION_DISABLED = True
 
 # Send emails weekly update every
 WEEKLY_UPDATE_STATS = 'Sunday'
+
+# Enable Server Sent Events
+SSE = False
