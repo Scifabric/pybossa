@@ -1521,23 +1521,29 @@ def project_event_stream(short_name, channel_type):
 @login_required
 def project_stream_uri_private(short_name):
     """Returns stream."""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = project_by_shortname(short_name)
-    if (current_user.id == project.owner_id or current_user.admin):
-        return Response(project_event_stream(short_name, 'private'),
-                        mimetype="text/event-stream",
-                        direct_passthrough=True)
+    if current_app.config.get('SSE'):
+        (project, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = project_by_shortname(short_name)
+        if (current_user.id == project.owner_id or current_user.admin):
+            return Response(project_event_stream(short_name, 'private'),
+                            mimetype="text/event-stream",
+                            direct_passthrough=True)
+        else:
+            return abort(403)
     else:
-        return abort(403)
+        return abort(404)
 
 
 @blueprint.route('/<short_name>/publicstream')
 def project_stream_uri_public(short_name):
     """Returns stream."""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = project_by_shortname(short_name)
-    return Response(project_event_stream(short_name, 'public'),
-                    mimetype="text/event-stream")
+    if current_app.config.get('SSE'):
+        (project, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = project_by_shortname(short_name)
+        return Response(project_event_stream(short_name, 'public'),
+                        mimetype="text/event-stream")
+    else:
+        abort(404)
 
 
 @blueprint.route('/<short_name>/webhook', defaults={'oid': None})
