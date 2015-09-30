@@ -1,14 +1,14 @@
 """Add webhooks table
 
 Revision ID: 4a571e217ab8
-Revises: 151b2f642877
+Revises: 3a98a6674cb2
 Create Date: 2015-08-17 16:52:28.279419
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '4a571e217ab8'
-down_revision = '151b2f642877'
+down_revision = '3a98a6674cb2'
 
 from alembic import op
 import sqlalchemy as sa
