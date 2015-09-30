@@ -473,6 +473,7 @@ def webhook(url, payload=None, oid=None):
     except requests.exceptions.ConnectionError:
         webhook.response = 'Connection Error'
         webhook.response_status_code = None
+        webhook_repo.save(webhook)
     if current_app.config.get('SSE'):
         publish_channel(sentinel, payload['project_short_name'],
                         data=webhook.dictize(), type='webhook',
