@@ -54,6 +54,21 @@ class TestWebHooks(Test):
 
     @with_context
     @patch('pybossa.jobs.requests.post')
+    def test_webhooks_connection_error(self, mock):
+        """Test WEBHOOK with connection error works."""
+        import requests
+        from pybossa.core import webhook_repo
+        mock.side_effect = requests.exceptions.ConnectionError
+        err_msg = "A webhook should be returned"
+        res = webhook('url', self.webhook_payload)
+        assert res.response == 'Connection Error', err_msg
+        assert res.response_status_code == None, err_msg
+        wh = webhook_repo.get(1)
+        assert wh.response == res.response, err_msg
+        assert wh.response_status_code == res.response_status_code, err_msg
+
+    @with_context
+    @patch('pybossa.jobs.requests.post')
     def test_webhooks_without_url(self, mock):
         """Test WEBHOOK without url works."""
         mock.post.return_value = True
