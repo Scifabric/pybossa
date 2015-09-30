@@ -59,7 +59,6 @@ class TestWebHooks(Test):
         mock.post.return_value = True
         err_msg = "The webhook should return Connection Error"
         res = webhook(None, self.webhook_payload, None)
-        print res
         assert res.response == 'Connection Error', err_msg
         assert res.response_status_code is None, err_msg
 
