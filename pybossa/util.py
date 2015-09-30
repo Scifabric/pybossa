@@ -462,3 +462,13 @@ def _points_by_interval(value, weight=1):
     if value > 0:
         return 1 * weight
     return 0
+
+
+def publish_channel(sentinel, project_short_name, data, type, private=True):
+    """Publish in a channel some JSON data as a string."""
+    if private:
+        channel = "channel_%s_%s" % ("private", project_short_name)
+    else:
+        channel = "channel_%s_%s" % ("public", project_short_name)
+    msg = dict(type=type, data=data)
+    sentinel.master.publish(channel, json.dumps(msg))

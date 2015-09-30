@@ -22,7 +22,8 @@ import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
-from pybossa.util import with_cache_disabled
+from pybossa.model.webhook import Webhook
+from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
 
 
@@ -446,14 +447,38 @@ def import_tasks(project_id, **form_data):
     return msg
 
 
-def webhook(url, payload=None):
+def webhook(url, payload=None, oid=None):
     """Post to a webhook."""
-    import json
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    if url:
-        return requests.post(url, data=json.dumps(payload), headers=headers)
-    else:
-        return False
+    from flask import current_app
+    try:
+        import json
+        from pybossa.core import sentinel, webhook_repo
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        if oid:
+            webhook = webhook_repo.get(oid)
+        else:
+            webhook = Webhook(project_id=payload['project_id'],
+                              payload=payload)
+        if url:
+            response = requests.post(url, data=json.dumps(payload), headers=headers)
+            webhook.response = response.text
+            webhook.response_status_code = response.status_code
+        else:
+            raise requests.exceptions.ConnectionError('Not URL')
+        if oid:
+            webhook_repo.update(webhook)
+            webhook = webhook_repo.get(oid)
+        else:
+            webhook_repo.save(webhook)
+    except requests.exceptions.ConnectionError:
+        webhook.response = 'Connection Error'
+        webhook.response_status_code = None
+        webhook_repo.save(webhook)
+    if current_app.config.get('SSE'):
+        publish_channel(sentinel, payload['project_short_name'],
+                        data=webhook.dictize(), type='webhook',
+                        private=True)
+    return webhook
 
 
 def notify_blog_users(blog_id, project_id, queue='high'):

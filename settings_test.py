@@ -48,3 +48,4 @@ FLICKR_SHARED_SECRET = "secret"
 DROPBOX_APP_KEY = 'key'
 LIMIT = 25
 PER = 15 * 60
+SSE = True

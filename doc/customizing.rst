@@ -752,3 +752,23 @@ Don't worry about the Javascript snippet part, we've already handled that for yo
 Instead, get the App key you will be given and add it to your settings_local.py::
 
     DROPBOX_APP_KEY = 'your-key'
+
+Enabling Server Sent Events
+===========================
+
+Since PyBossa v1.1.0, PyBossa supports Server Sent Events (SSE) in some views. This feature
+is really powerfull, however it brings some issues with it: it need to run PyBossa in
+asynchronous mode.
+
+As this is not a necessity, by default PyBossa has this feature disabled. PyBossa uses
+SSE to notify users about specific actions (i.e. the result of a webhook in real time).
+
+If you want to enable it, you will have to add to your settings_local.py::
+
+    SSE = True
+
+Also, you will need to configure uwsgi and nginx to support SSE events. This is not 
+trivial, as there are several different scenarios, libraries and options, so instead of
+recommending one solution, we invite you to read the `uwsgi documentation about it <http://uwsgi-docs.readthedocs.org/en/latest/Async.html>`_, so you can take a decission based on your
+own infrastructure and preferences.
+

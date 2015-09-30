@@ -4,6 +4,8 @@ Changelog v1.1.0
 
  * Remove support for hidden projects. To hide them use of password is now needed.
  * Projects need to be published in order to be visible for the volunteers.
+ * Add webhook table to debug easily them.
+ * Add Server Sent Events (SSE) to notify background jobs status on real time.
 
 Upgrading
 =========

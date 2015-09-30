@@ -29,6 +29,7 @@ import user
 import token
 import blogpost
 import auditlog
+import webhook
 
 assert project
 assert task
@@ -38,6 +39,7 @@ assert user
 assert token
 assert blogpost
 assert auditlog
+assert webhook
 
 
 _actions = ['create', 'read', 'update', 'delete']
@@ -48,7 +50,8 @@ _auth_classes = {'project': project.ProjectAuth,
                  'task': task.TaskAuth,
                  'taskrun': taskrun.TaskRunAuth,
                  'token': token.TokenAuth,
-                 'user': user.UserAuth}
+                 'user': user.UserAuth,
+                 'webhook': webhook.WebhookAuth}
 
 
 def is_authorized(user, action, resource, **kwargs):
@@ -77,6 +80,6 @@ def _authorizer_for(resource_name):
     kwargs = {}
     if resource_name in ('project', 'taskrun'):
         kwargs.update({'task_repo': task_repo})
-    if resource_name in ('auditlog', 'blogpost', 'task', 'taskrun'):
+    if resource_name in ('auditlog', 'blogpost', 'task', 'taskrun', 'webhook'):
         kwargs.update({'project_repo': project_repo})
     return _auth_classes[resource_name](**kwargs)
