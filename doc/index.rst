@@ -46,13 +46,16 @@ For more information, check :ref:`pybossa-cache`.
 Changelog
 ~~~~~~~~~
 
+* v1.1.1_
+* v1.1.0_
 * v0.2.3_
 * [v0.2.2] Internal refactoring. Include RQ for asynchronous and scheduled tasks.
 * [v0.2.1] New Rate Limiting for all the API endpoints
 * [v0.2.0] New CACHE system using Redis Master-Slave infrastructure
 
+.. _v1.1.1: changelog/v1.1.0.html
+.. _v1.1.0: changelog/v1.0.0.html
 .. _v0.2.3: changelog/v0.2.3.html
-
 
 ============
 Useful Links
