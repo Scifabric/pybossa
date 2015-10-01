@@ -10,7 +10,7 @@ introduce you to a few pieces of terminology and help you
 understand how things fit together.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    user/overview
    user/pbs

@@ -1,6 +1,6 @@
-Participating in the project
-============================
-So you have decided that this project is interesting and you want to help us: **THANKS!**
+Contributing to the PyBossa development
+=======================================
+Thus you have decided that this project is interesting and you want to help us: **THANKS!**
 
 If you want to help us you can do it by:
 
@@ -17,3 +17,5 @@ The basic ideas of this work flow are the following:
  * When you are ready, issue a git pull request and we will merge it.
 
 Please, read carefully the Github workflow and let us know if need help collaborating with us.
+If you like the framework and you want to contribute, this section explain how
+you could contribute to the project.

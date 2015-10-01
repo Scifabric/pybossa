@@ -21,7 +21,7 @@ Windows, OS X, GNU/Linux.
 
 
 Install Virtualbox & Vagrant
-----------------------------
+============================
 
 We will install PyBossa in a local virtual machine so you can delete it afterwards
 if you want. This will ensure that your computer is not polluted with libraries that
@@ -57,7 +57,7 @@ Install and download `Virtualbox <https://www.virtualbox.org>`__ and
 `Vagrant <http://www.vagrantup.com>`__ manually.
 
 Get latest version of PyBossa Juju charm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+========================================
 
 You have two options to get the latest version of PyBossa Juju charm. 
 You get a ZIP file with the latest version from this link:
@@ -81,7 +81,7 @@ Go the source code folder
 
 
 Start the VM
-~~~~~~~~~~~~
+============
 
 This is very easy:
 
@@ -91,7 +91,7 @@ This is very easy:
 
 
 Setup Juju
-~~~~~~~~~~
+==========
 
 SSH to the Vagrant box and **stay** in the VM
 
@@ -109,7 +109,7 @@ Prepare Juju for initial usage:
 
 
 PyBossa bundle
---------------
+==============
 
 Install the Pybossa charm bundle which will install PyBossa charm and PostgreSQL charm and connect them to eachother.
 
@@ -121,14 +121,14 @@ Install the Pybossa charm bundle which will install PyBossa charm and PostgreSQL
 Once is installed, we can install PyBossa and connect both of them.
 
 Sentinel and Redis
-------------------
+==================
 
 You can also install Redis and Sentinel at a later stage using Juju. This will allow
 you to add new Redis slave nodes as well as Sentinels to manage the Redis infrastructure
 using the load-balanced solution of Sentinel.
 
 Adding Redis Master and Slave nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===================================
 
 First you need to deploy at least two nodes of Redis: a master and a slave:
 
@@ -144,7 +144,7 @@ Then, you need link them:
     juju add-relation redis:master redis2:slave
 
 Adding Sentinel node
-~~~~~~~~~~~~~~~~~~~~
+====================
 
 Now you can add the Sentinel
 
@@ -179,7 +179,7 @@ Finally, you can link PyBossa to sentinel
 .. _site: https://github.com/PyBossa/redis-sentinel-jujucharm/
 
 Access PyBossa
---------------
+==============
 
 Look for the machine IP of PyBossa service here:
 
@@ -204,7 +204,7 @@ You can now view PyBossa in your browser:
 
 
 Email server
-------------
+============
 
 PyBossa does not need an email server by default, but we encourage you to install one.
 
@@ -219,7 +219,7 @@ Please, use the official documentation of your preferred server to configure the
 .. _SPF: https://en.wikipedia.org/wiki/Email_authentication#Authentication_methods
 
 sshuttle whole network mapping (optional)
------------------------------------------
+=========================================
 
 This is an alternative way for mapping internal ports to the VM ones. Instead of 
 using the shell scripts that you have seen before for NAT configuration, you can use 
@@ -246,7 +246,7 @@ HAProxy, e.g.:
     http://10.0.3.89
 
 Juju GUI (optional)
--------------------
+===================
 
 If you prefer a graphical interface, you are covered. Juju provides a very nice web
 interface from where you can handle PyBossa services. To use it, follow these steps:
@@ -279,4 +279,3 @@ for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
 If you've used Sentinel, Redis, PostgreSQL, HAProxy and PyBossa, your GUI should show something similar to this:
 
 .. image:: http://i.imgur.com/XraGePO.png
-
