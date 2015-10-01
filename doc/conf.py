@@ -40,7 +40,7 @@ html_theme_options = {
         #'google_analytics_id': ...
     }
 html_sidebars = {
-    '**': ['globaltoc.html', 'localtoc.html', 'relations.html']
+    '**': ['globaltoc.html']
 }
 
 # Year for copyright
