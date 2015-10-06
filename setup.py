@@ -48,7 +48,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '1.1.1',
+    version = '1.1.2',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
@@ -60,7 +60,7 @@ setup(
                         'git+https://github.com/PyBossa/rq-dashboard.git#egg=rq-dashboard'],
 
     # metadata for upload to PyPI
-    author = 'SF Isle of Man Limited',
+    author = 'SciFabric LTD',
     # TODO: change
     author_email = 'info@scifabric.com',
     description = 'Open Source CrowdSourcing framework',
