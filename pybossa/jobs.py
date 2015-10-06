@@ -422,6 +422,7 @@ def warn_old_project_owners():
                           html=html)
             conn.send(msg)
             project.contacted = True
+            project.published = False
             project_repo.update(project)
     return True
 
