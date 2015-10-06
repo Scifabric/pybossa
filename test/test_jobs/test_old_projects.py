@@ -44,8 +44,9 @@ class TestOldProjects(Test):
 
 
     @with_context
+    @patch('pybossa.cache.projects.clean')
     @patch('pybossa.core.mail')
-    def test_warn_project_owner(self, mail):
+    def test_warn_project_owner(self, mail, clean_mock):
         """Test JOB email is sent to warn project owner."""
         # Mock for the send method
         send_mock = MagicMock()
@@ -69,11 +70,14 @@ class TestOldProjects(Test):
         assert project.contacted, err_msg
         err_msg = "project.published field should be False"
         assert project.published is False, err_msg
+        err_msg = "cache of project should be cleaned"
+        clean_mock.assert_called_with(project_id), err_msg
         err_msg = "The update date should be different"
         assert project.updated != date, err_msg
 
     @with_context
-    def test_warn_project_owner_two(self):
+    @patch('pybossa.cache.projects.clean')
+    def test_warn_project_owner_two(self, clean_mock):
         """Test JOB email is sent to warn project owner."""
         from pybossa.core import mail
         with mail.record_messages() as outbox:
@@ -81,11 +85,16 @@ class TestOldProjects(Test):
             project = ProjectFactory.create(updated=date)
             project_id = project.id
             warn_old_project_owners()
+            project = project_repo.get(project_id)
             assert len(outbox) == 1, outbox
             subject = 'Your PyBossa project: %s has been inactive' % project.name
             assert outbox[0].subject == subject
             err_msg = "project.contacted field should be True"
             assert project.contacted, err_msg
+            err_msg = "project.published field should be False"
+            assert project.published is False, err_msg
+            err_msg = "cache of project should be cleaned"
+            clean_mock.assert_called_with(project_id), err_msg
             err_msg = "The update date should be different"
             assert project.updated != date, err_msg
 
