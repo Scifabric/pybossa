@@ -1,0 +1,19 @@
+================
+Changelog v1.1.1
+================
+
+ * Just update the docs and default theme to fully integrate previous changes.
+
+Upgrading
+=========
+
+.. note::
+    Please, backup the database before continuing.
+
+In order to upgrade you will have to pull the new code, and then run the
+following command to upgrade the database::
+
+  source env/bin/activate
+  alembic upgrade head
+
+Then restart your server, and you will be done.
