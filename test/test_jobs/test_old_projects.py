@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.core import project_repo
 from pybossa.jobs import warn_old_project_owners, get_non_updated_projects
 from default import Test, with_context
 from factories import ProjectFactory
@@ -59,12 +60,15 @@ class TestOldProjects(Test):
         project = ProjectFactory.create(updated=date)
         project_id = project.id
         warn_old_project_owners()
+        project = project_repo.get(project_id)
         err_msg = "mail.connect() should be called"
         assert mail.connect.called, err_msg
         err_msg = "conn.send() should be called"
         assert send_mock.send.called, err_msg
         err_msg = "project.contacted field should be True"
         assert project.contacted, err_msg
+        err_msg = "project.published field should be False"
+        assert project.published is False, err_msg
         err_msg = "The update date should be different"
         assert project.updated != date, err_msg
 
