@@ -404,6 +404,7 @@ def get_non_updated_projects():
 def warn_old_project_owners():
     """E-mail the project owners not updated in the last 3 months."""
     from pybossa.core import mail, project_repo
+    from pybossa.cache.projects import clean
     from flask.ext.mail import Message
 
     projects = get_non_updated_projects()
@@ -423,6 +424,7 @@ def warn_old_project_owners():
             conn.send(msg)
             project.contacted = True
             project.published = False
+            clean(project.id)
             project_repo.update(project)
     return True
 
