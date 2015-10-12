@@ -20,6 +20,7 @@ from pybossa.jobs import get_inactive_users_jobs, get_non_contributors_users_job
 from default import Test, with_context
 from factories import TaskRunFactory, UserFactory
 from pybossa.core import user_repo
+import datetime
 # from mock import patch, MagicMock
 
 
@@ -51,7 +52,21 @@ class TestEngageUsers(Test):
     def test_get_inactive_users_returns_jobs(self):
         """Test JOB get inactive users returns a list of jobs."""
 
-        tr = TaskRunFactory.create(finish_time="2010-07-07T17:23:45.714210")
+        today = datetime.datetime.today()
+        old_date = today - datetime.timedelta(days=120)
+        date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        one_year = today - datetime.timedelta(days=365)
+        one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        user = UserFactory.create()
+        # 3 months old contribution
+        tr = TaskRunFactory.create(finish_time=date_str)
+        # 1 year old contribution
+        TaskRunFactory.create(finish_time=one_year_str)
+        # User with a contribution from a long time ago
+        TaskRunFactory.create(finish_time="2010-08-08T18:23:45.714110",
+                              user=user)
+        # User with a recent contribution
+        TaskRunFactory.create(user=user)
         user = user_repo.get(tr.user_id)
 
         jobs_generator = get_inactive_users_jobs()
@@ -60,6 +75,7 @@ class TestEngageUsers(Test):
             jobs.append(job)
 
         msg = "There should be one job."
+        print jobs
         assert len(jobs) == 1,  msg
         job = jobs[0]
         args = job['args'][0]
