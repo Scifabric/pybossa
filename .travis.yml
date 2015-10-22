@@ -1,4 +1,5 @@
-sudo: false
+sudo: required
+dist: trusty
 language: python
 python:
 - '2.7'
@@ -9,14 +10,7 @@ services:
 addons:
   postgresql: "9.3"
 before_install:
-# Install swig by compiling (sudo not allowed)
-- wget http://prdownloads.sourceforge.net/swig/$SWIG.tar.gz
-- tar -xf $SWIG.tar.gz
-- pushd $SWIG && mkdir vendor
-- ./configure --prefix=`pwd`/vendor
-- make -j 5 && make install
-- popd
-- export PATH=${PATH}:`pwd`/$SWIG/vendor/bin
+- sudo apt-get install swig
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
@@ -24,7 +18,6 @@ install:
 - pip install -U pip
 - pip install -r requirements.txt
 before_script:
-- pip --version
 - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
 - psql -c "create database pybossa_test owner rtester encoding 'UTF-8' lc_collate 'en_US.UTF-8' lc_ctype 'en_US.UTF-8' template template0;" -U postgres
 script: nosetests test/
