@@ -10,7 +10,7 @@ services:
 addons:
   postgresql: "9.3"
 before_install:
-- sudo apt-get update -y && sudo apt-get install -y swig
+- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
