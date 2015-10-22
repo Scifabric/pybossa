@@ -34,7 +34,7 @@ requirements = [
     "coverage",
     "mock",
     "pyrax>=1.9.5, <2.0",
-    "pillow>=2.4, <2.5",
+    "pillow>=3.0, <3.1",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
