@@ -7,6 +7,7 @@ requirements = [
     "Flask-Babel>=0.9, <1.0",
     "Flask-Login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
+    "misaka>=1.0.0, <2.0.0",
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuthlib>=0.9.1, <0.9.2",
     "Flask-SQLAlchemy>=2.0, <2.1",
@@ -33,7 +34,7 @@ requirements = [
     "coverage",
     "mock",
     "pyrax>=1.9.5, <2.0",
-    "pillow>=2.4, <2.5",
+    "pillow>=3.0, <3.1",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",

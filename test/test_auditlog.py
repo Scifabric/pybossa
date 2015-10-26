@@ -233,7 +233,7 @@ class TestAuditlogWEB(web.Helper):
         self.data = {'id': 1,
                      'name': 'Sample Project',
                      'short_name': 'sampleapp',
-                     'description': 'Long Description',
+                     'description': 'Description',
                      'allow_anonymous_contributors': 'true',
                      'category_id': 1,
                      'long_description': 'Long Description\n================',

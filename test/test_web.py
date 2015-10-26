@@ -768,11 +768,21 @@ class TestWeb(web.Helper):
             "A project should have a category after being created"
 
     @with_context
+    def test_description_is_generated_only_if_not_provided(self):
+        """Test WEB when when creating a project and a description is provided,
+        then it is not generated from the long_description"""
+        self.register()
+        res = self.new_project(long_description="a"*300, description='b')
+
+        project = db.session.query(Project).first()
+        assert project.description == 'b', project.description
+
+    @with_context
     def test_description_is_generated_from_long_desc(self):
         """Test WEB when creating a project, the description field is
         automatically filled in by truncating the long_description"""
         self.register()
-        res = self.new_project(long_description="Hello")
+        res = self.new_project(long_description="Hello", description='')
 
         project = db.session.query(Project).first()
         assert project.description == "Hello", project.description
@@ -782,7 +792,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
-        res = self.new_project(long_description="## Hello")
+        res = self.new_project(long_description="## Hello", description='')
 
         project = db.session.query(Project).first()
         assert '##' not in project.description, project.description
@@ -791,9 +801,9 @@ class TestWeb(web.Helper):
     @with_context
     def test_description_is_generated_from_long_desc_truncates(self):
         """Test WEB when when creating a project, the description generated
-        from the long_description is only text (no html, no markdown)"""
+        from the long_description is truncated to 255 chars"""
         self.register()
-        res = self.new_project(long_description="a"*300)
+        res = self.new_project(long_description="a"*300, description='')
 
         project = db.session.query(Project).first()
         assert len(project.description) == 255, len(project.description)

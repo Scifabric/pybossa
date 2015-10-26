@@ -204,6 +204,8 @@ def new():
                                form=form, errors=errors)
 
     def _description_from_long_description():
+        if form.description.data:
+            return form.description.data
         long_desc = form.long_description.data
         html_long_desc = misaka.render(long_desc)[:-1]
         remove_html_tags_regex = re.compile('<[^>]*>')

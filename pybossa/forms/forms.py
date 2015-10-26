@@ -50,6 +50,8 @@ class ProjectForm(Form):
                             pb_validator.ReservedName('project', current_app)])
     long_description = TextAreaField(lazy_gettext('Long Description'),
                                      [validators.Required()])
+    description = TextAreaField(lazy_gettext('Description'),
+                                [validators.Length(max=255)])
 
 
 class ProjectUpdateForm(ProjectForm):
