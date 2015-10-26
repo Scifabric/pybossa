@@ -392,13 +392,17 @@ def warm_cache():  # pragma: no cover
 
 
 def get_non_updated_projects():
-    """Return a list of non updated projects."""
+    """Return a list of non updated projects excluding completed ones."""
     from sqlalchemy.sql import text
     from pybossa.model.project import Project
     from pybossa.core import db
     sql = text('''SELECT id FROM project WHERE TO_DATE(updated,
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL
-               AND contacted != True AND published = True''')
+               AND contacted != True AND published = True
+               AND project.id NOT IN
+               (SELECT task.project_id FROM task
+               WHERE task.state='completed'
+               GROUP BY task.project_id)''')
     results = db.slave_session.execute(sql)
     projects = []
     for row in results:
