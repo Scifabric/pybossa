@@ -19,7 +19,7 @@
 from pybossa.core import project_repo
 from pybossa.jobs import warn_old_project_owners, get_non_updated_projects
 from default import Test, with_context
-from factories import ProjectFactory
+from factories import ProjectFactory, TaskFactory
 from mock import patch, MagicMock
 
 
@@ -100,25 +100,16 @@ class TestOldProjects(Test):
 
     @with_context
     def test_warn_project_owner_limits(self):
-        """Test JOB email gets at most 25 projects."""
+        """Test JOB email gets all projects."""
         from pybossa.core import mail
         # Create 50 projects with old updated dates
         date = '2010-10-22T11:02:00.000000'
         projects = []
         for i in range(0, 50):
-            projects.append(ProjectFactory.create(updated=date))
-        # The first day that we run the job only 25 emails should be sent
-        with mail.record_messages() as outbox:
-            warn_old_project_owners()
-            err_msg = "There should be only 25 emails."
-            assert len(outbox) == 25, err_msg
-        # The second day that we run the job only 25 emails should be sent
-        with mail.record_messages() as outbox:
-            warn_old_project_owners()
-            err_msg = ("There should be only 25 emails, but there are %s."
-                       % len(outbox))
-            assert len(outbox) == 25, err_msg
-        # The third day that we run the job only 0 emails should be sent
+            project = ProjectFactory.create(updated=date)
+            TaskFactory.create(project=project)
+            projects.append(project)
+        # The next time that we run the job only 0 emails should be sent
         # as the previous projects have been already contacted.
         with mail.record_messages() as outbox:
             warn_old_project_owners()
