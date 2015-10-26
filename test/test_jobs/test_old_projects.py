@@ -99,19 +99,29 @@ class TestOldProjects(Test):
             assert project.updated != date, err_msg
 
     @with_context
-    def test_warn_project_owner_limits(self):
-        """Test JOB email gets all projects."""
+    @patch('pybossa.cache.projects.clean')
+    def test_warn_project_excludes_completed_projects(self, clean_mock):
+        """Test JOB email excludes completed projects."""
         from pybossa.core import mail
-        # Create 50 projects with old updated dates
-        date = '2010-10-22T11:02:00.000000'
-        projects = []
-        for i in range(0, 50):
-            project = ProjectFactory.create(updated=date)
-            TaskFactory.create(project=project)
-            projects.append(project)
-        # The next time that we run the job only 0 emails should be sent
-        # as the previous projects have been already contacted.
         with mail.record_messages() as outbox:
+            date = '2010-10-22T11:02:00.000000'
+            project = ProjectFactory.create(updated=date, contacted=False)
+            TaskFactory.create(created=date, project=project, state='completed')
+            project = ProjectFactory.create(updated=date, contacted=False)
+            TaskFactory.create(created=date, project=project, state='ongoing')
+            project_id = project.id
+            project = project_repo.get(project_id)
+            project.updated = date
+            project_repo.update(project)
             warn_old_project_owners()
-            err_msg = "There should be only 0 emails."
-            assert len(outbox) == 0, err_msg
+            assert len(outbox) == 1, outbox
+            subject = 'Your PyBossa project: %s has been inactive' % project.name
+            assert outbox[0].subject == subject
+            err_msg = "project.contacted field should be True"
+            assert project.contacted, err_msg
+            err_msg = "project.published field should be False"
+            assert project.published is False, err_msg
+            err_msg = "cache of project should be cleaned"
+            clean_mock.assert_called_with(project_id), err_msg
+            err_msg = "The update date should be different"
+            assert project.updated != date, err_msg
