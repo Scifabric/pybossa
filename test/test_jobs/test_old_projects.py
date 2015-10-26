@@ -105,14 +105,21 @@ class TestOldProjects(Test):
         from pybossa.core import mail
         with mail.record_messages() as outbox:
             date = '2010-10-22T11:02:00.000000'
+
             project = ProjectFactory.create(updated=date, contacted=False)
             TaskFactory.create(created=date, project=project, state='completed')
+            project_id = project.id
+            project = project_repo.get(project_id)
+            project.updated = date
+            project_repo.update(project)
+
             project = ProjectFactory.create(updated=date, contacted=False)
             TaskFactory.create(created=date, project=project, state='ongoing')
             project_id = project.id
             project = project_repo.get(project_id)
             project.updated = date
             project_repo.update(project)
+
             warn_old_project_owners()
             assert len(outbox) == 1, outbox
             subject = 'Your PyBossa project: %s has been inactive' % project.name
