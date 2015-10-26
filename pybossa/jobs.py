@@ -398,7 +398,7 @@ def get_non_updated_projects():
     from pybossa.core import db
     sql = text('''SELECT id FROM project WHERE TO_DATE(updated,
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL
-               AND contacted != True AND published = True LIMIT 25''')
+               AND contacted != True AND published = True''')
     results = db.slave_session.execute(sql)
     projects = []
     for row in results:
