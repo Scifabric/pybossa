@@ -25,7 +25,7 @@ ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ans
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "trusty32"
+  config.vm.box = "ubuntu/trusty32"
   config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box"
   config.vm.network :forwarded_port, host: 5000, guest: 5000
   # turn off warning message `stdin: is not a tty error`
