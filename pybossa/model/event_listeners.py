@@ -139,15 +139,17 @@ def push_webhook(project_obj, task_id):
 
 def create_result(conn, project_id, task_id):
     """Create a result for the given project and task."""
-    sql_query = ("SELECT id FROM task_run WHERE project_id==%s \
-                 AND task_id==%s") % (project_id, task_id)
-    results = con.execute(sql_query)
-    task_run_ids = [tr.id for tr in results]
+    sql_query = ("SELECT id FROM task_run WHERE project_id=%s \
+                 AND task_id=%s") % (project_id, task_id)
+    results = conn.execute(sql_query)
+    task_run_ids = ", ".join(str(tr.id) for tr in results)
 
-    result = Result(project_id=project_id,
-                    task_id=task_id,
-                    task_run_ids=task_run_ids)
-    results_repo.save(result)
+    sql_query = """INSERT INTO result
+                   (project_id, task_id, task_run_ids)
+                   VALUES (%s, %s, '{%s}');""" % (project_id,
+                                                  task_id,
+                                                  task_run_ids)
+    conn.execute(sql_query)
 
 
 @event.listens_for(TaskRun, 'after_insert')

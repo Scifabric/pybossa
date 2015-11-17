@@ -51,7 +51,10 @@ class TestResultRepository(Test):
 
         result = self.result_repo.filter_by(project_id=1)
 
+
         err_msg = "There should be a result"
+        assert len(result) == 1, err_msg
+        result = result[0]
         assert result.project_id == 1, err_msg
         assert result.task_id == task.id, err_msg
         assert len(result.task_run_ids) == n_answers, err_msg
