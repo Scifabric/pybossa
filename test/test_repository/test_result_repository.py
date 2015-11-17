@@ -62,6 +62,19 @@ class TestResultRepository(Test):
         for tr_id in result.task_run_ids:
             assert tr_id == task_run.id, err_msg
 
+    def test_get_returns_no_result(self):
+        """Test get method does not return a result if task not completed"""
+
+        n_answers = 3
+
+        task = TaskFactory.create(n_answers=n_answers)
+        TaskRunFactory.create(task=task)
+
+        result = self.result_repo.filter_by(project_id=1)
+
+        err_msg = "There should not be a result"
+        assert len(result) == 0, err_msg
+
 
     # def test_get_by(self):
     #     """Test get_by returns a log with the specified attribute"""
