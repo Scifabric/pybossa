@@ -22,6 +22,7 @@ from nose.tools import assert_raises
 from factories import ProjectFactory, TaskFactory, TaskRunFactory
 from factories import UserFactory
 from pybossa.repositories import ResultRepository
+from pybossa.core import task_repo, result_repo
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
@@ -62,6 +63,50 @@ class TestResultRepository(Test):
         for tr_id in result.task_run_ids:
             assert tr_id == task_run.id, err_msg
 
+    def test_get_returns_result_after_increasig_redundancy(self):
+        """Test get method returns a result if after increasing redundancy"""
+
+        n_answers = 1
+
+        task = TaskFactory.create(n_answers=n_answers)
+        task_run = TaskRunFactory.create(task=task)
+
+        result = self.result_repo.filter_by(project_id=1)
+
+        err_msg = "There should be a result"
+        assert len(result) == 1, err_msg
+        result = result[0]
+        assert result.project_id == 1, err_msg
+        assert result.task_id == task.id, err_msg
+        assert len(result.task_run_ids) == n_answers, err_msg
+        err_msg = "The task_run id is missing in the results array"
+        for tr_id in result.task_run_ids:
+            assert tr_id == task_run.id, err_msg
+
+        # Increase redundancy
+        tmp = task_repo.get_task(task.id)
+        tmp.n_answers = 2
+        task_repo.update(task)
+
+        err_msg = "There should be only one result"
+        results = result_repo.filter_by(project_id=1)
+        assert len(results) == 1, err_msg
+        task_run_2 = TaskRunFactory.create(task=task)
+
+        err_msg = "There should be 2 results"
+        results = result_repo.filter_by(project_id=1)
+        assert len(results) == 2, err_msg
+        assert results[1].project_id == 1, err_msg
+        assert results[1].task_id == task.id, err_msg
+        err_msg = "First result should have only one task run ID"
+        assert len(results[0].task_run_ids) == 1, err_msg
+        err_msg = "Second result should have only two task run IDs"
+        assert len(results[1].task_run_ids) == 2, err_msg
+        err_msg = "The task_run id is missing in the results array"
+        for tr_id in results[1].task_run_ids:
+            assert tr_id in [task_run.id, task_run_2.id], err_msg
+
+
     def test_get_returns_no_result(self):
         """Test get method does not return a result if task not completed"""
 
@@ -74,126 +119,3 @@ class TestResultRepository(Test):
 
         err_msg = "There should not be a result"
         assert len(result) == 0, err_msg
-
-
-    # def test_get_by(self):
-    #     """Test get_by returns a log with the specified attribute"""
-
-    #     project = ProjectFactory.create()
-    #     log = AuditlogFactory.create(project_id=project.id,
-    #                                  project_short_name=project.short_name,
-    #                                  user_id=project.owner.id,
-    #                                  user_name=project.owner.name)
-
-
-    #     retrieved_log = self.result_repo.get_by(user_id=project.owner.id)
-
-    #     assert log == retrieved_log, retrieved_log
-
-
-    # def test_get_by_returns_none_if_no_log(self):
-    #     """Test get_by returns None if no log matches the query"""
-
-    #     project = ProjectFactory.create()
-    #     AuditlogFactory.create(project_id=project.id,
-    #                            project_short_name=project.short_name,
-    #                            user_id=project.owner.id,
-    #                            user_name=project.owner.name)
-
-    #     retrieved_log = self.result_repo.get_by(user_id=5555)
-
-    #     assert retrieved_log is None, retrieved_log
-
-
-    # def test_filter_by_no_matches(self):
-    #     """Test filter_by returns an empty list if no log matches the query"""
-
-    #     project = ProjectFactory.create()
-    #     AuditlogFactory.create(project_id=project.id,
-    #                            project_short_name=project.short_name,
-    #                            user_id=project.owner.id,
-    #                            user_name=project.owner.name)
-
-    #     retrieved_logs = self.result_repo.filter_by(user_name='no_name')
-
-    #     assert isinstance(retrieved_logs, list)
-    #     assert len(retrieved_logs) == 0, retrieved_logs
-
-
-    # def test_filter_by_one_condition(self):
-    #     """Test filter_by returns a list of logs that meet the filtering
-    #     condition"""
-
-    #     project = ProjectFactory.create()
-    #     AuditlogFactory.create_batch(size=3, project_id=project.id,
-    #                            project_short_name=project.short_name,
-    #                            user_id=project.owner.id,
-    #                            user_name=project.owner.name)
-
-    #     project2 = ProjectFactory.create()
-    #     should_be_missing = AuditlogFactory.create_batch(size=3, project_id=project2.id,
-    #                                                project_short_name=project2.short_name,
-    #                                                user_id=project2.owner.id,
-    #                                                user_name=project2.owner.name)
-
-
-    #     retrieved_logs = self.result_repo.filter_by(user_id=project.owner.id)
-
-    #     assert len(retrieved_logs) == 3, retrieved_logs
-    #     assert should_be_missing not in retrieved_logs, retrieved_logs
-
-
-    # def test_filter_by_multiple_conditions(self):
-    #     """Test filter_by supports multiple-condition queries"""
-
-    #     project = ProjectFactory.create()
-    #     user = UserFactory.create()
-    #     AuditlogFactory.create_batch(size=3, project_id=project.id,
-    #                            project_short_name=project.short_name,
-    #                            user_id=project.owner.id,
-    #                            user_name=project.owner.name)
-
-    #     log = AuditlogFactory.create(project_id=project.id,
-    #                                  project_short_name=project.short_name,
-    #                                  user_id=user.id,
-    #                                  user_name=user.name)
-
-    #     retrieved_logs = self.result_repo.filter_by(project_id=project.id,
-    #                                                   user_id=user.id)
-
-    #     assert len(retrieved_logs) == 1, retrieved_logs
-    #     assert log in retrieved_logs, retrieved_logs
-
-
-    # def test_save(self):
-    #     """Test save persist the log"""
-
-    #     project = ProjectFactory.create()
-    #     log = AuditlogFactory.build(project_id=project.id,
-    #                                 project_short_name=project.short_name,
-    #                                 user_id=project.owner.id,
-    #                                 user_name=project.owner.name)
-
-    #     assert self.result_repo.get(log.id) is None
-
-    #     self.result_repo.save(log)
-
-    #     assert self.result_repo.get(log.id) == log, "Log not saved"
-
-
-    # def test_save_fails_if_integrity_error(self):
-    #     """Test save raises a DBIntegrityError if the instance to be saved lacks
-    #     a required value"""
-
-    #     log = AuditlogFactory.build(project_id=None)
-
-    #     assert_raises(DBIntegrityError, self.result_repo.save, log)
-
-
-    # def test_save_only_saves_projects(self):
-    #     """Test save raises a WrongObjectError when an object which is not
-    #     a Log instance is saved"""
-
-    #     bad_object = dict()
-
-    #     assert_raises(WrongObjectError, self.result_repo.save, bad_object)
