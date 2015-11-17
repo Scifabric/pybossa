@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text,
+from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import ARRAY
