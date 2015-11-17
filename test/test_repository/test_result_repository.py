@@ -18,12 +18,9 @@
 # Cache global variables for timeouts
 
 from default import Test, db
-from nose.tools import assert_raises
-from factories import ProjectFactory, TaskFactory, TaskRunFactory
-from factories import UserFactory
+from factories import TaskFactory, TaskRunFactory
 from pybossa.repositories import ResultRepository
 from pybossa.core import task_repo, result_repo
-from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 class TestResultRepository(Test):
