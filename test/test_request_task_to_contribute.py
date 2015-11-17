@@ -138,7 +138,7 @@ class TestCheckTasksRequestedByUser(object):
     def test_check_task_requested_by_user_anonymous_preserves_key(self, user):
         """_check_task_requested_by_user does not delete the key after checking
         that an anonymous user requested the task (in case many simultaneous
-        anonymous users are sharing the same IP"""
+        anonymous users are sharing the same IP)"""
         user.return_value = {'user_id': None, 'user_ip': '127.0.0.1'}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
@@ -148,4 +148,61 @@ class TestCheckTasksRequestedByUser(object):
         key_deleted = self.connection.get(key) is None
 
         assert key_deleted is False, key_deleted
+
+
+from redis import StrictRedis
+from pybossa.contributions_guard import ContributionsGuard
+
+class TestContributionsGuard(object):
+
+    def setUp(self):
+        self.connection = StrictRedis()
+        self.connection.flushall()
+        self.guard = ContributionsGuard(self.connection)
+
+    # @patch('pybossa.api.get_user_id_or_ip')
+    # def test_mark_task_as_requested_by_user_creates_key_for_auth(self, user):
+    #     """When an authenticated user requests a task, a key is stored in Redis
+    #     with his id and task id"""
+    #     user.return_value = {'user_id': 33, 'user_ip': None}
+    #     task = Task(id=22)
+    #     key = 'pybossa:task_requested:user:33:task:22'
+
+    #     mark_task_as_requested_by_user(task, self.connection)
+
+    #     assert key in self.connection.keys(), self.connection.keys()
+
+    def test_stamp_registers_specific_user_id_and_task(self):
+        user = {'user_id': 33, 'user_ip': None}
+        task = Task(id=22)
+        key = 'pybossa:task_requested:user:33:task:22'
+
+        self.guard.stamp(task, user)
+
+        assert key in self.connection.keys(), self.connection.keys()
+
+    # @patch('pybossa.api.get_user_id_or_ip')
+    # def test_mark_task_as_requested_by_user_creates_key_for_anon(self, user):
+    #     """When an anonymous user requests a task, a key is stored in Redis
+    #     with his IP and task id"""
+    #     user.return_value = {'user_id': None, 'user_ip': '127.0.0.1'}
+    #     task = Task(id=22)
+    #     key = 'pybossa:task_requested:user:127.0.0.1:task:22'
+
+    #     mark_task_as_requested_by_user(task, self.connection)
+
+    #     assert key in self.connection.keys(), self.connection.keys()
+
+    def test_stamp_registers_specific_user_ip_and_task_if_no_id_provided(self):
+        user = {'user_id': None, 'user_ip': '127.0.0.1'}
+        task = Task(id=22)
+        key = 'pybossa:task_requested:user:127.0.0.1:task:22'
+
+        self.guard.stamp(task, user)
+
+        assert key in self.connection.keys(), self.connection.keys()
+
+
+
+
 
