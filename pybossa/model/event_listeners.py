@@ -28,6 +28,8 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
+from pybossa.model.result import Result
+from pybossa.core import result_repo
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.core import sentinel
 
@@ -134,6 +136,20 @@ def push_webhook(project_obj, task_id):
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         webhook_queue.enqueue(webhook, project_obj['webhook'], payload)
 
+
+def create_result(conn, project_id, task_id):
+    """Create a result for the given project and task."""
+    sql_query = ("SELECT id FROM task_run WHERE project_id==%s \
+                 AND task_id==%s") % (project_id, task_id)
+    results = con.execute(sql_query)
+    task_run_ids = [tr.id for tr in results]
+
+    result = Result(project_id=project_id,
+                    task_id=task_id,
+                    task_run_ids=task_run_ids)
+    results_repo.save(result)
+
+
 @event.listens_for(TaskRun, 'after_insert')
 def on_taskrun_submit(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
@@ -158,6 +174,7 @@ def on_taskrun_submit(mapper, conn, target):
     if is_task_completed(conn, target.task_id):
         update_task_state(conn, target.task_id)
         update_feed(project_obj)
+        create_result(conn, target.project_id, target.task_id)
         push_webhook(project_obj, target.task_id)
 
 
