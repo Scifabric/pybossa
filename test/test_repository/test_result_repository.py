@@ -19,8 +19,8 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import ProjectFactory
-from factories import AuditlogFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory
+from factories import UserFactory
 from pybossa.repositories import ResultRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -38,21 +38,26 @@ class TestResultRepository(Test):
 
         result = self.result_repo.get(2)
 
-        assert result is None, log
+        assert result is None, result
 
 
-    # def test_get_returns_log(self):
-    #     """Test get method returns a log if exists"""
+    def test_get_returns_result(self):
+        """Test get method returns a result if exists"""
 
-    #     project = ProjectFactory.create()
-    #     log = AuditlogFactory.create(project_id=project.id,
-    #                                  project_short_name=project.short_name,
-    #                                  user_id=project.owner.id,
-    #                                  user_name=project.owner.name)
+        n_answers = 1
 
-    #     retrieved_log = self.result_repo.get(log.id)
+        task = TaskFactory.create(n_answers=n_answers)
+        task_run = TaskRunFactory.create(task=task)
 
-    #     assert log == retrieved_log, retrieved_log
+        result = self.result_repo.filter_by(project_id=1)
+
+        err_msg = "There should be a result"
+        assert result.project_id == 1, err_msg
+        assert result.task_id == task.id, err_msg
+        assert len(result.task_run_ids) == n_answers, err_msg
+        err_msg = "The task_run id is missing in the results array"
+        for tr_id in result.task_run_ids:
+            assert tr_id == task_run.id, err_msg
 
 
     # def test_get_by(self):
