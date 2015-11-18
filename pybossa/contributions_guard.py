@@ -17,18 +17,21 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 class ContributionsGuard(object):
+
+    KEY_PREFIX = 'pybossa:task_requested:user:%s:task:%s'
+
     def __init__(self, redis_conn):
         self.conn = redis_conn
 
     def stamp(self, task, user):
         user_id = user['user_id'] or user['user_ip']
-        key = 'pybossa:task_requested:user:%s:task:%s' % (user_id, task.id)
+        key = self.KEY_PREFIX % (user_id, task.id)
         timeout = 60 * 60
         self.conn.setex(key, timeout, True)
 
     def check_task_stamped(self, task, user):
-        usr = user['user_id'] or user['user_ip']
-        key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
+        user_id = user['user_id'] or user['user_ip']
+        key = self.KEY_PREFIX % (user_id, task.id)
         task_requested = bool(self.conn.get(key))
         if user['user_id'] is not None:
             self.conn.delete(key)

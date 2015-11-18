@@ -221,8 +221,7 @@ class TestSched(sched.Helper):
             assert t.state == "completed", t.state
 
     @with_context
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_tasks_for_user_ip_id(self, fake_validation):
+    def test_tasks_for_user_ip_id(self):
         """ Test SCHED newtask to see if sends the same ammount of Task to
             user_id and user_ip
         """

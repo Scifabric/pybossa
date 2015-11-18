@@ -1318,15 +1318,18 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
 
-    @patch('pybossa.view.projects.mark_task_as_requested_by_user')
-    def test_get_specific_ongoing_task_marks_task_as_requested(self, mark):
+    @patch('pybossa.view.projects.ContributionsGuard')
+    def test_get_specific_ongoing_task_marks_task_as_requested(self, guard):
+        fake_guard_instance = Mock()
+        guard.return_value = fake_guard_instance
         self.create()
         self.register()
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        mark.assert_called_with(task, sentinel.master)
+
+        assert fake_guard_instance.stamp.called
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

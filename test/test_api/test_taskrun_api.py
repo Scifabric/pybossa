@@ -19,7 +19,7 @@ import json
 from default import with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
-from mock import patch
+from mock import patch, MagicMock
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import TaskRepository
@@ -91,9 +91,12 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_taskrun_anonymous_post(self, fake_validation, mock_request):
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_anonymous_post(self, guard, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
+        fake_guard_instance = MagicMock()
+        fake_guard_instance.check_task_stamped.return_value = True
+        guard.return_value = fake_guard_instance
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -146,9 +149,12 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
 
     @with_context
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_taskrun_authenticated_post(self, fake_validation):
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_authenticated_post(self, guard):
         """Test API TaskRun creation and auth for authenticated users"""
+        fake_guard_instance = MagicMock()
+        fake_guard_instance.check_task_stamped.return_value = True
+        guard.return_value = fake_guard_instance
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -422,9 +428,12 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_taskrun_updates_task_state(self, fake_validation, mock_request):
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_updates_task_state(self, guard, mock_request):
         """Test API TaskRun POST updates task state"""
+        fake_guard_instance = MagicMock()
+        fake_guard_instance.check_task_stamped.return_value = True
+        guard.return_value = fake_guard_instance
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, n_answers=2)
         url = '/api/taskrun?api_key=%s' % project.owner.api_key
@@ -461,10 +470,8 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_taskrun_create_with_reserved_fields_returns_error(self, requested):
+    def test_taskrun_create_with_reserved_fields_returns_error(self):
         """Test API taskrun post with reserved fields raises an error"""
-        requested.return_value = True
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         url = '/api/taskrun?api_key=%s' % project.owner.api_key
@@ -483,10 +490,8 @@ class TestTaskrunAPI(TestAPI):
         error = json.loads(resp.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    @patch('pybossa.api.task_run._check_task_requested_by_user')
-    def test_taskrun_not_stored_if_project_is_not_published(self, requested):
+    def test_taskrun_not_stored_if_project_is_not_published(self):
         """Test API taskrun post draft project will not store the taskrun"""
-        requested.return_value = True
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
         url = '/api/taskrun?api_key=%s' % project.owner.api_key

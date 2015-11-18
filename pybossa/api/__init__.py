@@ -50,6 +50,7 @@ from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
 from pybossa.core import project_repo, task_repo
+from pybossa.contributions_guard import ContributionsGuard
 
 blueprint = Blueprint('api', __name__)
 
@@ -109,7 +110,8 @@ def new_task(project_id):
         task = _retrieve_new_task(project_id)
         # If there is a task for the user, return it
         if task is not None:
-            mark_task_as_requested_by_user(task, sentinel.master)
+            guard = ContributionsGuard(sentinel.master)
+            guard.stamp(task, get_user_id_or_ip())
             response = make_response(json.dumps(task.dictize()))
             response.mimetype = "application/json"
             return response
@@ -134,12 +136,6 @@ def _retrieve_new_task(project_id):
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     task = sched.new_task(project_id, project.info.get('sched'), user_id, user_ip, offset)
     return task
-
-def mark_task_as_requested_by_user(task, redis_conn):
-    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
-    key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
-    timeout = 60 * 60
-    redis_conn.setex(key, timeout, True)
 
 
 @jsonpify
