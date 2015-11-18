@@ -75,20 +75,6 @@ class TestContributionsGuard(object):
 
         assert self.guard.check_task_stamped(self.task, self.anon_user) is True
 
-    def test_check_task_stamped_returns_False_for_auth_if_called_second_time(self):
-        self.guard.stamp(self.task, self.auth_user)
-
-        self.guard.check_task_stamped(self.task, self.auth_user)
-
-        assert self.guard.check_task_stamped(self.task, self.auth_user) is False
-
-    def test_check_task_stamped_returns_True_for_anon_if_called_second_time(self):
-        self.guard.stamp(self.task, self.anon_user)
-
-        self.guard.check_task_stamped(self.task, self.anon_user)
-
-        assert self.guard.check_task_stamped(self.task, self.anon_user) is True
-
     def test_retrieve_timestamp_returns_None_for_non_stamped_task(self):
         assert self.guard.retrieve_timestamp(self.task, self.auth_user) is None
 
