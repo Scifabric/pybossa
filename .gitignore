@@ -29,6 +29,7 @@ keys/*
 *.log
 log
 *.sql
+dat/GeoIP.dat
 
 pybossa/themes/crowdcrafting-theme/
 pybossa/translations
