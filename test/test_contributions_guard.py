@@ -19,6 +19,7 @@
 from redis import StrictRedis
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model.task import Task
+from mock import patch
 
 class TestContributionsGuard(object):
 
@@ -55,6 +56,16 @@ class TestContributionsGuard(object):
 
         assert self.connection.ttl(key) == ONE_HOUR, self.connection.ttl(key)
 
+    @patch('pybossa.contributions_guard.make_timestamp')
+    def test_stamp_adds_a_timestamp_when_the_task_is_stamped(self, make_timestamp):
+        make_timestamp.return_value = "now"
+        user = {'user_id': None, 'user_ip': '127.0.0.1'}
+        task = Task(id=22)
+        key = 'pybossa:task_requested:user:127.0.0.1:task:22'
+
+        self.guard.stamp(task, user)
+
+        assert self.connection.get(key) == 'now'
 
 
     def test_check_task_stamped_returns_False_for_non_stamped_task(self):

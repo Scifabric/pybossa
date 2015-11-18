@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.model import make_timestamp
+
 class ContributionsGuard(object):
 
     KEY_PREFIX = 'pybossa:task_requested:user:%s:task:%s'
@@ -27,12 +29,12 @@ class ContributionsGuard(object):
         user_id = user['user_id'] or user['user_ip']
         key = self.KEY_PREFIX % (user_id, task.id)
         timeout = 60 * 60
-        self.conn.setex(key, timeout, True)
+        self.conn.setex(key, timeout, make_timestamp())
 
     def check_task_stamped(self, task, user):
         user_id = user['user_id'] or user['user_ip']
         key = self.KEY_PREFIX % (user_id, task.id)
-        task_requested = bool(self.conn.get(key))
+        task_requested = self.conn.get(key) is not None
         if user['user_id'] is not None:
             self.conn.delete(key)
         return task_requested
