@@ -29,6 +29,7 @@ from functools import wraps
 from factories import reset_all_pk_sequences
 import random
 import os
+from mock import MagicMock
 
 
 os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
@@ -417,3 +418,10 @@ def assert_not_raises(exception, call, *args, **kwargs):
 class FakeResponse(object):
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
+
+
+def mock_contributions_guard(stamped=True, timestamp='2015-11-18T16:29:25.496327'):
+    fake_guard_instance = MagicMock()
+    fake_guard_instance.check_task_stamped.return_value = stamped
+    fake_guard_instance.retrieve_timestamp.return_value = timestamp
+    return fake_guard_instance

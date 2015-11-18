@@ -70,6 +70,8 @@ class TaskRunAPI(APIBase):
         else:
             taskrun.user_id = current_user.id
 
+        taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
+
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:

@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import with_context
+from default import with_context, mock_contributions_guard
 from nose.tools import assert_equal
 from test_api import TestAPI
-from mock import patch, MagicMock
+from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import TaskRepository
@@ -94,9 +94,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_anonymous_post(self, guard, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
-        fake_guard_instance = MagicMock()
-        fake_guard_instance.check_task_stamped.return_value = True
-        guard.return_value = fake_guard_instance
+        guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -152,9 +150,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_post(self, guard):
         """Test API TaskRun creation and auth for authenticated users"""
-        fake_guard_instance = MagicMock()
-        fake_guard_instance.check_task_stamped.return_value = True
-        guard.return_value = fake_guard_instance
+        guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -431,9 +427,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_updates_task_state(self, guard, mock_request):
         """Test API TaskRun POST updates task state"""
-        fake_guard_instance = MagicMock()
-        fake_guard_instance.check_task_stamped.return_value = True
-        guard.return_value = fake_guard_instance
+        guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, n_answers=2)
         url = '/api/taskrun?api_key=%s' % project.owner.api_key
@@ -507,3 +501,24 @@ class TestTaskrunAPI(TestAPI):
 
         assert resp.status_code == 200, resp.status_code
         assert task_runs == [], task_runs
+
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_created_with_time_it_was_requested_on_creation(self, guard):
+        """Test API taskrun post adds the created timestamp of the moment the task
+        was requested by the user"""
+        guard.return_value = mock_contributions_guard(True, "a while ago")
+
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my result')
+        datajson = json.dumps(data)
+
+        resp = self.app.post(url, data=datajson)
+        taskrun = task_repo.filter_task_runs_by(task_id=data['task_id'])[0]
+
+        assert taskrun.created == "a while ago", taskrun.created
