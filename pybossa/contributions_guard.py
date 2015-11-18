@@ -21,23 +21,24 @@ from pybossa.model import make_timestamp
 class ContributionsGuard(object):
 
     KEY_PREFIX = 'pybossa:task_requested:user:%s:task:%s'
+    STAMP_TTL = 60 * 60
 
     def __init__(self, redis_conn):
         self.conn = redis_conn
 
     def stamp(self, task, user):
-        user_id = user['user_id'] or user['user_ip']
-        key = self.KEY_PREFIX % (user_id, task.id)
-        timeout = 60 * 60
-        self.conn.setex(key, timeout, make_timestamp())
+        key = self._create_key(task, user)
+        self.conn.setex(key, self.STAMP_TTL, make_timestamp())
 
     def check_task_stamped(self, task, user):
-        user_id = user['user_id'] or user['user_ip']
-        key = self.KEY_PREFIX % (user_id, task.id)
+        key = self._create_key(task, user)
         task_requested = self.conn.get(key) is not None
         return task_requested
 
     def retrieve_timestamp(self, task, user):
-        user_id = user['user_id'] or user['user_ip']
-        key = self.KEY_PREFIX % (user_id, task.id)
+        key = self._create_key(task, user)
         return self.conn.get(key)
+
+    def _create_key(self, task, user):
+        user_id = user['user_id'] or user['user_ip']
+        return self.KEY_PREFIX % (user_id, task.id)
