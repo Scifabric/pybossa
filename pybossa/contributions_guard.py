@@ -25,3 +25,11 @@ class ContributionsGuard(object):
         key = 'pybossa:task_requested:user:%s:task:%s' % (user_id, task.id)
         timeout = 60 * 60
         self.conn.setex(key, timeout, True)
+
+    def check_task_stamped(self, task, user):
+        usr = user['user_id'] or user['user_ip']
+        key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
+        task_requested = bool(self.conn.get(key))
+        if user['user_id'] is not None:
+            self.conn.delete(key)
+        return task_requested
