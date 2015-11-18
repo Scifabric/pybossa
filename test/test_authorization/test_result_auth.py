@@ -129,6 +129,35 @@ class TestResultAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete',
                       result, project_id=1)
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_update_results(self):
+        """Test anonymous users cannot update results of a specific project"""
+
+        result = self.create_result()
+
+        assert_raises(Unauthorized, ensure_authorized_to, 'update',
+                      result, project_id=1)
+
+    # @patch('pybossa.auth.current_user', new=mock_authenticated)
+    # def test_authenticated_user_cannot_delete_results(self):
+    #     """Test authenticated users cannot delete results of a specific project"""
+
+    #     result = Result()
+
+    #     assert_raises(Forbidden, ensure_authorized_to, 'delete',
+    #                   result, project_id=1)
+
+
+    # @patch('pybossa.auth.current_user', new=mock_admin)
+    # def test_admin_user_cannot_delete_results(self):
+    #     """Test admin users cannot delete results of a specific project"""
+
+    #     result = Result()
+
+    #     assert_raises(Forbidden, ensure_authorized_to, 'delete',
+    #                   result, project_id=1)
+
+
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
     #def test_owner_user_cannot_read_auditlog(self):
     #    """Test owner users cannot read an auditlog"""
