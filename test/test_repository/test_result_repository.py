@@ -21,6 +21,8 @@ from default import Test, db
 from factories import TaskFactory, TaskRunFactory
 from pybossa.repositories import ResultRepository
 from pybossa.core import task_repo, result_repo
+from nose.tools import assert_raises
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 class TestResultRepository(Test):
@@ -28,6 +30,14 @@ class TestResultRepository(Test):
     def setUp(self):
         super(TestResultRepository, self).setUp()
         self.result_repo = ResultRepository(db)
+
+    def create_result(self, n_answers=1, filter_by=False):
+        task = TaskFactory.create(n_answers=n_answers)
+        TaskRunFactory.create(task=task)
+        if filter_by:
+            return self.result_repo.filter_by(project_id=1)
+        else:
+            return self.result_repo.get_by(project_id=1)
 
 
     def test_get_return_none_if_no_result(self):
@@ -136,3 +146,33 @@ class TestResultRepository(Test):
 
         err_msg = "There should not be a result"
         assert len(result) == 0, err_msg
+
+    def test_update(self):
+        """Test update persists the changes made to the result"""
+
+        result = self.create_result()
+        result.info = dict(new='value')
+
+        self.result_repo.update(result)
+        updated_result = self.result_repo.get(result.id)
+
+        assert updated_result.info['new'] == 'value', updated_result
+
+
+    def test_update_fails_if_integrity_error(self):
+        """Test update raises a DBIntegrityError if the instance to be updated
+        lacks a required value"""
+
+        result = self.create_result()
+        result.project_id = None
+
+        assert_raises(DBIntegrityError, self.result_repo.update, result)
+
+
+    def test_update_only_updates_results(self):
+        """Test update raises a WrongObjectError when an object which is not
+        a Result instance is updated"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.result_repo.update, bad_object)
