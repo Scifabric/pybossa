@@ -73,13 +73,33 @@ class TestResultAuthorization(Test):
         assert ensure_authorized_to('read', result)
 
 
-    #@patch('pybossa.auth.current_user', new=mock_anonymous)
-    #def test_anonymous_user_cannot_read_project_auditlogs(self):
-    #    """Test anonymous users cannot read auditlogs of a specific project"""
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_save_results(self):
+        """Test anonymous users cannot save results of a specific project"""
 
-    #    project = ProjectFactory.create()
+        result = Result()
 
-    #    assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create',
+                      result, project_id=1)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_authenticated_user_cannot_save_results(self):
+        """Test authenticated users cannot save results of a specific project"""
+
+        result = Result()
+
+        assert_raises(Forbidden, ensure_authorized_to, 'create',
+                      result, project_id=1)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_user_cannot_save_results(self):
+        """Test admin users cannot save results of a specific project"""
+
+        result = Result()
+
+        assert_raises(Forbidden, ensure_authorized_to, 'create',
+                      result, project_id=1)
 
 
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
