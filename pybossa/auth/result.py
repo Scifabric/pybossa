@@ -40,7 +40,16 @@ class ResultAuth(object):
         return True
 
     def _update(self, user, result, project_id=None):
-        return False
+        if user.is_anonymous():
+            return False
+        project = self._get_project(result, result.project_id)
+        return ((project.owner_id == user.id) and
+                (result.project_id == project_id))
 
     def _delete(self, user, result, project_id=None):
         return False
+
+    def _get_project(self, result, project_id):
+        if result is not None:
+            return self.project_repo.get(result.project_id)
+        return self.project_repo.get(project_id)
