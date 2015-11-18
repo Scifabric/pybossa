@@ -38,15 +38,6 @@ class ResultRepository(object):
         query = query.order_by(Result.id).limit(limit).offset(offset)
         return query.all()
 
-    def save(self, result):
-        self._validate_can_be('saved', result)
-        try:
-            self.db.session.add(result)
-            self.db.session.commit()
-        except IntegrityError as e:
-            self.db.session.rollback()
-            raise DBIntegrityError(e)
-
     def _validate_can_be(self, action, result):
         if not isinstance(result, Result):
             name = result.__class__.__name__
