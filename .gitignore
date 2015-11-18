@@ -31,6 +31,7 @@ log
 *.sql
 dat/GeoIP.dat
 *.ini
+pybossa/themes/pybossa-default-theme/
 
 pybossa/themes/crowdcrafting-theme/
 pybossa/translations
