@@ -60,6 +60,26 @@ class TestResultRepository(Test):
         for tr_id in result.task_run_ids:
             assert tr_id == task_run.id, err_msg
 
+    def test_get_by_returns_result(self):
+        """Test get_by method returns a result if exists"""
+
+        n_answers = 1
+
+        task = TaskFactory.create(n_answers=n_answers)
+        task_run = TaskRunFactory.create(task=task)
+
+        result = self.result_repo.get_by(project_id=1)
+
+
+        err_msg = "There should be a result"
+        assert result.project_id == 1, err_msg
+        assert result.task_id == task.id, err_msg
+        assert len(result.task_run_ids) == n_answers, err_msg
+        err_msg = "The task_run id is missing in the results array"
+        for tr_id in result.task_run_ids:
+            assert tr_id == task_run.id, err_msg
+
+
     def test_get_returns_result_after_increasig_redundancy(self):
         """Test get method returns a result if after increasing redundancy"""
 
