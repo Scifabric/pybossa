@@ -37,3 +37,18 @@ class ResultRepository(object):
         query = self.db.session.query(Result).filter_by(**filters)
         query = query.order_by(Result.id).limit(limit).offset(offset)
         return query.all()
+
+    def update(self, result):
+        self._validate_can_be('updated', result)
+        try:
+            self.db.session.merge(result)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
+    def _validate_can_be(self, action, result):
+        if not isinstance(result, Result):
+            name = result.__class__.__name__
+            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            raise WrongObjectError(msg)
