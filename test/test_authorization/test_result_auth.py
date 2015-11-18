@@ -34,6 +34,7 @@ class TestResultAuthorization(Test):
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
     mock_pro = mock_current_user(anonymous=False, admin=False, id=2, pro=True)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
+    mock_owner = mock_current_user(anonymous=False, admin=False, id=1)
 
     def setUp(self):
         super(TestResultAuthorization, self).setUp()
@@ -146,6 +147,21 @@ class TestResultAuthorization(Test):
 
         assert_raises(Forbidden, ensure_authorized_to, 'update',
                       result, project_id=result.project_id)
+
+    @patch('pybossa.auth.current_user', new=mock_owner)
+    def test_auth_owner_can_update_results(self):
+        """Test auth owner can update results of a specific project"""
+
+        result = self.create_result()
+        result.info = dict(new='value')
+
+        assert ensure_authorized_to('update', result,
+                                    project_id=result.project_id)
+
+        updated_result = self.result_repo.get_by(id=result.id)
+
+        err_msg = "The result has not been updated"
+        assert updated_result.info['new'] == 'value', err_msg
 
 
     # @patch('pybossa.auth.current_user', new=mock_authenticated)
