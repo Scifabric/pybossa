@@ -38,3 +38,8 @@ class ContributionsGuard(object):
         if user['user_id'] is not None:
             self.conn.delete(key)
         return task_requested
+
+    def retrieve_timestamp(self, task, user):
+        user_id = user['user_id'] or user['user_ip']
+        key = self.KEY_PREFIX % (user_id, task.id)
+        return self.conn.get(key)

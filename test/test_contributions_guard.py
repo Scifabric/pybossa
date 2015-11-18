@@ -107,3 +107,19 @@ class TestContributionsGuard(object):
         self.guard.check_task_stamped(task, user)
 
         assert self.guard.check_task_stamped(task, user) is True
+
+
+    def test_retrieve_timestamp_returns_None_for_non_stamped_task(self):
+        user = {'user_id': 33, 'user_ip': None}
+        task = Task(id=22)
+
+        assert self.guard.retrieve_timestamp(task, user) is None
+
+    @patch('pybossa.contributions_guard.make_timestamp')
+    def test_retrieve_timestamp_returs_the_timestamp_for_stamped_task(self, make_timestamp):
+        make_timestamp.return_value = "now"
+        user = {'user_id': 33, 'user_ip': None}
+        task = Task(id=22)
+        self.guard.stamp(task, user)
+
+        assert self.guard.retrieve_timestamp(task, user) == 'now'
