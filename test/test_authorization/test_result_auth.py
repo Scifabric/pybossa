@@ -136,7 +136,17 @@ class TestResultAuthorization(Test):
         result = self.create_result()
 
         assert_raises(Unauthorized, ensure_authorized_to, 'update',
-                      result, project_id=1)
+                      result, project_id=result.project_id)
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_auth_user_cannot_update_results(self):
+        """Test auth users but not owner cannot update results of a specific project"""
+
+        result = self.create_result()
+
+        assert_raises(Forbidden, ensure_authorized_to, 'update',
+                      result, project_id=result.project_id)
+
 
     # @patch('pybossa.auth.current_user', new=mock_authenticated)
     # def test_authenticated_user_cannot_delete_results(self):
