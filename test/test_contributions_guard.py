@@ -27,99 +27,74 @@ class TestContributionsGuard(object):
         self.connection = StrictRedis()
         self.connection.flushall()
         self.guard = ContributionsGuard(self.connection)
+        self.anon_user = {'user_id': None, 'user_ip': '127.0.0.1'}
+        self.auth_user = {'user_id': 33, 'user_ip': None}
+        self.task = Task(id=22)
 
     def test_stamp_registers_specific_user_id_and_task(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
 
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.auth_user)
 
         assert key in self.connection.keys(), self.connection.keys()
 
     def test_stamp_registers_specific_user_ip_and_task_if_no_id_provided(self):
-        user = {'user_id': None, 'user_ip': '127.0.0.1'}
-        task = Task(id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.anon_user)
 
         assert key in self.connection.keys(), self.connection.keys()
 
     def test_stamp_expires_in_one_hour(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
         ONE_HOUR = 60 * 60
 
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.auth_user)
 
         assert self.connection.ttl(key) == ONE_HOUR, self.connection.ttl(key)
 
     @patch('pybossa.contributions_guard.make_timestamp')
     def test_stamp_adds_a_timestamp_when_the_task_is_stamped(self, make_timestamp):
         make_timestamp.return_value = "now"
-        user = {'user_id': None, 'user_ip': '127.0.0.1'}
-        task = Task(id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.anon_user)
 
         assert self.connection.get(key) == 'now'
 
-
     def test_check_task_stamped_returns_False_for_non_stamped_task(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
-
-        assert self.guard.check_task_stamped(task, user) is False
+        assert self.guard.check_task_stamped(self.task, self.auth_user) is False
 
     def test_check_task_stamped_returns_True_for_auth_user_who_requested_task(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
+        self.guard.stamp(self.task, self.auth_user)
 
-        self.guard.stamp(task, user)
-
-        assert self.guard.check_task_stamped(task, user) is True
+        assert self.guard.check_task_stamped(self.task, self.auth_user) is True
 
     def test_check_task_stamped_returns_True_for_anon_user_who_requested_task(self):
-        user = {'user_id': None, 'user_ip': '127.0.0.1'}
-        task = Task(id=22)
+        self.guard.stamp(self.task, self.anon_user)
 
-        self.guard.stamp(task, user)
-
-        assert self.guard.check_task_stamped(task, user) is True
+        assert self.guard.check_task_stamped(self.task, self.anon_user) is True
 
     def test_check_task_stamped_returns_False_for_auth_if_called_second_time(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.auth_user)
 
-        self.guard.check_task_stamped(task, user)
+        self.guard.check_task_stamped(self.task, self.auth_user)
 
-        assert self.guard.check_task_stamped(task, user) is False
+        assert self.guard.check_task_stamped(self.task, self.auth_user) is False
 
     def test_check_task_stamped_returns_True_for_anon_if_called_second_time(self):
-        user = {'user_id': None, 'user_ip': '127.0.0.1'}
-        task = Task(id=22)
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.anon_user)
 
-        self.guard.check_task_stamped(task, user)
+        self.guard.check_task_stamped(self.task, self.anon_user)
 
-        assert self.guard.check_task_stamped(task, user) is True
-
+        assert self.guard.check_task_stamped(self.task, self.anon_user) is True
 
     def test_retrieve_timestamp_returns_None_for_non_stamped_task(self):
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
-
-        assert self.guard.retrieve_timestamp(task, user) is None
+        assert self.guard.retrieve_timestamp(self.task, self.auth_user) is None
 
     @patch('pybossa.contributions_guard.make_timestamp')
     def test_retrieve_timestamp_returs_the_timestamp_for_stamped_task(self, make_timestamp):
         make_timestamp.return_value = "now"
-        user = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
-        self.guard.stamp(task, user)
+        self.guard.stamp(self.task, self.auth_user)
 
-        assert self.guard.retrieve_timestamp(task, user) == 'now'
+        assert self.guard.retrieve_timestamp(self.task, self.auth_user) == 'now'
