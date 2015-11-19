@@ -119,6 +119,7 @@ def new_task(project_id):
     except Exception as e:
         return error.format_exception(e, target='project', action='GET')
 
+
 def _retrieve_new_task(project_id):
     project = project_repo.get(project_id)
     if project is None:
@@ -134,7 +135,10 @@ def _retrieve_new_task(project_id):
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
-    task = sched.new_task(project_id, project.info.get('sched'), user_id, user_ip, offset)
+    task = sched.new_task(project_id, project.info.get('sched'),
+                          user_id,
+                          user_ip,
+                          offset)
     return task
 
 
