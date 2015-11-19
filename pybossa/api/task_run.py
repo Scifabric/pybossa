@@ -53,26 +53,34 @@ class TaskRunAPI(APIBase):
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
-        # validate the task and project for that taskrun are ok
         task = task_repo.get_task(taskrun.task_id)
-        if task is None:  # pragma: no cover
-            raise Forbidden('Invalid task_id')
-        if (task.project_id != taskrun.project_id):
-            raise Forbidden('Invalid project_id')
-
         guard = ContributionsGuard(sentinel.master)
-        if not guard.check_task_stamped(task, get_user_id_or_ip()):
-            raise Forbidden('You must request a task first!')
 
-        # Add the user info so it cannot post again the same taskrun
-        if current_user.is_anonymous():
-            taskrun.user_ip = request.remote_addr
-        else:
-            taskrun.user_id = current_user.id
-
-        taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
+        self._validate_project_and_task(taskrun, task)
+        self._ensure_task_was_requested(task, guard)
+        self._add_user_info(taskrun)
+        self._add_created_timestamp(taskrun, task, guard)
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
+
+    def _validate_project_and_task(self, taskrun, task):
+        if task is None:  # pragma: no cover
+            raise Forbidden('Invalid task_id')
+        if (task.project_id != taskrun.project_id):
+            raise Forbidden('Invalid project_id')
+
+    def _ensure_task_was_requested(self, task, guard):
+        if not guard.check_task_stamped(task, get_user_id_or_ip()):
+            raise Forbidden('You must request a task first!')
+
+    def _add_user_info(self, taskrun):
+        if current_user.is_anonymous():
+            taskrun.user_ip = request.remote_addr
+        else:
+            taskrun.user_id = current_user.id
+
+    def _add_created_timestamp(self, taskrun, task, guard):
+        taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
