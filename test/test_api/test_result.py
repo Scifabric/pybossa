@@ -110,8 +110,8 @@ class TestResultAPI(TestAPI):
 
 
     @with_context
-    def test_task_post(self):
-        """Test API Task creation"""
+    def test_result_post(self):
+        """Test API Result creation"""
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
@@ -170,19 +170,18 @@ class TestResultAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
-    #def test_task_post_with_reserved_fields_returns_error(self):
-    #    user = UserFactory.create()
-    #    project = ProjectFactory.create(owner=user)
-    #    data = {'created': 'today',
-    #            'state': 'completed',
-    #            'id': 222, 'project_id': project.id}
+    def test_result_post_with_reserved_fields_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = {'created': 'today',
+                'id': 222, 'project_id': project.id}
 
-    #    res = self.app.post('/api/task?api_key=' + user.api_key,
-    #                        data=json.dumps(data))
+        res = self.app.post('/api/result?api_key=' + user.api_key,
+                            data=json.dumps(data))
 
-    #    assert res.status_code == 400, res.status_code
-    #    error = json.loads(res.data)
-    #    assert error['exception_msg'] == "Reserved keys in payload", error
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
 
     #def test_task_put_with_reserved_fields_returns_error(self):
     #    user = UserFactory.create()
