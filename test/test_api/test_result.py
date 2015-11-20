@@ -189,7 +189,7 @@ class TestResultAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    def test_task_put_with_reserved_fields_returns_error(self):
+    def test_result_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         result = self.create_result(owner=user)
         print result
@@ -204,69 +204,64 @@ class TestResultAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    #@with_context
-    #def test_task_update(self):
-    #    """Test API task update"""
-    #    admin = UserFactory.create()
-    #    user = UserFactory.create()
-    #    non_owner = UserFactory.create()
-    #    project = ProjectFactory.create(owner=user)
-    #    task = TaskFactory.create(project=project)
-    #    root_task = TaskFactory.create(project=project)
-    #    data = {'n_answers': 1}
-    #    datajson = json.dumps(data)
-    #    root_data = {'n_answers': 4}
-    #    root_datajson = json.dumps(root_data)
+    @with_context
+    def test_result_update(self):
+        """Test API result update"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        non_owner = UserFactory.create()
+        data = dict(info=dict(foo='bar'))
+        datajson = json.dumps(data)
+        result = self.create_result(owner=user)
 
-    #    ## anonymous
-    #    res = self.app.put('/api/task/%s' % task.id, data=data)
-    #    assert_equal(res.status, '401 UNAUTHORIZED', res.status)
-    #    ### real user but not allowed as not owner!
-    #    url = '/api/task/%s?api_key=%s' % (task.id, non_owner.api_key)
-    #    res = self.app.put(url, data=datajson)
-    #    assert_equal(res.status, '403 FORBIDDEN', res.status)
+        ## anonymous
+        res = self.app.put('/api/result/%s' % result.id, data=datajson)
+        assert_equal(res.status, '401 UNAUTHORIZED', res.status)
+        ### real user but not allowed as not owner!
+        url = '/api/result/%s?api_key=%s' % (result.id, non_owner.api_key)
+        res = self.app.put(url, data=datajson)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
 
-    #    ### real user
-    #    url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
-    #    res = self.app.put(url, data=datajson)
-    #    out = json.loads(res.data)
-    #    assert_equal(res.status, '200 OK', res.data)
-    #    assert_equal(task.n_answers, data['n_answers'])
-    #    assert task.id == out['id'], out
+        ### real user
+        url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(result.info['foo'], data['info']['foo'])
+        assert result.id == out['id'], out
 
-    #    ### root
-    #    res = self.app.put('/api/task/%s?api_key=%s' % (root_task.id, admin.api_key),
-    #                       data=root_datajson)
-    #    assert_equal(res.status, '200 OK', res.data)
-    #    assert_equal(root_task.n_answers, root_data['n_answers'])
+        ### root
+        res = self.app.put('/api/result/%s?api_key=%s' % (result.id, admin.api_key),
+                           data=datajson)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
 
-    #    # PUT with not JSON data
-    #    res = self.app.put(url, data=data)
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'PUT', err
-    #    assert err['exception_cls'] == 'ValueError', err
+        # PUT with not JSON data
+        res = self.app.put(url, data=None)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
 
-    #    # PUT with not allowed args
-    #    res = self.app.put(url + "&foo=bar", data=json.dumps(data))
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'PUT', err
-    #    assert err['exception_cls'] == 'AttributeError', err
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
 
-    #    # PUT with fake data
-    #    data['wrongfield'] = 13
-    #    res = self.app.put(url, data=json.dumps(data))
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'PUT', err
-    #    assert err['exception_cls'] == 'TypeError', err
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
 
 
     #@with_context
