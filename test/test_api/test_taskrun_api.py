@@ -528,11 +528,20 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_cannot_be_deleted_associated_result(self):
         """Test API taskrun cannot be deleted when a result is associated."""
+        root = UserFactory.create(admin=True)
         results = self.create_result(n_results=10, filter_by=True)
         project = project_repo.get(results[0].project_id)
 
+        # Owner
         for result in results:
             for tr in result.task_run_ids:
                 url = '/api/taskrun/%s?api_key=%s' % (tr, project.owner.api_key)
+                res = self.app.delete(url)
+                assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+        # Admin
+        for result in results:
+            for tr in result.task_run_ids:
+                url = '/api/taskrun/%s?api_key=%s' % (tr, root.api_key)
                 res = self.app.delete(url)
                 assert_equal(res.status, '403 FORBIDDEN', res.status)
