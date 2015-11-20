@@ -33,8 +33,13 @@ class TestResultAPI(TestAPI):
         self.result_repo = ResultRepository(db)
 
 
-    def create_result(self, n_results=1, n_answers=1, filter_by=False):
-        project = ProjectFactory.create()
+    def create_result(self, n_results=1, n_answers=1, owner=None,
+                      filter_by=False):
+        if owner:
+            owner = owner
+        else:
+            owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
         tasks = []
         for i in range(n_results):
             tasks.append(TaskFactory.create(n_answers=n_answers,
@@ -184,20 +189,20 @@ class TestResultAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    #def test_task_put_with_reserved_fields_returns_error(self):
-    #    user = UserFactory.create()
-    #    project = ProjectFactory.create(owner=user)
-    #    task = TaskFactory.create(project=project)
-    #    url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
-    #    data = {'created': 'today',
-    #            'state': 'completed',
-    #            'id': 222}
+    def test_task_put_with_reserved_fields_returns_error(self):
+        user = UserFactory.create()
+        result = self.create_result(owner=user)
+        print result
+        url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
+        data = {'created': 'today',
+                'project_id': 1,
+                'id': 222}
 
-    #    res = self.app.put(url, data=json.dumps(data))
+        res = self.app.put(url, data=json.dumps(data))
 
-    #    assert res.status_code == 400, res.status_code
-    #    error = json.loads(res.data)
-    #    assert error['exception_msg'] == "Reserved keys in payload", error
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
 
     #@with_context
     #def test_task_update(self):
