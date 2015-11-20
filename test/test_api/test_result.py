@@ -61,6 +61,7 @@ class TestResultAPI(TestAPI):
         assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
         assert result['project_id'] == 1, result
         assert result['task_id'] == 1, result
+        assert result['created'] is not None, result
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
