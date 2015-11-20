@@ -20,6 +20,7 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
+from pybossa.core import project_repo, task_repo, result_repo
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
@@ -311,8 +312,17 @@ class TestResultAPI(TestAPI):
         task = task_repo.get_task(result.task_id)
         task.n_answers = 2
         TaskRunFactory.create(task=task, project=project)
-        results = result_repo.get_by(project_id=project.id)
+        result = result_repo.get_by(project_id=project.id)
 
+        assert result.last_version is True, result.last_version
+
+        result_id = result.id
+
+        results = result_repo.filter_by(project_id=project.id, last_version=False)
         assert len(results) == 2, len(results)
-        last_version = results[1]
-        url = '/api/result/i'
+
+        for r in results:
+            if r.id == result_id:
+                assert r.last_version is True, r.last_version
+            else:
+                assert r.last_version is False, r.last_version
