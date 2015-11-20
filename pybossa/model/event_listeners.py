@@ -22,6 +22,7 @@ from sqlalchemy import event
 
 from pybossa.feed import update_feed
 from pybossa.model import update_project_timestamp, update_target_timestamp
+from pybossa.model import make_timestamp
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.project import Project
 from pybossa.model.task import Task
@@ -145,8 +146,9 @@ def create_result(conn, project_id, task_id):
     task_run_ids = ", ".join(str(tr.id) for tr in results)
 
     sql_query = """INSERT INTO result
-                   (project_id, task_id, task_run_ids)
-                   VALUES (%s, %s, '{%s}');""" % (project_id,
+                   (created, project_id, task_id, task_run_ids)
+                   VALUES ('%s', %s, %s, '{%s}');""" % (make_timestamp(),
+                                                  project_id,
                                                   task_id,
                                                   task_run_ids)
     conn.execute(sql_query)
