@@ -33,7 +33,7 @@ class ResultAPI(APIBase):
 
     __class__ = Result
     reserved_keys = set(['id', 'created', 'project_id',
-                         'task_id', 'task_run_ids'])
+                         'task_id', 'task_run_ids', 'last_version'])
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
