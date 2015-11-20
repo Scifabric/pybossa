@@ -109,77 +109,66 @@ class TestResultAPI(TestAPI):
         assert data[0]['id'] == 2, data[0]
 
 
-    #@with_context
-    #def test_task_post(self):
-    #    """Test API Task creation"""
-    #    admin = UserFactory.create()
-    #    user = UserFactory.create()
-    #    non_owner = UserFactory.create()
-    #    project = ProjectFactory.create(owner=user)
-    #    data = dict(project_id=project.id, info='my task data')
-    #    root_data = dict(project_id=project.id, info='my root task data')
+    @with_context
+    def test_task_post(self):
+        """Test API Task creation"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        non_owner = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = dict(info='final result')
 
-    #    # anonymous user
-    #    # no api-key
-    #    res = self.app.post('/api/task', data=json.dumps(data))
-    #    error_msg = 'Should not be allowed to create'
-    #    assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        # anonymous user
+        # no api-key
+        res = self.app.post('/api/result', data=json.dumps(data))
+        error_msg = 'Should not be allowed to create'
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
-    #    ### real user but not allowed as not owner!
-    #    res = self.app.post('/api/task?api_key=' + non_owner.api_key,
-    #                        data=json.dumps(data))
+        ### real user but not allowed as not owner!
+        res = self.app.post('/api/result?api_key=' + non_owner.api_key,
+                            data=json.dumps(data))
 
-    #    error_msg = 'Should not be able to post tasks for projects of others'
-    #    assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error_msg = 'Should not be able to post tasks for projects of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
-    #    # now a real user
-    #    res = self.app.post('/api/task?api_key=' + user.api_key,
-    #                        data=json.dumps(data))
-    #    assert res.data, res
-    #    datajson = json.loads(res.data)
-    #    out = task_repo.get_task(datajson['id'])
-    #    assert out, out
-    #    assert_equal(out.info, 'my task data'), out
-    #    assert_equal(out.project_id, project.id)
+        # now a real user
+        res = self.app.post('/api/result?api_key=' + user.api_key,
+                            data=json.dumps(data))
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
-    #    # now the root user
-    #    res = self.app.post('/api/task?api_key=' + admin.api_key,
-    #                        data=json.dumps(root_data))
-    #    assert res.data, res
-    #    datajson = json.loads(res.data)
-    #    out = task_repo.get_task(datajson['id'])
-    #    assert out, out
-    #    assert_equal(out.info, 'my root task data'), out
-    #    assert_equal(out.project_id, project.id)
+        # now the root user
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                            data=json.dumps(data))
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
-    #    # POST with not JSON data
-    #    url = '/api/task?api_key=%s' % user.api_key
-    #    res = self.app.post(url, data=data)
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'POST', err
-    #    assert err['exception_cls'] == 'ValueError', err
+        # POST with not JSON data
+        url = '/api/result?api_key=%s' % user.api_key
+        res = self.app.post(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
 
-    #    # POST with not allowed args
-    #    res = self.app.post(url + '&foo=bar', data=json.dumps(data))
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'POST', err
-    #    assert err['exception_cls'] == 'AttributeError', err
+        # POST with not allowed args
+        res = self.app.post(url + '&foo=bar', data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
 
-    #    # POST with fake data
-    #    data['wrongfield'] = 13
-    #    res = self.app.post(url, data=json.dumps(data))
-    #    err = json.loads(res.data)
-    #    assert res.status_code == 415, err
-    #    assert err['status'] == 'failed', err
-    #    assert err['target'] == 'task', err
-    #    assert err['action'] == 'POST', err
-    #    assert err['exception_cls'] == 'TypeError', err
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'result', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
 
     #def test_task_post_with_reserved_fields_returns_error(self):
     #    user = UserFactory.create()
