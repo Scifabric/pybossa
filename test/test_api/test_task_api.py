@@ -363,3 +363,19 @@ class TestTaskAPI(TestAPI):
                                            project.owner.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    def test_delete_task_when_result_associated_variation(self):
+        """Test API delete task fails when a result is associated after
+        increasing the n_answers changing its state from completed to
+        ongoing."""
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        task = task_repo.get_task(result.task_id)
+        task.n_answers = 100
+        task_repo.update(task)
+
+        url = '/api/task/%s?api_key=%s' % (result.task_id,
+                                           project.owner.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
