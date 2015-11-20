@@ -302,31 +302,3 @@ class TestResultAPI(TestAPI):
         url = '/api/result/%s?api_key=%s' % (result.id, admin.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.data)
-
-
-    #@patch('pybossa.repositories.task_repository.uploader')
-    #def test_task_delete_deletes_zip_files(self, uploader):
-    #    """Test API task delete deletes also zip files with tasks and taskruns"""
-    #    admin = UserFactory.create()
-    #    project = ProjectFactory.create(owner=admin)
-    #    task = TaskFactory.create(project=project)
-    #    url = '/api/task/%s?api_key=%s' % (task.id, admin.api_key)
-    #    res = self.app.delete(url)
-    #    expected = [call('1_project1_task_json.zip', 'user_1'),
-    #                call('1_project1_task_csv.zip', 'user_1'),
-    #                call('1_project1_task_run_json.zip', 'user_1'),
-    #                call('1_project1_task_run_csv.zip', 'user_1')]
-    #    assert uploader.delete_file.call_args_list == expected
-
-
-    #@with_context
-    #def test_delete_task_cascade(self):
-    #    """Test API delete task deletes associated taskruns"""
-    #    task = TaskFactory.create()
-    #    task_runs = TaskRunFactory.create_batch(3, task=task)
-    #    url = '/api/task/%s?api_key=%s' % (task.id, task.project.owner.api_key)
-    #    res = self.app.delete(url)
-
-    #    assert_equal(res.status, '204 NO CONTENT', res.data)
-    #    task_runs = task_repo.filter_task_runs_by(task_id=task.id)
-    #    assert len(task_runs) == 0, "There should not be any task run for task"
