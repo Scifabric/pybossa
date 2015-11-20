@@ -80,8 +80,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Unauthorized, ensure_authorized_to, 'create',
-                      result, project_id=1)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', result)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_save_results(self):
@@ -89,8 +88,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'create',
-                      result, project_id=1)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', result)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -99,8 +97,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'create',
-                      result, project_id=1)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', result)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_delete_results(self):
@@ -108,8 +105,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Unauthorized, ensure_authorized_to, 'delete',
-                      result, project_id=1)
+        assert_raises(Unauthorized, ensure_authorized_to, 'delete', result)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_delete_results(self):
@@ -117,8 +113,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'delete',
-                      result, project_id=1)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', result)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -127,8 +122,7 @@ class TestResultAuthorization(Test):
 
         result = Result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'delete',
-                      result, project_id=1)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', result)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_update_results(self):
@@ -136,8 +130,7 @@ class TestResultAuthorization(Test):
 
         result = self.create_result()
 
-        assert_raises(Unauthorized, ensure_authorized_to, 'update',
-                      result, project_id=result.project_id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'update', result)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_auth_user_cannot_update_results(self):
@@ -145,8 +138,7 @@ class TestResultAuthorization(Test):
 
         result = self.create_result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'update',
-                      result, project_id=result.project_id)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', result)
 
     @patch('pybossa.auth.current_user', new=mock_owner)
     def test_auth_owner_can_update_results(self):
@@ -155,8 +147,7 @@ class TestResultAuthorization(Test):
         result = self.create_result()
         result.info = dict(new='value')
 
-        assert ensure_authorized_to('update', result,
-                                    project_id=result.project_id)
+        assert ensure_authorized_to('update', result)
 
         updated_result = self.result_repo.get_by(id=result.id)
 

@@ -27,26 +27,23 @@ class ResultAuth(object):
     def specific_actions(self):
         return self._specific_actions
 
-    def can(self, user, action, result=None, project_id=None):
+    def can(self, user, action, result=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, result, project_id)
+        return getattr(self, action)(user, result)
 
-    def _create(self, user, result, project_id=None):
+    def _create(self, user, result):
         return False
 
-    def _read(self, user, result=None, project_id=None):
-        if (result is None and project_id is None):
-            return False
+    def _read(self, user, result=None):
         return True
 
-    def _update(self, user, result, project_id=None):
+    def _update(self, user, result):
         if user.is_anonymous():
             return False
         project = self._get_project(result, result.project_id)
-        return ((project.owner_id == user.id) and
-                (result.project_id == project_id))
+        return (project.owner_id == user.id)
 
-    def _delete(self, user, result, project_id=None):
+    def _delete(self, user, result):
         return False
 
     def _get_project(self, result, project_id):
