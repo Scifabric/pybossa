@@ -41,6 +41,6 @@ class TaskAPI(APIBase):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 
-    def _valid_delete_conditions(self, oid):
-        if result_repo.get_by(task_id=oid):
+    def _valid_delete_conditions(self, obj):
+        if result_repo.get_by(task_id=obj.id):
             raise abort(403)

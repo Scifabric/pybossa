@@ -225,7 +225,6 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            self._valid_delete_conditions(oid)
             self._delete_instance(oid)
             return '', 204
         except Exception as e:
@@ -241,6 +240,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         ensure_authorized_to('delete', inst)
+        self._valid_delete_conditions(inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
