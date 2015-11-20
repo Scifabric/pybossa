@@ -35,7 +35,8 @@ class TestResultAPI(TestAPI):
 
     def create_result(self, n_answers=1, filter_by=False):
         task = TaskFactory.create(n_answers=n_answers)
-        TaskRunFactory.create(task=task)
+        for i in range(n_answers):
+            TaskRunFactory.create(task=task)
         if filter_by:
             return self.result_repo.filter_by(project_id=1)
         else:
@@ -45,14 +46,14 @@ class TestResultAPI(TestAPI):
     @with_context
     def test_result_query_without_params(self):
         """ Test API Result query"""
-        result = self.create_result()
+        result = self.create_result(n_answers=10)
         res = self.app.get('/api/result')
         results = json.loads(res.data)
         assert len(results) == 1, results
         result = results[0]
         assert result['info'] is None, result
-        assert len(result['task_run_ids']) == 1, result
-        assert result['task_run_ids'] == [1], result
+        assert len(result['task_run_ids']) == 10, result
+        assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
         assert result['project_id'] == 1, result
         assert result['task_id'] == 1, result
 
@@ -61,10 +62,9 @@ class TestResultAPI(TestAPI):
 
 
     #@with_context
-    #def test_task_query_with_params(self):
-    #    """Test API query for task with params works"""
-    #    project = ProjectFactory.create()
-    #    tasks = TaskFactory.create_batch(10, project=project)
+    #def test_result_query_with_params(self):
+    #    """Test API query for result with params works"""
+    #    self.create_result()
     #    # Test for real field
     #    res = self.app.get("/api/task?project_id=1")
     #    data = json.loads(res.data)
