@@ -15,11 +15,23 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+import json
+from sqlalchemy.sql import and_
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy.orm.base import _entity_descriptor
 from pybossa.model.result import Result
+from sqlalchemy import cast, Text
 from pybossa.exc import WrongObjectError, DBIntegrityError
+
+
+def generate_query_from_keywords(model, **kwargs):
+    clauses = [_entity_descriptor(model, key) == value
+                   for key, value in kwargs.items()
+                   if key != 'info']
+    if 'info' in kwargs.keys():
+        info = json.dumps(kwargs['info'])
+        clauses.append(cast(_entity_descriptor(model, 'info'), Text) == info)
+    return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
 
 
 class ResultRepository(object):
@@ -33,10 +45,23 @@ class ResultRepository(object):
     def get_by(self, **attributes):
         return self.db.session.query(Result).filter_by(**attributes).first()
 
-    def filter_by(self, limit=None, offset=0, **filters):
-        query = self.db.session.query(Result).filter_by(**filters)
-        query = query.order_by(Result.id).limit(limit).offset(offset)
+    def filter_by(self, limit=None, offset=0, yielded=False,
+                  last_id=None, **filters):
+        query_args = generate_query_from_keywords(Result, **filters)
+        query = self.db.session.query(Result).filter(*query_args)
+        if last_id:
+            query = query.filter(Result.id > last_id)
+            query = query.order_by(Result.id).limit(limit)
+        else:
+            query = query.order_by(Result.id).limit(limit).offset(offset)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
         return query.all()
+
+        #query = self.db.session.query(Result).filter_by(**filters)
+        #query = query.order_by(Result.id).limit(limit).offset(offset)
+        #return query.all()
 
     def update(self, result):
         self._validate_can_be('updated', result)
