@@ -33,10 +33,15 @@ class TestResultAPI(TestAPI):
         self.result_repo = ResultRepository(db)
 
 
-    def create_result(self, n_answers=1, filter_by=False):
-        task = TaskFactory.create(n_answers=n_answers)
+    def create_result(self, n_results=1, n_answers=1, filter_by=False):
+        project = ProjectFactory.create()
+        tasks = []
+        for i in range(n_results):
+            tasks.append(TaskFactory.create(n_answers=n_answers,
+                                            project=project))
         for i in range(n_answers):
-            TaskRunFactory.create(task=task)
+            for task in tasks:
+                TaskRunFactory.create(task=task, project=project)
         if filter_by:
             return self.result_repo.filter_by(project_id=1)
         else:
@@ -61,47 +66,47 @@ class TestResultAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
 
-    #@with_context
-    #def test_result_query_with_params(self):
-    #    """Test API query for result with params works"""
-    #    self.create_result()
-    #    # Test for real field
-    #    res = self.app.get("/api/task?project_id=1")
-    #    data = json.loads(res.data)
-    #    # Should return one result
-    #    assert len(data) == 10, data
-    #    # Correct result
-    #    assert data[0]['project_id'] == 1, data
+    @with_context
+    def test_result_query_with_params(self):
+        """Test API query for result with params works"""
+        results = self.create_result(n_results=10, filter_by=True)
+        # Test for real field
+        res = self.app.get("/api/result?project_id=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
 
-    #    # Valid field but wrong value
-    #    res = self.app.get("/api/task?project_id=99999999")
-    #    data = json.loads(res.data)
-    #    assert len(data) == 0, data
+        # Valid field but wrong value
+        res = self.app.get("/api/result?project_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
 
-    #    # Multiple fields
-    #    res = self.app.get('/api/task?project_id=1&state=ongoing')
-    #    data = json.loads(res.data)
-    #    # One result
-    #    assert len(data) == 10, data
-    #    # Correct result
-    #    assert data[0]['project_id'] == 1, data
-    #    assert data[0]['state'] == u'ongoing', data
+        # Multiple fields
+        res = self.app.get('/api/result?project_id=1&task_id=1')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
 
-    #    # Limits
-    #    res = self.app.get("/api/task?project_id=1&limit=5")
-    #    data = json.loads(res.data)
-    #    for item in data:
-    #        assert item['project_id'] == 1, item
-    #    assert len(data) == 5, data
+        # Limits
+        res = self.app.get("/api/result?project_id=1&limit=5")
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, len(data)
 
-    #    # Keyset pagination
-    #    url = "/api/task?project_id=1&limit=5&last_id=%s" % tasks[4].id
-    #    res = self.app.get(url)
-    #    data = json.loads(res.data)
-    #    for item in data:
-    #        assert item['project_id'] == 1, item
-    #    assert len(data) == 5, data
-    #    assert data[0]['id'] == tasks[5].id, data
+        # Keyset pagination
+        url = "/api/result?project_id=1&limit=5&last_id=1"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == 2, data[0]
 
 
     #@with_context
