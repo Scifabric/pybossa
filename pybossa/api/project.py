@@ -28,7 +28,7 @@ from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
-from pybossa.core import auditlog_repo
+from pybossa.core import auditlog_repo, result_repo
 from pybossa.auditlogger import AuditLogger
 
 auditlogger = AuditLogger(auditlog_repo, caller='api')
@@ -71,3 +71,7 @@ class ProjectAPI(APIBase):
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
+
+    def _valid_delete_conditions(self, obj):
+        if result_repo.get_by(project_id=obj.id):
+            raise Forbidden
