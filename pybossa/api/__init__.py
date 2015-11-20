@@ -49,6 +49,7 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
+from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 
 blueprint = Blueprint('api', __name__)
@@ -95,6 +96,7 @@ register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
+register_api(ResultAPI, 'result_token', '/result', pk='oid', pk_type='int')
 
 
 @jsonpify
