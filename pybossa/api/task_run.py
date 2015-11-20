@@ -23,14 +23,14 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from flask import request
+from flask import request, abort
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
-from pybossa.core import task_repo, project_repo, sentinel
+from pybossa.core import task_repo, project_repo, result_repo, sentinel
 
 
 class TaskRunAPI(APIBase):
@@ -72,6 +72,11 @@ class TaskRunAPI(APIBase):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 
+    def _valid_delete_conditions(self, obj):
+        result = result_repo.get_by(task_id=obj.task.id,
+                                    project_id=obj.project.id)
+        if result and (obj.id in result.task_run_ids):
+            raise abort(403)
 
 def _check_task_requested_by_user(taskrun, redis_conn):
     user_id_ip = get_user_id_or_ip()

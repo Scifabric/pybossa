@@ -22,13 +22,35 @@ from test_api import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
-from pybossa.repositories import TaskRepository
+from pybossa.repositories import ProjectRepository, TaskRepository
+from pybossa.repositories import ResultRepository
 from pybossa.core import db
 
+project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
+result_repo = ResultRepository(db)
 
 
 class TestTaskrunAPI(TestAPI):
+
+    def create_result(self, n_results=1, n_answers=1, owner=None,
+                      filter_by=False):
+        if owner:
+            owner = owner
+        else:
+            owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        tasks = []
+        for i in range(n_results):
+            tasks.append(TaskFactory.create(n_answers=n_answers,
+                                            project=project))
+        for i in range(n_answers):
+            for task in tasks:
+                TaskRunFactory.create(task=task, project=project)
+        if filter_by:
+            return result_repo.filter_by(project_id=1)
+        else:
+            return result_repo.get_by(project_id=1)
 
 
     @with_context
@@ -502,3 +524,14 @@ class TestTaskrunAPI(TestAPI):
 
         assert resp.status_code == 200, resp.status_code
         assert task_runs == [], task_runs
+
+    @with_context
+    def test_taskrun_cannot_be_deleted_associated_result(self):
+        """Test API taskrun cannot be deleted when a result is associated."""
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+
+        for tr in result.task_run_ids:
+            url = '/api/taskrun/%s?api_key=%s' % (tr, project.owner.api_key)
+            res = self.app.delete(url)
+            assert_equal(res.status, '403 FORBIDDEN', res.status)
