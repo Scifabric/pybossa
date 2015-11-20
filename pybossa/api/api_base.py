@@ -51,7 +51,7 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'},
-         'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
+        'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
                     'update': 'update'}
         }
 
