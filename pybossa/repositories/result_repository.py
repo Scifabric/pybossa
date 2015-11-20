@@ -43,10 +43,16 @@ class ResultRepository(object):
         return self.db.session.query(Result).get(id)
 
     def get_by(self, **attributes):
+        if 'last_version' not in attributes.keys():
+            attributes['last_version'] = True
         return self.db.session.query(Result).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, yielded=False,
                   last_id=None, **filters):
+        if 'last_version' not in filters.keys():
+            filters['last_version'] = True
+        if filters['last_version'] is False:
+            filters.pop('last_version')
         query_args = generate_query_from_keywords(Result, **filters)
         query = self.db.session.query(Result).filter(*query_args)
         if last_id:
@@ -58,10 +64,6 @@ class ResultRepository(object):
             limit = limit or 1
             return query.yield_per(limit)
         return query.all()
-
-        #query = self.db.session.query(Result).filter_by(**filters)
-        #query = query.order_by(Result.id).limit(limit).offset(offset)
-        #return query.all()
 
     def update(self, result):
         self._validate_can_be('updated', result)

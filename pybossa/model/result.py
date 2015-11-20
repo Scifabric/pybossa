@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text
+from sqlalchemy import Integer, Text, Boolean
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -42,5 +42,7 @@ class Result(db.Model, DomainObject):
                      nullable=False)
     #: Array of task_run ids associated with the result
     task_run_ids = Column(ARRAY(Integer), nullable=False)
+    #: Last version
+    last_version = Column(Boolean, default=True)
     #: Value of the Result.
     info = Column(JSON)

@@ -120,9 +120,14 @@ class TestResultRepository(Test):
         assert len(results) == 1, err_msg
         task_run_2 = TaskRunFactory.create(task=task)
 
-        err_msg = "There should be 2 results"
+        err_msg = "There should be 1 results"
         results = result_repo.filter_by(project_id=1)
+        assert len(results) == 1, err_msg
+
+        err_msg = "There should be 2 results"
+        results = result_repo.filter_by(project_id=1, last_version=False)
         assert len(results) == 2, err_msg
+
         assert results[1].project_id == 1, err_msg
         assert results[1].task_id == task.id, err_msg
         err_msg = "First result should have only one task run ID"

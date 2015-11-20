@@ -145,12 +145,25 @@ def create_result(conn, project_id, task_id):
     results = conn.execute(sql_query)
     task_run_ids = ", ".join(str(tr.id) for tr in results)
 
+    sql_query = ("""SELECT id FROM result WHERE project_id=%s \
+                   AND task_id=%s;""") % (project_id, task_id)
+
+    results = conn.execute(sql_query)
+
+    for r in results:
+        if r:
+            # Update result
+            sql_query = ("""UPDATE result SET last_version=false \
+                           WHERE id=%s;""") % (r.id)
+            conn.execute(sql_query)
+
     sql_query = """INSERT INTO result
-                   (created, project_id, task_id, task_run_ids)
-                   VALUES ('%s', %s, %s, '{%s}');""" % (make_timestamp(),
+                   (created, project_id, task_id, task_run_ids, last_version)
+                   VALUES ('%s', %s, %s, '{%s}', %s);""" % (make_timestamp(),
                                                   project_id,
                                                   task_id,
-                                                  task_run_ids)
+                                                  task_run_ids,
+                                                  True)
     conn.execute(sql_query)
 
 

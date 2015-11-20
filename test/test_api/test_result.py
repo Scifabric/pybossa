@@ -302,3 +302,17 @@ class TestResultAPI(TestAPI):
         url = '/api/result/%s?api_key=%s' % (result.id, admin.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.data)
+
+    @with_context
+    def test_get_last_version(self):
+        """Test API result returns always latest version."""
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        task = task_repo.get_task(result.task_id)
+        task.n_answers = 2
+        TaskRunFactory.create(task=task, project=project)
+        results = result_repo.get_by(project_id=project.id)
+
+        assert len(results) == 2, len(results)
+        last_version = results[1]
+        url = '/api/result/i'
