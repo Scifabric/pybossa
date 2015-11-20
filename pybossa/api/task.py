@@ -22,8 +22,10 @@ This package adds GET, POST, PUT and DELETE methods for:
     * tasks
 
 """
+from flask import abort
 from werkzeug.exceptions import BadRequest
 from pybossa.model.task import Task
+from pybossa.core import result_repo
 from api_base import APIBase
 
 
@@ -38,3 +40,7 @@ class TaskAPI(APIBase):
         for key in data.keys():
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
+
+    def _valid_delete_conditions(self, oid):
+        if result_repo.get_by(task_id=oid):
+            raise abort(403)

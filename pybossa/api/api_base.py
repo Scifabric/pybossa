@@ -225,6 +225,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
+            self._valid_delete_conditions(oid)
             self._delete_instance(oid)
             return '', 204
         except Exception as e:
@@ -330,4 +331,9 @@ class APIBase(MethodView):
     def _forbidden_attributes(self, data):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
+        pass
+
+    def _valid_delete_conditions(self, oid):
+        """Method to be overrriden by inheriting classes that will not allow to
+        delete objects under certain circunstances for DEL requests."""
         pass
