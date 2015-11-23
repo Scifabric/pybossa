@@ -20,8 +20,10 @@
 from default import Test, db
 from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
-from pybossa.repositories import TaskRepository
+from pybossa.repositories import TaskRepository, ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
+
+project_repo = ProjectRepository(db)
 
 
 class TestTaskRepositoryForTaskQueries(Test):
@@ -461,6 +463,20 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
         for task in tasks:
             assert self.task_repo.get_task(task.id) is None, task
+
+
+    def test_delete_all_valid_deletes_many_tasks(self):
+        """Test delete_all deletes many tasks at once"""
+
+        tasks = TaskFactory.create_batch(2)
+
+        project = project_repo.get(tasks[0].project_id)
+
+        self.task_repo.delete_valid_from_project(project)
+
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
+
+        assert len(tasks) == 0, len(tasks)
 
 
     def test_delete_all_deletes_dependent(self):
