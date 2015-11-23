@@ -3564,3 +3564,18 @@ class TestWeb(web.Helper):
         result_repo.update(result)
         res = self.app.get(url, follow_redirects=True)
         assert "No results" in res.data, res.data
+
+    @with_context
+    def test_results_with_values_and_template(self):
+        """Test WEB results with values and template is shown."""
+        task = TaskFactory.create(n_answers=1)
+        tr = TaskRunFactory.create(task=task)
+        project = project_repo.get(tr.project_id)
+        project.info['results'] = "The results"
+        project_repo.update(project)
+        url = '/project/%s/results' % project.short_name
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
+        res = self.app.get(url, follow_redirects=True)
+        assert "The results" in res.data, res.data

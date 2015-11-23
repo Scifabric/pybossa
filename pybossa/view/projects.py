@@ -1653,4 +1653,5 @@ def results(short_name):
     ensure_authorized_to('read', project)
 
     return render_template('/projects/results.html',
-                           title=title, project=project, owner=owner)
+                           title=title, project=project, owner=owner,
+                           n_results=n_results)

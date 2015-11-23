@@ -94,8 +94,6 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
 
     project['n_results'] = n_results(project['id'])
 
-    print project['n_results']
-
     return project
 
 
