@@ -146,6 +146,7 @@ class TaskRepository(object):
                    WHERE result.project_id=:project_id GROUP BY result.task_id);
                    ''')
         self.db.session.execute(sql, dict(project_id=project.id))
+        self.db.session.commit()
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
 
