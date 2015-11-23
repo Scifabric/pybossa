@@ -491,6 +491,20 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    def test_delete_all_valid_deletes_dependent(self):
+        """Test delete_all deletes dependent taskruns too"""
+
+        task = TaskFactory.create()
+        taskrun = TaskRunFactory.create(task=task)
+        task_run_id = taskrun.id
+        project = project_repo.get(task.project_id)
+
+        self.task_repo.delete_valid_from_project(project)
+        deleted = self.task_repo.get_task_run(id=task_run_id)
+
+        assert deleted is None, deleted
+
+
     def test_delete_all_deletes_many_taskruns(self):
         """Test delete_all deletes many taskruns at once"""
 
