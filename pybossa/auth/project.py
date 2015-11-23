@@ -20,8 +20,9 @@
 class ProjectAuth(object):
     _specific_actions = ['publish']
 
-    def __init__(self, task_repo):
+    def __init__(self, task_repo, result_repo):
         self.task_repo = task_repo
+        self.result_repo = result_repo
 
     @property
     def specific_actions(self):
@@ -45,6 +46,8 @@ class ProjectAuth(object):
         return self._only_admin_or_owner(user, project)
 
     def _delete(self, user, project):
+        if self.result_repo.get_by(project_id=project.id):
+            return False
         return self._only_admin_or_owner(user, project)
 
     def _publish(self, user, project):

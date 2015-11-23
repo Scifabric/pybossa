@@ -19,7 +19,7 @@
 import inspect
 from flask import abort
 from flask.ext.login import current_user
-from pybossa.core import task_repo, project_repo
+from pybossa.core import task_repo, project_repo, result_repo
 
 import project
 import task
@@ -82,7 +82,7 @@ def ensure_authorized_to(action, resource, **kwargs):
 def _authorizer_for(resource_name):
     kwargs = {}
     if resource_name in ('project', 'taskrun'):
-        kwargs.update({'task_repo': task_repo})
+        kwargs.update({'task_repo': task_repo, 'result_repo': result_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result'):
         kwargs.update({'project_repo': project_repo})
