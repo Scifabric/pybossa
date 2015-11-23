@@ -28,7 +28,6 @@ import pybossa.dashboard.jobs as dashboard
 
 
 MINUTE = 60
-HOUR = 60 * 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
