@@ -1607,3 +1607,17 @@ def webhook_handler(short_name, oid=None):
                            n_task_runs=n_task_runs,
                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
                            n_volunteers=cached_projects.n_volunteers(project.get('id')))
+
+
+@blueprint.route('/<short_name>/results')
+def results(short_name):
+    """Results page for the project."""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = project_by_shortname(short_name)
+
+    title = project_title(project, "Results")
+
+    ensure_authorized_to('read', project)
+
+    return render_template('/projects/results.html',
+                           title=title, project=project, owner=owner)
