@@ -545,7 +545,7 @@ class TestTaskrunAPI(TestAPI):
 
         assert taskrun.created == "a while ago", taskrun.created
 
-@with_context
+    @with_context
     def test_taskrun_cannot_be_deleted_associated_result(self):
         """Test API taskrun cannot be deleted when a result is associated."""
         root = UserFactory.create(admin=True)
