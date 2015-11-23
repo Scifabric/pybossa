@@ -91,6 +91,17 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
     results = session.execute(query, dict(project_id=project['id']))
     for row in results:
         project['n_blogposts'] = row.ct
+
+    query = text('''
+                 SELECT COUNT(id) AS ct FROM result
+                 WHERE project_id=:project_id
+                 AND info IS NOT NULL;
+                 ''')
+    results = session.execute(query, dict(project_id=project['id']))
+
+    for row in results:
+        project['n_results'] = row.ct
+
     return project
 
 
