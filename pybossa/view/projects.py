@@ -913,8 +913,9 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = task_repo.filter_tasks_by(project_id=project.id)
-        task_repo.delete_all(tasks)
+        #tasks = task_repo.filter_tasks_by(project_id=project.id)
+        #task_repo.delete_all(tasks)
+        task_repo.delete_valid_from_project(project)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=project.short_name))
