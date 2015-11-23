@@ -3545,9 +3545,22 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_results(self):
-        """Test WEB results are shown."""
+        """Test WEB results shows no data as no template and no data."""
         tr = TaskRunFactory.create()
         project = project_repo.get(tr.project_id)
         url = '/project/%s/results' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert "No results" in res.data, res.data
+
+    @with_context
+    def test_results_with_values(self):
+        """Test WEB results with values are not shown as no template but data."""
+        task = TaskFactory.create(n_answers=1)
+        tr = TaskRunFactory.create(task=task)
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
         res = self.app.get(url, follow_redirects=True)
         assert "No results" in res.data, res.data
