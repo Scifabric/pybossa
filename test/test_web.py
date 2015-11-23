@@ -39,7 +39,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.core import user_repo, sentinel
+from pybossa.core import user_repo, sentinel, project_repo, result_repo
 from pybossa.jobs import send_mail, import_tasks
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
@@ -3542,3 +3542,12 @@ class TestWeb(web.Helper):
         message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
         assert message not in res.data
         self.signout()
+
+    @with_context
+    def test_results(self):
+        """Test WEB results are shown."""
+        tr = TaskRunFactory.create()
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert "No results" in res.data, res.data
