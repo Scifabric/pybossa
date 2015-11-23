@@ -21,6 +21,7 @@ from pybossa.cache import projects as cached_projects
 from factories import UserFactory, ProjectFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
+from pybossa.core import result_repo
 
 
 class TestProjectsCache(Test):
@@ -238,6 +239,26 @@ class TestProjectsCache(Test):
         taskruns = cached_projects.n_task_runs(project.id)
 
         assert taskruns == 2, taskruns
+
+
+    def test_n_results_returns_number_of_total_results(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1, project=project)
+        TaskRunFactory.create(task=task, project=project)
+
+        results = cached_projects.n_results(project.id)
+
+        assert results == 0, results
+
+        result = result_repo.get_by(project_id=project.id)
+
+        result.info = dict(foo='bar')
+
+        result_repo.update(result)
+
+        results = cached_projects.n_results(project.id)
+
+        assert results == 1, results
 
 
     def test_n_registered_volunteers(self):
