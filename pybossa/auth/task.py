@@ -20,8 +20,9 @@
 class TaskAuth(object):
     _specific_actions = []
 
-    def __init__(self, project_repo):
+    def __init__(self, project_repo, result_repo):
         self.project_repo = project_repo
+        self.result_repo = result_repo
 
     @property
     def specific_actions(self):
@@ -41,6 +42,8 @@ class TaskAuth(object):
         return self._only_admin_or_owner(user, task)
 
     def _delete(self, user, task):
+        if self.result_repo.get_by(task_id=task.id, project_id=task.project_id):
+            return False
         return self._only_admin_or_owner(user, task)
 
     def _only_admin_or_owner(self, user, task):

@@ -240,7 +240,6 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         ensure_authorized_to('delete', inst)
-        self._valid_delete_conditions(inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -331,9 +330,4 @@ class APIBase(MethodView):
     def _forbidden_attributes(self, data):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
-        pass
-
-    def _valid_delete_conditions(self, oid):
-        """Method to be overrriden by inheriting classes that will not allow to
-        delete objects under certain circunstances for DEL requests."""
         pass

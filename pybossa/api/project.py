@@ -71,7 +71,3 @@ class ProjectAPI(APIBase):
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
-
-    def _valid_delete_conditions(self, obj):
-        if result_repo.get_by(project_id=obj.id):
-            raise Forbidden

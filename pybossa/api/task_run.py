@@ -72,11 +72,6 @@ class TaskRunAPI(APIBase):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 
-    def _valid_delete_conditions(self, obj):
-        result = result_repo.get_by(task_id=obj.task.id,
-                                    project_id=obj.project.id)
-        if result and (obj.id in result.task_run_ids):
-            raise abort(403)
 
 def _check_task_requested_by_user(taskrun, redis_conn):
     user_id_ip = get_user_id_or_ip()

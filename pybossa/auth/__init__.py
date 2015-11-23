@@ -82,8 +82,10 @@ def ensure_authorized_to(action, resource, **kwargs):
 def _authorizer_for(resource_name):
     kwargs = {}
     if resource_name in ('project', 'taskrun'):
-        kwargs.update({'task_repo': task_repo, 'result_repo': result_repo})
+        kwargs.update({'task_repo': task_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result'):
         kwargs.update({'project_repo': project_repo})
+    if resource_name in ('project', 'task', 'taskrun'):
+        kwargs.update({'result_repo': result_repo})
     return _auth_classes[resource_name](**kwargs)
