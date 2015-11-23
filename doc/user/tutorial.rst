@@ -1297,3 +1297,15 @@ can actually cite your work.
 .. image:: http://i.imgur.com/98xjH8a.png
 
 .. _`the Data hub`: http://datahub.io
+
+
+Keeping track of the time spent by volunteers
+=============================================
+
+Since v1.1.3, PyBossa records a timestamp, for every task run, of the instant
+a volunteer requests a task to contribute to it. This is stored in the "created"
+attribute of the Task Runs.
+
+This allows, together with the "finish_time" attribute, to know how much time
+the volunteer has spent completing the task:
+  (time spent = finish_time - created)

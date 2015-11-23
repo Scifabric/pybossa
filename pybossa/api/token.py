@@ -31,6 +31,7 @@ from pybossa.ratelimit import ratelimit
 from api_base import APIBase, error
 from pybossa.auth import ensure_authorized_to
 
+
 class TokenAPI(APIBase):
 
     """

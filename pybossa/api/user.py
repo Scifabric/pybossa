@@ -49,7 +49,6 @@ class UserAPI(APIBase):
     # has privacy_mode disabled
     allowed_attributes = ('name', 'locale', 'fullname', 'created')
 
-
     def _select_attributes(self, user_data):
         privacy = self._is_user_private(user_data)
         for attribute in user_data.keys():

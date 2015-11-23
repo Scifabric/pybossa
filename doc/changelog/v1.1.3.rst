@@ -1,0 +1,29 @@
+================
+Changelog v1.1.3
+================
+
+ * Save in the "created" attribute of task runs a timestamp of the moment it
+   was delivered to the volunteer so project owners can keep track of the time
+   invested by the volunteer in completing the task.
+ * Fix issue with completed projects being listed as inactive in a background
+   job (https://github.com/PyBossa/pybossa/issues/1214).
+ * Fix issue with SQL query for quarterly jobs (https://github.com/PyBossa/pybossa/issues/1206).
+ * Upgraded dependencies.
+ * Fix bug that was preventing saving the description of a project if it was
+   provided on project creation, generating always the description by cropping
+   the long description (https://github.com/PyBossa/pybossa/pull/1213).
+
+
+Upgrading
+=========
+
+.. note::
+    Please, backup the database before continuing.
+
+In order to upgrade you will have to pull the new code, and then run the
+following command to upgrade the database::
+
+  source env/bin/activate
+  alembic upgrade head
+
+Then restart your server, and you will be done.

@@ -58,7 +58,7 @@ from pybossa.importers import BulkImportException
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo
 from pybossa.core import webhook_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
-from pybossa.api import mark_task_as_requested_by_user
+from pybossa.contributions_guard import ContributionsGuard
 
 blueprint = Blueprint('project', __name__)
 
@@ -721,7 +721,10 @@ def task_presenter(short_name, task_id):
 
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
-    mark_task_as_requested_by_user(task, sentinel.master)
+
+    guard = ContributionsGuard(sentinel.master)
+    guard.stamp(task, get_user_id_or_ip())
+
     if has_no_presenter(project):
         flash(gettext("Sorry, but this project is still a draft and does "
                       "not have a task presenter."), "error")
