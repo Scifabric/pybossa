@@ -21,15 +21,13 @@ import os
 import shutil
 import zipfile
 from StringIO import StringIO
-from default import db, Fixtures, with_context, FakeResponse
+from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call
 from flask import Response, redirect
 from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import signer
-from pybossa.util import unicode_csv_reader
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, unicode_csv_reader
 from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
@@ -39,7 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.core import user_repo, sentinel, project_repo, result_repo
+from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
@@ -1318,15 +1316,18 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
 
-    @patch('pybossa.view.projects.mark_task_as_requested_by_user')
-    def test_get_specific_ongoing_task_marks_task_as_requested(self, mark):
+    @patch('pybossa.view.projects.ContributionsGuard')
+    def test_get_specific_ongoing_task_marks_task_as_requested(self, guard):
+        fake_guard_instance = mock_contributions_guard()
+        guard.return_value = fake_guard_instance
         self.create()
         self.register()
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        mark.assert_called_with(task, sentinel.master)
+
+        assert fake_guard_instance.stamp.called
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

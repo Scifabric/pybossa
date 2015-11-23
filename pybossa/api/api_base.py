@@ -104,7 +104,7 @@ class APIBase(MethodView):
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
-        if len (query_result) == 1 and query_result[0] is None:
+        if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
         for item in query_result:
@@ -293,7 +293,6 @@ class APIBase(MethodView):
         self._log_changes(old, existing)
         return existing
 
-
     def _update_object(self, data_dict):
         """Update object.
 
@@ -317,9 +316,9 @@ class APIBase(MethodView):
 
     def _validate_instance(self, instance):
         """Method to be overriden in inheriting classes which may need to
-        validate the creation (POST) or modification (PUT) of a domain object for
-        reasons other than business logic ones (e.g. overlapping of a project
-        name witht a URL).
+        validate the creation (POST) or modification (PUT) of a domain object
+        for reasons other than business logic ones (e.g. overlapping of a
+        project name witht a URL).
         """
         pass
 

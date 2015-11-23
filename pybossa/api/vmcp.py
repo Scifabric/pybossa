@@ -78,7 +78,6 @@ class VmcpAPI(APIBase):
                     exception_cls='vmcp',
                     exception_msg=message)
 
-
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
         raise MethodNotAllowed

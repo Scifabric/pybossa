@@ -32,7 +32,7 @@ class TaskRun(db.Model, DomainObject):
 
     #: ID of the TaskRun
     id = Column(Integer, primary_key=True)
-    #: UTC timestamp for when TaskRun is created.
+    #: UTC timestamp for when TaskRun is delivered to user.
     created = Column(Text, default=make_timestamp)
     #: Project.id of the project associated with this TaskRun.
     project_id = Column(Integer, ForeignKey('project.id'), nullable=False)
@@ -43,6 +43,7 @@ class TaskRun(db.Model, DomainObject):
     user_id = Column(Integer, ForeignKey('user.id'))
     #: User.ip of the user contributing the TaskRun (only if anonymous)
     user_ip = Column(Text)
+    #: UTC timestamp for when TaskRun is saved to DB.
     finish_time = Column(Text, default=make_timestamp)
     timeout = Column(Integer)
     calibration = Column(Integer)
