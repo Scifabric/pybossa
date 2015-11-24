@@ -1283,7 +1283,7 @@ with your account, otherwise you will not be able to export the data and
 a warning message will let you know it.
 
 Adding the CKAN API-KEY is really simple. You only need to create an account in
-the supported CKAN server (i.e. `the Data hub`_), check your profile and copy
+the supported CKAN server, check your profile and copy
 the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
 the section **External Services**.
 
@@ -1296,14 +1296,15 @@ can actually cite your work.
 
 .. image:: http://i.imgur.com/98xjH8a.png
 
-.. _`the Data hub`: http://datahub.io
+
+
 
 .. _pybossa-project-results:
 
 Publishing results of your project
 ==================================
 
-Since v1.1.4, PyBossa automatically creates "empty" results when a task is completed.
+Since v1.2.0, PyBossa automatically creates "empty" results when a task is completed.
 
 For example, imagine your project is asking the following question in a set of images:
 "Do you see a triangle in this picture?" The possible answers are: yes and no. 
