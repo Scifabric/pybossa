@@ -543,6 +543,30 @@ Crowdcrafting team.
             project_repo.save(project)
 
 
+def create_results():
+    """Create results when migrating."""
+    from pybossa.core import project_repo, task_repo, result_repo
+    from pybossa.model.result import Result
+
+    projects = project_repo.filter_by(published=True)
+
+    for project in projects:
+        print "Working on project: %s" % project.short_name
+        tasks = task_repo.filter_tasks_by(state='completed',
+                                          project_id=project.id)
+        print "Analyzing %s tasks" % len(tasks)
+        for task in tasks:
+            result = result_repo.get_by(project_id=project.id, task_id=task.id)
+            if result is None:
+                result = Result(project_id=project.id,
+                                task_id=task.id,
+                                task_run_ids=[tr.id for tr in task.task_runs],
+                                last_version=True)
+                print "Adding result: %s" % result.id
+                db.session.add(result)
+        db.session.commit()
+        print "Project %s completed!" % project.short_name
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
