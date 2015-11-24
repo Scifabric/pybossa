@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.dashboard.jobs import new_projects_week, update_projects_week
-from pybossa.dashboard.data import format_new_projects, format_update_projects
+from pybossa.dashboard.jobs import draft_projects_week, update_projects_week
+from pybossa.dashboard.data import format_draft_projects, format_update_projects
 from pybossa.core import db
 from pybossa.repositories import ProjectRepository
 from factories.project_factory import ProjectFactory
@@ -26,7 +26,7 @@ from mock import patch, MagicMock
 from datetime import datetime
 
 
-class TestDashBoardNewProject(Test):
+class TestDashBoardDraftProject(Test):
 
     @with_context
     @patch('pybossa.dashboard.jobs.db')
@@ -36,7 +36,7 @@ class TestDashBoardNewProject(Test):
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = new_projects_week()
+        res = draft_projects_week()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'
 
@@ -48,16 +48,16 @@ class TestDashBoardNewProject(Test):
         result.exists = False
         results = [result]
         db_mock.slave_session.execute.return_value = results
-        res = new_projects_week()
+        res = draft_projects_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
 
     @with_context
-    def test_new_projects_week(self):
-        """Test JOB update projects week works."""
+    def test_draft_projects_week(self):
+        """Test JOB draft_projects_week works."""
         p = ProjectFactory.create()
-        new_projects_week()
-        sql = "select * from dashboard_week_project_new;"
+        draft_projects_week()
+        sql = "select * from dashboard_week_project_draft;"
         results = db.session.execute(sql)
         for row in results:
             assert row.id == p.id
@@ -68,10 +68,10 @@ class TestDashBoardNewProject(Test):
 
     @with_context
     def test_format_new_projects(self):
-        """Test format new projects works."""
-        p = ProjectFactory.create()
-        new_projects_week()
-        res = format_new_projects()
+        """Test format draft_projects_week works."""
+        p = ProjectFactory.create(published=False)
+        draft_projects_week()
+        res = format_draft_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
         res = res[0]
         assert res['day'].strftime('%Y-%m-%d') == day, res['day']
@@ -81,6 +81,63 @@ class TestDashBoardNewProject(Test):
         assert res['email_addr'] == p.owner.email_addr
         assert res['owner_id'] == p.owner.id
         assert res['u_name'] == p.owner.name
+
+
+# class TestDashBoardPublishedProject(Test):
+
+#     @with_context
+#     @patch('pybossa.dashboard.jobs.db')
+#     def test_materialized_view_refreshed(self, db_mock):
+#         """Test JOB dashboard materialized view is refreshed."""
+#         result = MagicMock()
+#         result.exists = True
+#         results = [result]
+#         db_mock.slave_session.execute.return_value = results
+#         res = published_projects_week()
+#         assert db_mock.session.execute.called
+#         assert res == 'Materialized view refreshed'
+
+#     @with_context
+#     @patch('pybossa.dashboard.jobs.db')
+#     def test_materialized_view_created(self, db_mock):
+#         """Test JOB dashboard materialized view is created."""
+#         result = MagicMock()
+#         result.exists = False
+#         results = [result]
+#         db_mock.slave_session.execute.return_value = results
+#         res = published_projects_week()
+#         assert db_mock.session.commit.called
+#         assert res == 'Materialized view created'
+
+#     @with_context
+#     def test_published_projects_week(self):
+#         """Test JOB published_projects_week works."""
+#         p = ProjectFactory.create()
+#         published_projects_week()
+#         sql = "select * from dashboard_week_project_new;"
+#         results = db.session.execute(sql)
+#         for row in results:
+#             assert row.id == p.id
+#             assert row.name == p.name
+#             assert row.owner_id == p.owner_id
+#             assert row.u_name == p.owner.name
+#             assert row.email_addr == p.owner.email_addr
+
+#     @with_context
+#     def test_format_published_projects_week(self):
+#         """Test format published_projects_week works."""
+#         p = ProjectFactory.create()
+#         published_projects_week()
+#         res = format_new_projects()
+#         day = datetime.utcnow().strftime('%Y-%m-%d')
+#         res = res[0]
+#         assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+#         assert res['id'] == p.id
+#         assert res['short_name'] == p.short_name
+#         assert res['p_name'] == p.name
+#         assert res['email_addr'] == p.owner.email_addr
+#         assert res['owner_id'] == p.owner.id
+#         assert res['u_name'] == p.owner.name
 
 
 class TestDashBoardUpdateProject(Test):

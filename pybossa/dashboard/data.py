@@ -71,9 +71,9 @@ def format_anon_week():
     return active_anon_last_week
 
 
-def format_new_projects():
+def format_draft_projects():
     """Return new projects data."""
-    results = _select_from_materialized_view('dashboard_week_project_new')
+    results = _select_from_materialized_view('dashboard_week_project_draft')
     new_projects_last_week = []
     for row in results:
         datum = dict(day=row.day, id=row.id, short_name=row.short_name,
