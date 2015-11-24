@@ -238,6 +238,9 @@ Task Runs (answers) of your project.
     This step cannot be undone, once you delete all the tasks and associated
     task runs they will be lost forever.
 
+.. note::
+    **Only tasks not associated with a result can be deleted.**
+
 This feature is useful when you are testing your project, and you are
 deciding the structure that you are going to build in your answers.
 
@@ -286,3 +289,6 @@ and task runs, use this section to delete the project.
 
 .. note::
     This action cannot be undone, so be sure before proceeding.
+
+.. note::
+    Only projects without results can be deleted.

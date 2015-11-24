@@ -22,9 +22,10 @@ from flask import abort
 class TaskRunAuth(object):
     _specific_actions = []
 
-    def __init__(self, task_repo, project_repo):
+    def __init__(self, task_repo, project_repo, result_repo):
         self.task_repo = task_repo
         self.project_repo = project_repo
+        self.result_repo = result_repo
 
     @property
     def specific_actions(self):
@@ -58,6 +59,10 @@ class TaskRunAuth(object):
 
     def _delete(self, user, taskrun):
         if user.is_anonymous():
+            return False
+        result = self.result_repo.get_by(project_id=taskrun.project_id,
+                                         task_id=taskrun.task_id)
+        if result and (taskrun.id in result.task_run_ids):
             return False
         if taskrun.user_id is None:
             return user.admin

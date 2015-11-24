@@ -29,7 +29,10 @@ keys/*
 *.log
 log
 *.sql
-
+dat/GeoIP.dat
+*.ini
+pybossa/themes/pybossa-default-theme/
+dist/*
 pybossa/themes/crowdcrafting-theme/
 pybossa/translations
 pybossa/plugins/

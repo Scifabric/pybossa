@@ -185,7 +185,7 @@ Returns domain object.::
 
 If the object is not found you will get a JSON object like this:
 
-.. code-block:: JavaScript
+.. code-block:: js
 
     {
         "status": "failed",
@@ -237,7 +237,7 @@ Create a domain object. Returns created domain object.::
 
 If an error occurs, the action will return a JSON object like this:
 
-.. code-block:: JavaScript
+.. code-block:: js
 
     {
         "status": "failed",
@@ -263,7 +263,7 @@ Update a domain object::
 
 If an error occurs, the action will return a JSON object like this:
 
-.. code-block:: JavaScript
+.. code-block:: js
 
     {
         "status": "failed",
@@ -289,7 +289,7 @@ Delete a domain object::
 
 If an error occurs, the action will return a JSON object like this:
 
-.. code-block:: JavaScript
+.. code-block:: js
 
     {
         "status": "failed",
@@ -342,4 +342,6 @@ Example Usage
 
 Create a Project object::
 
-  curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myproject", "info":{"xyz":1}}' 'http://localhost:5000/api/project?api_key=API-KEY'
+.. code-block:: bash
+
+    curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myproject", "info":{"xyz":1}}' 'http://localhost:5000/api/project?api_key=API-KEY'

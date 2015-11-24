@@ -49,6 +49,7 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
+from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 
@@ -91,6 +92,7 @@ register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
+register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')

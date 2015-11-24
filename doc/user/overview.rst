@@ -357,9 +357,7 @@ presenter of the project:
 
 * filename: just it, the name of the file you're importing as a task.
 * link: the link to the Dropbox page showing the file.
-* link_raw: the link to the raw file served by Dropbox. This is the one you'll
-have to use if you want to direct link to the file from the presenter (e.g. for
-using an image in a <img> tag, you'd do: <img src=task.info.link_raw>).
+* link_raw: the link to the raw file served by Dropbox. This is the one you'll have to use if you want to direct link to the file from the presenter (e.g. for using an image in a <img> tag, you'd do: <img src=task.info.link_raw>).
 
 In addition to these generic information, the Dropbox importer also will recognize
 some kind of files by their extension and will attach some extra information to
@@ -425,6 +423,11 @@ tasks and associated task runs** from your project.
 .. note::
     **This action cannot be un-done, so please, be sure that you want to actually
     delete all the tasks.**
+
+.. note::
+    **This action will only allow you to delete tasks that are not associated with
+    a result. When a result is created, that task and its task runs cannot be deleted
+    so the volunteers can always have access to their contributions.**
 
 If you are sure that you want to flush all the tasks and task runs for your
 project, go to the project page (http://server/project/slug/tasks/) and click in
@@ -509,7 +512,8 @@ how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
 
-.. _publishing
+.. _publishing:
+
 Publishing the project
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -552,8 +556,7 @@ Creating a project using the API involves also four steps:
     1. Create the project,
     2. Create the :ref:`task-creator`, and 
     3. Create the :ref:`task-presenter` for the users.
-    4. Publish it. This needs to be done via the web interface. For more details
-    please refer to :ref:`publishing`.
+    4. Publish it. This needs to be done via the web interface. For more details please refer to :ref:`publishing`.
 
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -703,6 +706,7 @@ Creating a project is as simple as creating a project.json file and then run
 the following command:
 
 .. code-block:: bash
+
    pbs --server server --api-key yourkey create_project 
 
 Please, read the section :ref:`pbs` for more details.

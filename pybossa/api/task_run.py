@@ -23,14 +23,14 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from flask import request
+from flask import request, abort
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
-from pybossa.core import task_repo, project_repo, sentinel
+from pybossa.core import task_repo, project_repo, result_repo, sentinel
 from pybossa.contributions_guard import ContributionsGuard
 
 

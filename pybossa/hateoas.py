@@ -38,7 +38,16 @@ class Hateoas(object):
         """Create Hateoas links."""
         cls = item.__class__.__name__.lower()
         links = []
-        if cls == 'taskrun':
+        if cls == 'result':
+            link = self. create_link(item.id, title='result')
+            if item.project_id is not None:
+                links.append(self.create_link(item.project_id, title='project',
+                                              rel='parent'))
+            if item.task_id is not None:
+                links.append(self.create_link(item.task_id, title='task',
+                                              rel='parent'))
+            return links, link
+        elif cls == 'taskrun':
             link = self.create_link(item.id, title='taskrun')
             if item.project_id is not None:
                 links.append(self.create_link(item.project_id,

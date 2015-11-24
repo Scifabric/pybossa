@@ -22,12 +22,15 @@ from sqlalchemy import event
 
 from pybossa.feed import update_feed
 from pybossa.model import update_project_timestamp, update_target_timestamp
+from pybossa.model import make_timestamp
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
+from pybossa.model.result import Result
+from pybossa.core import result_repo
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.core import sentinel
 
@@ -125,14 +128,51 @@ def update_task_state(conn, task_id):
     conn.execute(sql_query)
 
 
-def push_webhook(project_obj, task_id):
+def push_webhook(project_obj, task_id, result_id):
     if project_obj['webhook']:
         payload = dict(event="task_completed",
                        project_short_name=project_obj['short_name'],
                        project_id=project_obj['id'],
                        task_id=task_id,
+                       result_id=result_id,
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         webhook_queue.enqueue(webhook, project_obj['webhook'], payload)
+
+
+def create_result(conn, project_id, task_id):
+    """Create a result for the given project and task."""
+    sql_query = ("SELECT id FROM task_run WHERE project_id=%s \
+                 AND task_id=%s") % (project_id, task_id)
+    results = conn.execute(sql_query)
+    task_run_ids = ", ".join(str(tr.id) for tr in results)
+
+    sql_query = ("""SELECT id FROM result WHERE project_id=%s \
+                   AND task_id=%s;""") % (project_id, task_id)
+
+    results = conn.execute(sql_query)
+
+    for r in results:
+        if r:
+            # Update result
+            sql_query = ("""UPDATE result SET last_version=false \
+                           WHERE id=%s;""") % (r.id)
+            conn.execute(sql_query)
+
+    sql_query = """INSERT INTO result
+                   (created, project_id, task_id, task_run_ids, last_version)
+                   VALUES ('%s', %s, %s, '{%s}', %s);""" % (make_timestamp(),
+                                                  project_id,
+                                                  task_id,
+                                                  task_run_ids,
+                                                  True)
+    conn.execute(sql_query)
+
+    sql_query = """SELECT id FROM result \
+                WHERE project_id=%s AND task_id=%s""" % (project_id, task_id)
+
+    results = conn.execute(sql_query)
+    for r in results:
+        return r.id
 
 @event.listens_for(TaskRun, 'after_insert')
 def on_taskrun_submit(mapper, conn, target):
@@ -158,7 +198,8 @@ def on_taskrun_submit(mapper, conn, target):
     if is_task_completed(conn, target.task_id):
         update_task_state(conn, target.task_id)
         update_feed(project_obj)
-        push_webhook(project_obj, target.task_id)
+        result_id = create_result(conn, target.project_id, target.task_id)
+        push_webhook(project_obj, target.task_id, result_id)
 
 
 @event.listens_for(Blogpost, 'after_insert')

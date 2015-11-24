@@ -26,10 +26,32 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTas
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
+from pybossa.repositories import ResultRepository
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
+result_repo = ResultRepository(db)
 
 class TestProjectAPI(TestAPI):
+
+    def create_result(self, n_results=1, n_answers=1, owner=None,
+                      filter_by=False):
+        if owner:
+            owner = owner
+        else:
+            owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        tasks = []
+        for i in range(n_results):
+            tasks.append(TaskFactory.create(n_answers=n_answers,
+                                            project=project))
+        for i in range(n_answers):
+            for task in tasks:
+                TaskRunFactory.create(task=task, project=project)
+        if filter_by:
+            return result_repo.filter_by(project_id=1)
+        else:
+            return result_repo.get_by(project_id=1)
+
 
     @with_context
     def test_project_query(self):
@@ -700,3 +722,24 @@ class TestProjectAPI(TestAPI):
         error_msg = json.loads(res.data)['exception_msg']
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
+
+    def test_project_delete_with_results(self):
+        """Test API delete project with results cannot be deleted."""
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        url = '/api/project/%s?api_key=%s' % (result.project_id,
+                                              project.owner.api_key)
+
+        res = self.app.delete(url)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    def test_project_delete_with_results_var(self):
+        """Test API delete project with results cannot be deleted by admin."""
+        root = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+
+        url = '/api/project/%s?api_key=%s' % (result.project_id,
+                                              root.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)

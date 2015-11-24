@@ -22,13 +22,35 @@ from test_api import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
-from pybossa.repositories import TaskRepository
+from pybossa.repositories import ProjectRepository, TaskRepository
+from pybossa.repositories import ResultRepository
 from pybossa.core import db
 
+project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
+result_repo = ResultRepository(db)
 
 
 class TestTaskrunAPI(TestAPI):
+
+    def create_result(self, n_results=1, n_answers=1, owner=None,
+                      filter_by=False):
+        if owner:
+            owner = owner
+        else:
+            owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        tasks = []
+        for i in range(n_results):
+            tasks.append(TaskFactory.create(n_answers=n_answers,
+                                            project=project))
+        for i in range(n_answers):
+            for task in tasks:
+                TaskRunFactory.create(task=task, project=project)
+        if filter_by:
+            return result_repo.filter_by(project_id=1)
+        else:
+            return result_repo.get_by(project_id=1)
 
 
     @with_context
@@ -522,3 +544,86 @@ class TestTaskrunAPI(TestAPI):
         taskrun = task_repo.filter_task_runs_by(task_id=data['task_id'])[0]
 
         assert taskrun.created == "a while ago", taskrun.created
+
+    @with_context
+    def test_taskrun_cannot_be_deleted_associated_result(self):
+        """Test API taskrun cannot be deleted when a result is associated."""
+        root = UserFactory.create(admin=True)
+        results = self.create_result(n_results=10, filter_by=True)
+        project = project_repo.get(results[0].project_id)
+
+        # Owner
+        for result in results:
+            for tr in result.task_run_ids:
+                url = '/api/taskrun/%s?api_key=%s' % (tr, project.owner.api_key)
+                res = self.app.delete(url)
+                assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+        # Admin
+        for result in results:
+            for tr in result.task_run_ids:
+                url = '/api/taskrun/%s?api_key=%s' % (tr, root.api_key)
+                res = self.app.delete(url)
+                assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    def test_taskrun_cannot_be_deleted_associated_result_variation(self):
+        """Test API taskrun cannot be deleted when a result is associated
+        variation."""
+        root = UserFactory.create(admin=True)
+        results = self.create_result(filter_by=True)
+        project = project_repo.get(results[0].project_id)
+        task = task_repo.get_task(results[0].task_id)
+
+        task.n_answers = 30
+
+        task_repo.update(task)
+
+        volunteer = UserFactory.create()
+        tr_delete = TaskRunFactory.create(task=task, user=volunteer)
+
+        results = result_repo.filter_by(project_id=project.id, task_id=task.id)
+
+        assert len(results) == 1, len(results)
+        # Owner
+        for result in results:
+            for tr in result.task_run_ids:
+                url = '/api/taskrun/%s?api_key=%s' % (tr, project.owner.api_key)
+                res = self.app.delete(url)
+                assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+            url = '/api/taskrun/%s?api_key=%s' % (tr_delete.id,
+                                                  volunteer.api_key)
+            res = self.app.delete(url)
+            assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_taskrun_cannot_be_deleted_associated_result_variation_2(self):
+        """Test API taskrun cannot be deleted when a result is associated
+        variation."""
+        root = UserFactory.create(admin=True)
+        results = self.create_result(filter_by=True)
+        project = project_repo.get(results[0].project_id)
+        task = task_repo.get_task(results[0].task_id)
+
+        task.n_answers = 30
+
+        task_repo.update(task)
+
+        volunteer = UserFactory.create()
+        tr_delete = TaskRunFactory.create(task=task, user=volunteer)
+
+        results = result_repo.filter_by(project_id=project.id, task_id=task.id)
+
+        assert len(results) == 1, len(results)
+        # Owner
+        for result in results:
+            for tr in result.task_run_ids:
+                url = '/api/taskrun/%s?api_key=%s' % (tr, root.api_key)
+                res = self.app.delete(url)
+                assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+            url = '/api/taskrun/%s?api_key=%s' % (tr_delete.id,
+                                                  volunteer.api_key)
+            res = self.app.delete(url)
+            assert_equal(res.status, '204 NO CONTENT', res.status)

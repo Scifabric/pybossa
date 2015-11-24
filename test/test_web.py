@@ -37,7 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.core import user_repo, sentinel, signer
+from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
@@ -3543,3 +3543,40 @@ class TestWeb(web.Helper):
         message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
         assert message not in res.data
         self.signout()
+
+    @with_context
+    def test_results(self):
+        """Test WEB results shows no data as no template and no data."""
+        tr = TaskRunFactory.create()
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert "No results" in res.data, res.data
+
+    @with_context
+    def test_results_with_values(self):
+        """Test WEB results with values are not shown as no template but data."""
+        task = TaskFactory.create(n_answers=1)
+        tr = TaskRunFactory.create(task=task)
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
+        res = self.app.get(url, follow_redirects=True)
+        assert "No results" in res.data, res.data
+
+    @with_context
+    def test_results_with_values_and_template(self):
+        """Test WEB results with values and template is shown."""
+        task = TaskFactory.create(n_answers=1)
+        tr = TaskRunFactory.create(task=task)
+        project = project_repo.get(tr.project_id)
+        project.info['results'] = "The results"
+        project_repo.update(project)
+        url = '/project/%s/results' % project.short_name
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
+        res = self.app.get(url, follow_redirects=True)
+        assert "The results" in res.data, res.data

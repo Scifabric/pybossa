@@ -20,8 +20,10 @@
 from default import Test, db
 from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
-from pybossa.repositories import TaskRepository
+from pybossa.repositories import TaskRepository, ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
+
+project_repo = ProjectRepository(db)
 
 
 class TestTaskRepositoryForTaskQueries(Test):
@@ -452,47 +454,55 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(WrongObjectError, self.task_repo.delete, bad_object)
 
 
-    def test_delete_all_deletes_many_tasks(self):
-        """Test delete_all deletes many tasks at once"""
+    def test_delete_valid_from_project_deletes_many_tasks(self):
+        """Test delete_valid_from_project deletes many tasks at once"""
 
         tasks = TaskFactory.create_batch(2)
 
-        self.task_repo.delete_all(tasks)
+        project = project_repo.get(tasks[0].project_id)
 
-        for task in tasks:
-            assert self.task_repo.get_task(task.id) is None, task
+        self.task_repo.delete_valid_from_project(project)
+
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
+
+        assert len(tasks) == 0, len(tasks)
 
 
-    def test_delete_all_deletes_dependent(self):
-        """Test delete_all deletes dependent taskruns too"""
+    def test_delete_valid_from_project_deletes_dependent(self):
+        """Test delete_valid_from_project deletes dependent taskruns too"""
 
         task = TaskFactory.create()
         taskrun = TaskRunFactory.create(task=task)
+        task_run_id = taskrun.id
+        project = project_repo.get(task.project_id)
 
-        self.task_repo.delete_all([task])
-        deleted = self.task_repo.get_task_run(taskrun.id)
+        self.task_repo.delete_valid_from_project(project)
+        deleted = self.task_repo.get_task_run(id=task_run_id)
 
         assert deleted is None, deleted
 
 
-    def test_delete_all_deletes_many_taskruns(self):
-        """Test delete_all deletes many taskruns at once"""
+    def test_delete_valid_from_project_deletes_dependent_without_result(self):
+        """Test delete_valid_from_project deletes dependent taskruns without result"""
 
-        taskruns = TaskRunFactory.create_batch(2)
+        task = TaskFactory.create(n_answers=1)
+        project = project_repo.get(task.project_id)
+        taskrun = TaskRunFactory.create(task=task)
+        task2 = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task2)
 
-        self.task_repo.delete_all(taskruns)
+        self.task_repo.delete_valid_from_project(project)
+        non_deleted = self.task_repo.filter_tasks_by(project_id=project.id)
 
-        for taskrun in taskruns:
-            assert self.task_repo.get_task_run(taskrun.id) is None, taskrun
+        err_msg = "There should be one task, as it belongs to a result"
+        assert len(non_deleted) == 1, err_msg
+        assert non_deleted[0].id == task.id, err_msg
 
+        non_deleted = self.task_repo.filter_task_runs_by(project_id=project.id)
 
-    def test_delete_all_raises_error_if_no_task(self):
-        """Test delete_all raises a WrongObjectError if is requested to delete
-        any other object than a task"""
-
-        bad_objects = [dict(), 'string']
-
-        assert_raises(WrongObjectError, self.task_repo.delete_all, bad_objects)
+        err_msg = "There should be one task_run, as it belongs to a result"
+        assert len(non_deleted) == 1, err_msg
+        assert non_deleted[0].id == taskrun.id, err_msg
 
 
     def test_update_tasks_redundancy_changes_all_project_tasks_redundancy(self):

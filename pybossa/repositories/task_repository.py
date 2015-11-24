@@ -127,14 +127,17 @@ class TaskRepository(object):
         cached_projects.clean_project(element.project_id)
         self._delete_zip_files_from_store(project)
 
-    def delete_all(self, elements):
-        if not elements:
-            return
-        for element in elements:
-            self._delete(element)
-        project = elements[0].project
+    def delete_valid_from_project(self, project):
+        """Delete only tasks that have no results associated."""
+        sql = text('''
+                   DELETE FROM task WHERE task.project_id=:project_id
+                   AND task.id NOT IN
+                   (SELECT task_id FROM result
+                   WHERE result.project_id=:project_id GROUP BY result.task_id);
+                   ''')
+        self.db.session.execute(sql, dict(project_id=project.id))
         self.db.session.commit()
-        cached_projects.clean_project(element.project_id)
+        cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
 
     def update_tasks_redundancy(self, project, n_answer):

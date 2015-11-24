@@ -20,7 +20,7 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
-from pybossa.cache.projects import overall_progress
+from pybossa.cache.projects import overall_progress, n_results
 
 
 session = db.slave_session
@@ -91,6 +91,9 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
     results = session.execute(query, dict(project_id=project['id']))
     for row in results:
         project['n_blogposts'] = row.ct
+
+    project['n_results'] = n_results(project['id'])
+
     return project
 
 
