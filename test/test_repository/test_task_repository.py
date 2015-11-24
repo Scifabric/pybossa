@@ -454,17 +454,6 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(WrongObjectError, self.task_repo.delete, bad_object)
 
 
-    def test_delete_all_deletes_many_tasks(self):
-        """Test delete_all deletes many tasks at once"""
-
-        tasks = TaskFactory.create_batch(2)
-
-        self.task_repo.delete_all(tasks)
-
-        for task in tasks:
-            assert self.task_repo.get_task(task.id) is None, task
-
-
     def test_delete_valid_from_project_deletes_many_tasks(self):
         """Test delete_all deletes many tasks at once"""
 
@@ -477,18 +466,6 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         tasks = self.task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 0, len(tasks)
-
-
-    def test_delete_all_deletes_dependent(self):
-        """Test delete_all deletes dependent taskruns too"""
-
-        task = TaskFactory.create()
-        taskrun = TaskRunFactory.create(task=task)
-
-        self.task_repo.delete_all([task])
-        deleted = self.task_repo.get_task_run(taskrun.id)
-
-        assert deleted is None, deleted
 
 
     def test_delete_valid_from_project_deletes_dependent(self):
@@ -526,17 +503,6 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         err_msg = "There should be one task_run, as it belongs to a result"
         assert len(non_deleted) == 1, err_msg
         assert non_deleted[0].id == taskrun.id, err_msg
-
-
-    def test_delete_all_deletes_many_taskruns(self):
-        """Test delete_all deletes many taskruns at once"""
-
-        taskruns = TaskRunFactory.create_batch(2)
-
-        self.task_repo.delete_all(taskruns)
-
-        for taskrun in taskruns:
-            assert self.task_repo.get_task_run(taskrun.id) is None, taskrun
 
 
     def test_delete_all_raises_error_if_no_task(self):

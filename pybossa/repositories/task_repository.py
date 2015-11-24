@@ -127,16 +127,6 @@ class TaskRepository(object):
         cached_projects.clean_project(element.project_id)
         self._delete_zip_files_from_store(project)
 
-    def delete_all(self, elements):
-        if not elements:
-            return
-        for element in elements:
-            self._delete(element)
-        project = elements[0].project
-        self.db.session.commit()
-        cached_projects.clean_project(element.project_id)
-        self._delete_zip_files_from_store(project)
-
     def delete_valid_from_project(self, project):
         """Delete only tasks that have no results associated."""
         sql = text('''
