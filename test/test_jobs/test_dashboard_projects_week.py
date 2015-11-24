@@ -27,7 +27,7 @@ from pybossa.repositories import ProjectRepository
 from factories.project_factory import ProjectFactory
 from default import Test, with_context
 from mock import patch, MagicMock
-from datetime import datetime
+from datetime import datetime, date
 from pybossa.auditlogger import AuditLogger
 
 
@@ -60,10 +60,14 @@ class TestDashBoardDraftProject(Test):
     @with_context
     def test_format_new_projects(self):
         """Test format draft_projects_week works."""
+        ProjectFactory.create(published=True)
         p = ProjectFactory.create(published=False)
         draft_projects_week()
-        res = format_draft_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
+
+        res = format_draft_projects()
+
+        assert len(res) == 1, res
         res = res[0]
         assert res['day'].strftime('%Y-%m-%d') == day, res['day']
         assert res['id'] == p.id
@@ -75,8 +79,6 @@ class TestDashBoardDraftProject(Test):
 
 
 class TestDashBoardPublishedProject(Test):
-
-    auditlogger = AuditLogger(auditlog_repo, caller='web')
 
     @with_context
     @patch('pybossa.dashboard.jobs.db')
@@ -105,11 +107,16 @@ class TestDashBoardPublishedProject(Test):
     @with_context
     def test_format_published_projects_week(self):
         """Test format published_projects_week works."""
+        ProjectFactory.create(published=False)
         p = ProjectFactory.create(published=True)
-        self.auditlogger.log_event(p, p.owner, 'update', 'published', False, True)
+        auditlogger = AuditLogger(auditlog_repo, caller='web')
+        auditlogger.log_event(p, p.owner, 'update', 'published', False, True)
         published_projects_week()
-        res = format_published_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
+
+        res = format_published_projects()
+
+        assert len(res) == 1, res
         res = res[0]
         assert res['day'].strftime('%Y-%m-%d') == day, res['day']
         assert res['id'] == p.id
@@ -149,13 +156,18 @@ class TestDashBoardUpdateProject(Test):
     @with_context
     def test_format_updated_projects(self):
         """Test format updated projects works."""
+        old_date = date(2014, 11, 24)
+        old_project = ProjectFactory.create(updated=old_date)
         p = ProjectFactory.create()
         p.name = 'NewNewNew'
         project_repo = ProjectRepository(db)
         project_repo.update(p)
         update_projects_week()
-        res = format_update_projects()
         day = datetime.utcnow().strftime('%Y-%m-%d')
+
+        res = format_update_projects()
+
+        assert len(res) == 1, res
         res = res[0]
         assert res['day'].strftime('%Y-%m-%d') == day, res['day']
         assert res['id'] == p.id
