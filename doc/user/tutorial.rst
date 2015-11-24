@@ -1298,6 +1298,47 @@ can actually cite your work.
 
 .. _`the Data hub`: http://datahub.io
 
+Publishing results of your project
+==================================
+
+Since v1.1.4, PyBossa automatically creates "empty" results when a task is completed.
+
+For example, imagine your project is asking the following question in a set of images:
+"Do you see a triangle in this picture?" The possible answers are: yes and no. 
+
+Your project has configured the task redundancy to 5, so 5 people will answer that question 
+for a given image (or task). When the 5th person sends the answer, the server marks the task
+as completed, and it creates a result for the given task associating the answers, the task and
+the project:
+
+.. code-block:: js
+
+    {"id": 1,
+     "project_id": 1,
+     "task_id": 1,
+     "task_run_ids": [1,2,3,4,5],
+     "info": null}
+
+As in other PyBossa domain objects, a result has a JSON field named **info** that allows you
+to store the **final result** for that task using the task_runs 1, 2, 3, 4, 5. Imagine that
+the five volunteers answered: yes, then as you are the project owner you could update the
+info field with that value:
+
+.. code-block:: js
+
+    {"id": 1,
+     "project_id": 1,
+     "task_id": 1,
+     "task_run_ids": [1,2,3,4,5],
+     "info": {"triangle": "yes"}}
+
+The benefit of storing that information is that you can access these data via the PyBossa
+API so you will be able to show the results, in your result project section using the API.
+
+This will allow you to build beautiful visualizations of your results on maps, webgl, etc.
+
+Right now this new feature is evolving, so please contact us if you need help. We'll provide
+result templates soon for our own basic templates.
 
 Keeping track of the time spent by volunteers
 =============================================
