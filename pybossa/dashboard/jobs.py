@@ -101,6 +101,29 @@ def draft_projects_week():
         return "Materialized view created"
 
 
+def published_projects_week():
+    """Create or update published projects last week materialized view."""
+    if _exists_materialized_view('dashboard_week_project_published'):
+        return _refresh_materialized_view('dashboard_week_project_published')
+    else:
+        sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_published AS
+                   SELECT TO_DATE(auditlog.created, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                   project.id, project.short_name, project.name,
+                   owner_id, "user".name as u_name, "user".email_addr
+                   FROM auditlog, project, "user"
+                   WHERE TO_DATE(auditlog.created,
+                                'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
+                                ('1 week')::INTERVAL
+                   AND "user".id = project.owner_id
+                   AND project.owner_id = auditlog.user_id
+                   AND auditlog.project_id = project.id
+                   AND auditlog.attribute = 'published'
+                   GROUP BY auditlog.id, "user".name, "user".email_addr, project.id;''')
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view created"
+
+
 def update_projects_week():
     """Create or update updated projects last week materialized view."""
     if _exists_materialized_view('dashboard_week_project_update'):

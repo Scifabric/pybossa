@@ -83,6 +83,18 @@ def format_draft_projects():
     return new_projects_last_week
 
 
+def format_published_projects():
+    """Return new projects data."""
+    results = _select_from_materialized_view('dashboard_week_project_published')
+    new_projects_last_week = []
+    for row in results:
+        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
+                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
+                     email_addr=row.email_addr)
+        new_projects_last_week.append(datum)
+    return new_projects_last_week
+
+
 def format_update_projects():
     """Return updated projects data."""
     results = _select_from_materialized_view('dashboard_week_project_update')

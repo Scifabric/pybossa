@@ -228,7 +228,9 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
                timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.active_anon_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
-    yield dict(name=dashboard.new_projects_week, args=[], kwargs={},
+    yield dict(name=dashboard.draft_projects_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue=queue)
+    yield dict(name=dashboard.published_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.update_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
