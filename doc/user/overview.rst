@@ -426,6 +426,11 @@ tasks and associated task runs** from your project.
     **This action cannot be un-done, so please, be sure that you want to actually
     delete all the tasks.**
 
+.. note::
+    **This action will only allow you to delete tasks that are not associated with
+    a result. When a result is created, that task and its task runs cannot be deleted
+    so the volunteers can always have access to their contributions.**
+
 If you are sure that you want to flush all the tasks and task runs for your
 project, go to the project page (http://server/project/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
