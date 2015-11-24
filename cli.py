@@ -562,7 +562,6 @@ def create_results():
                                 task_id=task.id,
                                 task_run_ids=[tr.id for tr in task.task_runs],
                                 last_version=True)
-                print "Adding result: %s" % result.id
                 db.session.add(result)
         db.session.commit()
         print "Project %s completed!" % project.short_name
