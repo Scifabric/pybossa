@@ -58,9 +58,9 @@ class TestDashBoardActiveAnon(Test):
         AnonymousTaskRunFactory.create()
         active_anon_week()
         sql = "select * from dashboard_week_anon;"
-        results = db.session.execute(sql)
-        for row in results:
-            assert row.n_users == 1, row.n_users
+        results = db.session.execute(sql).fetchall()
+
+        assert results[0].n_users == 1, results[0].n_users
 
     @with_context
     def test_format_anon_week(self):
