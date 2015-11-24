@@ -58,21 +58,6 @@ class TestDashBoardDraftProject(Test):
         assert res == 'Materialized view created'
 
     @with_context
-    def test_draft_projects_week(self):
-        """Test JOB draft_projects_week works."""
-        p = ProjectFactory.create(published=False)
-        draft_projects_week()
-        sql = "select * from dashboard_week_project_draft;"
-        results = db.session.execute(sql).fetchall()
-        assert len(results) == 1
-        for row in results:
-            assert row.id == p.id
-            assert row.name == p.name
-            assert row.owner_id == p.owner_id
-            assert row.u_name == p.owner.name
-            assert row.email_addr == p.owner.email_addr
-
-    @with_context
     def test_format_new_projects(self):
         """Test format draft_projects_week works."""
         p = ProjectFactory.create(published=False)
@@ -118,22 +103,6 @@ class TestDashBoardPublishedProject(Test):
         assert res == 'Materialized view created'
 
     @with_context
-    def test_published_projects_week(self):
-        """Test JOB published_projects_week works."""
-        p = ProjectFactory.create(published=True)
-        self.auditlogger.log_event(p, p.owner, 'update', 'published', False, True)
-        published_projects_week()
-        sql = "select * from dashboard_week_project_published;"
-        results = db.session.execute(sql).fetchall()
-        assert len(results) == 1
-        for row in results:
-            assert row.id == p.id
-            assert row.name == p.name
-            assert row.owner_id == p.owner_id
-            assert row.u_name == p.owner.name
-            assert row.email_addr == p.owner.email_addr
-
-    @with_context
     def test_format_published_projects_week(self):
         """Test format published_projects_week works."""
         p = ProjectFactory.create(published=True)
@@ -176,24 +145,6 @@ class TestDashBoardUpdateProject(Test):
         res = update_projects_week()
         assert db_mock.session.commit.called
         assert res == 'Materialized view created'
-
-    @with_context
-    def test_update_projects_week(self):
-        """Test JOB update projects week works."""
-        p = ProjectFactory.create()
-        p.name = 'NewNameName'
-        project_repository = ProjectRepository(db)
-        project_repository.update(p)
-        update_projects_week()
-        sql = "select * from dashboard_week_project_update;"
-        results = db.session.execute(sql).fetchall()
-        assert len(results) == 1
-        for row in results:
-            assert row.id == p.id
-            assert row.name == p.name
-            assert row.owner_id == p.owner_id
-            assert row.u_name == p.owner.name
-            assert row.email_addr == p.owner.email_addr
 
     @with_context
     def test_format_updated_projects(self):
