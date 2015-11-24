@@ -1298,6 +1298,8 @@ can actually cite your work.
 
 .. _`the Data hub`: http://datahub.io
 
+.. _pybossa-project-results:
+
 Publishing results of your project
 ==================================
 
