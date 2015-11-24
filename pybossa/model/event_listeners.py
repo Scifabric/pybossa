@@ -128,12 +128,13 @@ def update_task_state(conn, task_id):
     conn.execute(sql_query)
 
 
-def push_webhook(project_obj, task_id):
+def push_webhook(project_obj, task_id, result_id):
     if project_obj['webhook']:
         payload = dict(event="task_completed",
                        project_short_name=project_obj['short_name'],
                        project_id=project_obj['id'],
                        task_id=task_id,
+                       result_id=result_id,
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         webhook_queue.enqueue(webhook, project_obj['webhook'], payload)
 
@@ -166,6 +167,12 @@ def create_result(conn, project_id, task_id):
                                                   True)
     conn.execute(sql_query)
 
+    sql_query = """SELECT id FROM result \
+                WHERE project_id=%s AND task_id=%s""" % (project_id, task_id)
+
+    results = conn.execute(sql_query)
+    for r in results:
+        return r.id
 
 @event.listens_for(TaskRun, 'after_insert')
 def on_taskrun_submit(mapper, conn, target):
@@ -191,8 +198,8 @@ def on_taskrun_submit(mapper, conn, target):
     if is_task_completed(conn, target.task_id):
         update_task_state(conn, target.task_id)
         update_feed(project_obj)
-        create_result(conn, target.project_id, target.task_id)
-        push_webhook(project_obj, target.task_id)
+        result_id = create_result(conn, target.project_id, target.task_id)
+        push_webhook(project_obj, target.task_id, result_id)
 
 
 @event.listens_for(Blogpost, 'after_insert')
