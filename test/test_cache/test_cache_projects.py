@@ -21,11 +21,8 @@ from pybossa.cache import projects as cached_projects
 from factories import UserFactory, ProjectFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
-<<<<<<< HEAD
 import datetime
-=======
 from pybossa.core import result_repo
->>>>>>> master
 
 
 class TestProjectsCache(Test):
