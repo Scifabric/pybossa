@@ -71,9 +71,7 @@ def format_new_users():
 
 def format_returning_users():
     """Return returning users data."""
-    # Returning Users
-    labels = []
-    series = []
+    formatted_users = dict(labels=[], series=[[]])
     for i in range(1, 8):
         if i == 1:
             label = "%s day" % i
@@ -81,14 +79,11 @@ def format_returning_users():
             label = "%s days" % i
         results = _select_from_materialized_view('dashboard_week_returning_users',
                                                  n_days=i)
-        total = 0
-        for row in results:
-            total = row.count
-        labels.append(label)
-        series.append(total)
+        formatted_data = _graph_data_from_query(results, 'count', label)
+        formatted_users['labels'] += formatted_data['labels']
+        formatted_users['series'][0] += formatted_data['series'][0]
 
-    returning_users_week = dict(labels=labels, series=[series])
-    return returning_users_week
+    return formatted_users
 
 
 def format_draft_projects():
@@ -110,14 +105,14 @@ def format_update_projects():
     return _format_projects_data(results)
 
 
-def _graph_data_from_query(results, column):
+def _graph_data_from_query(results, column, label=None):
     labels = []
     series = []
     for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
+        labels.append(label or row.day.strftime('%Y-%m-%d'))
         series.append(getattr(row, column))
     if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
+        labels.append(label or datetime.now().strftime('%Y-%m-%d'))
     if len(series) == 0:
         series.append(0)
 
