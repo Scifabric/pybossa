@@ -188,6 +188,21 @@ def last_activity(project_id):
             return None
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def average_contribution_time(project_id):
+    print 'me shamahte'
+    sql = text('''SELECT
+        AVG(to_timestamp(finish_time, 'YYYY-MM-DD-THH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD-THH24-MI-SS.US')) AS average_time
+        FROM task_run
+        WHERE project_id=:project_id;''')
+
+    results = session.execute(sql, dict(project_id=project_id)).fetchall()
+    for row in results:
+        average_time = row.average_time
+    return average_time or 0
+
+
 # This function does not change too much, so cache it for a longer time
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_featured_projects")
