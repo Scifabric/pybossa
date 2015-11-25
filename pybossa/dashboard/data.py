@@ -54,37 +54,20 @@ def format_anon_week():
 def format_draft_projects():
     """Return new projects data."""
     results = _select_from_materialized_view('dashboard_week_project_draft')
-    new_projects_last_week = []
-    for row in results:
-        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
-                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
-                     email_addr=row.email_addr)
-        new_projects_last_week.append(datum)
-    return new_projects_last_week
+    return _format_projects_data(results)
 
 
 def format_published_projects():
     """Return new projects data."""
     results = _select_from_materialized_view('dashboard_week_project_published')
     new_projects_last_week = []
-    for row in results:
-        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
-                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
-                     email_addr=row.email_addr)
-        new_projects_last_week.append(datum)
-    return new_projects_last_week
+    return _format_projects_data(results)
 
 
 def format_update_projects():
     """Return updated projects data."""
     results = _select_from_materialized_view('dashboard_week_project_update')
-    update_projects_last_week = []
-    for row in results:
-        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
-                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
-                     email_addr=row.email_addr)
-        update_projects_last_week.append(datum)
-    return update_projects_last_week
+    return _format_projects_data(results)
 
 
 def format_new_tasks():
@@ -140,3 +123,13 @@ def _graph_data_from_query(results, column):
 
     new_users_week = dict(labels=labels, series=[series])
     return new_users_week
+
+
+def _format_projects_data(results):
+    formatted_projects = []
+    for row in results:
+        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
+                     p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
+                     email_addr=row.email_addr)
+        formatted_projects.append(datum)
+    return formatted_projects
