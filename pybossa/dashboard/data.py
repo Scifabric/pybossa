@@ -42,33 +42,13 @@ def _select_from_materialized_view(view, n_days=None):
 def format_users_week():
     """Return a variable with users data."""
     results = _select_from_materialized_view('dashboard_week_users')
-    labels = []
-    series = []
-    for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(int(row.n_users))
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
-    active_users_last_week = dict(labels=labels, series=[series])
-    return active_users_last_week
+    return _graph_data_from_query(results, 'n_users')
 
 
 def format_anon_week():
     """Return a variable with anon data."""
     results = _select_from_materialized_view('dashboard_week_anon')
-    labels = []
-    series = []
-    for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(int(row.n_users))
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
-    active_anon_last_week = dict(labels=labels, series=[series])
-    return active_anon_last_week
+    return _graph_data_from_query(results, 'n_users')
 
 
 def format_draft_projects():
@@ -110,50 +90,19 @@ def format_update_projects():
 def format_new_tasks():
     """Return new tasks data."""
     results = _select_from_materialized_view('dashboard_week_new_task')
-    labels = []
-    series = []
-    for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(row.day_tasks)
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
-    new_tasks_week = dict(labels=labels, series=[series])
-    return new_tasks_week
+    return _graph_data_from_query(results, 'day_tasks')
 
 
 def format_new_task_runs():
     """Return new task runs data."""
     results = _select_from_materialized_view('dashboard_week_new_task_run')
-    labels = []
-    series = []
-    for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(row.day_task_runs)
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
-    new_task_runs_week = dict(labels=labels, series=[series])
-    return new_task_runs_week
+    return _graph_data_from_query(results, 'day_task_runs')
 
 
 def format_new_users():
     """Return new registered users data."""
     results = _select_from_materialized_view('dashboard_week_new_users')
-    labels = []
-    series = []
-    for row in results:
-        labels.append(row.day.strftime('%Y-%m-%d'))
-        series.append(row.day_users)
-    if len(labels) == 0:
-        labels.append(datetime.now().strftime('%Y-%m-%d'))
-    if len(series) == 0:
-        series.append(0)
-
-    new_users_week = dict(labels=labels, series=[series])
-    return new_users_week
+    return _graph_data_from_query(results, 'day_users')
 
 
 def format_returning_users():
@@ -176,3 +125,18 @@ def format_returning_users():
 
     returning_users_week = dict(labels=labels, series=[series])
     return returning_users_week
+
+
+def _graph_data_from_query(results, column):
+    labels = []
+    series = []
+    for row in results:
+        labels.append(row.day.strftime('%Y-%m-%d'))
+        series.append(getattr(row, column))
+    if len(labels) == 0:
+        labels.append(datetime.now().strftime('%Y-%m-%d'))
+    if len(series) == 0:
+        series.append(0)
+
+    new_users_week = dict(labels=labels, series=[series])
+    return new_users_week
