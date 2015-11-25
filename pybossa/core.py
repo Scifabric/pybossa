@@ -168,18 +168,21 @@ def setup_repositories():
     from pybossa.repositories import TaskRepository
     from pybossa.repositories import AuditlogRepository
     from pybossa.repositories import WebhookRepository
+    from pybossa.repositories import ResultRepository
     global user_repo
     global project_repo
     global blog_repo
     global task_repo
     global auditlog_repo
     global webhook_repo
+    global result_repo
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db)
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
+    result_repo = ResultRepository(db)
 
 
 def setup_error_email(app):

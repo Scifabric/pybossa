@@ -17,37 +17,36 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class TaskAuth(object):
+class ResultAuth(object):
     _specific_actions = []
 
-    def __init__(self, project_repo, result_repo):
+    def __init__(self, project_repo):
         self.project_repo = project_repo
-        self.result_repo = result_repo
 
     @property
     def specific_actions(self):
         return self._specific_actions
 
-    def can(self, user, action, task=None):
+    def can(self, user, action, result=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, task)
+        return getattr(self, action)(user, result)
 
-    def _create(self, user, task):
-        return self._only_admin_or_owner(user, task)
+    def _create(self, user, result):
+        return False
 
-    def _read(self, user, task=None):
+    def _read(self, user, result=None):
         return True
 
-    def _update(self, user, task):
-        return self._only_admin_or_owner(user, task)
-
-    def _delete(self, user, task):
-        if self.result_repo.get_by(task_id=task.id, project_id=task.project_id):
+    def _update(self, user, result):
+        if user.is_anonymous():
             return False
-        return self._only_admin_or_owner(user, task)
+        project = self._get_project(result, result.project_id)
+        return (project.owner_id == user.id)
 
-    def _only_admin_or_owner(self, user, task):
-        if not user.is_anonymous():
-            project = self.project_repo.get(task.project_id)
-            return (project.owner_id == user.id or user.admin)
+    def _delete(self, user, result):
         return False
+
+    def _get_project(self, result, project_id):
+        if result is not None:
+            return self.project_repo.get(result.project_id)
+        return self.project_repo.get(project_id)

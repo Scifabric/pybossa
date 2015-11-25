@@ -20,19 +20,19 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
+from pybossa.core import project_repo, task_repo, result_repo
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
-from pybossa.repositories import ProjectRepository
-from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
 
-project_repo = ProjectRepository(db)
-task_repo = TaskRepository(db)
-result_repo = ResultRepository(db)
 
+class TestResultAPI(TestAPI):
 
-class TestTaskAPI(TestAPI):
+    def setUp(self):
+        super(TestResultAPI, self).setUp()
+        self.result_repo = ResultRepository(db)
+
 
     def create_result(self, n_results=1, n_answers=1, owner=None,
                       filter_by=False):
@@ -49,33 +49,36 @@ class TestTaskAPI(TestAPI):
             for task in tasks:
                 TaskRunFactory.create(task=task, project=project)
         if filter_by:
-            return result_repo.filter_by(project_id=1)
+            return self.result_repo.filter_by(project_id=1)
         else:
-            return result_repo.get_by(project_id=1)
+            return self.result_repo.get_by(project_id=1)
 
 
     @with_context
-    def test_task_query_without_params(self):
-        """ Test API Task query"""
-        project = ProjectFactory.create()
-        TaskFactory.create_batch(10, project=project, info={'question': 'answer'})
-        res = self.app.get('/api/task')
-        tasks = json.loads(res.data)
-        assert len(tasks) == 10, tasks
-        task = tasks[0]
-        assert task['info']['question'] == 'answer', task
+    def test_result_query_without_params(self):
+        """ Test API Result query"""
+        result = self.create_result(n_answers=10)
+        res = self.app.get('/api/result')
+        results = json.loads(res.data)
+        assert len(results) == 1, results
+        result = results[0]
+        assert result['info'] is None, result
+        assert len(result['task_run_ids']) == 10, result
+        assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
+        assert result['project_id'] == 1, result
+        assert result['task_id'] == 1, result
+        assert result['created'] is not None, result
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
 
     @with_context
-    def test_task_query_with_params(self):
-        """Test API query for task with params works"""
-        project = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(10, project=project)
+    def test_result_query_with_params(self):
+        """Test API query for result with params works"""
+        results = self.create_result(n_results=10, filter_by=True)
         # Test for real field
-        res = self.app.get("/api/task?project_id=1")
+        res = self.app.get("/api/result?project_id=1")
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 10, data
@@ -83,86 +86,75 @@ class TestTaskAPI(TestAPI):
         assert data[0]['project_id'] == 1, data
 
         # Valid field but wrong value
-        res = self.app.get("/api/task?project_id=99999999")
+        res = self.app.get("/api/result?project_id=99999999")
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/task?project_id=1&state=ongoing')
+        res = self.app.get('/api/result?project_id=1&task_id=1')
         data = json.loads(res.data)
         # One result
-        assert len(data) == 10, data
+        assert len(data) == 1, data
         # Correct result
         assert data[0]['project_id'] == 1, data
-        assert data[0]['state'] == u'ongoing', data
+        assert data[0]['task_id'] == 1, data
 
         # Limits
-        res = self.app.get("/api/task?project_id=1&limit=5")
+        res = self.app.get("/api/result?project_id=1&limit=5")
         data = json.loads(res.data)
         for item in data:
             assert item['project_id'] == 1, item
-        assert len(data) == 5, data
+        assert len(data) == 5, len(data)
 
         # Keyset pagination
-        url = "/api/task?project_id=1&limit=5&last_id=%s" % tasks[4].id
+        url = "/api/result?project_id=1&limit=5&last_id=1"
         res = self.app.get(url)
         data = json.loads(res.data)
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
-        assert data[0]['id'] == tasks[5].id, data
+        assert data[0]['id'] == 2, data[0]
 
 
     @with_context
-    def test_task_post(self):
-        """Test API Task creation"""
+    def test_result_post(self):
+        """Test API Result creation"""
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
-        data = dict(project_id=project.id, info='my task data')
-        root_data = dict(project_id=project.id, info='my root task data')
+        data = dict(info='final result')
 
         # anonymous user
         # no api-key
-        res = self.app.post('/api/task', data=json.dumps(data))
+        res = self.app.post('/api/result', data=json.dumps(data))
         error_msg = 'Should not be allowed to create'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        res = self.app.post('/api/task?api_key=' + non_owner.api_key,
+        res = self.app.post('/api/result?api_key=' + non_owner.api_key,
                             data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for projects of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
-        res = self.app.post('/api/task?api_key=' + user.api_key,
+        res = self.app.post('/api/result?api_key=' + user.api_key,
                             data=json.dumps(data))
-        assert res.data, res
-        datajson = json.loads(res.data)
-        out = task_repo.get_task(datajson['id'])
-        assert out, out
-        assert_equal(out.info, 'my task data'), out
-        assert_equal(out.project_id, project.id)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now the root user
-        res = self.app.post('/api/task?api_key=' + admin.api_key,
-                            data=json.dumps(root_data))
-        assert res.data, res
-        datajson = json.loads(res.data)
-        out = task_repo.get_task(datajson['id'])
-        assert out, out
-        assert_equal(out.info, 'my root task data'), out
-        assert_equal(out.project_id, project.id)
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                            data=json.dumps(data))
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # POST with not JSON data
-        url = '/api/task?api_key=%s' % user.api_key
+        url = '/api/result?api_key=%s' % user.api_key
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -171,7 +163,7 @@ class TestTaskAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -181,31 +173,30 @@ class TestTaskAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
-    def test_task_post_with_reserved_fields_returns_error(self):
+    def test_result_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         data = {'created': 'today',
-                'state': 'completed',
                 'id': 222, 'project_id': project.id}
 
-        res = self.app.post('/api/task?api_key=' + user.api_key,
+        res = self.app.post('/api/result?api_key=' + user.api_key,
                             data=json.dumps(data))
 
         assert res.status_code == 400, res.status_code
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    def test_task_put_with_reserved_fields_returns_error(self):
+    def test_result_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
-        project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        result = self.create_result(owner=user)
+        print result
+        url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
         data = {'created': 'today',
-                'state': 'completed',
+                'project_id': 1,
                 'id': 222}
 
         res = self.app.put(url, data=json.dumps(data))
@@ -215,47 +206,42 @@ class TestTaskAPI(TestAPI):
         assert error['exception_msg'] == "Reserved keys in payload", error
 
     @with_context
-    def test_task_update(self):
-        """Test API task update"""
+    def test_result_update(self):
+        """Test API result update"""
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-        root_task = TaskFactory.create(project=project)
-        data = {'n_answers': 1}
+        data = dict(info=dict(foo='bar'))
         datajson = json.dumps(data)
-        root_data = {'n_answers': 4}
-        root_datajson = json.dumps(root_data)
+        result = self.create_result(owner=user)
 
         ## anonymous
-        res = self.app.put('/api/task/%s' % task.id, data=data)
+        res = self.app.put('/api/result/%s' % result.id, data=datajson)
         assert_equal(res.status, '401 UNAUTHORIZED', res.status)
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (task.id, non_owner.api_key)
+        url = '/api/result/%s?api_key=%s' % (result.id, non_owner.api_key)
         res = self.app.put(url, data=datajson)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
 
         ### real user
-        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
-        assert_equal(task.n_answers, data['n_answers'])
-        assert task.id == out['id'], out
+        assert_equal(result.info['foo'], data['info']['foo'])
+        assert result.id == out['id'], out
 
         ### root
-        res = self.app.put('/api/task/%s?api_key=%s' % (root_task.id, admin.api_key),
-                           data=root_datajson)
-        assert_equal(res.status, '200 OK', res.data)
-        assert_equal(root_task.n_answers, root_data['n_answers'])
+        res = self.app.put('/api/result/%s?api_key=%s' % (result.id, admin.api_key),
+                           data=datajson)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
 
         # PUT with not JSON data
-        res = self.app.put(url, data=data)
+        res = self.app.put(url, data=None)
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -264,7 +250,7 @@ class TestTaskAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -274,28 +260,26 @@ class TestTaskAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
 
 
     @with_context
-    def test_task_delete(self):
-        """Test API task delete"""
+    def test_result_delete(self):
+        """Test API result delete"""
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-        root_task = TaskFactory.create(project=project)
+        result = self.create_result(owner=user)
 
         ## anonymous
-        res = self.app.delete('/api/task/%s' % task.id)
+        res = self.app.delete('/api/result/%s' % result.id)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (task.id, non_owner.api_key)
+        url = '/api/result/%s?api_key=%s' % (result.id, non_owner.api_key)
         res = self.app.delete(url)
         error_msg = 'Should not be able to update tasks of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -306,76 +290,39 @@ class TestTaskAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'task', err
+        assert err['target'] == 'result', err
         assert err['action'] == 'DELETE', err
         assert err['exception_cls'] == 'AttributeError', err
 
-        # DELETE returns 204
-        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        # DELETE returns 403
+        url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
         res = self.app.delete(url)
-        assert_equal(res.status, '204 NO CONTENT', res.data)
-        assert res.data == '', res.data
+        assert_equal(res.status, '403 FORBIDDEN', res.data)
 
         #### root user
-        url = '/api/task/%s?api_key=%s' % (root_task.id, admin.api_key)
+        url = '/api/result/%s?api_key=%s' % (result.id, admin.api_key)
         res = self.app.delete(url)
-        assert_equal(res.status, '204 NO CONTENT', res.data)
-
-        tasks = task_repo.filter_tasks_by(project_id=project.id)
-        assert task not in tasks, tasks
-        assert root_task not in tasks, tasks
-
-
-    @patch('pybossa.repositories.task_repository.uploader')
-    def test_task_delete_deletes_zip_files(self, uploader):
-        """Test API task delete deletes also zip files with tasks and taskruns"""
-        admin = UserFactory.create()
-        project = ProjectFactory.create(owner=admin)
-        task = TaskFactory.create(project=project)
-        url = '/api/task/%s?api_key=%s' % (task.id, admin.api_key)
-        res = self.app.delete(url)
-        expected = [call('1_project1_task_json.zip', 'user_1'),
-                    call('1_project1_task_csv.zip', 'user_1'),
-                    call('1_project1_task_run_json.zip', 'user_1'),
-                    call('1_project1_task_run_csv.zip', 'user_1')]
-        assert uploader.delete_file.call_args_list == expected
-
+        assert_equal(res.status, '403 FORBIDDEN', res.data)
 
     @with_context
-    def test_delete_task_cascade(self):
-        """Test API delete task deletes associated taskruns"""
-        task = TaskFactory.create()
-        task_runs = TaskRunFactory.create_batch(3, task=task)
-        url = '/api/task/%s?api_key=%s' % (task.id, task.project.owner.api_key)
-        res = self.app.delete(url)
-
-        assert_equal(res.status, '204 NO CONTENT', res.data)
-        task_runs = task_repo.filter_task_runs_by(task_id=task.id)
-        assert len(task_runs) == 0, "There should not be any task run for task"
-
-    @with_context
-    def test_delete_task_when_result_associated(self):
-        """Test API delete task fails when a result is associated."""
-        result = self.create_result()
-        project = project_repo.get(result.project_id)
-
-        url = '/api/task/%s?api_key=%s' % (result.task_id,
-                                           project.owner.api_key)
-        res = self.app.delete(url)
-        assert_equal(res.status, '403 FORBIDDEN', res.status)
-
-    @with_context
-    def test_delete_task_when_result_associated_variation(self):
-        """Test API delete task fails when a result is associated after
-        increasing the n_answers changing its state from completed to
-        ongoing."""
+    def test_get_last_version(self):
+        """Test API result returns always latest version."""
         result = self.create_result()
         project = project_repo.get(result.project_id)
         task = task_repo.get_task(result.task_id)
-        task.n_answers = 100
-        task_repo.update(task)
+        task.n_answers = 2
+        TaskRunFactory.create(task=task, project=project)
+        result = result_repo.get_by(project_id=project.id)
 
-        url = '/api/task/%s?api_key=%s' % (result.task_id,
-                                           project.owner.api_key)
-        res = self.app.delete(url)
-        assert_equal(res.status, '403 FORBIDDEN', res.status)
+        assert result.last_version is True, result.last_version
+
+        result_id = result.id
+
+        results = result_repo.filter_by(project_id=project.id, last_version=False)
+        assert len(results) == 2, len(results)
+
+        for r in results:
+            if r.id == result_id:
+                assert r.last_version is True, r.last_version
+            else:
+                assert r.last_version is False, r.last_version

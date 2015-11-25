@@ -113,6 +113,21 @@ def n_completed_tasks(project_id):
     return n_completed_tasks
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def n_results(project_id):
+    """Return number of results of a project."""
+    query = text('''
+                 SELECT COUNT(id) AS ct FROM result
+                 WHERE project_id=:project_id
+                 AND info IS NOT NULL;
+                 ''')
+    results = session.execute(query, dict(project_id=project_id))
+    n_results = 0
+    for row in results:
+        n_results = row.ct
+    return n_results
+
+
 @memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'))
 def n_registered_volunteers(project_id):
     """Return number of registered users that have participated in a project."""
@@ -418,6 +433,9 @@ def delete_n_tasks(project_id):
     """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, project_id)
 
+def delete_n_results(project_id):
+    """Reset n_results value in cache"""
+    delete_memoized(n_results, project_id)
 
 def delete_n_completed_tasks(project_id):
     """Reset n_completed_tasks value in cache"""
@@ -465,6 +483,7 @@ def clean_project(project_id):
     delete_browse_tasks(project_id)
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
+    delete_n_results(project_id)
     delete_n_registered_volunteers(project_id)
     delete_n_anonymous_volunteers(project_id)
     delete_n_volunteers(project_id)

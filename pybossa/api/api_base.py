@@ -36,7 +36,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-from pybossa.core import project_repo, user_repo, task_repo
+from pybossa.core import project_repo, user_repo, task_repo, result_repo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -50,7 +50,9 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'save': 'save', 'update': 'update', 'delete': 'delete'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
-                     'update': 'update_category', 'delete': 'delete_category'}
+                     'update': 'update_category', 'delete': 'delete_category'},
+        'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
+                    'update': 'update'}
         }
 
 

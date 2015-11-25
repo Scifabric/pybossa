@@ -1,0 +1,25 @@
+================
+Changelog v1.2.0
+================
+
+ * Add to projects a result table so, project owners can show case directly in their
+   project the results achieved. More info :ref:`pybossa-project-results`.
+
+
+Upgrading
+=========
+
+.. note::
+    Please, backup the database before continuing.
+
+In order to upgrade you will have to pull the new code, and then run the
+following command to upgrade the database::
+
+  source env/bin/activate
+  alembic upgrade head
+  python cli.py create_results
+
+Then restart your server, and you will be done.
+
+NOTE: depending on your server, the creation of results will vary based on number of
+completed tasks and task_runs.

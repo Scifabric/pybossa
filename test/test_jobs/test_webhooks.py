@@ -18,16 +18,19 @@
 
 import json
 from pybossa.jobs import webhook
-from default import Test, with_context, FakeResponse
+from default import Test, with_context, FakeResponse, db
 from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from redis import StrictRedis
 from mock import patch, MagicMock
 from datetime import datetime
+from pybossa.repositories import ResultRepository
 
 queue = MagicMock()
 queue.enqueue.return_value = True
+
+result_repo = ResultRepository(db)
 
 
 class TestWebHooks(Test):
@@ -109,10 +112,12 @@ class TestWebHooks(Test):
         project = ProjectFactory.create(webhook=url,)
         task = TaskFactory.create(project=project, n_answers=1)
         TaskRunFactory.create(project=project, task=task)
+        result = result_repo.get_by(project_id=project.id, task_id=task.id)
         payload = dict(event='task_completed',
                        project_short_name=project.short_name,
                        project_id=project.id,
                        task_id=task.id,
+                       result_id=result.id,
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         assert queue.enqueue.called
         assert queue.called_with(webhook, url, payload)

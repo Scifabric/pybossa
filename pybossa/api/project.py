@@ -28,7 +28,7 @@ from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
-from pybossa.core import auditlog_repo
+from pybossa.core import auditlog_repo, result_repo
 from pybossa.auditlogger import AuditLogger
 
 auditlogger = AuditLogger(auditlog_repo, caller='api')

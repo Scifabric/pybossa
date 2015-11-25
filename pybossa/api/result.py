@@ -16,25 +16,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """
-PyBossa api module for exposing domain object Task via an API.
+PyBossa api module for exposing domain object Result via an API.
 
 This package adds GET, POST, PUT and DELETE methods for:
     * tasks
 
 """
-from flask import abort
 from werkzeug.exceptions import BadRequest
-from pybossa.model.task import Task
-from pybossa.core import result_repo
+from pybossa.model.result import Result
 from api_base import APIBase
 
 
-class TaskAPI(APIBase):
+class ResultAPI(APIBase):
 
-    """Class for domain object Task."""
+    """Class for domain object Result."""
 
-    __class__ = Task
-    reserved_keys = set(['id', 'created', 'state'])
+    __class__ = Result
+    reserved_keys = set(['id', 'created', 'project_id',
+                         'task_id', 'task_run_ids', 'last_version'])
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
