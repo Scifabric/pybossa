@@ -51,25 +51,6 @@ def format_anon_week():
     return _graph_data_from_query(results, 'n_users')
 
 
-def format_draft_projects():
-    """Return new projects data."""
-    results = _select_from_materialized_view('dashboard_week_project_draft')
-    return _format_projects_data(results)
-
-
-def format_published_projects():
-    """Return new projects data."""
-    results = _select_from_materialized_view('dashboard_week_project_published')
-    new_projects_last_week = []
-    return _format_projects_data(results)
-
-
-def format_update_projects():
-    """Return updated projects data."""
-    results = _select_from_materialized_view('dashboard_week_project_update')
-    return _format_projects_data(results)
-
-
 def format_new_tasks():
     """Return new tasks data."""
     results = _select_from_materialized_view('dashboard_week_new_task')
@@ -108,6 +89,25 @@ def format_returning_users():
 
     returning_users_week = dict(labels=labels, series=[series])
     return returning_users_week
+
+
+def format_draft_projects():
+    """Return new projects data."""
+    results = _select_from_materialized_view('dashboard_week_project_draft')
+    return _format_projects_data(results)
+
+
+def format_published_projects():
+    """Return new projects data."""
+    results = _select_from_materialized_view('dashboard_week_project_published')
+    new_projects_last_week = []
+    return _format_projects_data(results)
+
+
+def format_update_projects():
+    """Return updated projects data."""
+    results = _select_from_materialized_view('dashboard_week_project_update')
+    return _format_projects_data(results)
 
 
 def _graph_data_from_query(results, column):
