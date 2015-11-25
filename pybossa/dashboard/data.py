@@ -24,7 +24,7 @@ from datetime import datetime
 
 def _select_from_materialized_view(view, n_days=None):
     if n_days is None:
-        sql = text("select * from %s" % view)
+        sql = text("SELECT * FROM %s" % view)
         options = {}
     else:
         sql = text("""SELECT COUNT(user_id)
