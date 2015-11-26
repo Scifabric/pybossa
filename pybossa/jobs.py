@@ -28,7 +28,6 @@ import pybossa.dashboard.jobs as dashboard
 
 
 MINUTE = 60
-HOUR = 60 * 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
@@ -45,8 +44,8 @@ def schedule_job(function, scheduler):
         timeout=function['timeout'])
     for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
-                sj.args == function['args'] and
-                sj.kwargs == function['kwargs']):
+            sj.args == function['args'] and
+            sj.kwargs == function['kwargs']):
             job.cancel()
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
@@ -75,9 +74,9 @@ def enqueue_job(job):
     redis_conn = sentinel.master
     queue = Queue(job['queue'], connection=redis_conn)
     queue.enqueue_call(func=job['name'],
-                           args=job['args'],
-                           kwargs=job['kwargs'],
-                           timeout=job['timeout'])
+                       args=job['args'],
+                       kwargs=job['kwargs'],
+                       timeout=job['timeout'])
     return True
 
 def enqueue_periodic_jobs(queue_name):
@@ -229,7 +228,9 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
                timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.active_anon_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
-    yield dict(name=dashboard.new_projects_week, args=[], kwargs={},
+    yield dict(name=dashboard.draft_projects_week, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue=queue)
+    yield dict(name=dashboard.published_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
     yield dict(name=dashboard.update_projects_week, args=[], kwargs={},
                timeout=(10 * MINUTE), queue=queue)
@@ -536,13 +537,14 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     msg = "%s users notified by email" % users
     return msg
 
+
 def get_weekly_stats_update_projects():
     """Return email jobs with weekly stats update for project owner."""
     from sqlalchemy.sql import text
     from pybossa.core import db
     send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
     today = datetime.today().strftime('%A').lower()
-    if  today.lower() == send_emails_date.lower():
+    if today.lower() == send_emails_date.lower():
         sql = text('''
                    SELECT project.id
                    FROM project, "user", task
@@ -563,6 +565,7 @@ def get_weekly_stats_update_projects():
                        timeout=(10 * MINUTE),
                        queue='low')
             yield job
+
 
 def send_weekly_stats_project(project_id):
     from pybossa.cache.project_stats import get_stats

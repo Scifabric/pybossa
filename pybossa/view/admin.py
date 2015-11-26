@@ -376,7 +376,8 @@ def dashboard():
             flash(msg)
         active_users_last_week = dashb.format_users_week()
         active_anon_last_week = dashb.format_anon_week()
-        new_projects_last_week = dashb.format_new_projects()
+        draft_projects_last_week = dashb.format_draft_projects()
+        published_projects_last_week = dashb.format_published_projects()
         update_projects_last_week = dashb.format_update_projects()
         new_tasks_week = dashb.format_new_tasks()
         new_task_runs_week = dashb.format_new_task_runs()
@@ -384,18 +385,20 @@ def dashboard():
         returning_users_week = dashb.format_returning_users()
         update_feed = get_update_feed()
 
-        return render_template('admin/dashboard.html',
-                               title=gettext('Dashboard'),
-                               active_users_last_week=active_users_last_week,
-                               active_anon_last_week=active_anon_last_week,
-                               new_projects_last_week=new_projects_last_week,
-                               update_projects_last_week=update_projects_last_week,
-                               new_tasks_week=new_tasks_week,
-                               new_task_runs_week=new_task_runs_week,
-                               new_users_week=new_users_week,
-                               returning_users_week=returning_users_week,
-                               update_feed=update_feed,
-                               wait=False)
+        return render_template(
+            'admin/dashboard.html',
+            title=gettext('Dashboard'),
+            active_users_last_week=active_users_last_week,
+            active_anon_last_week=active_anon_last_week,
+            draft_projects_last_week=draft_projects_last_week,
+            published_projects_last_week=published_projects_last_week,
+            update_projects_last_week=update_projects_last_week,
+            new_tasks_week=new_tasks_week,
+            new_task_runs_week=new_task_runs_week,
+            new_users_week=new_users_week,
+            returning_users_week=returning_users_week,
+            update_feed=update_feed,
+            wait=False)
     except ProgrammingError as e:
         return render_template('admin/dashboard.html',
                                title=gettext('Dashboard'),

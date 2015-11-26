@@ -39,7 +39,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
-from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
+from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
@@ -56,7 +56,6 @@ class TestWeb(web.Helper):
     def clear_temp_container(self, user_id):
         """Helper function which deletes all files in temp folder of a given owner_id"""
         temp_folder = os.path.join('/tmp', 'user_%d' % user_id)
-        print temp_folder
         if os.path.isdir(temp_folder):
             shutil.rmtree(temp_folder)
 
@@ -75,10 +74,18 @@ class TestWeb(web.Helper):
         assert "Search" in res.data, err_msg
 
     @with_context
+    def test_leaderboard(self):
+        """Test WEB leaderboard works"""
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert user.name in res.data, res.data
+
+    @with_context
     @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_02_stats(self, mock1, mock2):
-        """Test WEB leaderboard or stats page works"""
+    def test_project_stats(self, mock1):
+        """Test WEB project stats page works"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
@@ -118,10 +125,35 @@ class TestWeb(web.Helper):
             res = self.app.get(url)
             assert "GeoLite" in res.data, res.data
 
-        res = self.app.get('/leaderboard', follow_redirects=True)
-        assert self.html_title("Community Leaderboard") in res.data, res
-        assert user.name in res.data, res.data
+    def test_contribution_time_shown_for_admins_for_every_project(self):
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        owner = UserFactory.create(pro=False)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+        self.signin(email=admin.email_addr, password='1234')
 
+        assert 'Average contribution time' in self.app.get(url).data
+
+    def test_contribution_time_shown_in_pro_owned_projects(self):
+        pro_owner = UserFactory.create(pro=True)
+        pro_owned_project = ProjectFactory.create(owner=pro_owner)
+        task = TaskFactory.create(project=pro_owned_project)
+        TaskRunFactory.create(task=task)
+        pro_url = '/project/%s/stats' % pro_owned_project.short_name
+
+        assert 'Average contribution time' in self.app.get(pro_url).data
+
+    def test_contribution_time_not_shown_in_regular_user_owned_projects(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+
+        assert 'Average contribution time' not in self.app.get(url).data
 
     @with_context
     def test_03_account_index(self):

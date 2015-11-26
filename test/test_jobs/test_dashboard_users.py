@@ -59,10 +59,10 @@ class TestDashBoardNewUsers(Test):
         UserFactory.create()
         new_users_week()
         sql = "select * from dashboard_week_new_users;"
-        results = db.session.execute(sql)
-        for row in results:
-            assert row.day_users == 1
-            assert str(row.day) in datetime.utcnow().strftime('%Y-%m-%d')
+        results = db.session.execute(sql).fetchall()
+
+        assert results[0].day_users == 1
+        assert str(results[0].day) in datetime.utcnow().strftime('%Y-%m-%d')
 
     @with_context
     def test_format_new_users(self):
@@ -118,15 +118,19 @@ class TestDashBoardReturningUsers(Test):
     @with_context
     def test_returning_users(self):
         """Test JOB dashboard returns number of returning users."""
-        task_run = TaskRunFactory.create()
+        once_only_user = UserFactory.create()
+        returning_user = UserFactory.create()
+        TaskRunFactory.create(user=once_only_user)
+        TaskRunFactory.create(user=returning_user)
+        task_run = TaskRunFactory.create(user=returning_user)
         day = datetime.utcnow() - timedelta(days=1)
-        TaskRunFactory.create(finish_time=day.isoformat())
+        TaskRunFactory.create(user=returning_user, finish_time=day.isoformat())
         returning_users_week()
         sql = "select * from dashboard_week_returning_users;"
-        results = db.session.execute(sql)
-        for row in results:
-            assert row.n_days == 2
-            assert row.user_id == task_run.user_id
+        results = db.session.execute(sql).fetchall()
+
+        assert results[0].n_days == 2
+        assert results[0].user_id == task_run.user_id
 
     @with_context
     @patch('pybossa.dashboard.data.db')
@@ -150,21 +154,21 @@ class TestDashBoardReturningUsers(Test):
     @with_context
     def test_format_returning_users(self):
         """Test format returning users works."""
-        u = UserFactory.create()
-        TaskRunFactory.create(user=u)
-        TaskRunFactory.create(user=u)
-        TaskRunFactory.create(user=u)
-        TaskRunFactory.create(user=u)
-        TaskRunFactory.create(user=u)
-        TaskRunFactory.create(user=u)
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
         day = datetime.utcnow() - timedelta(days=2)
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
         day = datetime.utcnow() - timedelta(days=1)
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
-        TaskRunFactory.create(user=u, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
+        TaskRunFactory.create(user=user, finish_time=day.isoformat())
         returning_users_week()
         res = format_returning_users()
         for i in range(1,8):

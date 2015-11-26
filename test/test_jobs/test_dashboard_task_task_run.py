@@ -58,9 +58,9 @@ class TestDashBoardNewTask(Test):
         TaskFactory.create()
         new_tasks_week()
         sql = "select * from dashboard_week_new_task;"
-        results = db.session.execute(sql)
-        for row in results:
-            assert row.day_tasks == 1, row.day_tasks
+        results = db.session.execute(sql).fetchall()
+
+        assert results[0].day_tasks == 1, results[0].day_tasks
 
     @with_context
     @patch('pybossa.dashboard.data.db')
@@ -122,9 +122,9 @@ class TestDashBoardNewTaskRuns(Test):
         TaskRunFactory.create(finish_time=day.isoformat())
         new_task_runs_week()
         sql = "select * from dashboard_week_new_task_run;"
-        results = db.session.execute(sql)
-        for row in results:
-            assert row.day_task_runs == 1, row.day_task_runs
+        results = db.session.execute(sql).fetchall()
+
+        assert results[0].day_task_runs == 1, results[0].day_task_runs
 
     @with_context
     @patch('pybossa.dashboard.data.db')

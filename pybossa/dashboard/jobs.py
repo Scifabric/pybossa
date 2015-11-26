@@ -22,7 +22,7 @@ from pybossa.core import db
 
 def _exists_materialized_view(view):
     sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
-               relname=:view);''')
+               relname = :view);''')
     results = db.slave_session.execute(sql, dict(view=view))
     for result in results:
         return result.exists
@@ -80,21 +80,45 @@ def active_anon_week():
         return "Materialized view created"
 
 
-def new_projects_week():
-    """Create or update new created projects last week materialized view."""
-    if _exists_materialized_view('dashboard_week_project_new'):
-        return _refresh_materialized_view('dashboard_week_project_new')
+def draft_projects_week():
+    """Create or update new created draft projects last week materialized view."""
+    if _exists_materialized_view('dashboard_week_project_draft'):
+        return _refresh_materialized_view('dashboard_week_project_draft')
     else:
-        sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_new AS
-                   SELECT TO_DATE(project.created, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+        sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_draft AS
+                   SELECT TO_DATE(project.created, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
                    project.id, short_name, project.name,
-                   owner_id, "user".name as u_name, "user".email_addr
+                   owner_id, "user".name AS u_name, "user".email_addr
                    FROM project, "user"
                    WHERE TO_DATE(project.created,
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
                                 ('1 week')::INTERVAL
-                   AND "user".id=project.owner_id
+                   AND "user".id = project.owner_id
+                   AND project.published = false
                    GROUP BY project.id, "user".name, "user".email_addr;''')
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view created"
+
+
+def published_projects_week():
+    """Create or update published projects last week materialized view."""
+    if _exists_materialized_view('dashboard_week_project_published'):
+        return _refresh_materialized_view('dashboard_week_project_published')
+    else:
+        sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_published AS
+                   SELECT TO_DATE(auditlog.created, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
+                   project.id, project.short_name, project.name,
+                   owner_id, "user".name AS u_name, "user".email_addr
+                   FROM auditlog, project, "user"
+                   WHERE TO_DATE(auditlog.created,
+                                'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
+                                ('1 week')::INTERVAL
+                   AND "user".id = project.owner_id
+                   AND project.owner_id = auditlog.user_id
+                   AND auditlog.project_id = project.id
+                   AND auditlog.attribute = 'published'
+                   GROUP BY auditlog.id, "user".name, "user".email_addr, project.id;''')
         db.session.execute(sql)
         db.session.commit()
         return "Materialized view created"
@@ -106,14 +130,14 @@ def update_projects_week():
         return _refresh_materialized_view('dashboard_week_project_update')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_update AS
-                   SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                   SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
                    project.id, short_name, project.name,
-                   owner_id, "user".name as u_name, "user".email_addr
+                   owner_id, "user".name AS u_name, "user".email_addr
                    FROM project, "user"
                    WHERE TO_DATE(project.updated,
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
                                 ('1 week')::INTERVAL
-                   AND "user".id=project.owner_id
+                   AND "user".id = project.owner_id
                    GROUP BY project.id, "user".name, "user".email_addr;''')
         db.session.execute(sql)
         db.session.commit()

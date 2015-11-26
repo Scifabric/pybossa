@@ -92,7 +92,7 @@ def _pct_status(n_task_runs, n_answers):
 def n_tasks(project_id):
     """Return number of tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
-                  WHERE task.project_id=:project_id''')
+                  WHERE task.project_id=:project_id;''')
     results = session.execute(sql, dict(project_id=project_id))
     n_tasks = 0
     for row in results:
@@ -104,7 +104,8 @@ def n_tasks(project_id):
 def n_completed_tasks(project_id):
     """Return number of completed tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
-                WHERE task.project_id=:project_id AND task.state=\'completed\';''')
+                WHERE task.project_id=:project_id AND task.state=\'completed\';
+                ''')
 
     results = session.execute(sql, dict(project_id=project_id))
     n_completed_tasks = 0
@@ -203,6 +204,20 @@ def last_activity(project_id):
             return None
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def average_contribution_time(project_id):
+    sql = text('''SELECT
+        AVG(to_timestamp(finish_time, 'YYYY-MM-DD-THH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD-THH24-MI-SS.US')) AS average_time
+        FROM task_run
+        WHERE project_id=:project_id;''')
+
+    results = session.execute(sql, dict(project_id=project_id)).fetchall()
+    for row in results:
+        average_time = row.average_time
+    return average_time or 0
+
+
 # This function does not change too much, so cache it for a longer time
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_featured_projects")
@@ -220,13 +235,14 @@ def _n_featured():
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_all_featured(category=None):
     """Return a list of featured projects with a pagination."""
-    sql = text('''SELECT project.id, project.name, project.short_name, project.info,
+    sql = text(
+        '''SELECT project.id, project.name, project.short_name, project.info,
                project.created, project.updated, project.description,
                "user".fullname AS owner
-               FROM project, "user"
-               WHERE project.featured=true
-               AND "user".id=project.owner_id
-               GROUP BY project.id, "user".id;''')
+           FROM project, "user"
+           WHERE project.featured=true
+           AND "user".id=project.owner_id
+           GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
     projects = []
@@ -279,11 +295,13 @@ def _n_draft():
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_all_draft(category=None):
     """Return list of all draft projects."""
-    sql = text('''SELECT project.id, project.name, project.short_name, project.created,
-               project.description, project.info, project.updated, "user".fullname as owner
-               FROM "user", project
-               WHERE project.owner_id="user".id
-               AND project.published=false;''')
+    sql = text(
+        '''SELECT project.id, project.name, project.short_name, project.created,
+            project.description, project.info, project.updated,
+            "user".fullname AS owner
+           FROM "user", project
+           WHERE project.owner_id="user".id
+           AND project.published=false;''')
 
     results = session.execute(sql)
     projects = []
@@ -301,6 +319,7 @@ def get_all_draft(category=None):
                        info=row.info)
         projects.append(project)
     return projects
+
 
 def get_draft(category=None, page=1, per_page=5):
     """Return a list of draft project with a pagination."""
@@ -338,17 +357,18 @@ def n_count(category):
 def get_all(category):
     """Return a list of published projects for a given category.
     """
-    sql = text('''SELECT project.id, project.name, project.short_name,
-               project.description, project.info, project.created, project.updated,
-               project.category_id, project.featured, "user".fullname AS owner
-               FROM "user", project
-               LEFT OUTER JOIN category ON project.category_id=category.id
-               WHERE
-               category.short_name=:category
-               AND "user".id=project.owner_id
-               AND project.published=true
-               AND (project.info->>'passwd_hash') IS NULL
-               GROUP BY project.id, "user".id ORDER BY project.name;''')
+    sql = text(
+        '''SELECT project.id, project.name, project.short_name,
+           project.description, project.info, project.created, project.updated,
+           project.category_id, project.featured, "user".fullname AS owner
+           FROM "user", project
+           LEFT OUTER JOIN category ON project.category_id=category.id
+           WHERE
+           category.short_name=:category
+           AND "user".id=project.owner_id
+           AND project.published=true
+           AND (project.info->>'passwd_hash') IS NULL
+           GROUP BY project.id, "user".id ORDER BY project.name;''')
 
     results = session.execute(sql, dict(category=category))
     projects = []
@@ -418,9 +438,11 @@ def delete_n_tasks(project_id):
     """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, project_id)
 
+
 def delete_n_results(project_id):
     """Reset n_results value in cache"""
     delete_memoized(n_results, project_id)
+
 
 def delete_n_completed_tasks(project_id):
     """Reset n_completed_tasks value in cache"""

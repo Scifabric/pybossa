@@ -1184,13 +1184,14 @@ def show_stats(short_name):
         project.id,
         current_app.config['GEO'],
         period='2 week')
-    tmp_total = (users_stats['n_anon'] + users_stats['n_auth'])
-    if tmp_total > 0:
-        anon_pct_taskruns = int((users_stats['n_anon'] * 100) / tmp_total)
+    total_contribs = (users_stats['n_anon'] + users_stats['n_auth'])
+    if total_contribs > 0:
+        anon_pct_taskruns = int((users_stats['n_anon'] * 100) / total_contribs)
         auth_pct_taskruns = 100 - anon_pct_taskruns
     else:
         anon_pct_taskruns = 0
         auth_pct_taskruns = 0
+
     userStats = dict(
         geo=current_app.config['GEO'],
         anonymous=dict(
@@ -1204,23 +1205,29 @@ def show_stats(short_name):
             pct_taskruns=auth_pct_taskruns,
             top5=users_stats['auth']['top5']))
 
-    tmp = dict(userStats=users_stats['users'],
-               userAnonStats=users_stats['anon'],
-               userAuthStats=users_stats['auth'],
-               dayStats=dates_stats,
-               hourStats=hours_stats)
+    projectStats = dict(
+        userStats=users_stats['users'],
+        userAnonStats=users_stats['anon'],
+        userAuthStats=users_stats['auth'],
+        dayStats=dates_stats,
+        hourStats=hours_stats)
 
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return render_template('/projects/stats.html',
-                           title=title,
-                           appStats=json.dumps(tmp),
-                           userStats=userStats,
-                           project=project,
-                           owner=owner,
-                           n_tasks=n_tasks,
-                           overall_progress=overall_progress,
-                           n_volunteers=n_volunteers,
-                           n_completed_tasks=n_completed_tasks)
+    project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    contrib_time = cached_projects.average_contribution_time(project.id)
+    formatted_contrib_time = round(contrib_time.total_seconds(), 2)
+
+    return render_template(
+        '/projects/stats.html',
+        title=title,
+        projectStats=json.dumps(projectStats),
+        userStats=userStats,
+        project=project_dict,
+        owner=owner,
+        n_tasks=n_tasks,
+        overall_progress=overall_progress,
+        n_volunteers=n_volunteers,
+        n_completed_tasks=n_completed_tasks,
+        avg_contrib_time=formatted_contrib_time)
 
 
 @blueprint.route('/<short_name>/tasks/settings')
