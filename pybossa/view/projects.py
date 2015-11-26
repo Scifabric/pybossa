@@ -1213,7 +1213,9 @@ def show_stats(short_name):
         hourStats=hours_stats)
 
     project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    contrib_time = cached_projects.average_contribution_time(project.id).total_seconds()
+    contrib_time = cached_projects.average_contribution_time(project.id)
+    formatted_contrib_time = round(contrib_time.total_seconds(), 2)
+
     return render_template(
         '/projects/stats.html',
         title=title,
@@ -1225,7 +1227,7 @@ def show_stats(short_name):
         overall_progress=overall_progress,
         n_volunteers=n_volunteers,
         n_completed_tasks=n_completed_tasks,
-        avg_contrib_time=contrib_time)
+        avg_contrib_time=formatted_contrib_time)
 
 
 @blueprint.route('/<short_name>/tasks/settings')
