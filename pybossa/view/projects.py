@@ -971,62 +971,6 @@ def export_to(short_name):
                                n_completed_tasks=n_completed_tasks,
                                overall_progress=overall_progress)
 
-    def gen_json(table):
-        n = getattr(task_repo, 'count_%ss_with' % table)(project_id=project.id)
-        sep = ", "
-        yield "["
-        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id, yielded=True), 1):
-            item = json.dumps(tr.dictize())
-            if (i == n):
-                sep = ""
-            yield item + sep
-        yield "]"
-
-    def format_csv_properly(row, ty=None):
-        tmp = row.keys()
-        task_keys = []
-        for k in tmp:
-            k = "%s__%s" % (ty, k)
-            task_keys.append(k)
-        if (type(row['info']) == dict):
-            task_info_keys = []
-            tmp = row['info'].keys()
-            for k in tmp:
-                k = "%sinfo__%s" % (ty, k)
-                task_info_keys.append(k)
-        else:
-            task_info_keys = []
-
-        keys = sorted(task_keys + task_info_keys)
-        values = []
-        _prefix = "%sinfo" % ty
-        for k in keys:
-            prefix, k = k.split("__")
-            if prefix == _prefix:
-                if row['info'].get(k) is not None:
-                    values.append(row['info'][k])
-                else:
-                    values.append(None)
-            else:
-                if row.get(k) is not None:
-                    values.append(row[k])
-                else:
-                    values.append(None)
-
-        return values
-
-    def handle_task(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='task'))
-
-    def handle_task_run(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
-
-    def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id,
-                                                              yielded=True):
-            handle_row(writer, tr)
-        yield out.getvalue()
-
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
@@ -1097,33 +1041,11 @@ def export_to(short_name):
             return respond()
 
     def respond_csv(ty):
-        # Export Task(/Runs) to CSV
-        types = {
-            "task": (
-                Task, handle_task,
-                (lambda x: True),
-                gettext(
-                    "Oops, the project does not have tasks to \
-                    export, if you are the owner add some tasks")),
-            "task_run": (
-                TaskRun, handle_task_run,
-                (lambda x: True),
-                gettext(
-                    "Oops, there are no Task Runs yet to export, invite \
-                     some users to participate"))}
-        try:
-            table, handle_row, test, msg = types[ty]
-        except KeyError:
+        if ty not in ('task', 'task_run'):
             return abort(404)
 
-        # TODO: change check for existence below
-        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=project.id)
-        if t is not None:
-            res = csv_exporter.response_zip(project, ty)
-            return res
-        else:
-            flash(msg, 'info')
-            return respond()
+        res = csv_exporter.response_zip(project, ty)
+        return res
 
     export_formats = ["json", "csv"]
     if current_user.is_authenticated():
