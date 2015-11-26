@@ -1058,17 +1058,8 @@ def export_to(short_name):
         if len(request.args) >= 1:
             abort(404)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('/projects/export.html',
-                               title=title,
-                               loading_text=loading_text,
-                               ckan_name=current_app.config.get('CKAN_NAME'),
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress)
+        return respond()
+
     if fmt not in export_formats:
         abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
