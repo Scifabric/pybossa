@@ -76,8 +76,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_02_stats(self, mock1, mock2):
+    def test_02_stats(self, mock1):
         """Test WEB leaderboard or stats page works"""
         res = self.register()
         res = self.signin()
