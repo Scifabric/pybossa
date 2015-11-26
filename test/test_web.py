@@ -56,7 +56,6 @@ class TestWeb(web.Helper):
     def clear_temp_container(self, user_id):
         """Helper function which deletes all files in temp folder of a given owner_id"""
         temp_folder = os.path.join('/tmp', 'user_%d' % user_id)
-        print temp_folder
         if os.path.isdir(temp_folder):
             shutil.rmtree(temp_folder)
 
