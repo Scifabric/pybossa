@@ -86,9 +86,9 @@ def draft_projects_week():
         return _refresh_materialized_view('dashboard_week_project_draft')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_draft AS
-                   SELECT TO_DATE(project.created, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                   SELECT TO_DATE(project.created, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
                    project.id, short_name, project.name,
-                   owner_id, "user".name as u_name, "user".email_addr
+                   owner_id, "user".name AS u_name, "user".email_addr
                    FROM project, "user"
                    WHERE TO_DATE(project.created,
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
@@ -107,9 +107,9 @@ def published_projects_week():
         return _refresh_materialized_view('dashboard_week_project_published')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_published AS
-                   SELECT TO_DATE(auditlog.created, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                   SELECT TO_DATE(auditlog.created, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
                    project.id, project.short_name, project.name,
-                   owner_id, "user".name as u_name, "user".email_addr
+                   owner_id, "user".name AS u_name, "user".email_addr
                    FROM auditlog, project, "user"
                    WHERE TO_DATE(auditlog.created,
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
@@ -130,9 +130,9 @@ def update_projects_week():
         return _refresh_materialized_view('dashboard_week_project_update')
     else:
         sql = text('''CREATE MATERIALIZED VIEW dashboard_week_project_update AS
-                   SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') as day,
+                   SELECT TO_DATE(project.updated, 'YYYY-MM-DD\THH24:MI:SS.US') AS day,
                    project.id, short_name, project.name,
-                   owner_id, "user".name as u_name, "user".email_addr
+                   owner_id, "user".name AS u_name, "user".email_addr
                    FROM project, "user"
                    WHERE TO_DATE(project.updated,
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -

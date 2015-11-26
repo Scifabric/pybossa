@@ -77,8 +77,9 @@ def format_returning_users():
             label = "%s day" % i
         else:
             label = "%s days" % i
-        results = _select_from_materialized_view('dashboard_week_returning_users',
-                                                 n_days=i)
+        results = _select_from_materialized_view(
+            'dashboard_week_returning_users',
+            n_days=i)
         formatted_data = _graph_data_from_query(results, 'count', label)
         formatted_users['labels'] += formatted_data['labels']
         formatted_users['series'][0] += formatted_data['series'][0]
