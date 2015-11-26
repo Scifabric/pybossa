@@ -125,6 +125,36 @@ class TestWeb(web.Helper):
             res = self.app.get(url)
             assert "GeoLite" in res.data, res.data
 
+    def test_contribution_time_shown_for_admins_for_every_project(self):
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        owner = UserFactory.create(pro=False)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+        self.signin(email=admin.email_addr, password='1234')
+
+        assert 'Average contribution time' in self.app.get(url).data
+
+    def test_contribution_time_shown_in_pro_owned_projects(self):
+        pro_owner = UserFactory.create(pro=True)
+        pro_owned_project = ProjectFactory.create(owner=pro_owner)
+        task = TaskFactory.create(project=pro_owned_project)
+        TaskRunFactory.create(task=task)
+        pro_url = '/project/%s/stats' % pro_owned_project.short_name
+
+        assert 'Average contribution time' in self.app.get(pro_url).data
+
+    def test_contribution_time_not_shown_in_regular_user_owned_projects(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+
+        assert 'Average contribution time' not in self.app.get(url).data
+
     @with_context
     def test_03_account_index(self):
         """Test WEB account index works."""
