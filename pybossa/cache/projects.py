@@ -205,7 +205,6 @@ def last_activity(project_id):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def average_contribution_time(project_id):
-    print 'me shamahte'
     sql = text('''SELECT
         AVG(to_timestamp(finish_time, 'YYYY-MM-DD-THH24-MI-SS.US') -
             to_timestamp(created, 'YYYY-MM-DD-THH24-MI-SS.US')) AS average_time
