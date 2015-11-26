@@ -39,7 +39,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
-from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
+from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
@@ -75,9 +75,18 @@ class TestWeb(web.Helper):
         assert "Search" in res.data, err_msg
 
     @with_context
+    def test_leaderboard(self):
+        """Test WEB leaderboard works"""
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert user.name in res.data, res.data
+
+    @with_context
     @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    def test_02_stats(self, mock1):
-        """Test WEB leaderboard or stats page works"""
+    def test_project_stats(self, mock1):
+        """Test WEB project stats page works"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
@@ -116,11 +125,6 @@ class TestWeb(web.Helper):
             url = '/project/%s/stats' % project.short_name
             res = self.app.get(url)
             assert "GeoLite" in res.data, res.data
-
-        res = self.app.get('/leaderboard', follow_redirects=True)
-        assert self.html_title("Community Leaderboard") in res.data, res
-        assert user.name in res.data, res.data
-
 
     @with_context
     def test_03_account_index(self):
