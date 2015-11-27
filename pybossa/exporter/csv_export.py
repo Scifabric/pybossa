@@ -20,14 +20,13 @@
 CSV Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
-from pybossa.exporter import Exporter
+from functools import partial
 import tempfile
+from pybossa.exporter import Exporter
 from pybossa.core import uploader, task_repo
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
-from flask.ext.babel import gettext
 from pybossa.util import UnicodeWriter
-import pybossa.model as model
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
@@ -79,7 +78,6 @@ class CsvExporter(Exporter):
         yield out.read()
 
     def _respond_csv(self, ty, id):
-        from functools import partial
         handle_row = partial(self._handle_row, ty=ty)
 
         out = tempfile.TemporaryFile()
