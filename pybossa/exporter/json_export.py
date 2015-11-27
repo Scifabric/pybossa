@@ -29,7 +29,7 @@ from werkzeug.utils import secure_filename
 
 class JsonExporter(Exporter):
 
-    def _gen_json(self, table, id):
+    def gen_json(self, table, id):
         n = getattr(task_repo, 'count_%ss_with' % table)(project_id=id)
         sep = ", "
         yield "["
@@ -40,9 +40,9 @@ class JsonExporter(Exporter):
             yield item + sep
         yield "]"
 
-    def _respond_json(self, ty, id):    # TODO: Refactor _respond_json out?
+    def _respond_json(self, ty, id):  # TODO: Refactor _respond_json out?
         # TODO: check ty here
-        return self._gen_json(ty, id)
+        return self.gen_json(ty, id)
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
