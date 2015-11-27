@@ -30,7 +30,6 @@ from pybossa.util import UnicodeWriter
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from flask import abort
 
 
 class CsvExporter(Exporter):
@@ -82,52 +81,37 @@ class CsvExporter(Exporter):
         yield out.read()
 
     def _respond_csv(self, ty, id):
-        try:
-            # Export Task(/Runs) to CSV
-            types = {
-                "task": (
-                    model.task.Task, self._handle_task,
-                    (lambda x: True),
-                    gettext(
-                        "Oops, the project does not have tasks to \
-                        export, if you are the owner add some tasks")),
-                "task_run": (
-                    model.task_run.TaskRun, self._handle_task_run,
-                    (lambda x: True),
-                    gettext(
-                        "Oops, there are no Task Runs yet to export, invite \
-                         some users to participate"))}
-            try:
-                table, handle_row, test, msg = types[ty]
-            except KeyError:
-                return abort(404)  # TODO!
+        # Export Task(/Runs) to CSV
+        types = {
+            "task": (
+                self._handle_task),
+            "task_run": (
+                self._handle_task_run)}
+        handle_row = types[ty]
 
-            out = tempfile.TemporaryFile()
-            writer = UnicodeWriter(out)
-            t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
-            if t is not None:
-                if test(t):
-                    tmp = t.dictize().keys()
-                    task_keys = []
-                    for k in tmp:
-                        k = "%s__%s" % (ty, k)
-                        task_keys.append(k)
-                    if (type(t.info) == dict):
-                        task_info_keys = []
-                        tmp = t.info.keys()
-                        for k in tmp:
-                            k = "%sinfo__%s" % (ty, k)
-                            task_info_keys.append(k)
-                    else:
-                        task_info_keys = []
-                    keys = task_keys + task_info_keys
-                    writer.writerow(sorted(keys))
-
-                return self._get_csv(out, writer, ty, handle_row, id)
+        out = tempfile.TemporaryFile()
+        writer = UnicodeWriter(out)
+        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
+        if t is not None:
+            tmp = t.dictize().keys()
+            task_keys = []
+            for k in tmp:
+                k = "%s__%s" % (ty, k)
+                task_keys.append(k)
+            if (type(t.info) == dict):
+                task_info_keys = []
+                tmp = t.info.keys()
+                for k in tmp:
+                    k = "%sinfo__%s" % (ty, k)
+                    task_info_keys.append(k)
             else:
-                pass  # TODO
-        except:  # pragma: no cover
-            raise
+                task_info_keys = []
+            keys = task_keys + task_info_keys
+            writer.writerow(sorted(keys))
+
+            return self._get_csv(out, writer, ty, handle_row, id)
+        else:
+            pass
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
@@ -149,7 +133,6 @@ class CsvExporter(Exporter):
                     container = "user_%d" % project.owner_id
                     _file = FileStorage(
                         filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
