@@ -111,7 +111,9 @@ class CsvExporter(Exporter):
 
             return self._get_csv(out, writer, ty, handle_row, id)
         else:
-            pass
+            def empty_csv(out):
+                yield out.read()
+            return empty_csv(out)
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
@@ -133,6 +135,7 @@ class CsvExporter(Exporter):
                     container = "user_%d" % project.owner_id
                     _file = FileStorage(
                         filename=self.download_name(project, ty), stream=zipped_datafile)
+                    uploader.upload_file(_file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:

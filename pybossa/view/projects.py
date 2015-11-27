@@ -977,6 +977,12 @@ def export_to(short_name):
         res = json_exporter.response_zip(project, ty)
         return res
 
+    def respond_csv(ty):
+        if ty not in ('task', 'task_run'):
+            return abort(404)
+        res = csv_exporter.response_zip(project, ty)
+        return res
+
     def create_ckan_datastore(ckan, table, package_id, records):
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
@@ -1040,17 +1046,6 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         finally:
-            return respond()
-
-    def respond_csv(ty):
-        if ty not in ('task', 'task_run'):
-            return abort(404)
-
-        try:
-            res = csv_exporter.response_zip(project, ty)
-            return res
-        except Exception as e:
-            flash('project does not have tasks', 'info')
             return respond()
 
     export_formats = ["json", "csv"]
