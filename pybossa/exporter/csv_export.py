@@ -20,7 +20,6 @@
 CSV Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
-from functools import partial
 import tempfile
 from pybossa.exporter import Exporter
 from pybossa.core import uploader, task_repo
@@ -33,7 +32,7 @@ from werkzeug.utils import secure_filename
 
 class CsvExporter(Exporter):
 
-    def _format_csv_properly(self, row, ty):
+    def _format_csv_row(self, row, ty):
         tmp = row.keys()
         task_keys = []
         for k in tmp:
@@ -68,18 +67,16 @@ class CsvExporter(Exporter):
 
     def _handle_row(self, writer, t, ty):
         normal_ty = filter(lambda char: char.isalpha(), ty)
-        writer.writerow(self._format_csv_properly(t.dictize(), ty=normal_ty))
+        writer.writerow(self._format_csv_row(t.dictize(), ty=normal_ty))
 
-    def _get_csv(self, out, writer, table, handle_row, id):
+    def _get_csv(self, out, writer, table, id):
         for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=id,
                                                               yielded=True):
-            handle_row(writer, tr)
+            self._handle_row(writer, tr, table)
         out.seek(0)
         yield out.read()
 
     def _respond_csv(self, ty, id):
-        handle_row = partial(self._handle_row, ty=ty)
-
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
@@ -100,7 +97,7 @@ class CsvExporter(Exporter):
             keys = task_keys + task_info_keys
             writer.writerow(sorted(keys))
 
-            return self._get_csv(out, writer, ty, handle_row, id)
+            return self._get_csv(out, writer, ty, id)
         else:
             def empty_csv(out):
                 yield out.read()
