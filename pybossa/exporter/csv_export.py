@@ -76,26 +76,30 @@ class CsvExporter(Exporter):
         out.seek(0)
         yield out.read()
 
+    def _format_headers(self, t, ty):
+        tmp = t.dictize().keys()
+        task_keys = []
+        for k in tmp:
+            k = "%s__%s" % (ty, k)
+            task_keys.append(k)
+        if (type(t.info) == dict):
+            task_info_keys = []
+            tmp = t.info.keys()
+            for k in tmp:
+                k = "%sinfo__%s" % (ty, k)
+                task_info_keys.append(k)
+        else:
+            task_info_keys = []
+        keys = task_keys + task_info_keys
+        return sorted(keys)
+
     def _respond_csv(self, ty, id):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
         if t is not None:
-            tmp = t.dictize().keys()
-            task_keys = []
-            for k in tmp:
-                k = "%s__%s" % (ty, k)
-                task_keys.append(k)
-            if (type(t.info) == dict):
-                task_info_keys = []
-                tmp = t.info.keys()
-                for k in tmp:
-                    k = "%sinfo__%s" % (ty, k)
-                    task_info_keys.append(k)
-            else:
-                task_info_keys = []
-            keys = task_keys + task_info_keys
-            writer.writerow(sorted(keys))
+            headers = self._format_headers(t, ty)
+            writer.writerow(headers)
 
             return self._get_csv(out, writer, ty, id)
         else:
