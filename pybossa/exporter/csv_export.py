@@ -142,14 +142,14 @@ class CsvExporter(Exporter):
                 csv_task_generator.close()  # delete temp csv file
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(
                         datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
-                    zip.close()
+                    _zip.close()
                     container = "user_%d" % project.owner_id
-                    file = FileStorage(
+                    _file = FileStorage(
                         filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(file, container=container)
+                    uploader.upload_file(_file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:

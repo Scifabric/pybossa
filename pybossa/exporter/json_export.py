@@ -55,12 +55,12 @@ class JsonExporter(Exporter):
                 datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
-                    zip.close()
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
+                    _zip.close()
                     container = "user_%d" % project.owner_id
-                    file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(file, container=container)
+                    _file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
+                    uploader.upload_file(_file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
