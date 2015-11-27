@@ -1044,8 +1044,12 @@ def export_to(short_name):
         if ty not in ('task', 'task_run'):
             return abort(404)
 
-        res = csv_exporter.response_zip(project, ty)
-        return res
+        try:
+            res = csv_exporter.response_zip(project, ty)
+            return res
+        except Exception as e:
+            flash('project does not have tasks', 'info')
+            return respond()
 
     export_formats = ["json", "csv"]
     if current_user.is_authenticated():
