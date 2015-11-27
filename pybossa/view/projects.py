@@ -977,13 +977,13 @@ def export_to(short_name):
         res = json_exporter.response_zip(project, ty)
         return res
 
-    def create_ckan_datastore(ckan, table, package_id):
+    def create_ckan_datastore(ckan, table, package_id, records):
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
         ckan.datastore_create(name=table,
                               resource_id=new_resource['result']['id'])
         ckan.datastore_upsert(name=table,
-                              records=gen_json(table),
+                              records=records,
                               resource_id=new_resource['result']['id'])
 
     def respond_ckan(ty):
@@ -996,6 +996,7 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=project.short_name)
+            records = json_exporter.gen_json(ty, project.id)
             if e:
                 raise e
             if package:
@@ -1012,17 +1013,17 @@ def export_to(short_name):
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
                         ckan.datastore_create(name=ty, resource_id=r['id'])
                         ckan.datastore_upsert(name=ty,
-                                              records=gen_json(ty),
+                                              records=records,
                                               resource_id=r['id'])
                         resource_found = True
                         break
                 if not resource_found:
-                    create_ckan_datastore(ckan, ty, package['id'])
+                    create_ckan_datastore(ckan, ty, package['id'], records)
             else:
                 owner = user_repo.get(project.owner_id)
                 package = ckan.package_create(project=project, user=owner,
                                               url=project_url)
-                create_ckan_datastore(ckan, ty, package['id'])
+                create_ckan_datastore(ckan, ty, package['id'], records)
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1030,6 +1031,7 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
+            print inst
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))

@@ -2474,7 +2474,6 @@ class TestWeb(web.Helper):
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
-        #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
             res = self.app.get(uri, follow_redirects=True)
