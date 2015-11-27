@@ -34,7 +34,7 @@ from werkzeug.utils import secure_filename
 
 class CsvExporter(Exporter):
 
-    def _format_csv_properly(self, row, ty=None):
+    def _format_csv_properly(self, row, ty):
         tmp = row.keys()
         task_keys = []
         for k in tmp:
@@ -67,11 +67,9 @@ class CsvExporter(Exporter):
 
         return values
 
-    def _handle_task(self, writer, t):
-        writer.writerow(self._format_csv_properly(t.dictize(), ty='task'))
-
-    def _handle_task_run(self, writer, t):
-        writer.writerow(self._format_csv_properly(t.dictize(), ty='taskrun'))
+    def _handle_row(self, writer, t, ty):
+        normal_ty = filter(lambda char: char.isalpha(), ty)
+        writer.writerow(self._format_csv_properly(t.dictize(), ty=normal_ty))
 
     def _get_csv(self, out, writer, table, handle_row, id):
         for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=id,
@@ -81,13 +79,8 @@ class CsvExporter(Exporter):
         yield out.read()
 
     def _respond_csv(self, ty, id):
-        # Export Task(/Runs) to CSV
-        types = {
-            "task": (
-                self._handle_task),
-            "task_run": (
-                self._handle_task_run)}
-        handle_row = types[ty]
+        from functools import partial
+        handle_row = partial(self._handle_row, ty=ty)
 
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
