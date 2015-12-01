@@ -971,75 +971,25 @@ def export_to(short_name):
                                n_completed_tasks=n_completed_tasks,
                                overall_progress=overall_progress)
 
-    def gen_json(table):
-        n = getattr(task_repo, 'count_%ss_with' % table)(project_id=project.id)
-        sep = ", "
-        yield "["
-        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id, yielded=True), 1):
-            item = json.dumps(tr.dictize())
-            if (i == n):
-                sep = ""
-            yield item + sep
-        yield "]"
-
-    def format_csv_properly(row, ty=None):
-        tmp = row.keys()
-        task_keys = []
-        for k in tmp:
-            k = "%s__%s" % (ty, k)
-            task_keys.append(k)
-        if (type(row['info']) == dict):
-            task_info_keys = []
-            tmp = row['info'].keys()
-            for k in tmp:
-                k = "%sinfo__%s" % (ty, k)
-                task_info_keys.append(k)
-        else:
-            task_info_keys = []
-
-        keys = sorted(task_keys + task_info_keys)
-        values = []
-        _prefix = "%sinfo" % ty
-        for k in keys:
-            prefix, k = k.split("__")
-            if prefix == _prefix:
-                if row['info'].get(k) is not None:
-                    values.append(row['info'][k])
-                else:
-                    values.append(None)
-            else:
-                if row.get(k) is not None:
-                    values.append(row[k])
-                else:
-                    values.append(None)
-
-        return values
-
-    def handle_task(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='task'))
-
-    def handle_task_run(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
-
-    def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id,
-                                                              yielded=True):
-            handle_row(writer, tr)
-        yield out.getvalue()
-
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
         res = json_exporter.response_zip(project, ty)
         return res
 
-    def create_ckan_datastore(ckan, table, package_id):
+    def respond_csv(ty):
+        if ty not in ('task', 'task_run'):
+            return abort(404)
+        res = csv_exporter.response_zip(project, ty)
+        return res
+
+    def create_ckan_datastore(ckan, table, package_id, records):
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
         ckan.datastore_create(name=table,
                               resource_id=new_resource['result']['id'])
         ckan.datastore_upsert(name=table,
-                              records=gen_json(table),
+                              records=records,
                               resource_id=new_resource['result']['id'])
 
     def respond_ckan(ty):
@@ -1052,6 +1002,7 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=project.short_name)
+            records = json_exporter.gen_json(ty, project.id)
             if e:
                 raise e
             if package:
@@ -1068,17 +1019,17 @@ def export_to(short_name):
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
                         ckan.datastore_create(name=ty, resource_id=r['id'])
                         ckan.datastore_upsert(name=ty,
-                                              records=gen_json(ty),
+                                              records=records,
                                               resource_id=r['id'])
                         resource_found = True
                         break
                 if not resource_found:
-                    create_ckan_datastore(ckan, ty, package['id'])
+                    create_ckan_datastore(ckan, ty, package['id'], records)
             else:
                 owner = user_repo.get(project.owner_id)
                 package = ckan.package_create(project=project, user=owner,
                                               url=project_url)
-                create_ckan_datastore(ckan, ty, package['id'])
+                create_ckan_datastore(ckan, ty, package['id'], records)
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1086,6 +1037,7 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
+            print inst
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
@@ -1094,35 +1046,6 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         finally:
-            return respond()
-
-    def respond_csv(ty):
-        # Export Task(/Runs) to CSV
-        types = {
-            "task": (
-                Task, handle_task,
-                (lambda x: True),
-                gettext(
-                    "Oops, the project does not have tasks to \
-                    export, if you are the owner add some tasks")),
-            "task_run": (
-                TaskRun, handle_task_run,
-                (lambda x: True),
-                gettext(
-                    "Oops, there are no Task Runs yet to export, invite \
-                     some users to participate"))}
-        try:
-            table, handle_row, test, msg = types[ty]
-        except KeyError:
-            return abort(404)
-
-        # TODO: change check for existence below
-        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=project.id)
-        if t is not None:
-            res = csv_exporter.response_zip(project, ty)
-            return res
-        else:
-            flash(msg, 'info')
             return respond()
 
     export_formats = ["json", "csv"]
@@ -1136,17 +1059,8 @@ def export_to(short_name):
         if len(request.args) >= 1:
             abort(404)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('/projects/export.html',
-                               title=title,
-                               loading_text=loading_text,
-                               ckan_name=current_app.config.get('CKAN_NAME'),
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress)
+        return respond()
+
     if fmt not in export_formats:
         abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)

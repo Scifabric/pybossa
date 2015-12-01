@@ -2132,7 +2132,7 @@ class TestWeb(web.Helper):
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
-    def test_51_export_taskruns_json(self):
+    def test_export_taskruns_json(self):
         """Test WEB export Task Runs to JSON works"""
         Fixtures.create()
         # First test for a non-existant project
@@ -2172,7 +2172,20 @@ class TestWeb(web.Helper):
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
-    def test_52_export_task_csv(self):
+    def test_export_task_json_no_tasks_returns_file_with_empty_list(self):
+        """Test WEB export Tasks to JSON returns empty list if no tasks in project"""
+        project = ProjectFactory.create(short_name='no_tasks_here')
+        uri = "/project/%s/tasks/export?type=task&format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        extracted_filename = zip.namelist()[0]
+
+        exported_task_runs = json.loads(zip.read(extracted_filename))
+
+        assert exported_task_runs == [], exported_task_runs
+
+    @with_context
+    def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
         #Fixtures.create()
         # First test for a non-existant project
@@ -2254,13 +2267,22 @@ class TestWeb(web.Helper):
         content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
-        # With an empty project
-        project = ProjectFactory.create()
-        # Now get the tasks in CSV format
+    @with_context
+    def test_export_task_csv_no_tasks_returns_empty_file(self):
+        """Test WEB export Tasks to CSV returns empty file if no tasks in project"""
+        project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        msg = "project does not have tasks"
-        assert msg in res.data, msg
+        zip = zipfile.ZipFile(StringIO(res.data))
+        extracted_filename = zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
+        csvreader = unicode_csv_reader(csv_content)
+        is_empty = True
+        for line in csvreader:
+            is_empty = False, line
+
+        assert is_empty
 
     @with_context
     def test_53_export_task_runs_csv(self):
@@ -2474,7 +2496,6 @@ class TestWeb(web.Helper):
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
-        #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
             res = self.app.get(uri, follow_redirects=True)
