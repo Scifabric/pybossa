@@ -28,6 +28,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
+from pybossa.news import get_news
 
 
 def create_app(run_as_server=True):
@@ -428,6 +429,11 @@ def setup_hooks(app):
             if current_user.email_addr == current_user.name:
                 flash(gettext("Please update your e-mail address in your"
                       " profile page, right now it is empty!"), 'error')
+        if (current_user and current_user.is_authenticated()
+            and current_user.admin):
+            news = get_news()
+        else:
+            news = None
 
         # Cookies warning
         cookie_name = app.config['BRAND'] + "_accept_cookies"
@@ -471,7 +477,8 @@ def setup_hooks(app):
             show_cookies_warning=show_cookies_warning,
             contact_email=contact_email,
             contact_twitter=contact_twitter,
-            upload_method=app.config['UPLOAD_METHOD'])
+            upload_method=app.config['UPLOAD_METHOD'],
+            news=news)
 
 
 def setup_jinja2_filters(app):
