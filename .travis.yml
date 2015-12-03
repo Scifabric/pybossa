@@ -27,7 +27,10 @@ before_script:
 - pip --version
 - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
 - psql -c "create database pybossa_test owner rtester encoding 'UTF-8' lc_collate 'en_US.UTF-8' lc_ctype 'en_US.UTF-8' template template0;" -U postgres
-script: nosetests test/
+script: 
+    - alembic -c alembictest.ini stamp head
+    - alembic -c alembictest.ini upgrade head
+    - nosetests test/
 notifications:
   hipchat: 11e2176ebb4b7372ee0d1fbc8abf4d@Github
   slack:

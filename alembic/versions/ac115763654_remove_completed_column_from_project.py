@@ -12,7 +12,6 @@ down_revision = 'aee7291c81'
 
 from alembic import op
 import sqlalchemy as sa
-from pybossa.cache.projects import overall_progress
 
 
 def upgrade():
