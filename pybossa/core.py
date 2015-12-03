@@ -431,6 +431,11 @@ def setup_hooks(app):
                       " profile page, right now it is empty!"), 'error')
         if (current_user and current_user.is_authenticated()
             and current_user.admin):
+            key = 'notify:admin:%s' % current_user.id
+            if sentinel.slave.get(key):
+                notify_admin = True
+            else:
+                notify_admin = False
             news = get_news()
         else:
             news = None
@@ -478,7 +483,8 @@ def setup_hooks(app):
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'],
-            news=news)
+            news=news,
+            notify_admin=notify_admin)
 
 
 def setup_jinja2_filters(app):
