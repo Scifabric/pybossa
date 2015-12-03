@@ -16,8 +16,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-import json
-from time import time
 from pybossa.core import sentinel
 try:
     import cPickle as pickle
