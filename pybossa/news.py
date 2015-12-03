@@ -26,6 +26,7 @@ except ImportError:  # pragma: no cover
 
 
 FEED_KEY = 'scifabricnews'
+NOTIFY_ADMIN = 'notify:admin:'
 
 def get_news(score=None):
     """Return news list."""
@@ -50,5 +51,5 @@ def notify_news_admins():
     admins = user_repo.filter_by(admin=True)
 
     for admin in admins:
-        key = 'notify:admin:%s' % admin.id
+        key = NOTIFY_ADMIN + str(admin.id)
         sentinel.master.set(key, 1)
