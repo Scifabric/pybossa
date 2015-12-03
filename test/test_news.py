@@ -28,6 +28,7 @@ myset = 'scifabricnews'
 
 class TestNews(Test):
 
+
     news = dict(updated='2015-01-01')
 
     @with_context
@@ -61,3 +62,14 @@ class TestNews(Test):
         value = sentinel.slave.get(key)
         err_msg = "Key should exist"
         assert value == str(1), err_msg
+
+    @with_context
+    def test_notify_news_admins(self):
+        sentinel.master.flushall()
+        user = UserFactory.create(admin=False)
+        user2 = UserFactory.create(admin=False)
+        notify_news_admins()
+        key = "notify:admin:%s" % user2.id
+        value = sentinel.slave.get(key)
+        err_msg = "Key should not exist"
+        assert value is None, err_msg
