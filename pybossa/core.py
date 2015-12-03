@@ -28,7 +28,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
-import pybossa.news
+from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 
 
@@ -433,7 +433,7 @@ def setup_hooks(app):
                       " profile page, right now it is empty!"), 'error')
         if (current_user and current_user.is_authenticated()
             and current_user.admin):
-            key = news.FEED_KEY + str(current_user.id)
+            key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
                 notify_admin = True
             news = get_news()
