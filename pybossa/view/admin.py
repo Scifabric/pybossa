@@ -44,7 +44,7 @@ import json
 from StringIO import StringIO
 
 from pybossa.forms.admin_view_forms import *
-from pybossa.news import FEED_KEY as NEWS_FEED_KEY
+from pybossa.news import NOTIFY_ADMIN
 
 
 blueprint = Blueprint('admin', __name__)
@@ -64,7 +64,7 @@ def format_error(msg, status_code):
 @admin_required
 def index():
     """List admin actions."""
-    key = NEWS_FEED_KEY + str(current_user.id)
+    key = NOTIFY_ADMIN + str(current_user.id)
     sentinel.master.delete(key)
     return render_template('/admin/index.html')
 
