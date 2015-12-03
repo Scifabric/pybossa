@@ -634,7 +634,6 @@ def news():
     notify = False
     if current_app.config.get('NEWS_URL'):
         urls += current_app.config.get('NEWS_URL')
-    print urls
     for url in urls:
         d = feedparser.parse(url)
         tmp = get_news(score)
