@@ -130,6 +130,8 @@ def get_default_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='low')
     yield dict(name=warm_cache, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='super')
+    yield dict(name=news, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
 
 
 def get_export_task_jobs(queue):
@@ -614,3 +616,30 @@ def send_weekly_stats_project(project_id):
                timeout=(10 * MINUTE),
                queue='high')
     enqueue_job(job)
+
+
+def news():
+    """Get news from different ATOM RSS feeds."""
+    import feedparser
+    from pybossa.core import sentinel
+    from pybossa.news import get_news, notify_news_admins, FEED_KEY
+    try:
+        import cPickle as pickle
+    except ImportError:  # pragma: no cover
+        import pickle
+    urls = ['https://github.com/pybossa/pybossa/releases.atom',
+            'http://scifabric.com/blog/all.atom.xml']
+    score = 0
+    notify = False
+    if current_app.config.get('NEWS_URL'):
+        urls += current_app.config.get('NEWS_URL')
+    for url in urls:
+        d = feedparser.parse(url)
+        tmp = get_news(score)
+        if (len(tmp) == 0) or (tmp[0]['updated'] != d.entries[0]['updated']):
+            sentinel.master.zadd(FEED_KEY, float(score),
+                                 pickle.dumps(d.entries[0]))
+            notify = True
+        score += 1
+    if notify:
+        notify_news_admins()

@@ -772,3 +772,12 @@ trivial, as there are several different scenarios, libraries and options, so ins
 recommending one solution, we invite you to read the `uwsgi documentation about it <http://uwsgi-docs.readthedocs.org/en/latest/Async.html>`_, so you can take a decission based on your
 own infrastructure and preferences.
 
+Latest news from PyBossa
+========================
+
+Since version v1.2.1 PyBossa gets the latest news of its new releases, as well
+as anything related to what it's produced by SciFabric regarding the crowdsourcing
+world. You can add more items if you want, by just adding to your settings_local.py
+file new ATOM URLs::
+
+    NEWS_URL = ['http:/http:///atomurl1', 'http://atomurl2', ...]

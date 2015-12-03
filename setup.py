@@ -45,11 +45,12 @@ requirements = [
     "flask-plugins",
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
+    "feedparser",
 ]
 
 setup(
     name = 'pybossa',
-    version = '1.2.0',
+    version = '1.2.1',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
