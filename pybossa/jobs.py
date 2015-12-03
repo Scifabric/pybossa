@@ -119,18 +119,17 @@ def get_periodic_jobs(queue):
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
             weekly_update_jobs]
-    _all = [jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
 def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
-    #yield dict(name=warm_up_stats, args=[], kwargs={},
-    #           timeout=(10 * MINUTE), queue='high')
-    #yield dict(name=warn_old_project_owners, args=[], kwargs={},
-    #           timeout=(10 * MINUTE), queue='low')
-    #yield dict(name=warm_cache, args=[], kwargs={},
-    #           timeout=(10 * MINUTE), queue='super')
+    yield dict(name=warm_up_stats, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='high')
+    yield dict(name=warn_old_project_owners, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=warm_cache, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='super')
     yield dict(name=news, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
 
