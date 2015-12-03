@@ -1,0 +1,8 @@
+================
+Changelog v1.2.1
+================
+
+ * Get latest news about PyBossa and SciFabric for admins. The admin page will
+   feature the latest releases of PyBossa and news about SciFabric. You can customize
+   more news sites if you want.
+
