@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test, with_context
-from pybossa.news import get_news
+from pybossa.news import get_news, notify_news_admins
 from pybossa.core import sentinel
+from factories import UserFactory
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover
@@ -51,3 +52,12 @@ class TestNews(Test):
         sentinel.master.zadd(myset, 0, pickle.dumps(self.news))
         news = get_news(score=1)
         assert len(news) == 0, len(news)
+
+    @with_context
+    def test_notify_news_admins(self):
+        user = UserFactory.create(admin=True)
+        notify_news_admins()
+        key = "notify:admin:%s" % user.id
+        value = sentinel.slave.get(key)
+        err_msg = "Key should exist"
+        assert value == str(1), err_msg
