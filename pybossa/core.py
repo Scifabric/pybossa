@@ -425,6 +425,7 @@ def setup_hooks(app):
 
     @app.context_processor
     def _global_template_context():
+        notify_admin = False
         if current_user and current_user.is_authenticated():
             if current_user.email_addr == current_user.name:
                 flash(gettext("Please update your e-mail address in your"
@@ -434,8 +435,6 @@ def setup_hooks(app):
             key = 'notify:admin:%s' % current_user.id
             if sentinel.slave.get(key):
                 notify_admin = True
-            else:
-                notify_admin = False
             news = get_news()
         else:
             news = None
