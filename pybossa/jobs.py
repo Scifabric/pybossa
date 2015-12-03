@@ -623,7 +623,7 @@ def news():
     """Get news from different ATOM RSS feeds."""
     import feedparser
     from pybossa.core import sentinel
-    from pybossa.news import get_news
+    from pybossa.news import get_news, notify_news_admins
     try:
         import cPickle as pickle
     except ImportError:  # pragma: no cover
@@ -632,6 +632,7 @@ def news():
     urls = ['https://github.com/pybossa/pybossa/releases.atom',
             'http://scifabric.com/blog/all.atom.xml']
     score = 0
+    notify = False
     if current_app.config.get('NEWS_URL'):
         urls += current_app.config.get('NEWS_URL')
     for url in urls:
@@ -640,4 +641,7 @@ def news():
         if (len(tmp) == 0) or (tmp[0]['updated'] != d.entries[0]['updated']):
             sentinel.master.zadd(myset, float(score),
                                  pickle.dumps(d.entries[0]))
+            notify = True
         score += 1
+    if notify:
+        notify_news_admins()

@@ -63,6 +63,8 @@ def format_error(msg, status_code):
 @admin_required
 def index():
     """List admin actions."""
+    key = 'notify:admin:%s' % current_user.id
+    sentinel.master.delete(key)
     return render_template('/admin/index.html')
 
 
