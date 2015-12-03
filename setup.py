@@ -45,6 +45,7 @@ requirements = [
     "flask-plugins",
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
+    "feedparser",
 ]
 
 setup(
