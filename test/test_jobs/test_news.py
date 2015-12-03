@@ -17,14 +17,13 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+from pybossa.core import sentinel
 from pybossa.jobs import news
 from pybossa.news import get_news
 from default import Test, with_context, FakeResponse, db
-from factories import ProjectFactory
-from factories import TaskFactory
-from factories import TaskRunFactory
+from factories import UserFactory
 from redis import StrictRedis
-from mock import patch, MagicMock
+from mock import patch, MagicMock, call
 
 
 class TestNews(Test):
@@ -36,19 +35,30 @@ class TestNews(Test):
         super(TestNews, self).setUp()
         self.connection = StrictRedis()
         self.connection.flushall()
+        self.user = UserFactory.create(admin=True)
+
+    def get_notify_users(self):
+        key = "notify:admin:%s" % self.user.id
+        return sentinel.master.get(key)
+
+    def delete_notify(self):
+        key = "notify:admin:%s" % self.user.id
+        return sentinel.master.delete(key)
 
     @with_context
     @patch('feedparser.parse')
-    def test_webhooks(self, feedparser_mock):
+    def test_news(self, feedparser_mock):
         """Test NEWS works."""
         feedparser_mock.return_value = self.d
         news()
         tmp = get_news()
         assert len(tmp) == 1, len(tmp)
+        err_msg = "Notify user should be notified"
+        assert self.get_notify_users() == '1', err_msg
 
     @with_context
     @patch('feedparser.parse')
-    def test_webhooks_no_new_items(self, feedparser_mock):
+    def test_news_no_new_items(self, feedparser_mock):
         """Test NEWS no new items works."""
         feedparser_mock.return_value = self.d
         news()
@@ -56,3 +66,35 @@ class TestNews(Test):
         news()
         tmp = get_news()
         assert len(tmp) == 1, len(tmp)
+        err_msg = "Notify user should be notified"
+        assert self.get_notify_users() == '1', err_msg
+
+    @with_context
+    @patch('feedparser.parse')
+    def test_news_no_new_items_no_notification(self, feedparser_mock):
+        """Test NEWS no new items no notificaton works."""
+        feedparser_mock.return_value = self.d
+        news()
+        self.delete_notify()
+        feedparser_mock.return_value = self.d
+        news()
+        tmp = get_news()
+        assert len(tmp) == 1, len(tmp)
+        err_msg = "Notify user should NOT be notified"
+        assert self.get_notify_users() == None, err_msg
+
+    @with_context
+    @patch('feedparser.parse')
+    def test_news_check_config_urls(self, feedparser_mock):
+        """Test NEWS adds config URLs."""
+        urls = ['https://github.com/pybossa/pybossa/releases.atom',
+                'http://scifabric.com/blog/all.atom.xml',
+                'http://url']
+
+        feedparser_mock.return_value = self.d
+        with patch.dict(self.flask_app.config, {'NEWS_URL': ['http://url']}):
+            news()
+            calls = []
+            for url in urls:
+                calls.append(call(url))
+            feedparser_mock.assert_has_calls(calls, any_order=True)
