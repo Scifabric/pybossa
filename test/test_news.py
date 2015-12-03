@@ -45,3 +45,9 @@ class TestNews(Test):
         news = get_news()
         assert len(news) == 1, len(news)
         news[0]['updated'] == self.news['updated'], news
+
+    @with_context
+    def test_get_news_with_score(self):
+        sentinel.master.zadd(myset, 0, pickle.dumps(self.news))
+        news = get_news(score=1)
+        assert len(news) == 0, len(news)
