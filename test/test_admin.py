@@ -27,6 +27,7 @@ from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 from factories.taskrun_factory import TaskRunFactory
+from mock import patch
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -49,7 +50,8 @@ class TestAdmin(web.Helper):
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
 
     @with_context
-    def test_01_admin_index(self):
+    @patch('pybossa.view.admin.sentinel.master.delete')
+    def test_01_admin_index(self, sentinel_mock):
         """Test ADMIN index page works"""
         self.register()
         res = self.app.get("/admin", follow_redirects=True)
@@ -60,6 +62,8 @@ class TestAdmin(web.Helper):
         for div in divs:
             err_msg = "There should be a button for managing %s" % div
             assert dom.find(id=div) is not None, err_msg
+        key = "notify:admin:1"
+        sentinel_mock.assert_called_with(key)
 
     @with_context
     def test_01_admin_index_anonymous(self):
