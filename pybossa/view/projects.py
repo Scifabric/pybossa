@@ -54,6 +54,7 @@ from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
+from pybossa.pro_features import ProFeatureHandler
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo
 from pybossa.core import webhook_repo, auditlog_repo
@@ -593,8 +594,10 @@ def _import_tasks(project, **form_data):
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
 @login_required
 def setup_autoimporter(short_name):
-    if not current_user.pro and not current_user.admin:
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if not feature_handler.autoimporter_enabled_for(current_user):
         raise abort(403)
+
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
@@ -645,8 +648,10 @@ def setup_autoimporter(short_name):
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
 @login_required
 def delete_autoimporter(short_name):
-    if not current_user.pro and not current_user.admin:
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if not feature_handler.autoimporter_enabled_for(current_user):
         raise abort(403)
+
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
@@ -1460,12 +1465,16 @@ def _check_if_redirect_to_password(project):
 @blueprint.route('/<short_name>/auditlog')
 @login_required
 def auditlog(short_name):
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if not feature_handler.auditlog_enabled_for(current_user):
+        raise abort(403)
+
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
 
-    logs = auditlogger.get_project_logs(project.id)
     ensure_authorized_to('read', Auditlog, project_id=project.id)
+    logs = auditlogger.get_project_logs(project.id)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
