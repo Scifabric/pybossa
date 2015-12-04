@@ -114,3 +114,15 @@ WEEKLY_UPDATE_STATS = 'Sunday'
 
 # Enable Server Sent Events
 SSE = False
+
+# Pro user features. False will make the feature available to all regular users,
+# while True will make it available only to pro users
+PRO_FEATURES = {
+    'auditlog':              True,
+    'webhooks':              True,
+    'updated_exports':       True,
+    'notify_blog_updates':   True,
+    'project_weekly_report': True,
+    'autoimporter':          True,
+    'better_stats':          True
+}
