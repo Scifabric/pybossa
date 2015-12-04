@@ -18,7 +18,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from pybossa.core import sentinel
 from pybossa.core import db
-from pybossa.repositories import UserRepository
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover
@@ -46,6 +45,7 @@ def get_news(score=None):
 
 def notify_news_admins():
     """Notify news admins."""
+    from pybossa.repositories import UserRepository
 
     user_repo = UserRepository(db)
     admins = user_repo.filter_by(admin=True)
