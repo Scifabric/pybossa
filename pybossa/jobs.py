@@ -286,7 +286,7 @@ def get_autoimport_jobs(queue='low'):
     import pybossa.cache.projects as cached_projects
     from pybossa.pro_features import ProFeatureHandler
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
-    if feature_handler.only_for_pro('autoimport'):
+    if feature_handler.only_for_pro('autoimporter'):
         projects = cached_projects.get_from_pro_user()
     else:
         projects = (p.dictize() for p in project_repo.get_all())

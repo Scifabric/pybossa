@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, db, with_context
+from default import Test, with_context, flask_app
 from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
 from pybossa.model.task import Task
 from factories import ProjectFactory, TaskFactory, UserFactory
@@ -51,8 +51,9 @@ class TestImportTasksJob(Test):
 
         send_mail.assert_called_once_with(email_data)
 
-    def test_autoimport_jobs(self):
-        """Test JOB autoimport jobs works."""
+    @with_context
+    def test_autoimport_jobs_no_autoimporter(self):
+        """Test JOB autoimport does not return projects without autoimporter."""
         user = UserFactory.create(pro=True)
         ProjectFactory.create(owner=user)
         jobs_generator = get_autoimport_jobs()
@@ -64,8 +65,9 @@ class TestImportTasksJob(Test):
         assert len(jobs) == 0, msg
 
 
+    @with_context
     def test_autoimport_jobs_with_autoimporter(self):
-        """Test JOB autoimport jobs works with autoimporters."""
+        """Test JOB autoimport jobs returns projects with autoimporter."""
         user = UserFactory.create(pro=True)
         project = ProjectFactory.create(owner=user,info=dict(autoimporter='foobar'))
         jobs_generator = get_autoimport_jobs()
@@ -73,7 +75,7 @@ class TestImportTasksJob(Test):
         for job in jobs_generator:
             jobs.append(job)
 
-        msg = "There should be 1 jobs."
+        msg = "There should be 1 job."
         assert len(jobs) == 1, msg
         job = jobs[0]
         msg = "There sould be the same project."
@@ -81,9 +83,12 @@ class TestImportTasksJob(Test):
         msg = "There sould be the kwargs."
         assert job['kwargs'] == 'foobar', msg
 
-    def test_autoimport_jobs_without_pro(self):
-        """Test JOB autoimport jobs works without pro users."""
-        ProjectFactory.create()
+    @with_context
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'autoimporter': True}})
+    def test_autoimport_jobs_without_pro_when_only_pro(self):
+        """Test JOB autoimport jobs does not return normal user owned projects
+        if autoimporter is only enabled for pros."""
+        ProjectFactory.create(info=dict(autoimporter='foobar'))
         jobs_generator = get_autoimport_jobs()
         jobs = []
         for job in jobs_generator:
@@ -91,3 +96,22 @@ class TestImportTasksJob(Test):
 
         msg = "There should be 0 jobs."
         assert len(jobs) == 0, msg
+
+    @with_context
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'autoimporter': False}})
+    def test_autoimport_jobs_without_pro_when_for_everyone(self):
+        """Test JOB autoimport jobs returns normal user owned projects
+        if autoimporter is enabled for everyone."""
+        project = ProjectFactory.create(info=dict(autoimporter='foobar'))
+        jobs_generator = get_autoimport_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
+        msg = "There should be 1 job."
+        assert len(jobs) == 1, msg
+        job = jobs[0]
+        msg = "There sould be the same project."
+        assert job['args'] == [project.id], msg
+        msg = "There sould be the kwargs."
+        assert job['kwargs'] == 'foobar', msg
