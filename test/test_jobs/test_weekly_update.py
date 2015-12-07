@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, with_context
+from default import Test, with_context, flask_app
 from pybossa.jobs import get_weekly_stats_update_projects
 from pybossa.jobs import send_weekly_stats_project
 from factories import TaskRunFactory, UserFactory, ProjectFactory, TaskFactory
@@ -63,11 +63,11 @@ class TestWeeklyStats(Test):
             assert job['timeout'] == (10 * 60)
             assert job['queue'] == 'low'
 
-
     @with_context
     @patch('pybossa.jobs.datetime')
-    def test_get_jobs_no_pro(self, mock_datetime):
-        """Test JOB get jobs for weekly stats works only for pros."""
+    def test_get_jobs_no_pro_feature_only_for_pros(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works only for pros if feature is
+        only for pros."""
         user = UserFactory.create(pro=False)
         pr = ProjectFactory(owner=user)
         task = TaskFactory.create(project=pr)
@@ -78,6 +78,31 @@ class TestWeeklyStats(Test):
 
         jobs = get_weekly_stats_update_projects()
         assert_raises(StopIteration, jobs.next)
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'project_weekly_report': False}})
+    def test_get_jobs_no_pro_feature_for_everyone(self, mock_datetime):
+        """Test JOB get jobs for weekly stats works for non pros if feature is
+        only for everyone."""
+        user = UserFactory.create(pro=False)
+        pr = ProjectFactory(owner=user)
+        task = TaskFactory.create(project=pr)
+        TaskRunFactory.create(project=pr, task=task)
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Sunday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = [job for job in get_weekly_stats_update_projects()]
+
+        assert len(jobs) == 1
+        for job in jobs:
+            assert type(job) == dict, type(job)
+            assert job['name'] == send_weekly_stats_project
+            assert job['args'] == [pr.id]
+            assert job['kwargs'] == {}
+            assert job['timeout'] == (10 * 60)
+            assert job['queue'] == 'low'
 
     @with_context
     @patch('pybossa.jobs.datetime')
