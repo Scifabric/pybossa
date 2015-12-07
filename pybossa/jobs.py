@@ -138,11 +138,16 @@ def get_export_task_jobs(queue):
     """Export tasks to zip."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
-    if queue == 'high':
-        projects = cached_projects.get_from_pro_user()
+    from pybossa.pro_features import ProFeatureHandler
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if feature_handler.only_for_pro('updated_exports'):
+        if queue == 'high':
+            projects = cached_projects.get_from_pro_user()
+        else:
+            projects = (p.dictize() for p in project_repo.get_all()
+                        if p.owner.pro is False)
     else:
-        projects = (p.dictize() for p in project_repo.get_all()
-                    if p.owner.pro is False)
+        projects = (p.dictize() for p in project_repo.get_all())
     for project in projects:
         project_id = project.get('id')
         job = dict(name=project_export,
