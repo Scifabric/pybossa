@@ -781,3 +781,25 @@ world. You can add more items if you want, by just adding to your settings_local
 file new ATOM URLs::
 
     NEWS_URL = ['http:/http:///atomurl1', 'http://atomurl2', ...]
+
+Enabling pro user features
+==========================
+
+Since version v1.2.2 PyBossa allows making available to all the users certain
+features that were before reserved to pro users.
+
+Just locate them in the settings_local.py file. By default, they look like::
+
+    PRO_FEATURES = {
+        'auditlog':              True,
+        'webhooks':              True,
+        'updated_exports':       True,
+        'notify_blog_updates':   True,
+        'project_weekly_report': True,
+        'autoimporter':          True,
+        'better_stats':          True
+    }
+
+By choosing "True" on each of them, you are making that specific feature available
+only to pro users. On the other hand, selecting "False" makes them available
+to regular users as well.
