@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.jobs import notify_blog_users
-from default import Test, with_context
+from default import Test, with_context, flask_app
 from factories import BlogpostFactory
 from factories import TaskRunFactory
 from factories import ProjectFactory
@@ -46,9 +46,26 @@ class TestNotifyBlogUsers(Test):
 
     @with_context
     @patch('pybossa.jobs.requests')
-    def test_notify_blog_users_pro_owner(self, mock):
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'notify_blog_updates': True}})
+    def test_notify_blog_users_pro_owner_feature_only_for_pros(self, mock):
         """Test Notify Blog users with pro owner project works."""
         owner = UserFactory.create(pro=True)
+        user = UserFactory.create(subscribed=False)
+        project = ProjectFactory.create(owner=owner)
+        TaskRunFactory.create(project=project)
+        TaskRunFactory.create(project=project, user=user)
+        blog = BlogpostFactory.create(project=project)
+        res = notify_blog_users(blog.id, blog.project.id)
+        msg = "1 users notified by email"
+        assert res == msg, res
+
+    @with_context
+    @patch('pybossa.jobs.requests')
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'notify_blog_updates': False}})
+    def test_notify_blog_users_pro_owner_feature_for_everyone(self, mock):
+        """Test Notify Blog users with pro owner project works for normal owners
+        too if feature is for everyone"""
+        owner = UserFactory.create(pro=False)
         user = UserFactory.create(subscribed=False)
         project = ProjectFactory.create(owner=owner)
         TaskRunFactory.create(project=project)

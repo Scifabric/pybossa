@@ -512,9 +512,13 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     from sqlalchemy.sql import text
     from pybossa.core import db
     from pybossa.core import blog_repo
+    from pybossa.pro_features import ProFeatureHandler
+
     blog = blog_repo.get(blog_id)
     users = 0
-    if blog.project.featured or blog.project.owner.pro:
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    only_pros = feature_handler.only_for_pro('notify_blog_updates')
+    if blog.project.featured or (only_pros and blog.project.owner.pro) or not only_pros:
         sql = text('''
                    SELECT email_addr, name from "user", task_run
                    WHERE task_run.project_id=:project_id
