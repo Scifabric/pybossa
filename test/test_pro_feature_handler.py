@@ -60,6 +60,7 @@ class TestContributionsGuard(object):
         self.admin = mock_current_user(anonymous=False, id=1, admin=True)
         self.pro = mock_current_user(anonymous=False, id=2, pro=True)
         self.no_pro = mock_current_user(anonymous=False, id=3, pro=False, admin=False)
+        self.anonymous = mock_current_user(anonymous=True)
 
     def test_auditlog_enabled_for_admin_always_returns_True(self):
         pro_enabled_handler = ProFeatureHandler(self.config_enabled)
@@ -146,6 +147,47 @@ class TestContributionsGuard(object):
         pro_disabled_handler = ProFeatureHandler(self.config_disabled)
 
         assert pro_disabled_handler.autoimporter_enabled_for(self.no_pro) is True
+
+
+    def test_better_stats_enabled_for_admin_user_always_returns_True(self):
+        pro_enabled_handler = ProFeatureHandler(self.config_enabled)
+
+        assert pro_enabled_handler.better_stats_enabled_for(self.admin, self.no_pro) is True
+
+        pro_disabled_handler = ProFeatureHandler(self.config_disabled)
+
+        assert pro_disabled_handler.better_stats_enabled_for(self.admin, self.no_pro) is True
+
+    def test_better_stats_enabled_for_pro_owner_always_returns_True(self):
+        pro_enabled_handler = ProFeatureHandler(self.config_enabled)
+
+        assert pro_enabled_handler.better_stats_enabled_for(self.no_pro, self.pro) is True
+        assert pro_enabled_handler.better_stats_enabled_for(self.anonymous, self.pro) is True
+
+        pro_disabled_handler = ProFeatureHandler(self.config_disabled)
+
+        assert pro_disabled_handler.better_stats_enabled_for(self.no_pro, self.pro) is True
+        assert pro_disabled_handler.better_stats_enabled_for(self.anonymous, self.pro) is True
+
+    def test_better_stats_enabled_for_non_pro_owner_and_non_pro_user_returns_False_if_enabled(self):
+        pro_enabled_handler = ProFeatureHandler(self.config_enabled)
+
+        assert pro_enabled_handler.better_stats_enabled_for(self.no_pro, self.no_pro) is False
+
+    def test_better_stats_enabled_for_non_pro_owner_and_non_pro_user_returns_True_if_disabled(self):
+        pro_disabled_handler = ProFeatureHandler(self.config_disabled)
+
+        assert pro_disabled_handler.better_stats_enabled_for(self.no_pro, self.no_pro) is True
+
+    def test_better_stats_enabled_for_non_pro_owner_and_anonym_user_returns_False_if_enabled(self):
+        pro_enabled_handler = ProFeatureHandler(self.config_enabled)
+
+        assert pro_enabled_handler.better_stats_enabled_for(self.anonymous, self.no_pro) is False
+
+    def test_better_stats_enabled_for_non_pro_owner_and_anonym_user_returns_True_if_disabled(self):
+        pro_disabled_handler = ProFeatureHandler(self.config_disabled)
+
+        assert pro_disabled_handler.better_stats_enabled_for(self.anonymous, self.no_pro) is True
 
 
     def test_only_for_pro_returns_True_if_feature_is_only_for_pro(self):

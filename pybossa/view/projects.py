@@ -96,13 +96,18 @@ def project_by_shortname(short_name):
         return abort(404)
 
 
-def pro_features():
+def pro_features(owner=None):
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
-    return {
+    pro = {
         'auditlog_enabled': feature_handler.auditlog_enabled_for(current_user),
         'autoimporter_enabled': feature_handler.autoimporter_enabled_for(current_user),
         'webhooks_enabled': feature_handler.webhooks_enabled_for(current_user)
     }
+    if owner:
+        pro['better_stats_enabled'] = feature_handler.better_stats_enabled_for(
+                                          current_user,
+                                          owner)
+    return pro
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -1109,7 +1114,7 @@ def show_stats(short_name):
     n_volunteers = cached_projects.n_volunteers(project.id)
     n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Statistics")
-    pro = pro_features()
+    pro = pro_features(owner)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)

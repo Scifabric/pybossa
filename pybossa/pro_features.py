@@ -37,5 +37,10 @@ class ProFeatureHandler(object):
             return True
         return user.is_authenticated() and (user.admin or user.pro)
 
+    def better_stats_enabled_for(self, user, owner):
+        if not self.config.get('better_stats'):
+            return True
+        return (user.admin is True or owner.pro is True)
+
     def only_for_pro(self, feature):
         return self.config.get(feature)
