@@ -284,8 +284,13 @@ def get_autoimport_jobs(queue='low'):
     """Get autoimport jobs."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
-    pro_user_projects = cached_projects.get_from_pro_user()
-    for project_dict in pro_user_projects:
+    from pybossa.pro_features import ProFeatureHandler
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if feature_handler.only_for_pro('autoimport'):
+        projects = cached_projects.get_from_pro_user()
+    else:
+        projects = (p.dictize() for p in project_repo.get_all())
+    for project_dict in projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
             job = dict(name=import_tasks,
