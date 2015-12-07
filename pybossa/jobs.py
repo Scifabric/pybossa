@@ -518,7 +518,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     users = 0
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     only_pros = feature_handler.only_for_pro('notify_blog_updates')
-    if blog.project.featured or (only_pros and blog.project.owner.pro) or not only_pros:
+    if blog.project.featured or (blog.project.owner.pro or not only_pros):
         sql = text('''
                    SELECT email_addr, name from "user", task_run
                    WHERE task_run.project_id=:project_id
