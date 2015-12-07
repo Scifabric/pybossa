@@ -146,3 +146,14 @@ class TestContributionsGuard(object):
         pro_disabled_handler = ProFeatureHandler(self.config_disabled)
 
         assert pro_disabled_handler.autoimporter_enabled_for(self.no_pro) is True
+
+
+    def test_only_for_pro_returns_True_if_feature_is_only_for_pro(self):
+        pro_enabled_handler = ProFeatureHandler(self.config_enabled)
+
+        assert pro_enabled_handler.only_for_pro('auditlog') is True
+
+    def test_only_for_pro_returns_False_if_feature_is_for_everyone(self):
+        pro_disabled_handler = ProFeatureHandler(self.config_disabled)
+
+        assert pro_disabled_handler.only_for_pro('auditlog') is False

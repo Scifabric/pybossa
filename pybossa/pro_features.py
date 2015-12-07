@@ -36,3 +36,6 @@ class ProFeatureHandler(object):
         if not self.config.get('autoimporter'):
             return True
         return user.is_authenticated() and (user.admin or user.pro)
+
+    def only_for_pro(self, feature):
+        return self.config.get(feature)
