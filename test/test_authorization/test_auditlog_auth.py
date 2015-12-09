@@ -31,7 +31,6 @@ class TestAuditlogAuthorization(Test):
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
-    mock_pro = mock_current_user(anonymous=False, admin=False, id=2, pro=True)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
@@ -56,7 +55,7 @@ class TestAuditlogAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_auditlog(self):
-        """Test owner users cannot read an auditlog"""
+        """Test owner users can read an auditlog"""
 
         owner = UserFactory.create_batch(2)[1]
         project = ProjectFactory.create(owner=owner)
@@ -64,63 +63,17 @@ class TestAuditlogAuthorization(Test):
 
         assert self.mock_authenticated.id == project.owner_id
 
-        assert_raises(Forbidden, ensure_authorized_to, 'read', log)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_project_auditlogs(self):
-        """Test owner users cannot read auditlogs of a specific project"""
+        """Test owner users can read auditlogs of a specific project"""
 
         owner = UserFactory.create_batch(2)[1]
         project = ProjectFactory.create(owner=owner)
 
-        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
-
-
-    @patch('pybossa.auth.current_user', new=mock_pro)
-    def test_pro_user_can_read_auditlog(self):
-        """Test pro users can read an auditlog from an owned project"""
-
-        owner = UserFactory.create_batch(2, pro=True)[1]
-        project = ProjectFactory.create(owner=owner)
-        log = AuditlogFactory.create(project_id=project.id)
-
-        assert self.mock_pro.id == project.owner_id
-        assert_not_raises(Exception, ensure_authorized_to, 'read', log)
-
-
-    @patch('pybossa.auth.current_user', new=mock_pro)
-    def test_pro_user_can_read_project_auditlogs(self):
-        """Test pro users cannot read auditlogs from an owned project"""
-
-        owner = UserFactory.create_batch(2, pro=True)[1]
-        project = ProjectFactory.create(owner=owner)
-
-        assert self.mock_pro.id == project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
-
-
-    @patch('pybossa.auth.current_user', new=mock_pro)
-    def test_pro_user_cannot_read_auditlog(self):
-        """Test pro users cannot read an auditlog from a non-owned project"""
-
-        users = UserFactory.create_batch(2, pro=True)
-        project = ProjectFactory.create(owner=users[0])
-        log = AuditlogFactory.create(project_id=project.id)
-
-        assert self.mock_pro.id != project.owner_id
-        assert_raises(Forbidden, ensure_authorized_to, 'read', log)
-
-
-    @patch('pybossa.auth.current_user', new=mock_pro)
-    def test_pro_user_cannot_read_project_auditlogs(self):
-        """Test pro users cannot read auditlogs from a non-owned project"""
-
-        users = UserFactory.create_batch(2, pro=True)
-        project = ProjectFactory.create(owner=users[0])
-
-        assert self.mock_pro.id != project.owner_id
-        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -167,16 +120,6 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'update', log)
         assert_raises(Forbidden, ensure_authorized_to, 'delete', log)
 
-
-    @patch('pybossa.auth.current_user', new=mock_pro)
-    def test_pro_user_cannot_crud_auditlog(self):
-        """Test pro users cannot crud auditlogs"""
-
-        log = Auditlog()
-
-        assert_raises(Forbidden, ensure_authorized_to, 'create', log)
-        assert_raises(Forbidden, ensure_authorized_to, 'update', log)
-        assert_raises(Forbidden, ensure_authorized_to, 'delete', log)
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_auditlog(self):

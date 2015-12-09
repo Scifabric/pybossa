@@ -138,11 +138,16 @@ def get_export_task_jobs(queue):
     """Export tasks to zip."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
-    if queue == 'high':
-        projects = cached_projects.get_from_pro_user()
+    from pybossa.pro_features import ProFeatureHandler
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if feature_handler.only_for_pro('updated_exports'):
+        if queue == 'high':
+            projects = cached_projects.get_from_pro_user()
+        else:
+            projects = (p.dictize() for p in project_repo.get_all()
+                        if p.owner.pro is False)
     else:
-        projects = (p.dictize() for p in project_repo.get_all()
-                    if p.owner.pro is False)
+        projects = (p.dictize() for p in project_repo.get_all())
     for project in projects:
         project_id = project.get('id')
         job = dict(name=project_export,
@@ -284,8 +289,13 @@ def get_autoimport_jobs(queue='low'):
     """Get autoimport jobs."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
-    pro_user_projects = cached_projects.get_from_pro_user()
-    for project_dict in pro_user_projects:
+    from pybossa.pro_features import ProFeatureHandler
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    if feature_handler.only_for_pro('autoimporter'):
+        projects = cached_projects.get_from_pro_user()
+    else:
+        projects = (p.dictize() for p in project_repo.get_all())
+    for project_dict in projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
             job = dict(name=import_tasks,
@@ -502,9 +512,13 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     from sqlalchemy.sql import text
     from pybossa.core import db
     from pybossa.core import blog_repo
+    from pybossa.pro_features import ProFeatureHandler
+
     blog = blog_repo.get(blog_id)
     users = 0
-    if blog.project.featured or blog.project.owner.pro:
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    only_pros = feature_handler.only_for_pro('notify_blog_updates')
+    if blog.project.featured or (blog.project.owner.pro or not only_pros):
         sql = text('''
                    SELECT email_addr, name from "user", task_run
                    WHERE task_run.project_id=:project_id
@@ -544,13 +558,18 @@ def get_weekly_stats_update_projects():
     """Return email jobs with weekly stats update for project owner."""
     from sqlalchemy.sql import text
     from pybossa.core import db
+    from pybossa.pro_features import ProFeatureHandler
+
+    feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    only_pros = feature_handler.only_for_pro('project_weekly_report')
+    only_pros_sql = 'AND "user".pro=true' if only_pros else ''
     send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
     today = datetime.today().strftime('%A').lower()
     if today.lower() == send_emails_date.lower():
         sql = text('''
                    SELECT project.id
                    FROM project, "user", task
-                   WHERE "user".pro=true AND "user".id=project.owner_id
+                   WHERE "user".id=project.owner_id %s
                    AND "user".subscribed=true
                    AND task.project_id=project.id
                    AND task.state!='completed'
@@ -558,7 +577,7 @@ def get_weekly_stats_update_projects():
                    SELECT project.id
                    FROM project
                    WHERE project.featured=true;
-                   ''')
+                   ''' % only_pros_sql)
         results = db.slave_session.execute(sql)
         for row in results:
             job = dict(name=send_weekly_stats_project,

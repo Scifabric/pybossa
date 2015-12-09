@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test, with_context
+from default import Test, with_context, flask_app
 from factories import ProjectFactory, UserFactory
 from pybossa.jobs import get_export_task_jobs, project_export
 from mock import patch
@@ -23,6 +23,7 @@ from mock import patch
 class TestExport(Test):
 
     @with_context
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'updated_exports': True}})
     def test_get_export_task_jobs(self):
         """Test JOB export task jobs works."""
         project = ProjectFactory.create()
@@ -40,9 +41,30 @@ class TestExport(Test):
         assert job['queue'] == 'low', msg
 
     @with_context
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'updated_exports': True}})
     def test_get_export_task_pro_jobs(self):
         """Test JOB export task jobs for pro users works."""
         user = UserFactory.create(pro=True)
+        project = ProjectFactory.create(owner=user)
+        jobs_generator = get_export_task_jobs(queue='high')
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
+        msg = "There should be only one job."
+        assert len(jobs) == 1, len(jobs)
+        job = jobs[0]
+        msg = "The job should be for the same project.id"
+        assert job['args'] == [project.id], msg
+        msg = "The job should be enqueued in high priority."
+        assert job['queue'] == 'high', msg
+
+    @with_context
+    @patch.dict(flask_app.config, {'PRO_FEATURES': {'updated_exports': False}})
+    def test_get_export_task_jobs_pro_disabled_high_queue(self):
+        """Test JOB export task jobs returns non pro projects for high queue if
+        updated exports is enabled for everyone."""
+        user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         jobs_generator = get_export_task_jobs(queue='high')
         jobs = []
