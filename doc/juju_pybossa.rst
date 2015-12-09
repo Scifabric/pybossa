@@ -200,7 +200,7 @@ You can now view PyBossa in your browser:
 
 ::
 
-    https://localhost:7000
+    http://localhost:7000
 
 
 Email server
