@@ -20,7 +20,7 @@ from flask.ext.babel import gettext
 from .csv import _BulkTaskCSVImport, _BulkTaskGDImport
 from .dropbox import _BulkTaskDropboxImport
 from .flickr import _BulkTaskFlickrImport
-from .twitter import _BulkTaskTwitterImport
+from .twitterapi import _BulkTaskTwitterImport
 from .epicollect import _BulkTaskEpiCollectPlusImport
 
 
