@@ -46,6 +46,7 @@ requirements = [
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
     "feedparser",
+    "twitter>=1.17.1, < 1.18",
 ]
 
 setup(
