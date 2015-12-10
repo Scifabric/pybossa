@@ -2709,7 +2709,7 @@ class TestWeb(web.Helper):
         assert "type=dropbox" not in res.data
 
     @patch('pybossa.view.projects.redirect', wraps=redirect)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
         """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
@@ -2766,7 +2766,7 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_bulk_csv_import_works(self, Mock, mock):
         """Test WEB bulk import works"""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
@@ -2805,7 +2805,7 @@ class TestWeb(web.Helper):
             n += 1
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_bulk_gdocs_import_works(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
@@ -2859,7 +2859,7 @@ class TestWeb(web.Helper):
         assert "no new records" in res.data, res.data
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.epicollect.requests.get')
     def test_bulk_epicollect_import_works(self, Mock, mock):
         """Test WEB bulk Epicollect import works"""
         data = [dict(DeviceID=23)]
@@ -2901,7 +2901,7 @@ class TestWeb(web.Helper):
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
 
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.flickr.requests.get')
     def test_bulk_flickr_import_works(self, request):
         """Test WEB bulk Flickr import works"""
         data = {
