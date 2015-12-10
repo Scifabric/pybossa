@@ -328,6 +328,10 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
         return new_url
 
 
+class _BulkTaskTwitterImport(object):
+    pass
+
+
 class Importer(object):
 
     """Class to import data."""
@@ -347,6 +351,10 @@ class Importer(object):
     def register_dropbox_importer(self):
         """Register Dropbox importer."""
         self._importers['dropbox'] = _BulkTaskDropboxImport
+
+    def register_twitter_importer(self, twitter_params):
+        self._importers['twitter'] = _BulkTaskTwitterImport
+        self._importer_constructor_params['twitter'] = twitter_params
 
     def create_tasks(self, task_repo, project_id, **form_data):
         """Create tasks."""
