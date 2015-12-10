@@ -17,7 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import string
-from pybossa.importers import _BulkTaskDropboxImport
+from pybossa.importers import BulkImportException
+from pybossa.importers.dropbox import _BulkTaskDropboxImport
 
 
 class Test_BulkTaskDropboxImport(object):

@@ -18,11 +18,12 @@
 
 from mock import patch
 from nose.tools import assert_raises
-from pybossa.importers import _BulkTaskGDImport, BulkImportException
+from pybossa.importers import BulkImportException
+from pybossa.importers.csv import _BulkTaskGDImport
 from default import FakeResponse
 
 
-@patch('pybossa.importers.requests.get')
+@patch('pybossa.importers.csv.requests.get')
 class Test_BulkTaskGDImport(object):
 
     url = 'http://drive.google.com'

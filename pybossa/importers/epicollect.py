@@ -1,0 +1,57 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2015 SciFabric LTD.
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
+import json
+import requests
+from flask.ext.babel import gettext
+
+from .base import _BulkTaskImport, BulkImportException
+
+
+class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
+
+    """Class to import tasks in bulk from an EpiCollect+ project."""
+
+    importer_id = "epicollect"
+
+    def tasks(self, **form_data):
+        """Get tasks."""
+        dataurl = self._get_data_url(**form_data)
+        r = requests.get(dataurl)
+        return self._get_epicollect_data_from_request(r)
+
+    def _import_epicollect_tasks(self, data):
+        """Import epicollect tasks."""
+        for d in data:
+            yield {"info": d}
+
+    def _get_data_url(self, **form_data):
+        """Get data url."""
+        return 'http://plus.epicollect.net/%s/%s.json' % \
+            (form_data['epicollect_project'], form_data['epicollect_form'])
+
+    def _get_epicollect_data_from_request(self, r):
+        """Get epicollect data from request."""
+        if r.status_code == 403:
+            msg = ("Oops! It looks like you don't have permission to access"
+                   " the EpiCollect Plus project")
+            raise BulkImportException(gettext(msg), 'error')
+        if 'application/json' not in r.headers['content-type']:
+            msg = "Oops! That project and form do not look like the right one."
+            raise BulkImportException(gettext(msg), 'error')
+        return self._import_epicollect_tasks(json.loads(r.text))

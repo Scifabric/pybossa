@@ -18,11 +18,12 @@
 
 from mock import patch
 from nose.tools import assert_raises
-from pybossa.importers import _BulkTaskCSVImport, BulkImportException
+from pybossa.importers import BulkImportException
+from pybossa.importers.csv import _BulkTaskCSVImport
 from default import FakeResponse
 
 
-@patch('pybossa.importers.requests.get')
+@patch('pybossa.importers.csv.requests.get')
 class Test_BulkTaskCSVImport(object):
 
     url = 'http://myfakecsvurl.com'

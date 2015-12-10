@@ -21,10 +21,11 @@ import json
 import string
 from mock import patch, Mock
 from nose.tools import assert_raises
-from pybossa.importers import _BulkTaskFlickrImport, BulkImportException
+from pybossa.importers import BulkImportException
+from pybossa.importers.flickr import _BulkTaskFlickrImport
 
 
-@patch('pybossa.importers.requests')
+@patch('pybossa.importers.flickr.requests')
 class Test_BulkTaskFlickrImport(object):
 
     invalid_response = {u'stat': u'fail',

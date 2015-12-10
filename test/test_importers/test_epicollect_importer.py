@@ -19,11 +19,12 @@
 import json
 from mock import patch
 from nose.tools import assert_raises
-from pybossa.importers import _BulkTaskEpiCollectPlusImport, BulkImportException
+from pybossa.importers import BulkImportException
+from pybossa.importers.epicollect import _BulkTaskEpiCollectPlusImport
 from default import FakeResponse
 
 
-@patch('pybossa.importers.requests.get')
+@patch('pybossa.importers.epicollect.requests.get')
 class Test_BulkTaskEpiCollectPlusImport(object):
 
     epicollect = {'epicollect_project': 'fakeproject',
