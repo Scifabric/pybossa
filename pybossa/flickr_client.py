@@ -27,7 +27,7 @@ class FlickrClient(object):
     def __init__(self, app=None):
         """Init method."""
         self.app = app
-        self.client = None
+        self.oauth_client = None
         if app is not None:  # pragma: no cover
             self.init_app(app)
 
@@ -36,7 +36,7 @@ class FlickrClient(object):
         from flask import session
         from pybossa.core import importer
         self.app = app
-        self.client = OAuth().remote_app(
+        self.oauth_client = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
             access_token_url='https://www.flickr.com/services/oauth/access_token',
@@ -45,7 +45,7 @@ class FlickrClient(object):
             consumer_secret=app.config['FLICKR_SHARED_SECRET'],
             access_token_method='GET')
         tokengetter = functools.partial(self.get_token, session)
-        self.client.tokengetter(tokengetter)
+        self.oauth_client.tokengetter(tokengetter)
         importer_params = {'api_key': app.config['FLICKR_API_KEY']}
         importer.register_flickr_importer(importer_params)
 
@@ -58,7 +58,7 @@ class FlickrClient(object):
                    '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
                    % self._get_user_nsid(session))
-            res = self.client.get(url, token='')
+            res = self.oauth_client.get(url, token='')
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
@@ -70,15 +70,15 @@ class FlickrClient(object):
 
     def authorize(self, *args, **kwargs):
         """Authorize method."""
-        return self.client.authorize(*args, **kwargs)
+        return self.oauth_client.authorize(*args, **kwargs)
 
     def authorized_response(self):
         """Authorized response."""
-        return self.client.authorized_response()
+        return self.oauth_client.authorized_response()
 
     def get_oauth_client(self):
         """Get OAuth client."""
-        return self.client
+        return self.oauth_client
 
     def get_token(self, session):
         """Get token from session."""
