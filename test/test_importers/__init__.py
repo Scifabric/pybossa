@@ -96,7 +96,7 @@ class TestImporterPublicMethods(Test):
 
     def test_get_all_importers_returns_configured_importers(self, create):
         flickr_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
-        twitter_params = {'token': self.flask_app.config['TWITTER_ACCESS_TOKEN']}
+        twitter_params = {}
         importer = Importer()
         importer.register_flickr_importer(flickr_params)
         importer.register_dropbox_importer()
@@ -114,7 +114,7 @@ class TestImporterPublicMethods(Test):
 
     def test_get_autoimporter_names_returns_configured_autoimporters(self, create):
         flickr_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
-        twitter_params = {'token': self.flask_app.config['TWITTER_ACCESS_TOKEN']}
+        twitter_params = {}
         importer = Importer()
         importer.register_flickr_importer(flickr_params)
         importer.register_dropbox_importer()
