@@ -369,6 +369,28 @@ def setup_dropbox_importer(app):
         app.logger.info(log_message)
 
 
+def setup_twitter_importer(app):
+    try:  # pragma: no cover
+        if (app.config['TWITTER_CONSUMER_KEY'] and
+                app.config['TWITTER_CONSUMER_SECRET'] and
+                app.config['TWITTER_ACCESS_TOKEN'] and
+                app.config['TWITTER_TOKEN_SECRET']):
+            importer_params = {
+                'consumer_key': app.config['TWITTER_CONSUMER_KEY'],
+                'consumer_secret': app.config['TWITTER_CONSUMER_SECRET'],
+                'token': app.config['TWITTER_ACCESS_TOKEN'],
+                'token_secret': app.config['TWITTER_TOKEN_SECRET']
+            }
+            importer.register_twitter_importer(importer_params)
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Twitter importer not available"
+        log_message = 'Twitter importer not available: %s' % str(inst)
+        app.logger.info(log_message)
+
+
 def setup_geocoding(app):
     """Setup geocoding."""
     # Check if app stats page can generate the map
