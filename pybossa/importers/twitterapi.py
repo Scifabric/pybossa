@@ -34,16 +34,25 @@ class _BulkTaskTwitterImport(object):
             statuses = self._get_statuses(form_data.get('hashtag'))
             tasks = [self._create_task_from_status(status) for status in statuses]
             return tasks
+        if form_data.get('user'):
+            statuses = self._get_statuses_from_account(form_data.get('user'))
+            tasks = [self._create_task_from_status(status) for status in statuses]
+            return tasks
         return []
 
     def count_tasks(self, **form_data):
         if form_data.get('hashtag'):
             return len(self._get_statuses(form_data.get('hashtag')))
+        if form_data.get('user'):
+            return len(self._get_statuses_from_account(form_data.get('user')))
         return 0
+
+    def _get_statuses_from_account(self, query):
+        query_result = self.client.statuses.user_timeline(screen_name=query)
+        return query_result
 
     def _get_statuses(self, query):
         search_result = self.client.search.tweets(q=query)
-        print search_result
         return search_result.get('statuses')
 
     def _create_task_from_status(self, status):

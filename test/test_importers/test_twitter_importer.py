@@ -101,3 +101,120 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         assert info['retweet_count'] == expected_task_data['retweet_count']
         assert info['user_screen_name'] == expected_task_data['user']['screen_name']
         assert info['text'] == expected_task_data['text']
+
+
+class Test_BulkTaskTwitterImportFromAccount(object):
+
+    importer = _BulkTaskTwitterImport('access_token',
+                                      'token_secret',
+                                      'consumer_key',
+                                      'consumer_secret')
+
+    no_results = []
+    one_status = [
+        {
+            u'contributors': None,
+            u'truncated': False,
+            u'text': u'Burning news! PyBossa v1.2.1 released! This version gets all new @PyBossa releases in your admin page! https://t.co/WkOXc3YL6s',
+            u'is_quote_status': False,
+            u'in_reply_to_status_id': None,
+            u'id': 672432381014372352L,
+            u'favorite_count': 0,
+            u'source': u'<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
+            u'retweeted': False,
+            u'coordinates': None,
+            u'entities': {},
+            u'in_reply_to_screen_name': None,
+            u'id_str': u'672432381014372352',
+            u'retweet_count': 0,
+            u'in_reply_to_user_id': None,
+            u'favorited': False,
+            u'user': {
+                u'follow_request_sent': False,
+                u'has_extended_profile': False,
+                u'profile_use_background_image': True,
+                u'default_profile_image': False,
+                u'id': 497181885,
+                u'profile_background_image_url_https': u'https://abs.twimg.com/images/themes/theme1/bg.png',
+                u'verified': False,
+                u'profile_text_color': u'333333',
+                u'profile_image_url_https': u'https://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+                u'profile_sidebar_fill_color': u'DDEEF6',
+                u'entities': {},
+                u'followers_count': 700,
+                u'profile_sidebar_border_color': u'C0DEED',
+                u'id_str': u'497181885',
+                u'profile_background_color': u'C0DEED',
+                u'listed_count': 41,
+                u'is_translation_enabled': False,
+                u'utc_offset': 3600,
+                u'statuses_count': 887,
+                u'description': u'The open source crowdsourcing platform for research built by @Scifabric',
+                u'friends_count': 731,
+                u'location': u'Madrid, Spain',
+                u'profile_link_color': u'EE7147',
+                u'profile_image_url': u'http://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+                u'following': True,
+                u'geo_enabled': True,
+                u'profile_banner_url': u'https://pbs.twimg.com/profile_banners/497181885/1401885123',
+                u'profile_background_image_url': u'http://abs.twimg.com/images/themes/theme1/bg.png',
+                u'screen_name': u'PyBossa',
+                u'lang': u'en',
+                u'profile_background_tile': False,
+                u'favourites_count': 185,
+                u'name': u'PyBossa',
+                u'notifications': False,
+                u'url': u'http://t.co/ASSBcIRZjY',
+                u'created_at': u'Sun Feb 19 18:17:39 +0000 2012',
+                u'contributors_enabled': False,
+                u'time_zone': u'Amsterdam',
+                u'protected': False,
+                u'default_profile': False,
+                u'is_translator': False
+            },
+            u'geo': None,
+            u'in_reply_to_user_id_str': None,
+            u'possibly_sensitive': False,
+            u'lang': u'en',
+            u'created_at': u'Thu Dec 03 15:09:07 +0000 2015',
+            u'in_reply_to_status_id_str': None,
+            u'place': None,
+            u'extended_entities': {}
+        }
+    ]
+
+    @patch.object(importer, 'client')
+    def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
+        client.statuses.user_timeline.return_value = self.no_results
+        form_data = {'user': '@pybossa'}
+
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 0, number_of_tasks
+
+    @patch.object(importer, 'client')
+    def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
+        client.statuses.user_timeline.return_value = self.one_status
+        form_data = {'user': '@pybossa'}
+
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 1, number_of_tasks
+
+    @patch.object(importer, 'client')
+    def test_tasks_return_task_dict_with_info_from_query_result(self, client):
+        client.statuses.user_timeline.return_value = self.one_status
+        form_data = {'user': '@pybossa'}
+        expected_task_data = self.one_status[0]
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == 1, tasks
+        info = tasks[0]['info']
+        assert info['created_at'] == expected_task_data['created_at']
+        assert info['favorite_count'] == expected_task_data['favorite_count']
+        assert info['coordinates'] == expected_task_data['coordinates']
+        assert info['tweet_id'] == expected_task_data['id_str']
+        assert info['retweet_count'] == expected_task_data['retweet_count']
+        assert info['user_screen_name'] == expected_task_data['user']['screen_name']
+        assert info['text'] == expected_task_data['text']
