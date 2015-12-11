@@ -297,7 +297,7 @@ def setup_external_services(app):
         print inst
         print "Twitter signin disabled"
         log_message = 'Twitter signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
     # Enable Facebook if available
     try:  # pragma: no cover
@@ -312,7 +312,7 @@ def setup_external_services(app):
         print inst
         print "Facebook signin disabled"
         log_message = 'Facebook signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
     # Enable Google if available
     try:  # pragma: no cover
@@ -327,7 +327,7 @@ def setup_external_services(app):
         print inst
         print "Google signin disabled"
         log_message = 'Google signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
     # Enable Flickr if available
     try:  # pragma: no cover
@@ -342,7 +342,7 @@ def setup_external_services(app):
         print inst
         print "Flickr importer not available"
         log_message = 'Flickr importer not available: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
     # Enable Dropbox if available
     try:  # pragma: no cover
@@ -354,7 +354,7 @@ def setup_external_services(app):
         print inst
         print "Dropbox importer not available"
         log_message = 'Dropbox importer not available: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
 
 def setup_geocoding(app):
