@@ -288,6 +288,7 @@ def setup_external_services(app):
     setup_google_login(app)
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
+    setup_twitter_importer(app)
 
 
 def setup_twitter_login(app):
@@ -378,7 +379,7 @@ def setup_twitter_importer(app):
             importer_params = {
                 'consumer_key': app.config['TWITTER_CONSUMER_KEY'],
                 'consumer_secret': app.config['TWITTER_CONSUMER_SECRET'],
-                'token': app.config['TWITTER_ACCESS_TOKEN'],
+                'access_token': app.config['TWITTER_ACCESS_TOKEN'],
                 'token_secret': app.config['TWITTER_TOKEN_SECRET']
             }
             importer.register_twitter_importer(importer_params)
