@@ -283,6 +283,14 @@ def setup_blueprints(app):
 
 def setup_external_services(app):
     """Setup external services."""
+    setup_twitter_login(app)
+    setup_facebook_login(app)
+    setup_google_login(app)
+    setup_flickr_importer(app)
+    setup_dropbox_importer(app)
+
+
+def setup_twitter_login(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
                 app.config['TWITTER_CONSUMER_SECRET']):
@@ -297,7 +305,8 @@ def setup_external_services(app):
         log_message = 'Twitter signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
-    # Enable Facebook if available
+
+def setup_facebook_login(app):
     try:  # pragma: no cover
         if (app.config['FACEBOOK_APP_ID']
                 and app.config['FACEBOOK_APP_SECRET']):
@@ -312,7 +321,8 @@ def setup_external_services(app):
         log_message = 'Facebook signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
-    # Enable Google if available
+
+def setup_google_login(app):
     try:  # pragma: no cover
         if (app.config['GOOGLE_CLIENT_ID']
                 and app.config['GOOGLE_CLIENT_SECRET']):
@@ -327,7 +337,8 @@ def setup_external_services(app):
         log_message = 'Google signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
-    # Enable Flickr if available
+
+def setup_flickr_importer(app):
     try:  # pragma: no cover
         if (app.config['FLICKR_API_KEY']
                 and app.config['FLICKR_SHARED_SECRET']):
@@ -344,7 +355,8 @@ def setup_external_services(app):
         log_message = 'Flickr importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
-    # Enable Dropbox if available
+
+def setup_dropbox_importer(app):
     try:  # pragma: no cover
         if app.config['DROPBOX_APP_KEY']:
             importer.register_dropbox_importer()
