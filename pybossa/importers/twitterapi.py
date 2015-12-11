@@ -17,26 +17,43 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from twitter import Twitter, OAuth
 
-TWITTER_CONSUMER_KEY = 'hJTTkwD5jJze9TFvfHX4HC69z'
-TWITTER_CONSUMER_SECRET = 'BD5MVfao6Mb7mJDGf9AqJ1sAaTt7U5jfhOvCGuaCo7n2lzNsLS'
-TWITTER_ACCESS_TOKEN = '2163950446-okkpWxsi25vj594NR49bUfgaXobn3e915eeWRqX'
-TWITTER_TOKEN_SECRET = 'kyC3NdPqZFkcQ35CxaaDEUmr5zR7VZuGejZtQjGtOoaGf'
-
 
 class _BulkTaskTwitterImport(object):
 
     importer_id = "twitter"
-    client = Twitter(auth=OAuth(
-        TWITTER_ACCESS_TOKEN,
-        TWITTER_TOKEN_SECRET,
-        TWITTER_CONSUMER_KEY,
-        TWITTER_CONSUMER_SECRET))
+
+    def __init__(self, access_token, token_secret, consumer_key, consumer_secret):
+        self.client = Twitter(auth=OAuth(
+            access_token,
+            token_secret,
+            consumer_key,
+            consumer_secret))
 
     def tasks(self, **form_data):
         if form_data.get('hashtag'):
-            pass
-        return self._get_tasks_data_from_request(album_info)
+            statuses = self._get_statuses(form_data.get('hashtag'))
+            tasks = [self._create_task_from_status(status) for status in statuses]
+            return tasks
+        return []
 
     def count_tasks(self, **form_data):
-        album_info = self._get_album_info(form_data['album_id'])
-        return int(album_info['total'])
+        if form_data.get('hashtag'):
+            return len(self._get_statuses(form_data.get('hashtag')))
+        return 0
+
+    def _get_statuses(self, query):
+        search_result = self.client.search.tweets(q=query)
+        print search_result
+        return search_result.get('statuses')
+
+    def _create_task_from_status(self, status):
+        info = {
+            'created_at': status.get('created_at'),
+            'favorite_count': status.get('favorite_count'),
+            'coordinates': status.get('coordinates'),
+            'tweet_id': status.get('id_str'),
+            'retweet_count': status.get('retweet_count'),
+            'user_screen_name': status.get('user').get('screen_name'),
+            'text': status.get('text')
+        }
+        return {'info': info}
