@@ -183,6 +183,13 @@ class _BulkTaskDropboxImportForm(Form):
         return {'type': 'dropbox', 'files': self.files.data}
 
 
+class _BulkTaskTwitterImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='twitter')
+    hashtag = TextField(lazy_gettext('Hashtag'))
+    def get_import_data(self):
+        return {'type': 'twitter', 'hashtag': self.hashtag.data}
+
+
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
@@ -190,7 +197,8 @@ class GenericBulkTaskImportForm(object):
               'gdocs': _BulkTaskGDImportForm,
               'epicollect': _BulkTaskEpiCollectPlusImportForm,
               'flickr': _BulkTaskFlickrImportForm,
-              'dropbox': _BulkTaskDropboxImportForm }
+              'dropbox': _BulkTaskDropboxImportForm,
+              'twitter': _BulkTaskTwitterImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
