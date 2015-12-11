@@ -276,8 +276,6 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
-    # The RQDashboard is actually registering a blueprint to the app, so this is
-    # a propper place for it to be initialized
     from rq_dashboard import RQDashboard
     RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
                 redis_conn=sentinel.master)
@@ -336,6 +334,8 @@ def setup_external_services(app):
             flickr.init_app(app)
             from pybossa.view.flickr import blueprint as flickr_bp
             app.register_blueprint(flickr_bp, url_prefix='/flickr')
+            importer_params = {'api_key': app.config['FLICKR_API_KEY']}
+            importer.register_flickr_importer(importer_params)
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args

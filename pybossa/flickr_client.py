@@ -34,7 +34,6 @@ class FlickrClient(object):
     def init_app(self, app):  # pragma: no cover
         """Method to init object following factories pattern."""
         from flask import session
-        from pybossa.core import importer
         self.app = app
         self.oauth_client = OAuth().remote_app(
             'flickr',
@@ -46,8 +45,6 @@ class FlickrClient(object):
             access_token_method='GET')
         tokengetter = functools.partial(self.get_token, session)
         self.oauth_client.tokengetter(tokengetter)
-        importer_params = {'api_key': app.config['FLICKR_API_KEY']}
-        importer.register_flickr_importer(importer_params)
 
     def get_user_albums(self, session):
         """Get user albums from Flickr."""
