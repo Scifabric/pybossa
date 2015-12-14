@@ -29,40 +29,33 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
                                       'consumer_key',
                                       'consumer_secret')
 
+    metadata = {
+        u'count': 15,
+        u'completed_in': 0.018,
+        u'max_id_str':u'673928446372945921',
+        u'since_id_str': u'0',
+        u'refresh_url': u'?since_id=673928446372945921&q=%23noMatches&include_entities=1',
+        u'since_id': 0,
+        u'query': u'%23noMatches',
+        u'max_id': 673928446372945921L
+    }
+    status = {
+        u'created_at': 'created',
+        u'favorite_count': 77,
+        u'coordinates': 'coords',
+        u'id_str': '1234',
+        u'retweet_count': 44,
+        u'user': {'screen_name': 'fulanito'},
+        u'text': 'this is a tweet #match'
+    }
     no_results = {
-        u'search_metadata': {
-            u'count': 15,
-            u'completed_in': 0.018,
-            u'max_id_str':u'673928446372945921',
-            u'since_id_str': u'0',
-            u'refresh_url': u'?since_id=673928446372945921&q=%23noMatches&include_entities=1',
-            u'since_id': 0,
-            u'query': u'%23noMatches',
-            u'max_id': 673928446372945921L
-            },
+        u'search_metadata': metadata,
         u'statuses': []
     }
     one_status = {
-        u'search_metadata': {
-            u'count': 15,
-            u'completed_in': 0.018,
-            u'max_id_str':u'673928446372945921',
-            u'since_id_str': u'0',
-            u'refresh_url': u'?since_id=673928446372945921&q=%23noMatches&include_entities=1',
-            u'since_id': 0,
-            u'query': u'%23noMatches',
-            u'max_id': 673928446372945921L
-            },
+        u'search_metadata': metadata,
         u'statuses': [
-            {
-                u'created_at': 'created',
-                u'favorite_count': 77,
-                u'coordinates': 'coords',
-                u'id_str': '1234',
-                u'retweet_count': 44,
-                u'user': {'screen_name': 'fulanito'},
-                u'text': 'this is a tweet #match'
-            }
+            status
         ]
     }
 
