@@ -29,34 +29,30 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
                                       'consumer_key',
                                       'consumer_secret')
 
-    metadata = {
-        u'count': 15,
-        u'completed_in': 0.018,
-        u'max_id_str':u'673928446372945921',
-        u'since_id_str': u'0',
-        u'refresh_url': u'?since_id=673928446372945921&q=%23noMatches&include_entities=1',
-        u'since_id': 0,
-        u'query': u'%23noMatches',
-        u'max_id': 673928446372945921L
-    }
-    status = {
-        u'created_at': 'created',
-        u'favorite_count': 77,
-        u'coordinates': 'coords',
-        u'id_str': '1234',
-        u'retweet_count': 44,
-        u'user': {'screen_name': 'fulanito'},
-        u'text': 'this is a tweet #match'
-    }
+    def create_status(_id):
+        return {
+            u'created_at': 'created',
+            u'favorite_count': 77,
+            u'coordinates': 'coords',
+            u'id_str': unicode(_id),
+            u'id': _id,
+            u'retweet_count': 44,
+            u'user': {'screen_name': 'fulanito'},
+            u'text': 'this is a tweet #match'
+        }
+
     no_results = {
-        u'search_metadata': metadata,
         u'statuses': []
     }
+
     one_status = {
-        u'search_metadata': metadata,
         u'statuses': [
-            status
+            create_status(0)
         ]
+    }
+
+    five_statuses = {
+        u'statuses': [create_status(i+1) for i in range(5)]
     }
 
     @patch.object(importer, 'client')
@@ -95,6 +91,20 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         assert info['user_screen_name'] == expected_task_data['user']['screen_name']
         assert info['text'] == expected_task_data['text']
 
+    @patch.object(importer, 'client')
+    def test_task_can_return_more_than_returned_by_single_api_call(self, client):
+        responses = [self.no_results, self.one_status, self.five_statuses]
+        def multiple_requests(*args, **kwargs):
+            return responses.pop()
+
+        client.search.tweets = multiple_requests
+        max_tweets = 10
+        form_data = {'hashtag': '#match', 'max': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == 6, len(tasks)
+
 
 class Test_BulkTaskTwitterImportFromAccount(object):
 
@@ -103,22 +113,21 @@ class Test_BulkTaskTwitterImportFromAccount(object):
                                       'consumer_key',
                                       'consumer_secret')
 
-    no_results = []
-    one_status = [
-        {
+    def create_status(_id):
+        return {
             u'contributors': None,
             u'truncated': False,
             u'text': u'Burning news! PyBossa v1.2.1 released! This version gets all new @PyBossa releases in your admin page! https://t.co/WkOXc3YL6s',
             u'is_quote_status': False,
             u'in_reply_to_status_id': None,
-            u'id': 672432381014372352L,
+            u'id': _id,
             u'favorite_count': 0,
             u'source': u'<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
             u'retweeted': False,
             u'coordinates': None,
             u'entities': {},
             u'in_reply_to_screen_name': None,
-            u'id_str': u'672432381014372352',
+            u'id_str': unicode(_id),
             u'retweet_count': 0,
             u'in_reply_to_user_id': None,
             u'favorited': False,
@@ -174,7 +183,12 @@ class Test_BulkTaskTwitterImportFromAccount(object):
             u'place': None,
             u'extended_entities': {}
         }
-    ]
+
+    no_results = []
+
+    one_status = [create_status(0)]
+
+    five_statuses = [create_status(i+1) for i in range(5)]
 
     @patch.object(importer, 'client')
     def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
@@ -211,3 +225,17 @@ class Test_BulkTaskTwitterImportFromAccount(object):
         assert info['retweet_count'] == expected_task_data['retweet_count']
         assert info['user_screen_name'] == expected_task_data['user']['screen_name']
         assert info['text'] == expected_task_data['text']
+
+    @patch.object(importer, 'client')
+    def test_task_can_return_more_than_returned_by_single_api_call(self, client):
+        responses = [self.no_results, self.one_status, self.five_statuses]
+        def multiple_requests(*args, **kwargs):
+            return responses.pop()
+
+        client.statuses.user_timeline = multiple_requests
+        max_tweets = 10
+        form_data = {'user': '@pybossa', 'max': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == 6, len(tasks)

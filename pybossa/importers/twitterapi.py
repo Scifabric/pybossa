@@ -30,30 +30,52 @@ class _BulkTaskTwitterImport(object):
             consumer_secret))
 
     def tasks(self, **form_data):
+        count = form_data.get('max')
         if form_data.get('hashtag'):
-            statuses = self._get_statuses(form_data.get('hashtag'))
+            statuses = self._get_statuses(form_data.get('hashtag'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
             return tasks
         if form_data.get('user'):
-            statuses = self._get_statuses_from_account(form_data.get('user'))
+            statuses = self._get_statuses_from_account(form_data.get('user'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
             return tasks
         return []
 
     def count_tasks(self, **form_data):
+        count = form_data.get('max')
         if form_data.get('hashtag'):
-            return len(self._get_statuses(form_data.get('hashtag')))
+            return len(self._get_statuses(form_data.get('hashtag'), count=count))
         if form_data.get('user'):
-            return len(self._get_statuses_from_account(form_data.get('user')))
+            return len(self._get_statuses_from_account(form_data.get('user'), count=count))
         return 0
 
-    def _get_statuses_from_account(self, query):
-        query_result = self.client.statuses.user_timeline(screen_name=query)
-        return query_result
+    def _get_statuses_from_account(self, query, count):
+        max_id = None
+        partial_results = self.client.statuses.user_timeline(screen_name=query, count=count)
+        results = []
+        while len(results) < count and len(partial_results) > 0:
+            results += partial_results
+            remaining = count - len(results)
+            max_id = max([status['id'] for status in partial_results]) - 1
+            partial_results = self.client.statuses.user_timeline(
+                screen_name=query,
+                count=count,
+                max_id=max_id)
+        return results or partial_results
 
-    def _get_statuses(self, query):
-        search_result = self.client.search.tweets(q=query)
-        return search_result.get('statuses')
+    def _get_statuses(self, query, count):
+        max_id = None
+        partial_results = self.client.search.tweets(q=query, count=count).get('statuses')
+        results = []
+        while len(results) < count and len(partial_results) > 0:
+            results += partial_results
+            remaining = count - len(results)
+            max_id = max([status['id'] for status in partial_results]) - 1
+            partial_results = self.client.search.tweets(
+                q=query,
+                count=remaining,
+                max_id=max_id).get('statuses')
+        return results or partial_results
 
     def _create_task_from_status(self, status):
         info = {
