@@ -31,17 +31,16 @@ class _BulkTaskTwitterImport(object):
 
     def tasks(self, **form_data):
         count = form_data.get('max_tweets')
-        if form_data.get('source') and form_data.get('source').startswith('@'):
-            statuses = self._get_statuses_from_account(form_data.get('user'), count=count)
-            tasks = [self._create_task_from_status(status) for status in statuses]
-            return tasks[0:count]
-        else:
-            statuses = self._get_statuses(form_data.get('source'), count=count)
-            tasks = [self._create_task_from_status(status) for status in statuses]
-            return tasks[0:count]
+        source = form_data.get('source')
+        statuses = self._get_statuses(source, count=count)
+        tasks = [self._create_task_from_status(status) for status in statuses]
+        return tasks[0:count]
 
     def count_tasks(self, **form_data):
         return len(self.tasks(**form_data))
+
+    def _is_source_a_user_account(self, source):
+        return source and source.startswith('@')
 
     def _get_statuses_from_account(self, query, count):
         max_id = None
@@ -57,7 +56,7 @@ class _BulkTaskTwitterImport(object):
                 max_id=max_id)
         return results or partial_results
 
-    def _get_statuses(self, query, count):
+    def _get_statuses_from_search(self, query, count):
         max_id = None
         partial_results = self.client.search.tweets(q=query, count=count).get('statuses')
         results = []
@@ -70,6 +69,11 @@ class _BulkTaskTwitterImport(object):
                 count=remaining,
                 max_id=max_id).get('statuses')
         return results or partial_results
+
+    def _get_statuses(self, source, count):
+        if self._is_source_a_user_account(source):
+            return self._get_statuses_from_account(source, count)
+        return self._get_statuses_from_search(source, count)
 
     def _create_task_from_status(self, status):
         info = {
