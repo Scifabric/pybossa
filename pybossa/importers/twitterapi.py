@@ -32,48 +32,36 @@ class _BulkTaskTwitterImport(object):
     def tasks(self, **form_data):
         count = form_data.get('max_tweets')
         source = form_data.get('source')
-        statuses = self._get_statuses(source, count=count)
+        statuses = self._get_statuses(source, count)
         tasks = [self._create_task_from_status(status) for status in statuses]
         return tasks[0:count]
 
     def count_tasks(self, **form_data):
         return len(self.tasks(**form_data))
 
+    def _get_statuses(self, source, count):
+        if self._is_source_a_user_account(source):
+            fetcher = self._fetch_statuses_from_account
+        else:
+            fetcher = self._fetch_statuses_from_search
+        max_id = None
+        partial_results = fetcher(q=source, count=count)
+        results = []
+        while len(results) < count and len(partial_results) > 0:
+            results += partial_results
+            remaining = count - len(results)
+            max_id = min([status['id'] for status in partial_results]) - 1
+            partial_results = fetcher(q=source, count=remaining, max_id=max_id)
+        return results or partial_results
+
     def _is_source_a_user_account(self, source):
         return source and source.startswith('@')
 
-    def _get_statuses_from_account(self, query, count):
-        max_id = None
-        partial_results = self.client.statuses.user_timeline(screen_name=query, count=count)
-        results = []
-        while len(results) < count and len(partial_results) > 0:
-            results += partial_results
-            remaining = count - len(results)
-            max_id = min([status['id'] for status in partial_results]) - 1
-            partial_results = self.client.statuses.user_timeline(
-                screen_name=query,
-                count=remaining,
-                max_id=max_id)
-        return results or partial_results
+    def _fetch_statuses_from_search(self, **kwargs):
+        return self.client.search.tweets(**kwargs).get('statuses')
 
-    def _get_statuses_from_search(self, query, count):
-        max_id = None
-        partial_results = self.client.search.tweets(q=query, count=count).get('statuses')
-        results = []
-        while len(results) < count and len(partial_results) > 0:
-            results += partial_results
-            remaining = count - len(results)
-            max_id = min([status['id'] for status in partial_results]) - 1
-            partial_results = self.client.search.tweets(
-                q=query,
-                count=remaining,
-                max_id=max_id).get('statuses')
-        return results or partial_results
-
-    def _get_statuses(self, source, count):
-        if self._is_source_a_user_account(source):
-            return self._get_statuses_from_account(source, count)
-        return self._get_statuses_from_search(source, count)
+    def _fetch_statuses_from_account(self, **kwargs):
+        return self.client.statuses.user_timeline(**kwargs)
 
     def _create_task_from_status(self, status):
         info = {
