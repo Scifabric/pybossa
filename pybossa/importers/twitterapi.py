@@ -21,6 +21,7 @@ from twitter import Twitter, OAuth
 class _BulkTaskTwitterImport(object):
 
     importer_id = "twitter"
+    DEFAULT_NUMBER_OF_TWEETS = 50
 
     def __init__(self, access_token, token_secret, consumer_key, consumer_secret):
         self.client = Twitter(auth=OAuth(
@@ -30,7 +31,7 @@ class _BulkTaskTwitterImport(object):
             consumer_secret))
 
     def tasks(self, **form_data):
-        count = form_data.get('max_tweets')
+        count = form_data.get('max_tweets', self.DEFAULT_NUMBER_OF_TWEETS)
         source = form_data.get('source')
         statuses = self._get_statuses(source, count)
         tasks = [self._create_task_from_status(status) for status in statuses]

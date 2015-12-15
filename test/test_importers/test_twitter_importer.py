@@ -58,7 +58,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
         client.search.tweets.return_value = self.no_results
-        form_data = {'source': '#noMatches'}
+        form_data = {'source': '#noMatches', 'max_tweets': 1}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -67,7 +67,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
         client.search.tweets.return_value = self.one_status
-        form_data = {'source': '#match'}
+        form_data = {'source': '#match', 'max_tweets': 1}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -76,7 +76,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
         client.search.tweets.return_value = self.one_status
-        form_data = {'source': '#match'}
+        form_data = {'source': '#match', 'max_tweets': 1}
         expected_task_data = self.one_status['statuses'][0]
 
         tasks = self.importer.tasks(**form_data)
@@ -134,6 +134,20 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
+
+    @patch.object(importer, 'client')
+    def test_max_tweets_gets_a_default_value_of_50(self, client):
+        calls = []
+        def response(*args, **kwargs):
+            calls.append({'args': args, 'kwargs': kwargs})
+            return self.five_statuses
+
+        client.search.tweets = response
+        form_data = {'source': '#match'}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert calls[0]['kwargs']['count'] == 50, calls[0]['kwargs']['count']
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):
@@ -223,7 +237,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
         client.statuses.user_timeline.return_value = self.no_results
-        form_data = {'source': '@pybossa'}
+        form_data = {'source': '@pybossa', 'max_tweets': 1}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -232,7 +246,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
         client.statuses.user_timeline.return_value = self.one_status
-        form_data = {'source': '@pybossa'}
+        form_data = {'source': '@pybossa', 'max_tweets': 1}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -241,7 +255,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
         client.statuses.user_timeline.return_value = self.one_status
-        form_data = {'source': '@pybossa'}
+        form_data = {'source': '@pybossa', 'max_tweets': 1}
         expected_task_data = self.one_status[0]
 
         tasks = self.importer.tasks(**form_data)
