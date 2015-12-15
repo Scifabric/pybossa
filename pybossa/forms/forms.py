@@ -185,14 +185,14 @@ class _BulkTaskDropboxImportForm(Form):
 
 class _BulkTaskTwitterImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='twitter')
-    hashtag = TextField(lazy_gettext('Hashtag'))
-    user = TextField(lazy_gettext('User'))
+    msg_required = lazy_gettext("You must provide some source for the tweets")
+    source = TextField(lazy_gettext('Source'),
+                       [validators.Required(message=msg_required)])
     max_tweets = IntegerField(lazy_gettext('Number of tweets'))
     def get_import_data(self):
         return {
             'type': 'twitter',
-            'hashtag': self.hashtag.data,
-            'user': self.user.data,
+            'source': self.source.data,
             'max_tweets': self.max_tweets.data
         }
 
