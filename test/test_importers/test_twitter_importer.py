@@ -58,7 +58,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
         client.search.tweets.return_value = self.no_results
-        form_data = {'hashtag': '#noMatches'}
+        form_data = {'source': '#noMatches'}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -67,7 +67,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
         client.search.tweets.return_value = self.one_status
-        form_data = {'hashtag': '#match'}
+        form_data = {'source': '#match'}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -76,7 +76,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
         client.search.tweets.return_value = self.one_status
-        form_data = {'hashtag': '#match'}
+        form_data = {'source': '#match'}
         expected_task_data = self.one_status['statuses'][0]
 
         tasks = self.importer.tasks(**form_data)
@@ -99,7 +99,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
 
         client.search.tweets = multiple_responses
         max_tweets = 10
-        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -109,7 +109,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
         client.search.tweets.return_value = self.five_statuses
         max_tweets = 2
-        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -125,7 +125,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
 
         client.search.tweets = multiple_responses
         max_tweets = 6
-        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -223,7 +223,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
         client.statuses.user_timeline.return_value = self.no_results
-        form_data = {'user': '@pybossa'}
+        form_data = {'source': '@pybossa'}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -232,7 +232,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
         client.statuses.user_timeline.return_value = self.one_status
-        form_data = {'user': '@pybossa'}
+        form_data = {'source': '@pybossa'}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -241,7 +241,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
         client.statuses.user_timeline.return_value = self.one_status
-        form_data = {'user': '@pybossa'}
+        form_data = {'source': '@pybossa'}
         expected_task_data = self.one_status[0]
 
         tasks = self.importer.tasks(**form_data)
@@ -264,7 +264,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
 
         client.statuses.user_timeline = multiple_responses
         max_tweets = 10
-        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
+        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -274,7 +274,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
         client.statuses.user_timeline.return_value = self.five_statuses
         max_tweets = 2
-        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
+        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -290,7 +290,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
 
         client.statuses.user_timeline = multiple_responses
         max_tweets = 6
-        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
+        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 

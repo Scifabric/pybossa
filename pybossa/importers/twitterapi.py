@@ -31,15 +31,14 @@ class _BulkTaskTwitterImport(object):
 
     def tasks(self, **form_data):
         count = form_data.get('max_tweets')
-        if form_data.get('hashtag'):
-            statuses = self._get_statuses(form_data.get('hashtag'), count=count)
-            tasks = [self._create_task_from_status(status) for status in statuses]
-            return tasks[0:count]
-        if form_data.get('user'):
+        if form_data.get('source') and form_data.get('source').startswith('@'):
             statuses = self._get_statuses_from_account(form_data.get('user'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
             return tasks[0:count]
-        return []
+        else:
+            statuses = self._get_statuses(form_data.get('source'), count=count)
+            tasks = [self._create_task_from_status(status) for status in statuses]
+            return tasks[0:count]
 
     def count_tasks(self, **form_data):
         return len(self.tasks(**form_data))
