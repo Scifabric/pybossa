@@ -99,7 +99,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
 
         client.search.tweets = multiple_requests
         max_tweets = 10
-        form_data = {'hashtag': '#match', 'max': max_tweets}
+        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
@@ -234,7 +234,7 @@ class Test_BulkTaskTwitterImportFromAccount(object):
 
         client.statuses.user_timeline = multiple_requests
         max_tweets = 10
-        form_data = {'user': '@pybossa', 'max': max_tweets}
+        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 

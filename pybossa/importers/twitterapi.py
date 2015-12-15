@@ -30,7 +30,7 @@ class _BulkTaskTwitterImport(object):
             consumer_secret))
 
     def tasks(self, **form_data):
-        count = form_data.get('max')
+        count = form_data.get('max_tweets')
         if form_data.get('hashtag'):
             statuses = self._get_statuses(form_data.get('hashtag'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
@@ -42,7 +42,7 @@ class _BulkTaskTwitterImport(object):
         return []
 
     def count_tasks(self, **form_data):
-        count = form_data.get('max')
+        count = form_data.get('max_tweets')
         if form_data.get('hashtag'):
             return len(self._get_statuses(form_data.get('hashtag'), count=count))
         if form_data.get('user'):
