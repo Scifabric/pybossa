@@ -94,16 +94,46 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     @patch.object(importer, 'client')
     def test_task_can_return_more_than_returned_by_single_api_call(self, client):
         responses = [self.no_results, self.one_status, self.five_statuses]
-        def multiple_requests(*args, **kwargs):
+        def multiple_responses(*args, **kwargs):
             return responses.pop()
 
-        client.search.tweets = multiple_requests
+        client.search.tweets = multiple_responses
         max_tweets = 10
         form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
         assert len(tasks) == 6, len(tasks)
+
+    @patch.object(importer, 'client')
+    def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
+        client.search.tweets.return_value = self.five_statuses
+        max_tweets = 2
+        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == max_tweets, len(tasks)
+
+    @patch.object(importer, 'client')
+    def test_api_calls_with_max_id_pagination(self, client):
+        responses = [self.no_results, self.one_status, self.five_statuses]
+        calls = []
+        def multiple_responses(*args, **kwargs):
+            calls.append({'args': args, 'kwargs': kwargs})
+            return responses.pop()
+
+        client.search.tweets = multiple_responses
+        max_tweets = 6
+        form_data = {'hashtag': '#match', 'max_tweets': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
+        assert calls[1]['kwargs']['count'] == 1, calls[1]['kwargs']
+        assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
+        assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
+        assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):
@@ -229,13 +259,43 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     @patch.object(importer, 'client')
     def test_task_can_return_more_than_returned_by_single_api_call(self, client):
         responses = [self.no_results, self.one_status, self.five_statuses]
-        def multiple_requests(*args, **kwargs):
+        def multiple_responses(*args, **kwargs):
             return responses.pop()
 
-        client.statuses.user_timeline = multiple_requests
+        client.statuses.user_timeline = multiple_responses
         max_tweets = 10
         form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
 
         tasks = self.importer.tasks(**form_data)
 
         assert len(tasks) == 6, len(tasks)
+
+    @patch.object(importer, 'client')
+    def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
+        client.statuses.user_timeline.return_value = self.five_statuses
+        max_tweets = 2
+        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == max_tweets, len(tasks)
+
+    @patch.object(importer, 'client')
+    def test_api_calls_with_max_id_pagination(self, client):
+        responses = [self.no_results, self.one_status, self.five_statuses]
+        calls = []
+        def multiple_responses(*args, **kwargs):
+            calls.append({'args': args, 'kwargs': kwargs})
+            return responses.pop()
+
+        client.statuses.user_timeline = multiple_responses
+        max_tweets = 6
+        form_data = {'user': '@pybossa', 'max_tweets': max_tweets}
+
+        tasks = self.importer.tasks(**form_data)
+
+        assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
+        assert calls[1]['kwargs']['count'] == 1, calls[1]['kwargs']
+        assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
+        assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
+        assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']

@@ -34,11 +34,11 @@ class _BulkTaskTwitterImport(object):
         if form_data.get('hashtag'):
             statuses = self._get_statuses(form_data.get('hashtag'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
-            return tasks
+            return tasks[0:count]
         if form_data.get('user'):
             statuses = self._get_statuses_from_account(form_data.get('user'), count=count)
             tasks = [self._create_task_from_status(status) for status in statuses]
-            return tasks
+            return tasks[0:count]
         return []
 
     def count_tasks(self, **form_data):
@@ -56,10 +56,10 @@ class _BulkTaskTwitterImport(object):
         while len(results) < count and len(partial_results) > 0:
             results += partial_results
             remaining = count - len(results)
-            max_id = max([status['id'] for status in partial_results]) - 1
+            max_id = min([status['id'] for status in partial_results]) - 1
             partial_results = self.client.statuses.user_timeline(
                 screen_name=query,
-                count=count,
+                count=remaining,
                 max_id=max_id)
         return results or partial_results
 
@@ -70,7 +70,7 @@ class _BulkTaskTwitterImport(object):
         while len(results) < count and len(partial_results) > 0:
             results += partial_results
             remaining = count - len(results)
-            max_id = max([status['id'] for status in partial_results]) - 1
+            max_id = min([status['id'] for status in partial_results]) - 1
             partial_results = self.client.search.tweets(
                 q=query,
                 count=remaining,
