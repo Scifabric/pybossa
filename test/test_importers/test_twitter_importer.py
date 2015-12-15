@@ -56,22 +56,14 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
     }
 
     @patch.object(importer, 'client')
-    def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
-        client.search.tweets.return_value = self.no_results
-        form_data = {'source': '#noMatches', 'max_tweets': 1}
-
-        number_of_tasks = self.importer.count_tasks(**form_data)
-
-        assert number_of_tasks == 0, number_of_tasks
-
-    @patch.object(importer, 'client')
-    def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
+    def test_count_tasks_returns_number_of_tweets_requested(self, client):
         client.search.tweets.return_value = self.one_status
-        form_data = {'source': '#match', 'max_tweets': 1}
+        max_tweets = 10
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
-        assert number_of_tasks == 1, number_of_tasks
+        assert number_of_tasks == number_of_tasks, number_of_tasks
 
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
@@ -235,22 +227,14 @@ class Test_BulkTaskTwitterImportFromAccount(object):
     five_statuses = [create_status(i+1) for i in range(5)]
 
     @patch.object(importer, 'client')
-    def test_count_tasks_return_0_if_no_tweets_match_search(self, client):
+    def test_count_tasks_returns_number_of_tweets_requested(self, client):
         client.statuses.user_timeline.return_value = self.no_results
-        form_data = {'source': '@pybossa', 'max_tweets': 1}
+        max_tweets = 10
+        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
 
         number_of_tasks = self.importer.count_tasks(**form_data)
 
-        assert number_of_tasks == 0, number_of_tasks
-
-    @patch.object(importer, 'client')
-    def test_count_tasks_return_1_if_1_tweet_matches_search(self, client):
-        client.statuses.user_timeline.return_value = self.one_status
-        form_data = {'source': '@pybossa', 'max_tweets': 1}
-
-        number_of_tasks = self.importer.count_tasks(**form_data)
-
-        assert number_of_tasks == 1, number_of_tasks
+        assert number_of_tasks == number_of_tasks, number_of_tasks
 
     @patch.object(importer, 'client')
     def test_tasks_return_task_dict_with_info_from_query_result(self, client):
