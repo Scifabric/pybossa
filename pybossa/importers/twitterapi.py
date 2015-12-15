@@ -42,12 +42,7 @@ class _BulkTaskTwitterImport(object):
         return []
 
     def count_tasks(self, **form_data):
-        count = form_data.get('max_tweets')
-        if form_data.get('hashtag'):
-            return len(self._get_statuses(form_data.get('hashtag'), count=count))
-        if form_data.get('user'):
-            return len(self._get_statuses_from_account(form_data.get('user'), count=count))
-        return 0
+        return len(self.tasks(**form_data))
 
     def _get_statuses_from_account(self, query, count):
         max_id = None
