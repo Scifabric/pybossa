@@ -247,7 +247,7 @@ project, you will have to follow the next steps:
    :width: 100%
 
     
-3. And  click on the **Import Tasks** 
+3. And click on the **Import Tasks** 
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
@@ -359,7 +359,7 @@ presenter of the project:
 * link: the link to the Dropbox page showing the file.
 * link_raw: the link to the raw file served by Dropbox. This is the one you'll have to use if you want to direct link to the file from the presenter (e.g. for using an image in a <img> tag, you'd do: <img src=task.info.link_raw>).
 
-In addition to these generic information, the Dropbox importer also will recognize
+In addition to this generic information, the Dropbox importer will also recognize
 some kind of files by their extension and will attach some extra information to
 them.
 
