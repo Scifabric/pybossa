@@ -258,10 +258,10 @@ navigation bar:
 
 Tasks can be imported using any of the PyBossa built-in importers, such
 as :ref:`csv-import` and :ref:`epicollect-import`. To set up an autoimporter,
-please refer to the instructions for :ref:`csv-import`, :ref:`epicollect-import`
-or :ref:`flickr-import`, as the procedure is the same:
+please refer to the instructions for :ref:`csv-import`, :ref:`epicollect-import`,
+:ref:`flickr-import` or :ref:`twitter-import`, as the procedure is the same:
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/20PHlHe.png
 
 The only difference is that the tasks won't be imported only once, but regularly,
 as explained. However, the same behaviour should be expected, so autoimporting a

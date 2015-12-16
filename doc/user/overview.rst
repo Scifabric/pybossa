@@ -137,7 +137,7 @@ built-in :ref:`task-creator`. You have to do the following:
    see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/e9GhNlE.png
+.. image:: http://i.imgur.com/GbdkgEI.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -251,7 +251,7 @@ project, you will have to follow the next steps:
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/e9GhNlE.png
+.. image:: http://i.imgur.com/GbdkgEI.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -321,7 +321,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/e9GhNlE.png
+.. image:: http://i.imgur.com/GbdkgEI.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -398,9 +398,54 @@ These are the steps:
 
 .. image:: http://i.imgur.com/u5vusQR.png
 
-2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
+2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
 
-.. image:: http://i.imgur.com/e9GhNlE.png
+.. image:: http://i.imgur.com/GbdkgEI.png
+
+3. Fill in the two fields you will find in the form. The first one is for the
+source of your tweets. If you want them to be imported from a user account, then
+write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
+containing a word on them (or a #hashtag), then type it there. The second field
+is for you to specify how many tweets you want to import. You can import as many
+as you want!
+
+Finally, click on the "Import" button, and you are done:
+
+.. image:: http://i.imgur.com/hYWxI19.png
+
+.. _twitter-import:
+
+Importing the tasks from a Twitter account or search result
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Another option for importing tasks is using the built-in Twitter importer. It
+allows to import tweets as tasks from either a specified Twitter user account, or
+from the results returned from a search to the Twitter search API.
+
+Tasks imported with it will have the following data attached to their info field,
+and can later be used from within the task presenter:
+
+* created_at: the date and time the tweet was made.
+* favorite_count: number of times the tweet has been marked as 'favorite'.
+* retweet_count: number of times the tweet has been retweeted.
+* coordinates: geographic coordinates of the place the tweet was made from. Note
+that this is not always available for every tweet.
+* tweet_id: the internal ID handled by Twitter to identify this tweet.
+* user_screen_name: the screen name (or 'handle') of the author of the tweet.
+* text: the actual content of the tweet.
+
+For more information, please refer to the Twitter_ documentation.
+.. _Twitter: https://dev.twitter.com/
+
+So, to import tasks with the Twitter importer, do as follows:
+
+1. Navigate to your project's page and click in the **Tasks** section:
+
+.. image:: http://i.imgur.com/u5vusQR.png
+
+2. Then click on the **Import Tasks** button, and select the **Twitter importer**:
+
+.. image:: http://i.imgur.com/GbdkgEI.png
 
 3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
 account credentials. then select as many files as you want:
