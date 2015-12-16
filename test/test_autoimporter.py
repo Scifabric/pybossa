@@ -295,6 +295,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'Google Drive Spreadsheet' in res.data
         assert 'EpiCollect Plus Project' in res.data
         assert 'Flickr' in res.data
+        assert 'Twitter' in res.data
         assert 'Dropbox' not in res.data
 
 
@@ -309,6 +310,8 @@ class TestAutoimporterBehaviour(web.Helper):
         res = self.app.get(url, follow_redirects=True)
 
         assert 'Flickr' not in res.data
+        assert 'Dropbox' not in res.data
+        assert 'Twitter' not in res.data
 
 
     def test_autoimporter_with_specific_variant_argument(self):
@@ -348,6 +351,14 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Flickr Album" in data
+        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
+
+        # Twitter
+        url = "/project/%s/tasks/autoimporter?type=twitter" % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Twitter hashtag or account" in data
         assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Dropbox
