@@ -373,14 +373,10 @@ def setup_dropbox_importer(app):
 def setup_twitter_importer(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
-                app.config['TWITTER_CONSUMER_SECRET'] and
-                app.config['TWITTER_ACCESS_TOKEN'] and
-                app.config['TWITTER_TOKEN_SECRET']):
+                app.config['TWITTER_CONSUMER_SECRET']):
             importer_params = {
                 'consumer_key': app.config['TWITTER_CONSUMER_KEY'],
-                'consumer_secret': app.config['TWITTER_CONSUMER_SECRET'],
-                'access_token': app.config['TWITTER_ACCESS_TOKEN'],
-                'token_secret': app.config['TWITTER_TOKEN_SECRET']
+                'consumer_secret': app.config['TWITTER_CONSUMER_SECRET']
             }
             importer.register_twitter_importer(importer_params)
     except Exception as inst:  # pragma: no cover

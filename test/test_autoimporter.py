@@ -310,8 +310,6 @@ class TestAutoimporterBehaviour(web.Helper):
         res = self.app.get(url, follow_redirects=True)
 
         assert 'Flickr' not in res.data
-        assert 'Dropbox' not in res.data
-        assert 'Twitter' not in res.data
 
 
     def test_autoimporter_with_specific_variant_argument(self):

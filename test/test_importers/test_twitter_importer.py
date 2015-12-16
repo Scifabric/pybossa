@@ -24,10 +24,8 @@ from pybossa.importers.twitterapi import _BulkTaskTwitterImport
 
 class Test_BulkTaskTwitterImportSearchHashtag(object):
 
-    importer = _BulkTaskTwitterImport('access_token',
-                                      'token_secret',
-                                      'consumer_key',
-                                      'consumer_secret')
+    with patch('pybossa.importers.twitterapi.oauth2_dance'):
+        importer = _BulkTaskTwitterImport('consumer_key', 'consumer_secret')
 
     def create_status(_id):
         return {
@@ -144,10 +142,8 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
 
 class Test_BulkTaskTwitterImportFromAccount(object):
 
-    importer = _BulkTaskTwitterImport('access_token',
-                                      'token_secret',
-                                      'consumer_key',
-                                      'consumer_secret')
+    with patch('pybossa.importers.twitterapi.oauth2_dance'):
+        importer = _BulkTaskTwitterImport('consumer_key', 'consumer_secret')
 
     def create_status(_id):
         return {

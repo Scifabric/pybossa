@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from twitter import Twitter, OAuth
+from twitter import Twitter, OAuth2, oauth2_dance
 
 
 class _BulkTaskTwitterImport(object):
@@ -23,12 +23,9 @@ class _BulkTaskTwitterImport(object):
     importer_id = "twitter"
     DEFAULT_NUMBER_OF_TWEETS = 50
 
-    def __init__(self, access_token, token_secret, consumer_key, consumer_secret):
-        self.client = Twitter(auth=OAuth(
-            access_token,
-            token_secret,
-            consumer_key,
-            consumer_secret))
+    def __init__(self, consumer_key, consumer_secret):
+        bearer_token = oauth2_dance(consumer_key, consumer_secret)
+        self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
 
     def tasks(self, **form_data):
         count = form_data.get('max_tweets', self.DEFAULT_NUMBER_OF_TWEETS)

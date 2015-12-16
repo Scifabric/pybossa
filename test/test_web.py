@@ -2992,7 +2992,8 @@ class TestWeb(web.Helper):
         assert tasks[0].info == expected_info, tasks[0].info
 
     @patch('pybossa.importers.twitterapi.Twitter')
-    def test_bulk_twitter_import_works(self, client):
+    @patch('pybossa.importers.twitterapi.oauth2_dance')
+    def test_bulk_twitter_import_works(self, oauth, client):
         """Test WEB bulk Twitter import works"""
         tweet_data = {
             'statuses': [
