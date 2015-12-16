@@ -51,7 +51,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '1.2.2',
+    version = '1.3.0',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
