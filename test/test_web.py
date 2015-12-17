@@ -3028,7 +3028,9 @@ class TestWeb(web.Helper):
         expected_info = {
             u'text': u'this is a tweet #match',
             u'user_screen_name': u'fulanito',
+            u'user': {'screen_name': u'fulanito'},
             u'coordinates': u'coords',
+            u'id_str': u'1',
             u'id': 1,
             u'retweet_count': 44,
             u'created_at': u'created',
