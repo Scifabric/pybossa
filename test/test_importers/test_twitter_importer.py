@@ -22,7 +22,7 @@ from pybossa.importers import BulkImportException
 from pybossa.importers.twitterapi import _BulkTaskTwitterImport
 
 
-class Test_BulkTaskTwitterImportSearchHashtag(object):
+class Test_BulkTaskTwitterImportSearch(object):
 
     with patch('pybossa.importers.twitterapi.oauth2_dance'):
         importer = _BulkTaskTwitterImport('consumer_key', 'consumer_secret')
@@ -121,7 +121,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         tasks = self.importer.tasks(**form_data)
 
         assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
-        assert calls[0]['kwargs']['q'] == form_data['source'], calls[0]['kwargs']
+        assert calls[0]['kwargs']['q'] == form_data['source'] + '-filter:retweets', calls[0]['kwargs']
         assert calls[1]['kwargs']['count'] == 1, calls[1]['kwargs']
         assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']

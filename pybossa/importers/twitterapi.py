@@ -56,6 +56,7 @@ class _BulkTaskTwitterImport(object):
         return source and source.startswith('@')
 
     def _fetch_statuses_from_search(self, **kwargs):
+        kwargs['q'] = kwargs['q'] + '-filter:retweets'
         return self.client.search.tweets(**kwargs).get('statuses')
 
     def _fetch_statuses_from_account(self, **kwargs):
