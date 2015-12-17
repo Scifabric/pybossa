@@ -76,9 +76,10 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         assert info['created_at'] == expected_task_data['created_at']
         assert info['favorite_count'] == expected_task_data['favorite_count']
         assert info['coordinates'] == expected_task_data['coordinates']
-        assert info['tweet_id'] == expected_task_data['id_str']
+        assert info['id'] == expected_task_data['id']
         assert info['retweet_count'] == expected_task_data['retweet_count']
         assert info['user_screen_name'] == expected_task_data['user']['screen_name']
+        assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
     @patch.object(importer, 'client')
@@ -246,9 +247,10 @@ class Test_BulkTaskTwitterImportFromAccount(object):
         assert info['created_at'] == expected_task_data['created_at']
         assert info['favorite_count'] == expected_task_data['favorite_count']
         assert info['coordinates'] == expected_task_data['coordinates']
-        assert info['tweet_id'] == expected_task_data['id_str']
+        assert info['id'] == expected_task_data['id']
         assert info['retweet_count'] == expected_task_data['retweet_count']
         assert info['user_screen_name'] == expected_task_data['user']['screen_name']
+        assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
     @patch.object(importer, 'client')

@@ -64,13 +64,6 @@ class _BulkTaskTwitterImport(object):
         return self.client.statuses.user_timeline(**kwargs)
 
     def _create_task_from_status(self, status):
-        info = {
-            'created_at': status.get('created_at'),
-            'favorite_count': status.get('favorite_count'),
-            'coordinates': status.get('coordinates'),
-            'tweet_id': status.get('id_str'),
-            'retweet_count': status.get('retweet_count'),
-            'user_screen_name': status.get('user').get('screen_name'),
-            'text': status.get('text')
-        }
+        user_screen_name = status.get('user').get('screen_name')
+        info = dict(status, user_screen_name=user_screen_name)
         return {'info': info}
