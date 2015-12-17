@@ -59,6 +59,8 @@ class _BulkTaskTwitterImport(object):
         return self.client.search.tweets(**kwargs).get('statuses')
 
     def _fetch_statuses_from_account(self, **kwargs):
+        kwargs['screen_name'] = kwargs['q']
+        del kwargs['q']
         return self.client.statuses.user_timeline(**kwargs)
 
     def _create_task_from_status(self, status):

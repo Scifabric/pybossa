@@ -120,6 +120,7 @@ class Test_BulkTaskTwitterImportSearchHashtag(object):
         tasks = self.importer.tasks(**form_data)
 
         assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
+        assert calls[0]['kwargs']['q'] == form_data['source'], calls[0]['kwargs']
         assert calls[1]['kwargs']['count'] == 1, calls[1]['kwargs']
         assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
@@ -289,6 +290,8 @@ class Test_BulkTaskTwitterImportFromAccount(object):
         tasks = self.importer.tasks(**form_data)
 
         assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
+        assert calls[0]['kwargs'].get('q') is None, calls[0]['kwargs']
+        assert calls[0]['kwargs']['screen_name'] == form_data['source']
         assert calls[1]['kwargs']['count'] == 1, calls[1]['kwargs']
         assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
