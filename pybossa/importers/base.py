@@ -15,15 +15,24 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PyBossa main module.
 
-This exports:
-    * auth: for authorization methods
-    * cache: for caching pages, and methods
-    * view: for web front views
+class BulkImportException(Exception):
 
-"""
+    """Generic Bulk Importer Exception Error."""
+
+    pass
 
 
-__version__ = "1.3.0"  # pragma: no cover
+class _BulkTaskImport(object):
+
+    """Class to import tasks in bulk."""
+
+    importer_id = None
+
+    def tasks(self, **form_data):
+        """Return a generator with all the tasks imported."""
+        pass
+
+    def count_tasks(self, **form_data):
+        """Return amount of tasks to be imported."""
+        return len([task for task in self.tasks(**form_data)])

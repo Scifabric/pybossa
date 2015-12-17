@@ -252,6 +252,8 @@ them.
 .. _Twitter: https://dev.twitter.com/
 .. _`TWITTER_CONSUMER_KEY`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L52
 .. _`TWITTER_CONSUMER_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L53
+.. note::
+    This will also enable the Twitter task importer.
 
 Facebook
 ~~~~~~~~
@@ -263,7 +265,6 @@ variables: `FACEBOOK_APP_ID`_ and `FACEBOOK_APP_SECRET`_ and uncomment them.
 .. _Facebook: https://developers.facebook.com/apps
 .. _`FACEBOOK_APP_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L54
 .. _`FACEBOOK_APP_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L55
-
 
 Google
 ~~~~~~
@@ -330,7 +331,6 @@ type of users:
 .. code-block:: python
 
     ANNOUNCEMENT = {'root': 'Your secret message'}
-
 
 There is an example of the **ANNOUNCEMENT** variable in the
 `settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_
@@ -727,7 +727,7 @@ interested users.
 Enabling the Flickr Task importer
 =================================
 
-PyBossa has five different types of built-in importers. Users can use them to
+PyBossa has several different types of built-in importers. Users can use them to
 import tasks for their projects directly from the Web interface. However, using
 the Flickr one requires an API key and shared secret from Flickr in order to
 communicate with the service.
@@ -743,15 +743,28 @@ refer to `here <https://www.flickr.com/services/api/>`_.
 Enabling the Dropbox Task importer
 ==================================
 
-In addition to the Flickr importer, PyBossa also offers the Dropbox importer, which
-allows to import directly all kind of files from a Dropbox account. In order to
-use it, you'll need to register your PyBossa server as a Dropbox app, as explained
+PyBossa also offers the Dropbox importer, which allows to import directly all
+kind of files from a Dropbox account. In order to use it, you'll need to
+register your PyBossa server as a Dropbox app, as explained
 `here <https://www.dropbox.com/developers/dropins/chooser/js#setup>`_.
 
 Don't worry about the Javascript snippet part, we've already handled that for you.
 Instead, get the App key you will be given and add it to your settings_local.py::
 
     DROPBOX_APP_KEY = 'your-key'
+
+Enabling the Twitter Task importer
+==================================
+
+If you already have enabled the Twitter authentication, then the Twitter task
+importer will be enabled too. Otherwise, you will need to create an application
+in Twitter_ and copy and paste the **Consumer key and secret** into the next
+variables: `TWITTER_CONSUMER_KEY`_ and `TWITTER_CONSUMER_SECRET`_ and uncomment
+them.
+
+.. _Twitter: https://dev.twitter.com/
+.. note::
+    This will also enable PyBossa's Twitter login.
 
 Enabling Server Sent Events
 ===========================

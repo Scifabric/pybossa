@@ -1,0 +1,110 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2015 SciFabric LTD.
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
+import json
+from mock import patch
+from nose.tools import assert_raises
+from pybossa.importers import BulkImportException
+from pybossa.importers.epicollect import _BulkTaskEpiCollectPlusImport
+from default import FakeResponse
+
+
+@patch('pybossa.importers.epicollect.requests.get')
+class Test_BulkTaskEpiCollectPlusImport(object):
+
+    epicollect = {'epicollect_project': 'fakeproject',
+                  'epicollect_form': 'fakeform'}
+    importer = _BulkTaskEpiCollectPlusImport()
+
+    def test_count_tasks_raises_exception_if_file_forbidden(self, request):
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                         headers={'content-type': 'text/json'},
+                                         encoding='utf-8')
+        request.return_value = forbidden_request
+        msg = "Oops! It looks like you don't have permission to access the " \
+              "EpiCollect Plus project"
+
+        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
+        try:
+            self.importer.count_tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+    def test_tasks_raises_exception_if_file_forbidden(self, request):
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                         headers={'content-type': 'text/json'},
+                                         encoding='utf-8')
+        request.return_value = forbidden_request
+        msg = "Oops! It looks like you don't have permission to access the " \
+              "EpiCollect Plus project"
+
+        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
+        try:
+            self.importer.tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+    def test_count_tasks_raises_exception_if_not_json(self, request):
+        html_request = FakeResponse(text='Not an application/json',
+                                    status_code=200,
+                                    headers={'content-type': 'text/html'},
+                                    encoding='utf-8')
+        request.return_value = html_request
+        msg = "Oops! That project and form do not look like the right one."
+
+        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
+        try:
+            self.importer.count_tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+    def test_tasks_raises_exception_if_not_json(self, request):
+        html_request = FakeResponse(text='Not an application/json',
+                                    status_code=200,
+                                    headers={'content-type': 'text/html'},
+                                    encoding='utf-8')
+        request.return_value = html_request
+        msg = "Oops! That project and form do not look like the right one."
+
+        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
+        try:
+            self.importer.tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+    def test_count_tasks_returns_number_of_tasks_in_project(self, request):
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        response = FakeResponse(text=json.dumps(data), status_code=200,
+                                headers={'content-type': 'application/json'},
+                                encoding='utf-8')
+        request.return_value = response
+
+        number_of_tasks = self.importer.count_tasks(**self.epicollect)
+
+        assert number_of_tasks is 2, number_of_tasks
+
+    def test_tasks_returns_tasks_in_project(self, request):
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        response = FakeResponse(text=json.dumps(data), status_code=200,
+                                headers={'content-type': 'application/json'},
+                                encoding='utf-8')
+        request.return_value = response
+
+        task = self.importer.tasks(**self.epicollect).next()
+
+        assert task == {'info': {u'DeviceID': 23}}, task

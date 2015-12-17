@@ -15,15 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PyBossa main module.
+"""Importers module for PyBossa."""
 
-This exports:
-    * auth: for authorization methods
-    * cache: for caching pages, and methods
-    * view: for web front views
-
-"""
-
-
-__version__ = "1.3.0"  # pragma: no cover
+from .importer import Importer
+from .base import BulkImportException

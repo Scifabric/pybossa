@@ -2625,6 +2625,8 @@ class TestWeb(web.Helper):
         assert "type=flickr" in res.data, err_msg
         err_msg = "There should be a Dropbox importer"
         assert "type=dropbox" in res.data, err_msg
+        err_msg = "There should be a Twitter importer"
+        assert "type=twitter" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2689,6 +2691,14 @@ class TestWeb(web.Helper):
         assert "From your Dropbox account" in data
         assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
+        # Twitter
+        url = "/project/%s/tasks/import?type=twitter" % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Twitter hashtag or account" in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
+
         # Invalid
         url = "/project/%s/tasks/import?type=invalid" % project.short_name
         res = self.app.get(url, follow_redirects=True)
@@ -2707,9 +2717,10 @@ class TestWeb(web.Helper):
 
         assert "type=flickr" not in res.data
         assert "type=dropbox" not in res.data
+        assert "type=twitter" not in res.data
 
     @patch('pybossa.view.projects.redirect', wraps=redirect)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
         """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
@@ -2766,7 +2777,7 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_bulk_csv_import_works(self, Mock, mock):
         """Test WEB bulk import works"""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
@@ -2805,7 +2816,7 @@ class TestWeb(web.Helper):
             n += 1
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.csv.requests.get')
     def test_bulk_gdocs_import_works(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
@@ -2859,14 +2870,14 @@ class TestWeb(web.Helper):
         assert "no new records" in res.data, res.data
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.epicollect.requests.get')
     def test_bulk_epicollect_import_works(self, Mock, mock):
         """Test WEB bulk Epicollect import works"""
         data = [dict(DeviceID=23)]
-        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+        fake_response = FakeResponse(text=json.dumps(data), status_code=200,
                                     headers={'content-type': 'application/json'},
                                     encoding='utf-8')
-        Mock.return_value = html_request
+        Mock.return_value = fake_response
         self.register()
         self.new_project()
         project = db.session.query(Project).first()
@@ -2884,10 +2895,10 @@ class TestWeb(web.Helper):
         assert tasks[0].info['DeviceID'] == 23, err_msg
 
         data = [dict(DeviceID=23), dict(DeviceID=24)]
-        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+        fake_response = FakeResponse(text=json.dumps(data), status_code=200,
                                     headers={'content-type': 'application/json'},
                                     encoding='utf-8')
-        Mock.return_value = html_request
+        Mock.return_value = fake_response
         res = self.app.post(('/project/%s/tasks/import' % (project.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
@@ -2901,7 +2912,7 @@ class TestWeb(web.Helper):
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
 
-    @patch('pybossa.importers.requests.get')
+    @patch('pybossa.importers.flickr.requests.get')
     def test_bulk_flickr_import_works(self, request):
         """Test WEB bulk Flickr import works"""
         data = {
@@ -2922,10 +2933,10 @@ class TestWeb(web.Helper):
                 "total": 1,
                 "title": "Science Hack Day Balloon Mapping Workshop" },
             "stat": "ok" }
-        html_request = FakeResponse(text=json.dumps(data), status_code=200,
+        fake_response = FakeResponse(text=json.dumps(data), status_code=200,
                                     headers={'content-type': 'application/json'},
                                     encoding='utf-8')
-        request.return_value = html_request
+        request.return_value = fake_response
         self.register()
         self.new_project()
         project = db.session.query(Project).first()
@@ -2973,12 +2984,58 @@ class TestWeb(web.Helper):
 
         project = db.session.query(Project).first()
         err_msg = "Tasks should be imported"
-        #assert "1 new task was imported successfully" in res.data, res.data
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
             u'link_raw': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1',
             u'link': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0',
             u'filename': u'test.txt'}
+        assert tasks[0].info == expected_info, tasks[0].info
+
+    @patch('pybossa.importers.twitterapi.Twitter')
+    @patch('pybossa.importers.twitterapi.oauth2_dance')
+    def test_bulk_twitter_import_works(self, oauth, client):
+        """Test WEB bulk Twitter import works"""
+        tweet_data = {
+            'statuses': [
+                {
+                    u'created_at': 'created',
+                    u'favorite_count': 77,
+                    u'coordinates': 'coords',
+                    u'id_str': u'1',
+                    u'id': 1,
+                    u'retweet_count': 44,
+                    u'user': {'screen_name': 'fulanito'},
+                    u'text': 'this is a tweet #match'
+                }
+            ]
+        }
+        client_instance = Mock()
+        client_instance.search.tweets.return_value = tweet_data
+        client.return_value = client_instance
+
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        res = self.app.post('/project/%s/tasks/import' % project.short_name,
+                            data={'source': '#match',
+                                  'max_tweets': 1,
+                                  'form_name': 'twitter'},
+                            follow_redirects=True)
+
+        project = db.session.query(Project).first()
+        err_msg = "Tasks should be imported"
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
+        expected_info = {
+            u'created_at': 'created',
+            u'favorite_count': 77,
+            u'coordinates': 'coords',
+            u'id_str': u'1',
+            u'id': 1,
+            u'retweet_count': 44,
+            u'user': {'screen_name': 'fulanito'},
+            u'user_screen_name': 'fulanito',
+            u'text': 'this is a tweet #match'
+        }
         assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context

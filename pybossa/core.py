@@ -276,8 +276,6 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
-    # The RQDashboard is actually registering a blueprint to the app, so this is
-    # a propper place for it to be initialized
     from rq_dashboard import RQDashboard
     RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
                 redis_conn=sentinel.master)
@@ -285,6 +283,15 @@ def setup_blueprints(app):
 
 def setup_external_services(app):
     """Setup external services."""
+    setup_twitter_login(app)
+    setup_facebook_login(app)
+    setup_google_login(app)
+    setup_flickr_importer(app)
+    setup_dropbox_importer(app)
+    setup_twitter_importer(app)
+
+
+def setup_twitter_login(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
                 app.config['TWITTER_CONSUMER_SECRET']):
@@ -297,9 +304,10 @@ def setup_external_services(app):
         print inst
         print "Twitter signin disabled"
         log_message = 'Twitter signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
-    # Enable Facebook if available
+
+def setup_facebook_login(app):
     try:  # pragma: no cover
         if (app.config['FACEBOOK_APP_ID']
                 and app.config['FACEBOOK_APP_SECRET']):
@@ -312,9 +320,10 @@ def setup_external_services(app):
         print inst
         print "Facebook signin disabled"
         log_message = 'Facebook signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
-    # Enable Google if available
+
+def setup_google_login(app):
     try:  # pragma: no cover
         if (app.config['GOOGLE_CLIENT_ID']
                 and app.config['GOOGLE_CLIENT_SECRET']):
@@ -327,24 +336,28 @@ def setup_external_services(app):
         print inst
         print "Google signin disabled"
         log_message = 'Google signin disabled: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
-    # Enable Flickr if available
+
+def setup_flickr_importer(app):
     try:  # pragma: no cover
         if (app.config['FLICKR_API_KEY']
                 and app.config['FLICKR_SHARED_SECRET']):
             flickr.init_app(app)
             from pybossa.view.flickr import blueprint as flickr_bp
             app.register_blueprint(flickr_bp, url_prefix='/flickr')
+            importer_params = {'api_key': app.config['FLICKR_API_KEY']}
+            importer.register_flickr_importer(importer_params)
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
         print inst
         print "Flickr importer not available"
         log_message = 'Flickr importer not available: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
 
-    # Enable Dropbox if available
+
+def setup_dropbox_importer(app):
     try:  # pragma: no cover
         if app.config['DROPBOX_APP_KEY']:
             importer.register_dropbox_importer()
@@ -354,7 +367,25 @@ def setup_external_services(app):
         print inst
         print "Dropbox importer not available"
         log_message = 'Dropbox importer not available: %s' % str(inst)
-        app.logger.error(log_message)
+        app.logger.info(log_message)
+
+
+def setup_twitter_importer(app):
+    try:  # pragma: no cover
+        if (app.config['TWITTER_CONSUMER_KEY'] and
+                app.config['TWITTER_CONSUMER_SECRET']):
+            importer_params = {
+                'consumer_key': app.config['TWITTER_CONSUMER_KEY'],
+                'consumer_secret': app.config['TWITTER_CONSUMER_SECRET']
+            }
+            importer.register_twitter_importer(importer_params)
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Twitter importer not available"
+        log_message = 'Twitter importer not available: %s' % str(inst)
+        app.logger.info(log_message)
 
 
 def setup_geocoding(app):
