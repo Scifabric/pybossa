@@ -422,8 +422,16 @@ Another option for importing tasks is using the built-in Twitter importer. It
 allows to import tweets as tasks from either a specified Twitter user account, or
 from the results returned from a search to the Twitter search API.
 
-Tasks imported with it will have the following data attached to their info field,
-and can later be used from within the task presenter:
+Tasks imported with it will have the tweet data attached to their info field,
+and can later be used from within the task presenter. This data is a direct
+transcription of the data returned by the Twitter API, in particular a Tweet_
+object.
+
+.. _Tweet: https://dev.twitter.com/overview/api/tweets
+
+Please notice that the values returned by the Twitter API may vary. However,
+the following fields are guaranteed to be always included in the info field of
+the tasks:
 
 * created_at: the date and time the tweet was made.
 * favorite_count: number of times the tweet has been marked as 'favorite'.
@@ -431,8 +439,15 @@ and can later be used from within the task presenter:
 * coordinates: geographic coordinates of the place the tweet was made from. Note
 that this is not always available for every tweet.
 * tweet_id: the internal ID handled by Twitter to identify this tweet.
-* user_screen_name: the screen name (or 'handle') of the author of the tweet.
+* user: an object_ with information about the tweet author, as returned by the
+Twitter API.
 * text: the actual content of the tweet.
+
+In addition, an extra field "user_screen_name" has been added to the info field:
+* user_screen_name: the screen name (or 'handle') of the author of the tweet.
+
+
+.. _object: https://dev.twitter.com/overview/api/users
 
 For more information, please refer to the Twitter_ documentation.
 .. _Twitter: https://dev.twitter.com/
