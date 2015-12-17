@@ -764,7 +764,7 @@ them.
 
 .. _Twitter: https://dev.twitter.com/
 .. note::
-    This will also enable Twitter authentication.
+    This will also enable PyBossa's Twitter login.
 
 Enabling Server Sent Events
 ===========================
