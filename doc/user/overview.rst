@@ -446,11 +446,13 @@ Twitter API.
 In addition, an extra field "user_screen_name" has been added to the info field:
 * user_screen_name: the screen name (or 'handle') of the author of the tweet.
 
-
 .. _object: https://dev.twitter.com/overview/api/users
 
 For more information, please refer to the Twitter_ documentation.
 .. _Twitter: https://dev.twitter.com/
+
+.. note::
+    **When importing tweets from a search, retweets will be ignored!**
 
 So, to import tasks with the Twitter importer, do as follows:
 

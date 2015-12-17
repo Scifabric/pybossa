@@ -3026,13 +3026,15 @@ class TestWeb(web.Helper):
         err_msg = "Tasks should be imported"
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'text': u'this is a tweet #match',
-            u'user_screen_name': u'fulanito',
-            u'coordinates': u'coords',
+            u'created_at': 'created',
+            u'favorite_count': 77,
+            u'coordinates': 'coords',
+            u'id_str': u'1',
             u'id': 1,
             u'retweet_count': 44,
-            u'created_at': u'created',
-            u'favorite_count': 77
+            u'user': {'screen_name': 'fulanito'},
+            u'user_screen_name': 'fulanito',
+            u'text': 'this is a tweet #match'
         }
         assert tasks[0].info == expected_info, tasks[0].info
 
