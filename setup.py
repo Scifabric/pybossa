@@ -33,6 +33,7 @@ requirements = [
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
+    "python-novaclient>=2.31.0, <3.0",
     "pyrax>=1.9.5, <2.0",
     "pillow>=3.0, <3.1",
     "flask-debugtoolbar>=0.9.0, <1.0",
