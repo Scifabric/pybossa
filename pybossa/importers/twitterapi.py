@@ -21,21 +21,21 @@ from twitter import Twitter, OAuth2, oauth2_dance
 class _BulkTaskTwitterImport(object):
 
     importer_id = "twitter"
-    DEFAULT_NUMBER_OF_TWEETS = 50
+    DEFAULT_NUMBER_OF_TWEETS = 200
 
     def __init__(self, consumer_key, consumer_secret):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
         self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
 
     def tasks(self, **form_data):
-        count = form_data.get('max_tweets', self.DEFAULT_NUMBER_OF_TWEETS)
+        count = form_data.get('max_tweets') or self.DEFAULT_NUMBER_OF_TWEETS
         source = form_data.get('source')
         statuses = self._get_statuses(source, count)
         tasks = [self._create_task_from_status(status) for status in statuses]
         return tasks[0:count]
 
     def count_tasks(self, **form_data):
-        return form_data.get('max_tweets', self.DEFAULT_NUMBER_OF_TWEETS)
+        return form_data.get('max_tweets') or self.DEFAULT_NUMBER_OF_TWEETS
 
     def _get_statuses(self, source, count):
         if self._is_source_a_user_account(source):

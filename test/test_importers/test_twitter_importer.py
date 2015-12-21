@@ -128,7 +128,7 @@ class Test_BulkTaskTwitterImportSearch(object):
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
 
     @patch.object(importer, 'client')
-    def test_max_tweets_gets_a_default_value_of_50(self, client):
+    def test_max_tweets_gets_a_default_value_of_200(self, client):
         calls = []
         def response(*args, **kwargs):
             calls.append({'args': args, 'kwargs': kwargs})
@@ -139,7 +139,7 @@ class Test_BulkTaskTwitterImportSearch(object):
 
         tasks = self.importer.tasks(**form_data)
 
-        assert calls[0]['kwargs']['count'] == 50, calls[0]['kwargs']['count']
+        assert calls[0]['kwargs']['count'] == 200, calls[0]['kwargs']['count']
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):
