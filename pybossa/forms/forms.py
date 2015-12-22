@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField, FieldList
+    SelectField, validators, TextAreaField, PasswordField, FieldList, HiddenField
 from wtforms.fields.html5 import EmailField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -189,11 +189,13 @@ class _BulkTaskTwitterImportForm(Form):
     source = TextField(lazy_gettext('Source'),
                        [validators.Required(message=msg_required)])
     max_tweets = IntegerField(lazy_gettext('Number of tweets'))
+    user_credentials = HiddenField(label=None)
     def get_import_data(self):
         return {
             'type': 'twitter',
             'source': self.source.data,
-            'max_tweets': self.max_tweets.data
+            'max_tweets': self.max_tweets.data,
+            'user_credentials': self.user_credentials,
         }
 
 
