@@ -29,9 +29,13 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
 
     importer_id = "epicollect"
 
-    def tasks(self, **form_data):
+    def __init__(self, epicollect_project, epicollect_form):
+        self.project = epicollect_project
+        self.form = epicollect_form
+
+    def tasks(self):
         """Get tasks."""
-        dataurl = self._get_data_url(**form_data)
+        dataurl = self._get_data_url()
         r = requests.get(dataurl)
         return self._get_epicollect_data_from_request(r)
 
@@ -40,10 +44,10 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         for d in data:
             yield {"info": d}
 
-    def _get_data_url(self, **form_data):
+    def _get_data_url(self):
         """Get data url."""
         return 'http://plus.epicollect.net/%s/%s.json' % \
-            (form_data['epicollect_project'], form_data['epicollect_form'])
+            (self.project, self.form)
 
     def _get_epicollect_data_from_request(self, r):
         """Get epicollect data from request."""

@@ -53,11 +53,10 @@ class Importer(object):
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
-        importer_id = form_data.get('type')
         empty = True
         n = 0
-        importer = self._create_importer_for(importer_id)
-        for task_data in importer.tasks(**form_data):
+        importer = self._create_importer_for(**form_data)
+        for task_data in importer.tasks():
             task = Task(project_id=project_id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.get_task_by(project_id=project_id, info=task.info)
@@ -75,12 +74,13 @@ class Importer(object):
 
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""
-        importer_id = form_data.get('type')
-        return self._create_importer_for(importer_id).count_tasks(**form_data)
+        return self._create_importer_for(**form_data).count_tasks()
 
-    def _create_importer_for(self, importer_id):
+    def _create_importer_for(self, **form_data):
         """Create importer."""
+        importer_id = form_data.get('type')
         params = self._importer_constructor_params.get(importer_id) or {}
+        params.update(form_data)
         return self._importers[importer_id](**params)
 
     def get_all_importer_names(self):

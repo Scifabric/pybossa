@@ -28,13 +28,16 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
 
     importer_id = 'dropbox'
 
-    def tasks(self, **form_data):
-        """Get tasks."""
-        return [self._extract_file_info(_file) for _file in form_data['files']]
+    def __init__(self, files):
+        self.files = files
 
-    def count_tasks(self, **form_data):
+    def tasks(self):
+        """Get tasks."""
+        return [self._extract_file_info(_file) for _file in self.files]
+
+    def count_tasks(self):
         """Count number of tasks."""
-        return len(self.tasks(**form_data))
+        return len(self.tasks())
 
     def _extract_file_info(self, _file):
         """Extract file information."""

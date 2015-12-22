@@ -29,10 +29,10 @@ class _BulkTaskImport(object):
 
     importer_id = None
 
-    def tasks(self, **form_data):
+    def tasks(self):
         """Return a generator with all the tasks imported."""
-        pass
+        raise NotImplementedError
 
-    def count_tasks(self, **form_data):
+    def count_tasks(self):
         """Return amount of tasks to be imported."""
-        return len([task for task in self.tasks(**form_data)])
+        return len([task for task in self.tasks()])

@@ -56,7 +56,7 @@ class Test_BulkTaskFlickrImport(object):
     photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
              u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
              u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
-    importer = _BulkTaskFlickrImport(api_key='fake-key')
+    importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='72157633923521788')
 
 
     def make_response(self, text, status_code=200):
@@ -67,7 +67,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_call_to_flickr_api_endpoint(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
-        self.importer._get_album_info('72157633923521788')
+        self.importer._get_album_info()
         url = 'https://api.flickr.com/services/rest/'
         payload = {'method': 'flickr.photosets.getPhotos',
                    'api_key': 'fake-key',
@@ -78,7 +78,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_call_to_flickr_api_uses_no_credentials(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
-        self.importer._get_album_info('72157633923521788')
+        self.importer._get_album_info()
 
         # The request MUST NOT include user credentials, to avoid private photos
         url_call_params = requests.get.call_args_list[0][1]['params'].keys()
@@ -87,25 +87,25 @@ class Test_BulkTaskFlickrImport(object):
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
 
-        number_of_tasks = self.importer.count_tasks(album_id='72157633923521788')
+        number_of_tasks = self.importer.count_tasks()
 
         assert number_of_tasks is 3, number_of_tasks
 
     def test_count_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
+        importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
-        assert_raises(BulkImportException, self.importer.count_tasks, album_id='bad')
+        assert_raises(BulkImportException, importer.count_tasks)
 
     def test_count_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
-        assert_raises(BulkImportException, self.importer.count_tasks,
-                      album_id='72157633923521788')
+        assert_raises(BulkImportException, self.importer.count_tasks)
 
     def test_tasks_returns_list_of_all_photos(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
 
-        photos = self.importer.tasks(album_id='72157633923521788')
+        photos = self.importer.tasks()
 
         assert len(photos) == 3, len(photos)
 
@@ -116,7 +116,7 @@ class Test_BulkTaskFlickrImport(object):
         url_b = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg'
         link = 'https://www.flickr.com/photos/32985084@N00/8947115130'
         title = self.response['photoset']['photo'][0]['title']
-        photo = self.importer.tasks(album_id='72157633923521788')[0]
+        photo = self.importer.tasks()[0]
 
         assert photo['info'].get('title') == title
         assert photo['info'].get('url') == url, photo['info'].get('url')
@@ -126,14 +126,14 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
+        importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
-        assert_raises(BulkImportException, self.importer.tasks, album_id='bad')
+        assert_raises(BulkImportException, importer.tasks)
 
     def test_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
-        assert_raises(BulkImportException, self.importer.tasks,
-                      album_id='72157633923521788')
+        assert_raises(BulkImportException, self.importer.tasks)
 
     def test_tasks_returns_all_for_sets_with_more_than_500_photos(self, requests):
         # Deep-copy the object, as we will be modifying it and we don't want
@@ -153,7 +153,7 @@ class Test_BulkTaskFlickrImport(object):
         responses = [fake_first_response, fake_second_response]
         requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
 
-        photos = self.importer.tasks(album_id='72157633923521788')
+        photos = self.importer.tasks()
 
         assert len(photos) == 600, len(photos)
 
@@ -181,6 +181,6 @@ class Test_BulkTaskFlickrImport(object):
         responses = [fake_first_response, fake_second_response, fake_third_response]
         requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
 
-        photos = self.importer.tasks(album_id='72157633923521788')
+        photos = self.importer.tasks()
 
         assert len(photos) == 1100, len(photos)
