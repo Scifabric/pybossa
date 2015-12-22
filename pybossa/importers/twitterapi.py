@@ -22,14 +22,14 @@ from .base import _BulkTaskImport
 class _BulkTaskTwitterImport(_BulkTaskImport):
 
     importer_id = "twitter"
-    DEFAULT_NUMBER_OF_TWEETS = 200
+    DEFAULT_TWEETS = 200
     NO_RETWEETS = '-filter:retweets'
 
     def __init__(self, consumer_key, consumer_secret, source, max_tweets=None):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
         self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
         self.source = source
-        self.count = max_tweets or self.DEFAULT_NUMBER_OF_TWEETS
+        self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
 
     def tasks(self):
         statuses = self._get_statuses()
