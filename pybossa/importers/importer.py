@@ -81,6 +81,7 @@ class Importer(object):
         importer_id = form_data.get('type')
         params = self._importer_constructor_params.get(importer_id) or {}
         params.update(form_data)
+        del params['type']
         return self._importers[importer_id](**params)
 
     def get_all_importer_names(self):
