@@ -22,10 +22,16 @@ from pybossa.importers import BulkImportException
 from pybossa.importers.twitterapi import _BulkTaskTwitterImport
 
 
-class Test_BulkTaskTwitterImportSearch(object):
-
+def create_importer_with_form_data(**form_data):
     with patch('pybossa.importers.twitterapi.oauth2_dance'):
-        importer = _BulkTaskTwitterImport('consumer_key', 'consumer_secret')
+        form_data['consumer_key'] = 'consumer_key'
+        form_data['consumer_secret'] = 'consumer_secret'
+        importer = _BulkTaskTwitterImport(**form_data)
+    importer.client = Mock()
+    return importer
+
+
+class Test_BulkTaskTwitterImportSearch(object):
 
     def create_status(_id):
         return {
@@ -53,23 +59,23 @@ class Test_BulkTaskTwitterImportSearch(object):
         u'statuses': [create_status(i+1) for i in range(5)]
     }
 
-    @patch.object(importer, 'client')
-    def test_count_tasks_returns_number_of_tweets_requested(self, client):
-        client.search.tweets.return_value = self.one_status
+    def test_count_tasks_returns_number_of_tweets_requested(self):
         max_tweets = 10
         form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets.return_value = self.one_status
 
-        number_of_tasks = self.importer.count_tasks(**form_data)
+        number_of_tasks = importer.count_tasks()
 
         assert number_of_tasks == number_of_tasks, number_of_tasks
 
-    @patch.object(importer, 'client')
-    def test_tasks_return_task_dict_with_info_from_query_result(self, client):
-        client.search.tweets.return_value = self.one_status
+    def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '#match', 'max_tweets': 1}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets.return_value = self.one_status
         expected_task_data = self.one_status['statuses'][0]
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == 1, tasks
         info = tasks[0]['info']
@@ -82,43 +88,43 @@ class Test_BulkTaskTwitterImportSearch(object):
         assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
-    @patch.object(importer, 'client')
-    def test_task_can_return_more_than_returned_by_single_api_call(self, client):
+    def test_task_can_return_more_than_returned_by_single_api_call(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         def multiple_responses(*args, **kwargs):
             return responses.pop()
 
-        client.search.tweets = multiple_responses
         max_tweets = 10
         form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets = multiple_responses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == 6, len(tasks)
 
-    @patch.object(importer, 'client')
-    def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
-        client.search.tweets.return_value = self.five_statuses
+    def test_task_does_not_return_more_than_requested_even_if_api_do(self):
         max_tweets = 2
         form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets.return_value = self.five_statuses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == max_tweets, len(tasks)
 
-    @patch.object(importer, 'client')
-    def test_api_calls_with_max_id_pagination(self, client):
+    def test_api_calls_with_max_id_pagination(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         calls = []
         def multiple_responses(*args, **kwargs):
             calls.append({'args': args, 'kwargs': kwargs})
             return responses.pop()
 
-        client.search.tweets = multiple_responses
         max_tweets = 6
         form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets = multiple_responses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
         assert calls[0]['kwargs']['q'] == form_data['source'] + '-filter:retweets', calls[0]['kwargs']
@@ -127,25 +133,22 @@ class Test_BulkTaskTwitterImportSearch(object):
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
 
-    @patch.object(importer, 'client')
-    def test_max_tweets_gets_a_default_value_of_200(self, client):
+    def test_max_tweets_gets_a_default_value_of_200(self):
         calls = []
         def response(*args, **kwargs):
             calls.append({'args': args, 'kwargs': kwargs})
             return self.five_statuses
 
-        client.search.tweets = response
         form_data = {'source': '#match'}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets = response
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert calls[0]['kwargs']['count'] == 200, calls[0]['kwargs']['count']
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):
-
-    with patch('pybossa.importers.twitterapi.oauth2_dance'):
-        importer = _BulkTaskTwitterImport('consumer_key', 'consumer_secret')
 
     def create_status(_id):
         return {
@@ -224,23 +227,23 @@ class Test_BulkTaskTwitterImportFromAccount(object):
 
     five_statuses = [create_status(i+1) for i in range(5)]
 
-    @patch.object(importer, 'client')
-    def test_count_tasks_returns_number_of_tweets_requested(self, client):
-        client.statuses.user_timeline.return_value = self.no_results
+    def test_count_tasks_returns_number_of_tweets_requested(self):
         max_tweets = 10
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.statuses.user_timeline.return_value = self.no_results
 
-        number_of_tasks = self.importer.count_tasks(**form_data)
+        number_of_tasks = importer.count_tasks()
 
         assert number_of_tasks == number_of_tasks, number_of_tasks
 
-    @patch.object(importer, 'client')
-    def test_tasks_return_task_dict_with_info_from_query_result(self, client):
-        client.statuses.user_timeline.return_value = self.one_status
+    def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '@pybossa', 'max_tweets': 1}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.statuses.user_timeline.return_value = self.one_status
         expected_task_data = self.one_status[0]
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == 1, tasks
         info = tasks[0]['info']
@@ -253,43 +256,43 @@ class Test_BulkTaskTwitterImportFromAccount(object):
         assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
-    @patch.object(importer, 'client')
-    def test_task_can_return_more_than_returned_by_single_api_call(self, client):
+    def test_task_can_return_more_than_returned_by_single_api_call(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         def multiple_responses(*args, **kwargs):
             return responses.pop()
 
-        client.statuses.user_timeline = multiple_responses
         max_tweets = 10
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.statuses.user_timeline = multiple_responses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == 6, len(tasks)
 
-    @patch.object(importer, 'client')
-    def test_task_does_not_return_more_than_requested_even_if_api_do(self, client):
-        client.statuses.user_timeline.return_value = self.five_statuses
+    def test_task_does_not_return_more_than_requested_even_if_api_do(self):
         max_tweets = 2
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.statuses.user_timeline.return_value = self.five_statuses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert len(tasks) == max_tweets, len(tasks)
 
-    @patch.object(importer, 'client')
-    def test_api_calls_with_max_id_pagination(self, client):
+    def test_api_calls_with_max_id_pagination(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         calls = []
         def multiple_responses(*args, **kwargs):
             calls.append({'args': args, 'kwargs': kwargs})
             return responses.pop()
 
-        client.statuses.user_timeline = multiple_responses
         max_tweets = 6
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.statuses.user_timeline = multiple_responses
 
-        tasks = self.importer.tasks(**form_data)
+        tasks = importer.tasks()
 
         assert calls[0]['kwargs']['count'] == 6, calls[0]['kwargs']
         assert calls[0]['kwargs'].get('q') is None, calls[0]['kwargs']

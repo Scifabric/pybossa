@@ -23,37 +23,37 @@ class _BulkTaskTwitterImport(object):
     importer_id = "twitter"
     DEFAULT_NUMBER_OF_TWEETS = 200
 
-    def __init__(self, consumer_key, consumer_secret):
+    def __init__(self, consumer_key, consumer_secret, source, max_tweets=None):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
         self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
+        self.source = source
+        self.count = max_tweets or self.DEFAULT_NUMBER_OF_TWEETS
 
-    def tasks(self, **form_data):
-        count = form_data.get('max_tweets') or self.DEFAULT_NUMBER_OF_TWEETS
-        source = form_data.get('source')
-        statuses = self._get_statuses(source, count)
+    def tasks(self):
+        statuses = self._get_statuses()
         tasks = [self._create_task_from_status(status) for status in statuses]
-        return tasks[0:count]
+        return tasks[0:self.count]
 
-    def count_tasks(self, **form_data):
-        return form_data.get('max_tweets') or self.DEFAULT_NUMBER_OF_TWEETS
+    def count_tasks(self):
+        return self.count
 
-    def _get_statuses(self, source, count):
-        if self._is_source_a_user_account(source):
+    def _get_statuses(self):
+        if self._is_source_a_user_account():
             fetcher = self._fetch_statuses_from_account
         else:
             fetcher = self._fetch_statuses_from_search
         max_id = None
-        partial_results = fetcher(q=source, count=count)
+        partial_results = fetcher(q=self.source, count=self.count)
         results = []
-        while len(results) < count and len(partial_results) > 0:
+        while len(results) < self.count and len(partial_results) > 0:
             results += partial_results
-            remaining = count - len(results)
+            remaining = self.count - len(results)
             max_id = min([status['id'] for status in partial_results]) - 1
-            partial_results = fetcher(q=source, count=remaining, max_id=max_id)
+            partial_results = fetcher(q=self.source, count=remaining, max_id=max_id)
         return results or partial_results
 
-    def _is_source_a_user_account(self, source):
-        return source and source.startswith('@')
+    def _is_source_a_user_account(self):
+        return self.source and self.source.startswith('@')
 
     def _fetch_statuses_from_search(self, **kwargs):
         kwargs['q'] = kwargs['q'] + '-filter:retweets'
