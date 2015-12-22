@@ -23,6 +23,7 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
 
     importer_id = "twitter"
     DEFAULT_NUMBER_OF_TWEETS = 200
+    NO_RETWEETS = '-filter:retweets'
 
     def __init__(self, consumer_key, consumer_secret, source, max_tweets=None):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
@@ -57,7 +58,7 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
         return self.source and self.source.startswith('@')
 
     def _fetch_statuses_from_search(self, **kwargs):
-        kwargs['q'] = kwargs['q'] + '-filter:retweets'
+        kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
         return self.client.search.tweets(**kwargs).get('statuses')
 
     def _fetch_statuses_from_account(self, **kwargs):
