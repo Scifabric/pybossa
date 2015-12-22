@@ -25,7 +25,7 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
     DEFAULT_TWEETS = 200
     NO_RETWEETS = '-filter:retweets'
 
-    def __init__(self, consumer_key, consumer_secret, source, max_tweets=None):
+    def __init__(self, consumer_key, consumer_secret, source, max_tweets=None, user_credentials=None):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
         self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
         self.source = source

@@ -147,6 +147,21 @@ class Test_BulkTaskTwitterImportSearch(object):
 
         assert calls[0]['kwargs']['count'] == 200, calls[0]['kwargs']['count']
 
+    @patch('pybossa.importers.twitterapi.UserCredentialsClient')
+    def test_userCredentialsClient_is_used_if_user_credentials_provided(self, client):
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': 500,
+            'user_credentials': {
+                'oauth_token_secret': 'secret',
+                'oauth_token': 'tokenD'
+            },
+        }
+
+        importer = create_importer_with_form_data(**form_data)
+
+        client.assert_called_with()
+
 
 class Test_BulkTaskTwitterImportFromAccount(object):
 
