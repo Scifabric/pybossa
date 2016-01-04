@@ -19,16 +19,16 @@
 from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.csv import _BulkTaskGDImport
+from pybossa.importers.csv import BulkTaskGDImport
 from default import FakeResponse
 
 
 @patch('pybossa.importers.csv.requests.get')
-class Test_BulkTaskGDImport(object):
+class TestBulkTaskGDImport(object):
 
     def setUp(self):
         url = 'http://drive.google.com'
-        self.importer = _BulkTaskGDImport(googledocs_url=url)
+        self.importer = BulkTaskGDImport(googledocs_url=url)
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = FakeResponse(text='CSV,with,no,content\n', status_code=200,

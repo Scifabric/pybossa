@@ -124,7 +124,7 @@ class PasswordForm(Form):
                                     "You must enter a password"))])
 
 
-class _BulkTaskCSVImportForm(Form):
+class BulkTaskCSVImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='csv')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
@@ -137,7 +137,7 @@ class _BulkTaskCSVImportForm(Form):
         return {'type': 'csv', 'csv_url': self.csv_url.data}
 
 
-class _BulkTaskGDImportForm(Form):
+class BulkTaskGDImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='gdocs')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
@@ -150,7 +150,7 @@ class _BulkTaskGDImportForm(Form):
         return {'type': 'gdocs', 'googledocs_url': self.googledocs_url.data}
 
 
-class _BulkTaskEpiCollectPlusImportForm(Form):
+class BulkTaskEpiCollectPlusImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")
@@ -167,7 +167,7 @@ class _BulkTaskEpiCollectPlusImportForm(Form):
                 'epicollect_form': self.epicollect_form.data}
 
 
-class _BulkTaskFlickrImportForm(Form):
+class BulkTaskFlickrImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='flickr')
     msg_required = lazy_gettext("You must provide a valid Flickr album ID")
     album_id = TextField(lazy_gettext('Album ID'),
@@ -176,14 +176,14 @@ class _BulkTaskFlickrImportForm(Form):
         return {'type': 'flickr', 'album_id': self.album_id.data}
 
 
-class _BulkTaskDropboxImportForm(Form):
+class BulkTaskDropboxImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='dropbox')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
     def get_import_data(self):
         return {'type': 'dropbox', 'files': self.files.data}
 
 
-class _BulkTaskTwitterImportForm(Form):
+class BulkTaskTwitterImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='twitter')
     msg_required = lazy_gettext("You must provide some source for the tweets")
     source = TextField(lazy_gettext('Source'),
@@ -202,12 +202,12 @@ class _BulkTaskTwitterImportForm(Form):
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
-    _forms = { 'csv': _BulkTaskCSVImportForm,
-              'gdocs': _BulkTaskGDImportForm,
-              'epicollect': _BulkTaskEpiCollectPlusImportForm,
-              'flickr': _BulkTaskFlickrImportForm,
-              'dropbox': _BulkTaskDropboxImportForm,
-              'twitter': _BulkTaskTwitterImportForm }
+    _forms = { 'csv': BulkTaskCSVImportForm,
+              'gdocs': BulkTaskGDImportForm,
+              'epicollect': BulkTaskEpiCollectPlusImportForm,
+              'flickr': BulkTaskFlickrImportForm,
+              'dropbox': BulkTaskDropboxImportForm,
+              'twitter': BulkTaskTwitterImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:

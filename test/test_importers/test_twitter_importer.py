@@ -19,19 +19,19 @@
 
 from mock import patch, Mock
 from pybossa.importers import BulkImportException
-from pybossa.importers.twitterapi import _BulkTaskTwitterImport
+from pybossa.importers.twitterapi import BulkTaskTwitterImport
 
 
 def create_importer_with_form_data(**form_data):
     with patch('pybossa.importers.twitterapi.oauth2_dance'):
         form_data['consumer_key'] = 'consumer_key'
         form_data['consumer_secret'] = 'consumer_secret'
-        importer = _BulkTaskTwitterImport(**form_data)
+        importer = BulkTaskTwitterImport(**form_data)
     importer.client = Mock()
     return importer
 
 
-class Test_BulkTaskTwitterImportSearch(object):
+class TestBulkTaskTwitterImportSearch(object):
 
     def create_status(_id):
         return {
@@ -196,7 +196,7 @@ class Test_BulkTaskTwitterImportSearch(object):
         assert len(api_calls) == 1, api_calls
 
 
-class Test_BulkTaskTwitterImportFromAccount(object):
+class TestBulkTaskTwitterImportFromAccount(object):
 
     def create_status(_id):
         return {

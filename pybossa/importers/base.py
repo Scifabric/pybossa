@@ -23,7 +23,7 @@ class BulkImportException(Exception):
     pass
 
 
-class _BulkTaskImport(object):
+class BulkTaskImport(object):
 
     """Class to import tasks in bulk."""
 

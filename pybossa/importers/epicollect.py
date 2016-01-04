@@ -20,10 +20,10 @@ import json
 import requests
 from flask.ext.babel import gettext
 
-from .base import _BulkTaskImport, BulkImportException
+from .base import BulkTaskImport, BulkImportException
 
 
-class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
+class BulkTaskEpiCollectPlusImport(BulkTaskImport):
 
     """Class to import tasks in bulk from an EpiCollect+ project."""
 

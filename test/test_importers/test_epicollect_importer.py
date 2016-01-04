@@ -20,16 +20,16 @@ import json
 from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.epicollect import _BulkTaskEpiCollectPlusImport
+from pybossa.importers.epicollect import BulkTaskEpiCollectPlusImport
 from default import FakeResponse
 
 
 @patch('pybossa.importers.epicollect.requests.get')
-class Test_BulkTaskEpiCollectPlusImport(object):
+class TestBulkTaskEpiCollectPlusImport(object):
 
     epicollect = {'epicollect_project': 'fakeproject',
                   'epicollect_form': 'fakeform'}
-    importer = _BulkTaskEpiCollectPlusImport(**epicollect)
+    importer = BulkTaskEpiCollectPlusImport(**epicollect)
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = FakeResponse(text='Forbidden', status_code=403,

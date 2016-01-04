@@ -21,10 +21,10 @@ from StringIO import StringIO
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
-from .base import _BulkTaskImport, BulkImportException
+from .base import BulkTaskImport, BulkImportException
 
 
-class _BulkTaskCSVImport(_BulkTaskImport):
+class BulkTaskCSVImport(BulkTaskImport):
 
     """Class to import CSV tasks in bulk."""
 
@@ -106,7 +106,7 @@ class _BulkTaskCSVImport(_BulkTaskImport):
         return self._import_csv_tasks(csvreader)
 
 
-class _BulkTaskGDImport(_BulkTaskCSVImport):
+class BulkTaskGDImport(BulkTaskCSVImport):
 
     """Class to import tasks from Google Drive in bulk."""
 

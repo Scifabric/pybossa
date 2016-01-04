@@ -19,10 +19,10 @@
 import json
 import requests
 
-from .base import _BulkTaskImport, BulkImportException
+from .base import BulkTaskImport, BulkImportException
 
 
-class _BulkTaskFlickrImport(_BulkTaskImport):
+class BulkTaskFlickrImport(BulkTaskImport):
 
     """Class to import tasks from Flickr in bulk."""
 

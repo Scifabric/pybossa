@@ -19,10 +19,10 @@
 import string
 import json
 
-from .base import _BulkTaskImport
+from .base import BulkTaskImport
 
 
-class _BulkTaskDropboxImport(_BulkTaskImport):
+class BulkTaskDropboxImport(BulkTaskImport):
 
     """Class to import tasks from Dropbox in bulk."""
 

@@ -17,11 +17,11 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.babel import gettext
-from .csv import _BulkTaskCSVImport, _BulkTaskGDImport
-from .dropbox import _BulkTaskDropboxImport
-from .flickr import _BulkTaskFlickrImport
-from .twitterapi import _BulkTaskTwitterImport
-from .epicollect import _BulkTaskEpiCollectPlusImport
+from .csv import BulkTaskCSVImport, BulkTaskGDImport
+from .dropbox import BulkTaskDropboxImport
+from .flickr import BulkTaskFlickrImport
+from .twitterapi import BulkTaskTwitterImport
+from .epicollect import BulkTaskEpiCollectPlusImport
 
 
 class Importer(object):
@@ -30,22 +30,22 @@ class Importer(object):
 
     def __init__(self):
         """Init method."""
-        self._importers = dict(csv=_BulkTaskCSVImport,
-                               gdocs=_BulkTaskGDImport,
-                               epicollect=_BulkTaskEpiCollectPlusImport)
+        self._importers = dict(csv=BulkTaskCSVImport,
+                               gdocs=BulkTaskGDImport,
+                               epicollect=BulkTaskEpiCollectPlusImport)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
         """Register Flickr importer."""
-        self._importers['flickr'] = _BulkTaskFlickrImport
+        self._importers['flickr'] = BulkTaskFlickrImport
         self._importer_constructor_params['flickr'] = flickr_params
 
     def register_dropbox_importer(self):
         """Register Dropbox importer."""
-        self._importers['dropbox'] = _BulkTaskDropboxImport
+        self._importers['dropbox'] = BulkTaskDropboxImport
 
     def register_twitter_importer(self, twitter_params):
-        self._importers['twitter'] = _BulkTaskTwitterImport
+        self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
 
     def create_tasks(self, task_repo, project_id, **form_data):

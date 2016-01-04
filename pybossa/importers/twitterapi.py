@@ -17,10 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from twitter import Twitter, OAuth2, oauth2_dance, OAuth
-from .base import _BulkTaskImport
+from .base import BulkTaskImport
 
 
-class _BulkTaskTwitterImport(_BulkTaskImport):
+class BulkTaskTwitterImport(BulkTaskImport):
 
     importer_id = "twitter"
     DEFAULT_TWEETS = 200

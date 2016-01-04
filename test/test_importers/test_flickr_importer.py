@@ -22,11 +22,11 @@ import string
 from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.flickr import _BulkTaskFlickrImport
+from pybossa.importers.flickr import BulkTaskFlickrImport
 
 
 @patch('pybossa.importers.flickr.requests')
-class Test_BulkTaskFlickrImport(object):
+class TestBulkTaskFlickrImport(object):
 
     invalid_response = {u'stat': u'fail',
                         u'code': 1, u'message': u'Photoset not found'}
@@ -56,7 +56,7 @@ class Test_BulkTaskFlickrImport(object):
     photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
              u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
              u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
-    importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='72157633923521788')
+    importer = BulkTaskFlickrImport(api_key='fake-key', album_id='72157633923521788')
 
 
     def make_response(self, text, status_code=200):
@@ -93,7 +93,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_count_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
-        importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
+        importer = BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
         assert_raises(BulkImportException, importer.count_tasks)
 
@@ -126,7 +126,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
-        importer = _BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
+        importer = BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
         assert_raises(BulkImportException, importer.tasks)
 

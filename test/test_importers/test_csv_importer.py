@@ -19,16 +19,16 @@
 from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.csv import _BulkTaskCSVImport
+from pybossa.importers.csv import BulkTaskCSVImport
 from default import FakeResponse
 
 
 @patch('pybossa.importers.csv.requests.get')
-class Test_BulkTaskCSVImport(object):
+class TestBulkTaskCSVImport(object):
 
     def setUp(self):
         url = 'http://myfakecsvurl.com'
-        self.importer = _BulkTaskCSVImport(csv_url=url)
+        self.importer = BulkTaskCSVImport(csv_url=url)
 
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):

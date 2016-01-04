@@ -5,7 +5,7 @@ Importer interface
 ==================
 
 Task importers are currently located in importers.py; each gets
-a class, which should inherit from _BulkTaskImport and provide
+a class, which should inherit from BulkTaskImport and provide
 the following public interface:
 
 * importer_id
