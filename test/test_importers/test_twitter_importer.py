@@ -27,7 +27,7 @@ def create_importer_with_form_data(**form_data):
         form_data['consumer_key'] = 'consumer_key'
         form_data['consumer_secret'] = 'consumer_secret'
         importer = BulkTaskTwitterImport(**form_data)
-    importer.client = Mock()
+    importer.client.api = Mock()
     return importer
 
 
@@ -63,7 +63,7 @@ class TestBulkTaskTwitterImportSearch(object):
         max_tweets = 10
         form_data = {'source': '#match', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets.return_value = self.one_status
+        importer.client.api.search.tweets.return_value = self.one_status
 
         number_of_tasks = importer.count_tasks()
 
@@ -72,7 +72,7 @@ class TestBulkTaskTwitterImportSearch(object):
     def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '#match', 'max_tweets': 1}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets.return_value = self.one_status
+        importer.client.api.search.tweets.return_value = self.one_status
         expected_task_data = self.one_status['statuses'][0]
 
         tasks = importer.tasks()
@@ -100,7 +100,7 @@ class TestBulkTaskTwitterImportSearch(object):
             'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
         }
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets = multiple_responses
+        importer.client.api.search.tweets = multiple_responses
 
         tasks = importer.tasks()
 
@@ -110,7 +110,7 @@ class TestBulkTaskTwitterImportSearch(object):
         max_tweets = 2
         form_data = {'source': '#match', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets.return_value = self.five_statuses
+        importer.client.api.search.tweets.return_value = self.five_statuses
 
         tasks = importer.tasks()
 
@@ -130,7 +130,7 @@ class TestBulkTaskTwitterImportSearch(object):
             'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
         }
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets = multiple_responses
+        importer.client.api.search.tweets = multiple_responses
 
         tasks = importer.tasks()
 
@@ -149,7 +149,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         form_data = {'source': '#match'}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets = response
+        importer.client.api.search.tweets = response
 
         tasks = importer.tasks()
 
@@ -189,7 +189,7 @@ class TestBulkTaskTwitterImportSearch(object):
         max_tweets = 10
         form_data = {'source': '#match', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.search.tweets = multiple_responses
+        importer.client.api.search.tweets = multiple_responses
 
         tasks = importer.tasks()
 
@@ -279,7 +279,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
         max_tweets = 10
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.statuses.user_timeline.return_value = self.no_results
+        importer.client.api.statuses.user_timeline.return_value = self.no_results
 
         number_of_tasks = importer.count_tasks()
 
@@ -288,7 +288,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
     def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '@pybossa', 'max_tweets': 1}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.statuses.user_timeline.return_value = self.one_status
+        importer.client.api.statuses.user_timeline.return_value = self.one_status
         expected_task_data = self.one_status[0]
 
         tasks = importer.tasks()
@@ -316,7 +316,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
             'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
         }
         importer = create_importer_with_form_data(**form_data)
-        importer.client.statuses.user_timeline = multiple_responses
+        importer.client.api.statuses.user_timeline = multiple_responses
 
         tasks = importer.tasks()
 
@@ -326,7 +326,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
         max_tweets = 2
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
-        importer.client.statuses.user_timeline.return_value = self.five_statuses
+        importer.client.api.statuses.user_timeline.return_value = self.five_statuses
 
         tasks = importer.tasks()
 
@@ -346,7 +346,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
             'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
         }
         importer = create_importer_with_form_data(**form_data)
-        importer.client.statuses.user_timeline = multiple_responses
+        importer.client.api.statuses.user_timeline = multiple_responses
 
         tasks = importer.tasks()
 
