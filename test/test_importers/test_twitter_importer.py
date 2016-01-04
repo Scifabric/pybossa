@@ -147,20 +147,29 @@ class Test_BulkTaskTwitterImportSearch(object):
 
         assert calls[0]['kwargs']['count'] == 200, calls[0]['kwargs']['count']
 
-    @patch('pybossa.importers.twitterapi.UserCredentialsClient')
-    def test_userCredentialsClient_is_used_if_user_credentials_provided(self, client):
+    @patch('pybossa.importers.twitterapi.OAuth')
+    @patch('pybossa.importers.twitterapi.OAuth2')
+    def test_user_credentials_are_used_when_provided(self, oauth2, oauth):
         form_data = {
             'source': '#hashtag',
             'max_tweets': 500,
-            'user_credentials': {
-                'oauth_token_secret': 'secret',
-                'oauth_token': 'tokenD'
-            },
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
         }
 
         importer = create_importer_with_form_data(**form_data)
 
-        client.assert_called_with()
+        oauth.assert_called_with('token', 'secret', 'consumer_key', 'consumer_secret')
+        oauth2.assert_not_called()
+
+    @patch('pybossa.importers.twitterapi.OAuth')
+    @patch('pybossa.importers.twitterapi.OAuth2')
+    def test_app_credentials_are_used_when_no_user_ones_provided(self, oauth2, oauth):
+        form_data = {'source': '#hashtag'}
+
+        importer = create_importer_with_form_data(**form_data)
+
+        oauth.assert_not_called()
+        assert oauth2.called
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):

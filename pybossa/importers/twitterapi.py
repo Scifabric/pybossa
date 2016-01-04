@@ -15,7 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from twitter import Twitter, OAuth2, oauth2_dance
+import json
+from twitter import Twitter, OAuth2, oauth2_dance, OAuth
 from .base import _BulkTaskImport
 
 
@@ -26,8 +27,16 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
     NO_RETWEETS = '-filter:retweets'
 
     def __init__(self, consumer_key, consumer_secret, source, max_tweets=None, user_credentials=None):
-        bearer_token = oauth2_dance(consumer_key, consumer_secret)
-        self.client = Twitter(auth=OAuth2(bearer_token=bearer_token))
+        if user_credentials:
+            credentials = json.loads(user_credentials)
+            auth = OAuth(credentials['oauth_token'],
+                         credentials['oauth_token_secret'],
+                         consumer_key,
+                         consumer_secret)
+        else:
+            bearer_token = oauth2_dance(consumer_key, consumer_secret)
+            auth = OAuth2(bearer_token=bearer_token)
+        self.client = Twitter(auth=auth)
         self.source = source
         self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
 
