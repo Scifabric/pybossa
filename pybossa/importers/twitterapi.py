@@ -39,6 +39,7 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
         self.client = Twitter(auth=auth)
         self.source = source
         self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
+        self.credentials = user_credentials
 
     def tasks(self):
         statuses = self._get_statuses()
@@ -55,6 +56,8 @@ class _BulkTaskTwitterImport(_BulkTaskImport):
             fetcher = self._fetch_statuses_from_search
         max_id = None
         partial_results = fetcher(q=self.source, count=self.count)
+        if not self.credentials:
+            return partial_results
         results = []
         while len(results) < self.count and len(partial_results) > 0:
             results += partial_results

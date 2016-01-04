@@ -94,7 +94,11 @@ class Test_BulkTaskTwitterImportSearch(object):
             return responses.pop()
 
         max_tweets = 10
-        form_data = {'source': '#match', 'max_tweets': max_tweets}
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
         importer = create_importer_with_form_data(**form_data)
         importer.client.search.tweets = multiple_responses
 
@@ -120,7 +124,11 @@ class Test_BulkTaskTwitterImportSearch(object):
             return responses.pop()
 
         max_tweets = 6
-        form_data = {'source': '#match', 'max_tweets': max_tweets}
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
         importer = create_importer_with_form_data(**form_data)
         importer.client.search.tweets = multiple_responses
 
@@ -170,6 +178,22 @@ class Test_BulkTaskTwitterImportSearch(object):
 
         oauth.assert_not_called()
         assert oauth2.called
+
+    def test_only_one_api_call_is_made_when_using_app_credentials(self):
+        responses = [self.no_results, self.five_statuses]
+        api_calls = []
+        def multiple_responses(*args, **kwargs):
+            api_calls.append({'args': args, 'kwargs': kwargs})
+            return responses.pop()
+
+        max_tweets = 10
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.search.tweets = multiple_responses
+
+        tasks = importer.tasks()
+
+        assert len(api_calls) == 1, api_calls
 
 
 class Test_BulkTaskTwitterImportFromAccount(object):
@@ -286,7 +310,11 @@ class Test_BulkTaskTwitterImportFromAccount(object):
             return responses.pop()
 
         max_tweets = 10
-        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        form_data = {
+            'source': '@pybossa',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
         importer = create_importer_with_form_data(**form_data)
         importer.client.statuses.user_timeline = multiple_responses
 
@@ -312,7 +340,11 @@ class Test_BulkTaskTwitterImportFromAccount(object):
             return responses.pop()
 
         max_tweets = 6
-        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        form_data = {
+            'source': '@pybossa',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
         importer = create_importer_with_form_data(**form_data)
         importer.client.statuses.user_timeline = multiple_responses
 
