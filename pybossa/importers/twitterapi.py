@@ -42,24 +42,7 @@ class BulkTaskTwitterImport(BulkTaskImport):
         return self.count
 
     def _get_statuses(self):
-        if self._is_source_a_user_account():
-            fetcher = self.client.fetch_statuses_from_account
-        else:
-            fetcher = self.client.fetch_statuses_from_search
-        max_id = None
-        partial_results = fetcher(q=self.source, count=self.count)
-        if not self._using_user_credentials():
-            return partial_results
-        results = []
-        while len(results) < self.count and len(partial_results) > 0:
-            results += partial_results
-            remaining = self.count - len(results)
-            max_id = min([status['id'] for status in partial_results]) - 1
-            partial_results = fetcher(q=self.source, count=remaining, max_id=max_id)
-        return results or partial_results
-
-    def _is_source_a_user_account(self):
-        return self.source and self.source.startswith('@')
+        return self.client.fetch_all_statuses(source=self.source, count=self.count)
 
     def _using_user_credentials(self):
         return type(self.client) is UserCredentialsClient
@@ -74,6 +57,12 @@ class TwitterClient(object):
 
     NO_RETWEETS = '-filter:retweets'
 
+    def fetch_statuses(self, **kwargs):
+        if self._is_source_a_user_account(kwargs['q']):
+            return self.fetch_statuses_from_account(**kwargs)
+        else:
+            return self.fetch_statuses_from_search(**kwargs)
+
     def fetch_statuses_from_search(self, **kwargs):
         kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
         return self.api.search.tweets(**kwargs).get('statuses')
@@ -82,6 +71,9 @@ class TwitterClient(object):
         kwargs['screen_name'] = kwargs['q']
         del kwargs['q']
         return self.api.statuses.user_timeline(**kwargs)
+
+    def _is_source_a_user_account(self, source):
+        return source and source.startswith('@')
 
 
 class UserCredentialsClient(TwitterClient):
@@ -94,6 +86,17 @@ class UserCredentialsClient(TwitterClient):
                      consumer_secret)
         self.api = Twitter(auth=auth)
 
+    def fetch_all_statuses(self, source, count, **kwargs):
+        max_id = None
+        partial_results = self.fetch_statuses(q=source, count=count)
+        results = []
+        while len(results) < count and len(partial_results) > 0:
+            results += partial_results
+            remaining = count - len(results)
+            max_id = min([status['id'] for status in partial_results]) - 1
+            partial_results = self.fetch_statuses(q=source, count=remaining, max_id=max_id)
+        return results or partial_results
+
 
 class AppCredentialsClient(TwitterClient):
 
@@ -101,3 +104,7 @@ class AppCredentialsClient(TwitterClient):
         bearer_token = oauth2_dance(consumer_key, consumer_secret)
         auth = OAuth2(bearer_token=bearer_token)
         self.api = Twitter(auth=auth)
+
+    def fetch_all_statuses(self, source, count, **kwargs):
+        results = self.fetch_statuses(q=source, count=count)
+        return results
