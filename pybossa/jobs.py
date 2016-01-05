@@ -461,13 +461,13 @@ def send_mail(message_dict):
 def import_tasks(project_id, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
-    app = project_repo.get(project_id)
+    project = project_repo.get(project_id)
     msg = importer.create_tasks(task_repo, project_id, **form_data)
-    msg = msg + ' to your project %s!' % app.name
-    subject = 'Tasks Import to your project %s' % app.name
+    msg = msg + ' to your project %s!' % project.name
+    subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
-    mail_dict = dict(recipients=[app.owner.email_addr],
+    mail_dict = dict(recipients=[project.owner.email_addr],
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
