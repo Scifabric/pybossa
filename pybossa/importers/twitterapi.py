@@ -44,9 +44,6 @@ class BulkTaskTwitterImport(BulkTaskImport):
     def _get_statuses(self):
         return self.client.fetch_all_statuses(source=self.source, count=self.count)
 
-    def _using_user_credentials(self):
-        return type(self.client) is UserCredentialsClient
-
     def _create_task_from_status(self, status):
         user_screen_name = status.get('user').get('screen_name')
         info = dict(status, user_screen_name=user_screen_name)
