@@ -76,7 +76,7 @@ class TestImporterPublicMethods(Test):
         assert result.message == 'It looks like there were no new records to import', result
         importer_factory.assert_called_with(**form_data)
 
-    def test_count_tasks_to_import_returns_what_expected(self, importer_factory):
+    def test_count_tasks_to_import_returns_number_of_tasks_to_import(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
         importer_factory.return_value = mock_importer
