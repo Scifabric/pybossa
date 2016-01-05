@@ -54,17 +54,17 @@ class TwitterClient(object):
 
     NO_RETWEETS = '-filter:retweets'
 
-    def fetch_statuses(self, **kwargs):
+    def _fetch_statuses(self, **kwargs):
         if self._is_source_a_user_account(kwargs['q']):
-            return self.fetch_statuses_from_account(**kwargs)
+            return self._fetch_from_account(**kwargs)
         else:
-            return self.fetch_statuses_from_search(**kwargs)
+            return self._fetch_from_search(**kwargs)
 
-    def fetch_statuses_from_search(self, **kwargs):
+    def _fetch_from_search(self, **kwargs):
         kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
         return self.api.search.tweets(**kwargs).get('statuses')
 
-    def fetch_statuses_from_account(self, **kwargs):
+    def _fetch_from_account(self, **kwargs):
         kwargs['screen_name'] = kwargs['q']
         del kwargs['q']
         return self.api.statuses.user_timeline(**kwargs)
@@ -85,13 +85,16 @@ class UserCredentialsClient(TwitterClient):
 
     def fetch_all_statuses(self, source, count, **kwargs):
         max_id = None
-        partial_results = self.fetch_statuses(q=source, count=count)
+        partial_results = self._fetch_statuses(q=source, count=count)
         results = []
         while len(results) < count and len(partial_results) > 0:
             results += partial_results
             remaining = count - len(results)
             max_id = min([status['id'] for status in partial_results]) - 1
-            partial_results = self.fetch_statuses(q=source, count=remaining, max_id=max_id)
+            partial_results = self._fetch_statuses(
+                                  q=source,
+                                  count=remaining,
+                                  max_id=max_id)
         return results or partial_results
 
 
@@ -103,5 +106,5 @@ class AppCredentialsClient(TwitterClient):
         self.api = Twitter(auth=auth)
 
     def fetch_all_statuses(self, source, count, **kwargs):
-        results = self.fetch_statuses(q=source, count=count)
+        results = self._fetch_statuses(q=source, count=count)
         return results
