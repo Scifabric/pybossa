@@ -2744,7 +2744,7 @@ class TestWeb(web.Helper):
     def test_import_few_tasks_is_done_synchronously(self, create, count):
         """Test WEB importing a small amount of tasks is done synchronously"""
         count.return_value = 1
-        create.return_value = ImportReport(message='1 new task was imported successfully', last_task=None, total=1)
+        create.return_value = ImportReport(message='1 new task was imported successfully', metadata=None, total=1)
         self.register()
         self.new_project()
         project = db.session.query(Project).first()

@@ -76,6 +76,21 @@ class TestImporterPublicMethods(Test):
         assert result.message == 'It looks like there were no new records to import', result
         importer_factory.assert_called_with(**form_data)
 
+    def test_create_tasks_returns_task_report(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
+        metadata = {"metadata": 123}
+        mock_importer.import_metadata.return_value = metadata
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='flickr', album_id='1234')
+
+        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+
+        assert result.message == '1 new task was imported successfully', result.message
+        assert result.total == 1, result.total
+        assert result.metadata == metadata, result.metadata
+
     def test_count_tasks_to_import_returns_number_of_tasks_to_import(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2

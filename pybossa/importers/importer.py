@@ -55,7 +55,6 @@ class Importer(object):
         avoiding the creation of repeated tasks"""
         empty = True
         n = 0
-        last_task = None
         importer = self._create_importer_for(**form_data)
         for task_data in importer.tasks():
             task = Task(project_id=project_id)
@@ -65,14 +64,14 @@ class Importer(object):
                 task_repo.save(task)
                 n += 1
                 empty = False
-                last_task = task
         if empty:
             msg = gettext('It looks like there were no new records to import')
-            return ImportReport(message=msg, last_task=last_task, total=n)
+            return ImportReport(message=msg, metadata=None, total=n)
+        metadata = importer.import_metadata()
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
-        report = ImportReport(message=msg, last_task=last_task, total=n)
+        report = ImportReport(message=msg, metadata=metadata, total=n)
         return report
 
     def count_tasks_to_import(self, **form_data):
@@ -98,9 +97,9 @@ class Importer(object):
 
 class ImportReport(object):
 
-    def __init__(self, message, last_task, total):
+    def __init__(self, message, metadata, total):
         self._message = message
-        self._last_task = last_task
+        self._metadata = metadata
         self._total = total
 
     @property
@@ -108,8 +107,8 @@ class ImportReport(object):
         return self._message
 
     @property
-    def last_task(self):
-        return self._last_task
+    def metadata(self):
+        return self._metadata
 
     @property
     def total(self):
