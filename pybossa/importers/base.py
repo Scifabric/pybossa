@@ -38,4 +38,4 @@ class BulkTaskImport(object):
         return len([task for task in self.tasks()])
 
     def import_metadata(self):
-        return {}
+        return None

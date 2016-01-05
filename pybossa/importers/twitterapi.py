@@ -32,14 +32,23 @@ class BulkTaskTwitterImport(BulkTaskImport):
             self.client = AppCredentialsClient(consumer_key, consumer_secret)
         self.source = source
         self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
+        self._tasks = None
 
     def tasks(self):
-        statuses = self._get_statuses()
-        tasks = [self._create_task_from_status(status) for status in statuses]
-        return tasks[0:self.count]
+        if self._tasks is None:
+            statuses = self._get_statuses()
+            tasks = [self._create_task_from_status(status) for status in statuses]
+            self._tasks = tasks[0:self.count]
+        return self._tasks
 
     def count_tasks(self):
         return self.count
+
+    def import_metadata(self):
+        return None if self._tasks is None else self._extract_metadata()
+
+    def _extract_metadata(self):
+        return {'max_id': max(t['info']['id'] for t in self._tasks)}
 
     def _get_statuses(self):
         return self.client.fetch_all_statuses(source=self.source, count=self.count)

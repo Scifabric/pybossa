@@ -88,7 +88,7 @@ class TestBulkTaskTwitterImportSearch(object):
         assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
-    def test_task_can_return_more_than_returned_by_single_api_call(self):
+    def test_tasks_can_return_more_than_returned_by_single_api_call(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         def multiple_responses(*args, **kwargs):
             return responses.pop()
@@ -106,7 +106,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(tasks) == 6, len(tasks)
 
-    def test_task_does_not_return_more_than_requested_even_if_api_do(self):
+    def test_tasks_does_not_return_more_than_requested_even_if_api_do(self):
         max_tweets = 2
         form_data = {'source': '#match', 'max_tweets': max_tweets}
         importer = create_importer_with_form_data(**form_data)
@@ -194,6 +194,41 @@ class TestBulkTaskTwitterImportSearch(object):
         tasks = importer.tasks()
 
         assert len(api_calls) == 1, api_calls
+
+    def test_import_metadata_returns_None_before_fetching_tasks(self):
+        responses = [self.no_results, self.five_statuses]
+        def multiple_responses(*args, **kwargs):
+            return responses.pop()
+
+        max_tweets = 10
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.search.tweets = multiple_responses
+
+        assert importer.import_metadata() == None, importer.import_metadata()
+
+    def test_import_metadata_returns_greatest_id_of_imported_tweets(self):
+        responses = [self.no_results, self.five_statuses]
+        def multiple_responses(*args, **kwargs):
+            return responses.pop()
+
+        max_tweets = 10
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.search.tweets = multiple_responses
+        expected_metadata = {'max_id': 5}
+
+        tasks = importer.tasks()
+        metadata = importer.import_metadata()
+        assert metadata == expected_metadata, metadata
 
 
 class TestBulkTaskTwitterImportFromAccount(object):
