@@ -19,6 +19,7 @@
 from default import Test, with_context, flask_app
 from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
 from pybossa.model.task import Task
+from pybossa.importers import ImportReport
 from factories import ProjectFactory, TaskFactory, UserFactory
 from mock import patch
 
@@ -39,7 +40,7 @@ class TestImportTasksJob(Test):
     @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.importer.create_tasks')
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
-        create.return_value = '1 new task was imported successfully'
+        create.return_value = ImportReport(message='1 new task was imported successfully', last_task=None, total=1)
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name

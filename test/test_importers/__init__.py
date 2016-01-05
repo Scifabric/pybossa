@@ -58,7 +58,7 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
-        assert result == '2 new tasks were imported successfully', result
+        assert result.message == '2 new tasks were imported successfully', result
         importer_factory.assert_called_with(**form_data)
 
     def test_create_tasks_not_creates_duplicated_tasks(self, importer_factory):
@@ -73,7 +73,7 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 1, len(tasks)
-        assert result == 'It looks like there were no new records to import', result
+        assert result.message == 'It looks like there were no new records to import', result
         importer_factory.assert_called_with(**form_data)
 
     def test_count_tasks_to_import_returns_what_expected(self, importer_factory):

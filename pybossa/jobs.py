@@ -462,8 +462,8 @@ def import_tasks(project_id, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
-    msg = importer.create_tasks(task_repo, project_id, **form_data)
-    msg = msg + ' to your project %s!' % project.name
+    report = importer.create_tasks(task_repo, project_id, **form_data)
+    msg = report.message + ' to your project %s!' % project.name
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')

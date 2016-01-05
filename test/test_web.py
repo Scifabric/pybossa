@@ -39,6 +39,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
+from pybossa.importers import ImportReport
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -2743,7 +2744,7 @@ class TestWeb(web.Helper):
     def test_import_few_tasks_is_done_synchronously(self, create, count):
         """Test WEB importing a small amount of tasks is done synchronously"""
         count.return_value = 1
-        create.return_value = "1 new task was imported successfully"
+        create.return_value = ImportReport(message='1 new task was imported successfully', last_task=None, total=1)
         self.register()
         self.new_project()
         project = db.session.query(Project).first()

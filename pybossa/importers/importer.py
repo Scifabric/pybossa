@@ -55,6 +55,7 @@ class Importer(object):
         avoiding the creation of repeated tasks"""
         empty = True
         n = 0
+        last_task = None
         importer = self._create_importer_for(**form_data)
         for task_data in importer.tasks():
             task = Task(project_id=project_id)
@@ -64,13 +65,15 @@ class Importer(object):
                 task_repo.save(task)
                 n += 1
                 empty = False
+                last_task = task
         if empty:
             msg = gettext('It looks like there were no new records to import')
-            return msg
+            return ImportReport(message=msg, last_task=last_task, total=n)
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
-        return msg
+        report = ImportReport(message=msg, last_task=last_task, total=n)
+        return report
 
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""
@@ -91,3 +94,23 @@ class Importer(object):
     def get_autoimporter_names(self):
         """Get autoimporter names."""
         return [name for name in self._importers.keys() if name != 'dropbox']
+
+
+class ImportReport(object):
+
+    def __init__(self, message, last_task, total):
+        self._message = message
+        self._last_task = last_task
+        self._total = total
+
+    @property
+    def message(self):
+        return self._message
+
+    @property
+    def last_task(self):
+        return self._last_task
+
+    @property
+    def total(self):
+        return self._total

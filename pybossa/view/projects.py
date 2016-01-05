@@ -614,8 +614,8 @@ def import_task(short_name):
 def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
-        msg = importer.create_tasks(task_repo, project.id, **form_data)
-        flash(msg)
+        report = importer.create_tasks(task_repo, project.id, **form_data)
+        flash(report.message)
     else:
         importer_queue.enqueue(import_tasks, project.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
