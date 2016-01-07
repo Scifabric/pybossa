@@ -464,9 +464,9 @@ def import_tasks(project_id, from_auto=False, **form_data):
     project = project_repo.get(project_id)
     report = importer.create_tasks(task_repo, project_id, **form_data)
     if from_auto:
-      form_data['last_import_meta'] = report.metadata
-      project.set_autoimporter(form_data)
-      project_repo.save(project)
+        form_data['last_import_meta'] = report.metadata
+        project.set_autoimporter(form_data)
+        project_repo.save()
     msg = report.message + ' to your project %s!' % project.name
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
