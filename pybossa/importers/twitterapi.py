@@ -25,13 +25,15 @@ class BulkTaskTwitterImport(BulkTaskImport):
     importer_id = "twitter"
     DEFAULT_TWEETS = 200
 
-    def __init__(self, consumer_key, consumer_secret, source, max_tweets=None, user_credentials=None):
+    def __init__(self, consumer_key, consumer_secret, source,
+                 max_tweets=None, since_id=None, user_credentials=None):
         if user_credentials:
             self.client = UserCredentialsClient(consumer_key, consumer_secret, user_credentials)
         else:
             self.client = AppCredentialsClient(consumer_key, consumer_secret)
         self.source = source
         self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
+        self.since_id = since_id
         self._tasks = None
 
     def tasks(self):
@@ -51,7 +53,9 @@ class BulkTaskTwitterImport(BulkTaskImport):
         return {'max_id': max(t['info']['id'] for t in self._tasks)}
 
     def _get_statuses(self):
-        return self.client.fetch_all_statuses(source=self.source, count=self.count)
+        return self.client.fetch_all_statuses(source=self.source,
+                                              count=self.count,
+                                              since_id=self.since_id)
 
     def _create_task_from_status(self, status):
         user_screen_name = status.get('user').get('screen_name')
@@ -92,9 +96,11 @@ class UserCredentialsClient(TwitterClient):
                      consumer_secret)
         self.api = Twitter(auth=auth)
 
-    def fetch_all_statuses(self, source, count):
+    def fetch_all_statuses(self, source, count, since_id):
         max_id = None
-        partial_results = self._fetch_statuses(q=source, count=count)
+        partial_results = self._fetch_statuses(q=source,
+                                               count=count,
+                                               since_id=since_id)
         results = []
         while len(results) < count and len(partial_results) > 0:
             results += partial_results
@@ -103,7 +109,8 @@ class UserCredentialsClient(TwitterClient):
             partial_results = self._fetch_statuses(
                                   q=source,
                                   count=remaining,
-                                  max_id=max_id)
+                                  max_id=max_id,
+                                  since_id=since_id)
         return results or partial_results
 
 
@@ -114,6 +121,6 @@ class AppCredentialsClient(TwitterClient):
         auth = OAuth2(bearer_token=bearer_token)
         self.api = Twitter(auth=auth)
 
-    def fetch_all_statuses(self, source, count):
+    def fetch_all_statuses(self, source, count, since_id):
         results = self._fetch_statuses(q=source, count=count)
         return results
