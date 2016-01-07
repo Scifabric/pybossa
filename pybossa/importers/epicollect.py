@@ -29,9 +29,11 @@ class BulkTaskEpiCollectPlusImport(BulkTaskImport):
 
     importer_id = "epicollect"
 
-    def __init__(self, epicollect_project, epicollect_form):
+    def __init__(self, epicollect_project,
+                 epicollect_form, last_import_meta=None):
         self.project = epicollect_project
         self.form = epicollect_form
+        self.last_import_meta = last_import_meta
 
     def tasks(self):
         """Get tasks."""

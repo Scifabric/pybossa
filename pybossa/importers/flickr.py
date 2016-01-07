@@ -28,10 +28,11 @@ class BulkTaskFlickrImport(BulkTaskImport):
 
     importer_id = "flickr"
 
-    def __init__(self, api_key, album_id):
+    def __init__(self, api_key, album_id, last_import_meta=None):
         """Init method."""
         self.api_key = api_key
         self.album_id = album_id
+        self.last_import_meta = last_import_meta
 
     def tasks(self):
         """Get tasks."""

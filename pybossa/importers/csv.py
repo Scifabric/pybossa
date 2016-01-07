@@ -30,8 +30,9 @@ class BulkTaskCSVImport(BulkTaskImport):
 
     importer_id = "csv"
 
-    def __init__(self, csv_url):
+    def __init__(self, csv_url, last_import_meta=None):
         self.url = csv_url
+        self.last_import_meta = last_import_meta
 
     def tasks(self):
         """Get tasks from a given URL."""

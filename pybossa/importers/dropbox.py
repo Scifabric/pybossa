@@ -28,8 +28,9 @@ class BulkTaskDropboxImport(BulkTaskImport):
 
     importer_id = 'dropbox'
 
-    def __init__(self, files):
+    def __init__(self, files, last_import_meta=None):
         self.files = files
+        self.last_import_meta = last_import_meta
 
     def tasks(self):
         """Get tasks."""

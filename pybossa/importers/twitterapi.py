@@ -26,14 +26,14 @@ class BulkTaskTwitterImport(BulkTaskImport):
     DEFAULT_TWEETS = 200
 
     def __init__(self, consumer_key, consumer_secret, source,
-                 max_tweets=None, since_id=None, user_credentials=None):
+                 max_tweets=None, last_import_meta=None, user_credentials=None):
         if user_credentials:
             self.client = UserCredentialsClient(consumer_key, consumer_secret, user_credentials)
         else:
             self.client = AppCredentialsClient(consumer_key, consumer_secret)
         self.source = source
         self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
-        self.since_id = since_id
+        self.last_import_meta = last_import_meta
         self._tasks = None
 
     def tasks(self):
@@ -53,9 +53,11 @@ class BulkTaskTwitterImport(BulkTaskImport):
         return {'max_id': max(t['info']['id'] for t in self._tasks)}
 
     def _get_statuses(self):
+        meta = self.last_import_meta
+        since_id = None if meta is None else meta.get('max_id')
         return self.client.fetch_all_statuses(source=self.source,
                                               count=self.count,
-                                              since_id=self.since_id)
+                                              since_id=since_id)
 
     def _create_task_from_status(self, status):
         user_screen_name = status.get('user').get('screen_name')
