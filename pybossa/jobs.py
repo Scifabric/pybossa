@@ -299,7 +299,7 @@ def get_autoimport_jobs(queue='low'):
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
             job = dict(name=import_tasks,
-                       args=[project.id],
+                       args=[project.id, True],
                        kwargs=project.get_autoimporter(),
                        timeout=IMPORT_TASKS_TIMEOUT,
                        queue=queue)
@@ -458,11 +458,15 @@ def send_mail(message_dict):
     mail.send(message)
 
 
-def import_tasks(project_id, **form_data):
+def import_tasks(project_id, from_auto=False, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     report = importer.create_tasks(task_repo, project_id, **form_data)
+    if from_auto:
+      form_data['last_import_meta'] = report.metadata
+      project.set_autoimporter(form_data)
+      project_repo.save(project)
     msg = report.message + ' to your project %s!' % project.name
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
