@@ -92,7 +92,7 @@ class UserCredentialsClient(TwitterClient):
                      consumer_secret)
         self.api = Twitter(auth=auth)
 
-    def fetch_all_statuses(self, source, count, **kwargs):
+    def fetch_all_statuses(self, source, count):
         max_id = None
         partial_results = self._fetch_statuses(q=source, count=count)
         results = []
@@ -114,6 +114,6 @@ class AppCredentialsClient(TwitterClient):
         auth = OAuth2(bearer_token=bearer_token)
         self.api = Twitter(auth=auth)
 
-    def fetch_all_statuses(self, source, count, **kwargs):
+    def fetch_all_statuses(self, source, count):
         results = self._fetch_statuses(q=source, count=count)
         return results
