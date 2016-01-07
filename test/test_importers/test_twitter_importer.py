@@ -195,6 +195,23 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(api_calls) == 1, api_calls
 
+    def test_metadata_is_used_for_api_call_if_present(self):
+        form_data = {
+            'source': '#hashtag',
+            'max_tweets': 500,
+            'last_import_meta': {'last_id': 3},
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.search.tweets.return_value = {'statuses': []}
+
+        tasks = importer.tasks()
+
+        importer.client.api.search.tweets.assert_called_with(
+            count=500,
+            q='#hashtag-filter:retweets',
+            since_id=3)
+
     def test_import_metadata_returns_None_before_fetching_tasks(self):
         responses = [self.no_results, self.five_statuses]
         def multiple_responses(*args, **kwargs):
