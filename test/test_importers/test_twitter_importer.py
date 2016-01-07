@@ -224,7 +224,7 @@ class TestBulkTaskTwitterImportSearch(object):
         }
         importer = create_importer_with_form_data(**form_data)
         importer.client.api.search.tweets = multiple_responses
-        expected_metadata = {'max_id': 5}
+        expected_metadata = {'last_id': 5}
 
         tasks = importer.tasks()
         metadata = importer.import_metadata()
