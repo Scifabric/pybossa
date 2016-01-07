@@ -35,7 +35,6 @@ class TestImportTasksJob(Test):
 
         create.assert_called_once_with(task_repo, project.id, **form_data)
 
-
     @with_context
     @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.importer.create_tasks')
@@ -52,6 +51,8 @@ class TestImportTasksJob(Test):
 
         send_mail.assert_called_once_with(email_data)
 
+
+class TestAutoimportJobs(Test):
     @with_context
     def test_autoimport_jobs_no_autoimporter(self):
         """Test JOB autoimport does not return projects without autoimporter."""
@@ -64,7 +65,6 @@ class TestImportTasksJob(Test):
 
         msg = "There should be 0 jobs."
         assert len(jobs) == 0, msg
-
 
     @with_context
     def test_autoimport_jobs_with_autoimporter(self):

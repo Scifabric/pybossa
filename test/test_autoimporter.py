@@ -429,7 +429,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert project.has_autoimporter() is False, project.get_autoimporter()
 
 
-    def test_flickr_autoimporter_page_shows_option_to_log_into_flickr(self):
+    def test_flickr_autoimporter_page_shows_option_to_log_in_to_flickr(self):
         self.register()
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
