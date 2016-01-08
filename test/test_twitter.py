@@ -15,8 +15,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+from flask import Response
 from default import Test
-from pybossa.view.twitter import manage_user, manage_user_login
+from pybossa.view.twitter import manage_user, manage_user_login, \
+    manage_user_no_login
 from pybossa.core import user_repo
 from mock import patch
 from factories import UserFactory
@@ -162,3 +164,36 @@ class TestTwitter(Test):
         login_user.assert_called_once_with(user, remember=True)
         redirect.assert_called_once_with(next_url)
 
+    @patch('pybossa.view.twitter.twitter.oauth')
+    def test_twitter_signin_with_no_login_param(self, oauth):
+        oauth.authorize.return_value = Response(302)
+        self.app.get('/twitter/?no_login=1')
+
+        oauth.authorize.assert_called_once_with(
+            callback='/twitter/oauth-authorized?no_login=1')
+
+    @patch('pybossa.view.twitter.manage_user_no_login')
+    @patch('pybossa.view.twitter.twitter.oauth')
+    def test_twitter_signin_oauth_callback_no_login_calls_manage_user_no_login(
+            self, oauth, manage_user_no_login):
+        oauth.authorized_response.return_value = {
+            'oauth_token': 'token',
+            'oauth_token_secret': 'secret'
+            }
+        manage_user_no_login.return_value = Response(302)
+        self.app.get('/twitter/oauth-authorized?no_login=1')
+
+        manage_user_no_login.assert_called_once_with(
+            {'oauth_token_secret': 'secret', 'oauth_token': 'token'},
+            '/')
+
+    @patch('pybossa.view.twitter.current_user')
+    def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
+        self, current_user):
+        user = UserFactory.create(info={})
+        current_user.id = user.id
+        token_and_secret = {'oauth_token_secret': 'secret', 'oauth_token': 'token'}
+
+        manage_user_no_login(token_and_secret, '/')
+
+        assert user.info == {'twitter_token': token_and_secret}, user.info
