@@ -27,14 +27,17 @@ from pybossa.util import get_user_signup_method
 
 blueprint = Blueprint('twitter', __name__)
 
+NO_LOGIN = 'no_login'
+
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
     """Login with Twitter."""
     next_url = request.args.get("next")
-    no_login = request.args.get("no_login")
+    no_login = request.args.get(NO_LOGIN)
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                    next=next_url, no_login=no_login))
+                                                    next=next_url,
+                                                    no_login=no_login))
 
 
 @twitter.oauth.tokengetter
@@ -77,7 +80,7 @@ def oauth_authorized(resp):  # pragma: no cover
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
 
-    no_login = int(request.args.get('no_login'))
+    no_login = int(request.args.get(NO_LOGIN))
     if no_login == 1:
         return manage_user_no_login(access_token, next_url)
 
@@ -106,10 +109,10 @@ def manage_user(access_token, user_data):
         return None
 
     user = User(fullname=user_data['screen_name'],
-           name=user_data['screen_name'],
-           email_addr=user_data['screen_name'],
-           twitter_user_id=user_data['user_id'],
-           info=info)
+                name=user_data['screen_name'],
+                email_addr=user_data['screen_name'],
+                twitter_user_id=user_data['user_id'],
+                info=info)
     user_repo.save(user)
     return user
 
