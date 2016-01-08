@@ -51,8 +51,7 @@ def get_twitter_token():  # pragma: no cover
 
 
 @blueprint.route('/oauth-authorized')
-@twitter.oauth.authorized_handler
-def oauth_authorized(resp):  # pragma: no cover
+def oauth_authorized():  # pragma: no cover
     """Called after authorization.
 
     After this function finished handling,
@@ -68,6 +67,7 @@ def oauth_authorized(resp):  # pragma: no cover
     the application submitted. Note that Twitter itself does not really
     redirect back unless the user clicks on the application name.
     """
+    resp = twitter.oauth.authorized_response()
     next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
