@@ -32,8 +32,9 @@ blueprint = Blueprint('twitter', __name__)
 def login():  # pragma: no cover
     """Login with Twitter."""
     next_url = request.args.get("next")
+    no_login = request.args.get("no_login")
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                    next=next_url))
+                                                    next=next_url, no_login=no_login))
 
 
 @twitter.oauth.tokengetter
@@ -76,6 +77,10 @@ def oauth_authorized(resp):  # pragma: no cover
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
 
+    no_login = int(request.args.get('no_login'))
+    if no_login == 1:
+        return manage_user_no_login(access_token, next_url)
+
     user_data = dict(screen_name=resp['screen_name'],
                      user_id=resp['user_id'])
     user = manage_user(access_token, user_data)
@@ -87,14 +92,12 @@ def manage_user(access_token, user_data):
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
-    twitter_token = dict(oauth_token=access_token['oauth_token'],
-                         oauth_token_secret=access_token['oauth_token_secret'])
-    info = dict(twitter_token=twitter_token)
+    info = dict(twitter_token=access_token)
 
     user = user_repo.get_by(twitter_user_id=user_data['user_id'])
 
     if user is not None:
-        user.info['twitter_token'] = twitter_token
+        user.info['twitter_token'] = access_token
         user_repo.save(user)
         return user
 
@@ -133,3 +136,11 @@ def manage_user_login(user, user_data, next_url):
     else:
         flash("Please update your e-mail address in your profile page")
         return redirect(url_for('account.update_profile', name=user.name))
+
+
+def manage_user_no_login(access_token, next_url):
+    if current_user.is_authenticated():
+        user = user_repo.get(current_user.id)
+        user.info['twitter_token'] = access_token
+        user_repo.save(user)
+    return redirect(next_url)
