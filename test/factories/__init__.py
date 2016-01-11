@@ -25,11 +25,13 @@ from pybossa.repositories import ProjectRepository
 from pybossa.repositories import BlogRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import AuditlogRepository
+from pybossa.repositories import WebhookRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 blog_repo = BlogRepository(db)
 task_repo = TaskRepository(db)
 auditlog_repo = AuditlogRepository(db)
+webhook_repo = WebhookRepository(db)
 
 
 def reset_all_pk_sequences():
@@ -38,9 +40,9 @@ def reset_all_pk_sequences():
     CategoryFactory.reset_sequence()
     TaskFactory.reset_sequence()
     TaskRunFactory.reset_sequence()
-    AnonymousTaskRunFactory.reset_sequence()
     UserFactory.reset_sequence()
     AuditlogFactory.reset_sequence()
+    WebhookFactory.reset_sequence()
 
 
 class BaseFactory(factory.Factory):
@@ -63,3 +65,4 @@ from task_factory import TaskFactory
 from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from user_factory import UserFactory
 from auditlog_factory import AuditlogFactory
+from webhook_factory import WebhookFactory
