@@ -195,7 +195,7 @@ class TestNewsletterClass(Test):
         assert nw.ask_user_to_subscribe(user) is True
 
 
-class TestNewsletterViewFuntions(web.Helper):
+class TestNewsletterViewFunctions(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
