@@ -10,11 +10,21 @@ the following public interface:
 
 * importer_id
 * tasks()
+* count_tasks()
+* import_metadata()
 
 importer_id is the name of the importer; any of the supported importers:
 'csv', 'gdocs', 'epicollect', 'flickr' and 'dropbox'.
 
-tasks() should generate a list of tasks
+tasks() should generate a list of tasks.
+
+count_tasks() should return the number of tasks that will be created. This is
+because trying to import a large number of tasks (200 or more) will be done
+as a background job.
+
+import_metadata() may return any information about the tasks that are going to
+be imported. This is used for the autoimporters, and the information returned by
+this method is stored and available to be used by the next autoimport execution.
 
 These classes are intended for private use within the importers.py module. New
 ones can be created here to handle different kind of importing mechanisms.
