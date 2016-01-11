@@ -38,7 +38,9 @@ def reset_all_pk_sequences():
     CategoryFactory.reset_sequence()
     TaskFactory.reset_sequence()
     TaskRunFactory.reset_sequence()
+    AnonymousTaskRunFactory.reset_sequence()
     UserFactory.reset_sequence()
+    AuditlogFactory.reset_sequence()
 
 
 class BaseFactory(factory.Factory):
