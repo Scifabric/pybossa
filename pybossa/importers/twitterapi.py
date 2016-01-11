@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from twitter import Twitter, OAuth2, oauth2_dance, OAuth
-from .base import BulkTaskImport
+from twitter import Twitter, OAuth2, oauth2_dance, OAuth, TwitterHTTPError
+from .base import BulkTaskImport, BulkImportException
 
 
 class BulkTaskTwitterImport(BulkTaskImport):
@@ -28,7 +28,8 @@ class BulkTaskTwitterImport(BulkTaskImport):
     def __init__(self, consumer_key, consumer_secret, source,
                  max_tweets=None, last_import_meta=None, user_credentials=None):
         if user_credentials:
-            self.client = UserCredentialsClient(consumer_key, consumer_secret, user_credentials)
+            self.client = UserCredentialsClient(consumer_key, consumer_secret,
+                                                user_credentials)
         else:
             self.client = AppCredentialsClient(consumer_key, consumer_secret)
         self.source = source
@@ -68,6 +69,9 @@ class BulkTaskTwitterImport(BulkTaskImport):
 class TwitterClient(object):
 
     NO_RETWEETS = '-filter:retweets'
+    RATE_LIMIT_MESSAGE = ("Rate limit for Twitter API reached. "
+                          "Please, try again in 15 minutes.")
+    RATE_LIMIT_CODE = 429
 
     def _fetch_statuses(self, **kwargs):
         if self._is_source_a_user_account(kwargs['q']):
@@ -77,7 +81,14 @@ class TwitterClient(object):
 
     def _fetch_from_search(self, **kwargs):
         kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
-        return self.api.search.tweets(**kwargs).get('statuses')
+        try:
+            return self.api.search.tweets(**kwargs).get('statuses')
+        except TwitterHTTPError as e:
+            if e.e.code != self.RATE_LIMIT_CODE:
+                error_message = e.__str__()
+            else:
+                error_message = self.RATE_LIMIT_MESSAGE
+            raise BulkImportException(error_message)
 
     def _fetch_from_account(self, **kwargs):
         kwargs['screen_name'] = kwargs['q']

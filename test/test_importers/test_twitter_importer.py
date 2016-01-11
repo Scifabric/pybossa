@@ -18,6 +18,8 @@
 
 
 from mock import patch, Mock
+from nose.tools import assert_raises
+from twitter import TwitterHTTPError
 from pybossa.importers import BulkImportException
 from pybossa.importers.twitterapi import BulkTaskTwitterImport
 
@@ -195,7 +197,44 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(api_calls) == 1, api_calls
 
-    def test_metadata_is_used_for_api_call_if_present(self):
+    def test_tasks_raises_exception_on_twitter_client_error(self):
+        def response(*args, **kwargs):
+            class HTTPError(object):
+                code = 401
+                headers = {}
+                fp = Mock()
+                fp.read.return_value = []
+            raise TwitterHTTPError(HTTPError, "api.twitter.com", None, None)
+
+        max_tweets = 10
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.search.tweets = response
+
+        assert_raises(BulkImportException, importer.tasks)
+
+    def test_tasks_raises_exception_on_rate_limit_error(self):
+        def response(*args, **kwargs):
+            class HTTPError(object):
+                code = 429
+                headers = {}
+                fp = Mock()
+                fp.read.return_value = []
+            raise TwitterHTTPError(HTTPError, "api.twitter.com", None, None)
+
+        max_tweets = 10
+        form_data = {'source': '#match', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.search.tweets = response
+
+        assert_raises(BulkImportException, importer.tasks)
+
+        try:
+            importer.tasks()
+        except BulkImportException as e:
+            assert e.message == "Rate limit for Twitter API reached. Please, try again in 15 minutes.", e.message
+
+    def test_metadata_is_used_for_twitter_api_call_if_present(self):
         form_data = {
             'source': '#hashtag',
             'max_tweets': 500,
