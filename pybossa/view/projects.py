@@ -1609,6 +1609,9 @@ def webhook_handler(short_name, oid=None):
      n_results) = project_by_shortname(short_name)
 
     pro = pro_features()
+    if not pro['webhooks_enabled']:
+        raise abort(403)
+
     responses = webhook_repo.filter_by(project_id=project.id)
     if request.method == 'POST' and oid:
         tmp = webhook_repo.get(oid)
