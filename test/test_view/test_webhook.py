@@ -73,6 +73,43 @@ class TestWebhookView(web.Helper):
         assert res.status_code == 403, res.status_code
 
     @with_context
+    def test_webhook_handler_owner_pro(self):
+        """Test WEBHOOK view works for pro owner."""
+        # Admin/owner
+        self.register()
+        self.signout()
+        # User
+        self.register(name="Iser")
+        owner = user_repo.get_by(name="Iser")
+        owner.pro = True
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner)
+        url = "/project/%s/webhook" % project.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Created" in res.data
+        assert "Payload" in res.data
+
+    @with_context
+    def test_webhook_handler_admin(self):
+        """Test WEBHOOK view works for admin."""
+        # Admin
+        self.register()
+        self.signout()
+        # User
+        self.register(name="user", password="user")
+        owner = user_repo.get(2)
+        self.signout()
+        # Access as admin
+        self.signin()
+        project = ProjectFactory.create(owner=owner)
+        url = "/project/%s/webhook" % project.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Created" in res.data
+        assert "Payload" in res.data
+
+    @with_context
     def test_webhook_handler_post_oid(self):
         """Test WEBHOOK post oid works."""
         self.register()
