@@ -500,7 +500,7 @@ def setup_hooks(app):
             contact_twitter = 'PyBossa'
 
         # Available plugins
-        plugins = plugin_manager.plugins.values()
+        plugins = plugin_manager.plugins
 
         return dict(
             brand=app.config['BRAND'],
