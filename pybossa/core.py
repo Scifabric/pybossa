@@ -498,9 +498,9 @@ def setup_hooks(app):
             contact_twitter = app.config.get('CONTACT_TWITTER')
         else:
             contact_twitter = 'PyBossa'
-        
+
         # Available plugins
-        plugins = plugin_manager.plugins.keys()
+        plugins = plugin_manager.plugins.values()
 
         return dict(
             brand=app.config['BRAND'],
