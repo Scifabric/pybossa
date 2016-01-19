@@ -758,7 +758,7 @@ class TestAuditlogWEB(web.Helper):
         self.register()
         self.signout()
         # User
-        self.register(name="admin", password="admin")
+        self.register(name="user", password="user")
         self.new_project()
         self.new_task(1)
         self.signout()
