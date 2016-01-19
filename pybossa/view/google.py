@@ -54,9 +54,9 @@ def get_google_token():  # pragma: no cover
 
 
 @blueprint.route('/oauth_authorized')
-@google.oauth.authorized_handler
-def oauth_authorized(resp):  # pragma: no cover
+def oauth_authorized():  # pragma: no cover
     """Authorize Oauth."""
+    resp = google.oauth.authorized_response()
     next_url = url_for('home.home')
 
     if resp is None or request.args.get('error'):

@@ -19,15 +19,16 @@
 from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.csv import _BulkTaskCSVImport
+from pybossa.importers.csv import BulkTaskCSVImport
 from default import FakeResponse
 
 
 @patch('pybossa.importers.csv.requests.get')
-class Test_BulkTaskCSVImport(object):
+class TestBulkTaskCSVImport(object):
 
-    url = 'http://myfakecsvurl.com'
-    importer = _BulkTaskCSVImport()
+    def setUp(self):
+        url = 'http://myfakecsvurl.com'
+        self.importer = BulkTaskCSVImport(csv_url=url)
 
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
@@ -36,7 +37,7 @@ class Test_BulkTaskCSVImport(object):
                                   encoding='utf-8')
         request.return_value = empty_file
 
-        number_of_tasks = self.importer.count_tasks(csv_url=self.url)
+        number_of_tasks = self.importer.count_tasks()
 
         assert number_of_tasks is 0, number_of_tasks
 
@@ -46,7 +47,7 @@ class Test_BulkTaskCSVImport(object):
                                   encoding='utf-8')
         request.return_value = csv_file
 
-        number_of_tasks = self.importer.count_tasks(csv_url=self.url)
+        number_of_tasks = self.importer.count_tasks()
 
         assert number_of_tasks is 1, number_of_tasks
 
@@ -57,9 +58,9 @@ class Test_BulkTaskCSVImport(object):
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks)
         try:
-            self.importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -70,9 +71,9 @@ class Test_BulkTaskCSVImport(object):
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks)
         try:
-            self.importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -83,9 +84,9 @@ class Test_BulkTaskCSVImport(object):
         request.return_value = csv_file
         msg = "The file you uploaded has two headers with the same name."
 
-        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks)
         try:
-            self.importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -96,9 +97,9 @@ class Test_BulkTaskCSVImport(object):
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, self.importer.tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks)
         try:
-            self.importer.tasks(csv_url=self.url)
+            self.importer.tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -109,9 +110,9 @@ class Test_BulkTaskCSVImport(object):
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, self.importer.tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks)
         try:
-            self.importer.tasks(csv_url=self.url)
+            self.importer.tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -124,7 +125,7 @@ class Test_BulkTaskCSVImport(object):
 
         raised = False
         try:
-            self.importer.tasks(csv_url=self.url).next()
+            self.importer.tasks().next()
         except BulkImportException as e:
             assert e[0] == msg, e
             raised = True
@@ -140,7 +141,7 @@ class Test_BulkTaskCSVImport(object):
 
         raised = False
         try:
-            self.importer.tasks(csv_url=self.url).next()
+            self.importer.tasks().next()
         except BulkImportException as e:
             raised = True
             assert e[0] == msg, e
@@ -156,7 +157,7 @@ class Test_BulkTaskCSVImport(object):
 
         raised = False
         try:
-            self.importer.tasks(csv_url=self.url).next()
+            self.importer.tasks().next()
         except BulkImportException as e:
             raised = True
             assert e[0] == msg, e
@@ -169,7 +170,7 @@ class Test_BulkTaskCSVImport(object):
                                 encoding='utf-8')
         request.return_value = csv_file
 
-        tasks = self.importer.tasks(csv_url=self.url)
+        tasks = self.importer.tasks()
         task = tasks.next()
 
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
@@ -181,7 +182,7 @@ class Test_BulkTaskCSVImport(object):
                                 encoding='utf-8')
         request.return_value = csv_file
 
-        tasks = self.importer.tasks(csv_url=self.url)
+        tasks = self.importer.tasks()
         task = tasks.next()
 
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
@@ -193,7 +194,7 @@ class Test_BulkTaskCSVImport(object):
                                 encoding='ISO-8859-1')
         request.return_value = csv_file
 
-        tasks = self.importer.tasks(csv_url=self.url)
+        tasks = self.importer.tasks()
         task = tasks.next()
 
         assert csv_file.encoding == 'utf-8'

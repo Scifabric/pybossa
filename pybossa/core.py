@@ -499,6 +499,9 @@ def setup_hooks(app):
         else:
             contact_twitter = 'PyBossa'
 
+        # Available plugins
+        plugins = plugin_manager.plugins
+
         return dict(
             brand=app.config['BRAND'],
             title=app.config['TITLE'],
@@ -515,7 +518,8 @@ def setup_hooks(app):
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'],
             news=news,
-            notify_admin=notify_admin)
+            notify_admin=notify_admin,
+            plugins=plugins)
 
 
 def setup_jinja2_filters(app):

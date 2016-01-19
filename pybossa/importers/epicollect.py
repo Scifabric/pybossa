@@ -20,18 +20,24 @@ import json
 import requests
 from flask.ext.babel import gettext
 
-from .base import _BulkTaskImport, BulkImportException
+from .base import BulkTaskImport, BulkImportException
 
 
-class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
+class BulkTaskEpiCollectPlusImport(BulkTaskImport):
 
     """Class to import tasks in bulk from an EpiCollect+ project."""
 
     importer_id = "epicollect"
 
-    def tasks(self, **form_data):
+    def __init__(self, epicollect_project,
+                 epicollect_form, last_import_meta=None):
+        self.project = epicollect_project
+        self.form = epicollect_form
+        self.last_import_meta = last_import_meta
+
+    def tasks(self):
         """Get tasks."""
-        dataurl = self._get_data_url(**form_data)
+        dataurl = self._get_data_url()
         r = requests.get(dataurl)
         return self._get_epicollect_data_from_request(r)
 
@@ -40,10 +46,10 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         for d in data:
             yield {"info": d}
 
-    def _get_data_url(self, **form_data):
+    def _get_data_url(self):
         """Get data url."""
         return 'http://plus.epicollect.net/%s/%s.json' % \
-            (form_data['epicollect_project'], form_data['epicollect_form'])
+            (self.project, self.form)
 
     def _get_epicollect_data_from_request(self, r):
         """Get epicollect data from request."""

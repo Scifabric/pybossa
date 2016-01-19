@@ -19,6 +19,7 @@
 from default import Test, with_context, flask_app
 from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
 from pybossa.model.task import Task
+from pybossa.importers import ImportReport
 from factories import ProjectFactory, TaskFactory, UserFactory
 from mock import patch
 
@@ -34,12 +35,11 @@ class TestImportTasksJob(Test):
 
         create.assert_called_once_with(task_repo, project.id, **form_data)
 
-
     @with_context
     @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.importer.create_tasks')
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
-        create.return_value = '1 new task was imported successfully'
+        create.return_value = ImportReport(message='1 new task was imported successfully', metadata=None, total=1)
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name
@@ -52,6 +52,42 @@ class TestImportTasksJob(Test):
         send_mail.assert_called_once_with(email_data)
 
     @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.importer.create_tasks')
+    def test_it_adds_import_metadata_to_autoimporter_if_is_autoimport_job(self, create, send_mail):
+        create.return_value = ImportReport(message='1 new task was imported successfully', metadata="meta", total=1)
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
+        project = ProjectFactory.create(info=dict(autoimporter=form_data))
+        subject = 'Tasks Import to your project %s' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % project.name
+        email_data = dict(recipients=[project.owner.email_addr],
+                          subject=subject, body=body)
+
+        import_tasks(project.id, from_auto=True, **form_data)
+        autoimporter = project.get_autoimporter()
+
+        assert autoimporter.get('last_import_meta') == 'meta', autoimporter
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.importer.create_tasks')
+    def test_it_does_not_add_import_metadata_to_autoimporter_if_is_import_job(self, create, send_mail):
+        create.return_value = ImportReport(message='1 new task was imported successfully', metadata="meta", total=1)
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
+        project = ProjectFactory.create(info=dict(autoimporter=form_data))
+        subject = 'Tasks Import to your project %s' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % project.name
+        email_data = dict(recipients=[project.owner.email_addr],
+                          subject=subject, body=body)
+
+        import_tasks(project.id, from_auto=False, **form_data)
+        autoimporter = project.get_autoimporter()
+
+        assert autoimporter.get('last_import_meta') == None, autoimporter
+
+
+class TestAutoimportJobs(Test):
+    @with_context
     def test_autoimport_jobs_no_autoimporter(self):
         """Test JOB autoimport does not return projects without autoimporter."""
         user = UserFactory.create(pro=True)
@@ -63,7 +99,6 @@ class TestImportTasksJob(Test):
 
         msg = "There should be 0 jobs."
         assert len(jobs) == 0, msg
-
 
     @with_context
     def test_autoimport_jobs_with_autoimporter(self):
@@ -78,8 +113,10 @@ class TestImportTasksJob(Test):
         msg = "There should be 1 job."
         assert len(jobs) == 1, msg
         job = jobs[0]
-        msg = "There sould be the same project."
-        assert job['args'] == [project.id], msg
+        msg = "It sould be the same project."
+        assert job['args'][0] == project.id, msg
+        msg = "It sould be created as an auto import job."
+        assert job['args'][1] == True, msg
         msg = "There sould be the kwargs."
         assert job['kwargs'] == 'foobar', msg
 
@@ -111,7 +148,9 @@ class TestImportTasksJob(Test):
         msg = "There should be 1 job."
         assert len(jobs) == 1, msg
         job = jobs[0]
-        msg = "There sould be the same project."
-        assert job['args'] == [project.id], msg
+        msg = "It sould be the same project."
+        assert job['args'][0] == project.id, msg
+        msg = "It sould be created as an auto import job."
+        assert job['args'][1] == True, msg
         msg = "There sould be the kwargs."
         assert job['kwargs'] == 'foobar', msg

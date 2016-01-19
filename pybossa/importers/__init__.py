@@ -17,5 +17,5 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Importers module for PyBossa."""
 
-from .importer import Importer
+from .importer import Importer, ImportReport
 from .base import BulkImportException
