@@ -19,35 +19,37 @@
 import json
 import requests
 
-from .base import _BulkTaskImport, BulkImportException
+from .base import BulkTaskImport, BulkImportException
 
 
-class _BulkTaskFlickrImport(_BulkTaskImport):
+class BulkTaskFlickrImport(BulkTaskImport):
 
     """Class to import tasks from Flickr in bulk."""
 
     importer_id = "flickr"
 
-    def __init__(self, api_key):
+    def __init__(self, api_key, album_id, last_import_meta=None):
         """Init method."""
         self.api_key = api_key
+        self.album_id = album_id
+        self.last_import_meta = last_import_meta
 
-    def tasks(self, **form_data):
+    def tasks(self):
         """Get tasks."""
-        album_info = self._get_album_info(form_data['album_id'])
+        album_info = self._get_album_info()
         return self._get_tasks_data_from_request(album_info)
 
-    def count_tasks(self, **form_data):
+    def count_tasks(self):
         """Count tasks."""
-        album_info = self._get_album_info(form_data['album_id'])
+        album_info = self._get_album_info()
         return int(album_info['total'])
 
-    def _get_album_info(self, album_id):
+    def _get_album_info(self):
         """Get album info."""
         url = 'https://api.flickr.com/services/rest/'
         payload = {'method': 'flickr.photosets.getPhotos',
                    'api_key': self.api_key,
-                   'photoset_id': album_id,
+                   'photoset_id': self.album_id,
                    'format': 'json',
                    'nojsoncallback': '1'}
         res = requests.get(url, params=payload)

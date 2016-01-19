@@ -44,8 +44,8 @@ class TestImporterPublicMethods(Test):
         assert task.project_id == project.id, task.project_id
         assert task.n_answers == 20, task.n_answers
         assert task.info == {'question': 'question', 'url': 'url'}, task.info
-        importer_factory.assert_called_with('csv')
-        mock_importer.tasks.assert_called_with(**form_data)
+        importer_factory.assert_called_with(**form_data)
+        mock_importer.tasks.assert_called_with()
 
     def test_create_tasks_creates_many_tasks(self, importer_factory):
         mock_importer = Mock()
@@ -58,8 +58,8 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
-        assert result == '2 new tasks were imported successfully', result
-        importer_factory.assert_called_with('gdocs')
+        assert result.message == '2 new tasks were imported successfully', result
+        importer_factory.assert_called_with(**form_data)
 
     def test_create_tasks_not_creates_duplicated_tasks(self, importer_factory):
         mock_importer = Mock()
@@ -73,10 +73,25 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 1, len(tasks)
-        assert result == 'It looks like there were no new records to import', result
-        importer_factory.assert_called_with('flickr')
+        assert result.message == 'It looks like there were no new records to import', result
+        importer_factory.assert_called_with(**form_data)
 
-    def test_count_tasks_to_import_returns_what_expected(self, importer_factory):
+    def test_create_tasks_returns_task_report(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
+        metadata = {"metadata": 123}
+        mock_importer.import_metadata.return_value = metadata
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='flickr', album_id='1234')
+
+        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+
+        assert result.message == '1 new task was imported successfully', result.message
+        assert result.total == 1, result.total
+        assert result.metadata == metadata, result.metadata
+
+    def test_count_tasks_to_import_returns_number_of_tasks_to_import(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
         importer_factory.return_value = mock_importer
@@ -86,7 +101,7 @@ class TestImporterPublicMethods(Test):
         number_of_tasks = self.importer.count_tasks_to_import(**form_data)
 
         assert number_of_tasks == 2, number_of_tasks
-        importer_factory.assert_called_with('epicollect')
+        importer_factory.assert_called_with(**form_data)
 
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()

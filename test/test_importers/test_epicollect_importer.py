@@ -20,16 +20,16 @@ import json
 from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from pybossa.importers.epicollect import _BulkTaskEpiCollectPlusImport
+from pybossa.importers.epicollect import BulkTaskEpiCollectPlusImport
 from default import FakeResponse
 
 
 @patch('pybossa.importers.epicollect.requests.get')
-class Test_BulkTaskEpiCollectPlusImport(object):
+class TestBulkTaskEpiCollectPlusImport(object):
 
     epicollect = {'epicollect_project': 'fakeproject',
                   'epicollect_form': 'fakeform'}
-    importer = _BulkTaskEpiCollectPlusImport()
+    importer = BulkTaskEpiCollectPlusImport(**epicollect)
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = FakeResponse(text='Forbidden', status_code=403,
@@ -39,9 +39,9 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
-        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.count_tasks)
         try:
-            self.importer.count_tasks(**self.epicollect)
+            self.importer.count_tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -53,9 +53,9 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
-        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.tasks)
         try:
-            self.importer.tasks(**self.epicollect)
+            self.importer.tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -67,9 +67,9 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         request.return_value = html_request
         msg = "Oops! That project and form do not look like the right one."
 
-        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.count_tasks)
         try:
-            self.importer.count_tasks(**self.epicollect)
+            self.importer.count_tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -81,9 +81,9 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         request.return_value = html_request
         msg = "Oops! That project and form do not look like the right one."
 
-        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.tasks)
         try:
-            self.importer.tasks(**self.epicollect)
+            self.importer.tasks()
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -94,7 +94,7 @@ class Test_BulkTaskEpiCollectPlusImport(object):
                                 encoding='utf-8')
         request.return_value = response
 
-        number_of_tasks = self.importer.count_tasks(**self.epicollect)
+        number_of_tasks = self.importer.count_tasks()
 
         assert number_of_tasks is 2, number_of_tasks
 
@@ -105,6 +105,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
                                 encoding='utf-8')
         request.return_value = response
 
-        task = self.importer.tasks(**self.epicollect).next()
+        task = self.importer.tasks().next()
 
         assert task == {'info': {u'DeviceID': 23}}, task

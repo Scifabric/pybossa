@@ -17,11 +17,11 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.babel import gettext
-from .csv import _BulkTaskCSVImport, _BulkTaskGDImport
-from .dropbox import _BulkTaskDropboxImport
-from .flickr import _BulkTaskFlickrImport
-from .twitterapi import _BulkTaskTwitterImport
-from .epicollect import _BulkTaskEpiCollectPlusImport
+from .csv import BulkTaskCSVImport, BulkTaskGDImport
+from .dropbox import BulkTaskDropboxImport
+from .flickr import BulkTaskFlickrImport
+from .twitterapi import BulkTaskTwitterImport
+from .epicollect import BulkTaskEpiCollectPlusImport
 
 
 class Importer(object):
@@ -30,22 +30,22 @@ class Importer(object):
 
     def __init__(self):
         """Init method."""
-        self._importers = {'csv': _BulkTaskCSVImport,
-                           'gdocs': _BulkTaskGDImport,
-                           'epicollect': _BulkTaskEpiCollectPlusImport}
-        self._importer_constructor_params = {}
+        self._importers = dict(csv=BulkTaskCSVImport,
+                               gdocs=BulkTaskGDImport,
+                               epicollect=BulkTaskEpiCollectPlusImport)
+        self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
         """Register Flickr importer."""
-        self._importers['flickr'] = _BulkTaskFlickrImport
+        self._importers['flickr'] = BulkTaskFlickrImport
         self._importer_constructor_params['flickr'] = flickr_params
 
     def register_dropbox_importer(self):
         """Register Dropbox importer."""
-        self._importers['dropbox'] = _BulkTaskDropboxImport
+        self._importers['dropbox'] = BulkTaskDropboxImport
 
     def register_twitter_importer(self, twitter_params):
-        self._importers['twitter'] = _BulkTaskTwitterImport
+        self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
 
     def create_tasks(self, task_repo, project_id, **form_data):
@@ -53,11 +53,10 @@ class Importer(object):
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
-        importer_id = form_data.get('type')
         empty = True
         n = 0
-        importer = self._create_importer_for(importer_id)
-        for task_data in importer.tasks(**form_data):
+        importer = self._create_importer_for(**form_data)
+        for task_data in importer.tasks():
             task = Task(project_id=project_id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.get_task_by(project_id=project_id, info=task.info)
@@ -67,20 +66,24 @@ class Importer(object):
                 empty = False
         if empty:
             msg = gettext('It looks like there were no new records to import')
-            return msg
+            return ImportReport(message=msg, metadata=None, total=n)
+        metadata = importer.import_metadata()
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
-        return msg
+        report = ImportReport(message=msg, metadata=metadata, total=n)
+        return report
 
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""
-        importer_id = form_data.get('type')
-        return self._create_importer_for(importer_id).count_tasks(**form_data)
+        return self._create_importer_for(**form_data).count_tasks()
 
-    def _create_importer_for(self, importer_id):
+    def _create_importer_for(self, **form_data):
         """Create importer."""
+        importer_id = form_data.get('type')
         params = self._importer_constructor_params.get(importer_id) or {}
+        params.update(form_data)
+        del params['type']
         return self._importers[importer_id](**params)
 
     def get_all_importer_names(self):
@@ -90,3 +93,23 @@ class Importer(object):
     def get_autoimporter_names(self):
         """Get autoimporter names."""
         return [name for name in self._importers.keys() if name != 'dropbox']
+
+
+class ImportReport(object):
+
+    def __init__(self, message, metadata, total):
+        self._message = message
+        self._metadata = metadata
+        self._total = total
+
+    @property
+    def message(self):
+        return self._message
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @property
+    def total(self):
+        return self._total
