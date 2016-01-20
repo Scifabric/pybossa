@@ -80,7 +80,7 @@ def oauth_authorized():  # pragma: no cover
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
 
-    no_login = int(request.args.get(NO_LOGIN))
+    no_login = int(request.args.get(NO_LOGIN, 0))
     if no_login == 1:
         return manage_user_no_login(access_token, next_url)
 

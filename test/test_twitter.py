@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from flask import Response
-from default import Test
+from default import Test, assert_not_raises
 from pybossa.view.twitter import manage_user, manage_user_login, \
     manage_user_no_login
 from pybossa.core import user_repo
@@ -186,6 +186,20 @@ class TestTwitter(Test):
         manage_user_no_login.assert_called_once_with(
             {'oauth_token_secret': 'secret', 'oauth_token': 'token'},
             '/')
+
+    @patch('pybossa.view.twitter.manage_user_no_login')
+    @patch('pybossa.view.twitter.twitter.oauth')
+    def test_twitter_signin_no_login_param_missing(
+            self, oauth, manage_user_no_login):
+        oauth.authorized_response.return_value = {
+            'oauth_token': 'token',
+            'oauth_token_secret': 'secret',
+            'screen_name': 'john_doe',
+            'user_id': 1
+            }
+        manage_user_no_login.return_value = Response(302)
+
+        assert_not_raises(Exception, self.app.get, '/twitter/oauth-authorized')
 
     @patch('pybossa.view.twitter.current_user')
     def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
