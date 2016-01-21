@@ -448,3 +448,19 @@ class TestBulkTaskTwitterImportFromAccount(object):
         assert calls[1]['kwargs']['max_id'] == 0, calls[1]['kwargs']
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
+
+    def test_tasks_raises_exception_on_twitter_client_error(self):
+        def response(*args, **kwargs):
+            class HTTPError(object):
+                code = 401
+                headers = {}
+                fp = Mock()
+                fp.read.return_value = []
+            raise TwitterHTTPError(HTTPError, "api.twitter.com", None, None)
+
+        max_tweets = 10
+        form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.statuses.user_timeline = response
+
+        assert_raises(BulkImportException, importer.tasks)

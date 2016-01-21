@@ -74,21 +74,21 @@ class TwitterClient(object):
     RATE_LIMIT_CODE = 429
 
     def _fetch_statuses(self, **kwargs):
-        if self._is_source_a_user_account(kwargs['q']):
-            return self._fetch_from_account(**kwargs)
-        else:
-            return self._fetch_from_search(**kwargs)
-
-    def _fetch_from_search(self, **kwargs):
-        kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
         try:
-            return self.api.search.tweets(**kwargs).get('statuses')
+            if self._is_source_a_user_account(kwargs['q']):
+                return self._fetch_from_account(**kwargs)
+            else:
+                return self._fetch_from_search(**kwargs)
         except TwitterHTTPError as e:
             if e.e.code != self.RATE_LIMIT_CODE:
                 error_message = e.__str__()
             else:
                 error_message = self.RATE_LIMIT_MESSAGE
             raise BulkImportException(error_message)
+
+    def _fetch_from_search(self, **kwargs):
+        kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
+        return self.api.search.tweets(**kwargs).get('statuses')
 
     def _fetch_from_account(self, **kwargs):
         kwargs['screen_name'] = kwargs['q']
