@@ -88,12 +88,17 @@ class TwitterClient(object):
 
     def _fetch_from_search(self, **kwargs):
         kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
+        kwargs = self._remove_invalid_params(kwargs)
         return self.api.search.tweets(**kwargs).get('statuses')
 
     def _fetch_from_account(self, **kwargs):
         kwargs['screen_name'] = kwargs['q']
         del kwargs['q']
+        kwargs = self._remove_invalid_params(kwargs)
         return self.api.statuses.user_timeline(**kwargs)
+
+    def _remove_invalid_params(self, kwargs):
+        return {k: kwargs[k] for k in kwargs if kwargs[k] is not None}
 
     def _is_source_a_user_account(self, source):
         return source and source.startswith('@')
