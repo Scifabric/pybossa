@@ -464,3 +464,23 @@ class TestBulkTaskTwitterImportFromAccount(object):
         importer.client.api.statuses.user_timeline = response
 
         assert_raises(BulkImportException, importer.tasks)
+
+    def test_if_last_import_meta_is_None_since_id_is_not_passed_to_twitter_client(self):
+        responses = [self.no_results, self.five_statuses]
+        calls = []
+        def multiple_responses(*args, **kwargs):
+            calls.append({'args': args, 'kwargs': kwargs})
+            return responses.pop()
+
+        max_tweets = 3
+        form_data = {
+            'source': '@pybossa',
+            'max_tweets': max_tweets,
+            'user_credentials': '{"oauth_token_secret": "secret", "oauth_token": "token"}'
+        }
+        importer = create_importer_with_form_data(**form_data)
+        importer.client.api.statuses.user_timeline = multiple_responses
+
+        tasks = importer.tasks()
+
+        assert 'since_id' not in calls[0]['kwargs'].keys(), calls[0]['kwargs']
