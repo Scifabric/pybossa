@@ -74,15 +74,11 @@ class TwitterClient(object):
     RATE_LIMIT_CODE = 429
 
     def _fetch_statuses(self, **kwargs):
-        if self._is_source_a_user_account(kwargs['q']):
-            return self._fetch_from_account(**kwargs)
-        else:
-            return self._fetch_from_search(**kwargs)
-
-    def _fetch_from_search(self, **kwargs):
-        kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
         try:
-            return self.api.search.tweets(**kwargs).get('statuses')
+            if self._is_source_a_user_account(kwargs['q']):
+                return self._fetch_from_account(**kwargs)
+            else:
+                return self._fetch_from_search(**kwargs)
         except TwitterHTTPError as e:
             if e.e.code != self.RATE_LIMIT_CODE:
                 error_message = e.__str__()
@@ -90,10 +86,19 @@ class TwitterClient(object):
                 error_message = self.RATE_LIMIT_MESSAGE
             raise BulkImportException(error_message)
 
+    def _fetch_from_search(self, **kwargs):
+        kwargs['q'] = kwargs['q'] + self.NO_RETWEETS
+        kwargs = self._remove_invalid_params(kwargs)
+        return self.api.search.tweets(**kwargs).get('statuses')
+
     def _fetch_from_account(self, **kwargs):
         kwargs['screen_name'] = kwargs['q']
         del kwargs['q']
+        kwargs = self._remove_invalid_params(kwargs)
         return self.api.statuses.user_timeline(**kwargs)
+
+    def _remove_invalid_params(self, kwargs):
+        return {k: kwargs[k] for k in kwargs if kwargs[k] is not None}
 
     def _is_source_a_user_account(self, source):
         return source and source.startswith('@')
