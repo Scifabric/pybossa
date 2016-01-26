@@ -1,0 +1,13 @@
+================
+Changelog v1.4.0
+================
+
+ * Update Pyrax dependencies.
+ * Autoimport tasks can pass arbitrary metadata from previous import task to the
+   next scheduled execution.
+ * Twitter importer can use now API credentials from user too.
+ * Improved test coverage.
+ * A dict with data about the installed plugins is now available as a global
+   jinja2 template variable.
+ * New theme for documentation.
+ * Improvements in documentation.
