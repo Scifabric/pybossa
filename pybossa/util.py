@@ -23,7 +23,6 @@ import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
 from functools import wraps
-from flask_oauthlib.client import OAuth
 from flask.ext.login import current_user
 from math import ceil
 import json
@@ -191,95 +190,6 @@ class Pagination(object):
                     yield None
                 yield num
                 last = num
-
-
-class Twitter(object):
-
-    """Class Twitter to enable Twitter signin."""
-
-    def __init__(self, app=None):
-        """Init method."""
-        self.app = app
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Init app using factories."""
-        self.oauth = OAuth().remote_app(
-            'twitter',
-            base_url='https://api.twitter.com/1/',
-            request_token_url='https://api.twitter.com/oauth/request_token',
-            access_token_url='https://api.twitter.com/oauth/access_token',
-            authorize_url='https://api.twitter.com/oauth/authenticate',
-            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
-            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'])
-
-
-class Facebook(object):
-
-    """Class Facebook to enable Facebook signin."""
-
-    def __init__(self, app=None):
-        """Init method."""
-        self.app = app
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Init app using factories pattern."""
-        self.oauth = OAuth().remote_app(
-            'facebook',
-            base_url='https://graph.facebook.com/',
-            request_token_url=None,
-            access_token_url='/oauth/access_token',
-            authorize_url='https://www.facebook.com/dialog/oauth',
-            consumer_key=app.config['FACEBOOK_APP_ID'],
-            consumer_secret=app.config['FACEBOOK_APP_SECRET'],
-            request_token_params={'scope': 'email'})
-
-
-class Google(object):
-
-    """Class Google to enable Google signin."""
-
-    def __init__(self, app=None):
-        """Init method."""
-        self.app = app
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Init app using factories pattern."""
-        self.oauth = OAuth().remote_app(
-            'google',
-            base_url='https://www.googleapis.com/oauth2/v1/',
-            authorize_url='https://accounts.google.com/o/oauth2/auth',
-            request_token_url=None,
-            request_token_params={'scope': 'profile email'},
-            access_token_url='https://accounts.google.com/o/oauth2/token',
-            access_token_method='POST',
-            consumer_key=app.config['GOOGLE_CLIENT_ID'],
-            consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
-
-
-class Amazon(object):
-
-    def __init__(self, app=None):
-        self.app = app
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        self.oauth = OAuth().remote_app(
-            'amazon',
-            base_url='https://api.amazon.com/auth/o2',
-            authorize_url='https://www.amazon.com/ap/oa',
-            request_token_url=None,
-            request_token_params={'scope': 'profile'},
-            access_token_url='https://api.amazon.com/auth/o2/token',
-            access_token_method='POST',
-            consumer_key=app.config['AMAZON_CLIENT_ID'],
-            consumer_secret=app.config['AMAZON_CLIENT_SECRET'])
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):

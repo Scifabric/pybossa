@@ -71,15 +71,18 @@ login_manager = LoginManager()
 from flask.ext.debugtoolbar import DebugToolbarExtension
 debug_toolbar = DebugToolbarExtension()
 
-# Social Networks
-from pybossa.util import Facebook
+# OAuth providers
+from pybossa.oauth_providers import Facebook
 facebook = Facebook()
 
-from pybossa.util import Twitter
+from pybossa.oauth_providers import Twitter
 twitter = Twitter()
 
-from pybossa.util import Google
+from pybossa.oauth_providers import Google
 google = Google()
+
+from pybossa.oauth_providers import Amazon
+amazon = Amazon()
 
 # Markdown support
 from flask.ext.misaka import Misaka
@@ -117,9 +120,6 @@ importer = Importer()
 # Flickr OAuth integration for importer
 from pybossa.flickr_client import FlickrClient
 flickr = FlickrClient()
-
-from pybossa.util import Amazon
-amazon = Amazon()
 
 from flask.ext.plugins import PluginManager
 plugin_manager = PluginManager()
