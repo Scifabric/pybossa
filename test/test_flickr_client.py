@@ -117,7 +117,6 @@ class TestFlickrClient(object):
             self.data = data
 
     def setUp(self):
-        self.flickr = FlickrClient()
         self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
         self.flickr = FlickrClient()
