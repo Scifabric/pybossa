@@ -18,6 +18,7 @@
 """Flickr module for authentication."""
 from flask_oauthlib.client import OAuth
 import functools
+import requests
 
 
 class FlickrClient(object):
@@ -48,20 +49,21 @@ class FlickrClient(object):
 
     def get_user_albums(self, session):
         """Get user albums from Flickr."""
-        if (session.get('flickr_user') is not None and
-                session.get('flickr_token') is not None):
-            url = ('https://api.flickr.com/services/rest/?'
-                   'method=flickr.photosets.getList&user_id=%s'
-                   '&primary_photo_extras=url_q'
-                   '&format=json&nojsoncallback=1'
-                   % self._get_user_nsid(session))
-            res = self.oauth_client.get(url, token='')
-            if res.status == 200 and res.data.get('stat') == 'ok':
-                albums = res.data['photosets']['photoset']
+        if session.get('flickr_user') is not None:
+            url = 'https://api.flickr.com/services/rest/'
+            payload = {'method': 'flickr.photosets.getList',
+                       'api_key': self.app.config['FLICKR_API_KEY'],
+                       'user_id': self._get_user_nsid(session),
+                       'format': 'json',
+                       'primary_photo_extras':'url_q',
+                       'nojsoncallback': '1'}
+            res = requests.get(url, params=payload)
+            if res.status_code == 200 and res.json().get('stat') == 'ok':
+                albums = res.json()['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
             if self.app is not None:
                 msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
-                       % (res.status, res.data))
+                       % (res.status_code, res.json()))
                 self.app.logger.error(msg)
         return []
 

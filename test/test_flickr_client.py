@@ -113,15 +113,15 @@ class TestFlickrAPI(object):
 class TestFlickrClient(object):
     class Res(object):
         def __init__(self, status, data):
-            self.status = status
-            self.data = data
+            self.status_code = status
+            self.json = lambda: data
 
     def setUp(self):
         self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
         self.flickr = FlickrClient()
-        self.flickr.oauth_client = MagicMock()
         self.flickr.app = MagicMock()
+        self.flickr.app.config = {'FLICKR_API_KEY': 'key'}
 
     def test_flickr_get_token_returns_None_if_no_token(self):
         session = {}
@@ -157,22 +157,26 @@ class TestFlickrClient(object):
         assert session.get('flickr_user') is None
 
 
-    def test_get_user_albums_calls_flickr_api_endpoint(self):
+    @patch('pybossa.flickr_client.requests')
+    def test_get_user_albums_calls_flickr_api_endpoint(self, fake_requests):
         session = {'flickr_token': self.token, 'flickr_user': self.user}
-        url = ('https://api.flickr.com/services/rest/?'
-               'method=flickr.photosets.getList&user_id=user'
-               '&primary_photo_extras=url_q'
-               '&format=json&nojsoncallback=1')
+        url = 'https://api.flickr.com/services/rest/'
+        payload = {'method': 'flickr.photosets.getList',
+                   'api_key': 'key',
+                   'user_id': 'user',
+                   'format': 'json',
+                   'primary_photo_extras':'url_q',
+                   'nojsoncallback': '1'}
 
         self.flickr.get_user_albums(session)
 
-        # The request MUST NOT include a valid token, to avoid private photos
-        self.flickr.oauth_client.get.assert_called_with(url, token='')
+        fake_requests.get.assert_called_with(url, params=payload)
 
 
-    def test_get_user_albums_return_empty_list_on_request_error(self):
+    @patch('pybossa.flickr_client.requests')
+    def test_get_user_albums_return_empty_list_on_request_error(self, fake_requests):
         response = self.Res(404, 'not found')
-        self.flickr.oauth_client.get.return_value = response
+        fake_requests.get.return_value = response
 
         session = {'flickr_token': self.token, 'flickr_user': self.user}
 
@@ -181,10 +185,11 @@ class TestFlickrClient(object):
         assert albums == [], albums
 
 
-    def test_get_user_albums_return_empty_list_on_request_fail(self):
+    @patch('pybossa.flickr_client.requests')
+    def test_get_user_albums_return_empty_list_on_request_fail(self, fake_requests):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        self.flickr.oauth_client.get.return_value = response
+        fake_requests.get.return_value = response
 
         session = {'flickr_token': self.token, 'flickr_user': self.user}
 
@@ -193,12 +198,13 @@ class TestFlickrClient(object):
         assert albums == [], albums
 
 
-    def test_get_user_albums_log_response_on_request_fail(self):
+    @patch('pybossa.flickr_client.requests')
+    def test_get_user_albums_log_response_on_request_fail(self, fake_requests):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        self.flickr.oauth_client.get.return_value = response
+        fake_requests.get.return_value = response
         log_error_msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
-            % (response.status, response.data))
+            % (response.status_code, response.json()))
         session = {'flickr_token': self.token, 'flickr_user': self.user}
 
         albums = self.flickr.get_user_albums(session)
@@ -206,7 +212,8 @@ class TestFlickrClient(object):
         self.flickr.app.logger.error.assert_called_with(log_error_msg)
 
 
-    def test_get_user_albums_return_list_with_album_info(self):
+    @patch('pybossa.flickr_client.requests')
+    def test_get_user_albums_return_list_with_album_info(self, fake_requests):
         data = {
             u'stat': u'ok',
             u'photosets': {
@@ -234,12 +241,12 @@ class TestFlickrClient(object):
                 u'page': 1,
                 u'pages': 1}}
         response = self.Res(200, data)
-        self.flickr.oauth_client.get.return_value = response
+        fake_requests.get.return_value = response
         session = {'flickr_token': self.token, 'flickr_user': self.user}
 
         albums = self.flickr.get_user_albums(session)
 
-        expected_album = response.data['photosets']['photoset'][0]
+        expected_album = response.json()['photosets']['photoset'][0]
         expected_album_info = {
             'photos': expected_album['photos'],
             'thumbnail_url': expected_album['primary_photo_extras']['url_q'],
