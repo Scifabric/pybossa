@@ -37,7 +37,7 @@ class BulkTaskCSVImport(BulkTaskImport):
     def tasks(self):
         """Get tasks from a given URL."""
         dataurl = self._get_data_url()
-        r = requests.get(self.url)
+        r = requests.get(dataurl)
         return self._get_csv_data_from_request(r)
 
     def _get_data_url(self):
