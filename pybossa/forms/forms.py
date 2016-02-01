@@ -198,6 +198,12 @@ class BulkTaskTwitterImportForm(Form):
             'user_credentials': self.user_credentials.data,
         }
 
+class BulkTaskS3ImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='s3')
+    files = FieldList(TextField(label=None, widget=HiddenInput()))
+    def get_import_data(self):
+        return {'type': 's3', 'files': self.files.data}
+
 
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
@@ -207,7 +213,8 @@ class GenericBulkTaskImportForm(object):
               'epicollect': BulkTaskEpiCollectPlusImportForm,
               'flickr': BulkTaskFlickrImportForm,
               'dropbox': BulkTaskDropboxImportForm,
-              'twitter': BulkTaskTwitterImportForm }
+              'twitter': BulkTaskTwitterImportForm,
+              's3': BulkTaskS3ImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
