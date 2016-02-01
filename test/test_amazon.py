@@ -25,7 +25,7 @@ class TestAmazonOAuth(object):
     @patch('pybossa.view.amazon.amazon.oauth')
     def test_amazon_login_converts_next_param_to_state_param(self, oauth):
         oauth.authorize.return_value = Response(302)
-        next_url = 'http://server/project/myproject/tasks/import'
+        next_url = 'http://next'
         flask_app.test_client().get('/amazon/?next=%s' % next_url)
         oauth.authorize.assert_called_with(
             callback='http://localhost/amazon/oauth-authorized',
@@ -44,3 +44,32 @@ class TestAmazonOAuth(object):
             c.get('/amazon/oauth-authorized')
 
             assert session.get('amazon_token') == u'access_token'
+
+    @patch('pybossa.view.amazon.amazon.oauth')
+    @patch('pybossa.view.amazon.redirect')
+    def test_oauth_authorized_redirects_to_next_url_on_authorization(
+            self, redirect, oauth):
+        fake_resp = {u'access_token': u'access_token',
+                     u'token_type': u'bearer',
+                     u'expires_in': 3600,
+                     u'refresh_token': u'refresh_token'}
+        oauth.authorized_response.return_value = fake_resp
+        next_url = 'http://next'
+        redirect.return_value = Response(302)
+
+        flask_app.test_client().get('/amazon/oauth-authorized?state=%s' % next_url)
+
+        redirect.assert_called_with(next_url)
+
+    @patch('pybossa.view.amazon.amazon.oauth')
+    @patch('pybossa.view.amazon.redirect')
+    def test_oauth_authorized_redirects_to_next_url_on_non_authorization(
+            self, redirect, oauth):
+        fake_resp = None
+        oauth.authorized_response.return_value = fake_resp
+        next_url = 'http://next'
+        redirect.return_value = Response(302)
+
+        flask_app.test_client().get('/amazon/oauth-authorized?state=%s' % next_url)
+
+        redirect.assert_called_with(next_url)
