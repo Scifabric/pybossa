@@ -22,12 +22,11 @@ from flask import (Blueprint, request, url_for, flash, redirect, session,
 from pybossa.core import amazon
 from flask_oauthlib.client import OAuthException
 
-blueprint = Blueprint('amazon', __name__)
+blueprint = Blueprint('s3', __name__)
 
 
 @blueprint.route('/')
 def login():
-    """Login using amazon view."""
     callback_url = url_for('.oauth_authorized',
                            next=request.args.get('next'),
                            _external=True)
@@ -36,7 +35,6 @@ def login():
 
 @blueprint.route('/oauth-authorized')
 def oauth_authorized():
-    """Authorize amazon login."""
     next_url = request.args.get('next')
     resp = amazon.oauth.authorized_response()
     if resp is None:
@@ -47,5 +45,6 @@ def oauth_authorized():
         current_app.logger.error(resp)
         return redirect(next_url)
     amazon_token = resp['access_token']
+    print amazon_token
     session[amazon_token] = amazon_token
     return redirect(next_url)

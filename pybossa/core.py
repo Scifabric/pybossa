@@ -289,7 +289,7 @@ def setup_external_services(app):
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
-    setup_amazon_s3_importer(app)
+    setup_s3_importer(app)
 
 
 def setup_twitter_login(app):
@@ -389,20 +389,20 @@ def setup_twitter_importer(app):
         app.logger.info(log_message)
 
 
-def setup_amazon_s3_importer(app):
+def setup_s3_importer(app):
     try:  # pragma: no cover
         if (app.config['AMAZON_CLIENT_ID']
                 and app.config['AMAZON_CLIENT_SECRET']):
             amazon.init_app(app)
-            from pybossa.view.amazon import blueprint as amazon_bp
-            app.register_blueprint(amazon_bp, url_prefix='/amazon')
+            from pybossa.view.s3 import blueprint as s3_bp
+            app.register_blueprint(amazon_bp, url_prefix='/s3')
 
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
         print inst
-        print "Amazon importer not available"
-        log_message = 'Amazon importer not available: %s' % str(inst)
+        print "Amazon S3 importer not available"
+        log_message = 'Amazon S3 importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
 
