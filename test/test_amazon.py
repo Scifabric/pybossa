@@ -17,16 +17,30 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch
-from flask import Response
+from flask import Response, session
 from default import flask_app
 
 class TestAmazonOAuth(object):
 
     @patch('pybossa.view.amazon.amazon.oauth')
-    def test_amazon_login_converts_next_param_to_state_param(self, mock_oauth):
-        mock_oauth.authorize.return_value = Response(302)
+    def test_amazon_login_converts_next_param_to_state_param(self, oauth):
+        oauth.authorize.return_value = Response(302)
         next_url = 'http://server/project/myproject/tasks/import'
         flask_app.test_client().get('/amazon/?next=%s' % next_url)
-        mock_oauth.authorize.assert_called_with(
+        oauth.authorize.assert_called_with(
             callback='http://localhost/amazon/oauth-authorized',
             state=next_url)
+
+    @patch('pybossa.view.amazon.amazon.oauth')
+    def test_oauth_authorized_saves_token_to_session_if_authentication_succeeds(
+            self, oauth):
+        fake_resp = {u'access_token': u'access_token',
+                     u'token_type': u'bearer',
+                     u'expires_in': 3600,
+                     u'refresh_token': u'refresh_token'}
+        oauth.authorized_response.return_value = fake_resp
+
+        with flask_app.test_client() as c:
+            c.get('/amazon/oauth-authorized')
+
+            assert session.get('amazon_token') == u'access_token'
