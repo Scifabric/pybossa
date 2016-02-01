@@ -22,20 +22,20 @@ from flask import (Blueprint, request, url_for, flash, redirect, session,
 from pybossa.core import amazon
 from flask_oauthlib.client import OAuthException
 
-blueprint = Blueprint('s3', __name__)
+blueprint = Blueprint('amazon', __name__)
 
 
 @blueprint.route('/')
 def login():
     callback_url = url_for('.oauth_authorized',
-                           next=request.args.get('next'),
                            _external=True)
-    return amazon.oauth.authorize(callback=callback_url)
+    next_url = request.args.get('next')
+    return amazon.oauth.authorize(callback=callback_url, state=next_url)
 
 
 @blueprint.route('/oauth-authorized')
 def oauth_authorized():
-    next_url = request.args.get('next')
+    next_url = request.args.get('state')
     resp = amazon.oauth.authorized_response()
     if resp is None:
         flash(u'You denied the request to sign in.')
