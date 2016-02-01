@@ -27,8 +27,7 @@ blueprint = Blueprint('amazon', __name__)
 
 @blueprint.route('/')
 def login():
-    callback_url = url_for('.oauth_authorized',
-                           _external=True)
+    callback_url = url_for('.oauth_authorized', _external=True)
     next_url = request.args.get('next')
     return amazon.oauth.authorize(callback=callback_url, state=next_url)
 
@@ -46,5 +45,5 @@ def oauth_authorized():
         return redirect(next_url)
     amazon_token = resp['access_token']
     print amazon_token
-    session[amazon_token] = amazon_token
+    session['amazon_token'] = amazon_token
     return redirect(next_url)
