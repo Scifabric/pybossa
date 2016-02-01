@@ -22,6 +22,7 @@ from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
 from .epicollect import BulkTaskEpiCollectPlusImport
+from .s3 import BulkTaskS3Import
 
 
 class Importer(object):
@@ -47,6 +48,9 @@ class Importer(object):
     def register_twitter_importer(self, twitter_params):
         self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
+
+    def register_s3_importer(self):
+        self._importers['s3'] = BulkTaskS3Import
 
     def create_tasks(self, task_repo, project_id, **form_data):
         """Create tasks."""
@@ -92,7 +96,8 @@ class Importer(object):
 
     def get_autoimporter_names(self):
         """Get autoimporter names."""
-        return [name for name in self._importers.keys() if name != 'dropbox']
+        no_autoimporters = ('dropbox', 's3')
+        return [name for name in self._importers.keys() if name not in no_autoimporters]
 
 
 class ImportReport(object):

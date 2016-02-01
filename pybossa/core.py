@@ -395,8 +395,8 @@ def setup_s3_importer(app):
                 and app.config['AMAZON_CLIENT_SECRET']):
             amazon.init_app(app)
             from pybossa.view.s3 import blueprint as s3_bp
-            app.register_blueprint(amazon_bp, url_prefix='/s3')
-
+            app.register_blueprint(s3_bp, url_prefix='/s3')
+            importer.register_s3_importer()
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
