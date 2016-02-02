@@ -116,10 +116,12 @@ class TestImporterPublicMethods(Test):
         importer.register_flickr_importer(flickr_params)
         importer.register_dropbox_importer()
         importer.register_twitter_importer(twitter_params)
+        importer.register_s3_importer(twitter_params)
 
         assert 'flickr' in importer.get_all_importer_names()
         assert 'dropbox' in importer.get_all_importer_names()
         assert 'twitter' in importer.get_all_importer_names()
+        assert 's3' in importer.get_all_importer_names()
 
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
         importers = self.importer.get_autoimporter_names()
@@ -134,6 +136,9 @@ class TestImporterPublicMethods(Test):
         importer.register_flickr_importer(flickr_params)
         importer.register_dropbox_importer()
         importer.register_twitter_importer(twitter_params)
+        importer.register_s3_importer(twitter_params)
 
         assert 'flickr' in importer.get_autoimporter_names()
         assert 'twitter' in importer.get_all_importer_names()
+        assert 'dropbox' not in importer.get_all_importer_names()
+        assert 's3' not in importer.get_all_importer_names()
