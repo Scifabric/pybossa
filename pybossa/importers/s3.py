@@ -16,10 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-import boto3
-
-from .base import BulkTaskImport, BulkImportException
+from .base import BulkTaskImport
 
 
 class BulkTaskS3Import(BulkTaskImport):
