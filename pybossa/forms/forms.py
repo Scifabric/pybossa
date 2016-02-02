@@ -201,8 +201,15 @@ class BulkTaskTwitterImportForm(Form):
 class BulkTaskS3ImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='s3')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
+    msg_required = lazy_gettext("You must provide a valid bucket")
+    bucket = TextField(lazy_gettext('Bucket'),
+                       [validators.Required(message=msg_required)])
     def get_import_data(self):
-        return {'type': 's3', 'files': self.files.data}
+        return {
+            'type': 's3',
+            'files': self.files.data,
+            'bucket': self.bucket.data
+        }
 
 
 class GenericBulkTaskImportForm(object):
