@@ -2729,6 +2729,7 @@ class TestWeb(web.Helper):
         assert "type=flickr" not in res.data
         assert "type=dropbox" not in res.data
         assert "type=twitter" not in res.data
+        assert "type=s3" not in res.data
 
     @patch('pybossa.view.projects.redirect', wraps=redirect)
     @patch('pybossa.importers.csv.requests.get')
@@ -3047,6 +3048,25 @@ class TestWeb(web.Helper):
             u'user_screen_name': 'fulanito',
             u'text': 'this is a tweet #match'
         }
+        assert tasks[0].info == expected_info, tasks[0].info
+
+    def test_bulk_s3_import_works(self):
+        """Test WEB bulk S3 import works"""
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        res = self.app.post('/project/%s/tasks/import' % project.short_name,
+                            data={'files-0': 'myfile.png',
+                                  'bucket': 'mybucket',
+                                  'form_name': 's3'},
+                            follow_redirects=True)
+
+        project = db.session.query(Project).first()
+        err_msg = "Tasks should be imported"
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
+        expected_info = {
+            u'link': u'https://mybucket.s3.amazonaws.com/myfile.png',
+            u'filename': u'myfile.png'}
         assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
