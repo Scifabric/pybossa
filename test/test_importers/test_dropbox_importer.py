@@ -61,73 +61,25 @@ class TestBulkTaskDropboxImport(object):
         assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0"
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1"
 
-    def test_tasks_attributes_for_png_image_files(self):
+    def test_tasks_attributes_for_image_files(self):
         #For image file extensions: link, filename, link_raw, url_m, url_b, title
-        png_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?dl=0",'
-        u'"name":"test.png",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        image_ext = ['png', 'jpg', 'jpeg', 'gif']
+        file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        u'"name":"test.extension",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.extension"}')
 
-        form_data = {'files': [png_file_data]}
-        tasks = BulkTaskDropboxImport(**form_data).tasks()
+        for ext in image_ext:
+            data = string.replace(file_data,'extension', ext)
+            form_data = {'files': [data]}
+            tasks = BulkTaskDropboxImport(**form_data).tasks()
 
-        assert tasks[0]['info']['filename'] == "test.png"
-        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?dl=0"
-        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
-        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
-        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
-        assert tasks[0]['info']['title'] == "test.png"
-
-    def test_tasks_attributes_for_jpg_image_files(self):
-        #For image file extensions: link, filename, link_raw, url_m, url_b, title
-        jpg_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?dl=0",'
-        u'"name":"test.jpg",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
-
-        form_data = {'files': [jpg_file_data]}
-        tasks = BulkTaskDropboxImport(**form_data).tasks()
-
-        assert tasks[0]['info']['filename'] == "test.jpg"
-        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?dl=0"
-        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
-        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
-        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
-        assert tasks[0]['info']['title'] == "test.jpg"
-
-    def test_tasks_attributes_for_jpeg_image_files(self):
-        #For image file extensions: link, filename, link_raw, url_m, url_b, title
-        jpeg_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?dl=0",'
-        u'"name":"test.jpeg",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
-
-        form_data = {'files': [jpeg_file_data]}
-        tasks = BulkTaskDropboxImport(**form_data).tasks()
-
-        assert tasks[0]['info']['filename'] == "test.jpeg"
-        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?dl=0"
-        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
-        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
-        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
-        assert tasks[0]['info']['title'] == "test.jpeg"
-
-    def test_tasks_attributes_for_gif_image_files(self):
-        #For image file extensions: link, filename, link_raw, url_m, url_b, title
-        gif_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?dl=0",'
-        u'"name":"test.gif",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
-
-        form_data = {'files': [gif_file_data]}
-        tasks = BulkTaskDropboxImport(**form_data).tasks()
-
-        assert tasks[0]['info']['filename'] == "test.gif"
-        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?dl=0"
-        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
-        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
-        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
-        assert tasks[0]['info']['title'] == "test.gif"
+            assert tasks[0]['info']['filename'] == "test.%s" % ext
+            assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?dl=0" % ext
+            assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['title'] == "test.%s" % ext
 
     def test_tasks_attributes_for_pdf_files(self):
         #For pdf file extension: link, filename, link_raw, pdf_url
