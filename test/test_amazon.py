@@ -20,6 +20,7 @@ import json
 from mock import patch, MagicMock
 from flask import Response, session
 from default import flask_app
+from pybossa.s3_client import NoSuchBucket
 
 class TestAmazonOAuth(object):
 
@@ -101,3 +102,13 @@ class TestAmazonS3API(object):
 
         client_instance.objects.assert_called_with(bucket_name)
         assert resp.data == json.dumps(objects), resp.data
+
+    @patch('pybossa.view.amazon.S3Client')
+    def test_buckets_with_non_existing_bucket_returns_error(self, S3Client):
+        client_instance = MagicMock()
+        S3Client.return_value = client_instance
+        client_instance.objects.side_effect = NoSuchBucket('Bucket "noSuchBucket" does not exist')
+
+        resp = flask_app.test_client().get('/amazon/buckets/noSuchBucket')
+
+        assert resp.status_code == 404, resp

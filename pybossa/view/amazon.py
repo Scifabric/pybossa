@@ -21,7 +21,7 @@ from flask import (Blueprint, request, url_for, flash, redirect, session,
     current_app, Response)
 from flask_oauthlib.client import OAuthException
 from pybossa.core import amazon
-from pybossa.s3_client import S3Client
+from pybossa.s3_client import S3Client, NoSuchBucket
 
 blueprint = Blueprint('amazon', __name__)
 
@@ -59,6 +59,14 @@ def buckets():
 
 @blueprint.route('/buckets/<string:bucket>')
 def objects(bucket):
-    client = S3Client()
-    bucket_content = client.objects(bucket)
-    return Response(json.dumps(bucket_content), mimetype='application/json')
+    try:
+        client = S3Client()
+        bucket_content = client.objects(bucket)
+        return Response(json.dumps(bucket_content), mimetype='application/json')
+    except NoSuchBucket as e:
+        error = dict(action='GET',
+                     status="failed",
+                     status_code=404,
+                     exception_msg=str(e.message))
+        return Response(json.dumps(error), status=404,
+                        mimetype='application/json')

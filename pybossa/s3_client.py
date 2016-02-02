@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import boto3
+from botocore.exceptions import ClientError
 
 class S3Client(object):
 
@@ -27,7 +28,6 @@ class S3Client(object):
             RoleSessionName=username,
             WebIdentityToken=identity_token,
             ProviderId='www.amazon.com')
-        print response
         credentials = response['Credentials']
         session = boto3.session.Session(
                     aws_access_key_id=credentials['AccessKeyId'],
@@ -39,5 +39,12 @@ class S3Client(object):
         return [bucket.name for bucket in self.s3.buckets.all()]
 
     def objects(self, bucket_name):
-        bucket = self.s3.Bucket(bucket_name)
-        return [o.key for o in bucket.objects.all()]
+        try:
+            bucket = self.s3.Bucket(bucket_name)
+            return [o.key for o in bucket.objects.all()]
+        except ClientError as e:
+            return NoSuchBucket(e.message)
+
+
+class NoSuchBucket(Exception):
+    pass
