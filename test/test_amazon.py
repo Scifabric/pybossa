@@ -80,7 +80,7 @@ class TestAmazonS3API(object):
 
     @patch('pybossa.view.amazon.S3Client')
     def test_buckets_endpoint_returns_list_of_user_buckets(self, S3Client):
-        buckets = ['Bucket 1', 'Bucket 2']
+        buckets = ['Bucket1', 'Bucket2']
         client_instance = MagicMock()
         S3Client.return_value = client_instance
         client_instance.buckets.return_value = buckets
@@ -88,3 +88,16 @@ class TestAmazonS3API(object):
         resp = flask_app.test_client().get('/amazon/buckets')
 
         assert resp.data == json.dumps(buckets), resp.data
+
+    @patch('pybossa.view.amazon.S3Client')
+    def test_buckets_with_specific_bucket_lists_its_content(self, S3Client):
+        buckets = ['Bucket1', 'Bucket2']
+        objects = ['test.pdf', 'sunset.png']
+        client_instance = MagicMock()
+        S3Client.return_value = client_instance
+        client_instance.buckets.return_value = buckets
+        client_instance.objects.return_value = objects
+
+        resp = flask_app.test_client().get('/amazon/buckets/Bucket1')
+
+        assert resp.data == json.dumps(objects), resp.data

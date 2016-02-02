@@ -55,3 +55,11 @@ def buckets():
     client = S3Client()
     buckets = client.buckets()
     return Response(json.dumps(buckets), mimetype='application/json')
+
+
+@blueprint.route('/buckets/<string:bucket>')
+def objects(bucket):
+    client = S3Client()
+    buckets = client.buckets()
+    bucket_content = client.objects(bucket)
+    return Response(json.dumps(bucket_content), mimetype='application/json')
