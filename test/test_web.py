@@ -2628,6 +2628,8 @@ class TestWeb(web.Helper):
         assert "type=dropbox" in res.data, err_msg
         err_msg = "There should be a Twitter importer"
         assert "type=twitter" in res.data, err_msg
+        err_msg = "There should be an S3 importer"
+        assert "type=s3" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2698,6 +2700,14 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Twitter hashtag or account" in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
+
+        # S3
+        url = "/project/%s/tasks/import?type=s3" % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From an Amazon S3 bucket" in data
         assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Invalid
