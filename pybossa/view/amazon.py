@@ -19,8 +19,9 @@
 import json
 from flask import (Blueprint, request, url_for, flash, redirect, session,
     current_app, Response)
-from pybossa.core import amazon
 from flask_oauthlib.client import OAuthException
+from pybossa.core import amazon
+from pybossa.s3_client import S3Client
 
 blueprint = Blueprint('amazon', __name__)
 
@@ -47,3 +48,10 @@ def oauth_authorized():
     print amazon_token
     session['amazon_token'] = amazon_token
     return redirect(next_url)
+
+
+@blueprint.route('/buckets')
+def buckets():
+    client = S3Client()
+    buckets = client.buckets()
+    return Response(json.dumps(buckets), mimetype='application/json')
