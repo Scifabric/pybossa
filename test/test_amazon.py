@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch
+import json
+from mock import patch, MagicMock
 from flask import Response, session
 from default import flask_app
 
@@ -73,3 +74,17 @@ class TestAmazonOAuth(object):
         flask_app.test_client().get('/amazon/oauth-authorized?state=%s' % next_url)
 
         redirect.assert_called_with(next_url)
+
+
+class TestAmazonS3API(object):
+
+    @patch('pybossa.view.amazon.S3Client')
+    def test_buckets_endpoint_returns_list_of_user_buckets(self, S3Client):
+        buckets = ['Bucket 1', 'Bucket 2']
+        client_instance = MagicMock()
+        S3Client.return_value = client_instance
+        client_instance.buckets.return_value = buckets
+
+        resp = flask_app.test_client().get('/amazon/buckets')
+
+        assert resp.data == json.dumps(buckets), resp.data
