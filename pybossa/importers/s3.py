@@ -23,7 +23,7 @@ class BulkTaskS3Import(BulkTaskImport):
 
     """Class to import tasks from Flickr in bulk."""
 
-    importer_id = "amazon_s3"
+    importer_id = "s3"
 
     def __init__(self, api_key, album_id, last_import_meta=None):
         pass
