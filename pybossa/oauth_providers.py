@@ -85,23 +85,3 @@ class Google(object):
             access_token_method='POST',
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
-
-
-class Amazon(object):
-
-    def __init__(self, app=None):
-        self.app = app
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        self.oauth = OAuth().remote_app(
-            'amazon',
-            base_url='https://api.amazon.com/auth/o2',
-            authorize_url='https://www.amazon.com/ap/oa',
-            request_token_url=None,
-            request_token_params={'scope': 'profile'},
-            access_token_url='https://api.amazon.com/auth/o2/token',
-            access_token_method='POST',
-            consumer_key=app.config['AMAZON_CLIENT_ID'],
-            consumer_secret=app.config['AMAZON_CLIENT_SECRET'])
