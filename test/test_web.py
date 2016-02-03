@@ -3056,7 +3056,7 @@ class TestWeb(web.Helper):
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % project.short_name,
-                            data={'files-0': 'myfile.png',
+                            data={'files-0': 'myfile.txt',
                                   'bucket': 'mybucket',
                                   'form_name': 's3'},
                             follow_redirects=True)
@@ -3065,8 +3065,10 @@ class TestWeb(web.Helper):
         err_msg = "Tasks should be imported"
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'link': u'https://mybucket.s3.amazonaws.com/myfile.png',
-            u'filename': u'myfile.png'}
+            u'url': u'https://mybucket.s3.amazonaws.com/myfile.txt',
+            u'filename': u'myfile.txt',
+            u'link': u'https://mybucket.s3.amazonaws.com/myfile.txt'
+        }
         assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
