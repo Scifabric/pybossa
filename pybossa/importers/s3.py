@@ -25,7 +25,7 @@ class BulkTaskS3Import(BulkTaskImport):
 
     importer_id = "s3"
 
-    def __init__(self, api_key, album_id, last_import_meta=None):
+    def __init__(self, files, bucket, last_import_meta=None):
         pass
 
     def tasks(self):
