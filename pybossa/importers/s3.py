@@ -26,11 +26,52 @@ class BulkTaskS3Import(BulkTaskImport):
     importer_id = "s3"
 
     def __init__(self, files, bucket, last_import_meta=None):
-        pass
+        self.files = files
+        self.bucket = bucket
+        self.last_import_meta = last_import_meta
 
     def tasks(self):
-        return []
+        return [self._create_task_info(filename) for filename in self.files]
 
     def count_tasks(self):
-        return 0
+        return len(self.tasks())
+
+    def _create_task_info(self, filename):
+        url = 'https://%s.s3.amazonaws.com/%s' % (self.bucket, filename)
+        info = {'filename': filename,
+                'url': url,
+                'link': url}
+        if self._is_image_file(filename):
+            extra_fields = {'url_m': url,
+                            'url_b': url,
+                            'title': filename}
+            info.update(extra_fields)
+        if self._is_video_file(filename):
+            extra_fields = {'video_url': url}
+            info.update(extra_fields)
+        if self._is_audio_file(filename):
+            extra_fields = {'audio_url': url}
+            info.update(extra_fields)
+        if self._is_pdf_file(filename):
+            extra_fields = {'pdf_url': url}
+            info.update(extra_fields)
+        return {'info': info}
+
+    def _is_image_file(self, filename):
+        return (filename.endswith('.png') or filename.endswith('.jpg') or
+                filename.endswith('.jpeg') or filename.endswith('.gif'))
+
+    def _is_video_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4v') or
+                filename.endswith('.ogg') or filename.endswith('.ogv') or
+                filename.endswith('.webm') or filename.endswith('.avi'))
+
+    def _is_audio_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4a') or
+                filename.endswith('.ogg') or filename.endswith('.oga') or
+                filename.endswith('.webm') or filename.endswith('.wav') or
+                filename.endswith('.mp3'))
+
+    def _is_pdf_file(self, filename):
+        return filename.endswith('.pdf')
 
