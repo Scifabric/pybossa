@@ -18,77 +18,11 @@
 
 import json
 from mock import patch, MagicMock
-from flask import Response, session
 from default import flask_app
 from pybossa.s3_client import NoSuchBucket
 
-class TestAmazonOAuth(object):
-
-    @patch('pybossa.view.amazon.amazon.oauth')
-    def test_amazon_login_converts_next_param_to_state_param(self, oauth):
-        oauth.authorize.return_value = Response(302)
-        next_url = 'http://next'
-        flask_app.test_client().get('/amazon/?next=%s' % next_url)
-        oauth.authorize.assert_called_with(
-            callback='http://localhost/amazon/oauth-authorized',
-            state=next_url)
-
-    @patch('pybossa.view.amazon.amazon.oauth')
-    def test_oauth_authorized_saves_token_to_session_if_authentication_succeeds(
-            self, oauth):
-        fake_resp = {u'access_token': u'access_token',
-                     u'token_type': u'bearer',
-                     u'expires_in': 3600,
-                     u'refresh_token': u'refresh_token'}
-        oauth.authorized_response.return_value = fake_resp
-
-        with flask_app.test_client() as c:
-            c.get('/amazon/oauth-authorized')
-
-            assert session.get('amazon_token') == u'access_token'
-
-    @patch('pybossa.view.amazon.amazon.oauth')
-    @patch('pybossa.view.amazon.redirect')
-    def test_oauth_authorized_redirects_to_next_url_on_authorization(
-            self, redirect, oauth):
-        fake_resp = {u'access_token': u'access_token',
-                     u'token_type': u'bearer',
-                     u'expires_in': 3600,
-                     u'refresh_token': u'refresh_token'}
-        oauth.authorized_response.return_value = fake_resp
-        next_url = 'http://next'
-        redirect.return_value = Response(302)
-
-        flask_app.test_client().get('/amazon/oauth-authorized?state=%s' % next_url)
-
-        redirect.assert_called_with(next_url)
-
-    @patch('pybossa.view.amazon.amazon.oauth')
-    @patch('pybossa.view.amazon.redirect')
-    def test_oauth_authorized_redirects_to_next_url_on_non_authorization(
-            self, redirect, oauth):
-        fake_resp = None
-        oauth.authorized_response.return_value = fake_resp
-        next_url = 'http://next'
-        redirect.return_value = Response(302)
-
-        flask_app.test_client().get('/amazon/oauth-authorized?state=%s' % next_url)
-
-        redirect.assert_called_with(next_url)
-
 
 class TestAmazonS3API(object):
-
-    @patch('pybossa.view.amazon.S3Client')
-    def test_buckets_endpoint_returns_list_of_user_buckets(self, S3Client):
-        buckets = ['Bucket1', 'Bucket2']
-        client_instance = MagicMock()
-        S3Client.return_value = client_instance
-        client_instance.buckets.return_value = buckets
-
-        resp = flask_app.test_client().get('/amazon/buckets')
-
-        assert resp.data == json.dumps(buckets), resp.data
 
     @patch('pybossa.view.amazon.S3Client')
     def test_buckets_with_specific_bucket_lists_its_content(self, S3Client):

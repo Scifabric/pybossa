@@ -17,47 +17,13 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Amazon view for PyBossa."""
 import json
-from flask import (Blueprint, request, url_for, flash, redirect, session,
-    current_app, Response)
-from flask_oauthlib.client import OAuthException
-from pybossa.core import amazon
+from flask import Blueprint, Response
 from pybossa.s3_client import S3Client, NoSuchBucket
 
 blueprint = Blueprint('amazon', __name__)
 
 
-@blueprint.route('/')
-def login():
-    callback_url = url_for('.oauth_authorized', _external=True)
-    next_url = request.args.get('next')
-    return amazon.oauth.authorize(callback=callback_url, state=next_url)
-
-
-@blueprint.route('/oauth-authorized')
-def oauth_authorized():
-    next_url = request.args.get('state')
-    resp = amazon.oauth.authorized_response()
-    if resp is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
-    if isinstance(resp, OAuthException):
-        flash('Access denied: %s' % resp.message)
-        current_app.logger.error(resp)
-        return redirect(next_url)
-    amazon_token = resp['access_token']
-    print amazon_token
-    session['amazon_token'] = amazon_token
-    return redirect(next_url)
-
-
-@blueprint.route('/buckets')
-def buckets():
-    client = S3Client()
-    buckets = client.buckets()
-    return Response(json.dumps(buckets), mimetype='application/json')
-
-
-@blueprint.route('/buckets/<string:bucket>')
+@blueprint.route('/bucket/<string:bucket>')
 def objects(bucket):
     try:
         client = S3Client()
