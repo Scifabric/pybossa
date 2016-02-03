@@ -33,7 +33,8 @@ class Importer(object):
         """Init method."""
         self._importers = dict(csv=BulkTaskCSVImport,
                                gdocs=BulkTaskGDImport,
-                               epicollect=BulkTaskEpiCollectPlusImport)
+                               epicollect=BulkTaskEpiCollectPlusImport,
+                               s3=BulkTaskS3Import)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
@@ -48,9 +49,6 @@ class Importer(object):
     def register_twitter_importer(self, twitter_params):
         self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
-
-    def register_s3_importer(self):
-        self._importers['s3'] = BulkTaskS3Import
 
     def create_tasks(self, task_repo, project_id, **form_data):
         """Create tasks."""
