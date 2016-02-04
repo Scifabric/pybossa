@@ -27,7 +27,7 @@ class S3Client(object):
         if response.status_code == 404:
             raise NoSuchBucket('Bucket "%s" does not exist' % bucket_name)
         if response.status_code == 403:
-            raise PrivateBucket('Bucket "%s" is private'  % bucket_name)
+            raise PrivateBucket('Bucket "%s" is private' % bucket_name)
         xml_data = minidom.parseString(response.text)
         contents = xml_data.getElementsByTagName('Contents')
         return [content.getElementsByTagName('Key')[0].firstChild.nodeValue
@@ -39,7 +39,7 @@ class S3Client(object):
         return name.endswith('/') and size == '0'
 
 class NoSuchBucket(Exception):
-    pass
+    status_code = 404
 
 class PrivateBucket(Exception):
-    pass
+    status_code = 403

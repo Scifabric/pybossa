@@ -18,7 +18,7 @@
 """Amazon view for PyBossa."""
 import json
 from flask import Blueprint, Response
-from pybossa.s3_client import S3Client, NoSuchBucket
+from pybossa.s3_client import S3Client, NoSuchBucket, PrivateBucket
 
 blueprint = Blueprint('amazon', __name__)
 
@@ -28,10 +28,11 @@ def objects(bucket):
     try:
         bucket_content = S3Client().objects(bucket)
         return Response(json.dumps(bucket_content), mimetype='application/json')
-    except NoSuchBucket as e:
+    except (NoSuchBucket, PrivateBucket) as e:
+        status_code = e.status_code
         error = dict(action='GET',
                      status="failed",
-                     status_code=404,
+                     status_code=status_code,
                      exception_msg=str(e.message))
-        return Response(json.dumps(error), status=404,
+        return Response(json.dumps(error), status=status_code,
                         mimetype='application/json')
