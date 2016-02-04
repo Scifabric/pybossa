@@ -19,7 +19,7 @@
 from mock import patch, MagicMock
 from nose.tools import assert_raises
 import json
-from pybossa.s3_client import S3Client, NoSuchBucket
+from pybossa.s3_client import S3Client, NoSuchBucket, PrivateBucket
 
 class TestS3Client(object):
 
@@ -138,3 +138,9 @@ class TestS3Client(object):
 
         assert_raises(NoSuchBucket, S3Client().objects, 'test-pybossa')
 
+    @patch('pybossa.s3_client.requests')
+    def test_objects_raises_PrivateBucket_if_bucket_is_private(self, requests):
+        resp = self.make_response(self.no_such_bucket, 403)
+        requests.get.return_value = resp
+
+        assert_raises(PrivateBucket, S3Client().objects, 'test-pybossa')
