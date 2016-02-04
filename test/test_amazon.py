@@ -32,7 +32,7 @@ class TestAmazonS3API(object):
         S3Client.return_value = client_instance
         client_instance.objects.return_value = objects
 
-        resp = flask_app.test_client().get('/amazon/buckets/%s' % bucket_name)
+        resp = flask_app.test_client().get('/amazon/bucket/%s' % bucket_name)
 
         client_instance.objects.assert_called_with(bucket_name)
         assert resp.data == json.dumps(objects), resp.data
@@ -43,7 +43,7 @@ class TestAmazonS3API(object):
         S3Client.return_value = client_instance
         client_instance.objects.side_effect = NoSuchBucket('Bucket "noSuchBucket" does not exist')
 
-        resp = flask_app.test_client().get('/amazon/buckets/noSuchBucket')
+        resp = flask_app.test_client().get('/amazon/bucket/noSuchBucket')
 
         assert resp.status_code == 404, resp
 
@@ -53,6 +53,6 @@ class TestAmazonS3API(object):
         S3Client.return_value = client_instance
         client_instance.objects.side_effect = PrivateBucket('Bucket "noSuchBucket" is private')
 
-        resp = flask_app.test_client().get('/amazon/buckets/privateBucket')
+        resp = flask_app.test_client().get('/amazon/bucket/privateBucket')
 
         assert resp.status_code == 403, resp
