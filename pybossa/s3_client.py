@@ -24,6 +24,8 @@ class S3Client(object):
 
     def objects(self, bucket_name):
         response = requests.get('https://%s.s3.amazonaws.com/' % bucket_name)
+        if response.status_code == 404:
+            raise NoSuchBucket("The requested bucket does not exist")
         xml_data = minidom.parseString(response.text)
         contents = xml_data.getElementsByTagName('Contents')
         return [content.getElementsByTagName('Key')[0].firstChild.nodeValue
