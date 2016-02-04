@@ -26,8 +26,7 @@ blueprint = Blueprint('amazon', __name__)
 @blueprint.route('/bucket/<string:bucket>')
 def objects(bucket):
     try:
-        client = S3Client()
-        bucket_content = client.objects(bucket)
+        bucket_content = S3Client().objects(bucket)
         return Response(json.dumps(bucket_content), mimetype='application/json')
     except NoSuchBucket as e:
         error = dict(action='GET',
