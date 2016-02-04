@@ -16,11 +16,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
+from xml.dom import minidom
+
+
 class S3Client(object):
 
     def objects(self, bucket_name):
-        pass
+        response = requests.get('https://%s.s3.amazonaws.com/' % bucket_name)
+        xml_data = minidom.parseString(response.text)
+        contents = xml_data.getElementsByTagName('Contents')
+        return [content.getElementsByTagName('Key')[0].firstChild.nodeValue
+            for content in contents if not self._is_folder(content)]
 
+    def _is_folder(self, content):
+        size = content.getElementsByTagName('Size')[0].firstChild.nodeValue
+        name = content.getElementsByTagName('Key')[0].firstChild.nodeValue
+        return name.endswith('/') and size == '0'
 
 class NoSuchBucket(Exception):
     pass
