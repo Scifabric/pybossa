@@ -17,8 +17,9 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, MagicMock
+from nose.tools import assert_raises
 import json
-from pybossa.s3_client import S3Client
+from pybossa.s3_client import S3Client, NoSuchBucket
 
 class TestS3Client(object):
 
@@ -129,4 +130,11 @@ class TestS3Client(object):
         objects = S3Client().objects('test-pybossa')
 
         assert objects == [], objects
+
+    @patch('pybossa.s3_client.requests')
+    def test_objects_raises_NoSuchBucket_if_bucket_does_not_exist(self, requests):
+        resp = self.make_response(self.no_such_bucket, 404)
+        requests.get.return_value = resp
+
+        assert_raises(NoSuchBucket, S3Client().objects, 'test-pybossa')
 
