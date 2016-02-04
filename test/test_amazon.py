@@ -19,7 +19,7 @@
 import json
 from mock import patch, MagicMock
 from default import flask_app
-from pybossa.s3_client import NoSuchBucket
+from pybossa.s3_client import NoSuchBucket, PrivateBucket
 
 
 class TestAmazonS3API(object):
@@ -46,3 +46,13 @@ class TestAmazonS3API(object):
         resp = flask_app.test_client().get('/amazon/buckets/noSuchBucket')
 
         assert resp.status_code == 404, resp
+
+    @patch('pybossa.view.amazon.S3Client')
+    def test_buckets_with_private_bucket_returns_error(self, S3Client):
+        client_instance = MagicMock()
+        S3Client.return_value = client_instance
+        client_instance.objects.side_effect = PrivateBucket('Bucket "noSuchBucket" is private')
+
+        resp = flask_app.test_client().get('/amazon/buckets/privateBucket')
+
+        assert resp.status_code == 403, resp
