@@ -37,7 +37,7 @@ def login():
 def logout():
     """Log out."""
     next_url = request.args.get('next') or url_for('home.home')
-    remove_credentials(session)
+    _remove_credentials(session)
     return redirect(next_url)
 
 
@@ -56,7 +56,7 @@ def oauth_authorized():
     flickr_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
-    save_credentials(session, flickr_token, flickr_user)
+    _save_credentials(session, flickr_token, flickr_user)
     return redirect(next_url)
 
 @blueprint.route('/albums')
@@ -68,18 +68,18 @@ def user_albums():
 
 
 @flickr.oauth.tokengetter
-def get_token():
+def _get_token():
     token = session.get('flickr_token')
     if token is not None:
         token = (token['oauth_token'], token['oauth_token_secret'])
     return token
 
-def save_credentials(session, token, user):
+def _save_credentials(session, token, user):
     """Save credentials of user in session."""
     session['flickr_token'] = token
     session['flickr_user'] = user
 
-def remove_credentials(session):
+def _remove_credentials(session):
     """Remove user credentials from session."""
     session.pop('flickr_token', None)
     session.pop('flickr_user', None)
