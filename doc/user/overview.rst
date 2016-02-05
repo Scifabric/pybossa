@@ -445,6 +445,7 @@ the tasks:
 * text: the actual content of the tweet.
 
 In addition, an extra field "user_screen_name" has been added to the info field:
+
 * user_screen_name: the screen name (or 'handle') of the author of the tweet.
 
 .. _object: https://dev.twitter.com/overview/api/users
@@ -480,8 +481,8 @@ Importing the tasks from an Amazon S3 bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tasks can be imported from data hosted on the Amazon S3 service. Similarly to
-the Dropbox importer, this tasks can use different kind of data, like images, videos,
-audios, PDF files, etc. hosted on any S3 bucket.
+the Dropbox importer, these tasks can use different kind of data, like images,
+videos, audios, PDF files, etc. hosted on any S3 bucket.
 
 The S3 importer will work pretty much the same as the Dropbox one. When using it,
 the created tasks will contain the following data in the info field:
