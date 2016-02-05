@@ -476,6 +476,91 @@ Finally, click on the "Import" button, and you are done:
 
 .. image:: http://i.imgur.com/hYWxI19.png
 
+Importing the tasks from an Amazon S3 bucket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tasks can be imported from data hosted on the Amazon S3 service. Similarly to
+the Dropbox importer, this tasks can use different kind of data, like images, videos,
+audios, PDF files, etc. hosted on any S3 bucket.
+
+The S3 importer will work pretty much the same as the Dropbox one. When using it,
+the created tasks will contain the following data in the info field:
+
+* filename: just it, the name of the file you're importing as a task.
+* link: the link to the raw file served from Amazon S3.
+* url: same as the above.
+
+In addition to this generic information, the S3 importer will also recognize
+some kind of files by their extension and will attach some extra information to
+them.
+
+For pdf files (.pdf extension), the following field will be obtained too:
+
+* pdf_url: direct link to the raw pdf file.
+
+For image files (.png, jpg, .jpeg and .gif extensions) the following data will be
+available:
+
+* url_m: the same as link.
+* url_b: the same as link.
+* title: the same as filename.
+
+For audio files (.mp4, .m4a, .mp3, .ogg, .oga, .webm and .wav extensions):
+
+* audio_url: raw link to the audio file, which can be used inside an HTML 5 <audio> tag.
+
+For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
+
+* audio_url: raw link to the video file, which can be used inside an HTML 5 <video> tag.
+
+The tasks created with the S3 importer are ready to be used with the template
+project presenters available in PyBossa, as they include the described fields.
+
+Thus, importing your images from S3 will allow you to immediately use the
+image pattern recognition template with them; importing videos, audio files or
+pdfs with the S3 importer will also grant you to use the presenter templates
+for video pattern recognition, sound pattern recognition or documents transcription,
+respectively, with no additional modifications and have them working right away
+(as long as the files have any of the mentioned file extensions, of course).
+
+Importing from an S3 bucket requires that the bucket visibility is set to *public*
+so its content can be seen and listed by PyBossa. To make a bucket public, go to
+your AWS management console and select the S3 service. Then select the bucket you
+want to make public and click on "Properties". Click on "Add more Permissions"
+and add a new one with "Grantee: Everyone" and the "List" checkbox selected,
+like in the following image:
+
+.. image:: http://i.imgur.com/FuN9XAS.png
+
+You may also need to enable CORS in the bucket. In the same menu as above, click
+on "Edit CORS Configuration" and configure it. You can learn more
+`here <http://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html>`_.
+
+Finally, you need to make sure that every file inside the bucket that you want to
+use in a task has a *public* link too. Go to the bucket content and select the
+files. Then click on "Actions" and select "Make Public". Your files will now be
+visible for everyone, including a PyBossa server.
+
+.. image:: http://i.imgur.com/AHBVQCk.png
+
+Once your S3 bucket is ready, you can follow these steps to import tasks from it:
+
+1. Navigate to your project's page and click in the **Tasks** section:
+
+.. image:: http://i.imgur.com/u5vusQR.png
+
+2. Then click on the **Import Tasks** button, and select the **S3 importer**:
+
+.. image:: http://i.imgur.com/GbdkgEI.png
+
+3. Type the name of the bucket from which you will be importing your tasks and
+click on "Search in bucket". If you followed the steps above and your bucket is
+public, you will see a list of the items it contains. Select as many as you want:
+
+.. image:: http://i.imgur.com/WRf6nBq.png
+
+4. When you're ready, click on "Import".
+
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
 
