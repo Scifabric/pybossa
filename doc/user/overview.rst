@@ -137,7 +137,7 @@ built-in :ref:`task-creator`. You have to do the following:
    see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -251,7 +251,7 @@ project, you will have to follow the next steps:
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -321,7 +321,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -400,7 +400,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
 account credentials. then select as many files as you want:
@@ -463,7 +463,7 @@ So, to import tasks with the Twitter importer, do as follows:
 
 2. Then click on the **Import Tasks** button, and select the **Twitter importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 3. Fill in the two fields you will find in the form. The first one is for the
 source of your tweets. If you want them to be imported from a user account, then
@@ -551,7 +551,7 @@ Once your S3 bucket is ready, you can follow these steps to import tasks from it
 
 2. Then click on the **Import Tasks** button, and select the **S3 importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 3. Type the name of the bucket from which you will be importing your tasks and
 click on "Search in bucket". If you followed the steps above and your bucket is
