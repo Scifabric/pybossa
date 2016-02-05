@@ -402,16 +402,17 @@ These are the steps:
 
 .. image:: http://i.imgur.com/GbdkgEI.png
 
-3. Fill in the two fields you will find in the form. The first one is for the
-source of your tweets. If you want them to be imported from a user account, then
-write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
-containing a word on them (or a #hashtag), then type it there. The second field
-is for you to specify how many tweets you want to import. You can import as many
-as you want!
+3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
+account credentials. then select as many files as you want:
 
-Finally, click on the "Import" button, and you are done:
+.. image:: http://i.imgur.com/It2I1H3.png
 
-.. image:: http://i.imgur.com/hYWxI19.png
+4. You can repeat step 3 as many times as you want, and more files will be added
+to your import.
+
+5. When you're ready, click on "Import", and that's all:
+
+.. image:: http://i.imgur.com/0bzRc2b.png
 
 .. _twitter-import:
 
@@ -464,17 +465,16 @@ So, to import tasks with the Twitter importer, do as follows:
 
 .. image:: http://i.imgur.com/GbdkgEI.png
 
-3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
-account credentials. then select as many files as you want:
+3. Fill in the two fields you will find in the form. The first one is for the
+source of your tweets. If you want them to be imported from a user account, then
+write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
+containing a word on them (or a #hashtag), then type it there. The second field
+is for you to specify how many tweets you want to import. You can import as many
+as you want!
 
-.. image:: http://i.imgur.com/It2I1H3.png
+Finally, click on the "Import" button, and you are done:
 
-4. You can repeat step 3 as many times as you want, and more files will be added
-to your import.
-
-5. When you're ready, click on "Import", and that's all:
-
-.. image:: http://i.imgur.com/0bzRc2b.png
+.. image:: http://i.imgur.com/hYWxI19.png
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
