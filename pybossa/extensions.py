@@ -81,6 +81,9 @@ twitter = Twitter()
 from pybossa.oauth_providers import Google
 google = Google()
 
+from pybossa.oauth_providers import Flickr
+flickr = Flickr()
+
 # Markdown support
 from flask.ext.misaka import Misaka
 misaka = Misaka()
@@ -113,10 +116,6 @@ newsletter = Newsletter()
 # Importer
 from importers import Importer
 importer = Importer()
-
-# Flickr OAuth integration for importer
-from pybossa.flickr_client import FlickrClient
-flickr = FlickrClient()
 
 from flask.ext.plugins import PluginManager
 plugin_manager = PluginManager()

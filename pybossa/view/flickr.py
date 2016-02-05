@@ -20,6 +20,7 @@ import json
 from flask import (Blueprint, request, url_for, flash, redirect, session,
     current_app, Response)
 from pybossa.core import flickr
+from pybossa.flickr_client import FlickrClient
 from flask_oauthlib.client import OAuthException
 
 blueprint = Blueprint('flickr', __name__)
@@ -29,14 +30,14 @@ blueprint = Blueprint('flickr', __name__)
 def login():
     """Login using Flickr view."""
     callback_url = url_for('.oauth_authorized', next=request.args.get('next'))
-    return flickr.authorize(callback=callback_url, perms='read')
+    return flickr.oauth.authorize(callback=callback_url, perms='read')
 
 
 @blueprint.route('/revoke-access')
 def logout():
     """Log out."""
     next_url = request.args.get('next') or url_for('home.home')
-    flickr.remove_credentials(session)
+    remove_credentials(session)
     return redirect(next_url)
 
 
@@ -44,7 +45,7 @@ def logout():
 def oauth_authorized():
     """Authorize Flickr login."""
     next_url = request.args.get('next')
-    resp = flickr.authorized_response()
+    resp = flickr.oauth.authorized_response()
     if resp is None:
         flash(u'You denied the request to sign in.')
         return redirect(next_url)
@@ -55,10 +56,30 @@ def oauth_authorized():
     flickr_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
-    flickr.save_credentials(session, flickr_token, flickr_user)
+    save_credentials(session, flickr_token, flickr_user)
     return redirect(next_url)
 
 @blueprint.route('/albums')
 def user_albums():
-    albums = flickr.get_user_albums(session)
+    flickr_api_key = current_app.config['FLICKR_API_KEY']
+    client = FlickrClient(flickr_api_key, current_app.logger)
+    albums = client.get_user_albums(session)
     return Response(json.dumps(albums), mimetype='application/json')
+
+
+@flickr.oauth.tokengetter
+def get_token():
+    token = session.get('flickr_token')
+    if token is not None:
+        token = (token['oauth_token'], token['oauth_token_secret'])
+    return token
+
+def save_credentials(session, token, user):
+    """Save credentials of user in session."""
+    session['flickr_token'] = token
+    session['flickr_user'] = user
+
+def remove_credentials(session):
+    """Remove user credentials from session."""
+    session.pop('flickr_token', None)
+    session.pop('flickr_user', None)

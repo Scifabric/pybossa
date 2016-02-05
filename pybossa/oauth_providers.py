@@ -85,3 +85,22 @@ class Google(object):
             access_token_method='POST',
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
+
+class Flickr(object):
+
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:  # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app):  # pragma: no cover
+        from flask import session
+        self.app = app
+        self.oauth = OAuth().remote_app(
+            'flickr',
+            request_token_url='https://www.flickr.com/services/oauth/request_token',
+            access_token_url='https://www.flickr.com/services/oauth/access_token',
+            authorize_url='https://www.flickr.com/services/oauth/authorize',
+            consumer_key=app.config['FLICKR_API_KEY'],
+            consumer_secret=app.config['FLICKR_SHARED_SECRET'],
+            access_token_method='GET')

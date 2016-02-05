@@ -25,34 +25,16 @@ class FlickrClient(object):
 
     """Class for Flickr integration."""
 
-    def __init__(self, app=None):
-        """Init method."""
-        self.app = app
-        self.oauth_client = None
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):  # pragma: no cover
-        """Method to init object following factories pattern."""
-        from flask import session
-        self.app = app
-        self.oauth_client = OAuth().remote_app(
-            'flickr',
-            request_token_url='https://www.flickr.com/services/oauth/request_token',
-            access_token_url='https://www.flickr.com/services/oauth/access_token',
-            authorize_url='https://www.flickr.com/services/oauth/authorize',
-            consumer_key=app.config['FLICKR_API_KEY'],
-            consumer_secret=app.config['FLICKR_SHARED_SECRET'],
-            access_token_method='GET')
-        tokengetter = functools.partial(self.get_token, session)
-        self.oauth_client.tokengetter(tokengetter)
+    def __init__(self, api_key, logger=None):
+        self.api_key = api_key
+        self.logger = logger
 
     def get_user_albums(self, session):
         """Get user albums from Flickr."""
         if session.get('flickr_user') is not None:
             url = 'https://api.flickr.com/services/rest/'
             payload = {'method': 'flickr.photosets.getList',
-                       'api_key': self.app.config['FLICKR_API_KEY'],
+                       'api_key': self.api_key,
                        'user_id': self._get_user_nsid(session),
                        'format': 'json',
                        'primary_photo_extras':'url_q',
@@ -61,40 +43,11 @@ class FlickrClient(object):
             if res.status_code == 200 and res.json().get('stat') == 'ok':
                 albums = res.json()['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
-            if self.app is not None:
+            if self.logger is not None:
                 msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
                        % (res.status_code, res.json()))
-                self.app.logger.error(msg)
+                self.logger.error(msg)
         return []
-
-    def authorize(self, *args, **kwargs):
-        """Authorize method."""
-        return self.oauth_client.authorize(*args, **kwargs)
-
-    def authorized_response(self):
-        """Authorized response."""
-        return self.oauth_client.authorized_response()
-
-    def get_oauth_client(self):
-        """Get OAuth client."""
-        return self.oauth_client
-
-    def get_token(self, session):
-        """Get token from session."""
-        token = session.get('flickr_token')
-        if token is not None:
-            token = (token['oauth_token'], token['oauth_token_secret'])
-        return token
-
-    def save_credentials(self, session, token, user):
-        """Save credentials of user in session."""
-        session['flickr_token'] = token
-        session['flickr_user'] = user
-
-    def remove_credentials(self, session):
-        """Remove user credentials from session."""
-        session.pop('flickr_token', None)
-        session.pop('flickr_user', None)
 
     def _get_user_nsid(self, session):
         """Get session ID."""

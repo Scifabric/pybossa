@@ -24,11 +24,11 @@ from pybossa.flickr_client import FlickrClient
 
 class TestFlickrOauth(object):
 
-    @patch('pybossa.view.flickr.flickr')
-    def test_flickr_login_specifies_callback_and_read_permissions(self, flickr):
-        flickr.authorize.return_value = Response(302)
+    @patch('pybossa.view.flickr.flickr.oauth')
+    def test_flickr_login_specifies_callback_and_read_permissions(self, oauth):
+        oauth.authorize.return_value = Response(302)
         flask_app.test_client().get('/flickr/')
-        flickr.authorize.assert_called_with(
+        oauth.authorize.assert_called_with(
             callback='/flickr/oauth-authorized', perms='read')
 
 
@@ -55,21 +55,25 @@ class TestFlickrOauth(object):
         redirect.assert_called_with('http://mynext_url')
 
 
-    @patch('pybossa.view.flickr.flickr')
-    def test_oauth_authorized_saves_token_and_user_to_session(self, flickr):
+    @patch('pybossa.view.flickr.flickr.oauth')
+    def test_oauth_authorized_saves_token_and_user_to_session(self, oauth):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
                      'oauth_token':u'token',
                      'user_nsid': u'user'}
-        flickr.authorized_response.return_value = fake_resp
+        oauth.authorized_response.return_value = fake_resp
+        expected_token = {
+            'oauth_token_secret': u'secret',
+            'oauth_token': u'token'
+        }
+        expected_user = {'username': u'palotespaco', 'user_nsid': u'user'}
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
 
-        flickr.save_credentials.assert_called_with(session,
-            {'oauth_token_secret': u'secret', 'oauth_token': u'token'},
-            {'username': u'palotespaco', 'user_nsid': u'user'})
+            assert session['flickr_token'] == expected_token, session['flickr_token']
+            assert session['flickr_user'] == expected_user, session['flickr_user']
 
 
     @patch('pybossa.view.flickr.flickr')
@@ -101,10 +105,12 @@ class TestFlickrOauth(object):
 
 class TestFlickrAPI(object):
 
-    @patch('pybossa.view.flickr.flickr')
+    @patch('pybossa.view.flickr.FlickrClient')
     def test_albums_endpoint_returns_user_albums_in_JSON_format(self, client):
+        client_instance = MagicMock()
+        client.return_value = client_instance
         albums = ['one album', 'another album']
-        client.get_user_albums.return_value = albums
+        client_instance.get_user_albums.return_value = albums
         resp = flask_app.test_client().get('/flickr/albums')
 
         assert resp.data == json.dumps(albums), resp.data
@@ -119,42 +125,7 @@ class TestFlickrClient(object):
     def setUp(self):
         self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
-        self.flickr = FlickrClient()
-        self.flickr.app = MagicMock()
-        self.flickr.app.config = {'FLICKR_API_KEY': 'key'}
-
-    def test_flickr_get_token_returns_None_if_no_token(self):
-        session = {}
-
-        token = self.flickr.get_token(session)
-
-        assert token is None, token
-
-
-    def test_flickr_get_token_returns_existing_token_as_a_tuple(self):
-        session = {'flickr_token': self.token}
-
-        token = self.flickr.get_token(session)
-
-        assert token == (u'token', u'secret'), token
-
-
-    def test_save_credentials_stores_token_and_user(self):
-        session = {}
-
-        self.flickr.save_credentials(session, self.token, self.user)
-
-        assert session.get('flickr_token') is self.token
-        assert session.get('flickr_user') is self.user
-
-
-    def test_remove_token_deletes_token(self):
-        session = {'flickr_token': self.token, 'flickr_user': self.user}
-
-        self.flickr.remove_credentials(session)
-
-        assert session.get('flickr_token') is None
-        assert session.get('flickr_user') is None
+        self.flickr = FlickrClient('key', MagicMock())
 
 
     @patch('pybossa.flickr_client.requests')
@@ -209,7 +180,7 @@ class TestFlickrClient(object):
 
         albums = self.flickr.get_user_albums(session)
 
-        self.flickr.app.logger.error.assert_called_with(log_error_msg)
+        self.flickr.logger.error.assert_called_with(log_error_msg)
 
 
     @patch('pybossa.flickr_client.requests')
