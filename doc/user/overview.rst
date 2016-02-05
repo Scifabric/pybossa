@@ -365,7 +365,7 @@ them.
 
 For pdf files (.pdf extension), the following field will be obtained too:
 
-* pdf_url: direct linkt to the raw pdf file, with CORS support.
+* pdf_url: direct link to the raw pdf file, with CORS support.
 
 For image files (.png, jpg, .jpeg and .gif extensions) the following data will be
 available:
