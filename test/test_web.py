@@ -2718,7 +2718,7 @@ class TestWeb(web.Helper):
 
     @patch('pybossa.core.importer.get_all_importer_names')
     def test_get_importer_doesnt_show_unavailable_importers(self, names):
-        names.return_value = ['csv', 'gdocs', 'epicollect']
+        names.return_value = ['csv', 'gdocs', 'epicollect', 's3']
         self.register()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
@@ -2729,7 +2729,6 @@ class TestWeb(web.Helper):
         assert "type=flickr" not in res.data
         assert "type=dropbox" not in res.data
         assert "type=twitter" not in res.data
-        assert "type=s3" not in res.data
 
     @patch('pybossa.view.projects.redirect', wraps=redirect)
     @patch('pybossa.importers.csv.requests.get')
