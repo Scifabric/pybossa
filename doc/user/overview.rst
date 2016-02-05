@@ -438,10 +438,10 @@ the tasks:
 * favorite_count: number of times the tweet has been marked as 'favorite'.
 * retweet_count: number of times the tweet has been retweeted.
 * coordinates: geographic coordinates of the place the tweet was made from. Note
-that this is not always available for every tweet.
+  that this is not always available for every tweet.
 * tweet_id: the internal ID handled by Twitter to identify this tweet.
 * user: an object_ with information about the tweet author, as returned by the
-Twitter API.
+  Twitter API.
 * text: the actual content of the tweet.
 
 In addition, an extra field "user_screen_name" has been added to the info field:
