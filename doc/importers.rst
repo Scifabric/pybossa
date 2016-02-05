@@ -14,7 +14,7 @@ the following public interface:
 * import_metadata()
 
 importer_id is the name of the importer; any of the supported importers:
-'csv', 'gdocs', 'epicollect', 'flickr' and 'dropbox'.
+'csv', 'gdocs', 'epicollect', 'flickr', 'dropbox', 'twitter' and 's3'.
 
 tasks() should generate a list of tasks.
 
@@ -54,5 +54,5 @@ integration with the Flickr service is found, then the Flickr importer won't be
 available).
 
 get_autoimporter_names returns a list of the available importers for using as
-autoimport background jobs. Again, this list may vary depending on the  server
+autoimport background jobs. Again, this list may vary depending on the server
 configuration.
