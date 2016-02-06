@@ -21,8 +21,8 @@ from .csv import BulkTaskCSVImport, BulkTaskGDImport
 from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
+from .youtubeapi import BulkTaskYoutubeImport
 from .epicollect import BulkTaskEpiCollectPlusImport
-
 
 class Importer(object):
 
@@ -47,6 +47,9 @@ class Importer(object):
     def register_twitter_importer(self, twitter_params):
         self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
+
+    def register_youtube_importer(self):
+        self._importers['youtube'] = BulkTaskYoutubeImport
 
     def create_tasks(self, task_repo, project_id, **form_data):
         """Create tasks."""
