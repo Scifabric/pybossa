@@ -22,6 +22,7 @@ from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
 from .epicollect import BulkTaskEpiCollectPlusImport
+from .s3 import BulkTaskS3Import
 
 
 class Importer(object):
@@ -32,7 +33,8 @@ class Importer(object):
         """Init method."""
         self._importers = dict(csv=BulkTaskCSVImport,
                                gdocs=BulkTaskGDImport,
-                               epicollect=BulkTaskEpiCollectPlusImport)
+                               epicollect=BulkTaskEpiCollectPlusImport,
+                               s3=BulkTaskS3Import)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
@@ -92,7 +94,8 @@ class Importer(object):
 
     def get_autoimporter_names(self):
         """Get autoimporter names."""
-        return [name for name in self._importers.keys() if name != 'dropbox']
+        no_autoimporters = ('dropbox', 's3')
+        return [name for name in self._importers.keys() if name not in no_autoimporters]
 
 
 class ImportReport(object):

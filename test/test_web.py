@@ -2628,6 +2628,8 @@ class TestWeb(web.Helper):
         assert "type=dropbox" in res.data, err_msg
         err_msg = "There should be a Twitter importer"
         assert "type=twitter" in res.data, err_msg
+        err_msg = "There should be an S3 importer"
+        assert "type=s3" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2700,6 +2702,14 @@ class TestWeb(web.Helper):
         assert "From a Twitter hashtag or account" in data
         assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
+        # S3
+        url = "/project/%s/tasks/import?type=s3" % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From an Amazon S3 bucket" in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
+
         # Invalid
         url = "/project/%s/tasks/import?type=invalid" % project.short_name
         res = self.app.get(url, follow_redirects=True)
@@ -2708,7 +2718,7 @@ class TestWeb(web.Helper):
 
     @patch('pybossa.core.importer.get_all_importer_names')
     def test_get_importer_doesnt_show_unavailable_importers(self, names):
-        names.return_value = ['csv', 'gdocs', 'epicollect']
+        names.return_value = ['csv', 'gdocs', 'epicollect', 's3']
         self.register()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
@@ -3036,6 +3046,27 @@ class TestWeb(web.Helper):
             u'user': {'screen_name': 'fulanito'},
             u'user_screen_name': 'fulanito',
             u'text': 'this is a tweet #match'
+        }
+        assert tasks[0].info == expected_info, tasks[0].info
+
+    def test_bulk_s3_import_works(self):
+        """Test WEB bulk S3 import works"""
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        res = self.app.post('/project/%s/tasks/import' % project.short_name,
+                            data={'files-0': 'myfile.txt',
+                                  'bucket': 'mybucket',
+                                  'form_name': 's3'},
+                            follow_redirects=True)
+
+        project = db.session.query(Project).first()
+        err_msg = "Tasks should be imported"
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
+        expected_info = {
+            u'url': u'https://mybucket.s3.amazonaws.com/myfile.txt',
+            u'filename': u'myfile.txt',
+            u'link': u'https://mybucket.s3.amazonaws.com/myfile.txt'
         }
         assert tasks[0].info == expected_info, tasks[0].info
 

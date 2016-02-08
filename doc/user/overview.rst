@@ -137,7 +137,7 @@ built-in :ref:`task-creator`. You have to do the following:
    see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -251,7 +251,7 @@ project, you will have to follow the next steps:
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -321,7 +321,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -365,7 +365,7 @@ them.
 
 For pdf files (.pdf extension), the following field will be obtained too:
 
-* pdf_url: direct linkt to the raw pdf file, with CORS support.
+* pdf_url: direct link to the raw pdf file, with CORS support.
 
 For image files (.png, jpg, .jpeg and .gif extensions) the following data will be
 available:
@@ -400,18 +400,19 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
-3. Fill in the two fields you will find in the form. The first one is for the
-source of your tweets. If you want them to be imported from a user account, then
-write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
-containing a word on them (or a #hashtag), then type it there. The second field
-is for you to specify how many tweets you want to import. You can import as many
-as you want!
+3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
+account credentials. then select as many files as you want:
 
-Finally, click on the "Import" button, and you are done:
+.. image:: http://i.imgur.com/It2I1H3.png
 
-.. image:: http://i.imgur.com/hYWxI19.png
+4. You can repeat step 3 as many times as you want, and more files will be added
+to your import.
+
+5. When you're ready, click on "Import", and that's all:
+
+.. image:: http://i.imgur.com/0bzRc2b.png
 
 .. _twitter-import:
 
@@ -437,13 +438,14 @@ the tasks:
 * favorite_count: number of times the tweet has been marked as 'favorite'.
 * retweet_count: number of times the tweet has been retweeted.
 * coordinates: geographic coordinates of the place the tweet was made from. Note
-that this is not always available for every tweet.
+  that this is not always available for every tweet.
 * tweet_id: the internal ID handled by Twitter to identify this tweet.
 * user: an object_ with information about the tweet author, as returned by the
-Twitter API.
+  Twitter API.
 * text: the actual content of the tweet.
 
 In addition, an extra field "user_screen_name" has been added to the info field:
+
 * user_screen_name: the screen name (or 'handle') of the author of the tweet.
 
 .. _object: https://dev.twitter.com/overview/api/users
@@ -462,19 +464,103 @@ So, to import tasks with the Twitter importer, do as follows:
 
 2. Then click on the **Import Tasks** button, and select the **Twitter importer**:
 
-.. image:: http://i.imgur.com/GbdkgEI.png
+.. image:: http://i.imgur.com/6OVoObZ.png
 
-3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
-account credentials. then select as many files as you want:
+3. Fill in the two fields you will find in the form. The first one is for the
+source of your tweets. If you want them to be imported from a user account, then
+write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
+containing a word on them (or a #hashtag), then type it there. The second field
+is for you to specify how many tweets you want to import. You can import as many
+as you want!
 
-.. image:: http://i.imgur.com/It2I1H3.png
+Finally, click on the "Import" button, and you are done:
 
-4. You can repeat step 3 as many times as you want, and more files will be added
-to your import.
+.. image:: http://i.imgur.com/hYWxI19.png
 
-5. When you're ready, click on "Import", and that's all:
+Importing the tasks from an Amazon S3 bucket
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: http://i.imgur.com/0bzRc2b.png
+Tasks can be imported from data hosted on the Amazon S3 service. Similarly to
+the Dropbox importer, these tasks can use different kind of data, like images,
+videos, audios, PDF files, etc. hosted on any S3 bucket.
+
+The S3 importer will work pretty much the same as the Dropbox one. When using it,
+the created tasks will contain the following data in the info field:
+
+* filename: just it, the name of the file you're importing as a task.
+* link: the link to the raw file served from Amazon S3.
+* url: same as the above.
+
+In addition to this generic information, the S3 importer will also recognize
+some kind of files by their extension and will attach some extra information to
+them.
+
+For pdf files (.pdf extension), the following field will be obtained too:
+
+* pdf_url: direct link to the raw pdf file.
+
+For image files (.png, jpg, .jpeg and .gif extensions) the following data will be
+available:
+
+* url_m: the same as link.
+* url_b: the same as link.
+* title: the same as filename.
+
+For audio files (.mp4, .m4a, .mp3, .ogg, .oga, .webm and .wav extensions):
+
+* audio_url: raw link to the audio file, which can be used inside an HTML 5 <audio> tag.
+
+For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
+
+* audio_url: raw link to the video file, which can be used inside an HTML 5 <video> tag.
+
+The tasks created with the S3 importer are ready to be used with the template
+project presenters available in PyBossa, as they include the described fields.
+
+Thus, importing your images from S3 will allow you to immediately use the
+image pattern recognition template with them; importing videos, audio files or
+pdfs with the S3 importer will also grant you to use the presenter templates
+for video pattern recognition, sound pattern recognition or documents transcription,
+respectively, with no additional modifications and have them working right away
+(as long as the files have any of the mentioned file extensions, of course).
+
+Importing from an S3 bucket requires that the bucket visibility is set to *public*
+so its content can be seen and listed by PyBossa. To make a bucket public, go to
+your AWS management console and select the S3 service. Then select the bucket you
+want to make public and click on "Properties". Click on "Add more Permissions"
+and add a new one with "Grantee: Everyone" and the "List" checkbox selected,
+like in the following image:
+
+.. image:: http://i.imgur.com/FuN9XAS.png
+
+You may also need to enable CORS in the bucket. In the same menu as above, click
+on "Edit CORS Configuration" and configure it. You can learn more
+`here <http://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html>`_.
+
+Finally, you need to make sure that every file inside the bucket that you want to
+use in a task has a *public* link too. Go to the bucket content and select the
+files. Then click on "Actions" and select "Make Public". Your files will now be
+visible for everyone, including a PyBossa server.
+
+.. image:: http://i.imgur.com/AHBVQCk.png
+
+Once your S3 bucket is ready, you can follow these steps to import tasks from it:
+
+1. Navigate to your project's page and click in the **Tasks** section:
+
+.. image:: http://i.imgur.com/u5vusQR.png
+
+2. Then click on the **Import Tasks** button, and select the **S3 importer**:
+
+.. image:: http://i.imgur.com/6OVoObZ.png
+
+3. Type the name of the bucket from which you will be importing your tasks and
+click on "Search in bucket". If you followed the steps above and your bucket is
+public, you will see a list of the items it contains. Select as many as you want:
+
+.. image:: http://i.imgur.com/WRf6nBq.png
+
+4. When you're ready, click on "Import".
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
