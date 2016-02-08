@@ -105,7 +105,7 @@ class TestImporterPublicMethods(Test):
 
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect']
+        expected_importers = ['csv', 'gdocs', 'epicollect', 's3']
 
         assert set(importers) == set(expected_importers)
 
@@ -136,4 +136,5 @@ class TestImporterPublicMethods(Test):
         importer.register_twitter_importer(twitter_params)
 
         assert 'flickr' in importer.get_autoimporter_names()
-        assert 'twitter' in importer.get_all_importer_names()
+        assert 'twitter' in importer.get_autoimporter_names()
+        assert 'dropbox' not in importer.get_autoimporter_names()
