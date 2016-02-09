@@ -46,8 +46,7 @@ class TestTaskrunAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_repeated_taskrun(self):
-        """Test anonymous user cannot create a taskrun for a task to which
-        he has previously posted a taskrun"""
+        """Test anonymous user cannot create two taskruns for the same task"""
         task = TaskFactory.create()
         taskrun1 = AnonymousTaskRunFactory.create(task=task)
         taskrun2 = AnonymousTaskRunFactory.build(task=task)
@@ -77,15 +76,15 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_cannot_create_taskrun_for_draft_project(self):
-        """Test anonymous users cannot create a taskrun for a project that
+    def test_anonymous_user_can_create_taskrun_for_draft_project(self):
+        """Test anonymous users can create a taskrun for a project that
         is a draft"""
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
         taskrun = AnonymousTaskRunFactory.build(task_id=task.id,
                                                 project_id=project.id)
 
-        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_first_taskrun(self):
@@ -101,8 +100,7 @@ class TestTaskrunAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_repeated_taskrun(self):
-        """Test authenticated user cannot create a taskrun for a task to which
-        he has previously posted a taskrun"""
+        """Test authenticated user cannot create two taskruns for the same task"""
         task = TaskFactory.create()
         taskrun1 = TaskRunFactory.create(task=task)
         taskrun2 = TaskRunFactory.build(task=task, user=taskrun1.user)
@@ -135,14 +133,14 @@ class TestTaskrunAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    def test_authenticated_user_cannot_create_taskrun_for_draft_project(self):
-        """Test authenticated users cannot create a taskrun for a project that
+    def test_authenticated_user_can_create_taskrun_for_draft_project(self):
+        """Test authenticated users can create a taskrun for a project that
         is a draft"""
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
         taskrun = TaskRunFactory.build(task_id=task.id, project_id=project.id)
 
-        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
