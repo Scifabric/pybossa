@@ -630,3 +630,24 @@ class TestTaskrunAPI(TestAPI):
                                                   volunteer.api_key)
             res = self.app.delete(url)
             assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_post_taskrun_can_create_result_for_published_project(self, guard):
+        guard.return_value = mock_contributions_guard(True, "a while ago")
+        project = ProjectFactory.create(published=True)
+        task = TaskFactory.create(project=project, n_answers=1)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my task result')
+        datajson = json.dumps(data)
+
+        self.app.post(url, data=datajson)
+
+        result = result_repo.get_by(project_id=project.id, task_id=task.id)
+
+        assert result is not None, result
