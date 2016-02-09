@@ -41,16 +41,6 @@ class TaskRunAPI(APIBase):
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
 
-    def post(self):
-        try:
-            project_id = json.loads(request.data).get('project_id')
-            project = project_repo.get(project_id)
-            if project is not None and not project.published:
-                return json.dumps({'status': 'OK'})
-        except Exception as e:
-            return super(TaskRunAPI, self).post()
-        return super(TaskRunAPI, self).post()
-
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
         task = task_repo.get_task(taskrun.task_id)

@@ -506,8 +506,10 @@ class TestTaskrunAPI(TestAPI):
         error = json.loads(resp.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
-    def test_taskrun_not_stored_if_project_is_not_published(self):
-        """Test API taskrun post draft project will not store the taskrun"""
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_is_stored_if_project_is_not_published(self, guard):
+        """Test API taskrun post stores the taskrun even if project is not published"""
+        guard.return_value = mock_contributions_guard(True, "a while ago")
         project = ProjectFactory.create(published=False)
         task = TaskFactory.create(project=project)
         url = '/api/taskrun?api_key=%s' % project.owner.api_key
@@ -522,7 +524,8 @@ class TestTaskrunAPI(TestAPI):
         task_runs = task_repo.filter_task_runs_by(project_id=data['project_id'])
 
         assert resp.status_code == 200, resp.status_code
-        assert task_runs == [], task_runs
+        assert len(task_runs) == 1, task_runs
+        assert task_runs[0].info == 'my result', task_runs[0]
 
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_created_with_time_it_was_requested_on_creation(self, guard):
