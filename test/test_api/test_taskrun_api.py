@@ -634,6 +634,8 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_post_taskrun_can_create_result_for_published_project(self, guard):
+        """Test API taskrun post creates a result if task is completed and
+        project is published."""
         guard.return_value = mock_contributions_guard(True, "a while ago")
         project = ProjectFactory.create(published=True)
         task = TaskFactory.create(project=project, n_answers=1)
@@ -651,3 +653,25 @@ class TestTaskrunAPI(TestAPI):
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
 
         assert result is not None, result
+
+    @with_context
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_post_taskrun_not_creates_result_for_draft_project(self, guard):
+        """Test API taskrun post creates a result if project is not published."""
+        guard.return_value = mock_contributions_guard(True, "a while ago")
+        project = ProjectFactory.create(published=False)
+        task = TaskFactory.create(project=project, n_answers=1)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my task result')
+        datajson = json.dumps(data)
+
+        self.app.post(url, data=datajson)
+
+        result = result_repo.get_by(project_id=project.id, task_id=task.id)
+
+        assert result is None, result
