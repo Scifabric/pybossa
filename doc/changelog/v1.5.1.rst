@@ -1,0 +1,5 @@
+================
+Changelog v1.5.1
+================
+
+ * Store taskruns from draft projects, flush them automatically before publishing the project.
