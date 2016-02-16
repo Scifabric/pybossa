@@ -669,10 +669,13 @@ After completing the previous three steps, your project will be almost ready.
 The final step is to *publish* it, because now it will still be a draft, and it
 will be hidden to everyone but you (and admins).
 
-When your project is a draft, you can contribute to it but the answers will not
-be stored, so don't be afraid and try it as much as you can until you are sure
-that everything works as expected. Once you think the project is ready for the
-world to see it, just go to the project main page and you will see the button:
+When your project is a draft, you can contribute to it and the answers will be
+stored in the database so you can have access to them, but no results will be
+created. However, in the moment of publishing the project all the answers will
+be flushed, so don't be afraid and try it as much as you can until you are sure
+that everything works as expected.
+Once you think the project is ready for the world to see it, just go to the
+project main page and you will see the button:
 
 .. image:: http://i.imgur.com/lfhahgE.png
 
@@ -693,7 +696,7 @@ under your account in the *Published* projects section:
     :alt: Project Published
     :width: 100%
 
-Also, answers will begin to be stored. Enjoy!
+Also, results will begin to be created every time a task is completed. Enjoy!
 
 .. _api-interface:
 

@@ -23,14 +23,14 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from flask import request, abort
+from flask import request
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
-from pybossa.core import task_repo, project_repo, result_repo, sentinel
+from pybossa.core import task_repo, sentinel
 from pybossa.contributions_guard import ContributionsGuard
 
 
@@ -40,16 +40,6 @@ class TaskRunAPI(APIBase):
 
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
-
-    def post(self):
-        try:
-            project_id = json.loads(request.data).get('project_id')
-            project = project_repo.get(project_id)
-            if project is not None and not project.published:
-                return json.dumps({'status': 'OK'})
-        except Exception as e:
-            return super(TaskRunAPI, self).post()
-        return super(TaskRunAPI, self).post()
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""

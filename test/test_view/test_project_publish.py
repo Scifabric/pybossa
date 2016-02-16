@@ -18,13 +18,13 @@
 from mock import patch
 
 from default import db
-from factories import ProjectFactory, TaskFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory, TaskRunFactory
 from helper import web
-from pybossa.repositories import UserRepository
-from pybossa.repositories import ProjectRepository
+from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository
 from pybossa.view.projects import render_template
 
 project_repo = ProjectRepository(db)
+task_repo = TaskRepository(db)
 user_repo = UserRepository(db)
 
 
@@ -68,6 +68,18 @@ class TestProjectPublicationView(web.Helper):
         project = project_repo.get(self.project.id)
         assert resp.status_code == 200, resp.status_code
         assert project.published == True, project
+
+    @patch('pybossa.view.projects.task_repo')
+    def test_it_deletes_project_taskruns_before_publishing(self, task_repo):
+        task = TaskFactory.create(project=self.project)
+        TaskRunFactory.create(task=task)
+        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+                             follow_redirects=True)
+
+        taskruns = task_repo.filter_task_runs_by(project_id=self.project.id)
+
+        repo_call = task_repo.delete_taskruns_from_project.call_args_list[0][0][0]
+        assert repo_call.id == self.project.id, repo_call
 
     @patch('pybossa.view.projects.auditlogger')
     def test_it_logs_the_event_in_auditlog(self, fake_logger):

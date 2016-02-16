@@ -505,6 +505,17 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert non_deleted[0].id == taskrun.id, err_msg
 
 
+    def test_delete_taskruns_from_project_deletes_taskruns(self):
+        task = TaskFactory.create()
+        project = project_repo.get(task.project_id)
+        taskrun = TaskRunFactory.create(task=task)
+
+        self.task_repo.delete_taskruns_from_project(project)
+        taskruns = self.task_repo.filter_task_runs_by(project_id=project.id)
+
+        assert taskruns == [], taskruns
+
+
     def test_update_tasks_redundancy_changes_all_project_tasks_redundancy(self):
         """Test update_tasks_redundancy updates the n_answers value for every
         task in the project"""
