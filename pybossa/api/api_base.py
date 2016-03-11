@@ -149,9 +149,9 @@ class APIBase(MethodView):
 
     def api_context(self, all_arg, **filters):
         if current_user.is_authenticated():
-            filters['user_id'] = current_user.id
+            filters['owner_id'] = current_user.id
         if all_arg == '1':
-            del filters['user_id']
+            del filters['owner_id']
         return filters
 
     def _filter_query(self, repo_info, limit, offset):
