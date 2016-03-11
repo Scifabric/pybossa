@@ -45,12 +45,15 @@ class ProjectRepository(object):
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   **filters):
+        if filters.get('user_id'):
+            filters['owner_id'] = filters.get('user_id')
+            del filters['user_id']
         query = self.db.session.query(Project).filter_by(**filters)
         if last_id:
             query = query.filter(Project.id > last_id)
             query = query.order_by(Project.id).limit(limit)
         else:
-            query = query.order_by(Project.id).limit(limit).offset(offset)
+            query = query.order_by(Project.id).limit(limit).offset(1)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
