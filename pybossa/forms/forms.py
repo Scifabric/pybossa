@@ -198,6 +198,15 @@ class BulkTaskTwitterImportForm(Form):
             'user_credentials': self.user_credentials.data,
         }
 
+class BulkTaskYoutubeImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
+    files = FieldList(TextField(label=None, widget=HiddenInput()))
+    def get_import_data(self):
+        return {
+          'type': 'youtube',
+          'files': self.files.data
+        }
+
 class BulkTaskS3ImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='s3')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
