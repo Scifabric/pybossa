@@ -972,7 +972,7 @@ def delete_tasks(short_name):
                                pro_features=pro)
     else:
         task_repo.delete_valid_from_project(project)
-        msg = gettext("All the tasks and associated task runs have been deleted")
+        msg = gettext("Tasks and taskruns with no associated results have been deleted")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=project.short_name))
 
@@ -1555,6 +1555,7 @@ def publish(short_name):
                                 pro_features=pro)
     project.published = True
     project_repo.save(project)
+    task_repo.delete_taskruns_from_project(project)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))

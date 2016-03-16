@@ -178,24 +178,26 @@ def create_result(conn, project_id, task_id):
 def on_taskrun_submit(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get project details
-    sql_query = ('select name, short_name, webhook, info from project \
+    sql_query = ('select name, short_name, published, webhook, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
     project_obj = dict(id=target.project_id,
                    name=None,
                    short_name=None,
+                   published=False,
                    info=None,
                    webhook=None,
                    action_updated='TaskCompleted')
     for r in results:
         project_obj['name'] = r.name
         project_obj['short_name'] = r.short_name
+        project_obj['published'] = r.published
         project_obj['info'] = r.info
         project_obj['webhook'] = r.webhook
         project_obj['id'] = target.project_id
 
     add_user_contributed_to_feed(conn, target.user_id, project_obj)
-    if is_task_completed(conn, target.task_id):
+    if is_task_completed(conn, target.task_id) and project_obj['published']:
         update_task_state(conn, target.task_id)
         update_feed(project_obj)
         result_id = create_result(conn, target.project_id, target.task_id)

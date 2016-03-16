@@ -140,6 +140,15 @@ class TaskRepository(object):
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
 
+    def delete_taskruns_from_project(self, project):
+        sql = text('''
+                   DELETE FROM task_run WHERE project_id=:project_id;
+                   ''')
+        self.db.session.execute(sql, dict(project_id=project.id))
+        self.db.session.commit()
+        cached_projects.clean_project(project.id)
+        self._delete_zip_files_from_store(project)
+
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
         Use raw SQL for performance"""
