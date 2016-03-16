@@ -392,12 +392,11 @@ def setup_twitter_importer(app):
 
 def setup_youtube_importer(app):
     try:  # pragma: no cover
-        # TODO: therealmarv
-        # if (app.config['GOOGLE_CLIENT_ID']
-        #         and app.config['GOOGLE_CLIENT_SECRET']):
-        #     google.init_app(app)
-        #     from pybossa.view.google import blueprint as google_bp
-        importer.register_youtube_importer()
+        if app.config['YOUTUBE_API_SERVER_KEY']:
+            importer_parms = {
+                'youtube_api_server_key': app.config['YOUTUBE_API_SERVER_KEY']
+            }
+            importer.register_youtube_importer()
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
