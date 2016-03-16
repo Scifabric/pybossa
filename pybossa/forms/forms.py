@@ -201,10 +201,14 @@ class BulkTaskTwitterImportForm(Form):
 class BulkTaskYoutubeImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
+    msg_required = lazy_gettext("You must provide a valid playlist")
+    playlist = TextField(lazy_gettext('Playlist'),
+                         [validators.Required(message=msg_required)])
     def get_import_data(self):
         return {
           'type': 'youtube',
-          'files': self.files.data
+          'files': self.files.data,
+          'playlist': self.playlist.data
         }
 
 class BulkTaskS3ImportForm(Form):
@@ -230,7 +234,8 @@ class GenericBulkTaskImportForm(object):
               'flickr': BulkTaskFlickrImportForm,
               'dropbox': BulkTaskDropboxImportForm,
               'twitter': BulkTaskTwitterImportForm,
-              's3': BulkTaskS3ImportForm }
+              's3': BulkTaskS3ImportForm,
+              'youtube': BulkTaskYoutubeImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:

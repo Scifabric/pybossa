@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2016 SciFabric LTD.
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,24 +17,12 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from .base import BulkTaskImport, BulkImportException
 
-# TODO: therealmarv
-
 class BulkTaskYoutubeImport(BulkTaskImport):
 
     importer_id = "youtube"
 
-    def __init__(self, consumer_key, consumer_secret, source,
-                 max_tweets=None, last_import_meta=None, user_credentials=None):
-        pass
-        # if user_credentials:
-        #     self.client = UserCredentialsClient(consumer_key, consumer_secret,
-        #                                         user_credentials)
-        # else:
-        #     self.client = AppCredentialsClient(consumer_key, consumer_secret)
-        # self.source = source
-        # self.count = self.DEFAULT_TWEETS if max_tweets is None else max_tweets
-        # self.last_import_meta = last_import_meta
-        # self._tasks = None
+    def __init__(self, playlist_url):
+        self.url = playlist_url
 
     def tasks(self):
         # if self._tasks is None:
