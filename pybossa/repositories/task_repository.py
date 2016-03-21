@@ -46,6 +46,27 @@ class TaskRepository(object):
     def __init__(self, db):
         self.db = db
 
+
+    def _create_context(self, filters, model):
+        owner_id = None
+        query = None
+
+        if filters.get('owner_id'):
+            owner_id = filters.get('owner_id')
+            del filters['owner_id']
+        query_args = generate_query_from_keywords(model, **filters)
+
+        if owner_id:
+            subquery = self.db.session.query(Project)\
+                           .with_entities(Project.id)\
+                           .filter_by(owner_id=owner_id).subquery()
+            query = self.db.session.query(model)\
+                        .filter(model.project_id.in_(subquery), *query_args)
+        else:
+            query = self.db.session.query(model).filter(*query_args)
+        return query
+
+
     # Methods for queries on Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
@@ -57,18 +78,7 @@ class TaskRepository(object):
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
                         last_id=None, **filters):
 
-        owner_id = None
-        if filters.get('owner_id'):
-            owner_id = filters.get('owner_id')
-            del filters['owner_id']
-        query_args = generate_query_from_keywords(Task, **filters)
-        if owner_id:
-            subquery = self.db.session.query(Project)\
-                           .with_entities(Project.id)\
-                           .filter_by(owner_id=owner_id).subquery()
-            query = self.db.session.query(Task).filter(Task.project_id.in_(subquery), *query_args)
-        else:
-            query = self.db.session.query(Task).filter(*query_args)
+        query = self._create_context(filters, Task)
         if last_id:
             query = query.filter(Task.id > last_id)
             query = query.order_by(Task.id).limit(limit)
@@ -95,8 +105,7 @@ class TaskRepository(object):
 
     def filter_task_runs_by(self, limit=None, offset=0, last_id=None,
                             yielded=False, **filters):
-        query_args = generate_query_from_keywords(TaskRun, **filters)
-        query = self.db.session.query(TaskRun).filter(*query_args)
+        query = self._create_context(filters, TaskRun)
         if last_id:
             query = query.filter(TaskRun.id > last_id)
             query = query.order_by(TaskRun.id).limit(limit)
