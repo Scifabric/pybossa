@@ -95,7 +95,7 @@ class TestApiCommon(TestAPI):
         taskrun = TaskRunFactory.create(task=task, user=users[0],
                                         info={'answer': 'annakarenina'})
         for endpoint in self.endpoints:
-            url = '/api/' + endpoint + '?api_key=' + users[0].api_key
+            url = '/api/' + endpoint + '?api_key=' + users[1].api_key + '&all=1'
             res = self.app.get(url)
             data = json.loads(res.data)
 
