@@ -133,6 +133,55 @@ class TestTaskAPI(TestAPI):
 
 
     @with_context
+    def test_task_query_with_params_with_context(self):
+        """Test API query for task with params works with context"""
+        user = UserFactory.create()
+        project_oc = ProjectFactory.create(owner=user)
+        project_two = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(10, project=project_oc)
+        TaskFactory.create_batch(10, project=project_two)
+        # Test for real field
+        res = self.app.get("/api/task?project_id=1&api_key=" + user.api_key)
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for t in data:
+            assert t['project_id'] == project_oc.id, t
+
+        # Valid field but wrong value
+        res = self.app.get("/api/task?project_id=99999999&api_key=" + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/task?project_id=1&state=ongoing&api_key=' + user.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 10, data
+        # Correct result
+        for t in data:
+            assert t['project_id'] == project_oc.id, data
+            assert t['state'] == u'ongoing', data
+
+        # Limits
+        res = self.app.get("/api/task?project_id=1&limit=5&api_key=" + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        for item in data:
+            assert item['project_id'] == project_oc.id, item
+
+        # Keyset pagination
+        url = "/api/task?project_id=1&limit=5&last_id=%s&api_key=%s" % (tasks[4].id, user.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        assert data[0]['id'] == tasks[5].id, data
+        for item in data:
+            assert item['project_id'] == project_oc.id, item
+
+
+    @with_context
     def test_task_post(self):
         """Test API Task creation"""
         admin = UserFactory.create()
