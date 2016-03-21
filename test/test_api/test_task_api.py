@@ -70,6 +70,25 @@ class TestTaskAPI(TestAPI):
 
 
     @with_context
+    def test_task_query_without_params_with_context(self):
+        """ Test API Task query with context"""
+        user = UserFactory.create()
+        project_oc = ProjectFactory.create(owner=user)
+        project_two = ProjectFactory.create()
+        TaskFactory.create_batch(10, project=project_oc, info={'question': 'answer'})
+        TaskFactory.create_batch(10, project=project_two, info={'question': 'answer'})
+        res = self.app.get('/api/task?api_key=' + user.api_key)
+        tasks = json.loads(res.data)
+        assert len(tasks) == 10, tasks
+        for task in tasks:
+            assert task['project_id'] == project_oc.id, task
+            assert task['info']['question'] == 'answer', task
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+
+    @with_context
     def test_task_query_with_params(self):
         """Test API query for task with params works"""
         project = ProjectFactory.create()
