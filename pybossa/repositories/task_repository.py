@@ -23,6 +23,7 @@ from sqlalchemy.orm.base import _entity_descriptor
 from sqlalchemy import cast
 from sqlalchemy import Text
 
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.exc import WrongObjectError, DBIntegrityError
@@ -55,8 +56,19 @@ class TaskRepository(object):
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
                         last_id=None, **filters):
+
+        owner_id = None
+        if filters.get('owner_id'):
+            owner_id = filters.get('owner_id')
+            del filters['owner_id']
         query_args = generate_query_from_keywords(Task, **filters)
-        query = self.db.session.query(Task).filter(*query_args)
+        if owner_id:
+            subquery = self.db.session.query(Project)\
+                           .with_entities(Project.id)\
+                           .filter_by(owner_id=owner_id).subquery()
+            query = self.db.session.query(Task).filter(Task.project_id.in_(subquery), *query_args)
+        else:
+            query = self.db.session.query(Task).filter(*query_args)
         if last_id:
             query = query.filter(Task.id > last_id)
             query = query.order_by(Task.id).limit(limit)
@@ -65,6 +77,7 @@ class TaskRepository(object):
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
+        print query.all()
         return query.all()
 
     def count_tasks_with(self, **filters):
