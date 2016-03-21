@@ -123,22 +123,51 @@ List
 List domain objects::
      
     GET http://{pybossa-site-url}/api/{domain-object}
-    
-For example, you can get a list of registered Projects like this::
+
+
+The API is context aware in the sense that if you've an API-KEY and you're authenticating
+the calls, then, the server will send you first your own related data: projects, tasks, and
+task runs. You can get access to all the projects, tasks, and task runs (the whole data base) using the
+parameter: **all=1**.
+
+For example, if an anonymous user access the generic api endpoints like::
 
     GET http://{pybossa-site-url}/api/project
 
-Or a list of Categories:: 
+It will return all the projects from the DB, ordering them by ID. If you access it
+like authenticating yourself:: 
+
+    GET http://{pybossa-site-url}/api/project?api_key=YOURKEY
+
+Then, you will get your own list of projects. In other words, the projects that you 
+own. If you don't have a project, but you want to explore the API then you can use
+the **all=1** argument::
+
+    GET http://{pybossa-site-url}/api/project?api_key=YOURKEY&all=1
+
+This call will return all the projects from the DB ordering by ID.
+
+For example, you can get a list of your Projects like this::
+
+    GET http://{pybossa-site-url}/api/project
+    GET http://{pybossa-site-url}/api/project?api_key=YOURKEY
+    GET http://{pybossa-site-url}/api/project?api_key=YOURKEY&all=1
+
+Or a list of available Categories:: 
 
     GET http://{pybossa-site-url}/api/category
 
 Or a list of Tasks::
 
     GET http://{pybossa-site-url}/api/task
+    GET http://{pybossa-site-url}/api/task?api_key=YOURKEY
+    GET http://{pybossa-site-url}/api/task?api_key=YOURKEY&all=1
 
 For a list of TaskRuns use::
 
     GET http://{pybossa-site-url}/api/taskrun
+    GET http://{pybossa-site-url}/api/taskrun?api_key=YOURKEY
+    GET http://{pybossa-site-url}/api/taskrun?api_key=YOURKEY&all=1
 
 Finally, you can get a list of users by doing::
 
