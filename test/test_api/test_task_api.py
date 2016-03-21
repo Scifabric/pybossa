@@ -87,6 +87,10 @@ class TestTaskAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
+        res = self.app.get('/api/task?api_key=' + user.api_key + "&all=1")
+        tasks = json.loads(res.data)
+        assert len(tasks) == 20, tasks
+
 
     @with_context
     def test_task_query_with_params(self):
@@ -148,6 +152,12 @@ class TestTaskAPI(TestAPI):
         # Correct result
         for t in data:
             assert t['project_id'] == project_oc.id, t
+
+        res = self.app.get("/api/task?api_key=" + user.api_key + "&all=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 20, data
+
 
         # Valid field but wrong value
         res = self.app.get("/api/task?project_id=99999999&api_key=" + user.api_key)
