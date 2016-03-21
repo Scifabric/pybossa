@@ -97,14 +97,13 @@ class TestProjectAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
         # Test a non-existant ID
-        res = self.app.get('/api/project/0')
+        res = self.app.get('/api/project/0?api_key=' + user.api_key)
         err = json.loads(res.data)
         assert res.status_code == 404, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'project', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
-
 
 
     @with_context
@@ -132,6 +131,41 @@ class TestProjectAPI(TestAPI):
         # Correct result
         assert data[0]['short_name'] == 'test-app', data
         assert data[0]['name'] == 'My New Project', data
+
+
+    @with_context
+    def test_query_project_with_context(self):
+        """Test API query for project endpoint with context works"""
+        user = UserFactory.create()
+        project_oc = ProjectFactory.create(owner=user, short_name='test-app',
+                                           name='My New Project')
+        ProjectFactory.create()
+        # Test for real field
+        url = "/api/project?short_name=test-app&api_key=" + user.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['owner_id'] == user.id, data[0]
+
+        # Valid field but wrong value
+        url = "/api/project?short_name=wrongvalue&api_key=" + user.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        url = '/api/project?short_name=test-app&name=My New Project&api_key=' + user.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['name'] == 'My New Project', data
+        assert data[0]['owner_id'] == user.id, data
 
 
     @with_context
