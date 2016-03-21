@@ -52,7 +52,7 @@ class ProjectRepository(object):
             query = query.filter(Project.id > last_id)
             query = query.order_by(Project.id).limit(limit)
         else:
-            query = query.order_by(Project.id).limit(limit).offset(1)
+            query = query.order_by(Project.id).limit(limit).offset(offset)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
