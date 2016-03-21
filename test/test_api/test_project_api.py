@@ -75,6 +75,37 @@ class TestProjectAPI(TestAPI):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+    @with_context
+    def test_project_query_with_context(self):
+        """ Test API project query with context."""
+        user = UserFactory.create()
+        project_oc = ProjectFactory.create(owner=user, info={'total': 150})
+        ProjectFactory.create()
+        res = self.app.get('/api/project?api_key=' + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 1, len(data)
+        project = data[0]
+        assert project['info']['total'] == 150, data
+        assert project_oc.id == project['id'], project
+        assert project['owner_id'] == user.id, project
+
+        res = self.app.get('/api/project?api_key=' + user.api_key + '&offset=1')
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # Test a non-existant ID
+        res = self.app.get('/api/project/0')
+        err = json.loads(res.data)
+        assert res.status_code == 404, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'project', err
+        assert err['exception_cls'] == 'NotFound', err
+        assert err['action'] == 'GET', err
+
+
 
     @with_context
     def test_query_project(self):
