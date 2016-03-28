@@ -24,6 +24,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
+from sqlalchemy import text
 
 
 class TaskRepository(Repository):
@@ -48,7 +49,6 @@ class TaskRepository(Repository):
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
-        print query.all()
         return query.all()
 
     def count_tasks_with(self, **filters):
