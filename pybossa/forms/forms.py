@@ -200,15 +200,13 @@ class BulkTaskTwitterImportForm(Form):
 
 class BulkTaskYoutubeImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
-    files = FieldList(TextField(label=None, widget=HiddenInput()))
     msg_required = lazy_gettext("You must provide a valid playlist")
-    playlist = TextField(lazy_gettext('Playlist'),
-                         [validators.Required(message=msg_required)])
+    playlist_url = TextField(lazy_gettext('Playlist'),
+                             [validators.Required(message=msg_required)])
     def get_import_data(self):
         return {
           'type': 'youtube',
-          'files': self.files.data,
-          'playlist': self.playlist.data
+          'playlist_url': self.playlist_url.data
         }
 
 class BulkTaskS3ImportForm(Form):

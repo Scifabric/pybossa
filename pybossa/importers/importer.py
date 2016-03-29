@@ -50,8 +50,9 @@ class Importer(object):
         self._importers['twitter'] = BulkTaskTwitterImport
         self._importer_constructor_params['twitter'] = twitter_params
 
-    def register_youtube_importer(self):
+    def register_youtube_importer(self, youtube_params):
         self._importers['youtube'] = BulkTaskYoutubeImport
+        self._importer_constructor_params['youtube'] = youtube_params
 
     def create_tasks(self, task_repo, project_id, **form_data):
         """Create tasks."""

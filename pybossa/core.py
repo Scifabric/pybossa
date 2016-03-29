@@ -393,10 +393,10 @@ def setup_twitter_importer(app):
 def setup_youtube_importer(app):
     try:  # pragma: no cover
         if app.config['YOUTUBE_API_SERVER_KEY']:
-            importer_parms = {
+            importer_params = {
                 'youtube_api_server_key': app.config['YOUTUBE_API_SERVER_KEY']
             }
-            importer.register_youtube_importer()
+            importer.register_youtube_importer(importer_params)
     except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args

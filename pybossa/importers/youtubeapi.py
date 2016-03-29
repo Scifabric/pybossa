@@ -16,38 +16,70 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from .base import BulkTaskImport, BulkImportException
+from apiclient.discovery import build
+from apiclient.errors import HttpError
+from oauth2client.tools import argparser
+from urlparse import urlparse, parse_qs
 
 class BulkTaskYoutubeImport(BulkTaskImport):
 
     importer_id = "youtube"
 
-    def __init__(self, youtube_api_server_key, playlist_url):
-        self.url = playlist_url
+    def __init__(self, playlist_url, youtube_api_server_key):
+        self.playlist_url = playlist_url
+        # TODO
+        # self.playlist = playlist_url
+        self.youtube_api_server_key = youtube_api_server_key
 
     def tasks(self):
-        # if self._tasks is None:
-        #     statuses = self._get_statuses()
-        #     tasks = [self._create_task_from_status(status) for status in statuses]
-        #     self._tasks = tasks[0:self.count]
-        return self._tasks
+        playlist_id = self._get_playlist_id()
+        playlist = self._fetch_all_youtube_videos(playlist_id)
+        import pdb; pdb.set_trace()
+        return {}
 
-    def count_tasks(self):
-        return self.count
+    def _get_playlist_id(self):
+        """Get playlist id from url"""
+        url_data = urlparse(self.playlist_url)
+        params = parse_qs(url_data.query)
+        if not ('list' in params):
+            msg = gettext("No playlist in URL found.")
+            raise BulkImportException(msg)
+        return (params['list'][0])
 
-    def import_metadata(self):
-        return None if self._tasks is None else self._extract_metadata()
+    def _fetch_all_youtube_videos(self, playlistId):
+        """
+        Fetches a playlist of videos from youtube
+        We splice the results together in no particular order
 
-    def _extract_metadata(self):
-        return {'last_id': max(t['info']['id'] for t in self._tasks)}
+        Parameters:
+            parm1 - (string) playlistId
+        Returns:
+            playListItem Dict
+        """
+        YOUTUBE_API_SERVICE_NAME = "youtube"
+        YOUTUBE_API_VERSION = "v3"
+        youtube = build(YOUTUBE_API_SERVICE_NAME,
+                        YOUTUBE_API_VERSION,
+                        developerKey=self.youtube_api_server_key)
+        res = youtube.playlistItems().list(
+        part="snippet",
+        playlistId=playlistId,
+        maxResults="50"
+        ).execute()
 
-    def _get_statuses(self):
-        meta = self.last_import_meta
-        last_id = None if meta is None else meta.get('last_id')
-        return self.client.fetch_all_statuses(source=self.source,
-                                              count=self.count,
-                                              since_id=last_id)
+        nextPageToken = res.get('nextPageToken')
+        while ('nextPageToken' in res):
+            nextPage = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=playlistId,
+            maxResults="50",
+            pageToken=nextPageToken
+            ).execute()
+            res['items'] = res['items'] + nextPage['items']
 
-    def _create_task_from_status(self, status):
-        user_screen_name = status.get('user').get('screen_name')
-        info = dict(status, user_screen_name=user_screen_name)
-        return {'info': info}
+            if 'nextPageToken' not in nextPage:
+                res.pop('nextPageToken', None)
+            else:
+                nextPageToken = nextPage['nextPageToken']
+
+        return res
