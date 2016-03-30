@@ -18,8 +18,8 @@
 from .base import BulkTaskImport, BulkImportException
 from apiclient.discovery import build
 from apiclient.errors import HttpError
-from oauth2client.tools import argparser
 from urlparse import urlparse, parse_qs
+import json
 
 class BulkTaskYoutubeImport(BulkTaskImport):
 
@@ -27,15 +27,18 @@ class BulkTaskYoutubeImport(BulkTaskImport):
 
     def __init__(self, playlist_url, youtube_api_server_key):
         self.playlist_url = playlist_url
-        # TODO
-        # self.playlist = playlist_url
         self.youtube_api_server_key = youtube_api_server_key
 
     def tasks(self):
         playlist_id = self._get_playlist_id()
         playlist = self._fetch_all_youtube_videos(playlist_id)
-        import pdb; pdb.set_trace()
-        return {}
+        return [self._extract_video_info(item) for item in playlist['items']]
+
+    def _extract_video_info(self, item):
+        """Extract youtube video information from snippet dict"""
+        video_url = 'https://www.youtube.com/watch?v=' + item['snippet']['resourceId']['videoId']
+        info = {'video_url': video_url}
+        return {'info': info}
 
     def _get_playlist_id(self):
         """Get playlist id from url"""
