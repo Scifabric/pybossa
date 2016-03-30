@@ -32,7 +32,7 @@ class BulkTaskYoutubeImport(BulkTaskImport):
 
     def tasks(self):
         if self.playlist_url:
-            playlist_id = self._get_playlist_id()
+            playlist_id = self._get_playlist_id(self.playlist_url)
             playlist = self._fetch_all_youtube_videos(playlist_id)
             return [self._extract_video_info(item) for item in playlist['items']]
         else:
