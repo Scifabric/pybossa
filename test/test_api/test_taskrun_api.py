@@ -218,9 +218,17 @@ class TestTaskrunAPI(TestAPI):
             assert tr['project_id'] == project.id, tr
 
         # Valid field but wrong value
-        # res = self.app.get("/api/taskrun?project_id=99999999")
-        # data = json.loads(res.data)
-        # assert len(data) == 0, data
+        res = self.app.get("/api/taskrun?project_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?project_id=99999999&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?project_id=99999999&all=1&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
 
         # # Multiple fields
         # res = self.app.get('/api/taskrun?project_id=1&task_id=1')
