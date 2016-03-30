@@ -173,7 +173,7 @@ class TestTaskrunAPI(TestAPI):
         task_runs = TaskRunFactory.create_batch(10, project=project)
         task_runs_two = TaskRunFactory.create_batch(10, project=project_two)
 
-        # Test for real field
+        # Test for real field as anon
         res = self.app.get("/api/taskrun?project_id=" + str(project_two.id))
         data = json.loads(res.data)
         # Should return one result
@@ -182,6 +182,40 @@ class TestTaskrunAPI(TestAPI):
         for tr in data:
             assert tr['project_id'] == project_two.id, tr
 
+
+        # Test for real field as auth user but not owner
+        res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project_two.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 0, data
+
+        # Test for real field as auth user but not owner with all=1j
+        res = self.app.get("/api/taskrun?all=1&api_key=" + owner.api_key + "&project_id=" + str(project_two.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project_two.id, tr
+
+
+        # Test for real field as owner
+        res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project.id, tr
+
+        # Test for real field as owner
+        res = self.app.get("/api/taskrun?all=1&api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project.id, tr
 
         # Valid field but wrong value
         # res = self.app.get("/api/taskrun?project_id=99999999")
