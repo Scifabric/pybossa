@@ -56,6 +56,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_query_without_params(self):
         """Test API TaskRun query"""
+        user = UserFactory.create()
         TaskRunFactory.create_batch(10, info={'answer': 'annakarenina'})
         res = self.app.get('/api/taskrun')
         taskruns = json.loads(res.data)
@@ -65,6 +66,14 @@ class TestTaskrunAPI(TestAPI):
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+        res = self.app.get('/api/taskrun?api_key=' + user.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 0, taskruns
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
 
 
     @with_context
