@@ -300,16 +300,44 @@ class TestTaskrunAPI(TestAPI):
             assert item['project_id'] == project_two.id, item
         assert len(data) == 5, data
 
-        # # Keyset pagination
-        # url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
-        # res = self.app.get(url)
-        # data = json.loads(res.data)
-        # for item in data:
-        #     assert item['project_id'] == 1, item
-        # assert len(data) == 5, data
-        # assert data[0]['id'] == task_runs[5].id, data[0]['id']
+        # Keyset pagination
+        url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs[5].id, data[0]['id']
 
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s" % (project.id,
+                                                                            task_runs[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs[5].id, data[0]['id']
 
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s" % (project_two.id,
+                                                                            task_runs_two[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, len(data)
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s&all=1" % (project_two.id,
+                                                                            task_runs_two[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == project_two.id, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs_two[5].id, data[0]['id']
 
     @with_context
     @patch('pybossa.api.task_run.request')
