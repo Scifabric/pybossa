@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from .base import BulkTaskImport, BulkImportException
+from flask.ext.babel import gettext
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from urlparse import urlparse, parse_qs
@@ -30,9 +31,12 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         self.youtube_api_server_key = youtube_api_server_key
 
     def tasks(self):
-        playlist_id = self._get_playlist_id()
-        playlist = self._fetch_all_youtube_videos(playlist_id)
-        return [self._extract_video_info(item) for item in playlist['items']]
+        if self.playlist_url:
+            playlist_id = self._get_playlist_id()
+            playlist = self._fetch_all_youtube_videos(playlist_id)
+            return [self._extract_video_info(item) for item in playlist['items']]
+        else:
+            return []
 
     def _extract_video_info(self, item):
         """Extract youtube video information from snippet dict"""
@@ -40,9 +44,9 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         info = {'video_url': video_url}
         return {'info': info}
 
-    def _get_playlist_id(self):
+    def _get_playlist_id(self, url):
         """Get playlist id from url"""
-        url_data = urlparse(self.playlist_url)
+        url_data = urlparse(url)
         params = parse_qs(url_data.query)
         if not ('list' in params):
             msg = gettext("No playlist in URL found.")

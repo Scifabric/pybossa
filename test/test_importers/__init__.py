@@ -112,14 +112,17 @@ class TestImporterPublicMethods(Test):
     def test_get_all_importers_returns_configured_importers(self, create):
         flickr_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
         twitter_params = {}
+        youtube_params = {'youtube_api_server_key': self.flask_app.config['YOUTUBE_API_SERVER_KEY']}
         importer = Importer()
         importer.register_flickr_importer(flickr_params)
         importer.register_dropbox_importer()
         importer.register_twitter_importer(twitter_params)
+        importer.register_youtube_importer(youtube_params)
 
         assert 'flickr' in importer.get_all_importer_names()
         assert 'dropbox' in importer.get_all_importer_names()
         assert 'twitter' in importer.get_all_importer_names()
+        assert 'youtube' in importer.get_all_importer_names()
 
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
         importers = self.importer.get_autoimporter_names()
