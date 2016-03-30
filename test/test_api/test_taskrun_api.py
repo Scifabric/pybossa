@@ -67,6 +67,8 @@ class TestTaskrunAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
+        # User context should return 0 taskruns as none of them belong to this
+        # user.
         res = self.app.get('/api/taskrun?api_key=' + user.api_key)
         taskruns = json.loads(res.data)
         assert len(taskruns) == 0, taskruns
