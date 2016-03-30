@@ -283,6 +283,23 @@ class TestTaskrunAPI(TestAPI):
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
 
+        # Limits
+        res = self.app.get("/api/taskrun?project_id=" + str(project.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+
+        res = self.app.get("/api/taskrun?project_id=" + str(project_two.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?all=1&project_id=" + str(project_two.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == project_two.id, item
+        assert len(data) == 5, data
+
         # # Keyset pagination
         # url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
         # res = self.app.get(url)
