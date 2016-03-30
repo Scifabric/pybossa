@@ -30,7 +30,7 @@ def create_importer_with_form_data(**form_data):
 class TestBulkYoutubeImport(object):
 
     form_data = {
-        'playlist_url': 'https://www.youtube.com/playlist?list=playlistid'
+        'playlist_url': 'https://www.youtube.com/playlist?list=playlistid',
         'youtube_api_server_key': 'apikey'
     }
 
