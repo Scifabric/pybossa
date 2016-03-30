@@ -230,21 +230,58 @@ class TestTaskrunAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 0, data
 
-        # # Multiple fields
-        # res = self.app.get('/api/taskrun?project_id=1&task_id=1')
-        # data = json.loads(res.data)
-        # # One result
-        # assert len(data) == 1, data
-        # # Correct result
-        # assert data[0]['project_id'] == 1, data
-        # assert data[0]['task_id'] == 1, data
+        # Multiple fields
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
 
-        # # Limits
-        # res = self.app.get("/api/taskrun?project_id=1&limit=5")
-        # data = json.loads(res.data)
-        # for item in data:
-        #     assert item['project_id'] == 1, item
-        # assert len(data) == 5, data
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1&api_key=' + owner.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1&all=1&api_key=' + owner.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+        url = '/api/taskrun?project_id=%s&task_id=%s&api_key=%s' % (project_two.id,
+                                                                    task_runs_two[0].task_id,
+                                                                    owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 0, data
+
+        url = '/api/taskrun?all=1&project_id=%s&task_id=%s&api_key=%s' % (project_two.id,
+                                                                    task_runs_two[0].task_id,
+                                                                    owner.api_key)
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == project_two.id, data
+        assert data[0]['task_id'] == task_runs_two[0].task_id, data
+
+
+        # Limits
+        res = self.app.get("/api/taskrun?project_id=1&limit=5")
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
 
         # # Keyset pagination
         # url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
