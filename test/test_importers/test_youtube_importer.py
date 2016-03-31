@@ -19,14 +19,7 @@
 from mock import patch, Mock
 from pybossa.importers.youtubeapi import BulkTaskYoutubeImport
 
-def create_importer_with_form_data(**form_data):
-    with patch('pybossa.importers.youtubeapi.build'):
-        form_data['youtube_api_server_key'] = 'apikey'
-        importer = BulkTaskYoutubeImport(**form_data)
-    importer.client.api = Mock()
-    return importer
-
-
+@patch('pybossa.importers.youtubeapi.build')
 class TestBulkYoutubeImport(object):
 
     form_data = {
@@ -34,7 +27,154 @@ class TestBulkYoutubeImport(object):
         'youtube_api_server_key': 'apikey'
     }
 
-    def test_tasks_return_emtpy_list_if_no_video_to_import(self):
+    short_playlist_response = {
+      u'items': [
+        {
+          u'snippet': {
+            u'playlistId': u'youtubeplaylistid1',
+            u'thumbnails': {
+              u'default': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/default.jpg',
+                u'width': 120,
+                u'height': 90
+              },
+              u'high': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/hqdefault.jpg',
+                u'width': 480,
+                u'height': 360
+              },
+              u'medium': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/mqdefault.jpg',
+                u'width': 320,
+                u'height': 180
+              },
+              u'maxres': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/maxresdefault.jpg',
+                u'width': 1280,
+                u'height': 720
+              },
+              u'standard': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/sddefault.jpg',
+                u'width': 640,
+                u'height': 480
+              }
+            },
+            u'title': u'Cool Video 1',
+            u'resourceId': {
+              u'kind': u'youtube#video',
+              u'videoId': u'youtubeid1'
+            },
+            u'channelId': u'SomeChannelID',
+            u'publishedAt': u'2016-03-15T05:47:01.000Z',
+            u'channelTitle': u'Some Youtube Channel',
+            u'position': 1,
+            u'description': u'A long text describing the video here'
+          },
+          u'kind': u'youtube#playlistItem',
+          u'etag': u'\'somelongetaghere2\'',
+          u'id': u'somelongidhere1'
+        },
+        {
+          u'snippet': {
+            u'playlistId': u'youtubeplaylistid1',
+            u'thumbnails': {
+              u'default': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid2/default.jpg',
+                u'width': 120,
+                u'height': 90
+              },
+              u'high': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid2/hqdefault.jpg',
+                u'width': 480,
+                u'height': 360
+              },
+              u'medium': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid2/mqdefault.jpg',
+                u'width': 320,
+                u'height': 180
+              },
+              u'maxres': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid2/maxresdefault.jpg',
+                u'width': 1280,
+                u'height': 720
+              },
+              u'standard': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid2/sddefault.jpg',
+                u'width': 640,
+                u'height': 480
+              }
+            },
+            u'title': u'Best of Test Videos',
+            u'resourceId': {
+              u'kind': u'youtube#video',
+              u'videoId': u'youtubeid2'
+            },
+            u'channelId': u'SomeChannelID',
+            u'publishedAt': u'2016-03-11T18:58:52.000Z',
+            u'channelTitle': u'Some Youtube Channel',
+            u'position': 2,
+            u'description': u'Another long text describing the video here'
+          },
+          u'kind': u'youtube#playlistItem',
+          u'etag': u'\'somelongetaghere1\'',
+          u'id': u'somelongidhere2'
+        }
+      ]
+    }
+
+    long_playlist_response = {
+      u'items': [
+        {
+          u'snippet': {
+            u'playlistId': u'youtubeplaylistid0',
+            u'thumbnails': {
+              u'default': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid0/default.jpg',
+                u'width': 120,
+                u'height': 90
+              },
+              u'high': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid0/hqdefault.jpg',
+                u'width': 480,
+                u'height': 360
+              },
+              u'medium': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid0/mqdefault.jpg',
+                u'width': 320,
+                u'height': 180
+              },
+              u'maxres': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid0/maxresdefault.jpg',
+                u'width': 1280,
+                u'height': 720
+              },
+              u'standard': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid0/sddefault.jpg',
+                u'width': 640,
+                u'height': 480
+              }
+            },
+            u'title': u'First video',
+            u'resourceId': {
+              u'kind': u'youtube#video',
+              u'videoId': u'youtubeid0'
+            },
+            u'channelId': u'SomeChannelID',
+            u'publishedAt': u'2016-03-11T18:58:52.000Z',
+            u'channelTitle': u'Some Youtube Channel',
+            u'position': 0,
+            u'description': u'Very first video in a long playlist'
+          },
+          u'kind': u'youtube#playlistItem',
+          u'etag': u'\'somelongetaghere0\'',
+          u'id': u'somelongidher0'
+        },
+      ],
+      u'nextPageToken': 'someTokenId'
+    }
+
+
+    def test_tasks_return_emtpy_list_if_no_video_to_import(self, build):
         form_data = {
             'playlist_url': '',
             'youtube_api_server_key': 'apikey'
@@ -42,3 +182,29 @@ class TestBulkYoutubeImport(object):
         number_of_tasks = BulkTaskYoutubeImport(**form_data).count_tasks()
 
         assert number_of_tasks == 0, number_of_tasks
+
+    def test_call_to_youtube_api_endpoint(self, build):
+        build.return_value.playlistItems.return_value.list.\
+            return_value.execute.return_value = self.short_playlist_response
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer._fetch_all_youtube_videos('fakeId')
+        
+        build.assert_called_with('youtube', 'v3', developerKey=self.form_data['youtube_api_server_key'])
+
+    def test_call_to_youtube_api_short_playlist(self, build):
+        build.return_value.playlistItems.return_value.list.\
+            return_value.execute.return_value = self.short_playlist_response
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        playlist = importer._fetch_all_youtube_videos('fakeId')
+
+        assert playlist == self.short_playlist_response, playlist
+
+    def test_call_to_youtube_api_long_playlist(self, build):
+        build.return_value.playlistItems.return_value.list.\
+            return_value.execute.side_effect = [self.long_playlist_response, self.long_playlist_response, self.short_playlist_response]
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        expected_playlist = {'items': ''}
+        expected_playlist['items'] = self.long_playlist_response['items'] + self.long_playlist_response['items'] + self.short_playlist_response['items']
+        playlist = importer._fetch_all_youtube_videos('fakeId')
+
+        assert playlist == expected_playlist, playlist
