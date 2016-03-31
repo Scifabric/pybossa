@@ -21,7 +21,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList
-from wtforms.fields.html5 import EmailField
+from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
@@ -201,7 +201,7 @@ class BulkTaskTwitterImportForm(Form):
 class BulkTaskYoutubeImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
     msg_required = lazy_gettext("You must provide a valid playlist")
-    playlist_url = TextField(lazy_gettext('Playlist'),
+    playlist_url = URLField(lazy_gettext('Playlist'),
                              [validators.Required(message=msg_required)])
     def get_import_data(self):
         return {
