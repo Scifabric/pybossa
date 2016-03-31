@@ -227,3 +227,14 @@ class TestBulkYoutubeImport(object):
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://www.youtube.com/watch?v=youtubeid')
         # malformed url
         assert_raises(BulkImportException, importer._get_playlist_id, 'www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
+
+    def test_non_youtube_url_raises_exception(self, build):
+        # TODO
+        pass
+
+    def test_all_coverage_tasks_extraction(self, build):
+        build.return_value.playlistItems.return_value.list.\
+            return_value.execute.return_value = self.short_playlist_response
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        tasks = importer.tasks()
+        assert tasks == [{u'info': {u'video_url': u'https://www.youtube.com/watch?v=youtubeid2'}}]
