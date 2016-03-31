@@ -235,6 +235,8 @@ class TestBulkYoutubeImport(object):
         id = importer._get_playlist_id('https://youtu.be/playlist?list=goodplaylist')
         assert id == 'goodplaylist'
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://youtubee.com/playlist?list=goodplaylist')
+        assert_raises(BulkImportException, importer._get_playlist_id, 'https://api.youtube.com/playlist?list=goodplaylist')
+        assert_raises(BulkImportException, importer._get_playlist_id, 'https://otherdomain.com/playlist?list=goodplaylist')
 
     def test_all_coverage_tasks_extraction(self, build):
         build.return_value.playlistItems.return_value.list.\
