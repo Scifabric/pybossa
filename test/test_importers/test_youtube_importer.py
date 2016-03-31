@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch, Mock
+from mock import patch
+from nose.tools import assert_raises
+from pybossa.importers import BulkImportException
 from pybossa.importers.youtubeapi import BulkTaskYoutubeImport
 
 @patch('pybossa.importers.youtubeapi.build')
@@ -29,51 +31,6 @@ class TestBulkYoutubeImport(object):
 
     short_playlist_response = {
       u'items': [
-        {
-          u'snippet': {
-            u'playlistId': u'youtubeplaylistid1',
-            u'thumbnails': {
-              u'default': {
-                u'url': u'https://i.ytimg.com/vi/youtubeid1/default.jpg',
-                u'width': 120,
-                u'height': 90
-              },
-              u'high': {
-                u'url': u'https://i.ytimg.com/vi/youtubeid1/hqdefault.jpg',
-                u'width': 480,
-                u'height': 360
-              },
-              u'medium': {
-                u'url': u'https://i.ytimg.com/vi/youtubeid1/mqdefault.jpg',
-                u'width': 320,
-                u'height': 180
-              },
-              u'maxres': {
-                u'url': u'https://i.ytimg.com/vi/youtubeid1/maxresdefault.jpg',
-                u'width': 1280,
-                u'height': 720
-              },
-              u'standard': {
-                u'url': u'https://i.ytimg.com/vi/youtubeid1/sddefault.jpg',
-                u'width': 640,
-                u'height': 480
-              }
-            },
-            u'title': u'Cool Video 1',
-            u'resourceId': {
-              u'kind': u'youtube#video',
-              u'videoId': u'youtubeid1'
-            },
-            u'channelId': u'SomeChannelID',
-            u'publishedAt': u'2016-03-15T05:47:01.000Z',
-            u'channelTitle': u'Some Youtube Channel',
-            u'position': 1,
-            u'description': u'A long text describing the video here'
-          },
-          u'kind': u'youtube#playlistItem',
-          u'etag': u'\'somelongetaghere2\'',
-          u'id': u'somelongidhere1'
-        },
         {
           u'snippet': {
             u'playlistId': u'youtubeplaylistid1',
@@ -169,6 +126,51 @@ class TestBulkYoutubeImport(object):
           u'etag': u'\'somelongetaghere0\'',
           u'id': u'somelongidher0'
         },
+        {
+          u'snippet': {
+            u'playlistId': u'youtubeplaylistid1',
+            u'thumbnails': {
+              u'default': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/default.jpg',
+                u'width': 120,
+                u'height': 90
+              },
+              u'high': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/hqdefault.jpg',
+                u'width': 480,
+                u'height': 360
+              },
+              u'medium': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/mqdefault.jpg',
+                u'width': 320,
+                u'height': 180
+              },
+              u'maxres': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/maxresdefault.jpg',
+                u'width': 1280,
+                u'height': 720
+              },
+              u'standard': {
+                u'url': u'https://i.ytimg.com/vi/youtubeid1/sddefault.jpg',
+                u'width': 640,
+                u'height': 480
+              }
+            },
+            u'title': u'Cool Video 1',
+            u'resourceId': {
+              u'kind': u'youtube#video',
+              u'videoId': u'youtubeid1'
+            },
+            u'channelId': u'SomeChannelID',
+            u'publishedAt': u'2016-03-15T05:47:01.000Z',
+            u'channelTitle': u'Some Youtube Channel',
+            u'position': 1,
+            u'description': u'A long text describing the video here'
+          },
+          u'kind': u'youtube#playlistItem',
+          u'etag': u'\'somelongetaghere2\'',
+          u'id': u'somelongidhere1'
+        },
       ],
       u'nextPageToken': 'someTokenId'
     }
@@ -208,3 +210,20 @@ class TestBulkYoutubeImport(object):
         playlist = importer._fetch_all_youtube_videos('fakeId')
 
         assert playlist == expected_playlist, playlist
+
+    def test_extract_video_info_one_item(self, build):
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        info = importer._extract_video_info(self.short_playlist_response['items'][0])
+
+        assert info['info']['video_url'] == 'https://www.youtube.com/watch?v=youtubeid2'
+
+    def test_parse_playlist_id(self, build):
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        id = importer._get_playlist_id('https://www.youtube.com/playlist?list=goodplaylist')
+        assert id == 'goodplaylist'
+        id = importer._get_playlist_id('https://www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
+        assert id == 'anotherplaylist'
+        # no playlist
+        assert_raises(BulkImportException, importer._get_playlist_id, 'https://www.youtube.com/watch?v=youtubeid')
+        # malformed url
+        assert_raises(BulkImportException, importer._get_playlist_id, 'www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')

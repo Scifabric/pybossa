@@ -47,6 +47,9 @@ class BulkTaskYoutubeImport(BulkTaskImport):
     def _get_playlist_id(self, url):
         """Get playlist id from url"""
         url_data = urlparse(url)
+        if not (url_data.scheme):
+            msg = gettext("URL is not valid.")
+            raise BulkImportException(msg)            
         params = parse_qs(url_data.query)
         if not ('list' in params):
             msg = gettext("No playlist in URL found.")
