@@ -34,7 +34,7 @@ class TestBulkYoutubeImport(object):
         'youtube_api_server_key': 'apikey'
     }
 
-    def test_count_tasks_returns_0_if_no_files_to_import(self):
+    def test_tasks_return_emtpy_list_if_no_video_to_import(self):
         form_data = {
             'playlist_url': '',
             'youtube_api_server_key': 'apikey'
