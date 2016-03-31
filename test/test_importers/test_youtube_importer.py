@@ -229,8 +229,12 @@ class TestBulkYoutubeImport(object):
         assert_raises(BulkImportException, importer._get_playlist_id, 'www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
 
     def test_non_youtube_url_raises_exception(self, build):
-        # TODO
-        pass
+        importer = BulkTaskYoutubeImport(**self.form_data)
+        id = importer._get_playlist_id('https://www.youtu.be/playlist?list=goodplaylist')
+        assert id == 'goodplaylist'
+        id = importer._get_playlist_id('https://youtu.be/playlist?list=goodplaylist')
+        assert id == 'goodplaylist'
+        assert_raises(BulkImportException, importer._get_playlist_id, 'https://youtubee.com/playlist?list=goodplaylist')
 
     def test_all_coverage_tasks_extraction(self, build):
         build.return_value.playlistItems.return_value.list.\

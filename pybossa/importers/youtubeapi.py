@@ -21,6 +21,7 @@ from apiclient.discovery import build
 from apiclient.errors import HttpError
 from urlparse import urlparse, parse_qs
 import json
+import re
 
 class BulkTaskYoutubeImport(BulkTaskImport):
 
@@ -49,6 +50,10 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         url_data = urlparse(url)
         if not (url_data.scheme):
             msg = gettext("URL is not valid.")
+            raise BulkImportException(msg)
+        pattern = re.compile("^(www\.)?youtu(\.be|be\.com)")
+        if not (pattern.match(url_data.hostname)):
+            msg = gettext("URL is not a youtube domain.")
             raise BulkImportException(msg)            
         params = parse_qs(url_data.query)
         if not ('list' in params):
