@@ -268,7 +268,7 @@ as explained. However, the same behaviour should be expected, so autoimporting a
 CSV file that does not change will result in no new tasks being imported.
 
 .. note::
-    The Dropbox and Amazon S3 importers are not available for being used as an
+    The Dropbox, Amazon S3 and Youtube importers are not available for being used as an
     autoimporter.
 
 Once an autoimporter has been set up, it can also be cancelled anytime:
