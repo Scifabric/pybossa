@@ -112,13 +112,13 @@ class TestResultAPI(TestAPI):
         owner_two = UserFactory.create()
         res = self.app.get("/api/result?api_key=" + owner_two.api_key)
         data = json.loads(res.data)
-        # Should return one result
+        # Should return zero results
         assert len(data) == 0, data
 
         owner_two = UserFactory.create()
         res = self.app.get("/api/result?all=1&api_key=" + owner_two.api_key)
         data = json.loads(res.data)
-        # Should return one result
+        # Should return ten results
         assert len(data) == 10, data
         assert data[0]['project_id'] == 1, data
 
@@ -138,6 +138,22 @@ class TestResultAPI(TestAPI):
         assert data[0]['project_id'] == 1, data
         assert data[0]['task_id'] == 1, data
 
+        # Multiple fields
+        url = '/api/result?project_id=1&task_id=1&api_key=' + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # Zero result
+        assert len(data) == 0, data
+        url = '/api/result?all=1&project_id=1&task_id=1&api_key=' + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+
         # Limits
         url = "/api/result?project_id=1&limit=5&api_key=" + owner.api_key
         res = self.app.get(url)
@@ -145,6 +161,21 @@ class TestResultAPI(TestAPI):
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, len(data)
+
+        # Limits
+        url = "/api/result?project_id=1&limit=5&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Limits
+        url = "/api/result?all=1&project_id=1&limit=5&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, len(data)
+
 
         # Keyset pagination
         url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
@@ -155,6 +186,20 @@ class TestResultAPI(TestAPI):
         assert len(data) == 5, data
         assert data[0]['id'] == 2, data[0]
 
+        # Keyset pagination
+        url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Keyset pagination
+        url = "/api/result?all=1&project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == 2, data[0]
 
     @with_context
     def test_result_post(self):
