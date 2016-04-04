@@ -56,12 +56,65 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_query_without_params(self):
         """Test API TaskRun query"""
-        TaskRunFactory.create_batch(10, info={'answer': 'annakarenina'})
+        owner = UserFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        project_two = ProjectFactory.create()
+        TaskRunFactory.create_batch(10, project=project,
+                                    info={'answer': 'annakarenina'})
+        TaskRunFactory.create_batch(10, project=project_two,
+                                    info={'answer': 'annakarenina'})
+
+        project_ids = [project.id, project_two.id]
+        # As anon, it sould return everything
         res = self.app.get('/api/taskrun')
         taskruns = json.loads(res.data)
+        assert len(taskruns) == 20, taskruns
+        for tr in taskruns:
+            assert tr['project_id'] in project_ids, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # User context should return 0 taskruns as none of them belong to this
+        # user.
+        res = self.app.get('/api/taskrun?api_key=' + user.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 0, taskruns
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # User context with all=1 should return everything in the DB, even
+        # those task runs that do not belong to the user
+        res = self.app.get('/api/taskrun?all=1&api_key=' + user.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 20, taskruns
+        for tr in taskruns:
+            assert tr['project_id'] in project_ids, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # Owner should return all the taskruns that belong to his/her
+        # projects
+        res = self.app.get('/api/taskrun?api_key=' + owner.api_key)
+        taskruns = json.loads(res.data)
         assert len(taskruns) == 10, taskruns
-        taskrun = taskruns[0]
-        assert taskrun['info']['answer'] == 'annakarenina', taskrun
+        for tr in taskruns:
+            assert tr['project_id'] == project.id, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
+
+        # Owner should return all the taskruns that belong to his/her
+        # projects and those that do not belong
+        res = self.app.get('/api/taskrun?all=1&api_key=' + owner.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 20, taskruns
+        for tr in taskruns:
+            assert tr['project_id'] in project_ids, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -110,6 +163,181 @@ class TestTaskrunAPI(TestAPI):
         assert len(data) == 5, data
         assert data[0]['id'] == task_runs[5].id, data[0]['id']
 
+
+    @with_context
+    def test_query_taskrun_with_context(self):
+        """Test API query for taskrun with params works with context."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        project_two = ProjectFactory.create()
+        task_runs = TaskRunFactory.create_batch(10, project=project)
+        task_runs_two = TaskRunFactory.create_batch(10, project=project_two)
+
+        # Test for real field as anon
+        res = self.app.get("/api/taskrun?project_id=" + str(project_two.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project_two.id, tr
+
+
+        # Test for real field as auth user but not owner
+        res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project_two.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 0, data
+
+        # Test for real field as auth user but not owner with all=1j
+        res = self.app.get("/api/taskrun?all=1&api_key=" + owner.api_key + "&project_id=" + str(project_two.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project_two.id, tr
+
+
+        # Test for real field as owner
+        res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project.id, tr
+
+        # Test for real field as owner
+        res = self.app.get("/api/taskrun?all=1&api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        for tr in data:
+            assert tr['project_id'] == project.id, tr
+
+        # Valid field but wrong value
+        res = self.app.get("/api/taskrun?project_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?project_id=99999999&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?project_id=99999999&all=1&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1&api_key=' + owner.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1&all=1&api_key=' + owner.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+        url = '/api/taskrun?project_id=%s&task_id=%s&api_key=%s' % (project_two.id,
+                                                                    task_runs_two[0].task_id,
+                                                                    owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 0, data
+
+        url = '/api/taskrun?all=1&project_id=%s&task_id=%s&api_key=%s' % (project_two.id,
+                                                                    task_runs_two[0].task_id,
+                                                                    owner.api_key)
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == project_two.id, data
+        assert data[0]['task_id'] == task_runs_two[0].task_id, data
+
+
+        # Limits
+        res = self.app.get("/api/taskrun?project_id=1&limit=5")
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+
+        # Limits
+        res = self.app.get("/api/taskrun?project_id=" + str(project.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+
+        res = self.app.get("/api/taskrun?project_id=" + str(project_two.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/taskrun?all=1&project_id=" + str(project_two.id) + "&limit=5&api_key=" + owner.api_key)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == project_two.id, item
+        assert len(data) == 5, data
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs[5].id, data[0]['id']
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s" % (project.id,
+                                                                            task_runs[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs[5].id, data[0]['id']
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s" % (project_two.id,
+                                                                            task_runs_two[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, len(data)
+
+        # Keyset pagination
+        url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s&all=1" % (project_two.id,
+                                                                            task_runs_two[4].id,
+                                                                            owner.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == project_two.id, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == task_runs_two[5].id, data[0]['id']
 
     @with_context
     @patch('pybossa.api.task_run.request')

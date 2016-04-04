@@ -72,26 +72,65 @@ class TestResultAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
+    @with_context
+    def test_result_query_without_params_with_context(self):
+        """ Test API Result query with context."""
+        result = self.create_result(n_answers=10)
+        res = self.app.get('/api/result')
+        results = json.loads(res.data)
+        assert len(results) == 1, results
+        result = results[0]
+        assert result['info'] is None, result
+        assert len(result['task_run_ids']) == 10, result
+        assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
+        assert result['project_id'] == 1, result
+        assert result['task_id'] == 1, result
+        assert result['created'] is not None, result
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+
 
     @with_context
     def test_result_query_with_params(self):
         """Test API query for result with params works"""
-        results = self.create_result(n_results=10, filter_by=True)
+        owner = UserFactory.create()
+        results = self.create_result(n_results=10, filter_by=True, owner=owner)
         # Test for real field
-        res = self.app.get("/api/result?project_id=1")
+        res = self.app.get("/api/result?api_key=" + owner.api_key)
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 10, data
         # Correct result
         assert data[0]['project_id'] == 1, data
+        res = self.app.get("/api/project?api_key=" + owner.api_key)
+        project = json.loads(res.data)
+        assert len(project) == 1, project
+        assert project[0]['owner_id'] == owner.id, project
+
+        owner_two = UserFactory.create()
+        res = self.app.get("/api/result?api_key=" + owner_two.api_key)
+        data = json.loads(res.data)
+        # Should return zero results
+        assert len(data) == 0, data
+
+        owner_two = UserFactory.create()
+        res = self.app.get("/api/result?all=1&api_key=" + owner_two.api_key)
+        data = json.loads(res.data)
+        # Should return ten results
+        assert len(data) == 10, data
+        assert data[0]['project_id'] == 1, data
 
         # Valid field but wrong value
-        res = self.app.get("/api/result?project_id=99999999")
+        url = "/api/result?project_id=99999999&api_key=" + owner.api_key
+        res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/result?project_id=1&task_id=1')
+        url = '/api/result?project_id=1&task_id=1&api_key=' + owner.api_key
+        res = self.app.get(url)
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
@@ -99,15 +138,47 @@ class TestResultAPI(TestAPI):
         assert data[0]['project_id'] == 1, data
         assert data[0]['task_id'] == 1, data
 
+        # Multiple fields
+        url = '/api/result?project_id=1&task_id=1&api_key=' + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # Zero result
+        assert len(data) == 0, data
+        url = '/api/result?all=1&project_id=1&task_id=1&api_key=' + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['project_id'] == 1, data
+        assert data[0]['task_id'] == 1, data
+
+
         # Limits
-        res = self.app.get("/api/result?project_id=1&limit=5")
+        url = "/api/result?project_id=1&limit=5&api_key=" + owner.api_key
+        res = self.app.get(url)
         data = json.loads(res.data)
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, len(data)
 
+        # Limits
+        url = "/api/result?project_id=1&limit=5&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Limits
+        url = "/api/result?all=1&project_id=1&limit=5&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, len(data)
+
+
         # Keyset pagination
-        url = "/api/result?project_id=1&limit=5&last_id=1"
+        url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         for item in data:
@@ -115,6 +186,20 @@ class TestResultAPI(TestAPI):
         assert len(data) == 5, data
         assert data[0]['id'] == 2, data[0]
 
+        # Keyset pagination
+        url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Keyset pagination
+        url = "/api/result?all=1&project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        for item in data:
+            assert item['project_id'] == 1, item
+        assert len(data) == 5, data
+        assert data[0]['id'] == 2, data[0]
 
     @with_context
     def test_result_post(self):

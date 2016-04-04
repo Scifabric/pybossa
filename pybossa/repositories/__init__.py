@@ -35,6 +35,47 @@ a kind and/or saving them to the DB by calling the ORM apropriate methods.
 For more complex DB queries, refer to other packages or services within
 PyBossa.
 """
+import json
+from pybossa.model.project import Project
+from sqlalchemy.sql import and_
+from sqlalchemy import cast, Text
+from sqlalchemy.orm.base import _entity_descriptor
+
+class Repository(object):
+
+    def __init__(self, db):
+        self.db = db
+
+    def generate_query_from_keywords(self, model, **kwargs):
+        clauses = [_entity_descriptor(model, key) == value
+                       for key, value in kwargs.items()
+                       if key != 'info']
+        if 'info' in kwargs.keys():
+            info = json.dumps(kwargs['info'])
+            clauses.append(cast(_entity_descriptor(model, 'info'),
+                                Text) == info)
+        return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+
+
+    def create_context(self, filters, model):
+        """Return query with context aware query."""
+        owner_id = None
+        query = None
+
+        if filters.get('owner_id'):
+            owner_id = filters.get('owner_id')
+            del filters['owner_id']
+        query_args = self.generate_query_from_keywords(model, **filters)
+
+        if owner_id:
+            subquery = self.db.session.query(Project)\
+                           .with_entities(Project.id)\
+                           .filter_by(owner_id=owner_id).subquery()
+            query = self.db.session.query(model)\
+                        .filter(model.project_id.in_(subquery), *query_args)
+        else:
+            query = self.db.session.query(model).filter(*query_args)
+        return query
 
 from project_repository import ProjectRepository
 from user_repository import UserRepository
