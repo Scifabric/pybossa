@@ -140,14 +140,15 @@ class TestTaskAPI(TestAPI):
     def test_task_query_with_params_with_context(self):
         """Test API query for task with params works with context"""
         user = UserFactory.create()
+        user_two = UserFactory.create()
         project_oc = ProjectFactory.create(owner=user)
         project_two = ProjectFactory.create()
         tasks = TaskFactory.create_batch(10, project=project_oc)
         TaskFactory.create_batch(10, project=project_two)
         # Test for real field
-        res = self.app.get("/api/task?project_id=1&api_key=" + user.api_key)
+        res = self.app.get("/api/task?project_id="+ str(project_oc.id) + "&api_key=" + user.api_key)
         data = json.loads(res.data)
-        # Should return one result
+        # Should return then results
         assert len(data) == 10, data
         # Correct result
         for t in data:
@@ -183,6 +184,68 @@ class TestTaskAPI(TestAPI):
 
         # Keyset pagination
         url = "/api/task?project_id=1&limit=5&last_id=%s&api_key=%s" % (tasks[4].id, user.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        assert data[0]['id'] == tasks[5].id, data
+        for item in data:
+            assert item['project_id'] == project_oc.id, item
+
+        # Test for real field with user_two
+        res = self.app.get("/api/task?project_id="+ str(project_oc.id) + "&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        # Should return then results
+        assert len(data) == 0, data
+        # Test for real field with user_two
+        res = self.app.get("/api/task?all=1&project_id="+ str(project_oc.id) + "&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        # Should return then results
+        assert len(data) == 10, data
+        # Correct result
+        for t in data:
+            assert t['project_id'] == project_oc.id, t
+
+        res = self.app.get("/api/task?api_key=" + user_two.api_key + "&all=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 20, data
+
+
+        # Valid field but wrong value
+        res = self.app.get("/api/task?project_id=99999999&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/task?project_id=1&state=ongoing&api_key=' + user_two.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 0, data
+        res = self.app.get('/api/task?all=1&project_id=1&state=ongoing&api_key=' + user_two.api_key)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 10, data
+        # Correct result
+        for t in data:
+            assert t['project_id'] == project_oc.id, data
+            assert t['state'] == u'ongoing', data
+
+        # Limits
+        res = self.app.get("/api/task?project_id=1&limit=5&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        res = self.app.get("/api/task?all=1&project_id=1&limit=5&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        for item in data:
+            assert item['project_id'] == project_oc.id, item
+
+        # Keyset pagination
+        url = "/api/task?project_id=1&limit=5&last_id=%s&api_key=%s" % (tasks[4].id, user_two.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        url = "/api/task?all=1&project_id=1&limit=5&last_id=%s&api_key=%s" % (tasks[4].id, user_two.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 5, data
