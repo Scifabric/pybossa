@@ -56,7 +56,6 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        #ProjectFactory.create(info={'total': 150})
         projects = ProjectFactory.create_batch(10, info={'total': 150})
         res = self.app.get('/api/project')
         data = json.loads(res.data)
