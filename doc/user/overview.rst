@@ -562,6 +562,20 @@ public, you will see a list of the items it contains. Select as many as you want
 
 4. When you're ready, click on "Import".
 
+Importing the tasks from Youtube
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tasks can be imported from Youtube. Currently the importer supports importing from Youtube with:
+
+* Playlists
+
+When importing the video the importer parses all videos information and creates tasks with info fields:
+
+* video_url: the URL of the youtube video which can be embedded in the task form.
+
+The tasks created with the S3 importer are ready to be used with the youtube template.
+
+
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
 
