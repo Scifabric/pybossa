@@ -572,8 +572,9 @@ Tasks can be imported from Youtube. Currently the importer supports importing fr
 When importing the video the importer parses all videos information and creates tasks with info fields:
 
 * video_url: the URL of the youtube video which can be embedded in the task form.
+* oembed: embeddable code for the (old) PyBossa video templates.
 
-The tasks created with the S3 importer are ready to be used with the youtube template.
+The tasks created with the Youtube importer are ready to be used with the youtube and video templates.
 
 
 Flushing all the tasks
