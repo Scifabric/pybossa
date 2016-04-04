@@ -244,11 +244,5 @@ class TestBulkYoutubeImport(object):
         importer = BulkTaskYoutubeImport(**self.form_data)
         tasks = importer.tasks()
 
-        video_url = u'https://www.youtube.com/watch?v=youtubeid2'
-        oembed = u'<iframe width="512" height="512" ' \
-            'src="https://www.youtube.com/embed/{}" ' \
-            'frameborder="0" allowfullscreen></iframe>'.format('youtubeid2')
-
-        assert tasks == [{u'info': \
-          {u'video_url': video_url},\
-          {u'oembed': oembed}}]
+        assert tasks == [{u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/youtubeid2" frameborder="0" allowfullscreen></iframe>',
+            'video_url': u'https://www.youtube.com/watch?v=youtubeid2'}}]
