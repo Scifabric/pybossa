@@ -56,10 +56,11 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        ProjectFactory.create(info={'total': 150})
+        #ProjectFactory.create(info={'total': 150})
+        projects = ProjectFactory.create_batch(10, info={'total': 150})
         res = self.app.get('/api/project')
         data = json.loads(res.data)
-        assert len(data) == 1, data
+        assert len(data) == 10, data
         project = data[0]
         assert project['info']['total'] == 150, data
 
@@ -74,6 +75,20 @@ class TestProjectAPI(TestAPI):
         assert err['target'] == 'project', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
+
+        # Limits
+        res = self.app.get("/api/project?limit=5")
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+
+
+        # Keyset pagination
+        url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        assert data[0]['id'] == projects[5].id, data
+
 
     @with_context
     def test_project_query_with_context(self):
@@ -104,6 +119,8 @@ class TestProjectAPI(TestAPI):
         assert err['target'] == 'project', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
+
+
 
 
     @with_context
@@ -137,6 +154,7 @@ class TestProjectAPI(TestAPI):
     def test_query_project_with_context(self):
         """Test API query for project endpoint with context works"""
         user = UserFactory.create()
+        user_two = UserFactory.create()
         project_oc = ProjectFactory.create(owner=user, short_name='test-app',
                                            name='My New Project')
         ProjectFactory.create()
@@ -149,6 +167,24 @@ class TestProjectAPI(TestAPI):
         # Correct result
         assert data[0]['short_name'] == 'test-app', data
         assert data[0]['owner_id'] == user.id, data[0]
+
+        # Test for real field
+        url = "/api/project?short_name=test-app&api_key=" + user_two.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        # Should return zero result
+        assert len(data) == 0, data
+
+        # Test for real field
+        url = "/api/project?all=1&short_name=test-app&api_key=" + user_two.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['owner_id'] == user.id, data[0]
+
 
         # Valid field but wrong value
         url = "/api/project?short_name=wrongvalue&api_key=" + user.api_key
@@ -166,6 +202,25 @@ class TestProjectAPI(TestAPI):
         assert data[0]['short_name'] == 'test-app', data
         assert data[0]['name'] == 'My New Project', data
         assert data[0]['owner_id'] == user.id, data
+
+        # Multiple fields
+        url = '/api/project?short_name=test-app&name=My New Project&api_key=' + user_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # Zero result
+        assert len(data) == 0, data
+
+        # Multiple fields
+        url = '/api/project?all=1&short_name=test-app&name=My New Project&api_key=' + user_two.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['name'] == 'My New Project', data
+        assert data[0]['owner_id'] == user.id, data
+
 
 
     @with_context
