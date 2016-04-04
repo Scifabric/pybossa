@@ -119,7 +119,52 @@ class TestProjectAPI(TestAPI):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+        # Limits
+        user_two = UserFactory.create()
+        projects = ProjectFactory.create_batch(9, owner=user)
+        res = self.app.get("/api/project?limit=5&api_key=" + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        for d in data:
+            d['owner_id'] == user.id, d
 
+        res = self.app.get("/api/project?limit=5&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        res = self.app.get("/api/project?all=1&limit=5&api_key=" + user_two.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        for d in data:
+            d['owner_id'] == user.id, d
+
+
+        # Keyset pagination
+        url = "/api/project?limit=5&last_id=%s&api_key=%s" % (projects[3].id,
+                                                              user.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 5, len(data)
+        assert data[0]['id'] == projects[4].id, data
+        for d in data:
+            d['owner_id'] == user.id, d
+
+        # Keyset pagination
+        url = "/api/project?limit=5&last_id=%s&api_key=%s" % (projects[3].id,
+                                                              user_two.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Keyset pagination
+        url = "/api/project?all=1&limit=5&last_id=%s&api_key=%s" % (projects[3].id,
+                                                                    user_two.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        assert data[0]['id'] == projects[4].id, data
+        for d in data:
+            d['owner_id'] == user.id, d
 
 
     @with_context
