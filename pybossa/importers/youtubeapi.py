@@ -46,7 +46,7 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         oembed = '<iframe width="512" height="512" ' \
             'src="https://www.youtube.com/embed/{}" ' \
             'frameborder="0" allowfullscreen></iframe>'.format(video_id)
-        info = {'video_url': video_url}
+        info = {'video_url': video_url, 'oembed': oembed}
         return {'info': info}
 
     def _get_playlist_id(self, url):
