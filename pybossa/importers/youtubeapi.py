@@ -41,7 +41,11 @@ class BulkTaskYoutubeImport(BulkTaskImport):
 
     def _extract_video_info(self, item):
         """Extract youtube video information from snippet dict"""
-        video_url = 'https://www.youtube.com/watch?v=' + item['snippet']['resourceId']['videoId']
+        video_id = item['snippet']['resourceId']['videoId']
+        video_url = 'https://www.youtube.com/watch?v=' + video_id
+        oembed = '<iframe width="512" height="512" ' \
+            'src="https://www.youtube.com/embed/{}" ' \
+            'frameborder="0" allowfullscreen></iframe>'.format(video_id)
         info = {'video_url': video_url}
         return {'info': info}
 
