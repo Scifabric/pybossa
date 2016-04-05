@@ -19,6 +19,7 @@ _gcs_form.html
 dat/GeoLiteCity.dat
 .ropeproject/
 .idea/
+*.sublime-*
 .vagrant/
 vagrant_env/
 keys/*

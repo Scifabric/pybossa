@@ -766,6 +766,18 @@ them.
 .. note::
     This will also enable PyBossa's Twitter login.
 
+Enabling the Youtube Task importer
+==================================
+
+The Youtube task importer needs a Youtube server key which you need to create in the `Google API Console <https://console.developers.google.com/>`_ in YouTube Data API.
+
+Once you have an API key, you'll have to add it to your settings_local.py file::
+
+    YOUTUBE_API_SERVER_KEY = "your-key"
+
+For more information on how to get a Youtube server key, please
+refer to `here <https://developers.google.com/youtube/registering_an_application#Create_API_Keys>`_.
+
 Enabling Server Sent Events
 ===========================
 

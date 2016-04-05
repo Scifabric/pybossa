@@ -21,7 +21,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList
-from wtforms.fields.html5 import EmailField
+from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
@@ -198,6 +198,17 @@ class BulkTaskTwitterImportForm(Form):
             'user_credentials': self.user_credentials.data,
         }
 
+class BulkTaskYoutubeImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
+    msg_required = lazy_gettext("You must provide a valid playlist")
+    playlist_url = URLField(lazy_gettext('Playlist'),
+                             [validators.Required(message=msg_required)])
+    def get_import_data(self):
+        return {
+          'type': 'youtube',
+          'playlist_url': self.playlist_url.data
+        }
+
 class BulkTaskS3ImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='s3')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
@@ -221,7 +232,8 @@ class GenericBulkTaskImportForm(object):
               'flickr': BulkTaskFlickrImportForm,
               'dropbox': BulkTaskDropboxImportForm,
               'twitter': BulkTaskTwitterImportForm,
-              's3': BulkTaskS3ImportForm }
+              's3': BulkTaskS3ImportForm,
+              'youtube': BulkTaskYoutubeImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:

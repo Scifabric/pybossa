@@ -137,7 +137,7 @@ built-in :ref:`task-creator`. You have to do the following:
    see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/ii8AHtN.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -251,7 +251,7 @@ project, you will have to follow the next steps:
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/ii8AHtN.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -321,7 +321,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/ii8AHtN.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -400,7 +400,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/ii8AHtN.png
 
 3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
 account credentials. then select as many files as you want:
@@ -561,6 +561,21 @@ public, you will see a list of the items it contains. Select as many as you want
 .. image:: http://i.imgur.com/WRf6nBq.png
 
 4. When you're ready, click on "Import".
+
+Importing the tasks from Youtube
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tasks can be imported from Youtube. Currently the importer supports importing from Youtube with:
+
+* Playlists
+
+When importing the video the importer parses all videos information and creates tasks with info fields:
+
+* video_url: the URL of the youtube video which can be embedded in the task form.
+* oembed: embeddable code for the (old) PyBossa video templates.
+
+The tasks created with the Youtube importer are ready to be used with the youtube and video templates.
+
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~

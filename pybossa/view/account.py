@@ -250,7 +250,7 @@ def newsletter_subscribe():
 
 @blueprint.route('/register/confirmation', methods=['GET'])
 def confirm_account():
-    """Confir account endpoint."""
+    """Confirm account endpoint."""
     key = request.args.get('key')
     if key is None:
         abort(403)

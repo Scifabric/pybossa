@@ -291,6 +291,7 @@ def setup_external_services(app):
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
+    setup_youtube_importer(app)
 
 
 def setup_twitter_login(app):
@@ -389,6 +390,20 @@ def setup_twitter_importer(app):
         log_message = 'Twitter importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
+def setup_youtube_importer(app):
+    try:  # pragma: no cover
+        if app.config['YOUTUBE_API_SERVER_KEY']:
+            importer_params = {
+                'youtube_api_server_key': app.config['YOUTUBE_API_SERVER_KEY']
+            }
+            importer.register_youtube_importer(importer_params)
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Youtube importer not available"
+        log_message = 'Youtube importer not available: %s' % str(inst)
+        app.logger.info(log_message)
 
 def setup_geocoding(app):
     """Setup geocoding."""
