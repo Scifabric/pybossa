@@ -28,6 +28,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 """
 import json
 from flask import request, abort, Response
+from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from pybossa.util import jsonpify, crossdomain
@@ -46,8 +47,9 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'delete': 'delete'},
         'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                      'save': 'save', 'update': 'update'},
-        'Project' : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+         'Project' : {'repo': project_repo, 'filter': 'filter_by',
+                      'context': 'filter_owner_by', 'get': 'get',
+                      'save': 'save', 'update': 'update', 'delete': 'delete'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'},
@@ -145,14 +147,22 @@ class APIBase(MethodView):
             results = [getattr(repo, query_func)(oid)]
         return results
 
+    def api_context(self, all_arg, **filters):
+        if current_user.is_authenticated():
+            filters['owner_id'] = current_user.id
+        if filters.get('owner_id') and all_arg == '1':
+            del filters['owner_id']
+        return filters
+
     def _filter_query(self, repo_info, limit, offset):
         filters = {}
         for k in request.args.keys():
-            if k not in ['limit', 'offset', 'api_key', 'last_id']:
+            if k not in ['limit', 'offset', 'api_key', 'last_id', 'all']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
+        filters = self.api_context(all_arg=request.args.get('all'), **filters)
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')

@@ -42,6 +42,8 @@ class UserRepository(object):
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   **filters):
+        if filters.get('owner_id'):
+            del filters['owner_id']
         query = self.db.session.query(User).filter_by(**filters)
         if last_id:
             query = query.filter(User.id > last_id)
