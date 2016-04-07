@@ -1102,6 +1102,16 @@ def export_to(short_name):
 
     if fmt not in export_formats:
         abort(415)
+
+    if ty == 'task':
+        task = task_repo.get_task_by(project_id=project.id)
+        if task:
+            ensure_authorized_to('read', task)
+    if ty == 'task_run':
+        task_run = task_repo.get_task_run_by(project_id=project.id)
+        if task_run:
+            ensure_authorized_to('read', task_run)
+
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
 
