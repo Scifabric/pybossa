@@ -1105,10 +1105,12 @@ def export_to(short_name):
 
     if ty == 'task':
         task = task_repo.get_task_by(project_id=project.id)
-        ensure_authorized_to('read', task)
+        if task:
+            ensure_authorized_to('read', task)
     if ty == 'task_run':
         task_run = task_repo.get_task_run_by(project_id=project.id)
-        ensure_authorized_to('read', task_run)
+        if task_run:
+            ensure_authorized_to('read', task_run)
 
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
