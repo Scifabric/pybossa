@@ -995,6 +995,8 @@ def export_to(short_name):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
+        task = task_repo.get_task_by(project_id=project.id)
+        ensure_authorized_to('read', task)
 
     def respond():
         return render_template('/projects/export.html',
