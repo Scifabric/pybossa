@@ -31,13 +31,14 @@ The objects are:
     * uploader: for file uploads support,
     * csrf: for CSRF protection
     * newsletter: for subscribing users to Mailchimp newsletter
+    * assets: for assets management (SASS, etc.)
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'newsletter', 'importer',
-           'flickr', 'plugin_manager']
+           'flickr', 'plugin_manager', 'assets']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -119,3 +120,6 @@ importer = Importer()
 
 from flask.ext.plugins import PluginManager
 plugin_manager = PluginManager()
+
+from flask.ext.assets import Environment
+assets = Environment()

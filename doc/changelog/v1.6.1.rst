@@ -1,0 +1,6 @@
+================
+Changelog v1.6.1
+================
+
+ * PyBossa security improvement for tasks and task runs.
+
