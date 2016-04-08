@@ -26,6 +26,7 @@ class TestBulkYoutubeImport(object):
 
     form_data = {
         'playlist_url': 'https://www.youtube.com/playlist?list=playlistid',
+        'videolist': '',
         'youtube_api_server_key': 'apikey'
     }
 
@@ -179,6 +180,7 @@ class TestBulkYoutubeImport(object):
     def test_tasks_return_emtpy_list_if_no_video_to_import(self, build):
         form_data = {
             'playlist_url': '',
+            'videolist': '',
             'youtube_api_server_key': 'apikey'
         }
         number_of_tasks = BulkTaskYoutubeImport(**form_data).count_tasks()

@@ -27,7 +27,7 @@ class BulkTaskYoutubeImport(BulkTaskImport):
 
     importer_id = "youtube"
 
-    def __init__(self, playlist_url, youtube_api_server_key):
+    def __init__(self, playlist_url, videolist, youtube_api_server_key):
         self.playlist_url = playlist_url
         self.youtube_api_server_key = youtube_api_server_key
 
