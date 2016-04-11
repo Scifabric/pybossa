@@ -279,7 +279,7 @@ class TestBulkYoutubeImport(object):
         ]
 
     def test_malformed_extraction_picker(self, build):
-        form_data_allwrong = {
+        form_data_allwrong_array = {
           'playlist_url': '',
           'videolist': [
             '{"wrongrong":"pickedid1"}',
@@ -295,7 +295,7 @@ class TestBulkYoutubeImport(object):
           ],
           'youtube_api_server_key': 'apikey'
         }
-        importer1 = BulkTaskYoutubeImport(**form_data_allwrong)
+        importer1 = BulkTaskYoutubeImport(**form_data_allwrong_array)
         tasks1 = importer1.tasks()
 
         assert tasks1 == []
