@@ -258,6 +258,13 @@ class TestBulkYoutubeImport(object):
         assert tasks == [{u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/youtubeid2" frameborder="0" allowfullscreen></iframe>',
             'video_url': u'https://www.youtube.com/watch?v=youtubeid2'}}]
 
+    def test_maketask_from_id(self, build):
+        importer = BulkTaskYoutubeImport(**self.form_picker_data)
+        info = importer._make_task_from_video_id('some_video_id')
+
+        assert info == {u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/some_video_id" frameborder="0" allowfullscreen></iframe>',
+            'video_url': u'https://www.youtube.com/watch?v=some_video_id'}}
+
     def test_all_coverage_tasks_extraction_picker(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
