@@ -240,7 +240,7 @@ class TestBulkYoutubeImport(object):
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://api.youtube.com/playlist?list=goodplaylist')
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://otherdomain.com/playlist?list=goodplaylist')
 
-    def test_all_coverage_tasks_extraction(self, build):
+    def test_all_coverage_tasks_extraction_playlist(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
         importer = BulkTaskYoutubeImport(**self.form_playlist_data)
