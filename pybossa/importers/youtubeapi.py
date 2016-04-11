@@ -36,11 +36,13 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         if self.playlist_url:
             playlist_id = self._get_playlist_id(self.playlist_url)
             playlist = self._fetch_all_youtube_videos(playlist_id)
-            return [self._extract_video_info(item) for item in playlist['items']]
+            return [self._extract_video_info_from_playlist(item) for item in playlist['items']]
+        elif self.videolist:
+            pass
         else:
             return []
 
-    def _extract_video_info(self, item):
+    def _extract_video_info_from_playlist(self, item):
         """Extract youtube video information from snippet dict"""
         video_id = item['snippet']['resourceId']['videoId']
         video_url = 'https://www.youtube.com/watch?v=' + video_id
