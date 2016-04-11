@@ -34,8 +34,8 @@ class TestBulkYoutubeImport(object):
     form_picker_data = {
         'playlist_url': '',
         'videolist': [
-          '{"youtube_id":"youtubeid1"}',
-          '{"youtube_id":"youtubeid2"}'
+          '{"youtube_id":"pickedid1"}',
+          '{"youtube_id":"pickedid2"}'
         ],
         'youtube_api_server_key': 'apikey'
     }
@@ -257,3 +257,17 @@ class TestBulkYoutubeImport(object):
 
         assert tasks == [{u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/youtubeid2" frameborder="0" allowfullscreen></iframe>',
             'video_url': u'https://www.youtube.com/watch?v=youtubeid2'}}]
+
+    def test_all_coverage_tasks_extraction_picker(self, build):
+        build.return_value.playlistItems.return_value.list.\
+            return_value.execute.return_value = self.short_playlist_response
+        importer = BulkTaskYoutubeImport(**self.form_picker_data)
+        tasks = importer.tasks()
+
+        assert tasks == [
+            {u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/pickedid1" frameborder="0" allowfullscreen></iframe>',
+                'video_url': u'https://www.youtube.com/watch?v=pickedid1'}},
+            {u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/pickedid2" frameborder="0" allowfullscreen></iframe>',
+                'video_url': u'https://www.youtube.com/watch?v=pickedid2'}}
+        ]
+
