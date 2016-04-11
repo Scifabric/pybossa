@@ -63,7 +63,7 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         """Extract youtube video information from snippet dict"""
         try:
             video_id = item['snippet']['resourceId']['videoId']
-        except TypeError, IndexError:
+        except (TypeError, IndexError):
             msg = gettext("Invalid youtube extraction data received.")
             raise BulkImportException(msg)
         return self._make_task_from_video_id(video_id)
