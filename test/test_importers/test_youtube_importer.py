@@ -213,7 +213,7 @@ class TestBulkYoutubeImport(object):
 
         assert playlist == expected_playlist, playlist
 
-    def test_extract_video_info_one_item(self, build):
+    def test_extract_video_info_one_playlist_item(self, build):
         importer = BulkTaskYoutubeImport(**self.form_data)
         info = importer._extract_video_info(self.short_playlist_response['items'][0])
 
