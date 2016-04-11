@@ -21,6 +21,7 @@ from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from pybossa.importers.youtubeapi import BulkTaskYoutubeImport
 
+
 @patch('pybossa.importers.youtubeapi.build')
 class TestBulkYoutubeImport(object):
 
@@ -176,7 +177,6 @@ class TestBulkYoutubeImport(object):
       u'nextPageToken': 'someTokenId'
     }
 
-
     def test_tasks_return_emtpy_list_if_no_video_to_import(self, build):
         form_data = {
             'playlist_url': '',
@@ -192,7 +192,7 @@ class TestBulkYoutubeImport(object):
             return_value.execute.return_value = self.short_playlist_response
         importer = BulkTaskYoutubeImport(**self.form_data)
         importer._fetch_all_youtube_videos('fakeId')
-        
+
         build.assert_called_with('youtube', 'v3', developerKey=self.form_data['youtube_api_server_key'])
 
     def test_call_to_youtube_api_short_playlist(self, build):
