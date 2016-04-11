@@ -42,15 +42,18 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         else:
             return []
 
-    def _extract_video_info_from_playlist_item(self, item):
-        """Extract youtube video information from snippet dict"""
-        video_id = item['snippet']['resourceId']['videoId']
+    def _make_task_from_video_id(self, video_id):
         video_url = 'https://www.youtube.com/watch?v=' + video_id
         oembed = '<iframe width="512" height="512" ' \
             'src="https://www.youtube.com/embed/{}" ' \
             'frameborder="0" allowfullscreen></iframe>'.format(video_id)
         info = {'video_url': video_url, 'oembed': oembed}
         return {'info': info}
+
+    def _extract_video_info_from_playlist_item(self, item):
+        """Extract youtube video information from snippet dict"""
+        video_id = item['snippet']['resourceId']['videoId']
+        return self._make_task_from_video_id(video_id)
 
     def _get_playlist_id(self, url):
         """Get playlist id from url"""
