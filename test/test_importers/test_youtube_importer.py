@@ -228,6 +228,13 @@ class TestBulkYoutubeImport(object):
 
         assert info['info']['video_url'] == 'https://www.youtube.com/watch?v=youtubeid2'
 
+    def test_extract_video_info_from_malformed_playlist(self, build):
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
+        assert_raises(BulkImportException, importer._extract_video_info_from_playlist_item, self.short_playlist_response['items'])
+        assert_raises(BulkImportException, importer._extract_video_info_from_playlist_item, "hallo")
+        assert_raises(BulkImportException, importer._extract_video_info_from_playlist_item, "{a: b}")
+        assert_raises(BulkImportException, importer._extract_video_info_from_playlist_item, [{"a": "b"}])
+
     def test_parse_playlist_id(self, build):
         importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         id = importer._get_playlist_id('https://www.youtube.com/playlist?list=goodplaylist')
@@ -279,6 +286,11 @@ class TestBulkYoutubeImport(object):
         ]
 
     def test_malformed_extraction_picker(self, build):
+        form_data_allwrong_videolist = {
+          'playlist_url': '',
+          'videolist': 'justwrong',
+          'youtube_api_server_key': 'apikey'
+        }
         form_data_allwrong_array = {
           'playlist_url': '',
           'videolist': [
@@ -295,6 +307,10 @@ class TestBulkYoutubeImport(object):
           ],
           'youtube_api_server_key': 'apikey'
         }
+        importer0 = BulkTaskYoutubeImport(**form_data_allwrong_videolist)
+
+        assert_raises(BulkImportException, importer0.tasks)
+
         importer1 = BulkTaskYoutubeImport(**form_data_allwrong_array)
         tasks1 = importer1.tasks()
 

@@ -40,9 +40,13 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         elif self.videolist:
             id_list = []
             for video in self.videolist:
-                data = json.loads(video)
-                if 'youtube_id' in data:
-                    id_list.append(data['youtube_id'])
+                try:
+                    data = json.loads(video)
+                    if 'youtube_id' in data:
+                        id_list.append(data['youtube_id'])
+                except ValueError:
+                    msg = gettext("Invalid form data. No json youtube ids.")
+                    raise BulkImportException(msg)
             return [self._make_task_from_video_id(video_id) for video_id in id_list]
         else:
             return []
@@ -57,7 +61,11 @@ class BulkTaskYoutubeImport(BulkTaskImport):
 
     def _extract_video_info_from_playlist_item(self, item):
         """Extract youtube video information from snippet dict"""
-        video_id = item['snippet']['resourceId']['videoId']
+        try:
+            video_id = item['snippet']['resourceId']['videoId']
+        except TypeError, IndexError:
+            msg = gettext("Invalid youtube extraction data received.")
+            raise BulkImportException(msg)
         return self._make_task_from_video_id(video_id)
 
     def _get_playlist_id(self, url):
