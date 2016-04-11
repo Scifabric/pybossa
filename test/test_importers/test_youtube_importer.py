@@ -278,3 +278,32 @@ class TestBulkYoutubeImport(object):
                 'video_url': u'https://www.youtube.com/watch?v=pickedid2'}}
         ]
 
+    def test_malformed_extraction_picker(self, build):
+        form_data_allwrong = {
+          'playlist_url': '',
+          'videolist': [
+            '{"wrongrong":"pickedid1"}',
+            '{"youtube_non_id":"pickedid2"}'
+          ],
+          'youtube_api_server_key': 'apikey'
+        }
+        form_data_partially_wrong = {
+          'playlist_url': '',
+          'videolist': [
+            '{"wrongrong":"pickedid1"}',
+            '{"youtube_id":"pickedid2"}'
+          ],
+          'youtube_api_server_key': 'apikey'
+        }
+        importer1 = BulkTaskYoutubeImport(**form_data_allwrong)
+        tasks1 = importer1.tasks()
+
+        assert tasks1 == []
+
+        importer2 = BulkTaskYoutubeImport(**form_data_partially_wrong)
+        tasks2 = importer2.tasks()
+
+        assert tasks2 == [
+            {u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/pickedid2" frameborder="0" allowfullscreen></iframe>',
+                'video_url': u'https://www.youtube.com/watch?v=pickedid2'}}
+        ]
