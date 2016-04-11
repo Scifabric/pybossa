@@ -31,6 +31,15 @@ class TestBulkYoutubeImport(object):
         'youtube_api_server_key': 'apikey'
     }
 
+    form_picker_data = {
+        'playlist_url': '',
+        'videolist': [
+          '{"youtube_id":"youtubeid1"}',
+          '{"youtube_id":"youtubeid2"}'
+        ],
+        'youtube_api_server_key': 'apikey'
+    }
+
     short_playlist_response = {
       u'items': [
         {
