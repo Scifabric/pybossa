@@ -25,7 +25,7 @@ from pybossa.importers.youtubeapi import BulkTaskYoutubeImport
 @patch('pybossa.importers.youtubeapi.build')
 class TestBulkYoutubeImport(object):
 
-    form_data = {
+    form_playlist_data = {
         'playlist_url': 'https://www.youtube.com/playlist?list=playlistid',
         'videolist': '',
         'youtube_api_server_key': 'apikey'
@@ -190,15 +190,15 @@ class TestBulkYoutubeImport(object):
     def test_call_to_youtube_api_endpoint(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         importer._fetch_all_youtube_videos('fakeId')
 
-        build.assert_called_with('youtube', 'v3', developerKey=self.form_data['youtube_api_server_key'])
+        build.assert_called_with('youtube', 'v3', developerKey=self.form_playlist_data['youtube_api_server_key'])
 
     def test_call_to_youtube_api_short_playlist(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         playlist = importer._fetch_all_youtube_videos('fakeId')
 
         assert playlist == self.short_playlist_response, playlist
@@ -206,7 +206,7 @@ class TestBulkYoutubeImport(object):
     def test_call_to_youtube_api_long_playlist(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.side_effect = [self.long_playlist_response, self.long_playlist_response, self.short_playlist_response]
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         expected_playlist = {'items': ''}
         expected_playlist['items'] = self.long_playlist_response['items'] + self.long_playlist_response['items'] + self.short_playlist_response['items']
         playlist = importer._fetch_all_youtube_videos('fakeId')
@@ -214,13 +214,13 @@ class TestBulkYoutubeImport(object):
         assert playlist == expected_playlist, playlist
 
     def test_extract_video_info_one_playlist_item(self, build):
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         info = importer._extract_video_info(self.short_playlist_response['items'][0])
 
         assert info['info']['video_url'] == 'https://www.youtube.com/watch?v=youtubeid2'
 
     def test_parse_playlist_id(self, build):
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         id = importer._get_playlist_id('https://www.youtube.com/playlist?list=goodplaylist')
         assert id == 'goodplaylist'
         id = importer._get_playlist_id('https://www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
@@ -231,7 +231,7 @@ class TestBulkYoutubeImport(object):
         assert_raises(BulkImportException, importer._get_playlist_id, 'www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
 
     def test_non_youtube_url_raises_exception(self, build):
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         id = importer._get_playlist_id('https://www.youtu.be/playlist?list=goodplaylist')
         assert id == 'goodplaylist'
         id = importer._get_playlist_id('https://youtu.be/playlist?list=goodplaylist')
@@ -243,7 +243,7 @@ class TestBulkYoutubeImport(object):
     def test_all_coverage_tasks_extraction(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
-        importer = BulkTaskYoutubeImport(**self.form_data)
+        importer = BulkTaskYoutubeImport(**self.form_playlist_data)
         tasks = importer.tasks()
 
         assert tasks == [{u'info': {u'oembed': '<iframe width="512" height="512" src="https://www.youtube.com/embed/youtubeid2" frameborder="0" allowfullscreen></iframe>',
