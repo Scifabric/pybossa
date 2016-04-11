@@ -38,7 +38,12 @@ class BulkTaskYoutubeImport(BulkTaskImport):
             playlist = self._fetch_all_youtube_videos(playlist_id)
             return [self._extract_video_info_from_playlist_item(item) for item in playlist['items']]
         elif self.videolist:
-            pass
+            id_list = []
+            for video in self.videolist:
+                data = json.loads(video)
+                if 'youtube_id' in data:
+                    id_list.append(data['youtube_id'])
+            return [self._make_task_from_video_id(video_id) for video_id in id_list]
         else:
             return []
 
