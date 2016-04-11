@@ -212,6 +212,30 @@ server without problems.
 
 .. _`repository pybossa-default-theme`: https://github.com/PyBossa/pybossa-default-theme
 
+Using SASS and minifying JavaScript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyBossa supports SASS thanks to Flask-Assets. If you want to compile SASS or SCSS just
+add to your theme static folder a new one named: sass. Then, you can request the compiled
+version from the templates like this:
+
+.. code-block:: html
+
+    {% assets filters="libsass", output="css/gen/yourcss.min.css",
+              "sass/yourcss.scss"%}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+    {% endassets %}
+
+The same can be done for Javascript using the filter minjs:
+
+.. code-block:: html
+
+    {% assets filters="jsmin", output="gen/packed.js",
+              "common/jquery.js", "site/base.js", "site/widgets.js" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+
 Adding your Contact Information
 ===============================
 

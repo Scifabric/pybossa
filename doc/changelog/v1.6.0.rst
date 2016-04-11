@@ -1,0 +1,8 @@
+================
+Changelog v1.6.0
+================
+
+ * The API is now aware of the owner context. More info_.
+
+ .. _info: ../api.html
+
