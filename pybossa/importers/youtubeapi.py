@@ -18,10 +18,10 @@
 from .base import BulkTaskImport, BulkImportException
 from flask.ext.babel import gettext
 from apiclient.discovery import build
-from apiclient.errors import HttpError
 from urlparse import urlparse, parse_qs
 import json
 import re
+
 
 class BulkTaskYoutubeImport(BulkTaskImport):
 
@@ -69,7 +69,7 @@ class BulkTaskYoutubeImport(BulkTaskImport):
         pattern = re.compile("^(www\.)?youtu(\.be|be\.com)")
         if not (pattern.match(url_data.hostname)):
             msg = gettext("URL is not a youtube domain.")
-            raise BulkImportException(msg)            
+            raise BulkImportException(msg)
         params = parse_qs(url_data.query)
         if not ('list' in params):
             msg = gettext("No playlist in URL found.")
@@ -92,18 +92,18 @@ class BulkTaskYoutubeImport(BulkTaskImport):
                         YOUTUBE_API_VERSION,
                         developerKey=self.youtube_api_server_key)
         res = youtube.playlistItems().list(
-        part="snippet",
-        playlistId=playlistId,
-        maxResults="50"
+            part="snippet",
+            playlistId=playlistId,
+            maxResults="50"
         ).execute()
 
         nextPageToken = res.get('nextPageToken')
         while ('nextPageToken' in res):
             nextPage = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlistId,
-            maxResults="50",
-            pageToken=nextPageToken
+                part="snippet",
+                playlistId=playlistId,
+                maxResults="50",
+                pageToken=nextPageToken
             ).execute()
             res['items'] = res['items'] + nextPage['items']
 
