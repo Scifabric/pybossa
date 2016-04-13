@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField, FieldList
+    SelectField, validators, TextAreaField, PasswordField, FieldList, HiddenField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -298,7 +298,7 @@ class UpdateProfileForm(Form):
 
     """Form Class for updating PyBossa's user Profile."""
 
-    id = IntegerField(label=None, widget=HiddenInput())
+    id = HiddenField(label=None)
 
     err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
                            "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
