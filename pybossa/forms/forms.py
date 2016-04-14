@@ -308,8 +308,10 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
+    err_msg_3 = lazy_gettext("The user name is required")
     name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
+                      validators.Required(err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                       pb_validator.ReservedName('account', current_app)])
