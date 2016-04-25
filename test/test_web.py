@@ -530,8 +530,6 @@ class TestWeb(web.Helper):
         assert msg in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
-        msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
-        assert  msg in res.data, res.data
 
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example",
