@@ -65,7 +65,7 @@ class TestWeb(web.Helper):
         """Test WEB home page works"""
         res = self.app.get("/", follow_redirects=True)
         assert self.html_title() in res.data, res
-        assert "Create a Project" in res.data, res
+        assert "Create" in res.data, res
 
     @with_context
     def test_01_search(self):
