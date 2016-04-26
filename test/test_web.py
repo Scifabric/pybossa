@@ -691,7 +691,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
         assert '/project/test-app' in res.data, res.data
-        assert '<h2><a href="/project/test-app/">My New Project</a></h2>' in res.data, res.data
+        assert 'My New Project' in res.data, res.data
 
         # Update one task to have more answers than expected
         task = db.session.query(Task).get(1)
@@ -702,7 +702,7 @@ class TestWeb(web.Helper):
         cat = db.session.query(Category).get(1)
         url = '/project/category/featured/'
         res = self.app.get(url, follow_redirects=True)
-        assert '1 Featured Projects' in res.data, res.data
+        assert 'Featured Projects' in res.data, res.data
 
     @with_context
     @patch('pybossa.ckan.requests.get')
