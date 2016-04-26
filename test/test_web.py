@@ -1240,7 +1240,7 @@ class TestWeb(web.Helper):
         cat = db.session.query(Category).get(1)
         url = '/project/category/%s/' % Fixtures.cat_1
         res = self.app.get(url, follow_redirects=True)
-        tmp = '1 %s Projects' % Fixtures.cat_1
+        tmp = '%s Projects' % Fixtures.cat_1
         assert tmp in res.data, res
 
     @with_context
