@@ -1308,7 +1308,7 @@ class TestWeb(web.Helper):
         assert "project-published" not in res.data, res.data
         assert "draft" in res.data, res.data
         assert "Sample Project" in res.data, res.data
-        assert '1 Draft Projects' in res.data, res.data
+        assert 'Draft Projects' in res.data, res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
