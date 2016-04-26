@@ -1463,7 +1463,7 @@ class TestWeb(web.Helper):
         newtask_url = '/project/%s/newtask' % project.short_name
         task_url = '/project/%s/task/%s' % (project.short_name, task.id)
         message = ("Sorry, but this project is still a draft and does "
-                    "not have a task presenter.")
+                   "not have a task presenter.")
 
         newtask_response = self.app.get(newtask_url, follow_redirects=True)
         task_response = self.app.get(task_url, follow_redirects=True)
