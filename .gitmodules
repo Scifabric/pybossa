@@ -3,7 +3,7 @@
 	url = https://github.com/okfn/sphinx-theme-okfn.git
 [submodule "pybossa/themes/default"]
 	path = pybossa/themes/default
-	url = https://github.com/PyBossa/pybossa-default-theme.git
+	url = https://github.com/PyBossa/pybossa-amnesty-theme.git
 [submodule "doc/_themes/sphinx-theme-pybossa"]
 	path = doc/_themes/sphinx-theme-pybossa
 	url = https://github.com/PyBossa/sphinx-theme-pybossa.git
