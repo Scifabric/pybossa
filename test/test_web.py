@@ -977,11 +977,10 @@ class TestWeb(web.Helper):
         new_webhook = 'http://mynewserver.com/'
 
         res = self.update_project(id=project.id, short_name=project.short_name,
-                                      new_webhook=new_webhook)
+                                  new_webhook=new_webhook)
 
         err_msg = "There should not be an updated webhook url."
         assert project.webhook != new_webhook, err_msg
-
 
     @with_context
     @patch('pybossa.forms.validator.requests.get')
@@ -1001,7 +1000,6 @@ class TestWeb(web.Helper):
 
         assert project.needs_password(), 'Password not set'
 
-
     @with_context
     @patch('pybossa.forms.validator.requests.get')
     def test_remove_password_from_project(self, mock_webhook):
@@ -1020,7 +1018,6 @@ class TestWeb(web.Helper):
 
         assert not project.needs_password(), 'Password not deleted'
 
-
     @with_context
     def test_update_application_errors(self):
         """Test WEB update form validation issues the errors"""
@@ -1036,7 +1033,7 @@ class TestWeb(web.Helper):
         res = self.update_project(new_description="")
         assert "You must provide a description." in res.data
 
-        res = self.update_project(new_description="a"*256)
+        res = self.update_project(new_description="a" * 256)
         assert "Field cannot be longer than 255 characters." in res.data
 
         res = self.update_project(new_long_description="")
@@ -1088,8 +1085,8 @@ class TestWeb(web.Helper):
         #  without a password
         #  Register a user and sign out
         user = User(name="tester", passwd_hash="tester",
-                          fullname="tester",
-                          email_addr="tester")
+                    fullname="tester",
+                    email_addr="tester")
         user.set_password('tester')
         db.session.add(user)
         db.session.commit()
@@ -1112,7 +1109,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         # We use a string here to check that it works too
         project.published = True
-        task = Task(project_id=project.id, n_answers = 10)
+        task = Task(project_id=project.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
 
@@ -1126,7 +1123,7 @@ class TestWeb(web.Helper):
 
         for i in range(5):
             task_run = TaskRun(project_id=project.id, task_id=1,
-                                     info={'answer': 1})
+                               info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
             self.app.get('api/project/%s/newtask' % project.id)
@@ -1141,7 +1138,7 @@ class TestWeb(web.Helper):
 
         for i in range(5):
             task_run = TaskRun(project_id=project.id, task_id=1,
-                                     info={'answer': 1})
+                               info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
             self.app.get('api/project/%s/newtask' % project.id)
@@ -1160,7 +1157,6 @@ class TestWeb(web.Helper):
         err_msg = "Download Full results button should be shown"
         assert dom.find(id='fulldownload') is not None, err_msg
 
-
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
@@ -1168,7 +1164,7 @@ class TestWeb(web.Helper):
         self.new_project()
 
         project = db.session.query(Project).first()
-        task = Task(project_id=project.id, n_answers = 10)
+        task = Task(project_id=project.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
 
@@ -1190,7 +1186,6 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_18_task_status_wip(self, mock):
@@ -1200,7 +1195,7 @@ class TestWeb(web.Helper):
 
         project = db.session.query(Project).first()
         project.published = True
-        task = Task(project_id=project.id, n_answers = 10)
+        task = Task(project_id=project.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
         self.signout()
@@ -1219,7 +1214,6 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-
     @with_context
     def test_19_app_index_categories(self):
         """Test WEB Project Index categories works"""
@@ -1233,7 +1227,7 @@ class TestWeb(web.Helper):
 
         task = db.session.query(Task).get(1)
         # Update one task to have more answers than expected
-        task.n_answers=1
+        task.n_answers = 1
         db.session.add(task)
         db.session.commit()
         task = db.session.query(Task).get(1)
@@ -1256,10 +1250,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/" rel="nofollow">Next &raquo;</a>' in page1.data
+        assert '<a href="/project/category/cat/page/2/" rel="nofollow">' in page1.data
         assert page2.status_code == 200, page2.status_code
         assert '<a href="/project/category/cat/" rel="nofollow">' in page2.data
-
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
