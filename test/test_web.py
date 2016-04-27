@@ -3626,18 +3626,18 @@ class TestWeb(web.Helper):
     def test_79_cookies_warning2(self):
         """Test WEB cookies warning is hidden"""
         # As Anonymous
-        self.app.set_cookie("localhost", "PyBossa_accept_cookies", "Yes")
+        self.app.set_cookie("localhost", "cookieconsent_dismissed", "Yes")
         res = self.app.get('/', follow_redirects=True, headers={})
         dom = BeautifulSoup(res.data)
         err_msg = "If cookies are not accepted, cookies banner should be hidden"
-        assert dom.find(id='cookies_warning') is None, err_msg
+        assert dom.find('div', attrs={'class': 'cc_banner-wrapper'}) is None, err_msg
 
         # As user
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('/', follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "If cookies are not accepted, cookies banner should be hidden"
-        assert dom.find(id='cookies_warning') is None, err_msg
+        assert dom.find('div', attrs={'class': 'cc_banner-wrapper'}) is None, err_msg
         self.signout()
 
         # As admin
@@ -3645,7 +3645,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/', follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "If cookies are not accepted, cookies banner should be hidden"
-        assert dom.find(id='cookies_warning') is None, err_msg
+        assert dom.find('div', attrs={'class': 'cc_banner-wrapper'}) is None, err_msg
         self.signout()
 
 
