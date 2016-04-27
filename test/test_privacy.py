@@ -39,20 +39,20 @@ class TestPrivacyWebPublic(web_helper.Helper):
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "Footer links should be shown to anonymous users"
-        assert dom.find(id='footer_links') is not None, err_msg
+        assert dom.find('footer') is not None, err_msg
         # As Authenticated user but NOT ADMIN
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "Footer links should be shown to authenticated users"
-        assert dom.find(id='footer_links') is not None, err_msg
+        assert dom.find('footer') is not None, err_msg
         self.signout
         # As Authenticated user but ADMIN
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "Footer links should be shown to admin users"
-        assert dom.find(id='footer_links') is not None, err_msg
+        assert dom.find('footer') is not None, err_msg
         self.signout()
 
     @with_context
