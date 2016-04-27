@@ -3453,23 +3453,23 @@ class TestWeb(web.Helper):
             res = self.task_settings_redundancy(short_name="sampleapp",
                                                 n_answers=n_answers)
             db.session.close()
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
-            assert dom.find(id='msg_success') is not None, err_msg
+            assert "Redundancy of Tasks updated" in res.data, err_msg
+            assert "success" in res.data, err_msg
             project = db.session.query(Project).get(1)
             for t in project.tasks:
                 assert t.n_answers == n_answers, err_msg
             # Wrong values, triggering the validators
             res = self.task_settings_redundancy(short_name="sampleapp",
                                                 n_answers=0)
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
-            assert dom.find(id='msg_error') is not None, err_msg
+            assert "error" in res.data, err_msg
+            assert "success" not in res.data, err_msg
             res = self.task_settings_redundancy(short_name="sampleapp",
                                                 n_answers=10000000)
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
-            assert dom.find(id='msg_error') is not None, err_msg
+            assert "error" in res.data, err_msg
+            assert "success" not in res.data, err_msg
 
             self.signout()
 
