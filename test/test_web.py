@@ -782,7 +782,7 @@ class TestWeb(web.Helper):
         assert "Create the project" in res.data, res
 
         res = self.new_project(long_description='My Description')
-        assert "<strong>Sample Project</strong>: Update the project" in res.data
+        assert "Sample Project" in res.data
         assert "Project created!" in res.data, res
 
         project = db.session.query(Project).first()
