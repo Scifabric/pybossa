@@ -151,7 +151,7 @@ class TestAdmin(web.Helper):
         assert f['featured'] == True, f
         # Check can be removed from featured
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Remove from Featured!" in res.data,\
+        assert "Remove from Featured" in res.data,\
             "The project should have a button to remove from featured"
         # A retry should fail
         res = self.app.post('/admin/featured/1')
@@ -167,7 +167,7 @@ class TestAdmin(web.Helper):
         assert f['featured'] == False, f
         # Check that can be added to featured
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Add to Featured!" in res.data,\
+        assert "Add to Featured" in res.data,\
             "The project should have a button to add to featured"
         # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
