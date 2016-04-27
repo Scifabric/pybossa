@@ -2304,7 +2304,7 @@ class TestWeb(web.Helper):
             task_run = TaskRunFactory.create(project=project, task=task, info={'answer': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % project.name
+        heading = "Export All Tasks and Task Runs"
         data = res.data.decode('utf-8')
         assert heading in data, "Export page should be available\n %s" % data
         # Now get the tasks in CSV format
