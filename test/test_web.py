@@ -3557,9 +3557,9 @@ class TestWeb(web.Helper):
             res = self.task_settings_priority(short_name="sampleapp",
                                               task_ids=task_ids,
                                               priority_0=priority_0)
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Priority should be updated"
-            assert dom.find(id='msg_success') is not None, err_msg
+            assert "error" not in res.data, err_msg
+            assert "success" in res.data, err_msg
             task = db.session.query(Task).get(_id)
             assert task.id == int(task_ids), err_msg
             assert task.priority_0 == priority_0, err_msg
@@ -3567,19 +3567,19 @@ class TestWeb(web.Helper):
             res = self.task_settings_priority(short_name="sampleapp",
                                               priority_0=3,
                                               task_ids="1")
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Priority should be a value between 0.0 and 1.0"
-            assert dom.find(id='msg_error') is not None, err_msg
+            assert "error" in res.data, err_msg
+            assert "success" not in res.data, err_msg
             res = self.task_settings_priority(short_name="sampleapp",
                                               task_ids="1, 2")
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Priority task_ids should be a comma separated, no spaces, integers"
-            assert dom.find(id='msg_error') is not None, err_msg
+            assert "error" in res.data, err_msg
+            assert "success" not in res.data, err_msg
             res = self.task_settings_priority(short_name="sampleapp",
                                               task_ids="1,a")
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Priority task_ids should be a comma separated, no spaces, integers"
-            assert dom.find(id='msg_error') is not None, err_msg
+            assert "error" in res.data, err_msg
+            assert "success" not in res.data, err_msg
 
             self.signout()
 
