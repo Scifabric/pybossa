@@ -3685,7 +3685,8 @@ class TestWeb(web.Helper):
         project = project_repo.get(tr.project_id)
         url = '/project/%s/results' % project.short_name
         res = self.app.get(url, follow_redirects=True)
-        assert "No results" in res.data, res.data
+        dom = BeautifulSoup(res.data)
+        assert dom.find(id="noresult") is not None, res.data
 
     @with_context
     def test_results_with_values(self):
