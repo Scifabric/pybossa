@@ -476,7 +476,7 @@ class TestAdmin(web.Helper):
         err_msg = "Admin users should be able to get the settings page for any project"
         assert res.status == "200 OK", err_msg
         res = self.update_project(method="GET")
-        assert "Update the project" in res.data,\
+        assert "Update" in res.data,\
             "The project should be updated by admin users"
         res = self.update_project(new_name="Root",
                                       new_short_name="rootsampleapp")
