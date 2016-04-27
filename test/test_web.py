@@ -1258,7 +1258,7 @@ class TestWeb(web.Helper):
 
         assert '<a href="/project/category/cat/page/2/" rel="nofollow">Next &raquo;</a>' in page1.data
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/" rel="nofollow">&laquo; Prev </a>' in page2.data
+        assert '<a href="/project/category/cat/" rel="nofollow">' in page2.data
 
 
     @with_context
