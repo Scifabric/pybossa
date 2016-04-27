@@ -3399,9 +3399,9 @@ class TestWeb(web.Helper):
             assert dom.find(id=form_id) is not None, err_msg
             res = self.task_settings_scheduler(short_name="sampleapp",
                                                sched=sched)
-            dom = BeautifulSoup(res.data)
             err_msg = "Task Scheduler should be updated"
-            assert dom.find(id='msg_success') is not None, err_msg
+            assert "Project Task Scheduler updated" in res.data, err_msg
+            assert "success" in res.data, err_msg
             project = db.session.query(Project).get(1)
             assert project.info['sched'] == sched, err_msg
             self.signout()
