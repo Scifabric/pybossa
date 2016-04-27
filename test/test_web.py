@@ -3699,7 +3699,8 @@ class TestWeb(web.Helper):
         result.info = dict(foo='bar')
         result_repo.update(result)
         res = self.app.get(url, follow_redirects=True)
-        assert "No results" in res.data, res.data
+        dom = BeautifulSoup(res.data)
+        assert dom.find(id="noresult") is not None, res.data
 
     @with_context
     def test_results_with_values_and_template(self):
