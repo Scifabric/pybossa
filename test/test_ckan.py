@@ -46,7 +46,7 @@ class TestCkanWeb(web_helper.Helper):
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "The CKAN exporter should not be available for anon users"
-        assert dom.find(id="ckan") is None, err_msg
+        assert dom.find(id="ckan")['style'] == "display:none", err_msg
 
     def test_01_authenticated(self):
         """Test CKAN authenticated project owners can export data via CKAN"""
@@ -62,7 +62,7 @@ class TestCkanWeb(web_helper.Helper):
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "The CKAN exporter should be ONLY available for the owner of the project"
-        assert dom.find(id="ckan") is None, err_msg
+        assert dom.find(id="ckan")['style'] == "display:none", err_msg
 
     @with_context
     def test_02_export_links(self):
