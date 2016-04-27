@@ -196,7 +196,7 @@ class TestAdmin(web.Helper):
         res = self.app.get('/', follow_redirects=True)
         err_msg = ("The project should not be listed in the front page"
                    "as it is not featured")
-        assert "Create a Project" in res.data, err_msg
+        assert "Create" in res.data, err_msg
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.status)
