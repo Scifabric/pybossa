@@ -221,7 +221,7 @@ class TestAdmin(web.Helper):
         self.signout()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create a Project" in res.data,\
+        assert "Create" in res.data,\
             "The project should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
