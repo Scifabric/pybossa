@@ -2156,8 +2156,8 @@ class TestWeb(web.Helper):
 
         exported_task_runs = json.loads(zip.read(extracted_filename))
         project = db.session.query(Project)\
-                .filter_by(short_name=Fixtures.project_short_name)\
-                .first()
+                    .filter_by(short_name=Fixtures.project_short_name)\
+                    .first()
         err_msg = "The number of exported task runs is different from Project Tasks"
         assert len(exported_task_runs) == len(project.task_runs), err_msg
         # Task runs are exported as an attached file
@@ -2428,7 +2428,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
+        heading = "Export All Tasks and Task Runs"
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
