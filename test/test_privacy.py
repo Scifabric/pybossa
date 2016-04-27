@@ -236,28 +236,28 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
     @patch.dict(flask_app.config, {'ENFORCE_PRIVACY': True})
     @with_context
     def test_01_front_page(self):
-         """Test PRIVACY front page top users privacy is respected"""
-         url = '/'
-         # As Anonymou user
-         res = self.app.get(url, follow_redirects=True)
-         dom = BeautifulSoup(res.data)
-         err_msg = "Top users should not be shown to anonymous users"
-         assert dom.find(id='top_users') is None, err_msg
-         # As Authenticated user but NOT ADMIN
-         self.signin()
-         res = self.app.get(url, follow_redirects=True)
-         dom = BeautifulSoup(res.data)
-         err_msg = "Top users should not be shown to authenticated users"
-         assert dom.find(id='top_users') is None, err_msg
-         self.signout
-         # As Authenticated user but ADMIN
-         res = self.signin(email=self.root_addr, password=self.root_password)
-         print res.data
-         res = self.app.get(url, follow_redirects=True)
-         dom = BeautifulSoup(res.data)
-         err_msg = "Top users should be shown to admin"
-         assert dom.find(id='top_users') is not None, err_msg
-         self.signout()
+        """Test PRIVACY front page top users privacy is respected"""
+        url = '/'
+        # As Anonymou user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Top users should not be shown to anonymous users"
+        assert dom.find(id='top_users') is None, err_msg
+        # As Authenticated user but NOT ADMIN
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Top users should not be shown to authenticated users"
+        assert dom.find(id='top_users') is None, err_msg
+        self.signout
+        # As Authenticated user but ADMIN
+        res = self.signin(email=self.root_addr, password=self.root_password)
+        print res.data
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Top users should be shown to admin"
+        assert dom.find(id='top_users') is not None, err_msg
+        self.signout()
 
     @patch.dict(flask_app.config, {'ENFORCE_PRIVACY': True})
     @with_context
