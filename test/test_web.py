@@ -2180,7 +2180,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
-        #Fixtures.create()
+        # Fixtures.create()
         # First test for a non-existant project
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
@@ -2201,7 +2201,7 @@ class TestWeb(web.Helper):
             task = TaskFactory.create(project=project, info={'question': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % project.name
+        heading = "Export All Tasks and Task Runs"
         data = res.data.decode('utf-8')
         assert heading in data, "Export page should be available\n %s" % data
         # Now get the tasks in CSV format
@@ -2218,8 +2218,8 @@ class TestWeb(web.Helper):
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
         project = db.session.query(Project)\
-                .filter_by(short_name=project.short_name)\
-                .first()
+                    .filter_by(short_name=project.short_name)\
+                    .first()
         exported_tasks = []
         n = 0
         for row in csvreader:
