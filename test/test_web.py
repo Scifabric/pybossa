@@ -1921,12 +1921,13 @@ class TestWeb(web.Helper):
         err_msg = "Basic template not found"
         assert "The most basic template" in res.data, err_msg
         err_msg = "Image Pattern Recognition not found"
-        assert "Flickr Person Finder template" in res.data, err_msg
-        err_msg = "Geo-coding"
-        assert "Urban Park template" in res.data, err_msg
-        err_msg = "Transcribing documents"
-        assert "PDF transcription template" in res.data, err_msg
-
+        assert "Image Pattern Recognition" in res.data, err_msg
+        err_msg = "Sound Pattern Recognition not found"
+        assert "Sound Pattern Recognition" in res.data, err_msg
+        err_msg = "Video Pattern Recognition not found"
+        assert "Video Pattern Recognition" in res.data, err_msg
+        err_msg = "Transcribing documents not found"
+        assert "Transcribing documents" in res.data, err_msg
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
