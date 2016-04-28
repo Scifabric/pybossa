@@ -38,7 +38,7 @@ class Unique(object):
         filters = {self.field_name: form_field.data}
         check = self.query_function(**filters)
         if 'id' in form:
-            id = form.id.data
+            id = type(check.id)((form.id.data))
         else:
             id = None
         if check and (id is None or id != check.id):

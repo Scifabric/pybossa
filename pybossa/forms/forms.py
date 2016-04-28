@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField, FieldList
+    SelectField, validators, TextAreaField, PasswordField, FieldList, HiddenField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -298,7 +298,7 @@ class UpdateProfileForm(Form):
 
     """Form Class for updating PyBossa's user Profile."""
 
-    id = IntegerField(label=None, widget=HiddenInput())
+    id = HiddenField(label=None)
 
     err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
                            "characters long" , fullname=USER_FULLNAME_MAX_LENGTH)
@@ -308,8 +308,10 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
+    err_msg_3 = lazy_gettext("The user name is required")
     name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
+                      validators.Required(err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                       pb_validator.ReservedName('account', current_app)])

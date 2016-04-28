@@ -398,6 +398,8 @@ def update_profile(name):
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
 
+    title_msg = "Update your profile: %s" % user.fullname
+
     if request.method == 'POST':
         # Update user avatar
         if request.form.get('btn') == 'Upload':
@@ -414,9 +416,13 @@ def update_profile(name):
         # Otherwise return 415
         else:
             return abort(415)
-        return redirect(url_for('.update_profile', name=user.name))
+        return render_template('/account/update.html',
+                               form=update_form,
+                               upload_form=avatar_form,
+                               password_form=password_form,
+                               title=title_msg,
+                               show_passwd_form=show_passwd_form)
 
-    title_msg = "Update your profile: %s" % user.fullname
     return render_template('/account/update.html',
                            form=update_form,
                            upload_form=avatar_form,
@@ -486,6 +492,7 @@ def _handle_profile_update(user, update_form):
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
     else:
+        print update_form.errors
         flash(gettext('Please correct the errors'), 'error')
 
 
