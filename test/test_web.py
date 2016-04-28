@@ -528,7 +528,7 @@ class TestWeb(web.Helper):
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
                                   locale="en")
-        title = "Update your profile: John Doe"
+        title = "Update your profile: John Doe 2"
         assert self.html_title(title) in res.data, res.data
         user = user_repo.get_by(email_addr='johndoe2@example.com')
         assert "Your profile has been updated!" in res.data, res.data
@@ -546,6 +546,7 @@ class TestWeb(web.Helper):
                                   locale="en",
                                   new_name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
+        assert "Please sign in" in res.data, res.data
 
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
