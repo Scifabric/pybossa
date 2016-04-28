@@ -392,8 +392,7 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    # Creation of forms
-    update_form = UpdateProfileForm(obj=user)
+    update_form = UpdateProfileForm(formdata=None, obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
