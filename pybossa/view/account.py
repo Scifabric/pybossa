@@ -492,7 +492,6 @@ def _handle_profile_update(user, update_form):
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
     else:
-        print update_form.errors
         flash(gettext('Please correct the errors'), 'error')
 
 
