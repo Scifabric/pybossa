@@ -79,7 +79,6 @@ class TestPrivacyWebPublic(web_helper.Helper):
         dom = BeautifulSoup(res.data)
         # TODO: Old requirement, remove in future versions?
         # err_msg = "Top users should be shown to admin"
-        # text_file = open("/Users/marvin/tmp/pybossa/index.html", "w"); text_file.write(res.data); text_file.close()
         # assert dom.find(id='top_users') is not None, err_msg
         self.signout()
 
