@@ -1671,6 +1671,7 @@ def results(short_name):
                      "last_activity": last_activity,
                      "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
                      "n_volunteers": cached_projects.n_volunteers(project.get('id')),
-                     "pro_features": pro}
+                     "pro_features": pro,
+                     "n_results": n_results}
 
     return render_template('/projects/results.html', **template_args)
