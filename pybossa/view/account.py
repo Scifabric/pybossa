@@ -200,6 +200,7 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
+                       country=form.country.data,
                        email_addr=form.email_addr.data,
                        password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
