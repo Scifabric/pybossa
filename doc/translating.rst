@@ -38,7 +38,7 @@ Then, open the file **translations/fr/LC_MESSAGES/messages.po** with any text
 editor and translate the English strings to French. For example, if you get
 this string:
 
-.. code-block::
+.. code-block:: python
 
     #: templates/_gcs_form.html:6 templates/admin/users.html:20
     msgid "Search"
@@ -48,7 +48,7 @@ this string:
 All you have to do is to translate **Search** to its equivalent in French
 **Rechercher** and type in the msgstr section:
 
-.. code-block::
+.. code-block:: python
 
     #: templates/_gcs_form.html:6 templates/admin/users.html:20
     msgid "Search"
@@ -57,7 +57,7 @@ All you have to do is to translate **Search** to its equivalent in French
 Once you have translated all the strings, all you have to do is compile the
 translation with this command:
 
-.. code-block::
+.. code-block:: bash
 
     $ pybabel compile -d translations
 
