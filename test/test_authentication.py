@@ -26,5 +26,4 @@ class TestAuthentication(Test):
         self.create()
         res = self.app.get('/?api_key=%s' % self.api_key)
         assert '<a href="/account/signout"' in res.data, res.data
-        # TODO: Needs discussion to check
         assert 'checkpoint::logged-in::tester' in res.data, res.data
