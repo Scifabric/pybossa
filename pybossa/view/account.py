@@ -199,14 +199,14 @@ def register():
     """
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        print "POSTTT"
+
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        country=form.country.data,
                        email_addr=form.email_addr.data,
                        password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
-            print "POSTTT 222"
+
             return _create_account(account)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
@@ -216,7 +216,7 @@ def register():
         mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
-        print "POSTTT 333"
+
         flash(gettext('Please correct the errors'), 'error')
     return render_template('account/register.html',
                            title=gettext("Register"), form=form)
