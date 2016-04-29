@@ -39,6 +39,20 @@ Just run the following command:
   nosetests test/
 ```
 
+# Amnesty Specific Installation and Upgrading
+
+In order to adopt database schema of "user" table we need to add "country" column in current users table by running the following commands in PostgreSql shell:
+
+```
+  # First connect with local database server
+  psql -h localhost -U pybossa pybossa
+
+  # Second command will add country column to the user table, by running the following command
+  ALTER TABLE "user" ADD COLUMN "country" VARCHAR(250) NOT NULL DEFAULT '';
+
+```
+
+
 # Useful Links
 
 * [Documentation](http://docs.pybossa.com/)
