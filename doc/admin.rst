@@ -9,7 +9,7 @@ administrator and manage the site with full privileges.
 And admin user will be able to access the admin page by clicking in the user
 name and then in the link *Admin site*.
 
-.. image:: http://i.imgur.com/Xm6c42x.png
+.. image:: http://i.imgur.com/5YWAJ8E.png
 
 Administrators can manage three different areas of the server:
 
