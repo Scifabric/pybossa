@@ -44,7 +44,7 @@ Just run the following command:
 In order to adopt database schema of "user" table we need to add "country" column in current users table by running the following commands in PostgreSql shell:
 
 ```
-  # First connect with local database server
+  # First connect with local database server. Parameters below -h (host), -U (username) and last one is database name
   psql -h localhost -U pybossa pybossa
 
   # Second command will add country column to the user table, by running the following command
