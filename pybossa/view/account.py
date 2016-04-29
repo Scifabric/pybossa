@@ -392,7 +392,10 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    update_form = UpdateProfileForm(formdata=None, obj=user)
+    if request.form.get('btn') != 'Profile':
+        update_form = UpdateProfileForm(formdata=None, obj=user)
+    else:
+        update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
@@ -462,7 +465,7 @@ def _handle_avatar_update(user, avatar_form):
 
 def _handle_profile_update(user, update_form):
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
-    if update_form.validate():
+    if update_form.validate_on_submit():
         user.id = update_form.id.data
         user.fullname = update_form.fullname.data
         user.name = update_form.name.data
