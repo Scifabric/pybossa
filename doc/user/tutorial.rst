@@ -1159,6 +1159,7 @@ minutes (this is a value by default, can be changed in every PyBossa server).
 After this time, the user will be asked again to introduce the password if wants
 to continue contributing, and so on.
 
+.. _project-blog:
 
 Creating a blog for the project
 ===============================
