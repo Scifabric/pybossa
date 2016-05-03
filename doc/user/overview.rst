@@ -256,26 +256,29 @@ project, you will have to follow the next steps:
 1. Navigate to your project's page (you can directly access it using 
    the *slug* project name: http://server/project/slug).
 
-.. image:: http://i.imgur.com/98o4ixD.png
-
 2. Click in the **Tasks** section -on the left side local navigation menu:
 
+|
 .. image:: http://i.imgur.com/nauht7l.png
    :width: 100%
 
-    
-3. And click on the **Import Tasks** 
-   button. After clicking on it you will see several different options. The first
-   five correspond to the different importers PyBossa supports:
+|
 
+3. And click on the **Import Tasks** 
+   button. After clicking on it you will see several different options:
+|
 .. image:: http://i.imgur.com/eWBxSyS.png
+|
 
 4. Click in the **Use an EpiCollect Project** one.
+|
 
+.. image:: http://i.imgur.com/A50La7O.png
+
+|
 5. Then, type the **name of the EpiCollect project** and the name of the
-   **form** that you want to import, and click in the import button
+   **form** that you want to import, and click in the import button.
 
-.. image:: http://i.imgur.com/bCuTtl0.png
 
 All the data points should be imported now in your project.
 
