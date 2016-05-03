@@ -30,21 +30,20 @@ server.
    You can use http://crowdcrafting.org for testing. 
 
 When you create an account, you will have access to your profile by clicking on your 
-name, and then in the **My Settings** option:
-
-.. image:: http://i.imgur.com/nH9u2nk.png
+name, and then in the **My Settings** option.
 
 Then, you will be able to copy the
 `API-KEY that has been generated for you <http://crowdcrafting.org/account/profile>`_ 
 
-.. image:: http://i.imgur.com/aTooi6Q.png
+|
+.. image:: http://i.imgur.com/JcxciZc.png
+|
 
 This **API-KEY** allows you to create the
 project in PyBossa (only authenticated users can create projects and
 tasks, while everyone can collaborate solving the tasks).
 
 .. note::
-
     The Flickr Person Finder demo project uses :ref:`pbs` 
     that need to be installed in your system before proceeding. For this
     reason, we recommend you to configure a `virtualenv`_  for the project 
@@ -1202,8 +1201,10 @@ your web-browser::
 You will find a simple interface that will allow you to export the Tasks and
 Task Runs to JSON_ and CSV_ formats:
 
-.. image:: http://i.imgur.com/IAvl9OL.png
+|
+.. image:: http://i.imgur.com/m5gDyjU.png
     :width: 100%
+|
 
 The previous methods will export all the tasks and task runs, **even if they
 are not completed**. When a task has been completed, in other words, when a 
@@ -1219,13 +1220,17 @@ You can check which tasks are completed, going to the project URL::
 And clicking in the **Tasks** link in the **left local navigation**, and then
 click in the **Browse** box:
 
-.. image:: http://i.imgur.com/2Q3x2wP.png
+|
+.. image:: http://i.imgur.com/nauht7l.png
     :width: 100%
+|
 
 Then you will see which tasks are completed, and which ones you can download in
 JSON_ format:
 
-.. image:: http://i.imgur.com/hTgkR3U.png
+|
+.. image:: http://i.imgur.com/pf5O5Tr.png
+|
 
 You could download the results
 also using the API. For example, you could write a small script that gets the list
@@ -1264,9 +1269,8 @@ Exporting the task and task runs to a CSV file
 ----------------------------------------------
 
 While for the CSV_ format, you will get a CSV file that will be automatically
-saved in your computer:
+saved in your computer.
 
-.. image:: http://i.imgur.com/iGPMc9w.png
 
 Exporting the task and task runs to a CKAN server
 -------------------------------------------------
@@ -1274,9 +1278,6 @@ Exporting the task and task runs to a CKAN server
 If the server has been configured to allow you to export your aplication's data
 to a CKAN server (see :ref:`config-ckan`), the owner of the project will see another box that will
 give you the option to export the data to the CKAN server.
-
-.. image:: http://i.imgur.com/cAEBjez.png
-    :width: 100%
 
 In order to use this method you will need to add the CKAN API-KEY associated
 with your account, otherwise you will not be able to export the data and
@@ -1287,16 +1288,12 @@ the supported CKAN server, check your profile and copy
 the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
 the section **External Services**.
 
-.. image:: http://i.imgur.com/nYw9rcj.png
+|
+.. image:: http://i.imgur.com/xOezl6C.png
+|
 
 Then, you will be able to actually export the data to the CKAN server and host
-it there. Your project will show in the info page at the bottom a link to
-your published data in the CKAN server so other people, citizens or researchers
-can actually cite your work.
-
-.. image:: http://i.imgur.com/98xjH8a.png
-
-
+it there. 
 
 
 .. _pybossa-project-results:
