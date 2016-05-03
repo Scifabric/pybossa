@@ -158,6 +158,7 @@ built-in :ref:`task-creator`. You have to do the following:
 For example, the Flickr importer will allow to import a Flickr album by typing its
 ID or if you have an account, by logging into Flickr and showing your own public (and 
 creative commons licensed) albums:
+
 |
 .. image:: http://i.imgur.com/lF9LJVO.jpg
    :width: 100%
@@ -255,21 +256,9 @@ project, you will have to follow the next steps:
 
 1. Navigate to your project's page (you can directly access it using 
    the *slug* project name: http://server/project/slug).
-
 2. Click in the **Tasks** section -on the left side local navigation menu:
-
-|
-.. image:: http://i.imgur.com/nauht7l.png
-   :width: 100%
-
-|
-
 3. And click on the **Import Tasks** 
    button. After clicking on it you will see several different options:
-|
-.. image:: http://i.imgur.com/eWBxSyS.png
-|
-
 4. Click in the **Use an EpiCollect Project** one.
 |
 
@@ -335,24 +324,13 @@ Flickr, sou you don't even need to have a Flickr account.
 These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
-
-|
-.. image:: http://i.imgur.com/nauht7l.png
-   :width: 100%
-|
-
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
-
-|
-.. image:: http://i.imgur.com/eWBxSyS.png
-|
-
 3. Log in with your Flickr ID and select one of the available albums of your account,
    or type the ID of the Flickr set you want to import the photos from, then click
    on the import button:
 
 |
-.. image:: http://i.imgur.com/KvL0y6M.png
+.. image:: http://i.imgur.com/UZRBj8y.png
    :width: 100%
 |
 
@@ -425,24 +403,17 @@ respectively, with no additional modifications and have them working right away
 These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
-
-.. image:: http://i.imgur.com/nauht7l.png
-
 2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
-
-.. image:: http://i.imgur.com/eWBxSyS.png
-
 3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
 account credentials. then select as many files as you want:
 
-.. image:: http://i.imgur.com/It2I1H3.png
+|
+.. image:: http://i.imgur.com/dsgM0Tg.png
+|
 
 4. You can repeat step 3 as many times as you want, and more files will be added
-to your import.
+to your import. Then, click on "Import".
 
-5. When you're ready, click on "Import", and that's all:
-
-.. image:: http://i.imgur.com/0bzRc2b.png
 
 .. _twitter-import:
 
@@ -489,14 +460,9 @@ For more information, please refer to the Twitter_ documentation.
 So, to import tasks with the Twitter importer, do as follows:
 
 1. Navigate to your project's page and click in the **Tasks** section:
-
-.. image:: http://i.imgur.com/nauht7l.png
-
 2. Then click on the **Import Tasks** button, and select the **Twitter importer**:
-
-.. image:: http://i.imgur.com/eWBxSyS.png
-
-3. Fill in the two fields you will find in the form. The first one is for the
+3. You can provide your own Twitter credentials and make API requests in behalf of them, or use the credentials provided by us. (The later only allows to import the number of tweets returned by a single Twitter API call, which is 100 for searches and 200 for user timelines.) 
+4. Fill in the two fields you will find in the form. The first one is for the
 source of your tweets. If you want them to be imported from a user account, then
 write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
 containing a word on them (or a #hashtag), then type it there. The second field
@@ -505,8 +471,10 @@ as you want!
 
 Finally, click on the "Import" button, and you are done:
 
-.. image:: http://i.imgur.com/hYWxI19.png
+|
+.. image:: http://i.imgur.com/l5PG2WX.png
 
+|
 Importing the tasks from an Amazon S3 bucket
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -561,7 +529,9 @@ want to make public and click on "Properties". Click on "Add more Permissions"
 and add a new one with "Grantee: Everyone" and the "List" checkbox selected,
 like in the following image:
 
+|
 .. image:: http://i.imgur.com/FuN9XAS.png
+|
 
 You may also need to enable CORS in the bucket. In the same menu as above, click
 on "Edit CORS Configuration" and configure it. You can learn more
@@ -572,23 +542,21 @@ use in a task has a *public* link too. Go to the bucket content and select the
 files. Then click on "Actions" and select "Make Public". Your files will now be
 visible for everyone, including a PyBossa server.
 
+|
 .. image:: http://i.imgur.com/AHBVQCk.png
+|
 
 Once your S3 bucket is ready, you can follow these steps to import tasks from it:
 
 1. Navigate to your project's page and click in the **Tasks** section:
-
-.. image:: http://i.imgur.com/nauht7l.png
-
 2. Then click on the **Import Tasks** button, and select the **S3 importer**:
-
-.. image:: http://i.imgur.com/eWBxSyS.png
-
 3. Type the name of the bucket from which you will be importing your tasks and
 click on "Search in bucket". If you followed the steps above and your bucket is
 public, you will see a list of the items it contains. Select as many as you want:
 
-.. image:: http://i.imgur.com/WRf6nBq.png
+|
+.. image:: http://i.imgur.com/6RAMqd9.png
+|
 
 4. When you're ready, click on "Import".
 
@@ -626,15 +594,22 @@ If you are sure that you want to flush all the tasks and task runs for your
 project, go to the project page (http://server/project/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
 
+|
 .. image:: http://i.imgur.com/nauht7l.png
     :width: 100%
+
+|
 
 Then, you will see that there is a sub section called: **Task Settings** and
 a button with the label: **Delete the tasks**. Click in that button and a new
 page will be shown:
 
-.. image:: http://i.imgur.com/EKs3wE3.png
+
+|
+.. image:: http://i.imgur.com/DKPV6dc.png
     :width:100%
+
+|
 
 As you can see, a **red warning alert** is shown, warning you that if you click
 in the **yes** button, you will be deleting not only the project tasks, but
@@ -667,36 +642,48 @@ Another way for accessing your project (or projects) is clicking in
 your *user name* and select the *My Projects* item from the drop down menu.
 From there you will be able to manage your projects:
 
-.. image:: http://i.imgur.com/nH9u2nk.png
+|
+.. image:: http://i.imgur.com/3S497Ct.png
     :alt: PyBossa User Account
+|
 
-.. image:: http://i.imgur.com/abu0SsT.png
+.. image:: http://i.imgur.com/9sO21Zd.png
     :width: 100%
+|
 
 Once you have chosen your project, you can add :ref:`task-presenter` by
 clicking in the **Tasks** local navigation link, and then click in the 
 button named **Editor** under the **Task Presenter** box. 
 
+|
 .. image:: http://i.imgur.com/nauht7l.png
     :width: 100%
+|
 
 After clicking in this button, a new web page will be shown where you can
 choose a template to start coding your project, so you don't have to
 actually start from scratch. 
 
-.. image:: http://i.imgur.com/Xmq7qTq.png
+|
+.. image:: http://i.imgur.com/psC5m6Q.png
+
+|
 
 After choosing one of the templates, you will be able to adapt it to fit your
 project needs in a web text editor.
 
-.. image:: http://i.imgur.com/Z2myJrU.png
+|
+.. image:: http://i.imgur.com/g9gAvWw.png
     :width: 100%
+|
 
 Click in the **Preview button** to get an idea about how it will look like your
 :ref:`task-presenter`.
 
-.. image:: http://i.imgur.com/daRJyLa.png
+|
+.. image:: http://i.imgur.com/DsDDBia.png
     :width: 100%
+|
 
 We recommend to read the 
 :doc:`Step by step tutorial on
@@ -719,10 +706,12 @@ stored in the database so you can have access to them, but no results will be
 created. However, in the moment of publishing the project all the answers will
 be flushed, so don't be afraid and try it as much as you can until you are sure
 that everything works as expected.
-Once you think the project is ready for the world to see it, just go to the
-project main page and you will see the button:
+Once you think the project is ready for the world to see it, just click 
+in the Publish button:
 
-.. image:: http://i.imgur.com/lfhahgE.png
+|
+.. image:: http://i.imgur.com/A7m4aa6.png
+|
 
 .. note::
     Publishing a project *cannot* be undone, so please double check everything
@@ -736,10 +725,6 @@ project main page and you will see the button:
 
 After publishing it, you will be able to access your project using the slug, or
 under your account in the *Published* projects section:
-
-.. image:: http://i.imgur.com/BXtsCba.png
-    :alt: Project Published
-    :width: 100%
 
 Also, results will begin to be created every time a task is completed. Enjoy!
 
