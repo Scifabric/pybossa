@@ -336,25 +336,35 @@ These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
+|
 .. image:: http://i.imgur.com/nauht7l.png
    :width: 100%
+|
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
+|
 .. image:: http://i.imgur.com/eWBxSyS.png
+|
 
-3. Type the ID of the Flickr set you want to import the photos from, then click
-on the import button:
+3. Log in with your Flickr ID and select one of the available albums of your account,
+   or type the ID of the Flickr set you want to import the photos from, then click
+   on the import button:
 
-.. image:: http://i.imgur.com/P2yU8qd.png
+|
+.. image:: http://i.imgur.com/KvL0y6M.png
    :width: 100%
+|
 
 If you cannot find the ID or don't know what it is, just browse to your Flickr
 photo set and check the URL. Can you see that last long number rigth at the end
 of it? That's what you're looking for!
 
+|
 .. image:: http://i.imgur.com/h6qNDX2.png
    :width: 100%
+
+|
 
 And all the photos will be imported to your project. Just like with the other
 importers, each task will be created only once, even if you import twice from the
