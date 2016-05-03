@@ -1659,6 +1659,19 @@ def results(short_name):
 
     ensure_authorized_to('read', project)
 
-    return render_template('/projects/results.html',
-                           title=title, project=project, owner=owner,
-                           n_results=n_results)
+    pro = pro_features()
+
+    title = project_title(project, None)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = {"project": project, "title": title,
+                     "owner": owner,
+                     "n_tasks": n_tasks,
+                     "n_task_runs": n_task_runs,
+                     "overall_progress": overall_progress,
+                     "last_activity": last_activity,
+                     "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
+                     "n_volunteers": cached_projects.n_volunteers(project.get('id')),
+                     "pro_features": pro,
+                     "n_results": n_results}
+
+    return render_template('/projects/results.html', **template_args)

@@ -3,6 +3,9 @@ dist: trusty
 language: python
 python:
 - '2.7'
+# git submodules workaround
+git:
+  submodules: false
 env:
 - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
 services:
@@ -10,6 +13,7 @@ services:
 addons:
   postgresql: "9.3"
 before_install:
+- git submodule update --init --recursive
 - sudo apt-get update -y && sudo apt-get install -y swig libffi-dev
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
@@ -20,7 +24,7 @@ install:
 before_script:
 - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
 - psql -c "create database pybossa_test owner rtester encoding 'UTF-8' lc_collate 'en_US.UTF-8' lc_ctype 'en_US.UTF-8' template template0;" -U postgres
-script: 
+script:
     - alembic -c alembictest.ini stamp head
     - alembic -c alembictest.ini upgrade head
     - nosetests test/

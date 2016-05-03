@@ -9,15 +9,17 @@ administrator and manage the site with full privileges.
 And admin user will be able to access the admin page by clicking in the user
 name and then in the link *Admin site*.
 
-.. image:: http://i.imgur.com/Xm6c42x.png
+.. image:: http://i.imgur.com/5YWAJ8E.png
 
-Administrators can manage three different areas of the server:
+Administrators can manage different areas of the server:
 
- 1. Featured projects
- 2. Categories, and
- 3. Administrators
+ 1. Background jobs
+ 2. Featured projects
+ 3. Categories
+ 4. Administrators
+ 5. Users
 
-.. image:: http://i.imgur.com/CIVyRak.png
+.. image:: http://i.imgur.com/cfUF6K2.png
     :width:100%
 
 .. note::
@@ -26,7 +28,7 @@ Administrators can manage three different areas of the server:
     a :ref:`task-presenter` to allow other volunteers to participate.
 
 .. note::
-    A fourth option is available on the Admin Site menu. Here, admins will be able
+    In the users option, admins will be able
     to obtain a list of all registered users in the PyBossa system, in either
     json or csv formats.
 
@@ -41,13 +43,12 @@ Featured Projects
 =================
 
 In this section, admins can add/remove projects to the front page of the
-site. 
+site.
 
-.. image:: http://i.imgur.com/Jpr3bGh.png
+.. image:: http://i.imgur.com/K9deWZo.png
     :width:100%
 
-Basically, you will see a green button to add a project to the Featured
-selection, or a red one to remove it from the front page.
+You will see a "Add to Featured" link to add a a project to featured front page or a "Remove from Featured" to remove it.
 
 
 .. _categories:
@@ -67,7 +68,7 @@ description and click in the green button labeled: Add category.
 
 .. _EpiCollect: http://plus.epicollect.net
 
-.. image:: http://i.imgur.com/otR6wcG.png
+.. image:: http://i.imgur.com/FlTowJ7.png
     :width: 100%
 
 .. note::
@@ -85,7 +86,7 @@ In this section an administrator will be able to add/remove users to the admin
 role. Basically, you can search by user name -nick name- and add them to the
 admin group.
 
-.. image:: http://i.imgur.com/IdDKo8P.png
+.. image:: http://i.imgur.com/WSwNFxy.png
     :width:100%
 
 As with the :ref:`categories` section, a green button will allow you to add the user
@@ -100,7 +101,7 @@ When a project is created, deleted or updated, the system registers its actions
 in the server. Admins will have access to all the logged actions in every
 project page, in a section named **Audit log**.
 
-.. image:: http://i.imgur.com/UQeyHPF.png
+.. image:: http://i.imgur.com/BjcJQW7.png
     :width: 100%
 
 The section will let you know the following information:
@@ -121,7 +122,7 @@ Dashboard
 
 The dashboard allows you to see what's going on in your PyBossa server.
 
-.. image:: http://i.imgur.com/CpgclS1.png
+.. image:: http://i.imgur.com/TmB0dx2.png
 
 .. note::
     This feature requires PostgreSQL >= 9.3. Please upgrade as soon as possible your

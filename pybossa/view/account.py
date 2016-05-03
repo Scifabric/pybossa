@@ -392,31 +392,43 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    # Creation of forms
-    update_form = UpdateProfileForm(obj=user)
+    if request.form.get('btn') != 'Profile':
+        update_form = UpdateProfileForm(formdata=None, obj=user)
+    else:
+        update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
 
+    title_msg = "Update your profile: %s" % user.fullname
+
     if request.method == 'POST':
         # Update user avatar
+        succeed = False
         if request.form.get('btn') == 'Upload':
-            _handle_avatar_update(user, avatar_form)
+            succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
         elif request.form.get('btn') == 'Profile':
-            _handle_profile_update(user, update_form)
+            succeed = _handle_profile_update(user, update_form)
         # Update user password
         elif request.form.get('btn') == 'Password':
-            _handle_password_update(user, password_form)
+            succeed = _handle_password_update(user, password_form)
         # Update user external services
         elif request.form.get('btn') == 'External':
-            _handle_external_services_update(user, update_form)
+            succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
             return abort(415)
-        return redirect(url_for('.update_profile', name=user.name))
+        if succeed:
+            return redirect(url_for('.update_profile', name=user.name))
+        else:
+            return render_template('/account/update.html',
+                                   form=update_form,
+                                   upload_form=avatar_form,
+                                   password_form=password_form,
+                                   title=title_msg,
+                                   show_passwd_form=show_passwd_form)
 
-    title_msg = "Update your profile: %s" % user.fullname
     return render_template('/account/update.html',
                            form=update_form,
                            upload_form=avatar_form,
@@ -445,13 +457,15 @@ def _handle_avatar_update(user, avatar_form):
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your avatar has been updated! It may \
                       take some minutes to refresh...'), 'success')
+        return True
     else:
         flash("You have to provide an image file to update your avatar", "error")
+        return False
 
 
 def _handle_profile_update(user, update_form):
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
-    if update_form.validate():
+    if update_form.validate_on_submit():
         user.id = update_form.id.data
         user.fullname = update_form.fullname.data
         user.name = update_form.name.data
@@ -477,6 +491,7 @@ def _handle_profile_update(user, update_form):
                           new email: %s. Once you verify it, it will \
                           be updated.' % account['email_addr'])
             flash(fls, 'info')
+            return True
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
         user.privacy_mode = update_form.privacy_mode.data
@@ -485,8 +500,10 @@ def _handle_profile_update(user, update_form):
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
+        return True
     else:
         flash(gettext('Please correct the errors'), 'error')
+        return False
 
 
 def _handle_password_update(user, password_form):
@@ -497,12 +514,15 @@ def _handle_password_update(user, password_form):
             user_repo.update(user)
             flash(gettext('Yay, you changed your password succesfully!'),
                   'success')
+            return True
         else:
             msg = gettext("Your current password doesn't match the "
                           "one in our records")
             flash(msg, 'error')
+            return False
     else:
         flash(gettext('Please correct the errors'), 'error')
+        return False
 
 
 def _handle_external_services_update(user, update_form):
@@ -515,8 +535,10 @@ def _handle_external_services_update(user, update_form):
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
+        return True
     else:
         flash(gettext('Please correct the errors'), 'error')
+        return False
 
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
