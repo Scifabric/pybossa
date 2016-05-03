@@ -260,7 +260,7 @@ project, you will have to follow the next steps:
 
 2. Click in the **Tasks** section -on the left side local navigation menu:
 
-.. image:: http://i.imgur.com/u5vusQR.png
+.. image:: http://i.imgur.com/nauht7l.png
    :width: 100%
 
     
@@ -268,7 +268,7 @@ project, you will have to follow the next steps:
    button. After clicking on it you will see several different options. The first
    five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/ii8AHtN.png
+.. image:: http://i.imgur.com/eWBxSyS.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -333,12 +333,12 @@ These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
-.. image:: http://i.imgur.com/u5vusQR.png
+.. image:: http://i.imgur.com/nauht7l.png
    :width: 100%
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/ii8AHtN.png
+.. image:: http://i.imgur.com/eWBxSyS.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -413,11 +413,11 @@ These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
-.. image:: http://i.imgur.com/u5vusQR.png
+.. image:: http://i.imgur.com/nauht7l.png
 
 2. Then click on the **Import Tasks** button, and select the **Dropbox importer**:
 
-.. image:: http://i.imgur.com/ii8AHtN.png
+.. image:: http://i.imgur.com/eWBxSyS.png
 
 3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
 account credentials. then select as many files as you want:
@@ -477,11 +477,11 @@ So, to import tasks with the Twitter importer, do as follows:
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
-.. image:: http://i.imgur.com/u5vusQR.png
+.. image:: http://i.imgur.com/nauht7l.png
 
 2. Then click on the **Import Tasks** button, and select the **Twitter importer**:
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/eWBxSyS.png
 
 3. Fill in the two fields you will find in the form. The first one is for the
 source of your tweets. If you want them to be imported from a user account, then
@@ -565,11 +565,11 @@ Once your S3 bucket is ready, you can follow these steps to import tasks from it
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
-.. image:: http://i.imgur.com/u5vusQR.png
+.. image:: http://i.imgur.com/nauht7l.png
 
 2. Then click on the **Import Tasks** button, and select the **S3 importer**:
 
-.. image:: http://i.imgur.com/6OVoObZ.png
+.. image:: http://i.imgur.com/eWBxSyS.png
 
 3. Type the name of the bucket from which you will be importing your tasks and
 click on "Search in bucket". If you followed the steps above and your bucket is
@@ -613,7 +613,7 @@ If you are sure that you want to flush all the tasks and task runs for your
 project, go to the project page (http://server/project/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
 
-.. image:: http://i.imgur.com/XsAOjnb.png
+.. image:: http://i.imgur.com/nauht7l.png
     :width: 100%
 
 Then, you will see that there is a sub section called: **Task Settings** and
@@ -664,7 +664,7 @@ Once you have chosen your project, you can add :ref:`task-presenter` by
 clicking in the **Tasks** local navigation link, and then click in the 
 button named **Editor** under the **Task Presenter** box. 
 
-.. image:: http://i.imgur.com/XsAOjnb.png
+.. image:: http://i.imgur.com/nauht7l.png
     :width: 100%
 
 After clicking in this button, a new web page will be shown where you can
