@@ -177,6 +177,17 @@ class TestWeb(web.Helper):
         assert self.html_title("Register") in res.data, res
 
     @with_context
+    def test_register_errors_get(self):
+        """Test WEB register errors works"""
+        userdict = {'fullname': 'a', 'name': 'name',
+                    'email_addr': None, 'password':'p'}
+        res = self.app.post('/account/register', data=userdict)
+        # The output should have a mime-type: text/html
+        assert res.mimetype == 'text/html', res
+        assert "correct the errors" in res.data, res.data
+
+
+    @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
