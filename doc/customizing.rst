@@ -258,6 +258,7 @@ use.
 .. _TERMSOFUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L43
 .. _DATEUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L44
 
+.. _ssnn:
 
 Enabling Twitter, Facebook and Google authentication
 ====================================================

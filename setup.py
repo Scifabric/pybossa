@@ -15,7 +15,7 @@ requirements = [
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",
-    "M2Crypto>=0.22.3, <0.22.4",        # let's be more restrictive on M2Crypto version
+    "M2Crypto>=0.24.0, <0.24.1",        # let's be more restrictive on M2Crypto version
     "markdown>=2.4, <3.0",
     "psycopg2>=2.5.2, <3.0",
     "pygeoip>=0.3.1, <1.0",
@@ -55,7 +55,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '1.6.2',
+    version = '2.0.1',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

@@ -1,0 +1,6 @@
+================
+Changelog v2.0.0
+================
+
+ * Brand new theme with lots of small fixes.
+ * Support of different aspect ratios for avatars.
