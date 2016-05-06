@@ -369,7 +369,7 @@ Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 Example Usage
 -------------
 
-Create a Project object::
+Create a Project object:
 
 .. code-block:: bash
 
