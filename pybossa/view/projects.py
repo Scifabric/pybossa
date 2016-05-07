@@ -112,6 +112,8 @@ def pro_features(owner=None):
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>/', defaults={'page': 1})
+@login_required
+@admin_required
 def redirect_old_featured(page):
     """DEPRECATED only to redirect old links"""
     return redirect(url_for('.index', page=page), 301)
@@ -119,6 +121,8 @@ def redirect_old_featured(page):
 
 @blueprint.route('/published/', defaults={'page': 1})
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
+@login_required
+@admin_required
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
     category = project_repo.get_category()
@@ -127,6 +131,8 @@ def redirect_old_published(page):  # pragma: no cover
 
 @blueprint.route('/draft/', defaults={'page': 1})
 @blueprint.route('/draft/<int:page>/', defaults={'page': 1})
+@login_required
+@admin_required
 def redirect_old_draft(page):
     """DEPRECATED only to redirect old links"""
     return redirect(url_for('.draft', page=page), 301)
@@ -134,6 +140,8 @@ def redirect_old_draft(page):
 
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
+@login_required
+@admin_required
 def index(page):
     """List projects in the system"""
     if cached_projects.n_count('featured') > 0:
@@ -203,6 +211,8 @@ def draft(page):
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
+@login_required
+@admin_required
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
     return project_index(page, cached_projects.get_all, category, False, True)
