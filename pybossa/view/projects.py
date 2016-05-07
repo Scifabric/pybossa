@@ -210,6 +210,7 @@ def project_cat_index(category, page):
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def new():
     ensure_authorized_to('create', Project)
     form = ProjectForm(request.form)
