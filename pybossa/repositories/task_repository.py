@@ -41,6 +41,7 @@ class TaskRepository(Repository):
                         last_id=None, **filters):
 
         query = self.create_context(filters, Task)
+        print query
         if last_id:
             query = query.filter(Task.id > last_id)
             query = query.order_by(Task.id).limit(limit)
