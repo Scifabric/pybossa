@@ -1,0 +1,5 @@
+================
+Changelog v2.1.0
+================
+
+ * Now it's possible to use the API to get first level keys from JSON in info field.

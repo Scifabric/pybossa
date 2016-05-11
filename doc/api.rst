@@ -244,6 +244,24 @@ It is possible to limit the number of returned objects::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&limit=20]
 
+
+It is possible to access first level JSON keys within the **info** field of Projects,
+Tasks, Task Runs and Results::
+
+    GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&info=foo::bar&limit=20]
+
+To search within the first level (nested keys are not supported), you have to use the
+following format::
+
+    info=key::value
+
+For adding more keys::
+
+    info=key1::value1|key2::value2|keyN::valueN
+
+These parameters will be ANDs, so, it will return objects that have those keys with 
+and **and** operator.
+
 .. note::
     By default all GET queries return a maximum of 20 objects unless the
     **limit** keyword is used to get more: limit=50. However, a maximum amount

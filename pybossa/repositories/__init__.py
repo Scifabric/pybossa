@@ -51,10 +51,29 @@ class Repository(object):
                        for key, value in kwargs.items()
                        if key != 'info']
         if 'info' in kwargs.keys():
-            info = json.dumps(kwargs['info'])
+            # info = json.dumps(kwargs['info'])
+            #info = self.handle_info_json(kwargs['info'])
+            #clauses.append(cast(_entity_descriptor(model, 'info'),
+            #                    Text) == info)
+            clauses = clauses + self.handle_info_json(model, kwargs['info'])
+        return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+
+
+    def handle_info_json(self, model, info):
+        """Handle info JSON query filter."""
+        clauses = []
+        if '::' in info:
+            pairs = info.split('|')
+            for pair in pairs:
+                if pair != '':
+                    k,v = pair.split("::")
+                    clauses.append(_entity_descriptor(model,
+                                                      'info')[k].astext == v)
+        else:
+            info = json.dumps(info)
             clauses.append(cast(_entity_descriptor(model, 'info'),
                                 Text) == info)
-        return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+        return clauses
 
 
     def create_context(self, filters, model):

@@ -22,6 +22,7 @@ from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository, ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from pybossa.model.task import Task
 
 project_repo = ProjectRepository(db)
 
@@ -32,6 +33,56 @@ class TestTaskRepositoryForTaskQueries(Test):
         super(TestTaskRepositoryForTaskQueries, self).setUp()
         self.task_repo = TaskRepository(db)
 
+
+    def test_handle_info_json_plain_text(self):
+        """Test handle info in JSON as plain text works."""
+        TaskFactory.create(info='answer')
+        res = self.task_repo.filter_tasks_by(info='answer')
+        assert len(res) == 1
+        assert res[0].info == 'answer', res[0]
+
+    def test_handle_info_json(self):
+        """Test handle info in JSON works."""
+        TaskFactory.create(info={'foo': 'bar'})
+        info = 'foo::bar'
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 1
+        assert res[0].info['foo'] == 'bar', res[0]
+
+    def test_handle_info_json_multiple_keys(self):
+        """Test handle info in JSON with multiple keys works."""
+        TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
+        info = 'foo::bar|bar::foo'
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 1
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['bar'] == 'foo', res[0]
+
+
+    def test_handle_info_json_multiple_keys_404(self):
+        """Test handle info in JSON with multiple keys not found works."""
+        TaskFactory.create(info={'foo': 'bar', 'daniel': 'foo'})
+        info = 'foo::bar|bar::foo'
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 0
+
+    def test_handle_info_json_multiple_keys_404(self):
+        """Test handle info in JSON with multiple keys not found works."""
+        TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
+        info = 'foo::bar|'
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 1
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['bar'] == 'foo', res[0]
+
+    def test_handle_info_json_wrong_data(self):
+        """Test handle info in JSON with wrong data works."""
+        TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
+
+        infos = ['|', '||', '|::', ':|', '::|', '|:', 'foo|', 'foo|']
+        for info in infos:
+            res = self.task_repo.filter_tasks_by(info=info)
+            assert len(res) == 0
 
     def test_get_task_return_none_if_no_task(self):
         """Test get_task method returns None if there is no task with the
