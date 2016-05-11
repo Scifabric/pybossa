@@ -65,8 +65,10 @@ class Repository(object):
         if '::' in info:
             pairs = info.split('|')
             for pair in pairs:
-                k,v = pair.split("::")
-                clauses.append(_entity_descriptor(model, 'info')[k].astext == v)
+                if pair != '':
+                    k,v = pair.split("::")
+                    clauses.append(_entity_descriptor(model,
+                                                      'info')[k].astext == v)
         else:
             info = json.dumps(info)
             clauses.append(cast(_entity_descriptor(model, 'info'),
