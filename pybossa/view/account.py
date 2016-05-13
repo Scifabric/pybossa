@@ -436,7 +436,7 @@ def _handle_avatar_update(user, avatar_form):
         coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                        avatar_form.x2.data, avatar_form.y2.data)
         prefix = time.time()
-        _file.filename = "%s_avatar.png" % prefix
+        _file.filename = "%s_avatar.png" % str(prefix).replace('.', '')
         container = "user_%s" % user.id
         uploader.upload_file(_file,
                              container=container,
