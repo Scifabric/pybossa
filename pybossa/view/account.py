@@ -400,10 +400,12 @@ def update_profile(name):
     # Creation of forms
     update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
+
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
 
     if request.method == 'POST':
+
         # Update user avatar
         if request.form.get('btn') == 'Upload':
             _handle_avatar_update(user, avatar_form)
@@ -436,7 +438,7 @@ def _handle_avatar_update(user, avatar_form):
         coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                        avatar_form.x2.data, avatar_form.y2.data)
         prefix = time.time()
-        _file.filename = "%s_avatar.png" % str(prefix).replace('.', '')
+        _file.filename = "%s_avatar.png" % prefix
         container = "user_%s" % user.id
         uploader.upload_file(_file,
                              container=container,
@@ -455,11 +457,13 @@ def _handle_avatar_update(user, avatar_form):
 
 
 def _handle_profile_update(user, update_form):
+
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
     if update_form.validate():
         user.id = update_form.id.data
         user.fullname = update_form.fullname.data
         user.name = update_form.name.data
+        user.country = update_form.country.data
         if (user.email_addr != update_form.email_addr.data and
                 acc_conf_dis is False):
             user.valid_email = False
