@@ -157,7 +157,7 @@ class APIBase(MethodView):
     def _filter_query(self, repo_info, limit, offset):
         filters = {}
         for k in request.args.keys():
-            if k not in ['limit', 'offset', 'api_key', 'last_id', 'all']:
+            if k not in ['limit', 'offset', 'api_key', 'last_id', 'all', 'fulltextsearch']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]

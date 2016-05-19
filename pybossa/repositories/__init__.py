@@ -51,10 +51,6 @@ class Repository(object):
                        for key, value in kwargs.items()
                        if key != 'info']
         if 'info' in kwargs.keys():
-            # info = json.dumps(kwargs['info'])
-            #info = self.handle_info_json(kwargs['info'])
-            #clauses.append(cast(_entity_descriptor(model, 'info'),
-            #                    Text) == info)
             clauses = clauses + self.handle_info_json(model, kwargs['info'])
         return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
 
