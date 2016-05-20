@@ -75,9 +75,8 @@ class TestTaskRepositoryForTaskQueries(Test):
         """Test handle info in JSON with multiple keys works."""
         text = "two three four five"
         TaskFactory.create(info={'foo': 'bar', 'extra': text})
-        info = 'foo::bar|extra::two'
+        info = 'foo::bar|extra::four'
         res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
-        print res
         assert len(res) == 1, len(res)
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['extra'] == text, res[0]
