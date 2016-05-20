@@ -98,7 +98,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         res = self.task_repo.filter_tasks_by(info=info)
         assert len(res) == 0
 
-    def test_handle_info_json_multiple_keys_404(self):
+    def test_handle_info_json_multiple_keys_404_with_one_pipe(self):
         """Test handle info in JSON with multiple keys not found works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
         info = 'foo::bar|'
@@ -106,6 +106,17 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 1
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == 'foo', res[0]
+
+    def test_handle_info_json_multiple_keys_404_fulltextsearch(self):
+        """Test handle info in JSON with full text
+        search with multiple keys not found works."""
+        TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
+        info = 'foo::bar|'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['bar'] == 'foo', res[0]
+
 
     def test_handle_info_json_wrong_data(self):
         """Test handle info in JSON with wrong data works."""
