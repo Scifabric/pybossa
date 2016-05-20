@@ -305,6 +305,19 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
 
+    def test_get_task_run_by_info_json(self):
+        """Test get_task_run_by with JSON returns a
+        taskrun with the specified attribute"""
+
+        data = {'foo': 'bar'}
+        taskrun = TaskRunFactory.create(info=data)
+
+        info = 'foo::bar'
+        retrieved_taskrun = self.task_repo.get_task_run_by(info=info)
+
+        assert taskrun == retrieved_taskrun, retrieved_taskrun
+
+
 
     def test_get_task_run_by_returns_none_if_no_task_run(self):
         """Test get_task_run_by returns None if no taskrun matches the query"""
