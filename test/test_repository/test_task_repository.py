@@ -380,6 +380,27 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun in retrieved_taskruns, retrieved_taskruns
 
 
+    def test_filter_task_runs_by_multiple_conditions_fulltext(self):
+        """Test filter_task_runs_by supports multiple-condition
+        fulltext queries"""
+
+        text = 'you agent something word'
+        data = {'foo': 'bar', 'bar': text}
+        TaskRunFactory.create(info=data, user_ip='8.8.8.8')
+        taskrun = TaskRunFactory.create(info=data, user_ip='1.1.1.1')
+
+        info = 'foo::bar|bar::agent'
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info=info,
+                                                                user_ip='1.1.1.1',
+                                                                fulltextsearch='1')
+
+        assert len(retrieved_taskruns) == 1, retrieved_taskruns
+        assert taskrun in retrieved_taskruns, retrieved_taskruns
+
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info=info,
+                                                                user_ip='1.1.1.1')
+        assert len(retrieved_taskruns) == 0, retrieved_taskruns
+
     def test_filter_task_runs_support_yield_option(self):
         """Test that filter_task_runs_by with the yielded=True option returns
         the results as a generator"""
@@ -395,7 +416,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
             assert taskrun in task_runs
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_tasks_runs_limit_offset(self):
         """Test that filter_tasks_by supports limit and offset options"""
 
         TaskRunFactory.create_batch(4)
