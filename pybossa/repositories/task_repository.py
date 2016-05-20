@@ -60,8 +60,10 @@ class TaskRepository(Repository):
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
 
-    def get_task_run_by(self, **attributes):
-        filters = self.generate_query_from_keywords(TaskRun, **attributes)
+    def get_task_run_by(self, fulltextsearch=None, **attributes):
+        filters = self.generate_query_from_keywords(TaskRun,
+                                                    fulltextsearch,
+                                                    **attributes)
         return self.db.session.query(TaskRun).filter(*filters).first()
 
     def filter_task_runs_by(self, limit=None, offset=0, last_id=None,

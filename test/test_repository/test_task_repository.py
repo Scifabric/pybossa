@@ -49,6 +49,16 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 1
         assert res[0].info['foo'] == 'bar', res[0]
 
+    def test_handle_info_json_fulltextsearch(self):
+        """Test handle info fulltextsearch in JSON works."""
+        text = 'bar word agent something'
+        TaskFactory.create(info={'foo': text})
+        info = 'foo::agent'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1
+        assert res[0].info['foo'] == text, res[0]
+
+
     def test_handle_info_json_multiple_keys(self):
         """Test handle info in JSON with multiple keys works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
