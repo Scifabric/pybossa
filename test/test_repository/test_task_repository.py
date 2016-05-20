@@ -77,7 +77,8 @@ class TestTaskRepositoryForTaskQueries(Test):
         TaskFactory.create(info={'foo': 'bar', 'bar': text})
         info = 'foo::bar|bar::you'
         res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
-        assert len(res) == 1
+        print res
+        assert len(res) == 1, len(res)
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == text, res[0]
 
