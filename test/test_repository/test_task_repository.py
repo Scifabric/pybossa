@@ -127,6 +127,10 @@ class TestTaskRepositoryForTaskQueries(Test):
             res = self.task_repo.filter_tasks_by(info=info)
             assert len(res) == 0
 
+        for info in infos:
+            res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+            assert len(res) == 0
+
     def test_get_task_return_none_if_no_task(self):
         """Test get_task method returns None if there is no task with the
         specified id"""
