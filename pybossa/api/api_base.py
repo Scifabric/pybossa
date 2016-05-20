@@ -166,11 +166,14 @@ class APIBase(MethodView):
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
+        fulltextsearch = request.args.get('fulltextsearch')
         if last_id:
             results = getattr(repo, query_func)(limit=limit, last_id=last_id,
+                                                fulltextsearch=fulltextsearch,
                                                 **filters)
         else:
             results = getattr(repo, query_func)(limit=limit, offset=offset,
+                                                fulltextsearch=fulltextsearch,
                                                 **filters)
         return results
 
