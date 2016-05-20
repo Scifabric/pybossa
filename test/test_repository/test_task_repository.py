@@ -84,6 +84,11 @@ class TestTaskRepositoryForTaskQueries(Test):
         res = self.task_repo.filter_tasks_by(info=info)
         assert len(res) == 0, len(res)
 
+    def test_handle_info_json_multiple_keys_and_fulltextsearch(self):
+        """Test handle info in JSON with multiple keys and AND operator works."""
+        text = "agent myself you bar"
+        TaskFactory.create(info={'foo': 'bar', 'bar': text})
+
         info = 'foo::bar|bar::you&agent'
         res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
         assert len(res) == 1, len(res)
