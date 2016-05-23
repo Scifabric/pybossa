@@ -4,7 +4,7 @@ requirements = [
     "alembic>=0.6.4, <1.0",
     "beautifulsoup4>=4.3.2, <5.0",
     "blinker>=1.3, <2.0",
-    "Flask-Babel>=0.9, <1.0",
+    "Flask-Babel>=0.9, <0.10",
     "Flask-Login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
     "misaka>=1.0.0, <2.0.0",
@@ -55,7 +55,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '2.0.1',
+    version = '2.2.1',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
