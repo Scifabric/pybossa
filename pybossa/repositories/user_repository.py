@@ -41,7 +41,7 @@ class UserRepository(object):
         return self.db.session.query(User).all()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  **filters):
+                  fulltextsearch=None, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
         query = self.db.session.query(User).filter_by(**filters)

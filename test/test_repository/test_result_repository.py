@@ -152,6 +152,50 @@ class TestResultRepository(Test):
         err_msg = "There should not be a result"
         assert len(result) == 0, err_msg
 
+    def test_fulltext_search_result(self):
+        """Test fulltext search in JSON info works."""
+        result = self.create_result()
+        text = 'something word you me bar'
+        data = {'foo': text}
+        result.info = data
+        self.result_repo.update(result)
+
+        info = 'foo::word'
+        res = self.result_repo.filter_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == text, res[0]
+
+        res = self.result_repo.filter_by(info=info)
+        assert len(res) == 0, len(res)
+
+    def test_fulltext_search_result_01(self):
+        """Test fulltext search in JSON info works."""
+        result = self.create_result()
+        text = 'something word you me bar'
+        data = {'foo': text, 'bar': 'foo'}
+        result.info = data
+        self.result_repo.update(result)
+
+        info = 'foo::word&bar|bar::foo'
+        res = self.result_repo.filter_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == text, res[0]
+
+
+    def test_info_json_search_result(self):
+        """Test search in JSON info works."""
+        result = self.create_result()
+        text = 'bar'
+        data = {'foo': text}
+        result.info = data
+        self.result_repo.update(result)
+
+        info = 'foo::bar'
+        res = self.result_repo.filter_by(info=info)
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == text, res[0]
+
+
     def test_update(self):
         """Test update persists the changes made to the result"""
 

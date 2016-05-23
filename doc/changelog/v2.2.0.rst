@@ -1,0 +1,5 @@
+================
+Changelog v2.2.0
+================
+
+ * Full text search enabled for Task, Task Runs and Results in the JSON first key level.

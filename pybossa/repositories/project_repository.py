@@ -44,7 +44,7 @@ class ProjectRepository(object):
         return self.db.session.query(Project).all()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  **filters):
+                  fulltextsearch=None, **filters):
         if filters.get('owner_id'):
             filters['owner_id'] = filters.get('owner_id')
         query = self.db.session.query(Project).filter_by(**filters)
@@ -103,7 +103,7 @@ class ProjectRepository(object):
         return self.db.session.query(Category).all()
 
     def filter_categories_by(self, limit=None, offset=0, yielded=False,
-                             last_id=None, **filters):
+                             last_id=None, fulltextsearch=None, **filters):
         query = self.db.session.query(Category).filter_by(**filters)
         if last_id:
             query = query.filter(Category.id > last_id)

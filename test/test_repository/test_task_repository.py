@@ -49,6 +49,19 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 1
         assert res[0].info['foo'] == 'bar', res[0]
 
+    def test_handle_info_json_fulltextsearch(self):
+        """Test handle info fulltextsearch in JSON works."""
+        text = 'bar word agent something'
+        TaskFactory.create(info={'foo': text})
+        info = 'foo::agent'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1
+        assert res[0].info['foo'] == text, res[0]
+
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 0, len(res)
+
+
     def test_handle_info_json_multiple_keys(self):
         """Test handle info in JSON with multiple keys works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
@@ -58,6 +71,30 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == 'foo', res[0]
 
+    def test_handle_info_json_multiple_keys_fulltextsearch(self):
+        """Test handle info in JSON with multiple keys works."""
+        text = "two three four five"
+        TaskFactory.create(info={'foo': 'bar', 'extra': text})
+        info = 'foo::bar|extra::four'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['extra'] == text, res[0]
+
+        res = self.task_repo.filter_tasks_by(info=info)
+        assert len(res) == 0, len(res)
+
+    def test_handle_info_json_multiple_keys_and_fulltextsearch(self):
+        """Test handle info in JSON with multiple keys and AND operator works."""
+        text = "agent myself you bar"
+        TaskFactory.create(info={'foo': 'bar', 'bar': text})
+
+        info = 'foo::bar|bar::you&agent'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['bar'] == text, res[0]
+
 
     def test_handle_info_json_multiple_keys_404(self):
         """Test handle info in JSON with multiple keys not found works."""
@@ -66,7 +103,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         res = self.task_repo.filter_tasks_by(info=info)
         assert len(res) == 0
 
-    def test_handle_info_json_multiple_keys_404(self):
+    def test_handle_info_json_multiple_keys_404_with_one_pipe(self):
         """Test handle info in JSON with multiple keys not found works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
         info = 'foo::bar|'
@@ -75,6 +112,17 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == 'foo', res[0]
 
+    def test_handle_info_json_multiple_keys_404_fulltextsearch(self):
+        """Test handle info in JSON with full text
+        search with multiple keys not found works."""
+        TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
+        info = 'foo::bar|'
+        res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
+        assert len(res) == 1
+        assert res[0].info['foo'] == 'bar', res[0]
+        assert res[0].info['bar'] == 'foo', res[0]
+
+
     def test_handle_info_json_wrong_data(self):
         """Test handle info in JSON with wrong data works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
@@ -82,6 +130,10 @@ class TestTaskRepositoryForTaskQueries(Test):
         infos = ['|', '||', '|::', ':|', '::|', '|:', 'foo|', 'foo|']
         for info in infos:
             res = self.task_repo.filter_tasks_by(info=info)
+            assert len(res) == 0
+
+        for info in infos:
+            res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
             assert len(res) == 0
 
     def test_get_task_return_none_if_no_task(self):
@@ -258,6 +310,32 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
 
+    def test_get_task_run_by_info_json(self):
+        """Test get_task_run_by with JSON returns a
+        taskrun with the specified attribute"""
+
+        data = {'foo': 'bar'}
+        taskrun = TaskRunFactory.create(info=data)
+
+        info = 'foo::bar'
+        retrieved_taskrun = self.task_repo.get_task_run_by(info=info)
+
+        assert taskrun == retrieved_taskrun, retrieved_taskrun
+
+    def test_get_task_run_by_info_json_fulltext(self):
+        """Test get_task_run_by with JSON and fulltext returns a
+        taskrun with the specified attribute"""
+
+        data = {'foo': 'bar'}
+        taskrun = TaskRunFactory.create(info=data)
+
+        info = 'foo::bar'
+        retrieved_taskrun = self.task_repo.get_task_run_by(info=info,
+                                                           fulltextsearch='1')
+
+        assert taskrun == retrieved_taskrun, retrieved_taskrun
+
+
 
     def test_get_task_run_by_returns_none_if_no_task_run(self):
         """Test get_task_run_by returns None if no taskrun matches the query"""
@@ -307,6 +385,27 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun in retrieved_taskruns, retrieved_taskruns
 
 
+    def test_filter_task_runs_by_multiple_conditions_fulltext(self):
+        """Test filter_task_runs_by supports multiple-condition
+        fulltext queries"""
+
+        text = 'you agent something word'
+        data = {'foo': 'bar', 'bar': text}
+        TaskRunFactory.create(info=data, user_ip='8.8.8.8')
+        taskrun = TaskRunFactory.create(info=data, user_ip='1.1.1.1')
+
+        info = 'foo::bar|bar::agent'
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info=info,
+                                                                user_ip='1.1.1.1',
+                                                                fulltextsearch='1')
+
+        assert len(retrieved_taskruns) == 1, retrieved_taskruns
+        assert taskrun in retrieved_taskruns, retrieved_taskruns
+
+        retrieved_taskruns = self.task_repo.filter_task_runs_by(info=info,
+                                                                user_ip='1.1.1.1')
+        assert len(retrieved_taskruns) == 0, retrieved_taskruns
+
     def test_filter_task_runs_support_yield_option(self):
         """Test that filter_task_runs_by with the yielded=True option returns
         the results as a generator"""
@@ -322,7 +421,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
             assert taskrun in task_runs
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_tasks_runs_limit_offset(self):
         """Test that filter_tasks_by supports limit and offset options"""
 
         TaskRunFactory.create_batch(4)
