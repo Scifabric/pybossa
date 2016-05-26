@@ -1,0 +1,5 @@
+================
+Changelog v2.2.1
+================
+
+ * Add as many pages as you want. Create static pages by putting them in your home static folder.
