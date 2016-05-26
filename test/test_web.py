@@ -74,6 +74,27 @@ class TestWeb(web.Helper):
         assert "Search" in res.data, err_msg
 
     @with_context
+    def test_result_view(self):
+        """Test WEB result page works."""
+        import os
+        APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+        template_folder = os.path.join(APP_ROOT, '..', 'pybossa',
+                                       self.flask_app.template_folder)
+        file_name = os.path.join(template_folder, "home", "_results.html")
+        with open(file_name, "w") as f:
+            f.write("foobar")
+        res = self.app.get('/results')
+        assert "foobar" in res.data, res.data
+        os.remove(file_name)
+
+    @with_context
+    def test_00000_results_not_found(self):
+        """Test WEB results page returns 404 when no template is found works."""
+        res = self.app.get('/results')
+        assert res.status_code == 404, res.status_code
+
+
+    @with_context
     def test_leaderboard(self):
         """Test WEB leaderboard works"""
         user = UserFactory.create()
