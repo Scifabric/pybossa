@@ -235,18 +235,15 @@ The same can be done for Javascript using the filter minjs:
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-Adding static pages
-===================
+Results page
+=============
 
-Sometimes you'll need to add some extra content pages. If you need it, all you have
-to do is adding a file in the themes folder, under the home directory. There add a
-file named for example: _foobar.html. Then, PyBossa will be serving that page like
-this:
+PyBossa allows you to present a results page for your server. Add a file named
+_results.html to the home directory in the templates folder and you'll be able
+to show results about your project from one place:
 
+    http://server/results
 
-    http://server/foobar
-
-Enjoy!
 
 Adding your Contact Information
 ===============================

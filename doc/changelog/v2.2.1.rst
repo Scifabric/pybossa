@@ -2,4 +2,4 @@
 Changelog v2.2.1
 ================
 
- * Add as many pages as you want. Create static pages by putting them in your home static folder.
+ * Add a global results page. This can be fully customized in each theme.
