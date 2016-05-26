@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Home view for PyBossa."""
-from flask import current_app
+from flask import current_app, abort
 from flask.ext.login import current_user
 from pybossa.model.category import Category
 from flask import Blueprint
@@ -25,6 +25,7 @@ from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.util import rank
+from jinja2.exceptions import TemplateNotFound
 
 
 blueprint = Blueprint('home', __name__)
@@ -74,3 +75,12 @@ def about():
 def search():
     """Render search results page."""
     return render_template("/home/search.html")
+
+@blueprint.route("<string:name>")
+def page(name):
+    """Render a page from the theme's template."""
+    try:
+        template_name = "/home/_" + name + ".html"
+        return render_template(template_name)
+    except TemplateNotFound:
+        return abort(404)
