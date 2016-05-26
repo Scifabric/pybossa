@@ -77,7 +77,7 @@ def search():
     return render_template("/home/search.html")
 
 @blueprint.route("results")
-def result(name):
+def result():
     """Render a results page."""
     try:
         return render_template("/home/_results.html")
