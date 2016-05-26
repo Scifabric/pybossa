@@ -76,11 +76,10 @@ def search():
     """Render search results page."""
     return render_template("/home/search.html")
 
-@blueprint.route("<string:name>")
-def page(name):
-    """Render a page from the theme's template."""
+@blueprint.route("results")
+def result(name):
+    """Render a results page."""
     try:
-        template_name = "/home/_" + name + ".html"
-        return render_template(template_name)
+        return render_template("/home/_results.html")
     except TemplateNotFound:
         return abort(404)
