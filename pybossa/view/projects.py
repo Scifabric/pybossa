@@ -743,7 +743,8 @@ def task_presenter(short_name, task_id):
         if redirect_to_password:
             return redirect_to_password
     else:
-        ensure_authorized_to('read', project)
+        pass
+        # ensure_authorized_to('read', project)
 
     if current_user.is_anonymous():
         if not project.allow_anonymous_contributors:
@@ -808,7 +809,8 @@ def presenter(short_name):
         if redirect_to_password:
             return redirect_to_password
     else:
-        ensure_authorized_to('read', project)
+        pass
+        # ensure_authorized_to('read', project)
 
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
