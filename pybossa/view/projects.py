@@ -816,13 +816,13 @@ def presenter(short_name):
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project)}
 
-    # if not project.allow_anonymous_contributors and current_user.is_anonymous():
-    #     msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
-    #            project" % project.name
-    #     flash(gettext(msg), 'warning')
-    #     return redirect(url_for('account.signin',
-    #                     next=url_for('.presenter',
-    #                                  short_name=project.short_name)))
+    if not project.allow_anonymous_contributors and current_user.is_anonymous():
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
+               project" % project.name
+        flash(gettext(msg), 'warning')
+        return redirect(url_for('account.signin',
+                        next=url_for('.presenter',
+                                     short_name=project.short_name)))
 
     msg = "Ooops! You are an anonymous user and will not \
            get any credit for your contributions. Sign in \
