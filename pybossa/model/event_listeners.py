@@ -168,7 +168,9 @@ def create_result(conn, project_id, task_id):
     conn.execute(sql_query)
 
     sql_query = """SELECT id FROM result \
-                WHERE project_id=%s AND task_id=%s""" % (project_id, task_id)
+                WHERE project_id=%s \
+                AND task_id=%s \
+                AND last_version=true""" % (project_id, task_id)
 
     results = conn.execute(sql_query)
     for r in results:
