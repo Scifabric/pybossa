@@ -300,6 +300,7 @@ class APIBase(MethodView):
         old = self.__class__(**existing.dictize())
         for key in data:
             setattr(existing, key, data[key])
+        self._update_attribute(existing, old)
         update_func = repos[self.__class__.__name__]['update']
         self._validate_instance(existing)
         getattr(repo, update_func)(existing)
@@ -314,6 +315,13 @@ class APIBase(MethodView):
 
         """
         pass
+
+    def _update_attribute(self, new, old):
+        """Update object attribute if new value is passed.
+        Method to be overriden in inheriting classes which wish to update
+        data dict.
+
+        """
 
     def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not

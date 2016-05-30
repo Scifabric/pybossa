@@ -383,6 +383,7 @@ class TestTaskAPI(TestAPI):
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
         assert_equal(task.n_answers, data['n_answers'])
+        assert_equal(task.state, 'ongoing')
         assert task.id == out['id'], out
 
         ### root
@@ -390,6 +391,7 @@ class TestTaskAPI(TestAPI):
                            data=root_datajson)
         assert_equal(res.status, '200 OK', res.data)
         assert_equal(root_task.n_answers, root_data['n_answers'])
+        assert_equal(task.state, 'ongoing')
 
         # PUT with not JSON data
         res = self.app.put(url, data=data)
@@ -418,6 +420,47 @@ class TestTaskAPI(TestAPI):
         assert err['target'] == 'task', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
+
+    @with_context
+    def test_task_update_state(self):
+        """Test API task n_answers updates state properly."""
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project, n_answers=1,
+                                  state='ongoing')
+        data = {'n_answers': 2}
+        datajson = json.dumps(data)
+
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(task.n_answers, data['n_answers'])
+        assert_equal(task.state, 'ongoing')
+        assert task.id == out['id'], out
+
+        task.state = 'completed'
+        task_repo.update(task)
+
+        data = {'n_answers': 1}
+        datajson = json.dumps(data)
+
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(task.n_answers, data['n_answers'])
+        assert_equal(task.state, 'completed')
+        assert task.id == out['id'], out
+
+        data = {'n_answers': 5}
+        datajson = json.dumps(data)
+
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(task.n_answers, data['n_answers'])
+        assert_equal(task.state, 'ongoing')
+        assert task.id == out['id'], out
 
 
     @with_context

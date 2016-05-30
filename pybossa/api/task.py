@@ -40,3 +40,7 @@ class TaskAPI(APIBase):
         for key in data.keys():
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
+
+    def _update_attribute(self, new, old):
+        if (new.state == 'completed') and (old.n_answers <= new.n_answers):
+            new.state = 'ongoing'
