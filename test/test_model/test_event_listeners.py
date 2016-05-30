@@ -113,7 +113,6 @@ class TestModelEventListeners(Test):
 
         assert mock_create_result.called
         err_msg = "The result should ID should be the same"
-        assert len(result) == 1, len(result)
         assert result_id == result.id, err_msg
 
         task.n_answers = 2
@@ -126,5 +125,6 @@ class TestModelEventListeners(Test):
                                        task_id=task.id,
                                        last_version=True)
         assert len(result) == 1, len(result)
+        result = result[0]
         err_msg = "The result should ID should be the same"
         assert result_id == result.id, err_msg
