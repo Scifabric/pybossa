@@ -442,7 +442,17 @@ class TestTaskAPI(TestAPI):
         task.state = 'completed'
         task_repo.update(task)
 
-        data = {'n_answers': 3}
+        data = {'n_answers': 1}
+        datajson = json.dumps(data)
+
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(task.n_answers, data['n_answers'])
+        assert_equal(task.state, 'completed')
+        assert task.id == out['id'], out
+
+        data = {'n_answers': 5}
         datajson = json.dumps(data)
 
         res = self.app.put(url, data=datajson)
