@@ -19,7 +19,7 @@
 DEBUG = False
 
 # webserver host and port
-HOST = 'http://altclick-test.focallabs.co.uk'
+HOST = '0.0.0.0'
 PORT = 5000
 
 SECRET = 'foobar'
