@@ -13,7 +13,6 @@ services:
 addons:
   postgresql: "9.3"
 before_install:
-- rm /etc/init/docker.conf
 - curl -fsSL https://test.docker.com | sh
 - git submodule update --init --recursive
 - sudo apt-get update -y && sudo apt-get install -y swig libffi-dev
