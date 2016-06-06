@@ -280,6 +280,7 @@ def new():
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def task_presenter_editor(short_name):
     errors = False
     (project, owner, n_tasks, n_task_runs,
@@ -370,6 +371,7 @@ def task_presenter_editor(short_name):
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def delete(short_name):
     (project, owner, n_tasks,
     n_task_runs, overall_progress, last_activity,
@@ -395,6 +397,7 @@ def delete(short_name):
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def update(short_name):
     (project, owner, n_tasks,
      n_task_runs, overall_progress, last_activity,
@@ -501,6 +504,8 @@ def update(short_name):
 
 
 @blueprint.route('/<short_name>/')
+@login_required
+@admin_required
 def details(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -536,6 +541,7 @@ def details(short_name):
 
 @blueprint.route('/<short_name>/settings')
 @login_required
+@admin_required
 def settings(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -561,6 +567,7 @@ def settings(short_name):
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def import_task(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -636,6 +643,7 @@ def _import_tasks(project, **form_data):
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def setup_autoimporter(short_name):
     pro = pro_features()
     if not pro['autoimporter_enabled']:
@@ -691,6 +699,7 @@ def setup_autoimporter(short_name):
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
 @login_required
+@admin_required
 def delete_autoimporter(short_name):
     pro = pro_features()
     if not pro['autoimporter_enabled']:
@@ -857,6 +866,8 @@ def tutorial(short_name):
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
+@login_required
+@admin_required
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
@@ -882,6 +893,8 @@ def export(short_name, task_id):
 
 
 @blueprint.route('/<short_name>/tasks/')
+@login_required
+@admin_required
 def tasks(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1209,6 +1222,7 @@ def show_stats(short_name):
 
 @blueprint.route('/<short_name>/tasks/settings')
 @login_required
+@admin_required
 def task_settings(short_name):
     """Settings page for tasks of the project"""
     (project, owner, n_tasks, n_task_runs,
@@ -1232,6 +1246,7 @@ def task_settings(short_name):
 
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def task_n_answers(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1268,6 +1283,7 @@ def task_n_answers(short_name):
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def task_scheduler(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1318,6 +1334,7 @@ def task_scheduler(short_name):
 
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def task_priority(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1419,6 +1436,7 @@ def show_blogpost(short_name, id):
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def new_blogpost(short_name):
     pro = pro_features()
 
@@ -1467,6 +1485,7 @@ def new_blogpost(short_name):
 
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def update_blogpost(short_name, id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1516,6 +1535,7 @@ def update_blogpost(short_name, id):
 
 @blueprint.route('/<short_name>/<int:id>/delete', methods=['POST'])
 @login_required
+@admin_required
 def delete_blogpost(short_name, id):
     project = project_by_shortname(short_name)[0]
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
@@ -1539,6 +1559,7 @@ def _check_if_redirect_to_password(project):
 
 @blueprint.route('/<short_name>/auditlog')
 @login_required
+@admin_required
 def auditlog(short_name):
     pro = pro_features()
     if not pro['auditlog_enabled']:
@@ -1563,6 +1584,7 @@ def auditlog(short_name):
 
 @blueprint.route('/<short_name>/publish', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def publish(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
@@ -1593,6 +1615,7 @@ def project_event_stream(short_name, channel_type):
 
 @blueprint.route('/<short_name>/privatestream')
 @login_required
+@admin_required
 def project_stream_uri_private(short_name):
     """Returns stream."""
     if current_app.config.get('SSE'):
@@ -1625,6 +1648,7 @@ def project_stream_uri_public(short_name):
 @blueprint.route('/<short_name>/webhook', defaults={'oid': None})
 @blueprint.route('/<short_name>/webhook/<int:oid>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def webhook_handler(short_name, oid=None):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
