@@ -5,7 +5,7 @@
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# the Free Software Foundation, either version 3 of the License, ort
 # (at your option) any later version.
 #
 # PyBossa is distributed in the hope that it will be useful,
@@ -928,6 +928,8 @@ def tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
+@login_required
+@admin_required
 def tasks_browse(short_name, page):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
