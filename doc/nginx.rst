@@ -179,6 +179,20 @@ console::
 
   ps aux | grep rq
 
+Setup PyBossa itself
+--------------------
+
+This steps are recommended to do when you run PyBossa in nginx. Open your **settings_local.py** in your PyBossa
+installation and uncomment or delete the two lines with **HOST** and **PORT**, e.g.::
+
+  # HOST = '0.0.0.0'
+  # PORT = 12000
+
+After that specify the full server URL where your PyBossa is reachable, e.g.::
+
+  SERVER_NAME = mypybossa.com
+  PORT = 80
+
 Let PyBossa run as service
 --------------------------
 
