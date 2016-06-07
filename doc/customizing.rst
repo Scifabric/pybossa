@@ -235,6 +235,15 @@ The same can be done for Javascript using the filter minjs:
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
+Results page
+=============
+
+PyBossa allows you to present a results page for your server. Add a file named
+_results.html to the home directory in the templates folder and you'll be able
+to show results about your project from one place:
+
+    http://server/results
+
 
 Adding your Contact Information
 ===============================
