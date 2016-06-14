@@ -78,6 +78,18 @@ def n_task_runs_site():
     return n_task_runs or 0
 
 
+@cache(timeout=ONE_DAY, key_prefix="site_n_results")
+def n_results_site():
+    """Return number of results in the server."""
+    sql = text('''
+               SELECT COUNT(id) AS n_results FROM result;
+               ''')
+    results = session.execute(sql)
+    for row in results:
+        n_results = row.n_results
+    return n_results or 0
+
+
 @cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
 def get_top5_projects_24_hours():
     """Return the top 5 projects more active in the last 24 hours."""

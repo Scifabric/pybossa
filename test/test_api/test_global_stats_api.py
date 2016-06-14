@@ -30,7 +30,7 @@ class TestGlobalStatsAPI(TestAPI):
         stats = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         keys = ['n_projects', 'n_pending_tasks',
-                'n_users', 'n_task_runs', 'categories']
+                'n_users', 'n_task_runs', 'n_results', 'categories']
         for k in keys:
             err_msg = "%s should be in stats JSON object" % k
             assert k in stats.keys(), err_msg

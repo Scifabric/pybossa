@@ -53,6 +53,7 @@ class GlobalStatsAPI(APIBase):
                     n_users=n_users,
                     n_task_runs=stats.n_task_runs_site(),
                     n_pending_tasks=n_pending_tasks,
+                    n_results=stats.n_results_site(),
                     categories=[])
         # Add Categories
         categories = cached_categories.get_used()

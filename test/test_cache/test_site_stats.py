@@ -17,14 +17,36 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-from default import Test
+from default import db, Test
 from pybossa.cache import site_stats as stats
 from factories import (UserFactory, ProjectFactory, AnonymousTaskRunFactory,
-    TaskRunFactory, TaskFactory)
+                       TaskRunFactory, TaskFactory)
+from pybossa.repositories import ResultRepository
 from mock import patch, Mock
+
+result_repo = ResultRepository(db)
 
 
 class TestSiteStatsCache(Test):
+
+    def create_result(self, n_results=1, n_answers=1, owner=None,
+                      filter_by=False):
+        if owner:
+            owner = owner
+        else:
+            owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        tasks = []
+        for i in range(n_results):
+            tasks.append(TaskFactory.create(n_answers=n_answers,
+                                            project=project))
+        for i in range(n_answers):
+            for task in tasks:
+                TaskRunFactory.create(task=task, project=project)
+        if filter_by:
+            return result_repo.filter_by(project_id=1)
+        else:
+            return result_repo.get_by(project_id=1)
 
     def test_n_auth_users_returns_number_of_registered_users(self):
         UserFactory.create_batch(2)
@@ -64,6 +86,17 @@ class TestSiteStatsCache(Test):
 
         assert task_runs == 2, task_runs
 
+    def test_n_results_site_returns_total_number_of_n_results(self):
+        self.create_result()
+        n_results = stats.n_results_site()
+
+        assert n_results == 1, n_results
+
+        self.create_result(n_results=2)
+        n_results = stats.n_results_site()
+
+        assert n_results == 3, n_results
+
     def test_get_top5_projects_24_hours_returns_best_5_only(self):
         projects = ProjectFactory.create_batch(5)
         i = 5
@@ -80,7 +113,6 @@ class TestSiteStatsCache(Test):
         assert worst_project.id not in top5_ids
         for i in range(len(top5)):
             assert projects[i].id == top5_ids[i]
-
 
     def test_get_top5_projects_24_hours_considers_last_24_hours_contributions_only(self):
         recently_contributed_project = ProjectFactory.create()
