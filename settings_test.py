@@ -24,7 +24,7 @@ ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
            ('ja', u'日本語'), ('el', u'ελληνικά')]
-ENFORCE_PRIVACY = True
+ENFORCE_PRIVACY = False
 REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_KEYPREFIX = 'pybossa_cache'
