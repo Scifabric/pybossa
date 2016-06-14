@@ -83,7 +83,9 @@ def n_results_site():
     """Return number of results in the server."""
     sql = text('''
                SELECT COUNT(id) AS n_results FROM result
-               WHERE info IS NOT NULL;
+               WHERE info IS NOT NULL
+               AND cast(info AS TEXT) != 'null'
+               AND cast(info AS TEXT) != '';
                ''')
     results = session.execute(sql)
     for row in results:

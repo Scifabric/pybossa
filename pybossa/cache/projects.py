@@ -120,7 +120,9 @@ def n_results(project_id):
     query = text('''
                  SELECT COUNT(id) AS ct FROM result
                  WHERE project_id=:project_id
-                 AND info IS NOT NULL;
+                 AND info IS NOT NULL
+                 AND cast(info AS TEXT) != 'null'
+                 AND cast(info AS TEXT) != '';
                  ''')
     results = session.execute(query, dict(project_id=project_id))
     n_results = 0
