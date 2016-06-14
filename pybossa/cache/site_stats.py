@@ -82,7 +82,8 @@ def n_task_runs_site():
 def n_results_site():
     """Return number of results in the server."""
     sql = text('''
-               SELECT COUNT(id) AS n_results FROM result;
+               SELECT COUNT(id) AS n_results FROM result
+               WHERE info IS NOT NULL;
                ''')
     results = session.execute(sql)
     for row in results:

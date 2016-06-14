@@ -86,16 +86,45 @@ class TestSiteStatsCache(Test):
 
         assert task_runs == 2, task_runs
 
-    def test_n_results_site_returns_total_number_of_n_results(self):
+    def test_n_results_site_returns_zero_results_when_no_info(self):
+        n_results = stats.n_results_site()
+
+        assert n_results == 0, n_results
+
         self.create_result()
         n_results = stats.n_results_site()
 
-        assert n_results == 1, n_results
+        assert n_results == 0, n_results
 
         self.create_result(n_results=2)
         n_results = stats.n_results_site()
 
-        assert n_results == 3, n_results
+        assert n_results == 0, n_results
+
+    def test_n_results_site_returns_valid_results_with_info(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1, project=project)
+        TaskRunFactory.create(task=task, project=project)
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
+        n_results = stats.n_results_site()
+
+        assert n_results == 1, n_results
+
+        project = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1, project=project)
+        TaskRunFactory.create(task=task, project=project)
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar2')
+        result_repo.update(result)
+        n_results = stats.n_results_site()
+
+        assert n_results == 2, n_results
+
+        self.create_result(n_results=10)
+
+        assert n_results == 2, n_results
 
     def test_get_top5_projects_24_hours_returns_best_5_only(self):
         projects = ProjectFactory.create_batch(5)
