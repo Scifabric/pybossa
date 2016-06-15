@@ -61,21 +61,6 @@ def home():
             d['top_users'] = cached_users.get_leaderboard(10)
     if not current_app.config['ENFORCE_PRIVACY']:
         d['top_users'] = cached_users.get_leaderboard(10)
-    '''
-    active_users_last_week = dashb.format_users_week()
-    active_anon_last_week = dashb.format_anon_week()
-    new_task_runs_week = dashb.format_new_task_runs()
-    project = cached_projects.get_project('urgent-actions')
-    overall_progress = cached_projects.overall_progress(project.id)
-    last_activity = cached_projects.last_activity(project.id)
-    return render_template('/home/index.html',
-                           active_users_last_week=active_users_last_week,
-                           active_anon_last_week=active_anon_last_week,
-                           new_task_runs_week=new_task_runs_week,
-                           overall_progress =overall_progress,
-                           last_activity= last_activity,
-                           **d)
-    '''
     return render_template('/home/index.html', **d)
 
 
