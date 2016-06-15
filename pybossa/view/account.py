@@ -472,6 +472,7 @@ def _handle_profile_update(user, update_form):
             user.newsletter_prompted = False
             account = dict(fullname=update_form.fullname.data,
                            name=update_form.name.data,
+                           country=update_form.country.data,
                            email_addr=update_form.email_addr.data,
                            privacy_mode=update_form.privacy_mode.data,
                            newsletter_subscribe=update_form.newsletter_subscribe,
