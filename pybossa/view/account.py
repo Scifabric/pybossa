@@ -202,6 +202,7 @@ def register():
 
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        country=form.country.data,
+                       newsletter_subscribe=form.newsletter_subscribe.data,
                        email_addr=form.email_addr.data,
                        password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
@@ -274,6 +275,7 @@ def _create_account(user_data):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                country=user_data['country'],
+                               newsletter_subscribe=user_data['newsletter_subscribe'],
                                email_addr=user_data['email_addr'],
                                valid_email=True)
     new_user.set_password(user_data['password'])
@@ -464,13 +466,17 @@ def _handle_profile_update(user, update_form):
         user.fullname = update_form.fullname.data
         user.name = update_form.name.data
         user.country = update_form.country.data
+        user.newsletter_subscribe = update_form.newsletter_subscribe.data
         if (user.email_addr != update_form.email_addr.data and
                 acc_conf_dis is False):
             user.valid_email = False
             user.newsletter_prompted = False
             account = dict(fullname=update_form.fullname.data,
                            name=update_form.name.data,
-                           email_addr=update_form.email_addr.data)
+                           email_addr=update_form.email_addr.data,
+                           privacy_mode=update_form.privacy_mode.data,
+                           newsletter_subscribe=update_form.newsletter_subscribe,
+                           subscribed=update_form.subscribed)
             confirm_url = get_email_confirmation_url(account)
             subject = ('You have updated your email in %s! Verify it' \
                        % current_app.config.get('BRAND'))

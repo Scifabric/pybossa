@@ -45,6 +45,8 @@ class User(db.Model, DomainObject, UserMixin):
     fullname = Column(Unicode(length=500), nullable=False)
     #: Country of the user
     country = Column(Unicode(length=250), nullable=False)
+    #: subscribe to newsletter of the user
+    newsletter_subscribe = Column(Boolean, default=False)
     #: Language used by the user in the PyBossa server.
     locale = Column(Unicode(length=254), default=u'en', nullable=False)
     api_key = Column(String(length=36), default=make_uuid, unique=True)
