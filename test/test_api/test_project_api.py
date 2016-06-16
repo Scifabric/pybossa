@@ -56,9 +56,14 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        projects = ProjectFactory.create_batch(10, info={'total': 150})
+        project = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
+        projects = ProjectFactory.create_batch(8, info={'total': 150})
+        project = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
+        projects.insert(0, project)
+        projects.append(project)
         res = self.app.get('/api/project')
         data = json.loads(res.data)
+        dataNoDesc = data
         assert len(data) == 10, data
         project = data[0]
         assert project['info']['total'] == 150, data
@@ -87,6 +92,13 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 5, data
         assert data[0]['id'] == projects[5].id, data
+
+        # Desc filter
+        url = "/api/project?desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['updated'] == projects[len(projects)-1].updated, err_msg
 
 
     @with_context
