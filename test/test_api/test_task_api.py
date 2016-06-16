@@ -58,7 +58,12 @@ class TestTaskAPI(TestAPI):
     def test_task_query_without_params(self):
         """ Test API Task query"""
         project = ProjectFactory.create()
-        TaskFactory.create_batch(10, project=project, info={'question': 'answer'})
+        t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
+        tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
+        t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119', info={'question': 'answer'})
+        tasks.insert(0, t1)
+        tasks.append(t2)
+
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
         assert len(tasks) == 10, tasks
@@ -67,6 +72,13 @@ class TestTaskAPI(TestAPI):
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+        # Desc filter
+        url = "/api/task?desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['created'] == tasks[len(tasks)-1]['created'], err_msg
 
 
     @with_context

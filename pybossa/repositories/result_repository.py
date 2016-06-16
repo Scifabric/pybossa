@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import cast, Date
 from pybossa.repositories import Repository
 from pybossa.model.result import Result
 from pybossa.exc import WrongObjectError, DBIntegrityError
@@ -32,7 +33,7 @@ class ResultRepository(Repository):
         return self.db.session.query(Result).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, yielded=False,
-                  last_id=None, fulltextsearch=None, **filters):
+                  last_id=None, fulltextsearch=None, desc=False, **filters):
         if 'last_version' not in filters.keys():
             filters['last_version'] = True
         if filters['last_version'] is False:
@@ -42,7 +43,11 @@ class ResultRepository(Repository):
             query = query.filter(Result.id > last_id)
             query = query.order_by(Result.id).limit(limit)
         else:
-            query = query.order_by(Result.id).limit(limit).offset(offset)
+            if desc:
+                query = query.order_by(cast(Result.created, Date).desc())\
+                        .limit(limit).offset(offset)
+            else:
+                query = query.order_by(Result.id).limit(limit).offset(offset)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)

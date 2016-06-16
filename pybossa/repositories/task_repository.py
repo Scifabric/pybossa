@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import cast, Date
 
 from pybossa.repositories import Repository
 from pybossa.model.task import Task
@@ -38,14 +39,19 @@ class TaskRepository(Repository):
         return self.db.session.query(Task).filter(*filters).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
-                        last_id=None, fulltextsearch=None, **filters):
+                        last_id=None, fulltextsearch=None, desc=False,
+                        **filters):
 
         query = self.create_context(filters, fulltextsearch, Task)
         if last_id:
             query = query.filter(Task.id > last_id)
             query = query.order_by(Task.id).limit(limit)
         else:
-            query = query.order_by(Task.id).limit(limit).offset(offset)
+            if desc:
+                query = query.order_by(cast(Task.created, Date).desc())\
+                        .limit(limit).offset(offset)
+            else:
+                query = query.order_by(Task.id).limit(limit).offset(offset)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
@@ -67,13 +73,18 @@ class TaskRepository(Repository):
         return self.db.session.query(TaskRun).filter(*filters).first()
 
     def filter_task_runs_by(self, limit=None, offset=0, last_id=None,
-                            yielded=False, fulltextsearch=None, **filters):
+                            yielded=False, fulltextsearch=None,
+                            desc=False, **filters):
         query = self.create_context(filters, fulltextsearch, TaskRun)
         if last_id:
             query = query.filter(TaskRun.id > last_id)
             query = query.order_by(TaskRun.id).limit(limit)
         else:
-            query = query.order_by(TaskRun.id).limit(limit).offset(offset)
+            if desc:
+                query = query.order_by(cast(TaskRun.created, Date).desc())\
+                        .limit(limit).offset(offset)
+            else:
+                query = query.order_by(TaskRun.id).limit(limit).offset(offset)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
