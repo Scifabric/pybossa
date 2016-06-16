@@ -64,6 +64,10 @@ class TestTaskrunAPI(TestAPI):
                                     info={'answer': 'annakarenina'})
         TaskRunFactory.create_batch(10, project=project_two,
                                     info={'answer': 'annakarenina'})
+        date_new = '2019-01-01T14:37:30.642119'
+        date_old = '2014-01-01T14:37:30.642119'
+        TaskRunFactory.create(created=date_new)
+        TaskRunFactory.create(created=date_old)
 
         project_ids = [project.id, project_two.id]
         # As anon, it sould return everything
@@ -118,6 +122,13 @@ class TestTaskrunAPI(TestAPI):
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+        url = "/api/taskrun?desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['created'] == date_new, err_msg
+
 
 
     @with_context
