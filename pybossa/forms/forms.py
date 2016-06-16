@@ -325,7 +325,7 @@ class RegisterForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
     country = SelectField(lazy_gettext('Country'), choices=[(cnt, cnt) for cnt in COUNTRY_LIST])
-    newsletter_subscribe = BooleanField(lazy_gettext('Subscribe to newsletter'))
+    newsletter_subscribe = BooleanField(lazy_gettext('I would like to receive email updates about Amnesty Decoders and other projects.'))
 
 
 class UpdateProfileForm(Form):
@@ -340,7 +340,7 @@ class UpdateProfileForm(Form):
                          [validators.Length(min=3, max=USER_FULLNAME_MAX_LENGTH, message=err_msg)])
 
     country = SelectField(lazy_gettext('Country'), choices=[(cnt, cnt) for cnt in COUNTRY_LIST])
-    newsletter_subscribe = BooleanField(lazy_gettext('Subscribe to newsletter'))
+    newsletter_subscribe = BooleanField(lazy_gettext('I would like to receive email updates about Amnesty Decoders and other projects.'))
 
     err_msg = lazy_gettext("User name must be between 3 and %(username_length)s "
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
