@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import cast, Date
 
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -44,7 +45,7 @@ class ProjectRepository(object):
         return self.db.session.query(Project).all()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  fulltextsearch=None, **filters):
+                  fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
             filters['owner_id'] = filters.get('owner_id')
         query = self.db.session.query(Project).filter_by(**filters)
@@ -52,7 +53,11 @@ class ProjectRepository(object):
             query = query.filter(Project.id > last_id)
             query = query.order_by(Project.id).limit(limit)
         else:
-            query = query.order_by(Project.id).limit(limit).offset(offset)
+            if desc:
+                query = query.order_by(cast(Project.updated, Date).desc())\
+                        .limit(limit).offset(offset)
+            else:
+                query = query.order_by(Project.id).limit(limit).offset(offset)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
