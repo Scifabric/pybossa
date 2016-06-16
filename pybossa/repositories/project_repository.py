@@ -108,7 +108,8 @@ class ProjectRepository(object):
         return self.db.session.query(Category).all()
 
     def filter_categories_by(self, limit=None, offset=0, yielded=False,
-                             last_id=None, fulltextsearch=None, **filters):
+                             last_id=None, fulltextsearch=None,
+                             desc=False, **filters):
         query = self.db.session.query(Category).filter_by(**filters)
         if last_id:
             query = query.filter(Category.id > last_id)
