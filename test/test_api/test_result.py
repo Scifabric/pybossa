@@ -69,6 +69,23 @@ class TestResultAPI(TestAPI):
         assert result['task_id'] == 1, result
         assert result['created'] is not None, result
 
+        result = self.create_result(n_answers=10)
+        result = result_repo.get(2)
+        result.created = '2119-01-01T14:37:30.642119'
+        result_repo.update(result)
+
+        url = '/api/result?desc=true'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['created'] == '2119-01-01T14:37:30.642119', err_msg
+
+        url = '/api/result'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get not the last item first."
+        assert data[0]['created'] != '2119-01-01T14:37:30.642119', err_msg
+
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
