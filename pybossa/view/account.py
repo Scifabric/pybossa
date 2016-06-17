@@ -130,7 +130,7 @@ def signin():
                                next=request.args.get('next'))
     else:
         # User already signed in, so redirect to home page
-        return redirect(url_for('.profile', name=current_user.name))
+        return redirect(url_for('home.home'))
 
 
 def _sign_in_user(user):
@@ -138,7 +138,7 @@ def _sign_in_user(user):
     if newsletter.ask_user_to_subscribe(user):
         return redirect(url_for('account.newsletter_subscribe',
                                  next=request.args.get('next')))
-    return redirect(request.args.get("next") or url_for('.profile', name=current_user.name))
+    return redirect(request.args.get("next") or url_for('home.home'))
 
 @blueprint.route('/signout')
 def signout():
