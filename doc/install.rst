@@ -104,7 +104,7 @@ Installing the required libraries for PyBossa is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev
+    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
 
 Then, you are ready to download the code and install the required libraries for
 running PyBossa.
