@@ -48,7 +48,6 @@ requirements = [
     "feedparser",
     "twitter>=1.17.1, <1.18",
     "google-api-python-client>=1.5.0, <1.6.0",
-    "keyring>=9.2.1, <9.3.0"
     "Flask-Assets",
     "jsmin",
     "libsass"

@@ -14,8 +14,7 @@ addons:
   postgresql: "9.3"
 before_install:
 - git submodule update --init --recursive
-- dpkg --get-selections | grep dbus
-- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev dbus
+- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev dbus libnih-dbus1
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
