@@ -37,6 +37,9 @@
         - libssl-dev
         - swig
         - libffi-dev
+        - dbus
+        - libdbus-1-dev
+        - libdbus-glib-1-dev
 
     - name: install PostgreSQL
       apt: name={{item}} state=latest
