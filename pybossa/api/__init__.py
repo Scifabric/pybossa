@@ -30,6 +30,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 
 import json
+from jose import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
@@ -184,3 +185,25 @@ def user_progress(project_id=None, short_name=None):
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
+
+
+@jsonpify
+@blueprint.route('/auth/project/<short_name>/token')
+@crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def auth_jwt_project(short_name):
+    """Create a JWT for a project via its secret KEY."""
+    project_secret_key = None
+    if 'Authorization' in request.headers:
+        project_secret_key = request.headers.get('Authorization')
+    if project_secret_key:
+        project = project_repo.get_by_shortname(short_name)
+        if project and project.secret_key == project_secret_key:
+            token = jwt.encode({'short_name': short_name,
+                                'project_id': project.id},
+                               project.secret_key, algorithm='HS256')
+            return token
+        else:
+            return abort(404)
+    else:
+        return abort(403)
