@@ -45,7 +45,8 @@ class ProjectAPI(APIBase):
 
     __class__ = Project
     reserved_keys = set(['id', 'created', 'updated', 'completed', 'contacted',
-                         'published'])
+                         'published', 'secret_key'])
+    private_keys = set(['secret_key'])
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
@@ -71,3 +72,9 @@ class ProjectAPI(APIBase):
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
+
+    def _select_attributes(self, data):
+        for key in self.private_keys:
+            if data.get(key):
+                del data[key]
+        return data
