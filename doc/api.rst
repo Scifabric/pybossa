@@ -286,6 +286,14 @@ to escape the & operator with %26 to use the and operator.
     If the search does not find anything, the server will return an empty JSON
     list []
 
+
+Finally you can also get the results ordered by date of creation listing first the latest
+domain objects (projects, tasks, task runs and results) using the following argument
+in the URL::
+
+    GET http://server.com/api/project?desc=true
+
+
 Create
 ~~~~~~
 
