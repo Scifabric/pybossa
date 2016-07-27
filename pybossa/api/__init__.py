@@ -137,9 +137,13 @@ def _retrieve_new_task(project_id):
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
+    external_uid = None
+    if user_ip is None and user_id is None:
+        external_uid = request.args.get('external_uid')
     task = sched.new_task(project_id, project.info.get('sched'),
                           user_id,
                           user_ip,
+                          external_uid,
                           offset)
     return task
 
