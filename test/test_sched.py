@@ -28,7 +28,9 @@ from pybossa.model.project import Project
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
-from factories import TaskFactory, ProjectFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
+from pybossa.core import task_repo
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
+from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 import pybossa
 
 
@@ -77,6 +79,47 @@ class TestSched(sched.Helper):
         err_msg = "One Assigned Task is duplicated"
         for at in assigned_tasks:
             assert self.is_unique(at['id'], assigned_tasks), err_msg
+
+    @with_context
+    def test_external_uid_02_gets_different_tasks(self):
+        """ Test SCHED newtask returns N different Tasks
+        for a external User ID."""
+        assigned_tasks = []
+        # Get a Task until scheduler returns None
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project, info={})
+        url = 'api/project/%s/newtask?external_uid=%s' % (project.id, '1xa')
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        while data.get('info') is not None:
+            # Save the assigned task
+            assigned_tasks.append(data)
+
+            task = db.session.query(Task).get(data['id'])
+            # Submit an Answer for the assigned task
+            tr = ExternalUidTaskRunFactory.create(project=project, task=task)
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+        # Check if we received the same number of tasks that the available ones
+        assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
+        # Check if all the assigned Task.id are equal to the available ones
+        err_msg = "Assigned Task not found in DB Tasks"
+        for at in assigned_tasks:
+            assert self.is_task(at['id'], tasks), err_msg
+        # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
+        for at in assigned_tasks:
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
+        # Check that there are task runs saved with the external UID
+        answers = task_repo.filter_task_runs_by(external_uid='1xa')
+        print answers
+        err_msg = "There should be the same amount of task_runs than tasks"
+        assert len(answers) == len(assigned_tasks), err_msg
+        assigned_tasks_ids = sorted([at['id'] for at in assigned_tasks])
+        task_run_ids = sorted([a.task_id for a in answers])
+        err_msg = "There should be an answer for each assigned task"
+        assert assigned_tasks_ids == task_run_ids, err_msg
 
     @with_context
     def test_anonymous_03_respects_limit_tasks(self):
