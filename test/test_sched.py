@@ -440,6 +440,38 @@ class TestSched(sched.Helper):
         err_msg = "Task.priority_0 should be the 1"
         assert task1.get('priority_0') == 1, err_msg
 
+    @with_context
+    def test_task_priority_external_uid(self):
+        """Test SCHED respects priority_0 field for externa uid"""
+        # Del previous TaskRuns
+        self.create()
+        self.del_task_runs()
+
+        # By default, tasks without priority should be ordered by task.id (FIFO)
+        tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
+        url = 'api/project/1/newtask?external_uid=342'
+        res = self.app.get(url)
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == tasks[0].id, err_msg
+
+        # Now let's change the priority to a random task
+        import random
+        t = random.choice(tasks)
+        # Increase priority to maximum
+        t.priority_0 = 1
+        db.session.add(t)
+        db.session.commit()
+        # Request again a new task
+        res = self.app.get(url)
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == t.id, err_msg
+        err_msg = "Task.priority_0 should be the 1"
+        assert task1.get('priority_0') == 1, err_msg
+
     def _add_task_run(self, app, task, user=None):
         tr = AnonymousTaskRunFactory.create(project=app, task=task)
 
