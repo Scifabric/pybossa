@@ -157,6 +157,45 @@ class TestSched(sched.Helper):
                 assert self.is_unique(tr.user_ip, t.task_runs), err_msg
 
     @with_context
+    def test_external_uid_03_respects_limit_tasks(self):
+        """ Test SCHED newtask respects the limit of 30 TaskRuns per Task for
+        external user id"""
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        url = 'api/project/1/newtask?external_uid=%s' % '1xa'
+        for i in range(10):
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            while data.get('info') is not None:
+                # Check that we received a Task
+                assert data.get('info'),  data
+
+                # Save the assigned task
+                assigned_tasks.append(data)
+
+                # Submit an Answer for the assigned task
+                tr = TaskRun(project_id=data['project_id'], task_id=data['id'],
+                             user_ip="127.0.0.1",
+                             external_uid='newUser' + str(i),
+                             info={'answer': 'Yes'})
+                db.session.add(tr)
+                db.session.commit()
+                res = self.app.get(url)
+                data = json.loads(res.data)
+
+        # Check if there are 30 TaskRuns per Task
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        for t in tasks:
+            assert len(t.task_runs) == 10, len(t.task_runs)
+        # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same IP"
+        for t in tasks:
+            for tr in t.task_runs:
+                assert self.is_unique(tr.external_uid, t.task_runs), err_msg
+
+
+    @with_context
     def test_user_01_newtask(self):
         """ Test SCHED newtask returns a Task for John Doe User"""
         # Del previous TaskRuns
