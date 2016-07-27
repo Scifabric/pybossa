@@ -355,6 +355,57 @@ class TestSched(sched.Helper):
         assert json.loads(res.data) == {}, res.data
 
     @with_context
+    def test_task_preloading_external_uid(self):
+        """Test TASK Pre-loading for external user IDs works"""
+        # Del previous TaskRuns
+        self.create()
+        self.del_task_runs()
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        url = 'api/project/1/newtask?external_uid=2xb'
+        res = self.app.get(url)
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        assert task1.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=1')
+        task2 = json.loads(res.data)
+        # Check that we received a Task
+        assert task2.get('info'),  task2
+        # Check that both tasks are different
+        assert task1.get('id') != task2.get('id'), "Tasks should be different"
+        ## Save the assigned task
+        assigned_tasks.append(task1)
+        assigned_tasks.append(task2)
+
+        # Submit an Answer for the assigned and pre-loaded task
+        for t in assigned_tasks:
+            tr = dict(project_id=t['project_id'],
+                      task_id=t['id'], info={'answer': 'No'},
+                      external_uid='2xb')
+            tr = json.dumps(tr)
+
+            self.app.post('/api/taskrun', data=tr)
+        # Get two tasks again
+        res = self.app.get(url)
+        task3 = json.loads(res.data)
+        # Check that we received a Task
+        assert task3.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=1')
+        task4 = json.loads(res.data)
+        # Check that we received a Task
+        assert task4.get('info'),  task2
+        # Check that both tasks are different
+        assert task3.get('id') != task4.get('id'), "Tasks should be different"
+        assert task1.get('id') != task3.get('id'), "Tasks should be different"
+        assert task2.get('id') != task4.get('id'), "Tasks should be different"
+        # Check that a big offset returns None
+        res = self.app.get(url + '&offset=11')
+        assert json.loads(res.data) == {}, res.data
+
+    @with_context
     def test_task_priority(self):
         """Test SCHED respects priority_0 field"""
         # Del previous TaskRuns
