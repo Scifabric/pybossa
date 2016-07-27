@@ -18,7 +18,9 @@ field = 'external_uid'
 
 def upgrade():
     op.add_column('task_run', sa.Column(field, sa.String))
+    op.add_column('project', sa.Column('secret_key', sa.String))
 
 
 def downgrade():
     op.drop_column('task_run', field)
+    op.drop_column('project', sa.Column('secret_key', sa.String))
