@@ -77,8 +77,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                        ''')
             rows = session.execute(sql,
                                    dict(project_id=project_id, user_ip=user_ip))
-
-        if external_uid and not user_ip:
+        else:
             sql = text('''
                        SELECT task.id, COUNT(task_run.task_id) AS taskcount
                        FROM task
