@@ -168,7 +168,7 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
             rows = session.execute(query, dict(project_id=project_id,
                                                user_ip=user_ip))
             data = [t.id for t in rows]
-        if external_uid and not user_ip:
+        else:
             query = text('''
                          SELECT id FROM task WHERE NOT EXISTS
                          (SELECT task_id FROM task_run WHERE
