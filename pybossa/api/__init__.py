@@ -111,13 +111,11 @@ def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        if request.args.get('external_uid'):
-            project = project_repo.get(project_id)
-            resp = jwt_authorize_project(project,
-                                         request.headers.get('Authorization'))
-            if resp != True:
-                return resp
         task = _retrieve_new_task(project_id)
+
+        if type(task) is Response:
+            return task
+
         # If there is a task for the user, return it
         if task is not None:
             guard = ContributionsGuard(sentinel.master)
@@ -131,14 +129,24 @@ def new_task(project_id):
 
 
 def _retrieve_new_task(project_id):
+
     project = project_repo.get(project_id)
+
     if project is None:
         raise NotFound
+
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
         error = model.task.Task(info=info)
         return error
+
+    if request.args.get('external_uid'):
+        resp = jwt_authorize_project(project,
+                                     request.headers.get('Authorization'))
+        if resp != True:
+            return resp
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:

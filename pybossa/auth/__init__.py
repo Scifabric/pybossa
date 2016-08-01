@@ -99,6 +99,7 @@ def handle_error(error):
     """Return authentication error in JSON."""
     resp = jsonify(error)
     resp.status_code = 401
+    print error
     return resp
 
 
