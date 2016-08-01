@@ -51,7 +51,7 @@ requirements = [
     "Flask-Assets",
     "jsmin",
     "libsass",
-    "python-jose"
+    "pyjwt"
 ]
 
 setup(
