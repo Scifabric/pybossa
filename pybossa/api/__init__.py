@@ -30,7 +30,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 
 import json
-from jose import jwt
+import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
@@ -53,6 +53,7 @@ from token import TokenAPI
 from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
+from pybossa.auth import jwt_authorize_project
 
 blueprint = Blueprint('api', __name__)
 
@@ -110,6 +111,12 @@ def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
+        if request.args.get('external_uid'):
+            project = project_repo.get(project_id)
+            resp = jwt_authorize_project(project,
+                                         request.headers.get('Authorization'))
+            if resp != True:
+                return resp
         task = _retrieve_new_task(project_id)
         # If there is a task for the user, return it
         if task is not None:

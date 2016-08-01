@@ -21,6 +21,10 @@ from flask import abort
 from flask.ext.login import current_user
 from pybossa.core import task_repo, project_repo, result_repo
 
+import jwt
+from flask import jsonify
+from jwt import exceptions
+
 import project
 import task
 import taskrun
@@ -89,3 +93,44 @@ def _authorizer_for(resource_name):
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})
     return _auth_classes[resource_name](**kwargs)
+
+
+def handle_error(error):
+    """Return authentication error in JSON."""
+    resp = jsonify(error)
+    resp.status_code = 401
+    return resp
+
+
+def jwt_authorize_project(project, payload):
+    """Authorize the project for the payload."""
+    try:
+        if payload is None:
+            return handle_error({'code': 'invalid_header',
+                                 'description': 'Missing Authorization header'})
+        parts = payload.split()
+
+        if parts[0].lower() != 'bearer':
+            return handle_error({'code': 'invalid_header',
+                                 'description': 'Authorization header \
+                                 must start with Bearer'})
+        elif len(parts) == 1:
+            return handle_error({'code': 'invalid_header',
+                                 'description': 'Token not found'})
+        elif len(parts) > 2:
+            return handle_error({'code': 'invalid_header',
+                                 'description': 'Authorization header must \
+                                 be Bearer + \\s + token'})
+
+        data = jwt.decode(parts[1],
+                          project.secret_key,
+                          'H256')
+        if (data['project_id'] == project.id
+            and data['short_name'] == project.short_name):
+            return True
+        else:
+            return handle_error({'code': 'Wrong project',
+                                 'description': 'Signature verification failed'})
+    except exceptions.DecodeError:
+        return handle_error({'code': 'Decode error',
+                             'description': 'Signature verification failed'})
