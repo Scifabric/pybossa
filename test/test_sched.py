@@ -28,7 +28,7 @@ from pybossa.model.project import Project
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
-from pybossa.core import task_repo
+from pybossa.core import task_repo, project_repo
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 import pybossa
@@ -38,6 +38,18 @@ class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
         self.endpoints = ['project', 'task', 'taskrun']
+
+
+    def get_headers_jwt(self, project):
+        """Return headesr JWT token."""
+        # Get JWT token
+        url = 'api/auth/project/%s/token' % project.short_name
+
+        res = self.app.get(url, headers={'Authorization': project.secret_key})
+
+        authorization_token = 'Bearer %s' % res.data
+
+        return {'Authorization': authorization_token}
 
     # Tests
     @with_context
@@ -88,8 +100,12 @@ class TestSched(sched.Helper):
         # Get a Task until scheduler returns None
         project = ProjectFactory.create()
         tasks = TaskFactory.create_batch(3, project=project, info={})
+
+        headers = self.get_headers_jwt(project)
+
         url = 'api/project/%s/newtask?external_uid=%s' % (project.id, '1xa')
-        res = self.app.get(url)
+
+        res = self.app.get(url, headers=headers)
         data = json.loads(res.data)
         while data.get('info') is not None:
             # Save the assigned task
@@ -98,7 +114,7 @@ class TestSched(sched.Helper):
             task = db.session.query(Task).get(data['id'])
             # Submit an Answer for the assigned task
             tr = ExternalUidTaskRunFactory.create(project=project, task=task)
-            res = self.app.get(url)
+            res = self.app.get(url, headers=headers)
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
@@ -363,13 +379,15 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
+        project = project_repo.get(1)
+        headers = self.get_headers_jwt(project)
         url = 'api/project/1/newtask?external_uid=2xb'
-        res = self.app.get(url)
+        res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
         assert task1.get('info'),  task1
         # Pre-load the next task for the user
-        res = self.app.get(url + '&offset=1')
+        res = self.app.get(url + '&offset=1', headers=headers)
         task2 = json.loads(res.data)
         # Check that we received a Task
         assert task2.get('info'),  task2
@@ -388,12 +406,12 @@ class TestSched(sched.Helper):
 
             self.app.post('/api/taskrun', data=tr)
         # Get two tasks again
-        res = self.app.get(url)
+        res = self.app.get(url, headers=headers)
         task3 = json.loads(res.data)
         # Check that we received a Task
         assert task3.get('info'),  task1
         # Pre-load the next task for the user
-        res = self.app.get(url + '&offset=1')
+        res = self.app.get(url + '&offset=1', headers=headers)
         task4 = json.loads(res.data)
         # Check that we received a Task
         assert task4.get('info'),  task2
@@ -402,7 +420,7 @@ class TestSched(sched.Helper):
         assert task1.get('id') != task3.get('id'), "Tasks should be different"
         assert task2.get('id') != task4.get('id'), "Tasks should be different"
         # Check that a big offset returns None
-        res = self.app.get(url + '&offset=11')
+        res = self.app.get(url + '&offset=11', headers=headers)
         assert json.loads(res.data) == {}, res.data
 
     @with_context
@@ -449,8 +467,10 @@ class TestSched(sched.Helper):
 
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
+        project = project_repo.get(1)
+        headers = self.get_headers_jwt(project)
         url = 'api/project/1/newtask?external_uid=342'
-        res = self.app.get(url)
+        res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
@@ -464,7 +484,7 @@ class TestSched(sched.Helper):
         db.session.add(t)
         db.session.commit()
         # Request again a new task
-        res = self.app.get(url)
+        res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
