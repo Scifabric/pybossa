@@ -517,6 +517,11 @@ class TestTaskrunAPI(TestAPI):
             info='my task result',
             external_uid='1xa')
         datajson = json.dumps(data)
+        # But without authentication
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+        assert tmp.status_code == 403, r_taskrun
+
         tmp = self.app.post(url, data=datajson, headers=headers)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
