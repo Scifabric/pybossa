@@ -34,6 +34,7 @@ import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
     csv_exporter, importer, sentinel)
+from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -1675,3 +1676,28 @@ def results(short_name):
                      "n_results": n_results}
 
     return render_template('/projects/results.html', **template_args)
+
+@blueprint.route('/<short_name>/resetsecretkey', methods=['POST'])
+@login_required
+def reset_secret_key(short_name):
+    """
+    Reset Project key.
+
+    Returns a Jinja2 template.
+
+    """
+
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
+
+    title = project_title(project, "Results")
+
+    ensure_authorized_to('update', project)
+
+    project.secret_key = make_uuid()
+    project_repo.update(project)
+    cached_projects.delete_project(short_name)
+    msg = gettext('New secret key generated')
+    flash(msg, 'success')
+    return redirect(url_for('.update', short_name=short_name))
