@@ -65,8 +65,8 @@ class TaskRunAPI(APIBase):
         if taskrun.external_uid:
             resp = jwt_authorize_project(task.project,
                                          request.headers.get('Authorization'))
-            msg = json.loads(resp.data)['description']
             if type(resp) == Response:
+                msg = json.loads(resp.data)['description']
                 raise Forbidden(msg)
 
     def _ensure_task_was_requested(self, task, guard):

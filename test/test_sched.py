@@ -404,7 +404,7 @@ class TestSched(sched.Helper):
                       external_uid='2xb')
             tr = json.dumps(tr)
 
-            self.app.post('/api/taskrun', data=tr)
+            res = self.app.post('/api/taskrun', data=tr, headers=headers)
         # Get two tasks again
         res = self.app.get(url, headers=headers)
         task3 = json.loads(res.data)
