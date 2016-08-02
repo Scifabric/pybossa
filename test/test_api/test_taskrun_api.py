@@ -488,6 +488,38 @@ class TestTaskrunAPI(TestAPI):
         success = self.app.post('/api/taskrun', data=datajson)
         assert success.status_code == 200, success.data
 
+    def test_taskrun_post_requires_newtask_first_external_uid(self):
+        """Test API TaskRun post fails if task was not previously requested for
+        external user"""
+        project = ProjectFactory.create()
+        url = '/api/auth/project/%s/token' % project.short_name
+        headers = {'Authorization': project.secret_key}
+        token = self.app.get(url, headers=headers)
+        headers['Authorization'] = 'Bearer %s' % token.data
+        task = TaskFactory.create(project=project)
+        data = dict(
+            project_id=project.id,
+            task_id=task.id,
+            info='my task result',
+            external_uid='1xa')
+        datajson = json.dumps(data)
+        fail = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        err = json.loads(fail.data)
+
+        assert fail.status_code == 403, fail.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You must request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id,
+                     headers=headers)
+        success = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        assert success.status_code == 200, success.data
+
+
 
     @with_context
     def test_taskrun_post_requires_newtask_first_authenticated(self):
