@@ -1677,13 +1677,12 @@ def results(short_name):
 
     return render_template('/projects/results.html', **template_args)
 
+
 @blueprint.route('/<short_name>/resetsecretkey', methods=['POST'])
 @login_required
 def reset_secret_key(short_name):
     """
     Reset Project key.
-
-    Returns a Jinja2 template.
 
     """
 
