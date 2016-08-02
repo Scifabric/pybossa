@@ -25,6 +25,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db
+from pybossa.auth.errcodes import *
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -580,6 +581,12 @@ class TestTaskrunAPI(TestAPI):
         assert err['exception_msg'] == 'You must request a task first!', err
         assert err['exception_cls'] == 'Forbidden', err
         assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        res = self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id)
+        assert res.status_code == 401
+        assert json.loads(res.data) == INVALID_HEADER_MISSING
+
 
         # Succeeds after requesting a task
         self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id,
