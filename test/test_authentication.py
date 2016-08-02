@@ -19,9 +19,10 @@
 import jwt
 from default import Test, with_context
 from pybossa.auth import jwt_authorize_project
+from pybossa.auth import handle_error as handle_error_upstream
 from pybossa.auth.errcodes import *
 from factories import ProjectFactory
-from mock import patch
+from mock import patch, MagicMock
 
 
 class TestAuthentication(Test):
@@ -39,6 +40,18 @@ def handle_error(error):
 
 
 class TestJwtAuthorization(Test):
+
+    @patch('pybossa.auth.jsonify')
+    def test_handle_error(self, mymock):
+        """Test handle error method."""
+        resp = MagicMock()
+        resp.status_code = 0
+        resp.data = INVALID_HEADER_TOKEN
+        mymock.return_value = resp
+
+        tmp = handle_error_upstream(INVALID_HEADER_TOKEN)
+        assert tmp.status_code == 401
+        assert tmp.data == INVALID_HEADER_TOKEN, tmp.data
 
 
     @patch('pybossa.auth.handle_error')
