@@ -544,9 +544,14 @@ class TestGetBreadthFirst(Test):
     @with_context
     def test_get_breadth_first_task_user(self):
         user = self.create_users()[0]
-        self._test_get_breadth_first_task(user)
+        self._test_get_breadth_first_task(user=user)
 
-    def _test_get_breadth_first_task(self, user=None):
+    @with_context
+    def test_get_breadth_first_task_external_user(self):
+        self._test_get_breadth_first_task(external_uid='234')
+
+
+    def _test_get_breadth_first_task(self, user=None, external_uid=None):
         self.del_task_runs()
         if user:
             short_name = 'xyzuser'
@@ -580,6 +585,11 @@ class TestGetBreadthFirst(Test):
         # now check we get task without task runs as a user
         owner = db.session.query(User).get(1)
         out = pybossa.sched.get_breadth_first_task(projectid, owner.id)
+        assert out.id == taskid, out
+
+        # now check we get task without task runs as a external uid
+        out = pybossa.sched.get_breadth_first_task(projectid,
+                                                   external_uid=external_uid)
         assert out.id == taskid, out
 
 
