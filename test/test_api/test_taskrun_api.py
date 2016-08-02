@@ -463,6 +463,69 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
 
 
+    @with_context
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_authenticated_external_uid_post(self, guard):
+        """Test API TaskRun creation and auth for authenticated external uid"""
+        guard.return_value = mock_contributions_guard(True)
+        project = ProjectFactory.create()
+        url = '/api/auth/project/%s/token' % project.short_name
+        headers = {'Authorization': project.secret_key}
+        token = self.app.get(url, headers=headers)
+        headers['Authorization'] = 'Bearer %s' % token.data
+
+        task = TaskFactory.create(project=project)
+        data = dict(
+            project_id=project.id,
+            task_id=task.id,
+            info='my task result',
+            external_uid='1xa')
+
+        # With wrong project_id
+        data['project_id'] = 100000000000000000
+        datajson = json.dumps(data)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        err_msg = "This post should fail as the project_id is wrong"
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid project_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['target'] == 'taskrun', err_msg
+
+        # With wrong task_id
+        data['project_id'] = task.project_id
+        data['task_id'] = 100000000000000000000
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        err_msg = "This post should fail as the task_id is wrong"
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid task_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['target'] == 'taskrun', err_msg
+
+        # Now with everything fine
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my task result',
+            external_uid='1xa')
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        r_taskrun = json.loads(tmp.data)
+        assert tmp.status_code == 200, r_taskrun
+
+        # If the user tries again it should be forbidden
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        assert tmp.status_code == 403, tmp.data
+
+
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
