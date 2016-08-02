@@ -23,7 +23,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from flask import request
+from flask import request, Response
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
@@ -32,6 +32,7 @@ from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel
 from pybossa.contributions_guard import ContributionsGuard
+from pybossa.auth import jwt_authorize_project
 
 
 class TaskRunAPI(APIBase):
@@ -61,6 +62,12 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid task_id')
         if (task.project_id != taskrun.project_id):
             raise Forbidden('Invalid project_id')
+        if taskrun.external_uid:
+            resp = jwt_authorize_project(task.project,
+                                         request.headers.get('Authorization'))
+            msg = json.loads(resp.data)['description']
+            if type(resp) == Response:
+                raise Forbidden(msg)
 
     def _ensure_task_was_requested(self, task, guard):
         if not guard.check_task_stamped(task, get_user_id_or_ip()):
