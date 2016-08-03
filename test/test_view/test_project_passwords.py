@@ -27,7 +27,10 @@ project_repo = ProjectRepository(db)
 def configure_mock_current_user_from(user, mock):
     def is_anonymous():
         return user is None
+    def is_authenticated():
+        return True
     mock.is_anonymous.return_value = is_anonymous()
+    mock.is_authenticated.return_value = True
     mock.admin = user.admin if user != None else None
     mock.id = user.id if user != None else None
     return mock
@@ -218,3 +221,19 @@ class TestProjectPassword(Test):
         self.app.get('/project/%s' % project.short_name, follow_redirects=True)
 
         assert fake_authorizer.called == True
+
+    def test_get_reset_project_secret_key(self):
+        """Test GET project reset key method works."""
+        project = ProjectFactory.create()
+        url = '/project/%s/resetsecretkey' % project.short_name
+        res = self.app.get(url)
+        assert res.status_code == 405, res.status_code
+
+    def test_reset_project_secret_key(self):
+        """Test project reset key method works."""
+        project = ProjectFactory.create()
+        url = '/project/%s/resetsecretkey' % project.short_name
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        err_msg = "User should be redirected to sign in."
+        assert "Sign in" in res.data, err_msg
