@@ -893,7 +893,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
-    def test_12_update_application(self, Mock, mock, mock_webhook):
+    def test_12_update_project(self, Mock, mock, mock_webhook):
         """Test WEB update project works"""
         html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
                                     status_code=200,
@@ -3713,3 +3713,41 @@ class TestWeb(web.Helper):
         result_repo.update(result)
         res = self.app.get(url, follow_redirects=True)
         assert "The results" in res.data, res.data
+
+    @with_context
+    def test_update_project_secret_key_owner(self):
+        """Test update project secret key owner."""
+        self.register()
+        self.new_project()
+
+        project = project_repo.get(1)
+
+        old_key = project.secret_key
+
+        url = "/project/%s/resetsecretkey" % project.short_name
+
+        res = self.app.post(url, follow_redirects=True)
+
+        project = project_repo.get(1)
+
+        err_msg = "A new key should be generated"
+        assert "New secret key generated" in res.data, err_msg
+        assert old_key != project.secret_key, err_msg
+
+    @with_context
+    def test_update_project_secret_key_not_owner(self):
+        """Test update project secret key not owner."""
+        self.register()
+        self.new_project()
+        self.signout()
+
+        self.register(email="juan@juan.com", name="juanjuan")
+
+        project = project_repo.get(1)
+
+        url = "/project/%s/resetsecretkey" % project.short_name
+
+        res = self.app.post(url, follow_redirects=True)
+
+        assert res.status_code == 403, res.status_code
+
