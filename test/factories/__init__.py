@@ -62,7 +62,7 @@ from project_factory import ProjectFactory
 from blogpost_factory import BlogpostFactory
 from category_factory import CategoryFactory
 from task_factory import TaskFactory
-from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
+from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 from user_factory import UserFactory
 from auditlog_factory import AuditlogFactory
 from webhook_factory import WebhookFactory

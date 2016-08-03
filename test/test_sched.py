@@ -28,7 +28,9 @@ from pybossa.model.project import Project
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
-from factories import TaskFactory, ProjectFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
+from pybossa.core import task_repo, project_repo
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
+from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 import pybossa
 
 
@@ -36,6 +38,18 @@ class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
         self.endpoints = ['project', 'task', 'taskrun']
+
+
+    def get_headers_jwt(self, project):
+        """Return headesr JWT token."""
+        # Get JWT token
+        url = 'api/auth/project/%s/token' % project.short_name
+
+        res = self.app.get(url, headers={'Authorization': project.secret_key})
+
+        authorization_token = 'Bearer %s' % res.data
+
+        return {'Authorization': authorization_token}
 
     # Tests
     @with_context
@@ -79,6 +93,51 @@ class TestSched(sched.Helper):
             assert self.is_unique(at['id'], assigned_tasks), err_msg
 
     @with_context
+    def test_external_uid_02_gets_different_tasks(self):
+        """ Test SCHED newtask returns N different Tasks
+        for a external User ID."""
+        assigned_tasks = []
+        # Get a Task until scheduler returns None
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(3, project=project, info={})
+
+        headers = self.get_headers_jwt(project)
+
+        url = 'api/project/%s/newtask?external_uid=%s' % (project.id, '1xa')
+
+        res = self.app.get(url, headers=headers)
+        data = json.loads(res.data)
+        while data.get('info') is not None:
+            # Save the assigned task
+            assigned_tasks.append(data)
+
+            task = db.session.query(Task).get(data['id'])
+            # Submit an Answer for the assigned task
+            tr = ExternalUidTaskRunFactory.create(project=project, task=task)
+            res = self.app.get(url, headers=headers)
+            data = json.loads(res.data)
+
+        # Check if we received the same number of tasks that the available ones
+        assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
+        # Check if all the assigned Task.id are equal to the available ones
+        err_msg = "Assigned Task not found in DB Tasks"
+        for at in assigned_tasks:
+            assert self.is_task(at['id'], tasks), err_msg
+        # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
+        for at in assigned_tasks:
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
+        # Check that there are task runs saved with the external UID
+        answers = task_repo.filter_task_runs_by(external_uid='1xa')
+        print answers
+        err_msg = "There should be the same amount of task_runs than tasks"
+        assert len(answers) == len(assigned_tasks), err_msg
+        assigned_tasks_ids = sorted([at['id'] for at in assigned_tasks])
+        task_run_ids = sorted([a.task_id for a in answers])
+        err_msg = "There should be an answer for each assigned task"
+        assert assigned_tasks_ids == task_run_ids, err_msg
+
+    @with_context
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         assigned_tasks = []
@@ -112,6 +171,45 @@ class TestSched(sched.Helper):
         for t in tasks:
             for tr in t.task_runs:
                 assert self.is_unique(tr.user_ip, t.task_runs), err_msg
+
+    @with_context
+    def test_external_uid_03_respects_limit_tasks(self):
+        """ Test SCHED newtask respects the limit of 30 TaskRuns per Task for
+        external user id"""
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        url = 'api/project/1/newtask?external_uid=%s' % '1xa'
+        for i in range(10):
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            while data.get('info') is not None:
+                # Check that we received a Task
+                assert data.get('info'),  data
+
+                # Save the assigned task
+                assigned_tasks.append(data)
+
+                # Submit an Answer for the assigned task
+                tr = TaskRun(project_id=data['project_id'], task_id=data['id'],
+                             user_ip="127.0.0.1",
+                             external_uid='newUser' + str(i),
+                             info={'answer': 'Yes'})
+                db.session.add(tr)
+                db.session.commit()
+                res = self.app.get(url)
+                data = json.loads(res.data)
+
+        # Check if there are 30 TaskRuns per Task
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        for t in tasks:
+            assert len(t.task_runs) == 10, len(t.task_runs)
+        # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same IP"
+        for t in tasks:
+            for tr in t.task_runs:
+                assert self.is_unique(tr.external_uid, t.task_runs), err_msg
+
 
     @with_context
     def test_user_01_newtask(self):
@@ -273,6 +371,59 @@ class TestSched(sched.Helper):
         assert json.loads(res.data) == {}, res.data
 
     @with_context
+    def test_task_preloading_external_uid(self):
+        """Test TASK Pre-loading for external user IDs works"""
+        # Del previous TaskRuns
+        self.create()
+        self.del_task_runs()
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        project = project_repo.get(1)
+        headers = self.get_headers_jwt(project)
+        url = 'api/project/1/newtask?external_uid=2xb'
+        res = self.app.get(url, headers=headers)
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        assert task1.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=1', headers=headers)
+        task2 = json.loads(res.data)
+        # Check that we received a Task
+        assert task2.get('info'),  task2
+        # Check that both tasks are different
+        assert task1.get('id') != task2.get('id'), "Tasks should be different"
+        ## Save the assigned task
+        assigned_tasks.append(task1)
+        assigned_tasks.append(task2)
+
+        # Submit an Answer for the assigned and pre-loaded task
+        for t in assigned_tasks:
+            tr = dict(project_id=t['project_id'],
+                      task_id=t['id'], info={'answer': 'No'},
+                      external_uid='2xb')
+            tr = json.dumps(tr)
+
+            res = self.app.post('/api/taskrun', data=tr, headers=headers)
+        # Get two tasks again
+        res = self.app.get(url, headers=headers)
+        task3 = json.loads(res.data)
+        # Check that we received a Task
+        assert task3.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=1', headers=headers)
+        task4 = json.loads(res.data)
+        # Check that we received a Task
+        assert task4.get('info'),  task2
+        # Check that both tasks are different
+        assert task3.get('id') != task4.get('id'), "Tasks should be different"
+        assert task1.get('id') != task3.get('id'), "Tasks should be different"
+        assert task2.get('id') != task4.get('id'), "Tasks should be different"
+        # Check that a big offset returns None
+        res = self.app.get(url + '&offset=11', headers=headers)
+        assert json.loads(res.data) == {}, res.data
+
+    @with_context
     def test_task_priority(self):
         """Test SCHED respects priority_0 field"""
         # Del previous TaskRuns
@@ -300,6 +451,40 @@ class TestSched(sched.Helper):
         db.session.commit()
         # Request again a new task
         res = self.app.get('api/project/1/newtask')
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == t.id, err_msg
+        err_msg = "Task.priority_0 should be the 1"
+        assert task1.get('priority_0') == 1, err_msg
+
+    @with_context
+    def test_task_priority_external_uid(self):
+        """Test SCHED respects priority_0 field for externa uid"""
+        # Del previous TaskRuns
+        self.create()
+        self.del_task_runs()
+
+        # By default, tasks without priority should be ordered by task.id (FIFO)
+        tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
+        project = project_repo.get(1)
+        headers = self.get_headers_jwt(project)
+        url = 'api/project/1/newtask?external_uid=342'
+        res = self.app.get(url, headers=headers)
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == tasks[0].id, err_msg
+
+        # Now let's change the priority to a random task
+        import random
+        t = random.choice(tasks)
+        # Increase priority to maximum
+        t.priority_0 = 1
+        db.session.add(t)
+        db.session.commit()
+        # Request again a new task
+        res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
@@ -359,9 +544,14 @@ class TestGetBreadthFirst(Test):
     @with_context
     def test_get_breadth_first_task_user(self):
         user = self.create_users()[0]
-        self._test_get_breadth_first_task(user)
+        self._test_get_breadth_first_task(user=user)
 
-    def _test_get_breadth_first_task(self, user=None):
+    @with_context
+    def test_get_breadth_first_task_external_user(self):
+        self._test_get_breadth_first_task(external_uid='234')
+
+
+    def _test_get_breadth_first_task(self, user=None, external_uid=None):
         self.del_task_runs()
         if user:
             short_name = 'xyzuser'
@@ -395,6 +585,11 @@ class TestGetBreadthFirst(Test):
         # now check we get task without task runs as a user
         owner = db.session.query(User).get(1)
         out = pybossa.sched.get_breadth_first_task(projectid, owner.id)
+        assert out.id == taskid, out
+
+        # now check we get task without task runs as a external uid
+        out = pybossa.sched.get_breadth_first_task(projectid,
+                                                   external_uid=external_uid)
         assert out.id == taskid, out
 
 

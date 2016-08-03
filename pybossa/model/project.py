@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, make_timestamp
+from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
@@ -58,6 +58,8 @@ class Project(db.Model, DomainObject):
     published = Column(Boolean, nullable=False, default=False)
     # If the project is featured
     featured = Column(Boolean, nullable=False, default=False)
+    # Secret key for project
+    secret_key = Column(Text, default=make_uuid)
     # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id

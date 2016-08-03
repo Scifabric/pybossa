@@ -25,6 +25,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db
+from pybossa.auth.errcodes import *
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -463,6 +464,74 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
 
 
+    @with_context
+    @patch('pybossa.api.task_run.ContributionsGuard')
+    def test_taskrun_authenticated_external_uid_post(self, guard):
+        """Test API TaskRun creation and auth for authenticated external uid"""
+        guard.return_value = mock_contributions_guard(True)
+        project = ProjectFactory.create()
+        url = '/api/auth/project/%s/token' % project.short_name
+        headers = {'Authorization': project.secret_key}
+        token = self.app.get(url, headers=headers)
+        headers['Authorization'] = 'Bearer %s' % token.data
+
+        task = TaskFactory.create(project=project)
+        data = dict(
+            project_id=project.id,
+            task_id=task.id,
+            info='my task result',
+            external_uid='1xa')
+
+        # With wrong project_id
+        data['project_id'] = 100000000000000000
+        datajson = json.dumps(data)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        err_msg = "This post should fail as the project_id is wrong"
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid project_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['target'] == 'taskrun', err_msg
+
+        # With wrong task_id
+        data['project_id'] = task.project_id
+        data['task_id'] = 100000000000000000000
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        err_msg = "This post should fail as the task_id is wrong"
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid task_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['target'] == 'taskrun', err_msg
+
+        # Now with everything fine
+        data = dict(
+            project_id=task.project_id,
+            task_id=task.id,
+            user_id=project.owner.id,
+            info='my task result',
+            external_uid='1xa')
+        datajson = json.dumps(data)
+        # But without authentication
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+        assert tmp.status_code == 403, r_taskrun
+
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        r_taskrun = json.loads(tmp.data)
+        assert tmp.status_code == 200, r_taskrun
+
+        # If the user tries again it should be forbidden
+        tmp = self.app.post(url, data=datajson, headers=headers)
+        assert tmp.status_code == 403, tmp.data
+
+
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
@@ -487,6 +556,44 @@ class TestTaskrunAPI(TestAPI):
         self.app.get('/api/project/%s/newtask' % project.id)
         success = self.app.post('/api/taskrun', data=datajson)
         assert success.status_code == 200, success.data
+
+    def test_taskrun_post_requires_newtask_first_external_uid(self):
+        """Test API TaskRun post fails if task was not previously requested for
+        external user"""
+        project = ProjectFactory.create()
+        url = '/api/auth/project/%s/token' % project.short_name
+        headers = {'Authorization': project.secret_key}
+        token = self.app.get(url, headers=headers)
+        headers['Authorization'] = 'Bearer %s' % token.data
+        task = TaskFactory.create(project=project)
+        data = dict(
+            project_id=project.id,
+            task_id=task.id,
+            info='my task result',
+            external_uid='1xa')
+        datajson = json.dumps(data)
+        fail = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        err = json.loads(fail.data)
+
+        assert fail.status_code == 403, fail.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You must request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        res = self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id)
+        assert res.status_code == 401
+        assert json.loads(res.data) == INVALID_HEADER_MISSING
+
+
+        # Succeeds after requesting a task
+        self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id,
+                     headers=headers)
+        success = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        assert success.status_code == 200, success.data
+
 
 
     @with_context

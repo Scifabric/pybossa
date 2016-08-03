@@ -1,0 +1,22 @@
+================
+Changelog v2.3.0
+================
+
+
+This new version adds a few cool features to PYBOSSA. Basically, it allows to use
+PYBOSSA backend as your crowdsourcing engine for native iOS and Android phone apps.
+
+The idea is that those apps, usually have their own user base, with their own IDs.
+
+As a result, you don't want to force your user base to register again in another 
+service just to help you with your crowdsourcing research. Therefore, PYBOSSA comes
+to the rescue allowing you to login those users in a PYBOSSA project using a secure
+token (JWT).
+
+The process is really simple, you create a PYBOSSA project, you copy the secret key
+created by PYBOSSA for your project and you use it to authenticate your requests. Then
+when a user sends a Task Run you pass your authentication token and your internal user
+ID. As simple as that. PYBOSSA will handle everything as usual.
+
+ * Add support for external User IDs. 
+ * Add JWT authentication for projects.

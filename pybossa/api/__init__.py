@@ -30,6 +30,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 
 import json
+import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
@@ -52,6 +53,7 @@ from token import TokenAPI
 from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
+from pybossa.auth import jwt_authorize_project
 
 blueprint = Blueprint('api', __name__)
 
@@ -110,6 +112,10 @@ def new_task(project_id):
     # Check if the request has an arg:
     try:
         task = _retrieve_new_task(project_id)
+
+        if type(task) is Response:
+            return task
+
         # If there is a task for the user, return it
         if task is not None:
             guard = ContributionsGuard(sentinel.master)
@@ -123,23 +129,35 @@ def new_task(project_id):
 
 
 def _retrieve_new_task(project_id):
+
     project = project_repo.get(project_id)
+
     if project is None:
         raise NotFound
+
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
         error = model.task.Task(info=info)
         return error
+
+    if request.args.get('external_uid'):
+        resp = jwt_authorize_project(project,
+                                     request.headers.get('Authorization'))
+        if resp != True:
+            return resp
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
+    external_uid = request.args.get('external_uid')
     task = sched.new_task(project_id, project.info.get('sched'),
                           user_id,
                           user_ip,
+                          external_uid,
                           offset)
     return task
 
@@ -182,3 +200,25 @@ def user_progress(project_id=None, short_name=None):
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
+
+
+@jsonpify
+@blueprint.route('/auth/project/<short_name>/token')
+@crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def auth_jwt_project(short_name):
+    """Create a JWT for a project via its secret KEY."""
+    project_secret_key = None
+    if 'Authorization' in request.headers:
+        project_secret_key = request.headers.get('Authorization')
+    if project_secret_key:
+        project = project_repo.get_by_shortname(short_name)
+        if project and project.secret_key == project_secret_key:
+            token = jwt.encode({'short_name': short_name,
+                                'project_id': project.id},
+                               project.secret_key, algorithm='HS256')
+            return token
+        else:
+            return abort(404)
+    else:
+        return abort(403)

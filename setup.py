@@ -50,12 +50,13 @@ requirements = [
     "google-api-python-client>=1.5.0, <1.6.0",
     "Flask-Assets",
     "jsmin",
-    "libsass"
+    "libsass",
+    "pyjwt"
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.2.0',
+    version = '2.3.0',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
@@ -68,7 +69,6 @@ setup(
 
     # metadata for upload to PyPI
     author = 'SciFabric LTD',
-    # TODO: change
     author_email = 'info@scifabric.com',
     description = 'Open Source CrowdSourcing framework',
     long_description = '''PyBossa is an open source crowdsourcing solution for volunteer computing, thinking and sensing ''',

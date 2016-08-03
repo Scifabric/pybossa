@@ -45,3 +45,10 @@ class AnonymousTaskRunFactory(TaskRunFactory):
     user_id = None
     user_ip = '127.0.0.1'
     info = 'yes'
+
+class ExternalUidTaskRunFactory(TaskRunFactory):
+    user = None
+    user_id = None
+    user_ip = '127.0.0.1'
+    external_uid = '1xa'
+    info = 'yes'

@@ -20,6 +20,11 @@ import inspect
 from flask import abort
 from flask.ext.login import current_user
 from pybossa.core import task_repo, project_repo, result_repo
+from pybossa.auth.errcodes import *
+
+import jwt
+from flask import jsonify
+from jwt import exceptions
 
 import project
 import task
@@ -89,3 +94,36 @@ def _authorizer_for(resource_name):
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})
     return _auth_classes[resource_name](**kwargs)
+
+
+def handle_error(error):
+    """Return authentication error in JSON."""
+    resp = jsonify(error)
+    resp.status_code = 401
+    return resp
+
+
+def jwt_authorize_project(project, payload):
+    """Authorize the project for the payload."""
+    try:
+        if payload is None:
+            return handle_error(INVALID_HEADER_MISSING)
+        parts = payload.split()
+
+        if parts[0].lower() != 'bearer':
+            return handle_error(INVALID_HEADER_BEARER)
+        elif len(parts) == 1:
+            return handle_error(INVALID_HEADER_TOKEN)
+        elif len(parts) > 2:
+            return handle_error(INVALID_HEADER_BEARER_TOKEN)
+
+        data = jwt.decode(parts[1],
+                          project.secret_key,
+                          'H256')
+        if (data['project_id'] == project.id
+            and data['short_name'] == project.short_name):
+            return True
+        else:
+            return handle_error(WRONG_PROJECT_SIGNATURE)
+    except exceptions.DecodeError:
+        return handle_error(DECODE_ERROR_SIGNATURE)
