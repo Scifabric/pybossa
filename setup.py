@@ -69,7 +69,6 @@ setup(
 
     # metadata for upload to PyPI
     author = 'SciFabric LTD',
-    # TODO: change
     author_email = 'info@scifabric.com',
     description = 'Open Source CrowdSourcing framework',
     long_description = '''PyBossa is an open source crowdsourcing solution for volunteer computing, thinking and sensing ''',
