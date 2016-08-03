@@ -424,6 +424,12 @@ First, create a project. When you create a project in PYBOSSA the system will cr
 you a *secret key*. This secret key will be used by your phone app to authenticate all
 the requests and avoid other users to send data to your project via external user API.
 
+
+.. note::
+
+    We highly recommend using SSL on your server to secure all the process. You can use
+    Let's Encrypt certificates for free. Check their `documentation. <https://certbot.eff.org/>`_
+
 Now your phone app will have to authenticate to the server to get tasks and post task runs.
 
 To do it, all you have to do is to create an HTTP Request with an Authorization Header like this::
@@ -453,8 +459,8 @@ this::
 As simple as that! 
 
 
-Example Usage
--------------
+Command line Example Usage of the API
+-------------------------------------
 
 Create a Project object:
 
