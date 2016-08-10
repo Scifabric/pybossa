@@ -25,4 +25,4 @@ blueprint = Blueprint('results', __name__)
 @blueprint.route('/')
 def index():
     """Glossary page."""
-    return render_template('/results/results.html')
+    return render_template('/theme_v2/static_pages/results.html')
