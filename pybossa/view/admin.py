@@ -69,6 +69,13 @@ def index():
     return render_template('/admin/index.html')
 
 
+@blueprint.route('/tile-generator')
+@login_required
+@admin_required
+def map_tile_generator():
+    return render_template('/admin/map-tile-generator.html')
+
+
 @blueprint.route('/featured')
 @blueprint.route('/featured/<int:project_id>', methods=['POST', 'DELETE'])
 @login_required
