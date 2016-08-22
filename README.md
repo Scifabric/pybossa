@@ -27,7 +27,7 @@ sudo apt-get install apache2
 ```
 
 ## 3.3 Checkout Project
-Be sure to use the --recursive flag in fetch submodules:
+Be sure to use the --recursive flag to fetch submodules:
 ```
 cd /var/www
 git clone --recursive https://github.com/AltClick/pybossa-amnesty-microtasking.git
