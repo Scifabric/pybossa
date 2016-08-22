@@ -4,9 +4,119 @@
 - The platform is a fork of [PyBossa v1.6.1](https://github.com/PyBossa/pybossa/releases/tag/v1.6.1).
 - The original README of the forked project can be found [here](https://github.com/PyBossa/pybossa/blob/1155b6f57fc7a152916ccc003e40df7f763aa60f/README.md).
 
-# Environment
+# 1. Environment
 - [Ubuntu 14.04.5 LTS (Trusty Tahr)](http://releases.ubuntu.com/14.04/)
-- [MongoDB 3.x](https://docs.mongodb.com/v3.0/release-notes/3.0/) (Latest deployed version: v3.2.8)
+- Git
+- MongoDB 3.2.x
+- Python >= 2.7.6, <3.0
+- PostgreSQL >= 9.3
+- Redis >= 2.6
+- pip >= 6.1
+- Apache Virtual Hosts (httpd)
 
-# Installation
-Original installation instructions can be found [here](http://docs.pybossa.com/en/latest/installing_pybossa.html). However, the Amnesty Decoders implementation requires some additional considerations. Specifically in regards to setting up MongoDB and a custom API.
+# 2. Installation
+Original installation instructions can be found [here](http://docs.pybossa.com/en/latest/installing_pybossa.html). However, the Amnesty Decoders implementation requires some additional considerations. Specifically in regards to setting up MongoDB, a custom API for one of the projects, and setting up hosting with Apache http..
+
+## 2.1 MongoDB
+Follow [these instructions](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/).
+
+## 2.2 Apache Virtual Hosts 
+```
+sudo apt-get update
+sudo apt-get install apache2
+```
+
+## 2.3 Checkout Project
+Be sure to use the --recursive flag in fetch submodules:
+```
+cd /var/www
+git clone --recursive https://github.com/AltClick/pybossa-amnesty-microtasking.git
+cd /var/www/pybossa-amnesty-microtasking
+```
+
+## 2.4 Install Project
+These instructions are beased on [the official PyBossa installation and configuration instructions](http://docs.pybossa.com/en/latest/install.html). They have been slightly modified for this specifcities related to this project.
+
+### 2.4.1 Setting Things Up
+2.4.1.1. Installing the PostgreSQL database
+```
+sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
+```
+
+2.4.1.2 Installing virtualenv
+```
+sudo apt-get install python-virtualenv
+```
+
+2.4.1.3 Installing the PyBossa Python requirements
+```
+sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
+```
+
+2.4.1.4 Install Python libraries required to run the Project.
+The libraries are listed in /var/www/pybossa-amnesty-microtasking/requirements.txt
+```
+bash install.sh
+```
+
+2.4.1.5 Create a settings file and enter your SQLAlchemy DB URI (you can also override default settings as needed):
+```
+cp settings_local.py.tmpl settings_local.py
+# now edit ...
+nano settings_local.py
+```
+
+2.4.1.6 Create the alembic config file and set the sqlalchemy.url to point to your database:
+```
+cp alembic.ini.template alembic.ini
+# now set the sqlalchemy.url ...
+nano alembic.ini
+```
+
+### 2.4.2 Installing Redis
+
+2.4.2.1 redis-server
+```
+sudo apt-get install redis-server
+```
+
+2.4.2.2 Running
+In the contrib folder you will find a file named sentinel.conf that should be enough to run the sentinel node. Thus, for running it:
+```
+redis-server contrib/sentinel.conf --sentinel
+```
+
+2.4.2.3 Run Scheduler and Jobs
+```
+bash run rqscheduler.sh &
+bash run jobs.sh &
+```
+
+To check if they are running:
+```
+ps ax | grep rqscheduler.sh
+ps ax | grep job.sh
+```
+
+### 2.4.3 Configuring PostgreSQL Database
+```
+sudo su postgres
+createuser -d -P pybossa
+```
+
+Use password `tester` when prompted.
+
+And now, you can create the database:
+```
+createdb pybossa -O pybossa
+```
+
+Exit the postgresql user:
+```
+exit
+```
+
+Populate the database with its tables:
+```
+bash db_create.sh
+```
