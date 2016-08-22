@@ -142,7 +142,7 @@ app_dir_path = '/var/www/pybossa-amnesty-microtasking'
 
 ## 3.8.2 Install mod_wsgi
 ```
-sudo aptitude install libapache2-mod-wsgi
+sudo apt-get install libapache2-mod-wsgi
 ```
 
 ## 3.8.3 Create virtual host config file
