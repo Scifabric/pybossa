@@ -193,7 +193,7 @@ sudo service apache2 restart
 Enter the IP adress of the server into the browser, the project should load splendidely.
 Should errors be thrown, tail the apache error.log and access.log for clues on the root of the problem.
 
-## 3.10 Deploy the Latest Codebase
+## 4 Deploy the Latest Codebase
 To deploy the latest codebase, you need to do two git pulls from the project repo:
  - The first git pull is for the project.
  - The second git pull is for the project's submodules (e.g. themes).
@@ -203,6 +203,11 @@ These are the commands in question:
 cd /var/www/pybossa-amnesty-microtasking
 sudo git pull
 sudo git submodule foreach git pull origin master
+```
+
+Restart the server for these changes to take effect:
+```
+sudo service apache2 restart
 ```
 
 
