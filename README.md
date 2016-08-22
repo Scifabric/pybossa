@@ -188,9 +188,20 @@ Restart the server for these change to take effect:
 sudo service apache2 restart
 ```
 
-## 3.9 Load The Project
+## 3.9 Load the Project
 Enter the IP adress of the server into the browser, the Project should load splendidely.
 Should errors be thrown, tail the apache error.log and access.log for clues on the root of the problem.
+
+## 3.10 Deploying Latest Codebase
+The deploy the latest codebase, you need to do two git pulls from the project repo:
+ - The first git pull is for the project.
+ - The second git pull is for the project's submodules (e.g. themes)
+
+```
+cd /var/www/pybossa-amnesty-microtasking
+sudo git pull
+sudo git submodule foreach git pull origin master
+```
 
 
 
