@@ -39,7 +39,7 @@ cd /var/www/pybossa-amnesty-microtasking
 ## 3.4 Install the Project
 These instructions are beased on [the official PyBossa installation and configuration instructions](http://docs.pybossa.com/en/latest/install.html). They have been slightly modified for this specifcities related to this project.
 
-#### 3.4.1 Installi PostgreSQL Database
+#### 3.4.1 Install PostgreSQL Database
 ```
 sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
 ```
