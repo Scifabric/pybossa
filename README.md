@@ -114,8 +114,8 @@ redis-server contrib/sentinel.conf --sentinel
 
 #### 3.7.3. Run Scheduler and Jobs
 ```
-bash run rqscheduler.sh &
-bash run jobs.sh &
+bash rqscheduler.sh &
+bash jobs.sh &
 ```
 
 If somewher down the line you supect that the scheduler or the jobs are not running, you can check if they are still running like so:
