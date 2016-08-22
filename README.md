@@ -18,7 +18,7 @@
 Original installation instructions can be found [here](http://docs.pybossa.com/en/latest/installing_pybossa.html). However, the Amnesty Decoders implementation requires some additional considerations. Specifically in regards to setting up MongoDB, a custom API for one of the projects, and setting up hosting with Apache http..
 
 ## 3.1 MongoDB
-Follow [these instructions](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+Follow [these instructions](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/).
 
 ## 3.2 Apache Virtual Hosts 
 ```
@@ -171,5 +171,26 @@ And configure it to point to the project's app.wsgi file:
   CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
+
+## 3.8.4 Enably New Virtual Host FIle
+First disable the defaul one:
+```
+sudo a2dissite 000-default.conf
+```
+
+Then enable the new one we just created:
+```
+sudo a2ensite decoders.amnesty.org.conf
+```
+
+Restart the server for these change to take effect:
+```
+sudo service apache2 restart
+```
+
+## 3.9 Load The Project
+Enter the IP adress of the server into the browser, the Project should load splendidely.
+Should errors be thrown, tail the apache error.log and access.log for clues on the root of the problem.
+
 
 
