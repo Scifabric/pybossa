@@ -111,7 +111,7 @@ In the contrib folder you will find a file named sentinel.conf that should be en
 redis-server contrib/sentinel.conf --sentinel
 ```
 
-#### 3.7.8 Run Scheduler and Jobs
+#### 3.7.3 Run Scheduler and Jobs
 ```
 bash run rqscheduler.sh &
 bash run jobs.sh &
