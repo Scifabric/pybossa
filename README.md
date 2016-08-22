@@ -123,3 +123,53 @@ ps ax | grep rqscheduler.sh
 ps ax | grep job.sh
 ```
 
+## 3.8 Hosting on Apache Virtual Hosts
+## 3.8.1 Create the project's app.wsgi file
+```
+sudo cp app.wsgi.tmpl app.wsgi
+```
+
+Open the new file in your editor with root privileges:
+```
+sudo nano app.wsgi
+```
+
+And configure the project's path
+```
+app_dir_path = '/var/www/pybossa-amnesty-microtasking'
+```
+
+## 3.8.2 Install mod_wsgi:
+```
+sudo aptitude install libapache2-mod-wsgi
+```
+
+## 3.8.3 Create virtual host config file
+Copy default to create new file specific to the project:
+```
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/decoders.amnesty.org.conf
+```
+
+Open the new file in your editor with root privileges:
+```
+sudo nano /etc/apache2/sites-available/decoders.amnesty.org.conf
+```
+
+And configure it to point to the project's app.wsgi file:
+```
+<VirtualHost *:80>
+  ServerAdmin admin@localhost
+  #ServerName decoders.amnesty.org
+  
+  WSGIScriptAlias / /var/www/pybossa-amnesty-microtasking/app.wsgi
+  <Directory /var/www/pybossa-amnesty-microtasking>
+    Order allow,deny
+    Allow from all
+  </Directory>
+    
+  ErrorLog ${APACHE_LOG_DIR}/error.log
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
+
