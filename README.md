@@ -173,7 +173,7 @@ And configure it to point to the project's app.wsgi file:
 </VirtualHost>
 ```
 
-## 3.8.4. Enably New Virtual Host File
+## 3.8.4. Enable New Virtual Host File
 First disable the defaul one:
 ```
 sudo a2dissite 000-default.conf
@@ -209,6 +209,3 @@ Restart the server for these changes to take effect:
 ```
 sudo service apache2 restart
 ```
-
-
-
