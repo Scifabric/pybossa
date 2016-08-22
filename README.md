@@ -15,7 +15,9 @@
 - Apache Virtual Hosts (httpd)
 
 # 3. Installation
-Original installation instructions can be found [here](http://docs.pybossa.com/en/latest/installing_pybossa.html). However, the Amnesty Decoders implementation requires some additional considerations. Specifically in regards to setting up MongoDB, a custom API for one of the projects, and setting up hosting with Apache http..
+Original installation instructions can be found [here](http://docs.pybossa.com/en/latest/installing_pybossa.html). However, the Amnesty Decoders implementation requires some additional considerations. Specifically in regards to setting up MongoDB, a custom API for one of the projects, and setting up hosting with Apache httpd.
+
+**IMPORTANT:** Please still read through the [original PyBossa installtion instructions](http://docs.pybossa.com/en/latest/installing_pybossa.html) as it provides necessary context and explanation for all of the project's depenedencies.
 
 ## 3.1 Install MongoDB
 Follow [these instructions](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/).
