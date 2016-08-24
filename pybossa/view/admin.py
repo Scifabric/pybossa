@@ -75,6 +75,12 @@ def index():
 def map_tile_generator():
     return render_template('/admin/map-tile-generator.html')
 
+@blueprint.route('/map-result')
+@login_required
+@admin_required
+def map_result():
+    all_projects = project_repo.get_all()
+    return render_template('/admin/map_result.html', all_projects=all_projects)
 
 @blueprint.route('/featured')
 @blueprint.route('/featured/<int:project_id>', methods=['POST', 'DELETE'])
