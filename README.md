@@ -81,7 +81,7 @@ exit
 
 #### 3.5.3. Populate the database with its tables:
 ```
-bash db_create.sh
+sudo bash db_create.sh
 ```
 
 ### 3.6. Config Files
