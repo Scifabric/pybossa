@@ -59,6 +59,7 @@ class User(db.Model, DomainObject, UserMixin):
     twitter_user_id = Column(BigInteger, unique=True)
     facebook_user_id = Column(BigInteger, unique=True)
     google_user_id = Column(String, unique=True)
+    amnesty_user_id = Column(BigInteger, unique=True)
     ckan_api = Column(String, unique=True)
     newsletter_prompted = Column(Boolean, default=False)
     valid_email = Column(Boolean, default=False)

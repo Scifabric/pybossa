@@ -294,12 +294,28 @@ def setup_external_services(app):
     setup_twitter_login(app)
     setup_facebook_login(app)
     setup_google_login(app)
+    setup_amnesy_login(app)
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
     setup_youtube_importer(app)
 
-
+def setup_amnesy_login(app):
+    try:  # pragma: no cover
+        if (app.config['AMSSO_CONSUMER_KEY'] and
+                app.config['AMSSO_CONSUMER_SECRET']):
+            amnesty.init_app(app)
+            print "App Initilized"
+            from plugins.amnesty_sso_connector.views import blueprint as amnesty_bp
+            app.register_blueprint(amnesty_bp, url_prefix='/amnesty')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Amnesty signin disabled"
+        log_message = 'Amnesty signin disabled: %s' % str(inst)
+        app.logger.info(log_message)
+        
 def setup_twitter_login(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and

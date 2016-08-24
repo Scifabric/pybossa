@@ -35,7 +35,7 @@ The objects are:
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
-           'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
+           'twitter', 'google', 'amnesty', 'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'newsletter', 'importer',
            'flickr', 'plugin_manager', 'assets']
@@ -84,6 +84,10 @@ google = Google()
 
 from pybossa.oauth_providers import Flickr
 flickr = Flickr()
+
+# Amnesty Identity Management OAuth provider
+from plugins.amnesty_sso_connector import AmnestySSOConnector
+amnesty = AmnestySSOConnector()
 
 # Markdown support
 from flask.ext.misaka import Misaka
