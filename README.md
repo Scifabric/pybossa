@@ -60,8 +60,23 @@ The libraries are listed in /var/www/pybossa-amnesty-microtasking/requirements.t
 bash install.sh
 ```
 
-### 3.5. Configuring PostgreSQL Database
-#### 3.5.1. Create user for the app
+### 3.5. Config Files
+#### 3.5.1. Create a settings file and enter your SQLAlchemy DB URI (you can also override default settings as needed):
+```
+cp settings_local.py.tmpl settings_local.py
+# now edit ...
+nano settings_local.py
+```
+
+#### 3.5.2. Create the alembic config file and set the sqlalchemy.url to point to your database:
+```
+cp alembic.ini.template alembic.ini
+# now set the sqlalchemy.url ...
+nano alembic.ini
+```
+
+### 3.6. Configuring PostgreSQL Database
+#### 3.6.1. Create user for the app
 ```
 sudo su postgres
 createuser -d -P pybossa
@@ -69,7 +84,7 @@ createuser -d -P pybossa
 
 Use password `tester` when prompted.
 
-#### 3.5.2. Create the database
+#### 3.6.2. Create the database
 ```
 createdb pybossa -O pybossa
 ```
@@ -79,24 +94,9 @@ Exit the postgresql user:
 exit
 ```
 
-#### 3.5.3. Populate the database with its tables:
+#### 3.6.3. Populate the database with its tables:
 ```
 sudo bash db_create.sh
-```
-
-### 3.6. Config Files
-#### 3.6.1. Create a settings file and enter your SQLAlchemy DB URI (you can also override default settings as needed):
-```
-cp settings_local.py.tmpl settings_local.py
-# now edit ...
-nano settings_local.py
-```
-
-#### 3.6.1. Create the alembic config file and set the sqlalchemy.url to point to your database:
-```
-cp alembic.ini.template alembic.ini
-# now set the sqlalchemy.url ...
-nano alembic.ini
 ```
 
 ### 3.7. Install Redis
