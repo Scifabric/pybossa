@@ -7,3 +7,6 @@
 [submodule "doc/_themes/sphinx-theme-pybossa"]
 	path = doc/_themes/sphinx-theme-pybossa
 	url = https://github.com/PyBossa/sphinx-theme-pybossa.git
+[submodule "pybossa/plugins/amnesty_sso_connector"]
+	path = pybossa/plugins/amnesty_sso_connector
+	url = https://github.com/AltClick/pybossa-im-oauth2-client.git
