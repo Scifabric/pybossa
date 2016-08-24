@@ -118,7 +118,7 @@ redis-server contrib/sentinel.conf --sentinel
 2>/dev/null 1>&2 bash jobs.sh &
 ```
 
-We do `2>/dev/null 1>&2` so that output from those two processes don't pollute the terminal and instead are just sent `/dev/null`
+We do `2>/dev/null 1>&2` so that output from those two processes don't pollute the terminal and instead are just sent to `/dev/null`
 
 If somewher down the line you supect that the scheduler or the jobs are not running, you can check if they are still running like so:
 ```
