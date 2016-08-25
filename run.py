@@ -16,6 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa. If not, see <http://www.gnu.org/licenses/>.
 from pybossa.core import create_app
+import os 
+
+# turn off https now for oauth2 so we can work with IM without ssl certificate, hope we will enable it back later
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 if __name__ == "__main__":  # pragma: no cover
     app = create_app()
