@@ -9,4 +9,4 @@
 	url = https://github.com/PyBossa/sphinx-theme-pybossa.git
 [submodule "pybossa/plugins/amnesty_sso_connector"]
 	path = pybossa/plugins/amnesty_sso_connector
-	url = https://github.com/AltClick/pybossa-im-oauth2-client.git
+	url = git@github.com:AltClick/pybossa-im-oauth2-client.git
