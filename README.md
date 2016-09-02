@@ -220,6 +220,7 @@ Using the debugger with Vagrant may not be as straightfoward as it will seems in
 First, make sure you enable debug mode by opening and editing settings_local.py so that `DEBUG = True`.
 
 **Create a Python Interpreter for Vagrant:**
+
 1. Start your Vagrant machine from PyCharm by navigating to Tools->Vagrant->Up.
 2. SSH into your Vagrant box: Tools->Start SSH Session. Select Vagrant at [VagrantFolder] from the list that appears. If you get a PyCharm Warning message about a possible man-in-the-middle attacke, just ignore it and click on "Yes".
 3. From the terminal that appears, run `which python`. This will give you an absolute path to python on your virtual machine.
@@ -229,6 +230,7 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 7. Click OK to save. Note: Vagrant has to be up in order for this to work.
 
 **Configure Your Project to Use the Correct Interpreter**
+
 1. From the Run menu, select Edit Configurations.
 2. Click + and create a new Python Configuration.
 3. Set the name, e.g. amnesty-decoders.
