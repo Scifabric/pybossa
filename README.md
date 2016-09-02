@@ -229,7 +229,7 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 6. Click on the *Vagrant Hosts URL* link to test the connection. 
 7. Click OK to save. Note: Vagrant has to be up in order for this to work.
 
-**Configure Your Project to Use the Correct Interpreter**
+**Configure Your Project to Use the Correct Interpreter:**
 
 1. From the Run menu, select Edit Configurations.
 2. Click + and create a new Python Configuration.
