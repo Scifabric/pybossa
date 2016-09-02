@@ -225,7 +225,7 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 2. SSH into your Vagrant box: Tools->Start SSH Session. Select Vagrant at [VagrantFolder] from the list that appears. If you get a PyCharm Warning message about a possible man-in-the-middle attacke, just ignore it and click on "Yes".
 3. From the terminal that appears, run `which python`. This will give you an absolute path to python on your virtual machine.
 4. File->Settings->Project->Project Interpreter, then click the + button to create a new Project Interpreter. In OSX, it's PyCharm->Preferences->Project Interpreter, then click on the gear icon and "Add Remote". 
-5. Choose Vagrant. Your "Vagrant Instance Folder" should be the location of your VagrantFile on your host machine. *Python interpreter path* should be set to the absolute path you found in step 3 above.
+5. Choose Vagrant. Your *Vagrant Instance Folder* should be the location of your VagrantFile on your host machine. *Python interpreter path* should be set to the absolute path you found in step 3 above.
 6. Click on the *Vagrant Hosts URL* link to test the connection. 
 7. Click OK to save. Note: Vagrant has to be up in order for this to work.
 
