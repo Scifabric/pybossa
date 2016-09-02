@@ -161,7 +161,7 @@ def users(user_id=None):
 def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin')
+                             'created', 'locale', 'admin','country','newsletter_subscribe', 'task_contributions')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
