@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from sqlalchemy.sql import select
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.repositories import Repository
@@ -81,7 +82,6 @@ class TaskRepository(Repository):
         query_args = self.generate_query_from_keywords(TaskRun, **filters)
         return self.db.session.query(TaskRun).filter(*query_args).count()
 
-
     # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
         self._validate_can_be('saved', element)
@@ -131,6 +131,18 @@ class TaskRepository(Repository):
         self.db.session.commit()
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
+
+    def get_tasks_redundancy(self, project):
+        """get the given project's redundancy number"""
+
+        # Get all tasks for the given project.
+        # But we only need one of them so .first().
+        s = select([Task.n_answers]).where(Task.project_id == project.id)
+        a_task = self.db.session.execute(s).first()
+
+        # Return the redundancy value.
+        return a_task['n_answers']
+
 
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
