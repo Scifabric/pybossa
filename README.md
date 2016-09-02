@@ -212,7 +212,34 @@ Restart the server for these changes to take effect:
 sudo service apache2 restart
 ```
 
-## 5. Updating Currently Deployed Version
+## 5. Debugging With Vagrant
+While locally developing on PyBossa, chances are that you will [use Vagrant to run and test your code](http://docs.pybossa.com/en/latest/vagrant_pybossa.html#setting-up-pybossa-with-vagrant) because it's fast and easy and spares you having to go through hosting configurations.
+
+Using the debugger with Vagrant may not be as straightfoward as it will seems in retrospect, so this section is dedicated to explaining how to configure the debugger with PyCharm (Tested on PyCharm Pro 2016.1). These instructions are basically a copy and paste of [this StackOverflow post](http://stackoverflow.com/questions/27166855/using-pycharm-professional-and-vagrant-how-do-i-run-a-django-server).
+
+First, make sure you enable debug mode by opening and editing settings_local.py so that `DEBUG = True`.
+
+**Create a Python Interpreter for Vagrant:**
+1. Start your Vagrant machine from PyCharm by navigating to Tools->Vagrant->Up.
+2. SSH into your Vagrant box: Tools->Start SSH Session. Select Vagrant at [VagrantFolder] from the list that appears. If you get a PyCharm Warning message about a possible man-in-the-middle attacke, just ignore it and click on "Yes".
+3. From the terminal that appears, run `which python`. This will give you an absolute path to python on your virtual machine.
+4. File->Settings->Project->Project Interpreter, then click the + button to create a new Project Interpreter. In OSX, it's PyCharm->Preferences->Project Interpreter, then click on the gear icon and "Add Remote". 
+5. Choose Vagrant. Your "Vagrant Instance Folder" should be the location of your VagrantFile on your host machine. *Python interpreter path* should be set to the absolute path you found in step 3 above.
+6. Click on the *Vagrant Hosts URL* link to test the connection. 
+7. Click OK to save. Note: Vagrant has to be up in order for this to work.
+
+**Configure Your Project to Use the Correct Interpreter**
+1. From the Run menu, select Edit Configurations.
+2. Click + and create a new Python Configuration.
+3. Set the name, e.g. amnesty-decoders.
+4. Check "Single instance only" so that you do not run multiple instance at the same time.
+4. Set the Script to the project's run.py file path.
+5. Choose the Python interpreter that you set up in the above section from the Python interpreter dropdown
+6. Add your absolute path mappings. For local, use your project's absolute path. For remote use the VM's project path (i.e. /vagrant).
+
+Now you can run and debug your project from PyCharm.
+
+## 6. Updating Currently Deployed Version
 
 If you are getting the following message under /api/taskrun: 
 ```
