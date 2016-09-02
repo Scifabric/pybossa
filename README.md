@@ -215,7 +215,7 @@ sudo service apache2 restart
 ## 5. Debugging With Vagrant
 While locally developing on PyBossa, chances are that you will [use Vagrant to run and test your code](http://docs.pybossa.com/en/latest/vagrant_pybossa.html#setting-up-pybossa-with-vagrant) because it's fast and easy and spares you having to go through hosting configurations.
 
-Using the debugger with Vagrant may not be as straightfoward as it will seems in retrospect, so this section is dedicated to explaining how to configure the debugger with PyCharm (Tested on PyCharm Pro 2016.1). These instructions are basically a copy and paste of [this StackOverflow post](http://stackoverflow.com/questions/27166855/using-pycharm-professional-and-vagrant-how-do-i-run-a-django-server).
+Using the debugger with Vagrant may not be as straightfoward as it will seem in retrospect, so this section is dedicated to explaining how to configure the debugger with PyCharm (Tested on PyCharm Pro 2016.1). These instructions are basically a copy and paste of [this StackOverflow post](http://stackoverflow.com/questions/27166855/using-pycharm-professional-and-vagrant-how-do-i-run-a-django-server).
 
 First, make sure you enable debug mode by opening and editing settings_local.py so that `DEBUG = True`.
 
@@ -227,7 +227,7 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 4. File->Settings->Project->Project Interpreter, then click the + button to create a new Project Interpreter. In OSX, it's PyCharm->Preferences->Project Interpreter, then click on the gear icon and "Add Remote". 
 5. Choose Vagrant. Your *Vagrant Instance Folder* should be the location of your VagrantFile on your host machine. *Python interpreter path* should be set to the absolute path you found in step 3 above.
 6. Click on the *Vagrant Hosts URL* link to test the connection. 
-7. Click OK to save. Note: Vagrant has to be up in order for this to work.
+7. Click OK to save.
 
 **Configure Your Project to Use the Correct Interpreter:**
 
@@ -239,7 +239,7 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 5. Choose the Python interpreter that you set up in the above section from the Python interpreter dropdown
 6. Add your absolute path mappings. For local, use your project's absolute path. For remote use the VM's project path (i.e. /vagrant).
 
-Now you can run and debug your project from PyCharm.
+Now you can run and debug your project from PyCharm, with breakpoints and everything.
 
 ## 6. Updating Currently Deployed Version
 
