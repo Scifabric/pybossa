@@ -211,3 +211,14 @@ Restart the server for these changes to take effect:
 ```
 sudo service apache2 restart
 ```
+
+## 5. Updating Currently Deployed Version
+
+If you are getting the following message under /api/taskrun: 
+```
+exception_msg: "(psycopg2.ProgrammingError) column task_run.transfered_in_mongo does not exist LINE 1: ..._run_calibration, task_run.info AS task_run_info, task_run.t... ^ ",
+```
+Open terminal and connect to the pybossa database, and run the following command:
+```
+ ALTER TABLE task_run ADD COLUMN transfered_in_mongo integer  NOT NULL DEFAULT '0';
+```
