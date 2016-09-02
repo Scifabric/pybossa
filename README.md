@@ -233,11 +233,11 @@ First, make sure you enable debug mode by opening and editing settings_local.py 
 
 1. From the Run menu, select Edit Configurations.
 2. Click + and create a new Python Configuration.
-3. Set the name, e.g. amnesty-decoders.
-4. Check "Single instance only" so that you do not run multiple instance at the same time.
-4. Set the Script to the project's run.py file path.
-5. Choose the Python interpreter that you set up in the above section from the Python interpreter dropdown
-6. Add your absolute path mappings. For local, use your project's absolute path. For remote use the VM's project path (i.e. /vagrant).
+3. Set the *Name*, e.g. amnesty-decoders.
+4. Check *Single instance only* so that you do not run multiple instance at the same time.
+4. Set the *Script* to the project's run.py file path.
+5. Choose the Python interpreter that you set up in the above section from the Python interpreter dropdown.
+6. Add your absolute path mappings. For local, use the project's absolute path in your local machine. For remote, use the VM's project absolute path (i.e. /vagrant).
 
 Now you can run and debug your project from PyCharm, with breakpoints and everything.
 
