@@ -212,10 +212,10 @@ Restart the server for these changes to take effect:
 sudo service apache2 restart
 ```
 
-## Results page
+### 4.1. Results page
 The results page in this pybossa theme use style and images from https://github.com/AltClick/amnesty-theme
 
-### Git submodule
+#### 4.1.1. Git submodule
 https://github.com/AltClick/amnesty-theme is added as git submodule in this repo 
 
 To manually amnesty-theme as gitsumodule
@@ -225,7 +225,7 @@ cd pybossa/themes/default
 git submodule add git@github.com:AltClick/amnesty-theme.git static/amnesty-theme
 ```
 
-### Build style
+#### 4.1.2. Build style
 Copy images, js file from amnesty theme to pybossa theme
 ```
 cd pybossa/themes/default/static
