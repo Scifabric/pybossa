@@ -212,6 +212,30 @@ Restart the server for these changes to take effect:
 sudo service apache2 restart
 ```
 
+## Results page
+The results page in this pybossa theme use style and images from https://github.com/AltClick/amnesty-theme
+
+### Git submodule
+https://github.com/AltClick/amnesty-theme is added as git submodule in this repo 
+
+To manually amnesty-theme as gitsumodule
+```
+# Pull amnesty theme code as submodule
+cd pybossa/themes/default
+git submodule add git@github.com:AltClick/amnesty-theme.git static/amnesty-theme
+```
+
+### Build style
+Copy images, js file from amnesty theme to pybossa theme
+```
+cd pybossa/themes/default/static
+mkdir -p img/results-page js/results-page
+rm -Rf img/results-page/* js/results-page/*
+cp -R amnesty-theme/static/img/results-page/* img/results-page
+cp -R amnesty-theme/static/js/results-page/* js/results-page
+cp -f amnesty-theme/dist/pybossa/* amnesty-theme/static
+```
+
 ## 5. Debugging With Vagrant
 While locally developing on PyBossa, chances are that you will [use Vagrant to run and test your code](http://docs.pybossa.com/en/latest/vagrant_pybossa.html#setting-up-pybossa-with-vagrant) because it's fast and easy and spares you having to go through hosting configurations.
 
