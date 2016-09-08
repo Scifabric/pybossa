@@ -236,6 +236,36 @@ cp -R amnesty-theme/static/js/results-page/* js/results-page
 cp -f amnesty-theme/dist/pybossa/* amnesty-theme/static
 ```
 
+### 4.2 Single sign on with Identity Management (IM)
+Step 1: As we change domain of cookie for pybossa so we need to logout all users first ???
+
+Step 2: change pybossa cookie domain so the one both used by IM and Pybossa
+Set domain of pybossa cookie to domain of IM, so we can clear session cookie of IM and Pybossa at once.
+
+Example
+```
+Pybossa : http://py02.dev.amnestydecoders.com/ 
+IM: http://dev.amnestydecoders.com/
+SESSION_COOKIE_DOMAIN=".dev.amnestydecoders.com"
+```
+
+Example
+```
+Pybossa : http://decode-dafur.amnesty.org
+IM: http://decoders.amnesty.org
+SESSION_COOKIE_DOMAIN=".amnesty.org"
+```
+
+Step 3 : add setting for integrate with IM.
+Create a client (Key and secret) for pybossa in IM and fill config
+```
+# Amnesty SSO settings
+AMSSO_CONSUMER_KEY='key'
+AMSSO_CONSUMER_SECRET='secret'
+# Host is without http, https and is without / at the end. E.g. domain.com
+AMNESTY_SSO_HOST='decoders.amnesty.org'
+```
+
 ## 5. Debugging With Vagrant
 While locally developing on PyBossa, chances are that you will [use Vagrant to run and test your code](http://docs.pybossa.com/en/latest/vagrant_pybossa.html#setting-up-pybossa-with-vagrant) because it's fast and easy and spares you having to go through hosting configurations.
 
