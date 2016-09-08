@@ -225,7 +225,14 @@ cd pybossa/themes/default
 git submodule add git@github.com:AltClick/amnesty-theme.git static/amnesty-theme
 ```
 
-#### 4.1.2. Build style
+#### 4.1.2 Git pull
+https://github.com/AltClick/amnesty-theme is a private repo so we need permission to pull from github to a server.
+
+If pull using ssh then add ssh key as https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
+
+If pull using http then we can type username / password during pulling
+
+#### 4.1.3. Build style
 Copy images, js file from amnesty theme to pybossa theme
 ```
 cd pybossa/themes/default/static
