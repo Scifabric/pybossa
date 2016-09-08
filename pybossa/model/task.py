@@ -49,7 +49,7 @@ class Task(db.Model, DomainObject):
     #: Task.info field in JSON with the data for the task.
     info = Column(JSON)
     #: Number of answers to collect for this task.
-    n_answers = Column(Integer, default=30)
+    n_answers = Column(Integer, default=5)
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 

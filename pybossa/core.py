@@ -266,6 +266,7 @@ def setup_blueprints(app):
     from pybossa.view.terms import blueprint as terms
     from pybossa.view.uploads import blueprint as uploads
     from pybossa.view.amazon import blueprint as amazon
+    from pybossa.view.results import blueprint as results
 
     blueprints = [{'handler': home, 'url_prefix': '/'},
                   {'handler': api,  'url_prefix': '/api'},
@@ -279,6 +280,7 @@ def setup_blueprints(app):
                   {'handler': stats, 'url_prefix': '/stats'},
                   {'handler': uploads, 'url_prefix': '/uploads'},
                   {'handler': amazon, 'url_prefix': '/amazon'},
+                  {'handler': results, 'url_prefix': '/results'},
                   ]
 
     for bp in blueprints:

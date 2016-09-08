@@ -1259,6 +1259,11 @@ def task_n_answers(short_name):
     ensure_authorized_to('update', project)
     pro = pro_features()
     if request.method == 'GET':
+
+        # Set the form's task redundancy value to the currently set value.
+        task_redundancy_num = task_repo.get_tasks_redundancy(project)
+        form.n_answers.data = str(task_redundancy_num)
+
         return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,

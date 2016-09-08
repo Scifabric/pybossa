@@ -106,12 +106,12 @@ class TaskPresenterForm(Form):
 
 
 class TaskRedundancyForm(Form):
-    n_answers = IntegerField(lazy_gettext('Redundancy'),
-                             [validators.Required(),
-                              validators.NumberRange(
-                                  min=1, max=1000,
-                                  message=lazy_gettext('Number of answers should be a \
-                                                       value between 1 and 1,000'))])
+    _choices = []
+    for i in range(1, 11):
+        _choices.append((str(i), str(i)))
+
+    n_answers = SelectField(lazy_gettext('Task Redundancy'),
+                            choices=_choices)
 
 
 class TaskPriorityForm(Form):

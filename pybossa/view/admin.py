@@ -69,6 +69,19 @@ def index():
     return render_template('/admin/index.html')
 
 
+@blueprint.route('/tile-generator')
+@login_required
+@admin_required
+def map_tile_generator():
+    return render_template('/admin/map-tile-generator.html')
+
+@blueprint.route('/map-result')
+@login_required
+@admin_required
+def map_result():
+    all_projects = project_repo.get_all()
+    return render_template('/admin/map_result.html', all_projects=all_projects)
+
 @blueprint.route('/featured')
 @blueprint.route('/featured/<int:project_id>', methods=['POST', 'DELETE'])
 @login_required
@@ -148,7 +161,7 @@ def users(user_id=None):
 def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin')
+                             'created', 'locale', 'admin','country','newsletter_subscribe', 'task_contributions')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
