@@ -274,8 +274,6 @@ Create a client (Key and secret) for pybossa in IM and fill config
 # Amnesty SSO settings
 AMSSO_CONSUMER_KEY='key'
 AMSSO_CONSUMER_SECRET='secret'
-# Host is without http, https and is without / at the end. E.g. domain.com
-AMNESTY_SSO_HOST='decoders.amnesty.org'
 ```
 
 ## 5. Debugging With Vagrant

@@ -63,8 +63,11 @@ CONTACT_TWITTER = 'PyBossa'
 # AMSSO_CONSUMER_SECRET=''
 ## Server url is with http, https and is without / at the end. E.g. https://domain.com
 # AMNESTY_SSO_SERVER_URL=''
-## Domain is without http, https and is without / at the end. E.g. domain.com
-# AMNESTY_SSO_HOST=''
+## Set cookie domain to a shared domain so we can clear pybossa cookie and IM cookie at once.
+## Check info about SESSION_COOKIE_DOMAIN, REMEMBER_COOKIE_DOMAIN in http://flask.pocoo.org/docs/0.11/config/ and https://flask-login.readthedocs.io/en/latest/#cookie-settings
+#SESSION_COOKIE_DOMAIN=".dev.amnestydecoders.com"
+#REMEMBER_COOKIE_DOMAIN = ".dev.amnestydecoders.com"
+
 
 ## Discussion
 # DISCOURSE_API_KEY=''
