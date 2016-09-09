@@ -296,11 +296,43 @@ def setup_external_services(app):
     setup_twitter_login(app)
     setup_facebook_login(app)
     setup_google_login(app)
+    setup_amnesy_login(app)
+    setup_discourse_integration(app)
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
     setup_youtube_importer(app)
 
+def setup_amnesy_login(app):
+    try:  # pragma: no cover
+        if (app.config['AMSSO_CONSUMER_KEY'] and
+                app.config['AMSSO_CONSUMER_SECRET']):
+            amnesty.init_app(app)
+            from plugins.amnesty_sso_connector.views import blueprint as amnesty_bp
+            app.register_blueprint(amnesty_bp, url_prefix='/amnesty')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Amnesty signin disabled"
+        log_message = 'Amnesty signin disabled: %s' % str(inst)
+        app.logger.info(log_message)
+
+def setup_discourse_integration(app):
+    try:  # pragma: no cover
+        if (app.config['DISCOURSE_API_KEY'] and
+                app.config['DISCOURSE_CATEGORY'] and
+                    app.config['DISCOURSE_SERVER_URL']):
+            discourse_integration.init_app(app)
+            from plugins.discourse_integration.views import blueprint as discourse_integration_bp
+            app.register_blueprint(discourse_integration_bp, url_prefix='/discourse')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Discourse integration disabled"
+        log_message = 'Discourse integration disabled: %s' % str(inst)
+        app.logger.info(log_message)
 
 def setup_twitter_login(app):
     try:  # pragma: no cover

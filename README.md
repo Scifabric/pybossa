@@ -243,6 +243,46 @@ cp -R amnesty-theme/static/js/results-page/* js/results-page
 cp -f amnesty-theme/dist/pybossa/* amnesty-theme/static
 ```
 
+### 4.2 Single sign on with Identity Management (IM)
+
+#### 4.2.1. Plugin code
+Add plugin code in https://github.com/AltClick/pybossa-im-oauth2-client as gitsumodule
+```
+cd pybossa/plugins
+git submodule add https://github.com/AltClick/pybossa-im-oauth2-client amnesty_sso_connector
+```
+
+#### 4.2.2 Setup
+Step 1: As we change domain of cookie for pybossa so we need to logout all users first. 
+Do this by modify current `SECRET_KEY` in `settings_local.py` to new value 
+
+Step 2: change pybossa cookie domain in `settings_local.py` to shared domain used by IM and Pybossa
+Reference: check SESSION_COOKIE_DOMAIN, REMEMBER_COOKIE_DOMAIN in http://flask.pocoo.org/docs/0.11/config/ and https://flask-login.readthedocs.io/en/latest/#cookie-settings
+
+Example
+```
+# Pybossa domain: http://py02.dev.amnestydecoders.com/ 
+# IM domain: http://dev.amnestydecoders.com/
+SESSION_COOKIE_DOMAIN=".dev.amnestydecoders.com"
+REMEMBER_COOKIE_DOMAIN = ".dev.amnestydecoders.com"
+```
+
+Example
+```
+# Pybossa domain: http://decode-dafur.amnesty.org
+# IM domain: http://decoders.amnesty.org
+SESSION_COOKIE_DOMAIN=".amnesty.org"
+REMEMBER_COOKIE_DOMAIN = ".amnesty.org"
+```
+
+Step 3 : in `settings_local.py`, add setting to integrate with IM.
+Create a client (Key and secret) for pybossa in IM and fill config
+```
+# Amnesty SSO settings
+AMSSO_CONSUMER_KEY='key'
+AMSSO_CONSUMER_SECRET='secret'
+```
+
 ## 5. Debugging With Vagrant
 While locally developing on PyBossa, chances are that you will [use Vagrant to run and test your code](http://docs.pybossa.com/en/latest/vagrant_pybossa.html#setting-up-pybossa-with-vagrant) because it's fast and easy and spares you having to go through hosting configurations.
 
