@@ -150,6 +150,14 @@ def signout():
     """
     logout_user()
     flash(gettext('You are now signed out'), 'success')
+
+    # when Identity Management (IM) available then after logout in pybossa 
+    # we will redirect to IM so it will clear its session and its other children's ones
+    im_logout_url = current_app.config['AMNESTY_SSO_SERVER_URL']
+    if im_logout_url is not None:
+        im_logout_url = im_logout_url + '/api/v1/sso/pybossa/logout'
+        return redirect(im_logout_url)
+
     return redirect(url_for('home.home'))
 
 
