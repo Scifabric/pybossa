@@ -11,5 +11,5 @@
 	path = pybossa/plugins/amnesty_sso_connector
 	url = https://github.com/AltClick/pybossa-im-oauth2-client.git
 [submodule "pybossa-discourse-client"]
-	path = ybossa/plugins/discourse_integration
+	path = pybossa/plugins/discourse_integration
 	url = https://github.com/AltClick/pybossa-discourse-client.git
