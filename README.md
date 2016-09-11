@@ -314,6 +314,16 @@ Now you can run and debug your project from PyCharm, with breakpoints and everyt
 
 ## 6. Updating Currently Deployed Version
 
+### 6.1 Identity Manager Database Update
+If in the error.log there is the following error: _"ProgrammingError: (psycopg2.ProgrammingError) column user.amnesty_user_id does not exist"_
+
+The you must update a table via alembic:
+
+```
+alembic upgrade head
+```
+
+### 6.2 Identity Manager Database Update
 If you are getting the following message under /api/taskrun: 
 ```
 exception_msg: "(psycopg2.ProgrammingError) column task_run.transfered_in_mongo does not exist LINE 1: ..._run_calibration, task_run.info AS task_run_info, task_run.t... ^ ",
@@ -322,3 +332,5 @@ Open terminal and connect to the pybossa database, and run the following command
 ```
  ALTER TABLE task_run ADD COLUMN transfered_in_mongo integer  NOT NULL DEFAULT '0';
 ```
+
+**Note:** This should be setup so it can be updated via `alembic upgrade head`.
