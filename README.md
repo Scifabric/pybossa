@@ -323,7 +323,7 @@ The you must update a table via alembic:
 alembic upgrade head
 ```
 
-### 6.2 Identity Manager Database Update
+### 6.2 Mongo Synching Database Update
 If you are getting the following message under /api/taskrun: 
 ```
 exception_msg: "(psycopg2.ProgrammingError) column task_run.transfered_in_mongo does not exist LINE 1: ..._run_calibration, task_run.info AS task_run_info, task_run.t... ^ ",
