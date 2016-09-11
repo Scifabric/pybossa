@@ -320,6 +320,7 @@ If in the error.log there is the following error: _"ProgrammingError: (psycopg2.
 The you must update a table via alembic:
 
 ```
+source ./venv/bin/activate
 alembic upgrade head
 ```
 
