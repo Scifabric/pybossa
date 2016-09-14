@@ -47,6 +47,7 @@ class TaskRun(db.Model, DomainObject):
     finish_time = Column(Text, default=make_timestamp)
     timeout = Column(Integer)
     calibration = Column(Integer)
+    transfered_in_mongo = Column(Integer, default=0)
     #: Value of the answer.
     info = Column(JSON)
     '''General writable field that should be used by clients to record results\
