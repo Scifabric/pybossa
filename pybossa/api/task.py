@@ -34,6 +34,9 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.ratelimit import ratelimit
 from pybossa.core import result_repo, task_repo
 from api_base import APIBase, cors_headers
+from pybossa.error import ErrorStatus
+
+error = ErrorStatus()
 
 class TaskAPI(APIBase):
 
