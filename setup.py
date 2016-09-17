@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
 requirements = [
+    "Flask-PyMongo=0.4.1",
     "alembic>=0.6.4, <1.0",
     "beautifulsoup4>=4.3.2, <5.0",
     "blinker>=1.3, <2.0",

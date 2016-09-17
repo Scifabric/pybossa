@@ -24,6 +24,8 @@ from flask import Flask, url_for, request, render_template, \
 from flask.ext.login import current_user
 from flask.ext.babel import gettext
 from flask.ext.assets import Bundle
+from flask.ext.pymongo import PyMongo
+
 from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -48,6 +50,7 @@ def create_app(run_as_server=True):
     setup_babel(app)
     setup_markdown(app)
     setup_db(app)
+    setup_mongo_db(app)
     setup_repositories()
     setup_exporter(app)
     mail.init_app(app)
@@ -72,6 +75,10 @@ def create_app(run_as_server=True):
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
     return app
+
+
+def setup_mongo_db(app):
+    app.mongo = PyMongo(app)
 
 
 def configure_app(app):

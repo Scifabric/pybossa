@@ -27,7 +27,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 
 """
 import json
-from flask import request, abort, Response
+from flask import request, abort, Response, current_app
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
@@ -196,6 +196,7 @@ class APIBase(MethodView):
 
         """
         try:
+            # Save in the Postgresql database
             self.valid_args()
             data = json.loads(request.data)
             self._forbidden_attributes(data)
@@ -204,6 +205,10 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
+
+            # Save in MongoDB database
+            current_app.mongo.db.taskruns.insert_one(data)
+
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
