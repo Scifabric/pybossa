@@ -49,6 +49,12 @@
     - name: start PostgreSQL service
       service: name=postgresql state=started
 
+    - name: add MongoDB apt repo
+      apt_repository: repo="deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" update_cache=yes
+
+    - name: install MongoDB
+      apt: name=mongodb state=latest
+
     - name: install Redis
       apt: name=redis-server state=latest
 
