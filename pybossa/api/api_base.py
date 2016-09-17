@@ -27,7 +27,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 
 """
 import json
-from flask import request, abort, Response, current_app
+from flask import request, abort, Response
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
@@ -38,6 +38,7 @@ from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
+from pybossa.mongo import task_run_mongo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -196,7 +197,7 @@ class APIBase(MethodView):
 
         """
         try:
-            # Save in the Postgresql database
+            # Save in the Postgresl database
             self.valid_args()
             data = json.loads(request.data)
             self._forbidden_attributes(data)
@@ -207,7 +208,15 @@ class APIBase(MethodView):
             self._log_changes(None, inst)
 
             # Save in MongoDB database
-            current_app.mongo.db.taskruns.insert_one(data)
+            # TODO: save all user info:
+            #   - username (or IP if anonymous user
+            #   - task start time
+            #   - task end time
+            #   - total time spent on task
+            #   - country
+            #   - what else?
+            task_run_mongo.insert_one(data)
+
 
             return json.dumps(inst.dictize())
         except Exception as e:
