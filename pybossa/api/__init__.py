@@ -145,6 +145,15 @@ def _retrieve_new_task(project_id):
 
 
 @jsonpify
+@blueprint.route('/<short_name>/all-volunteers')
+@crossdomain(origin='*', headers=cors_headers)
+def get_km_square(short_name):
+    tmp = {
+        "project": short_name
+    }
+    return Response(json.dumps(tmp), mimetype="application/json")
+
+@jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/project/<short_name>/userprogress')
 @blueprint.route('/app/<int:project_id>/userprogress')

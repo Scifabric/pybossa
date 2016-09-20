@@ -27,6 +27,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 
 """
 import json
+import datetime
 from flask import request, abort, Response
 from flask.ext.login import current_user
 from flask.views import MethodView
@@ -206,19 +207,23 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
+            current_user_dumbs = json.dumps(current_user.dictize())
+            inst_dumbs = json.dumps(inst.dictize())
+            current_user_json = json.loads(current_user_dumbs)
+            json_inst = json.loads(inst_dumbs)
 
-            # Save in MongoDB database
-            # TODO: save all user info:
-            #   - username (or IP if anonymous user
-            #   - task start time
-            #   - task end time
-            #   - total time spent on task
-            #   - country
-            #   - what else?
+            if current_user.is_authenticated():
+                data["username"] = current_user_json['name']
+                data["country"] = current_user_json["country"]
+
+            start_time = datetime.datetime.strptime(str(json_inst["created"]), "%Y-%m-%dT%H:%M:%S.%f")
+            finish_time = datetime.datetime.strptime(str(json_inst["finish_time"]), "%Y-%m-%dT%H:%M:%S.%f")
+            data["start_time"] = start_time
+            data["finish_time"] = finish_time
+            data["spent_time"] = (finish_time - start_time).total_seconds()
+            data["user_ip"] = json_inst["user_ip"]
             task_run_mongo.insert_one(data)
-
-
-            return json.dumps(inst.dictize())
+            return inst_dumbs
         except Exception as e:
             return error.format_exception(
                 e,
