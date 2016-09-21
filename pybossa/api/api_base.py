@@ -207,9 +207,9 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
-            current_user_dums = json.dumps(current_user.dictize())
+            current_user_dumps = json.dumps(current_user.dictize())
             inst_dumps = json.dumps(inst.dictize())
-            current_user_json = json.loads(current_user_dums)
+            current_user_json = json.loads(current_user_dumps)
             json_inst = json.loads(inst_dumps)
 
             # Including user information when saving task run in MongoDB.
