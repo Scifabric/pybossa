@@ -312,8 +312,8 @@ def setup_external_services(app):
 
 def setup_amnesy_login(app):
     try:  # pragma: no cover
-        if (app.config['AMSSO_CONSUMER_KEY'] and
-                app.config['AMSSO_CONSUMER_SECRET']):
+        if (app.config['AMNESTY_SSO_CONSUMER_KEY'] and
+                app.config['AMNESTY_SSO_CONSUMER_SECRET']):
             amnesty.init_app(app)
             from plugins.amnesty_sso_connector.views import blueprint as amnesty_bp
             app.register_blueprint(amnesty_bp, url_prefix='/amnesty')
