@@ -279,8 +279,8 @@ Step 3 : in `settings_local.py`, add setting to integrate with IM.
 Create a client (Key and secret) for pybossa in IM and fill config
 ```
 # Amnesty SSO settings
-AMSSO_CONSUMER_KEY='key'
-AMSSO_CONSUMER_SECRET='secret'
+AMNESTY_SSO_CONSUMER_KEY='key'
+AMNESTY_SSO_CONSUMER_SECRET='secret'
 ```
 
 ## 5. Debugging With Vagrant

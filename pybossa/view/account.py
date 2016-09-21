@@ -54,6 +54,21 @@ blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('super', connection=sentinel.master)
 
+def is_amnesty_sso_enable():
+    if ('AMNESTY_SSO_CONSUMER_KEY' in current_app.config):
+        return True
+    else:
+        return False
+
+def amnesty_url_for(pybossa_url):
+    urls = {
+        '/forgot-password': '/password/reset',
+        '/reset-password': '/account/change-password',
+        '/<name>/update': '/account/profile',
+        '/signin': '/login',
+        '/register': '/register'
+    }
+    return current_app.config['AMNESTY_SSO_SERVER_URL'] + urls[pybossa_url]
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
@@ -92,6 +107,10 @@ def signin():
     Returns a Jinja2 template with the result of signing process.
 
     """
+
+    if is_amnesty_sso_enable():
+        return redirect(amnesty_url_for('/signin'))
+
     form = LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         password = form.password.data
@@ -153,10 +172,11 @@ def signout():
 
     # when Identity Management (IM) available then after logout in pybossa 
     # we will redirect to IM so it will clear its session and its other children's ones
-    im_logout_url = current_app.config['AMNESTY_SSO_SERVER_URL']
-    if im_logout_url is not None:
-        im_logout_url = im_logout_url + '/api/v1/sso/pybossa/logout'
-        return redirect(im_logout_url)
+    if 'AMNESTY_SSO_SERVER_URL' in current_app.config:
+        im_logout_url = current_app.config['AMNESTY_SSO_SERVER_URL']
+        if im_logout_url is not None:
+            im_logout_url = im_logout_url + '/api/v1/sso/pybossa/logout'
+            return redirect(im_logout_url)
 
     return redirect(url_for('home.home'))
 
@@ -204,6 +224,10 @@ def register():
     Returns a Jinja2 template
 
     """
+
+    if is_amnesty_sso_enable():
+        return redirect(amnesty_url_for('/register'))
+
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
 
@@ -400,6 +424,12 @@ def update_profile(name):
     if not user:
         return abort(404)
     ensure_authorized_to('update', user)
+
+    # pybossa admin can still access pybossa account page event when we enable IM
+    if not user.admin :
+        if is_amnesty_sso_enable():
+            return redirect(amnesty_url_for('/<name>/update'))
+
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
@@ -551,6 +581,10 @@ def reset_password():
     Returns a Jinja2 template.
 
     """
+
+    if is_amnesty_sso_enable():
+        return redirect(amnesty_url_for('/reset-password'))
+
     key = request.args.get('key')
     if key is None:
         abort(403)
@@ -585,6 +619,10 @@ def forgot_password():
     Returns a Jinja2 template.
 
     """
+
+    if is_amnesty_sso_enable():
+        return redirect(amnesty_url_for('/forgot-password'))
+
     form = ForgotPasswordForm(request.form)
     if form.validate_on_submit():
         user = user_repo.get_by(email_addr=form.email_addr.data)
