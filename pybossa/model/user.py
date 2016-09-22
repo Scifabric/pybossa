@@ -22,7 +22,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
-
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.project import Project
@@ -73,8 +72,8 @@ class User(db.Model, DomainObject, UserMixin):
     blogposts = relationship(Blogpost, backref='owner')
 
     @property
-    def task_contributions(self): 
-        ''' Get number of contriubtions by user'''
+    def total_contributions(self):
+        ''' Get number of contribution by user'''
         return TaskRun.query.filter_by(user_id=self.id).count()
 
 

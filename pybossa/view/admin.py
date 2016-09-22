@@ -45,7 +45,7 @@ from StringIO import StringIO
 
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
-
+from pybossa.model.task_run import TaskRun
 
 blueprint = Blueprint('admin', __name__)
 
@@ -161,7 +161,11 @@ def users(user_id=None):
 def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin','country','newsletter_subscribe', 'task_contributions')
+                             'created', 'locale', 'admin','country','newsletter_subscribe', 'total_contributions' )
+
+    def number_of_project_contributions(user, project):
+        nr_of_contributions = TaskRun.query.filter_by(user_id=user.id, project_id=project.id).count()
+        return nr_of_contributions
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
@@ -180,6 +184,9 @@ def export_users():
         dict_user = {}
         for attr in exportable_attributes:
             dict_user[attr] = getattr(user, attr)
+        all_projects = project_repo.get_all()
+        for project in all_projects:
+            dict_user[project.name] = number_of_project_contributions(user, project)
         return dict_user
 
     def respond_csv():
@@ -197,11 +204,20 @@ def export_users():
         yield out.getvalue()
 
     def write_user(writer, user):
-        values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
+        values = []
+        for attr in sorted(exportable_attributes):
+            values.append(getattr(user, attr))
+        all_projects = project_repo.get_all()
+        for project in all_projects:
+            values.append(number_of_project_contributions(user, project))
         writer.writerow(values)
 
     def add_headers(writer):
-        writer.writerow(sorted(exportable_attributes))
+        headers = sorted(exportable_attributes)
+        all_projects = project_repo.get_all()
+        for project in all_projects:
+            headers.append(project.name)
+        writer.writerow(headers)
 
     export_formats = ["json", "csv"]
 
