@@ -32,7 +32,7 @@ for further information.
 
 Can I create *golden tasks*?
 ----------------------------
-Yes, you can. PyBossa has a field for every Task named: *calibration* that will
+Yes, you can. PYBOSSA has a field for every Task named: *calibration* that will
 identify the task as a *golden* task or as we call them as a *calibration
 task*. Calibration tasks can be used to weight the answers of the volunteers
 (authenticated and anonymous) as you know the answer for those given tasks. For
@@ -63,14 +63,14 @@ them about this issue, and they will decide about your project.
 
 I have all my data in a CSV file, can I import it?
 --------------------------------------------------
-Yes, you can. PyBossa supports the CSV format, so all you have to do is upload
+Yes, you can. PYBOSSA supports the CSV format, so all you have to do is upload
 your file to a file server like DropBox, copy the public link and paste it in
-the importer section. PyBossa also supports Google Drive Spreadsheets, see
+the importer section. PYBOSSA also supports Google Drive Spreadsheets, see
 :ref:`csv-import` section for further details.
 
 My data is in a Google Doc Spreadsheet, can I import the data into my project?
 --------------------------------------------------------------------------
-Yes, you can. PyBossa supports the Google Drive Spreadsheets, so make it
+Yes, you can. PYBOSSA supports the Google Drive Spreadsheets, so make it
 public, copy the link and use that link to import it the Google Drive importer
 section. See :ref:`csv-import` section for further details.
 
@@ -78,7 +78,7 @@ All my tasks have been completed, how do I download the results to analyze them?
 --------------------------------------------------------------------------------
 You can export all the data of your project whenever you want. The data can
 be exported directly from the *Tasks* section (check the *Tasks* link in the
-left sidebar of your project and click in the export box). PyBossa can
+left sidebar of your project and click in the export box). PYBOSSA can
 export your tasks and task runs (or answers) to a CSV file, JSON format or to
 a CKAN server. See the :ref:`export-results` section for further details.
 
@@ -94,18 +94,18 @@ The task presenter is the web project that will load the tasks of your
 project and present them to the user. It is an HTML + JavaScript
 project. See the :ref:`task-presenter` section for further details.
 
-PyBossa
+PYBOSSA
 =======
-Does PyBossa have an API?
+Does PYBOSSA have an API?
 -------------------------
-Yes, it does. PyBossa has a :ref:`api` that allows you to create projects,
+Yes, it does. PYBOSSA has a :ref:`api` that allows you to create projects,
 download results, import tasks, etc. Please see the :ref:`api` section for more
 details and the :doc:`user/tutorial` for a full example about how you can use
 it.
 
-Is PyBossa open-source?
+Is PYBOSSA open-source?
 -----------------------
-Yes, it is. PyBossa is licensed under the `GNU Affero general public license
+Yes, it is. PYBOSSA is licensed under the `GNU Affero general public license
 version 3.0`_. 
 
 .. _`GNU Affero general public license version 3.0`: http://www.gnu.org/licenses/agpl-3.0.html
@@ -118,4 +118,20 @@ etc. Check the official `Git repository`_ for all the available projects.
 
 .. _`Git repository`: http://github.com/PyBossa/
 
+Support
+=======
 
+PYBOSSA is free and open source, that means that anyone can create a project and 
+benefit from the endless features that PYBOSSA has to offer, so that you can reach 
+your ultimate goal. And the best part? That it is free of charge! 
+
+As well as the FAQs and all the available documentation to help you create and 
+develop your PYBOSSA project, we will be happy to answer your questions related 
+to the running of PYBOSSA in general. 
+
+To receive support for your project specifics, you will have to either purchase 
+a support plan or adhere to Scifabric’s hourly support rate. 
+Do contact Mar on `mar@scifabric.com`_ to discuss all queries related to your 
+specific project support and she will be more than happy to help you.
+
+.. _`mar@scifabric.com`: mailto:mar@scifabric.com
