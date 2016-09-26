@@ -118,4 +118,20 @@ etc. Check the official `Git repository`_ for all the available projects.
 
 .. _`Git repository`: http://github.com/PyBossa/
 
+Support
+=======
 
+PYBOSSA is free and open source, that means that anyone can create a project and 
+benefit from the endless features that PYBOSSA has to offer, so that you can reach 
+your ultimate goal. And the best part? That it is free of charge! 
+
+As well as the FAQs and all the available documentation to help you create and 
+develop your PYBOSSA project, we will be happy to answer your questions related 
+to the running of PYBOSSA in general. 
+
+To receive support for your project specifics, you will have to either purchase 
+a support plan or adhere to Scifabric’s hourly support rate. 
+Do contact Mar on `mar@scifabric.com`_ to discuss all queries related to your 
+specific project support and she will be more than happy to help you.
+
+.. _`mar@scifabric.com`: mailto:mar@scifabric.com
