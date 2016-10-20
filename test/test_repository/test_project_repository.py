@@ -325,6 +325,16 @@ class TestProjectRepositoryForCategories(Test):
         assert isinstance(retrieved_categories, list)
         assert len(retrieved_categories) == 0, retrieved_categories
 
+    def test_filter_categories_by_ownerid(self):
+        """Test filter_categories_by removes ownerid from query."""
+
+        CategoryFactory.create(name='My Project', short_name='mycategory')
+
+        retrieved_categories = self.project_repo.filter_categories_by(short_name='mycategory',
+                                                                      owner_id=1)
+
+        assert isinstance(retrieved_categories, list)
+        assert len(retrieved_categories) == 1, retrieved_categories
 
     def test_filter_categories_by_one_condition(self):
         """Test filter_categories_by returns a list of categories that meet
