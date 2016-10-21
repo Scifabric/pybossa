@@ -1,0 +1,43 @@
+version: 0.0
+os: linux
+files:
+  - source: /pybossa/
+    destination: /home/gigwork/pybossa/pybossa
+# TODO: uncomment line 7 - 15 after running pybossa under nginx
+#hooks:
+#  BeforeInstall:
+#    - location: scripts/pre_install
+#      timeout: 300
+#      runas: root  
+#  AfterInstall:
+#    - location: scripts/post_install
+#      timeout: 300
+#      runas: root        
+permissions:
+# 1) For newly deployment folder "pybossa" under /home/gigwork/pybossa/
+#  owner = gigwork, group = gigwork and mode = 775 (drwxrwxr-x).
+  - object: /home/gigwork/pybossa
+    pattern: "pybossa"
+    owner: gigwork
+    group: gigwork
+    mode: 775
+    type:
+      - directory
+# 2) For all folders at any level under /home/gigwork/pybossa/
+#  owner = gigwork, group = gigwork and mode = 775 (drwxrwxr-x).
+  - object: /home/gigwork/pybossa/pybossa
+    owner: gigwork
+    group: gigwork
+    mode: 775
+    type:
+      - directory
+# 3) For all files at any level under /home/gigwork/pybossa/pybossa
+# except pre_install and post_install scripts
+#  owner = gigwork, group = gigwork and mode = 664 (-rw-rw-r--).
+  - object: /home/gigwork/pybossa/pybossa
+    except: [pre_install, post_install]
+    owner: gigwork
+    group: gigwork
+    mode: 664
+    type:
+      - file
