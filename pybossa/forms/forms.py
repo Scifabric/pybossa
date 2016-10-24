@@ -28,7 +28,8 @@ from flask.ext.babel import lazy_gettext, gettext
 from pybossa.core import project_repo, user_repo
 from pybossa.sched import sched_variants
 import validator as pb_validator
-
+import re
+from wtforms.validators import ValidationError
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -270,6 +271,29 @@ class RegisterForm(Form):
 
     """Register Form Class for creating an account in PYBOSSA."""
 
+    """ apply strong password policy """
+    def check_password_strength(form, field):
+        pwd = field.data
+        range_pwdlen = range(8, 16)
+        pwdlen = len(pwd)
+        if not pwdlen in range_pwdlen:
+            raise ValidationError('Password must be between 8 and 15 characters')
+
+        std_scores = {0: 'Bad', 1: 'Weak', 2: 'Medium', 3: 'Average', 4: 'Strong'}
+        strength = dict.fromkeys(['has_upper', 'has_lower', 'has_num', 'has_special'], False)
+        if re.search(r'[A-Z]', pwd):
+            strength['has_upper'] = True
+        if re.search(r'[a-z]', pwd):
+            strength['has_lower'] = True
+        if re.search(r'[0-9]', pwd):
+            strength['has_num'] = True
+        if re.search(r'[!@$%^&*\#]', pwd):
+            strength['has_special'] = True
+
+        score = len([b for b in strength.values() if b])
+        if score < 4:
+            raise ValidationError('Password must contain atleast one uppercase alpha, numeric and special character !@$%^&*#\n')
+            
     err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
                            "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
     fullname = TextField(lazy_gettext('Full name'),
@@ -298,7 +322,8 @@ class RegisterForm(Form):
     err_msg_2 = lazy_gettext("Passwords must match")
     password = PasswordField(lazy_gettext('New Password'),
                              [validators.Required(err_msg),
-                              validators.EqualTo('confirm', err_msg_2)])
+                              validators.EqualTo('confirm', err_msg_2),
+                              validators.Required(), check_password_strength])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
