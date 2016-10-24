@@ -41,7 +41,7 @@ from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
 from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter
-from pybossa.util import Pagination, handle_content_type
+from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import get_user_signup_method
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
@@ -195,6 +195,7 @@ def confirm_email():
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
+@admin_required
 def register():
     """
     Register method for creating a PYBOSSA account.
