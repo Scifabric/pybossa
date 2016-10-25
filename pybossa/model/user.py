@@ -62,6 +62,7 @@ class User(db.Model, DomainObject, UserMixin):
     confirmation_email_sent = Column(Boolean, default=False)
     subscribed = Column(Boolean, default=True)
     info = Column(MutableDict.as_mutable(JSON), default=dict())
+    subadmin = Column(Boolean, default=False)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
