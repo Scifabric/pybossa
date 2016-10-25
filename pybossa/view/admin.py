@@ -524,3 +524,73 @@ def dashboard():
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+    
+@blueprint.route('/subadminusers', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def subadminusers(user_id=None):
+    """Manage subadminusers of PyBossa."""
+    form = SearchForm(request.form)
+    users = [user for user in user_repo.filter_by(subadmin=True)
+             if user.id != current_user.id]
+
+    if request.method == 'POST' and form.user.data:
+        query = form.user.data
+        found = [user for user in user_repo.search_by_name(query)
+                 if user.id != current_user.id]
+        [ensure_authorized_to('update', found_user) for found_user in found]
+        if not found:
+            flash("<strong>Ooops!</strong> We didn't find a user "
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+        return render_template('/admin/subadminusers.html', found=found, users=users,
+                               title=gettext("Manage Subadmin Users"),
+                               form=form)
+
+    return render_template('/admin/subadminusers.html', found=[], users=users,
+                           title=gettext("Manage Subadmin Users"), form=form)
+                           
+                                   
+@blueprint.route('/users/addsubadmin/<int:user_id>')
+@login_required
+@admin_required
+def add_subadmin(user_id=None):
+    """Add subadmin flag for user_id."""
+    try:
+        if user_id:
+            user = user_repo.get(user_id)
+            if user:
+                ensure_authorized_to('update', user)
+                user.subadmin = True
+                user_repo.update(user)
+                return redirect(url_for(".subadminusers"))
+            else:
+                msg = "User not found"
+                return format_error(msg, 404)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)
+
+
+@blueprint.route('/users/delsubadmin/<int:user_id>')
+@login_required
+@admin_required
+def del_subadmin(user_id=None):
+    """Del admin flag for user_id."""
+    try:
+        if user_id:
+            user = user_repo.get(user_id)
+            if user:
+                ensure_authorized_to('update', user)
+                user.subadmin = False
+                user_repo.update(user)
+                return redirect(url_for('.subadminusers'))
+            else:
+                msg = "User.id not found"
+                return format_error(msg, 404)
+        else:  # pragma: no cover
+            msg = "User.id is missing for method del_admin"
+            return format_error(msg, 415)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)    
