@@ -88,7 +88,7 @@ def handle_content_type(data):
                 data[item] = cat
             if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
-            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str: 
+            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
                 data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
@@ -141,6 +141,62 @@ def admin_required(f):  # pragma: no cover
         else:
             return abort(403)
     return decorated_function
+
+
+def admin_or_subadmin_required(f):  # pragma: no cover
+    """Check if the user is and admin or not."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.admin or current_user.subadmin:
+            return f(*args, **kwargs)
+        else:
+            return abort(403)
+    return decorated_function
+
+
+# from http://flask.pocoo.org/snippets/56/
+def crossdomain(origin=None, methods=None, headers=None,
+                max_age=21600, attach_to_all=True,
+                automatic_options=True):
+    """Crossdomain decorator."""
+    if methods is not None:  # pragma: no cover
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, basestring):
+        headers = ', '.join(x.upper() for x in headers)
+    if not isinstance(origin, basestring):  # pragma: no cover
+        origin = ', '.join(origin)
+    if isinstance(max_age, timedelta):  # pragma: no cover
+        max_age = max_age.total_seconds()
+
+    def get_methods():  # pragma: no cover
+        if methods is not None:
+            return methods
+
+        options_resp = current_app.make_default_options_response()
+        return options_resp.headers['allow']
+
+    def decorator(f):
+
+        def wrapped_function(*args, **kwargs):
+            if automatic_options and request.method == 'OPTIONS':  # pragma: no cover
+                resp = current_app.make_default_options_response()
+            else:
+                resp = make_response(f(*args, **kwargs))
+            if not attach_to_all and request.method != 'OPTIONS':  # pragma: no cover
+                return resp
+
+            h = resp.headers
+
+            h['Access-Control-Allow-Origin'] = origin
+            h['Access-Control-Allow-Methods'] = get_methods()
+            h['Access-Control-Max-Age'] = str(max_age)
+            if headers is not None:
+                h['Access-Control-Allow-Headers'] = headers
+            return resp
+
+        f.provide_automatic_options = False
+        return update_wrapper(wrapped_function, f)
+    return decorator
 
 
 # Fromhttp://stackoverflow.com/q/1551382
