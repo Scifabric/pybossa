@@ -26,6 +26,8 @@ This package adds GET, POST, PUT and DELETE methods for:
     * users,
     * global_stats,
     * vmcp
+    * completedtasks
+    * completedtaskruns
 
 """
 
@@ -59,6 +61,8 @@ from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed
+from completed_task import CompletedTaskAPI
+from completed_task_run import CompletedTaskRunAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -107,7 +111,8 @@ register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
              pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
-
+register_api(CompletedTaskAPI, 'api_completedtask', '/completedtask', pk='oid', pk_type='int')
+register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', pk='oid', pk_type='int')
 
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
@@ -181,7 +186,7 @@ def _retrieve_new_task(project_id):
         desc = fuzzyboolean(request.args.get('desc'))
     else:
         desc = False
-   
+
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
