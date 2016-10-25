@@ -112,13 +112,18 @@ class Exporter(object):
         filename = self.download_name(project, ty)
         return uploader.file_exists(filename, self._container(project))
 
-    def get_zip(self, project, ty):
-        """Get a ZIP file directly from uploaded directory
-        or generate one on the fly and upload it if not existing."""
+    def delete_existing_zip(self, project, ty):
+        """Delete existing ZIP from uploads directory"""
         filename = self.download_name(project, ty)
-        if not self.zip_existing(project, ty):
-            print "Warning: Generating %s on the fly now!" % filename
-            self._make_zip(project, ty)
+        if uploader.file_exists(filename, self._container(project)):
+            uploader.delete_file(filename, self._container(project))
+            
+    def get_zip(self, project, ty):
+        """Delete existing ZIP file directly from uploads directory,
+        generate one on the fly and upload it."""
+        filename = self.download_name(project, ty)
+        self.delete_existing_zip(project, ty)
+        self._make_zip(project, ty)
         if isinstance(uploader, local.LocalUploader):
             filepath = self._download_path(project)
             res = send_file(filename_or_fp=safe_join(filepath, filename),
