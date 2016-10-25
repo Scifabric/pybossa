@@ -46,7 +46,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url)
+                          get_avatar_url, admin_or_subadmin_required)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -226,6 +226,7 @@ def project_cat_index(category, page):
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
+@admin_or_subadmin_required
 def new():
     ensure_authorized_to('create', Project)
     form = ProjectForm(request.body)
@@ -287,13 +288,15 @@ def new():
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
+@admin_or_subadmin_required
 def task_presenter_editor(short_name):
     errors = False
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, "Task Presenter Editor")
-    ensure_authorized_to('read', project)
-    ensure_authorized_to('update', project)
+    if not current_user.admin and not current_user.subadmin:
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
 
     pro = pro_features()
 
@@ -1003,8 +1006,8 @@ def delete_tasks(short_name):
         n_volunteers = cached_projects.n_volunteers(project.id)
         n_completed_tasks = cached_projects.n_completed_tasks(project.id)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        project_sanitized, owner_sanitized = sanitize_project_owner(project, 
-                                                                    owner, 
+        project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
                                                                     current_user,
                                                                     ps)
         response = dict(template='projects/tasks/delete.html',
@@ -1028,6 +1031,7 @@ def delete_tasks(short_name):
 
 
 @blueprint.route('/<short_name>/tasks/export')
+@admin_or_subadmin_required
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = project_by_shortname(short_name)
@@ -1037,12 +1041,13 @@ def export_to(short_name):
     loading_text = gettext("Exporting data..., this may take a while")
     pro = pro_features()
 
-    if project.needs_password():
-        redirect_to_password = _check_if_redirect_to_password(project)
-        if redirect_to_password:
-            return redirect_to_password
-    else:
+    if not current_user.admin and not current_user.subadmin:
         ensure_authorized_to('read', project)
+        if project.needs_password():
+            redirect_to_password = _check_if_redirect_to_password(project)
+            if redirect_to_password:
+                return redirect_to_password
+
 
     def respond():
         return render_template('/projects/export.html',
@@ -1237,7 +1242,7 @@ def show_stats(short_name):
                                                                 current_user,
                                                                 ps)
 
-    # Handle JSON project stats depending of output 
+    # Handle JSON project stats depending of output
     # (needs to be escaped for HTML)
     if request.headers.get('Content-Type') == 'application/json':
         handle_projectStats = projectStats
