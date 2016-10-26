@@ -98,6 +98,9 @@ def configure_app(app):
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
+    # Two factor authentication
+    global twofactor_auth
+    twofactor_auth = app.config.get('ENABLE_TWO_FACTOR_AUTH')
 
 
 def setup_json_serializer(app):
