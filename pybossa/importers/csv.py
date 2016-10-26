@@ -22,6 +22,8 @@ from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
 from .base import BulkTaskImport, BulkImportException
+from flask import request
+import io
 
 
 class BulkTaskCSVImport(BulkTaskImport):
@@ -126,3 +128,41 @@ class BulkTaskGDImport(BulkTaskCSVImport):
         else:
             return ''.join([self.url.split('edit')[0],
                             'export?format=csv'])
+
+
+class _BulkTaskLocalCSVImport(_BulkTaskCSVImport):
+
+    """Class to import CSV tasks in bulk from local file."""
+
+    importer_id = "localcsv"
+
+    def _get_data(self, **form_data):
+        """Get data."""
+        return form_data['csv_filename']
+        
+    def _get_csv_data_from_request(self, csv_filename):        
+        if csv_filename is None:
+            msg = ("Not a valid csv file for import")
+            raise BulkImportException(gettext(msg), 'error')
+
+        if (('text/plain' not in request.headers['content-type']) and
+                ('text/csv' not in request.headers['content-type']) and
+                ('multipart/form-data' not in request.headers['content-type'])):
+            msg = gettext("Oops! That file doesn't look like the right file.")
+            raise BulkImportException(msg, 'error')
+
+        request.encoding = 'utf-8'
+        file = request.files['file']
+        if file is None or file.stream is None:
+            msg = ("Not a valid csv file for import")
+            raise BulkImportException(gettext(msg), 'error')
+        
+        file.stream.seek(0)
+        csvcontent = io.StringIO(file.stream.read().decode("UTF8"))
+        csvreader = unicode_csv_reader(csvcontent)
+        return self._import_csv_tasks(csvreader)
+        
+    def tasks(self, **form_data):
+        """Get tasks from a given URL."""
+        csv_filename = self._get_data(**form_data)
+        return self._get_csv_data_from_request(csv_filename)
