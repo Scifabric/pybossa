@@ -130,7 +130,7 @@ class BulkTaskGDImport(BulkTaskCSVImport):
                             'export?format=csv'])
 
 
-class BulkTaskLocalCSVImport(_BulkTaskCSVImport):
+class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
     """Class to import CSV tasks in bulk from local file."""
 
