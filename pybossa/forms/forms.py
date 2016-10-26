@@ -410,6 +410,12 @@ class ForgotPasswordForm(Form):
                                               message=err_msg),
                             validators.Email()])
 
+class OTPForm(Form):
+    #email_addr = EmailField(label=None, widget=HiddenInput())
+    otp = TextField(lazy_gettext('One Time Password'),
+                             [validators.Required(
+                                 message=lazy_gettext(
+                                     "You must provide a valid OTP code"))])
 
 ### Forms for admin view
 
