@@ -30,6 +30,8 @@ from pybossa.sched import sched_variants
 import validator as pb_validator
 import re
 from wtforms.validators import ValidationError
+from flask import request
+from werkzeug.utils import secure_filename
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -160,6 +162,28 @@ class BulkTaskGDImportForm(Form):
         return {'type': 'gdocs', 'googledocs_url': self.googledocs_url.data}
 
 
+class _BulkTaskLocalCSVImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='localcsv')
+    _allowed_extensions = set(['csv'])                               
+    def _allowed_file(self, filename):
+        return '.' in filename and \
+            filename.rsplit('.', 1)[1] in self._allowed_extensions
+            
+    def get_import_data(self):
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                flash('No file part')
+                return {'type': 'localcsv', 'csv_filename': None}
+            file = request.files['file']
+            if file.filename == '':
+                flash('No file selected')
+                return {'type': 'localcsv', 'csv_filename': None}
+            if file and self._allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                return {'type': 'localcsv', 'csv_filename': file.filename}
+        return {'type': 'localcsv', 'csv_filename': None}
+
+
 class BulkTaskEpiCollectPlusImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
@@ -243,7 +267,8 @@ class GenericBulkTaskImportForm(object):
               'dropbox': BulkTaskDropboxImportForm,
               'twitter': BulkTaskTwitterImportForm,
               's3': BulkTaskS3ImportForm,
-              'youtube': BulkTaskYoutubeImportForm }
+              'youtube': BulkTaskYoutubeImportForm,
+              'localcsv': _BulkTaskLocalCSVImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
