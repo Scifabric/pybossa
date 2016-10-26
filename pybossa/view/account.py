@@ -40,7 +40,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
 from flask import jsonify
-from pybossa.core import signer, uploader, sentinel, newsletter
+from pybossa.core import signer, uploader, sentinel, newsletter, twofactor_auth
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import get_user_signup_method
 from pybossa.util import redirect_content_type
@@ -53,12 +53,18 @@ from pybossa.feed import get_update_feed
 from pybossa.messages import *
 
 from pybossa.forms.account_view_forms import *
-
+from otpauth import OtpAuth
+import os
+import base64
 
 blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('email', connection=sentinel.master)
 
+# dictionary comprising OtpAuth objects for each user
+# the objects are created at the time of otp generation.
+# and destroyed upon otp validation.
+otpauths = {}
 
 @blueprint.route('/')
 @blueprint.route('/page/<int:page>')
@@ -86,6 +92,63 @@ def index(page=1):
     return handle_content_type(tmp)
 
 
+def _email_two_factor_auth(user):
+    # send email to user that has details on
+    # how to apply TOTP to login to pybossa
+    if user and user.email_addr:
+        msg = dict(subject='One time password generation details for Pybossa',
+                   recipients=[user.email_addr])
+        msg['body'] = render_template(
+            '/account/email/otp.md',
+            user=user)
+        otpauths[user.email_addr] =  None
+        otpauths[user.email_addr] =  OtpAuth(base64.b32encode(os.urandom(10)).decode('utf-8'))
+        otpsecret = otpauths[user.email_addr]
+        if otpsecret is None:
+            flash(gettext("Problem with generating one time password"), 'error')
+        else:
+            otpcode = otpsecret.totp(period=600) # otp valid for 10 mins
+            print '********** OTP code generated before sending email: %r' % otpcode
+            msg['html'] = render_template(
+                                '/account/email/otp.html',
+                                user=user, otpcode=otpcode)
+            mail_queue.enqueue(send_mail, msg)
+            flash(gettext("An email has been sent to you with one time password"),'success')
+    else:
+        flash(gettext("We don't have this email in our records. "
+                      "You may have signed up with a different "
+                      "email or used Twitter, Facebook, or "
+                      "Google to sign-in"), 'error')
+
+
+@blueprint.route('/<email>/otpvalidation', methods=['GET', 'POST'])
+def otpvalidation(email):
+    print '********** inside otpvalidation. request: %r' % request
+    form = OTPForm(request.form)
+    otp = int(form.otp.data)
+    print '************ user email: %r' % email
+    user = user_repo.get_by(email_addr=email)
+    if request.method == 'POST' and form.validate():
+        if otpauths.get(email) is not None:
+            otpsecret = otpauths[email]
+            if (otpsecret.valid_totp(otp, period=600)):
+                # user provided valid otp, signin user
+                msg = gettext("OTP verified. You are logged in to the system")
+                flash(msg, 'note')
+                _sign_in_user(user)
+                return redirect(url_for("home.home"))
+            else:
+                # invalid otp
+                msg = gettext("Invalid one time password")
+                flash(msg, 'error')
+        _email_two_factor_auth(user)
+        otpform = OTPForm(request.form)
+    return render_template('/account/otpvalidation.html',
+                title="Verify OTP",
+                form=form,
+                user=user)
+
+
 @blueprint.route('/signin', methods=['GET', 'POST'])
 def signin():
     """
@@ -100,9 +163,17 @@ def signin():
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
-            msg_1 = gettext("Welcome back") + " " + user.fullname
-            flash(msg_1, 'success')
-            return _sign_in_user(user)
+            if twofactor_auth == False:
+                msg_1 = gettext("Welcome back") + " " + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
+            else:
+                _email_two_factor_auth(user)
+                otpform = OTPForm(request.form)
+                return render_template('/account/otpvalidation.html',
+                                title="Verify OTP",
+                                form=otpform,
+                                user=user)
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
