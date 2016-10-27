@@ -52,7 +52,7 @@ from pybossa.forms.account_view_forms import *
 
 blueprint = Blueprint('account', __name__)
 
-mail_queue = Queue('super', connection=sentinel.master)
+mail_queue = Queue('email', connection=sentinel.master)
 
 
 @blueprint.route('/', defaults={'page': 1})

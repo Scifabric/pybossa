@@ -25,6 +25,7 @@ from default import with_context
 
 def jobs():
     """Generator."""
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='email')
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='high')
