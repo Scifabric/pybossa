@@ -174,4 +174,8 @@
 
   handlers:
     - name: restart supervisor
-      service: name=supervisor state=restarted
+      command: supervisorctl reread
+      notify: update supervisor
+
+    - name: update supervisor
+      command: supervisorctl update
