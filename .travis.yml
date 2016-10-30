@@ -21,7 +21,7 @@ before_install:
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
 install:
-- pip install -U pip
+- pip install -U pip 
 - pip install -r requirements.txt
 before_script:
 - redis-cli info
