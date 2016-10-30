@@ -23,6 +23,7 @@ before_install:
 install:
 - pip install -U pip 
 - pip install -r requirements.txt
+- pip install otpauth
 before_script:
 - redis-cli info
 - redis-cli set foo 1
