@@ -136,11 +136,17 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
     importer_id = "localcsv"
 
-    def _get_data(self, **form_data):
+    def __init__(self, **form_data):
+       self.form_data = form_data
+
+    def _get_data(self):
         """Get data."""
-        return form_data['csv_filename']
-        
-    def _get_csv_data_from_request(self, csv_filename):        
+        return self.form_data['csv_filename']
+
+    def count_tasks(self):
+        return len([task for task in self.tasks()])
+
+    def _get_csv_data_from_request(self, csv_filename):
         if csv_filename is None:
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
@@ -156,13 +162,13 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         if file is None or file.stream is None:
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
-        
+
         file.stream.seek(0)
-        csvcontent = io.StringIO(file.stream.read().decode("UTF8"))
+        csvcontent = io.StringIO(file.stream.read().decode("UTF8")) #csvcontent = StringIO(file.stream.read())
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_tasks(csvreader)
-        
-    def tasks(self, **form_data):
+
+    def tasks(self):
         """Get tasks from a given URL."""
-        csv_filename = self._get_data(**form_data)
+        csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
