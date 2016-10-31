@@ -162,13 +162,13 @@ class BulkTaskGDImportForm(Form):
         return {'type': 'gdocs', 'googledocs_url': self.googledocs_url.data}
 
 
-class _BulkTaskLocalCSVImportForm(Form):
+class BulkTaskLocalCSVImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='localcsv')
-    _allowed_extensions = set(['csv'])                               
+    _allowed_extensions = set(['csv'])
     def _allowed_file(self, filename):
         return '.' in filename and \
             filename.rsplit('.', 1)[1] in self._allowed_extensions
-            
+
     def get_import_data(self):
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -268,7 +268,7 @@ class GenericBulkTaskImportForm(object):
               'twitter': BulkTaskTwitterImportForm,
               's3': BulkTaskS3ImportForm,
               'youtube': BulkTaskYoutubeImportForm,
-              'localcsv': _BulkTaskLocalCSVImportForm }
+              'localcsv': BulkTaskLocalCSVImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
@@ -318,7 +318,7 @@ class RegisterForm(Form):
         score = len([b for b in strength.values() if b])
         if score < 4:
             raise ValidationError('Password must contain atleast one uppercase alpha, numeric and special character !@$%^&*#\n')
-            
+
     err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
                            "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
     fullname = TextField(lazy_gettext('Full name'),
