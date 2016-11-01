@@ -1,5 +1,5 @@
 [program:rq-worker]
-command=/home/pybossa/pybossa/env/bin/python app_context_rqworker.py scheduled_jobs super high medium low
+command=/home/pybossa/pybossa/env/bin/python app_context_rqworker.py scheduled_jobs super high medium low email
 directory=/home/pybossa/pybossa
 autostart=true
 autorestart=true

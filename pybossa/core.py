@@ -604,7 +604,9 @@ def setup_scheduled_jobs(app):  # pragma: no cover
     HOUR = 60 * 60
     MONTH = 30 * (24 * HOUR)
     first_quaterly_execution = get_quarterly_date(datetime.utcnow())
-    JOBS = [dict(name=enqueue_periodic_jobs, args=['super'], kwargs={},
+    JOBS = [dict(name=enqueue_periodic_jobs, args=['email'], kwargs={},
+                 interval=(1 * MINUTE), timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['super'], kwargs={},
                  interval=(10 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['high'], kwargs={},
                  interval=(1 * HOUR), timeout=(10 * MINUTE)),

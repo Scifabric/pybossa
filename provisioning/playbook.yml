@@ -7,6 +7,9 @@
     pybossa_path: "/vagrant"
     vagrant_home: "/home/vagrant"
     virtualenv_path: "/home/vagrant/pybossa-env"
+    redis_host: "127.0.0.1"
+    redis_port: "6379"
+    schedule_interval: "60"
   tasks:
     - name: Check Ubuntu 14.04 running
       assert:
@@ -140,8 +143,13 @@
     - name: start Supervisor service
       service: name=supervisor state=started
 
-    - name: copy Supervisor config
+    - name: copy rq-worker config
       template: src=templates/rq-worker.conf.j2 dest=/etc/supervisor/conf.d/rq-worker.conf owner=root group=root
+      notify:
+       - restart supervisor
+
+    - name: copy rq-scheduler config
+      template: src=templates/rq-scheduler.conf.j2 dest=/etc/supervisor/conf.d/rq-scheduler.conf owner=root group=root
       notify:
        - restart supervisor
 
@@ -166,4 +174,8 @@
 
   handlers:
     - name: restart supervisor
-      service: name=supervisor state=restarted
+      command: supervisorctl reread
+      notify: update supervisor
+
+    - name: update supervisor
+      command: supervisorctl update

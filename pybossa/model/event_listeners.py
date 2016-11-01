@@ -35,7 +35,7 @@ from pybossa.jobs import webhook, notify_blog_users
 from pybossa.core import sentinel
 
 webhook_queue = Queue('high', connection=sentinel.master)
-mail_queue = Queue('super', connection=sentinel.master)
+mail_queue = Queue('email', connection=sentinel.master)
 
 
 @event.listens_for(Blogpost, 'after_insert')
