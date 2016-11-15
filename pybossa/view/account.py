@@ -355,9 +355,8 @@ def _create_account(user_data):
                                valid_email=True)
     new_user.set_password(user_data['password'])
     user_repo.save(new_user)
-    flash(gettext('Thanks for signing-up'), 'success')
-    return _sign_in_user(new_user)
-
+    flash(gettext('Created user succesfully!'), 'success')
+    return redirect(url_for("home.home"))
 
 def _update_user_with_valid_email(user, email_addr):
     user.valid_email = True
