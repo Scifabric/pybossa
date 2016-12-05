@@ -1,14 +1,13 @@
 version: 0.0
 os: linux
 files:
-  - source: /pybossa/
+  - source: /pybossa/pybossa
     destination: /home/ubuntu/pybossa/pybossa
-# TODO: uncomment line 7 - 15 after running pybossa under nginx
-#hooks:
-#  BeforeInstall:
-#    - location: scripts/pre_install
-#      timeout: 300
-#      runas: root  
+hooks:
+  BeforeInstall:
+    - location: scripts/pre_install
+      timeout: 300
+      runas: root  
 #  AfterInstall:
 #    - location: scripts/post_install
 #      timeout: 300
