@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /pybossa/pybossa
+  - source: /pybossa
     destination: /home/ubuntu/pybossa/pybossa
 hooks:
   BeforeInstall:
