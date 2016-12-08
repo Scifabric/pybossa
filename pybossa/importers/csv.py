@@ -23,8 +23,9 @@ from pybossa.util import unicode_csv_reader
 
 from .base import BulkTaskImport, BulkImportException
 from flask import request
+from werkzeug.datastructures import FileStorage
 import io
-
+import time
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -151,20 +152,32 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
 
-        if (('text/plain' not in request.headers['content-type']) and
-                ('text/csv' not in request.headers['content-type']) and
-                ('multipart/form-data' not in request.headers['content-type'])):
-            msg = gettext("Oops! That file doesn't look like the right file.")
-            raise BulkImportException(msg, 'error')
+        retry = 0
+        csv_file = None
+        while retry < 5:
+            try:
+                csv_file = FileStorage(open(csv_filename, 'r'))
+                current_app.logger.info('LOCAL_CSV_UPLOAD: csv_file: {0}'.format(csv_file))
+                break
+            except IOError, e:
+                time.sleep(1)
+                retry += 1
+                
+        if csv_file is None:
+           if (('text/plain' not in request.headers['content-type']) and
+                   ('text/csv' not in request.headers['content-type']) and
+                   ('multipart/form-data' not in request.headers['content-type'])):
+               msg = gettext("Oops! That file doesn't look like the right file.")
+               raise BulkImportException(msg, 'error')
 
-        request.encoding = 'utf-8'
-        file = request.files['file']
-        if file is None or file.stream is None:
-            msg = ("Not a valid csv file for import")
-            raise BulkImportException(gettext(msg), 'error')
+           request.encoding = 'utf-8'
+           csv_file = request.files['file']
+           if csv_file is None or csv_file.stream is None:
+               msg = ("Not a valid csv file for import")
+               raise BulkImportException(gettext(msg), 'error')
 
-        file.stream.seek(0)
-        csvcontent = io.StringIO(file.stream.read().decode("UTF8")) #csvcontent = StringIO(file.stream.read())
+        csv_file.stream.seek(0)
+        csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_tasks(csvreader)
 
