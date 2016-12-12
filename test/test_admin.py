@@ -280,12 +280,9 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="John2", email="john2@john.com",
                       password="passwd")
+        self.signin(email="john2@john.com",
+                      password="passwd")
         self.new_project()
-        # The project is in the system but not in the front page
-        res = self.app.get('/', follow_redirects=True)
-        err_msg = ("The project should not be listed in the front page"
-                   "as it is not featured")
-        assert "Create" in res.data, err_msg
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.status)
@@ -310,7 +307,7 @@ class TestAdmin(web.Helper):
         self.signout()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create" in res.data,\
+        assert "Sign in" in res.data,\
             "The project should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
