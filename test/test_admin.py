@@ -57,6 +57,7 @@ class TestAdmin(web.Helper):
     def test_01_admin_index(self, sentinel_mock):
         """Test ADMIN index page works"""
         self.register()
+        self.signin()
         res = self.app.get("/admin", follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "There should be an index page for admin users and projects"
