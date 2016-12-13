@@ -48,3 +48,25 @@ class TestSubAdmin(web.Helper):
         assert res.status_code == 404, res.status_code
         assert err['error'] == "User.id not found", err
         assert err['status_code'] == 404, err
+
+    @with_context
+    def test_02_nonadmin_authenticated_user_cannot_add_del_subadmin(self):
+        """Test non admin authenticated user cannot add users to subadmin group works"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", name="juan",
+                      email="juan@juan.com", password="juan")
+        self.signout()
+        self.register(fullname="Juan Jose2", name="juan2",
+                      email="juan2@juan.com", password="juan2")
+        self.signout()
+        self.signin(email="juan2@juan.com", password="juan2")
+        # Add user.id=2 to subadmin group
+        res = self.app.get("/admin/users/addsubadmin/2", follow_redirects=True)
+        assert res.status == "403 FORBIDDEN",\
+            "This action should be forbidden, not enought privileges"
+        # Remove user.id=2 from subadmin group
+        res = self.app.get("/admin/users/delsubadmin/2", follow_redirects=True)
+        assert res.status == "403 FORBIDDEN",\
+            "This action should be forbidden, not enought privileges"
+            
