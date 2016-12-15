@@ -1,9 +1,9 @@
 ======================
-Administrating PyBossa
+Administrating PYBOSSA
 ======================
 
-PyBossa has three type of users: anonymous, authenticated and administrators.
-By default the first created user in a PyBossa server will become an
+PYBOSSA has three type of users: anonymous, authenticated and administrators.
+By default the first created user in a PYBOSSA server will become an
 administrator and manage the site with full privileges.
 
 And admin user will be able to access the admin page by clicking in the user
@@ -29,7 +29,7 @@ Administrators can manage different areas of the server:
 
 .. note::
     In the users option, admins will be able
-    to obtain a list of all registered users in the PyBossa system, in either
+    to obtain a list of all registered users in the PYBOSSA system, in either
     json or csv formats.
 
 .. note::
@@ -56,12 +56,12 @@ You will see a "Add to Featured" link to add a a project to featured front page 
 Categories
 ==========
 
-PyBossa provides by default two type of categories:
+PYBOSSA provides by default two type of categories:
 
 1. **Thinking**: for projects where the users can use their skills to solve
    a problem (i.e. image or sound pattern recognition).
 2. **Sensing**: for projects where the users can help gathering data using
-   tools like EpiCollect_ and then analyze the data in the PyBossa server.
+   tools like EpiCollect_ and then analyze the data in the PYBOSSA server.
 
 Admins can add as many categories as they want, just type then and its
 description and click in the green button labeled: Add category.
@@ -120,7 +120,7 @@ The section will let you know the following information:
 Dashboard
 =========
 
-The dashboard allows you to see what's going on in your PyBossa server.
+The dashboard allows you to see what's going on in your PYBOSSA server.
 
 .. image:: http://i.imgur.com/TmB0dx2.png
 

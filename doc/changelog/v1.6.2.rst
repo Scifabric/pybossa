@@ -2,5 +2,5 @@
 Changelog v1.6.2
 ================
 
- * PyBossa supports webassets: SASS, LESS, Coffee Script, etc.
+ * PYBOSSA supports webassets: SASS, LESS, Coffee Script, etc.
 

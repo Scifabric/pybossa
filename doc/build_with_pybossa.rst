@@ -1,8 +1,8 @@
 ==================
-Build with PyBossa
+Build with PYBOSSA
 ==================
 
-This section covers how to you can write and manage your own PyBossa
+This section covers how to you can write and manage your own PYBOSSA
 project.
 
 We suggest starting by taking a quick look at the :doc:`overview` as this will 

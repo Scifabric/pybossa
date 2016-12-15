@@ -1,8 +1,8 @@
 ============================
-Installing PyBossa with Juju
+Installing PYBOSSA with Juju
 ============================
 
-With this guide you can deploy PyBossa using the Juju_ technology inside a Virtualbox
+With this guide you can deploy PYBOSSA using the Juju_ technology inside a Virtualbox
 Virtual Machine (VM) locally. We will use Vagrant_  as it will help us to setup the 
 new VM. This should work on all supported OSes where Vagrant and Virtualbox run: 
 Windows, OS X, GNU/Linux.
@@ -23,7 +23,7 @@ Windows, OS X, GNU/Linux.
 Install Virtualbox & Vagrant
 ============================
 
-We will install PyBossa in a local virtual machine so you can delete it afterwards
+We will install PYBOSSA in a local virtual machine so you can delete it afterwards
 if you want. This will ensure that your computer is not polluted with libraries that
 you will not need any future, containing everything within the virtual machine.
 
@@ -56,18 +56,18 @@ Windows & OS X
 Install and download `Virtualbox <https://www.virtualbox.org>`__ and
 `Vagrant <http://www.vagrantup.com>`__ manually.
 
-Get latest version of PyBossa Juju charm
+Get latest version of PYBOSSA Juju charm
 ========================================
 
-You have two options to get the latest version of PyBossa Juju charm. 
+You have two options to get the latest version of PYBOSSA Juju charm. 
 You get a ZIP file with the latest version from this link:
-https://github.com/PyBossa/pybossa-jujucharm/archive/master.zip
+https://github.com/Scifabric/pybossa-jujucharm/archive/master.zip
 
 Or you use git to clone it:
 
 ::
 
-    git clone https://github.com/PyBossa/pybossa-jujucharm.git
+    git clone https://github.com/Scifabric/pybossa-jujucharm.git
 
 .. note::
     If you use the ZIP file, please unzip it before proceeding.
@@ -108,17 +108,17 @@ Prepare Juju for initial usage:
     juju bootstrap
 
 
-PyBossa bundle
+PYBOSSA bundle
 ==============
 
-Install the Pybossa charm bundle which will install PyBossa charm and PostgreSQL charm and connect them to eachother.
+Install the Pybossa charm bundle which will install PYBOSSA charm and PostgreSQL charm and connect them to eachother.
 
 ::
 
     juju deployer -c bundle.yaml
 
 
-Once is installed, we can install PyBossa and connect both of them.
+Once is installed, we can install PYBOSSA and connect both of them.
 
 Sentinel and Redis
 ==================
@@ -150,7 +150,7 @@ Now you can add the Sentinel
 
 :: 
 
-    juju git-deploy PyBossa/redis-sentinel-jujucharm
+    juju git-deploy Scifabric/redis-sentinel-jujucharm
 
 .. note::
    If you don't have the git-deploy command for juju, you can install it with these commands:
@@ -165,7 +165,7 @@ And monitor Redis master
 
     juju add-relation redis-sentinel redis:master
 
-Finally, you can link PyBossa to sentinel
+Finally, you can link PYBOSSA to sentinel
 
 ::
 
@@ -176,12 +176,12 @@ Finally, you can link PyBossa to sentinel
     check the official site_.
 
 
-.. _site: https://github.com/PyBossa/redis-sentinel-jujucharm/
+.. _site: https://github.com/Scifabric/redis-sentinel-jujucharm/
 
-Access PyBossa
+Access PYBOSSA
 ==============
 
-Look for the machine IP of PyBossa service here:
+Look for the machine IP of PYBOSSA service here:
 
 ::
 
@@ -194,9 +194,9 @@ Copy & Paste the IP and pass it to the following script
     sudo natpybossa 10.0.3.x
 
 
-Which will map the PyBossa server port to your localhost's port 7000.
+Which will map the PYBOSSA server port to your localhost's port 7000.
 
-You can now view PyBossa in your browser:
+You can now view PYBOSSA in your browser:
 
 ::
 
@@ -206,7 +206,7 @@ You can now view PyBossa in your browser:
 Email server
 ============
 
-PyBossa does not need an email server by default, but we encourage you to install one.
+PYBOSSA does not need an email server by default, but we encourage you to install one.
 
 Sending email properly is a bit complicated, as nowadays you have configure several authentication methods
 so your emails are not marked as SPAM or black listed. This configuration involves not only modifying the 
@@ -249,7 +249,7 @@ Juju GUI (optional)
 ===================
 
 If you prefer a graphical interface, you are covered. Juju provides a very nice web
-interface from where you can handle PyBossa services. To use it, follow these steps:
+interface from where you can handle PYBOSSA services. To use it, follow these steps:
 
 ::
 
@@ -276,6 +276,6 @@ for your Juju-GUI. Copy the password, and open the Juju-GUI in your browser
 
     https://localhost:8000
 
-If you've used Sentinel, Redis, PostgreSQL, HAProxy and PyBossa, your GUI should show something similar to this:
+If you've used Sentinel, Redis, PostgreSQL, HAProxy and PYBOSSA, your GUI should show something similar to this:
 
 .. image:: http://i.imgur.com/XraGePO.png

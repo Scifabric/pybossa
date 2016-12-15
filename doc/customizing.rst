@@ -1,12 +1,12 @@
 ===================
-Configuring PyBossa
+Configuring PYBOSSA
 ===================
 
-The PyBossa `settings_local.py.tmpl`_ file has all the available configuration
+The PYBOSSA `settings_local.py.tmpl`_ file has all the available configuration
 options for your server. This section, explains each of them and how you
 should/could use them in your server.
 
-.. _`settings_local.py.tmpl`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl
+.. _`settings_local.py.tmpl`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl
 
 Debug mode
 ==========
@@ -14,12 +14,12 @@ Debug mode
 The DEBUG_ mode is disabled by default in the configuration file, as this should
 be only used when you are running the server for development purposes. You
 should not enable this option, unless you need to do some debugging in the
-PyBossa server
+PYBOSSA server
 
-.. _DEBUG: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L19
+.. _DEBUG: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L19
 
 .. note::
-    For further details about the DEBUG mode in the PyBossa server, please,
+    For further details about the DEBUG mode in the PYBOSSA server, please,
     check the official documentation_.
 
 .. _documentation: http://flask.pocoo.org/docs/quickstart/#debug-mode
@@ -27,8 +27,8 @@ PyBossa server
 Debug Toolbar
 ~~~~~~~~~~~~~
 
-PyBossa includes a flag to enable a debug toolbar that can give your more
-insights about the performance of PyBossa. We strongly recommend to keep the
+PYBOSSA includes a flag to enable a debug toolbar that can give your more
+insights about the performance of PYBOSSA. We strongly recommend to keep the
 toolbar disabled in production environments, as it will slow down considerably
 all the execution of the code. However, if you are testing the server, feel
 free to enable it adding the following variable to the settings file::
@@ -44,13 +44,13 @@ in specific addresses of your server, as well as at a given port. Usually, you
 will only need to uncomment the HOST_ variable in order to listen in all the
 net interfaces.
 
-.. _HOST: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L22
-.. _PORT: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L23
+.. _HOST: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L22
+.. _PORT: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L23
 
 Securing the server
 ===================
 
-PyBossa uses the `Flask Sessions`_ feature that signs the cookies
+PYBOSSA uses the `Flask Sessions`_ feature that signs the cookies
 cryptographically for storing information. This improves the security of the
 server, as the user could look at the contents of the cookie but not modify it,
 unless they know the SECRET_ and SECRET_KEY_.
@@ -60,25 +60,25 @@ keys for your server and keep them private**. Please, check the `Flask
 Sessions`_ documentation for instructions about how to create good secret keys.
 
 .. _`Flask Sessions`: http://flask.pocoo.org/docs/quickstart/#sessions
-.. _SECRET: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L25
-.. _SECRET_KEY : https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L26
+.. _SECRET: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L25
+.. _SECRET_KEY : https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L26
 
 Database username and password
 ==============================
 
-PyBossa uses the SQLAlchemy_ SQL toolkit to access the DB. In the settings
+PYBOSSA uses the SQLAlchemy_ SQL toolkit to access the DB. In the settings
 file, you only need to modify the name of the user, password and database name
 so it fits your needs in the field `SQLALCHEMY_DATABASE_URI`_::
 
     'postgresql://username:userpassword@localhost/databasename'
 
-.. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L28
+.. _`SQLALCHEMY_DATABSE_URI`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L28
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 
 Load balance SQL Queries
 ========================
 
-If you have a master/slave PostgreSQL setup, you can instruct PyBossa to use
+If you have a master/slave PostgreSQL setup, you can instruct PYBOSSA to use
 the slave node for load balancing queries between the master and slave node.
 
 For enabling this mode, all you have to do is adding to the settings_local.py
@@ -94,42 +94,42 @@ config file the following:
 It's dangerous, so better sign this
 ===================================
 
-PyBossa uses the `It's dangerous` Python library that allows you to send some
+PYBOSSA uses the `It's dangerous` Python library that allows you to send some
 data to untrusted environments, but signing it. Basically, it uses a key that
 the server only knows and uses it for signing the data.
 
-This library is used to send the recovery password e-mails to your PyBossa
+This library is used to send the recovery password e-mails to your PYBOSSA
 users, sending a link with a signed key that will be verified in the server.
 Thus, **it is very important you create a secure and private key for the it's
 dangerous module in your configuration file**, just modify the
 ITSDANGEROUSKEY_.
 
-.. _ITSDANGEROUSKEY: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L35
+.. _ITSDANGEROUSKEY: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L35
 .. _`It's dangerous`: http://pythonhosted.org/itsdangerous/
 
 Modifying the Brand name
 ========================
 
 You can configure your project with a different name, instead of the default
-one: PyBossa. You only need to change the string BRAND_ to the name of your
+one: PYBOSSA. You only need to change the string BRAND_ to the name of your
 organization or project.
 
-.. _BRAND: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L38
+.. _BRAND: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L38
 
 Adding a Logo
 =============
 
-By default, PyBossa does not provide a logo for the server side, so you will
+By default, PYBOSSA does not provide a logo for the server side, so you will
 have to copy your logo into the folder: **pybossa/pybossa/static/img**. If the
 logo name is, **my_brand.png** the LOGO_ variable should be updated with the
 name of the file.
 
-.. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L40
+.. _LOGO: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L40
 
 Multiple languages
 ==================
 
-By default PyBossa only speaks English, however the default theme comes with a few
+By default PYBOSSA only speaks English, however the default theme comes with a few
 translations (Spanish, French, Italian, Japanese, Greek and German). 
 
 You can enable those translations (mostly user interface strings and actions) by doing
@@ -139,7 +139,7 @@ the following: creating a symlink to the translations folders:
 
     $ cd pybossa && ln -s themes/default/translations
 
-This will use the default translations of PyBossa for your server. We recommend to use
+This will use the default translations of PYBOSSA for your server. We recommend to use
 these translations with the default theme. If you use your own theme, the best thing is
 to do your own translation, (see :ref:`translating`), as you might want to name things 
 differently on the templates.
@@ -164,14 +164,14 @@ snippet in the same settings file
 
 
 .. note::
-    PyBossa tries to first match the user preferred language from their
+    PYBOSSA tries to first match the user preferred language from their
     browser. This will work for anonymous users, while registered ones can
     specify the language they want using their user preferences. 
 
 
 .. note::
     As an alternative way to allow anonymous users to *force* a different
-    language, PyBossa looks for a cookie named **language** where it expects
+    language, PYBOSSA looks for a cookie named **language** where it expects
     the key of any of the supported langes in the LOCALES list. You can use
     JavaScript to set it up.
     
@@ -179,8 +179,8 @@ snippet in the same settings file
 Creating your own theme
 =======================
 
-PyBossa supports themes. By default, it provides its own theme that you can use
-or if you prefer, copy it and create your own. The default theme for PyBossa is
+PYBOSSA supports themes. By default, it provides its own theme that you can use
+or if you prefer, copy it and create your own. The default theme for PYBOSSA is
 available in the `repository pybossa-default-theme`_.
 
 In order to create your theme, all you have to do is to fork the default theme
@@ -191,7 +191,7 @@ structure:
   name.
 * static: this folder has all the CSS, JavaScript, images, etc. In other words,
   the static content.
-* templates: this folder has the templates for PyBossa.
+* templates: this folder has the templates for PYBOSSA.
 
 Therefore, if you want to change the look and feel (i.e. colors of the top bar)
 all you have to do is to modify the styles.css file of the static folder. Or
@@ -202,7 +202,7 @@ order of the elements of the navigation bar: the first element should be the
 About link, then you will have to modify the files included in the templates
 folder.
 
-As you can see, you will be able to give a full personality to your own PyBossa
+As you can see, you will be able to give a full personality to your own PYBOSSA
 server without problems.
 
 .. note::
@@ -210,12 +210,12 @@ server without problems.
     the default value in your settings_local.py file of APPS_PER_PAGE to the
     number that you want. By default it gives you access to 20.
 
-.. _`repository pybossa-default-theme`: https://github.com/PyBossa/pybossa-default-theme
+.. _`repository pybossa-default-theme`: https://github.com/Scifabric/pybossa-default-theme
 
 Using SASS and minifying JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyBossa supports SASS thanks to Flask-Assets. If you want to compile SASS or SCSS just
+PYBOSSA supports SASS thanks to Flask-Assets. If you want to compile SASS or SCSS just
 add to your theme static folder a new one named: sass. Then, you can request the compiled
 version from the templates like this:
 
@@ -238,7 +238,7 @@ The same can be done for Javascript using the filter minjs:
 Results page
 =============
 
-PyBossa allows you to present a results page for your server. Add a file named
+PYBOSSA allows you to present a results page for your server. Add a file named
 _results.html to the home directory in the templates folder and you'll be able
 to show results about your project from one place:
 
@@ -248,8 +248,8 @@ to show results about your project from one place:
 Adding your Contact Information
 ===============================
 
-By default, PyBossa provides an e-mail and a Twitter handle to contact the
-PyBossa infrastructure. If you want, you can change it to your own e-mail and
+By default, PYBOSSA provides an e-mail and a Twitter handle to contact the
+PYBOSSA infrastructure. If you want, you can change it to your own e-mail and
 Twitter account. You can do it, modifying the following variables in the
 **settings_local.py** file:
 
@@ -264,15 +264,15 @@ provided URL that we use by default. You can also modify the license used for
 the data, just change the DATAUSE_ link to the open license that you want to
 use.
 
-.. _TERMSOFUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L43
-.. _DATEUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L44
+.. _TERMSOFUSE: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L43
+.. _DATEUSE: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L44
 
 .. _ssnn:
 
 Enabling Twitter, Facebook and Google authentication
 ====================================================
 
-PyBossa supports third party authentication services like Twitter, Facebook and
+PYBOSSA supports third party authentication services like Twitter, Facebook and
 Google.
 
 Twitter
@@ -284,8 +284,8 @@ variables: `TWITTER_CONSUMER_KEY`_ and `TWITTER_CONSUMER_SECRET`_ and uncomment
 them.
 
 .. _Twitter: https://dev.twitter.com/
-.. _`TWITTER_CONSUMER_KEY`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L52
-.. _`TWITTER_CONSUMER_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L53
+.. _`TWITTER_CONSUMER_KEY`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L52
+.. _`TWITTER_CONSUMER_SECRET`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L53
 .. note::
     This will also enable the Twitter task importer.
 
@@ -297,8 +297,8 @@ Facebook_ and copy and paste the **app ID/API Key and secret** into the next
 variables: `FACEBOOK_APP_ID`_ and `FACEBOOK_APP_SECRET`_ and uncomment them.
 
 .. _Facebook: https://developers.facebook.com/apps
-.. _`FACEBOOK_APP_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L54
-.. _`FACEBOOK_APP_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L55
+.. _`FACEBOOK_APP_ID`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L54
+.. _`FACEBOOK_APP_SECRET`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L55
 
 Google
 ~~~~~~
@@ -309,36 +309,36 @@ variables: `GOOGLE_CLIENT_ID`_ and `GOOGLE_CLIENT_SECRET`_ and uncomment
 them.
 
 .. _Google: https://code.google.com/apis/console/
-.. _`GOOGLE_CLIENT_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L56
-.. _`GOOGLE_CLIENT_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L57
+.. _`GOOGLE_CLIENT_ID`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L56
+.. _`GOOGLE_CLIENT_SECRET`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L57
 
 
 Receiving e-mails with errors
 =============================
 
-If you want to receive an e-mail when an error occurs in the PyBossa server,
+If you want to receive an e-mail when an error occurs in the PYBOSSA server,
 uncomment the ADMINS_ config variable and add a list of e-mails.
 
-.. _ADMINS: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L64
+.. _ADMINS: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L64
 
 Enabling Logging
 ================
 
-PyBossa can log errors to a file_ or to a Sentry_ server. If none of the above
+PYBOSSA can log errors to a file_ or to a Sentry_ server. If none of the above
 configurations are used, you will get the errors in the log file of the web server that you
 are using (i.e. in nginx the errors will be in /var/log/nginx/error.log*).
 
-.. _file: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L75
-.. _Sentry: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L73
+.. _file: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L75
+.. _Sentry: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L73
 
 Mail Setup
 ==========
 
-PyBossa needs a mail server in order to validate new accounts, send e-mails
+PYBOSSA needs a mail server in order to validate new accounts, send e-mails
 for recovering passwords, etc. , so it is very important you configure a server.
 Please, check the section `Mail setup`_ in the config file for configuring it.
 
-.. _`Mail setup`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L80
+.. _`Mail setup`: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L80
 
 Global Announcements for the users
 ==================================
@@ -347,8 +347,8 @@ Sometimes you will need to send a message to all your users while they are
 browsing the server. For example, an scheduled shutdown for installing new
 hardware.
 
-PyBossa provides a general solution for these announcements via the
-`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_
+PYBOSSA provides a general solution for these announcements via the
+`settings_local.py.tmpl <https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl>`_
 configuration file. The announcement feature allows
 you to send messages to the following type of users:
 
@@ -367,7 +367,7 @@ type of users:
     ANNOUNCEMENT = {'root': 'Your secret message'}
 
 There is an example of the **ANNOUNCEMENT** variable in the
-`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_
+`settings_local.py.tmpl <https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl>`_
 file, so you can easily adapt it for your own server. Basically, the
 announcement variable has a **key** and an associated **message**. The
 supported keys are:
@@ -384,8 +384,8 @@ supported keys are:
 Cache
 =====
 
-By default PyBossa uses Redis to cache a lot of data in order to serve it as
-fast as possible. PyBossa comes with a default set of timeouts for different
+By default PYBOSSA uses Redis to cache a lot of data in order to serve it as
+fast as possible. PYBOSSA comes with a default set of timeouts for different
 views that you can change or modify to your own taste. All you have to do is
 modify the following variables in your settings file::
 
@@ -420,7 +420,7 @@ If you want to disable the cache, you only have to export the following env vari
 Rate limit for the API
 ======================
 
-By default PyBossa limits the usage of the API with the following values::
+By default PYBOSSA limits the usage of the API with the following values::
 
     LIMIT = 300
     PER = 15 * 60
@@ -438,10 +438,10 @@ settings_local.py file, you can adapt it to your own needs.
 Configuring upload method
 =========================
 
-PyBossa by default allows you to upload avatars for users, icons for projects, etc.
+PYBOSSA by default allows you to upload avatars for users, icons for projects, etc.
 using the local file system of your server. While this is nice for small
 setups, when you need to add more nodes to serve the same content, this feature
-could become a problem. For this reason, PyBossa also supports cloud solutions
+could become a problem. For this reason, PYBOSSA also supports cloud solutions
 to save the files and serve them from there properly.
 
 Local Uploader
@@ -457,7 +457,7 @@ this method use the following the config settings::
 Rackspace Cloud Files
 ---------------------
 
-PyBossa comes with support for Rackspace CloudFiles service, allowing you to
+PYBOSSA comes with support for Rackspace CloudFiles service, allowing you to
 grow horizontally the services. Suportting cloud based system is as simple as
 having an account in Rackspace, and setting up the following config variables::
 
@@ -467,12 +467,12 @@ having an account in Rackspace, and setting up the following config variables::
     RACKSPACE_REGION = 'region'
 
 Once the server is started, it will authenticate against Rackspace and since
-that moment, your PyBossa server will save files in the cloud.
+that moment, your PYBOSSA server will save files in the cloud.
 
 Customizing the Layout and Front Page text
 ==========================================
 
-PyBossa allows you to override two items:
+PYBOSSA allows you to override two items:
 
  * **Front Page Text**
  * **Footer**
@@ -487,10 +487,10 @@ If you want to override those items, you have to create a folder named
 Tracking the server with Google Analytics
 =========================================
 
-PyBossa provides an easy way to integrate Google Analytics with your PyBossa
+PYBOSSA provides an easy way to integrate Google Analytics with your PYBOSSA
 server. In order to enable it you only have to create a file with the name:
 **_ga.html** in the **pybossa/template** folder with the Google Tracking code.
-PyBossa will be including your Google Analytics tracking code in every page
+PYBOSSA will be including your Google Analytics tracking code in every page
 since that moment.
 
 The file **_ga.html** should contain something like this::
@@ -510,7 +510,7 @@ The file **_ga.html** should contain something like this::
 Adding a Search box: Google Custom Search
 =========================================
 
-PyBossa provides a simple way to search within the server pages: Google Custom
+PYBOSSA provides a simple way to search within the server pages: Google Custom
 Search. In order to enable it you will have to apply for a Google Custom Search
 API key and then follow the next steps:
 
@@ -552,7 +552,7 @@ will be working, providing for your users a search tool.
 Adding web maps for project statistics
 ==========================================
 
-PyBossa creates for each project a statistics page, where the creators of
+PYBOSSA creates for each project a statistics page, where the creators of
 the project and the volunteers can check the top 5 anonymous and
 authenticated users, an estimation of time about when all the tasks will be
 completed, etc.
@@ -579,7 +579,7 @@ restart the server.
 Using your own Terms of Use
 ===========================
 
-PyBossa has a default Terms of Service page that you can customize it to fit your
+PYBOSSA has a default Terms of Service page that you can customize it to fit your
 institutional needs. In the case that you do not want to use the default one,
 please, create a **_tos.html** file in the **custom** folder. You
 can re-use the template **help/_tos.html** and adapt it (it is
@@ -588,7 +588,7 @@ located in the **template/help** folder.
 Using your own Cookies Policy
 =============================
 
-PyBossa has a default cookies policy page, but you can customize it to fit your
+PYBOSSA has a default cookies policy page, but you can customize it to fit your
 institutional needs. In the case that you do not want to use the default one,
 please, create a **_cookies_policy.html** file in the **custom** folder. You
 can re-use the template **help/_cookies_policy.html** and adapt it (it is
@@ -597,7 +597,7 @@ located in the **template/help** folder.
 Using your own Privacy Policy
 =============================
 
-PyBossa has a blank privacy policy page. We recommend you to add one, so your
+PYBOSSA has a blank privacy policy page. We recommend you to add one, so your
 users know how you are using their data. To add it, just create a file named
 **_privacy_policy.html** file in the **custom** folder.
 
@@ -608,7 +608,7 @@ Exporting data to a CKAN server
 
 CKAN_ is a powerful data management system that makes data accessible – by providing tools to streamline publishing, sharing, finding and using data. CKAN_ is aimed at data publishers (national and regional governments, companies and organizations) wanting to make their data open and available.
 
-PyBossa can export project's data to a CKAN_ server. In order to use this
+PYBOSSA can export project's data to a CKAN_ server. In order to use this
 feature, you will need to add the following config variables to the
 settings_loca.py file:
 
@@ -618,7 +618,7 @@ settings_loca.py file:
     CKAN_URL = "http://demo.ckan.org"
 
 As CKAN_ is open source, you can install your own CKAN_ server and configure it
-to host the data generated by your PyBossa projects quite easily, making it
+to host the data generated by your PYBOSSA projects quite easily, making it
 the data repository for your own projects. Another alternative is to use the
 `the Data hub`_ service that it is actually a free CKAN service for hosting your
 data.
@@ -631,7 +631,7 @@ Enforce Privacy mode
 
 Some projects need sometimes a way to protect their contributors due to the
 nature of the project. In this cases, where privacy is really important,
-PyBossa allows you to **lock** all the public pages related to the users and
+PYBOSSA allows you to **lock** all the public pages related to the users and
 statistics about the site and projects. Specifically, by enabling this mode
 only administrators will be able to see the following pages:
 
@@ -666,8 +666,8 @@ To:
 Adding your own templates
 =========================
 
-PyBossa supports different types of templates that you can offer for every
-project. By default, PyBossa comes with the following templates:
+PYBOSSA supports different types of templates that you can offer for every
+project. By default, PYBOSSA comes with the following templates:
 
  * **Basic**: the most basic template. It only has the basic structure to
    develop your project.
@@ -709,7 +709,7 @@ TEMPLATE_TASKS = {
 Setting an expiration time for project passwords
 ================================================
 
-PyBossa allows the owner of a project to set a password so that only people
+PYBOSSA allows the owner of a project to set a password so that only people
 (both anonymous or authenticated) that know it can contribute. By entering this
 password, the user will have access to the project for a time specified by::
 
@@ -720,7 +720,7 @@ Which defaults to 30 minutes.
 Validation of new user accounts
 ===============================
 
-Whenever a new user wants to sign up, PyBossa allows you to add some extra
+Whenever a new user wants to sign up, PYBOSSA allows you to add some extra
 security to the process by making the users have to validate a real email account.
 
 However, if you don't need this feature, it can be disabled (as it is by default)
@@ -742,7 +742,7 @@ WEEKLY_UPDATE_STATS = 'Tuesday'
 Newsletters with Mailchimp
 ==========================
 
-PyBossa can show a subscription page to users when they create an account. By
+PYBOSSA can show a subscription page to users when they create an account. By
 default is disabled, but if you want to enable it the system will show the page
 to registered users only once, to check if they want to be subscribed or not.
 
@@ -761,7 +761,7 @@ interested users.
 Enabling the Flickr Task importer
 =================================
 
-PyBossa has several different types of built-in importers. Users can use them to
+PYBOSSA has several different types of built-in importers. Users can use them to
 import tasks for their projects directly from the Web interface. However, using
 the Flickr one requires an API key and shared secret from Flickr in order to
 communicate with the service.
@@ -777,9 +777,9 @@ refer to `here <https://www.flickr.com/services/api/>`_.
 Enabling the Dropbox Task importer
 ==================================
 
-PyBossa also offers the Dropbox importer, which allows to import directly all
+PYBOSSA also offers the Dropbox importer, which allows to import directly all
 kind of files from a Dropbox account. In order to use it, you'll need to
-register your PyBossa server as a Dropbox app, as explained
+register your PYBOSSA server as a Dropbox app, as explained
 `here <https://www.dropbox.com/developers/dropins/chooser/js#setup>`_.
 
 Don't worry about the Javascript snippet part, we've already handled that for you.
@@ -798,7 +798,7 @@ them.
 
 .. _Twitter: https://dev.twitter.com/
 .. note::
-    This will also enable PyBossa's Twitter login.
+    This will also enable PYBOSSA's Twitter login.
 
 Enabling the Youtube Task importer
 ==================================
@@ -815,11 +815,11 @@ refer to `here <https://developers.google.com/youtube/registering_an_application
 Enabling Server Sent Events
 ===========================
 
-Since PyBossa v1.1.0, PyBossa supports Server Sent Events (SSE) in some views. This feature
-is really powerfull, however it brings some issues with it: it need to run PyBossa in
+Since PYBOSSA v1.1.0, PYBOSSA supports Server Sent Events (SSE) in some views. This feature
+is really powerfull, however it brings some issues with it: it need to run PYBOSSA in
 asynchronous mode.
 
-As this is not a necessity, by default PyBossa has this feature disabled. PyBossa uses
+As this is not a necessity, by default PYBOSSA has this feature disabled. PYBOSSA uses
 SSE to notify users about specific actions (i.e. the result of a webhook in real time).
 
 If you want to enable it, you will have to add to your settings_local.py::
@@ -831,10 +831,10 @@ trivial, as there are several different scenarios, libraries and options, so ins
 recommending one solution, we invite you to read the `uwsgi documentation about it <http://uwsgi-docs.readthedocs.org/en/latest/Async.html>`_, so you can take a decission based on your
 own infrastructure and preferences.
 
-Latest news from PyBossa
+Latest news from PYBOSSA
 ========================
 
-Since version v1.2.1 PyBossa gets the latest news of its new releases, as well
+Since version v1.2.1 PYBOSSA gets the latest news of its new releases, as well
 as anything related to what it's produced by SciFabric regarding the crowdsourcing
 world. You can add more items if you want, by just adding to your settings_local.py
 file new ATOM URLs::
@@ -844,7 +844,7 @@ file new ATOM URLs::
 Enabling pro user features
 ==========================
 
-Since version v1.2.2 PyBossa allows making available to all the users certain
+Since version v1.2.2 PYBOSSA allows making available to all the users certain
 features that were before reserved to pro users.
 
 Just locate them in the settings_local.py file. By default, they look like::

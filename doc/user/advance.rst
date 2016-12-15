@@ -3,13 +3,13 @@ DEPRECATED: Using the task ID with FlickrPerson
 ===============================================
 
 .. note:: 
-    This documentation is deprecated. The new PyBossa.JS_ library, will do
+    This documentation is deprecated. The new PYBOSSA.JS_ library, will do
     automatically all the described elements in this page for your project,
-    simplifying your code. The :doc:`tutorial` uses the new PyBossa.JS
+    simplifying your code. The :doc:`tutorial` uses the new PYBOSSA.JS
     version and explain how to use it. Please, upgrade your project.
 
-.. _PyBossa.JS: https://github.com/PyBossa/pybossa.js/
-PyBossa features a new endpoint system that allows every project to load
+.. _PYBOSSA.JS: https://github.com/Scifabric/pybossa.js/
+PYBOSSA features a new endpoint system that allows every project to load
 a specific Task for a given project.
 
 The following URL is available for every project::
@@ -38,8 +38,8 @@ project will have to code a bit more for loading the tasks in its own URL
 DEPRECATED: Checking if the project has to load a Task or request a new one
 ===============================================================================
 
-The following code shows how any PyBossa project can check if it has to
-load a specific task, or request a new one for the user using PyBossa.JS::
+The following code shows how any PYBOSSA project can check if it has to
+load a specific task, or request a new one for the user using PYBOSSA.JS::
 
   pathArray = window.location.pathname.split('/');
   if (window.location.pathname.indexOf('/task/')!=-1) {

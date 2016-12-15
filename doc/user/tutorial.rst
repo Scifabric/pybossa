@@ -3,26 +3,26 @@ Project Tutorial
 ================
 
 This tutorial is based in the demo project **Flickr Person** (`source code`_) provided with
-PyBossa. This demo project is a simple microtasking project where users have to
+PYBOSSA. This demo project is a simple microtasking project where users have to
 answer the following question: *Do you see a human face in this photo?* The possible
 answers are: *Yes, No* and *I don't know*.
 
-.. _source code: https://github.com/PyBossa/app-flickrperson
+.. _source code: https://github.com/Scifabric/app-flickrperson
 
 The demo project Flickr Person has two main components:
 
-  * The :ref:`task-creator` a Python script that creates the tasks in PyBossa, and
+  * The :ref:`task-creator` a Python script that creates the tasks in PYBOSSA, and
   * the :ref:`task-presenter`: an HTML + Javascript structure that will show the tasks 
     to the users and save their answers.
 
-This tutorial uses the PyBossa :ref:`pbs` command line tool.
+This tutorial uses the PYBOSSA :ref:`pbs` command line tool.
 
 
 Setting Things Up
 =================
 
-In order to run the tutorial, you will need to create an account in a PyBossa
-server. The PyBossa server could be running in your computer or in a third party
+In order to run the tutorial, you will need to create an account in a PYBOSSA
+server. The PYBOSSA server could be running in your computer or in a third party
 server.
 
 .. note::
@@ -40,7 +40,7 @@ Then, you will be able to copy the
 |
 
 This **API-KEY** allows you to create the
-project in PyBossa (only authenticated users can create projects and
+project in PYBOSSA (only authenticated users can create projects and
 tasks, while everyone can collaborate solving the tasks).
 
 .. note::
@@ -66,7 +66,7 @@ tasks, while everyone can collaborate solving the tasks).
 .. note:: 
 
     Flickr Person Finder uses the **pbs** command line tool which simplifies a lot
-    accessing the PyBossa API endpoints. Therefore, you will need to
+    accessing the PYBOSSA API endpoints. Therefore, you will need to
     install the *pybossa-pbs* with `pip --a python installer packager <http://pypi.python.org/pypi/pip>`_::
 
     $ pip install pybossa-pbs
@@ -87,24 +87,24 @@ There are two possible methos for creating a project:
   * :ref:`api-interface`: using the **pbs** command line tool.
 
 For this tutorial we are going to use the second option, the :doc:`../api` via
-the PyBossa :ref:`pbs` command line tool for interacting with the API.
+the PYBOSSA :ref:`pbs` command line tool for interacting with the API.
 
 For creating the project, you will need to parameters
 
-    * the URL of the PyBossa server, and 
-    * an API-KEY to authenticate you in the PyBossa server. 
+    * the URL of the PYBOSSA server, and 
+    * an API-KEY to authenticate you in the PYBOSSA server. 
 
 The following section gives more details about how to use the script.
 
 .. note::
-    If you are running a PyBossa server locally, you can omit the URL parameter
+    If you are running a PYBOSSA server locally, you can omit the URL parameter
     as by default it uses the URL http://localhost:5000
 
 Cloning the Flickr Person Finder source code
 --------------------------------------------
 
 In order to follow the tutorial, you will need to clone the `Flickr Person
-Finder public Github Repository <http://github.com/PyBossa/app-flickrperson>`_
+Finder public Github Repository <http://github.com/Scifabric/app-flickrperson>`_
 so you will have a local copy of the required files to create the project
 and tasks using the API.
 
@@ -120,7 +120,7 @@ that you need to clone the repository are:
 
 .. code-block:: bash
 
-    git clone git://github.com/PyBossa/app-flickrperson.git
+    git clone git://github.com/Scifabric/app-flickrperson.git
 
 After running that command a new folder named **app-flickrperson** will be
 created from where you run the command. 
@@ -128,7 +128,7 @@ created from where you run the command.
 Configuring the name, short name, thumbnail, etc.
 =================================================
 
-The Flickr Person Finder provides a file called: `project.json <https://github.com/PyBossa/app-flickrperson/blob/master/project.json>`_  that has the
+The Flickr Person Finder provides a file called: `project.json <https://github.com/Scifabric/app-flickrperson/blob/master/project.json>`_  that has the
 following content:
 
 .. code-block:: js
@@ -159,7 +159,7 @@ Now that we have the **project.json** file ready, we can create the project:
     pbs --server server --apikey key create_project
 
 This command will read the values in the file **project.json** and it will use
-them to create an empty project in the PyBossa server of your choice.
+them to create an empty project in the PYBOSSA server of your choice.
 
 .. note::
 
@@ -179,15 +179,15 @@ Adding tasks to the project
 ===========================
 
 Now that we have the project created, we can add some tasks to our project.
-PyBossa will deliver the tasks for the users (authenticated and anonymous ones) 
-and store the submitted answers in the PyBossa data base, so you can process
+PYBOSSA will deliver the tasks for the users (authenticated and anonymous ones) 
+and store the submitted answers in the PYBOSSA data base, so you can process
 them in a later stage.
 
-A PyBossa task is a JSON object with the information that needs to be processed
+A PYBOSSA task is a JSON object with the information that needs to be processed
 by the volunteers. Usually it will be a link to a media file (image, video,
 sound clip, PDF file, etc.) that needs to be processed.
 
-While PyBossa internally uses JSON for storing the data, you can add tasks to
+While PYBOSSA internally uses JSON for storing the data, you can add tasks to
 your project using two different formats::
 
  * CSV: a comma separated spreadsheet
@@ -275,7 +275,7 @@ The error message will have the information regarding the problems it has found
 when using the API.
 
 .. note::
-    Since version 2.0.1 PyBossa enforces API Rate Limiting, so you might exceed
+    Since version 2.0.1 PYBOSSA enforces API Rate Limiting, so you might exceed
     the number of allowed requests, getting a 429 error. Please see
     :ref:`rate-limiting` section.
 
@@ -283,7 +283,7 @@ when using the API.
 Number of answers or task runs per task
 =======================================
 
-PyBossa by default will send a task to different users (authenticated and
+PYBOSSA by default will send a task to different users (authenticated and
 anonymous users) until 30 different task runs are obtained for each task. 
 
 :ref:`task-scheduler` does not allow the same user to submit more than one answer for 
@@ -336,7 +336,7 @@ The template is the skeleton that will be used to load the data of the tasks:
 the question, the photos, user progress, input fields & submit buttons 
 to solve the task. 
 
-In this tutorial, Flickr Person uses a basic HTML skeleton and the `PyBossa.JS
+In this tutorial, Flickr Person uses a basic HTML skeleton and the `PYBOSSA.JS
 <http://pybossajs.rtfd.org>`_ library to load the data of the tasks into the 
 HTML template, and take actions based on the users's answers.
 
@@ -360,13 +360,13 @@ sections or <div>:
   * **<div> for the Questions & Answer buttons**. There are three buttons with the 
     possible answers: *Yes*, *No*, and *I don't know*.
 
-By default, the PyBossa framework loads for every task the PyBossa.JS library,
+By default, the PYBOSSA framework loads for every task the PYBOSSA.JS library,
 so you don't have to include it in your template.
 
 All you have to do is to add a script section where you will be loading the
 tasks and saving the answers from the users: <script></script>.
 
-.. _file: https://github.com/PyBossa/app-flickrperson/blob/master/app-flickrperson/template.html
+.. _file: https://github.com/Scifabric/app-flickrperson/blob/master/app-flickrperson/template.html
 
 This template file will be used by the :ref:`pbs` command line tool to add the
 task presenter to the project. You can add it running the following command:
@@ -377,10 +377,10 @@ task presenter to the project. You can add it running the following command:
 
 .. note::
     You can also edit the HTML skeleton using the web interface. Once the
-    project has been created in PyBossa you will see a button that allows
+    project has been created in PYBOSSA you will see a button that allows
     you to edit the skeleton using a WYSIWYG editor.
 
-In PyBossa every project has a **presenter** endpoint:
+In PYBOSSA every project has a **presenter** endpoint:
 
  * http://PYBOSSA-SERVER/project/SLUG/newtask
 
@@ -389,10 +389,10 @@ In PyBossa every project has a **presenter** endpoint:
    **flickrperson**. 
 
 Loading the above endpoint will load the skeleton and trigger the JavaScript 
-functions to get a task from the PyBossa server and populate it in the HTML
+functions to get a task from the PYBOSSA server and populate it in the HTML
 skeleton.
 
-The header and footer for the presenter are already provided by PyBossa, so the 
+The header and footer for the presenter are already provided by PYBOSSA, so the 
 template only has to define the structure to present the data from the tasks to the
 users and the action buttons, input methods, etc. to retrieve and save the 
 answer from the volunteers.
@@ -562,11 +562,11 @@ can grab the answer of the user and save it back in the server.
 All the action takes place in the file_
 **template.html** script section.
 
-The script is very simple, it uses the  `PyBossa.JS library
+The script is very simple, it uses the  `PYBOSSA.JS library
 <http://pybossajs.rtfd.org>`_ to get a new task and
 to submit and save the answer in the server.
 
-`PyBossa.JS <http://pybossajs.rtfd.org>`_ provides two methods that have to
+`PYBOSSA.JS <http://pybossajs.rtfd.org>`_ provides two methods that have to
 been overridden with some logic, as each project will have a different
 need, i.e. some projects will be loading other type of data in a different
 skeleton:
@@ -627,7 +627,7 @@ In this demo project, we will basically updating the question, adding the
 photo to the DOM, updating the user progress and add some actions to the 
 submission buttons so we can save the answer of the volunteer.
 
-The PyBossa.JS library treats the user input as an "async function". This is
+The PYBOSSA.JS library treats the user input as an "async function". This is
 why the function gets a deferred object, as this object will be *resolved* when
 the user clicks in one of the possible answers. We use this approach to load in
 the background the next task for the user while the volunteer is solving the
@@ -738,7 +738,7 @@ task as sometimes the image is not available (the Flickr user has delete it) or 
 is not clear if there is a human or not in the image (you only see one hand and 
 nothing else).
 
-In order to submit and save the answer from the user, we will use again the `PyBossa.JS 
+In order to submit and save the answer from the user, we will use again the `PYBOSSA.JS 
 library <http://pybossajs.rtfd.org>`_. In this case:
 
 .. code-block:: javascript
@@ -808,7 +808,7 @@ first time your project. Usually, the overview page of your project
 will not be enough, so you can actually build a tutorial (a web page) that
 will explain to the volunteer how he can participate in the project.
 
-PyBossa will detect if the user is accessing for the very first time your
+PYBOSSA will detect if the user is accessing for the very first time your
 project, so in that case, it will load the **tutorial** if your project
 has one.
 
@@ -820,7 +820,7 @@ Adding a tutorial is really simple: you only have to create a file named
     pbs update_project
 
 The tutorial could have whatever you like: videos, nice animations, etc.
-PyBossa will render for you the header and the footer, so you only have to
+PYBOSSA will render for you the header and the footer, so you only have to
 focus on the content. You can actually copy the template.html file and use it
 as a draft of your tutorial or just include a video of yourself explaining why
 your project is important and how, as a volunteer, you can contribute.
@@ -867,7 +867,7 @@ the tutorial. Here you have a snippet of HTML tutorial file:
                     <h3>Flickr Person Finder tutorial</h3>
                 </div>
                 <div id="0" class="modal-body" style="display:none">
-                    <p><strong>Hi!</strong> This is a <strong>demo project</strong> that shows how you can do pattern recognition on pictures or images using the PyBossa framework in Crowdcrafting.org.
+                    <p><strong>Hi!</strong> This is a <strong>demo project</strong> that shows how you can do pattern recognition on pictures or images using the PYBOSSA framework in Crowdcrafting.org.
                    </p>
                 </div>
                 <div id="1" class="modal-body" style="display:none">
@@ -1082,9 +1082,9 @@ add the languages that we want to support.
 
 .. note::
     
-    PyBossa will give you only the following 3 locale settings: "en", "es" and
-    "fr" as PyBossa is only translated to those languages. If you want to add
-    another language, please, help us to translate PyBossa (see
+    PYBOSSA will give you only the following 3 locale settings: "en", "es" and
+    "fr" as PYBOSSA is only translated to those languages. If you want to add
+    another language, please, help us to translate PYBOSSA (see
     :ref:`translating`).
 
 
@@ -1139,7 +1139,7 @@ update it:
 Adding an icon to the project
 =============================
 
-It is possible also to add a nice icon for the project. By default PyBossa
+It is possible also to add a nice icon for the project. By default PYBOSSA
 will render a 100x100 pixels empty thumbnail for those projects that do not
 provide it. 
 
@@ -1155,7 +1155,7 @@ If, for any reason, you want to allow only certain people to contribute to your
 project, you can set a password. Thus, every time a user (either anonymous or
 authenticated) wants to contribute to the project, it will be asked to introduce
 the password. The user will then be able to contribute to the project for 30
-minutes (this is a value by default, can be changed in every PyBossa server).
+minutes (this is a value by default, can be changed in every PYBOSSA server).
 After this time, the user will be asked again to introduce the password if wants
 to continue contributing, and so on.
 
@@ -1164,7 +1164,7 @@ to continue contributing, and so on.
 Creating a blog for the project
 ===============================
 
-You can share the progress of the project creating a blog. Every PyBossa
+You can share the progress of the project creating a blog. Every PYBOSSA
 project includes a very simple blog where you will be able to write about
 your project regularly.
 
@@ -1242,7 +1242,7 @@ of tasks that have been completed using this url::
 .. note::
     If your project has more than 20 tasks, then you will need to use the
     **offset** and **limit** parameters to get the next tasks, as by default
-    PyBossa API only returns the first 20 items.
+    PYBOSSA API only returns the first 20 items.
 
 Once you have obtained the list of completed tasks, your script could start
 requesting the collected answers for the given tasks::
@@ -1253,7 +1253,7 @@ requesting the collected answers for the given tasks::
 
     If your project is collecting more than 20 answers per task, then you will
     need to use the **offset** and **limit** parameters to get the next task
-    runs, as by default PyBossa API only returns the first 20 items. That way
+    runs, as by default PYBOSSA API only returns the first 20 items. That way
     you will be able to get all the submitted answers by the volunteers for the
     given task.
 
@@ -1286,7 +1286,7 @@ a warning message will let you know it.
 
 Adding the CKAN API-KEY is really simple. You only need to create an account in
 the supported CKAN server, check your profile and copy
-the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
+the API-KEY. Then, open your PYBOSSA account page, edit it and paste the key in
 the section **External Services**.
 
 |
@@ -1302,7 +1302,7 @@ it there.
 Publishing results of your project
 ==================================
 
-Since v1.2.0, PyBossa automatically creates "empty" results when a task is completed.
+Since v1.2.0, PYBOSSA automatically creates "empty" results when a task is completed.
 
 For example, imagine your project is asking the following question in a set of images:
 "Do you see a triangle in this picture?" The possible answers are: yes and no. 
@@ -1320,7 +1320,7 @@ the project:
      "task_run_ids": [1,2,3,4,5],
      "info": null}
 
-As in other PyBossa domain objects, a result has a JSON field named **info** that allows you
+As in other PYBOSSA domain objects, a result has a JSON field named **info** that allows you
 to store the **final result** for that task using the task_runs 1, 2, 3, 4, 5. Imagine that
 the five volunteers answered: yes, then as you are the project owner you could update the
 info field with that value:
@@ -1333,7 +1333,7 @@ info field with that value:
      "task_run_ids": [1,2,3,4,5],
      "info": {"triangle": "yes"}}
 
-The benefit of storing that information is that you can access these data via the PyBossa
+The benefit of storing that information is that you can access these data via the PYBOSSA
 API so you will be able to show the results, in your result project section using the API.
 
 This will allow you to build beautiful visualizations of your results on maps, webgl, etc.
@@ -1344,7 +1344,7 @@ result templates soon for our own basic templates.
 Keeping track of the time spent by volunteers
 =============================================
 
-Since v1.1.3, PyBossa records a timestamp, for every task run, of the instant
+Since v1.1.3, PYBOSSA records a timestamp, for every task run, of the instant
 a volunteer requests a task to contribute to it. This is stored in the "created"
 attribute of the Task Runs.
 

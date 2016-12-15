@@ -6,12 +6,12 @@ Changelog v1.1.3
    was delivered to the volunteer so project owners can keep track of the time
    invested by the volunteer in completing the task.
  * Fix issue with completed projects being listed as inactive in a background
-   job (https://github.com/PyBossa/pybossa/issues/1214).
- * Fix issue with SQL query for quarterly jobs (https://github.com/PyBossa/pybossa/issues/1206).
+   job (https://github.com/Scifabric/pybossa/issues/1214).
+ * Fix issue with SQL query for quarterly jobs (https://github.com/Scifabric/pybossa/issues/1206).
  * Upgraded dependencies.
  * Fix bug that was preventing saving the description of a project if it was
    provided on project creation, generating always the description by cropping
-   the long description (https://github.com/PyBossa/pybossa/pull/1213).
+   the long description (https://github.com/Scifabric/pybossa/pull/1213).
 
 
 Upgrading

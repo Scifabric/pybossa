@@ -2,13 +2,13 @@
 Domain Model
 ============
 
-This section introduces the main domain objects present in the PyBossa system (see the :doc:`api` section for details about how you can access some of the objects using the API).
+This section introduces the main domain objects present in the PYBOSSA system (see the :doc:`api` section for details about how you can access some of the objects using the API).
 
 
 Overview
 --------
 
-PyBossa has 5 main domain objects:
+PYBOSSA has 5 main domain objects:
 
   * Project: the overall Project (formerly named Application) to which Tasks are associated.
 
@@ -33,7 +33,7 @@ There are some attributes common across most of the domain objects notably:
   * `create_time`: the Datetime (as an integer) when object was created.
   * `info`: a 'blob-style' attribute into which one can store arbitrary JSON. This attribute is use to any additional information one wants (e.g. Task configuration or Task results on TaskRun)
 
-The following excerpts directly from the PyBossa source to provide
+The following excerpts directly from the PYBOSSA source to provide
 documentation of main model attributes.
 
 Project

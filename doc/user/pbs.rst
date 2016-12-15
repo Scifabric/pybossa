@@ -2,14 +2,14 @@
 Using the command line
 ======================
 In this section we'll learn how we can use the command line to interact with
-our project in a PyBossa server, using the command line tool: **pbs**.
+our project in a PYBOSSA server, using the command line tool: **pbs**.
 
 .. _pbs:
 
 pbs
 ===
 
-**pbs** is a very simple command line interface to a PyBossa server. It allows
+**pbs** is a very simple command line interface to a PYBOSSA server. It allows
 you to create projects, add tasks (from a CSV or JSON file) with a nice
 progress bar, delete them and update the project templates 
 (tutorial, task_presenter, and descriptions) all from the command line.
@@ -138,7 +138,7 @@ options, please check the **--help** command:
 
 .. note::
 
-    By default PyBossa servers use a rate limit for avoiding abuse of the
+    By default PYBOSSA servers use a rate limit for avoiding abuse of the
     API. For this reason, you can only do usually 300 requests per every 15
     minutes. If you are going to add more than 300 tasks, pbs will detect it and
     warn you, auto-enabling the throttling for you to respect the limits.

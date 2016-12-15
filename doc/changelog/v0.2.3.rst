@@ -5,7 +5,7 @@ Changelog v0.2.3
 The most interesting changes are the following:
  * New security version for POSTing task_runs preventing abusing the system
  * CKAN backend performance improvements: polling now with JavaScript
- * Themes support: now you can easily customize PyBossa look and feel
+ * Themes support: now you can easily customize PYBOSSA look and feel
  * Breadth First Scheduler improved: now users can only participate once in
    every task.
  * Refactor API and add three new endpoints: globalstats, user and token.
@@ -25,7 +25,7 @@ The most interesting changes are the following:
  * Background jobs dashboard: admins can manage background jobs with a dashboard.
  * Audit log for projects: admin users can see the changes that a project has
    gone through.
- * Newsletters: a PyBossa project can now show a newsletter subscription page
+ * Newsletters: a PYBOSSA project can now show a newsletter subscription page
    to a Mailchimp list.
  * Export tasks and taskruns changes: creation of CSV and JSON files for both
    task and task runs are now handled in the background regularly, and served
@@ -36,15 +36,15 @@ The most interesting changes are the following:
  * Apps are now projects: URL for projects have been renamed from /app/aproject to
    /project/aproject in all the code, both front-end and back-end, including
    database and API.
- * Plugins system: support for creating custom plugins and add them to a PyBossa
+ * Plugins system: support for creating custom plugins and add them to a PYBOSSA
    server has been added.
- * PyBossa dashboard: see what's going on in your server. **REQUIRES POSTGRESQL >= 9.3**
+ * PYBOSSA dashboard: see what's going on in your server. **REQUIRES POSTGRESQL >= 9.3**
  * Add keyset pagination for the API: this returns results much faster than
    offsets.
 
 For a full list of changes, see associated `Github milestone`_.
 
-.. _Github milestone: https://github.com/PyBossa/pybossa/issues?milestone=7&page=1&state=closed
+.. _Github milestone: https://github.com/Scifabric/pybossa/issues?milestone=7&page=1&state=closed
 
 Upgrading
 =========

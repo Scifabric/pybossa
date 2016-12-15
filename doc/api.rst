@@ -86,7 +86,7 @@ Task Runs will have only two parents: the associated task and associated project
 Rate Limiting
 -------------
 
-Rate Limiting has been enabled for all the API endpoints (since PyBossa v2.0.1).
+Rate Limiting has been enabled for all the API endpoints (since PYBOSSA v2.0.1).
 The rate limiting gives any user, using the IP, **a window of 15 minutes to do at
 most 300 requests per endpoint**.
 
@@ -98,7 +98,7 @@ requests without problems:
 * **X-RateLimit-Reset**: the remaining window before the rate limit resets in UTC epoch seconds
 
 We recommend to use the Python package **requests** for interacting with
-PyBossa, as it is really simple to check those values:
+PYBOSSA, as it is really simple to check those values:
 
 .. code-block:: python
 
@@ -180,7 +180,7 @@ Finally, you can get a list of users by doing::
     creation date will be visible for everyone through the API.
 
 .. note::
-    By default PyBossa limits the list of items to 20. If you want to get more
+    By default PYBOSSA limits the list of items to 20. If you want to get more
     items, use the keyword **limit=N** with **N** being a number to get that
     amount. There is a maximum of 100 to the **limit** keyword, so if you try to
     get more items at once it won't work.
@@ -394,7 +394,7 @@ Requesting the user's oAuth tokens
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A user who has registered or signed in with any of the third parties supported
-by PyBossa (currently Twitter, Facebook and Google) can request his own oAuth
+by PYBOSSA (currently Twitter, Facebook and Google) can request his own oAuth
 tokens by doing::
 
     GET http://{pybossa-site-url}/api/token?api_key=API-KEY

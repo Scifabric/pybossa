@@ -1,16 +1,16 @@
 ====================================
-Writing plugins for a PyBossa server
+Writing plugins for a PYBOSSA server
 ====================================
 
-PyBossa has a plugin system that allows you to write your own custom features
-and add them to a running PyBossa server without the need of touching the server
+PYBOSSA has a plugin system that allows you to write your own custom features
+and add them to a running PYBOSSA server without the need of touching the server
 code. For instance, you could create a new endpoint for an admin dashboard (with
-new views, templates, etc.) or build a new scheduler like in `this example <https://github.com/PyBossa/random-scheduler>`_.
+new views, templates, etc.) or build a new scheduler like in `this example <https://github.com/Scifabric/random-scheduler>`_.
 
-The PyBossa plugin system is powered by `Flask-plugins`_
+The PYBOSSA plugin system is powered by `Flask-plugins`_
 
 To create a plugin, you will have to make a folder with the name of your plugin
-and add it to the plugins folder in your PyBossa server. If you have the PyBossa
+and add it to the plugins folder in your PYBOSSA server. If you have the PYBOSSA
 code in a directory called pybossa, then the plugins folder will be pybossa/pybossa/plugins.
 
 The least you need to include in that folder is the following::

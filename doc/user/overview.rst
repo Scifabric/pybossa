@@ -2,7 +2,7 @@
 Quickstart: Creating a Project
 ===============================
 
-This is a short guide about how you can create a project in a PyBossa
+This is a short guide about how you can create a project in a PYBOSSA
 server. Readers may wish to start with the :doc:`Step by step tutorial on creating an
 Project <tutorial>` which walks through creating a
 simple photo classification project if they want to understand all the
@@ -45,14 +45,14 @@ Creating a project using the web interface involves four steps:
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~
 
-In order to create a project in PyBossa via the web interface you have to:
+In order to create a project in PYBOSSA via the web interface you have to:
 
-1. Create a local account in your PyBossa server: 
+1. Create a local account in your PYBOSSA server: 
 
 |
 
 .. image:: http://i.imgur.com/MMnUQr7.png
-   :alt: PyBossa Register 
+   :alt: PYBOSSA Register 
    :width: 100%
 
 |
@@ -64,7 +64,7 @@ the server has enabled them, see the documentation: :ref:`ssnn`).
 |
 
 .. image:: http://i.imgur.com/GxhfjGL.png
-    :alt: PyBossa sign in methods
+    :alt: PYBOSSA sign in methods
 
 |
 
@@ -85,12 +85,12 @@ the server has enabled them, see the documentation: :ref:`ssnn`).
 | 
 
 .. image:: http://i.imgur.com/Js4YgVg.png
-    :alt: PyBossa Create link
+    :alt: PYBOSSA Create link
 |
 
 .. note::
-    PyBossa usually provides two Categories by default: *thinking* and
-    *sensing*. The *thinking* category represents the standard PyBossa
+    PYBOSSA usually provides two Categories by default: *thinking* and
+    *sensing*. The *thinking* category represents the standard PYBOSSA
     project where users contribute helping with their skills. *Sensing*
     category refers to projects that are using a volunter sensing tools like
     EpiCollect or Raspberry Pi with PYBOSSA for gathering data.
@@ -127,7 +127,7 @@ your mind and wanted to change any of them) plus the following:
 |
 
 .. image:: http://i.imgur.com/UbSOAcZ.png
-    :alt: PyBossa Project Update page
+    :alt: PYBOSSA Project Update page
 
 
 .. _csv-import:
@@ -149,7 +149,7 @@ built-in :ref:`task-creator`. You have to do the following:
 
 3. And click again on the **Import Tasks** card. After clicking on it you will
    see several options. The first ones are for using the different kinds of
-   importers supported by PyBossa: Amazon S3, Twitter, Dropbox, Flickr, Youtube,
+   importers supported by PYBOSSA: Amazon S3, Twitter, Dropbox, Flickr, Youtube,
    Google Spreadsheet, CSV url, and EpiCollect Plus.
 |
 .. image:: http://i.imgur.com/eWBxSyS.png
@@ -246,7 +246,7 @@ the picture to the EpiCollect_ server. If the user does not have Internet
 access at that moment, the user will be able to synchronize the data afterwards
 i.e. when the user has access to an Internet WIFI hotspot.
 
-PyBossa can automatically import data from a public EpiCollect_ Plus project
+PYBOSSA can automatically import data from a public EpiCollect_ Plus project
 that you own or that it is publicly available in the EpiCollect_ web site and
 help you to validate, analyze, etc. the data that have been obtained via
 EpiCollect.
@@ -277,14 +277,14 @@ All the data points should be imported now in your project.
     EpiCollect projects will be gathering data mostly all the time, for this
     reason, if you import again the same EpiCollect project, only **new data
     points** will be imported. This feature will allow you to easily add new data
-    points to the PyBossa project without having to do anything special.
+    points to the PYBOSSA project without having to do anything special.
 
 .. _flickr-import:
 
 Importing the tasks from a Flickr photo set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyBossa also allows to import tasks for projects based on images (like image
+PYBOSSA also allows to import tasks for projects based on images (like image
 pattern recognition ones) directly from a Flickr_ `set <https://www.flickr.com/help/photos/#150321191>`_
 (also called album).
 
@@ -301,17 +301,17 @@ each picture (which will be later available to be used in the task presenter):
 You can import tasks from a Flickr photo set (a.k.a. album) in either of the
 following ways:
 
-The easiest one is to give the PyBossa server permission to access your Flickr
+The easiest one is to give the PYBOSSA server permission to access your Flickr
 list of albums. To do so, you'll have to log in to your Flickr account by clicking
 the "Log in Flickr" button. Then you'll be redirected to Flickr, where you will
-be asked if you want to allow PyBossa to access your Flickr information. If you
-say yes, then you'll be again redirected to PyBossa and you'll see all of your
+be asked if you want to allow PYBOSSA to access your Flickr information. If you
+say yes, then you'll be again redirected to PYBOSSA and you'll see all of your
 albums. Choose one of them and then click the "Import" button to get all the
 photos created as tasks for your project.
 
 .. note::
     Next time you try to import photos using the Flickr importer, you'll see
-    the albums for your account again. If you don't want PyBossa to access them
+    the albums for your account again. If you don't want PYBOSSA to access them
     anymore, or just want to use another Flickr account, then click "Revoke access".
 
 Another option to import from a Flickr album is by specifying the ID of the set
@@ -350,7 +350,7 @@ same Flickr set (unless you add new photos to it, of course!).
 
 .. note::
     You will need to make sure that every photo belonging to the set has the
-    visibility set to public, so the PyBossa server can then access and present
+    visibility set to public, so the PYBOSSA server can then access and present
     them to the volunteers of your project.
 
 .. _`Flickr`: https://www.flickr.com/
@@ -391,7 +391,7 @@ For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
 * audio_url: raw link to the video file, which can be used inside an HTML 5 <video> tag and supports CORS.
 
 The tasks created with the Dropbox importer are ready to be used with the template
-project presenters available in PyBossa, as they include the described fields.
+project presenters available in PYBOSSA, as they include the described fields.
 
 Thus, importing your images from Dropbox will allow you to immediately use the
 image pattern recognition template with them; importing videos, audio files or
@@ -464,7 +464,7 @@ So, to import tasks with the Twitter importer, do as follows:
 3. You can provide your own Twitter credentials and make API requests in behalf of them, or use the credentials provided by us. (The later only allows to import the number of tweets returned by a single Twitter API call, which is 100 for searches and 200 for user timelines.) 
 4. Fill in the two fields you will find in the form. The first one is for the
 source of your tweets. If you want them to be imported from a user account, then
-write it with the "@" symbol, like "@PyBossa". If you just want to import tweets
+write it with the "@" symbol, like "@PYBOSSA". If you just want to import tweets
 containing a word on them (or a #hashtag), then type it there. The second field
 is for you to specify how many tweets you want to import. You can import as many
 as you want!
@@ -513,7 +513,7 @@ For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
 * audio_url: raw link to the video file, which can be used inside an HTML 5 <video> tag.
 
 The tasks created with the S3 importer are ready to be used with the template
-project presenters available in PyBossa, as they include the described fields.
+project presenters available in PYBOSSA, as they include the described fields.
 
 Thus, importing your images from S3 will allow you to immediately use the
 image pattern recognition template with them; importing videos, audio files or
@@ -523,7 +523,7 @@ respectively, with no additional modifications and have them working right away
 (as long as the files have any of the mentioned file extensions, of course).
 
 Importing from an S3 bucket requires that the bucket visibility is set to *public*
-so its content can be seen and listed by PyBossa. To make a bucket public, go to
+so its content can be seen and listed by PYBOSSA. To make a bucket public, go to
 your AWS management console and select the S3 service. Then select the bucket you
 want to make public and click on "Properties". Click on "Add more Permissions"
 and add a new one with "Grantee: Everyone" and the "List" checkbox selected,
@@ -540,7 +540,7 @@ on "Edit CORS Configuration" and configure it. You can learn more
 Finally, you need to make sure that every file inside the bucket that you want to
 use in a task has a *public* link too. Go to the bucket content and select the
 files. Then click on "Actions" and select "Make Public". Your files will now be
-visible for everyone, including a PyBossa server.
+visible for everyone, including a PYBOSSA server.
 
 |
 .. image:: http://i.imgur.com/AHBVQCk.png
@@ -570,7 +570,7 @@ Tasks can be imported from Youtube. Currently the importer supports importing fr
 When importing the video the importer parses all videos information and creates tasks with info fields:
 
 * video_url: the URL of the youtube video which can be embedded in the task form.
-* oembed: embeddable code for the (old) PyBossa video templates.
+* oembed: embeddable code for the (old) PYBOSSA video templates.
 
 The tasks created with the Youtube importer are ready to be used with the youtube and video templates.
 
@@ -644,7 +644,7 @@ From there you will be able to manage your projects:
 
 |
 .. image:: http://i.imgur.com/3S497Ct.png
-    :alt: PyBossa User Account
+    :alt: PYBOSSA User Account
 |
 
 .. image:: http://i.imgur.com/9sO21Zd.png
@@ -747,7 +747,7 @@ You can create a project via the API URL **/api/project** with a POST request (S
 
 You have to provide the following information about the project and convert
 it to a JSON object (the actual values are taken from the `Flickr Person demo
-project <http://github.com/PyBossa/app-flickrperson>`_)::
+project <http://github.com/Scifabric/app-flickrperson>`_)::
 
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
@@ -780,10 +780,10 @@ As in all the previous steps, we are going to create a JSON
 object and POST it using the following API URL **/api/task** in order to add
 tasks to a project that you own. 
 
-For PyBossa all the tasks are JSON objects with a field named **info** where
+For PYBOSSA all the tasks are JSON objects with a field named **info** where
 the owners of the project can add any JSON object that will represent
 a task for their project. For example, using again the `Flickr Person demo project
-<http://github.com/PyBossa/app-flickrperson>`_ example, we need to create a JSON object
+<http://github.com/Scifabric/app-flickrperson>`_ example, we need to create a JSON object
 that should have the link to the photo that we want to identify:
 
 .. code-block:: python
@@ -805,7 +805,7 @@ that should have the link to the photo that we want to identify:
 
 The most important field for the task is the **info** one. This field will be
 used to store a JSON object with the required data for the task. As  `Flickr Person
-<https://github.com/PyBossa/app-flickrperson>`_ is trying to figure out if there is a human or
+<https://github.com/Scifabric/app-flickrperson>`_ is trying to figure out if there is a human or
 not in a photo, the provided information is:
 
     1. the Flickr web page posting the photo, and
@@ -843,7 +843,7 @@ Creating the Task Presenter
 
 The :ref:`task-presenter` is usually a template of HTML and JavaScript that will present the
 tasks to the users, and save the answers in the database. The `Flickr Person demo
-project <http://github.com/PyBossa/app-flickersperson>`_ provides a simple template
+project <http://github.com/Scifabric/app-flickersperson>`_ provides a simple template
 which has a <div> to load the input files, in this case the photo, and another
 <div> to load the action buttons that the users will be able to to press to
 answer the question and save it in the database. Please, check the :doc:`tutorial` for more details
@@ -851,10 +851,10 @@ about the :ref:`task-presenter`.
 
 As we will be using the API for creating the task presenter, we will basically
 have to create an HTML file in our computer, read it from a script, and post 
-it into PyBossa using the API.
+it into PYBOSSA using the API.
 
 Once the presenter has been posted to the project, you can edit it locally
-with your own editor, or using the PyBossa interface (see previous section).
+with your own editor, or using the PYBOSSA interface (see previous section).
 
 .. note::
 
@@ -875,12 +875,12 @@ how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it work.
 
-Using PyBossa API from the command line
+Using PYBOSSA API from the command line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While you can use your own programming language to access the API we recommend
-you to use the `PyBossa pbs command line tool
-<https://github.com/PyBossa/pbs>`_ as it simpflies the usage of PyBossa for any
+you to use the `PYBOSSA pbs command line tool
+<https://github.com/Scifabric/pbs>`_ as it simpflies the usage of PYBOSSA for any
 given project.
 
 Creating a project is as simple as creating a project.json file and then run
