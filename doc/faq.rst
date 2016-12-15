@@ -116,7 +116,7 @@ Yes, we do. You can find several open source project examples that can be
 re-used for image/sound pattern recognition problems, geo-coding, PDF transcription, 
 etc. Check the official `Git repository`_ for all the available projects.
 
-.. _`Git repository`: http://github.com/PyBossa/
+.. _`Git repository`: http://github.com/Scifabric/
 
 Support
 =======

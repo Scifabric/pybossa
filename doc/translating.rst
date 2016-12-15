@@ -2,11 +2,11 @@
 .. _translating:
 
 ===================
-Translating PyBossa
+Translating PYBOSSA
 ===================
 
-PyBossa supports i18n locales, so you can translate the **User Interface** to
-any language. By default PyBossa comes with several languages: English,
+PYBOSSA supports i18n locales, so you can translate the **User Interface** to
+any language. By default PYBOSSA comes with several languages: English,
 Spanish, Italian, French, German, Greek and Japanese.
 
 Enabling multiple locales
@@ -21,13 +21,13 @@ the following: creating a symlink to the translations folders:
 
     $ cd pybossa && ln -s themes/default/translations
 
-This will use the default translations of PyBossa for your server. We recommend to use
+This will use the default translations of PYBOSSA for your server. We recommend to use
 these translations with the default theme. 
 
 Adding a new language 
 =====================
 
-If you want to translate PyBossa to your own language, lets say French, all you have to do is
+If you want to translate PYBOSSA to your own language, lets say French, all you have to do is
 create a translation file with this command:
 
 .. code-block:: bash
@@ -68,7 +68,7 @@ the LOCALES config variable and add your locale.
 Updating translation and adding new strings to the translation
 ==============================================================
 
-From time to time, the PyBossa framework will have new strings to translate. In
+From time to time, the PYBOSSA framework will have new strings to translate. In
 order to add the new strings (or update previous ones) you have to follow
 this 3 simple steps.
 

@@ -1,11 +1,11 @@
-Contributing to the PyBossa development
+Contributing to the PYBOSSA development
 =======================================
 Thus you have decided that this project is interesting and you want to help us: **THANKS!**
 
 If you want to help us you can do it by:
 
- * Proposing new features in the `Issues page <https://github.com/PyBossa/pybossa/issues>`_,
- * Submitting new bugs/issues in the `Issues page <https://github.com/PyBossa/pybossa/issues>`_, or
+ * Proposing new features in the `Issues page <https://github.com/Scifabric/pybossa/issues>`_,
+ * Submitting new bugs/issues in the `Issues page <https://github.com/Scifabric/pybossa/issues>`_, or
  * Fixing bugs and sending us actual code patches.
 
 The project is using the popular `Github Workflow 

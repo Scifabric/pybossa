@@ -1,13 +1,13 @@
 ==========================
-Installing PyBossa by hand
+Installing PYBOSSA by hand
 ==========================
 
-PyBossa is a python web application built using the Flask micro-framework.
+PYBOSSA is a python web application built using the Flask micro-framework.
 
 You need this guide if you want to
 
- * Create a PyBossa for development or testing purposes
- * First step to create a production ready PyBossa. Second step for that is :doc:`nginx`.
+ * Create a PYBOSSA for development or testing purposes
+ * First step to create a production ready PYBOSSA. Second step for that is :doc:`nginx`.
 
 Officially supported requirements:
 
@@ -28,10 +28,10 @@ It may also run with older software but we do not officially support it:
 Setting things up
 =================
 
-Before proceeding to install PyBossa you will need to configure some other
+Before proceeding to install PYBOSSA you will need to configure some other
 applications and libraries in your system. In this page, you will get a step by
 step guide about how to install all the required packages and libraries for
-PyBossa using the latest `Ubuntu Server Long Term Support`_ version available at
+PYBOSSA using the latest `Ubuntu Server Long Term Support`_ version available at
 the moment:
 
   * `Ubuntu 14.04 LTS`_
@@ -42,8 +42,8 @@ the moment:
 Installing git - a distributed version control system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PyBossa uses the git_ distributed version control system for handling the
-PyBossa server source code as well as the template projects.
+PYBOSSA uses the git_ distributed version control system for handling the
+PYBOSSA server source code as well as the template projects.
 
 Git_ is a freen and open source distributed version control system designed to
 handle everything from small to very large projects with seepd and efficiency.
@@ -63,7 +63,7 @@ PostgreSQL_ is a powerful, open source object-relational database system.
 It has more than 15 years of active development and a proven architecture that
 has earned it a strong reputation for reliability, data integrity, and correctness.
 
-PyBossa uses PostgreSQL_ as the main database for storing all the data, and you
+PYBOSSA uses PostgreSQL_ as the main database for storing all the data, and you
 the required steps for installing it are the following::
 
     sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
@@ -74,7 +74,7 @@ the required steps for installing it are the following::
 Installing virtualenv (optional, but recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We recommend to install PyBossa using a `virtualenv`_ as it will create a an
+We recommend to install PYBOSSA using a `virtualenv`_ as it will create a an
 isolated Python environment, helping you to manage different dependencies and
 versions without having to deal with root permissions in your server machine.
 
@@ -92,27 +92,27 @@ Installing virtualenv_ in the Ubuntu server could be done like this::
     sudo apt-get install python-virtualenv
 
 After installing the software, now you will be able to create independent virtual
-environments for the PyBossa installation as well as for the template
+environments for the PYBOSSA installation as well as for the template
 projects (see :doc:`user/tutorial`).
 
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv
 
-Installing the PyBossa Python requirements
+Installing the PYBOSSA Python requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Installing the required libraries for PyBossa is a step that will need to use
+Installing the required libraries for PYBOSSA is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
     sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
 
 Then, you are ready to download the code and install the required libraries for
-running PyBossa.
+running PYBOSSA.
 
 .. note::
     We recommend you to install the required libraries using a **virtual
     environment** with the command virtualenv (you can install the package
-    python-virtualenv). This will allow to have all the libraries for PyBossa
+    python-virtualenv). This will allow to have all the libraries for PYBOSSA
     in one folder of your choice, so cleaning the installation would be as
     simple as deleting that folder without affecting your system.
 
@@ -121,7 +121,7 @@ If you decide to use a **virtualenv** then, follow these steps (lines starting
 with **#** are comments)::
 
   # get the source code
-  git clone --recursive https://github.com/PyBossa/pybossa
+  git clone --recursive https://github.com/Scifabric/pybossa
   # Access the source code folder
   cd pybossa
   virtualenv env
@@ -137,7 +137,7 @@ Otherwise you should be able to install the libraries in your system like
 this::
 
   # get the source
-  git clone --recursive https://github.com/PyBossa/pybossa
+  git clone --recursive https://github.com/Scifabric/pybossa
   # Access the source code folder
   cd pybossa
   # Upgrade pip to latest version
@@ -180,7 +180,7 @@ database::
 Installing Redis
 ================
 
-Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
+Since version v0.2.1, PYBOSSA uses Redis not only for caching objects and speed
 up the site, but also for limiting the usage of the API requests.
 
 Latest Redis can be installed by downloading the package directly from its
@@ -217,11 +217,11 @@ Redis can be run in sentinel mode with the **--sentinel** arg, or by its own
 command named: redis-sentinel. This will vary from your distribution and
 version of Redis, so check its help page to know how you can run it.
 
-In any case, you will need to run a sentinel node, as PyBossa uses it to
+In any case, you will need to run a sentinel node, as PYBOSSA uses it to
 load-balance the queries, and also to autoconfigure the master and slaves
 automagically.
 
-In order to run PyBossa, you will need first to configure a Sentinel node.
+In order to run PYBOSSA, you will need first to configure a Sentinel node.
 Create a config file named **sentinel.conf** with something like this::
 
     sentinel monitor mymaster 127.0.0.1 6379 2
@@ -248,15 +248,15 @@ Speeding up the site
 
 Enabling the cache
 ------------------
-PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
+PYBOSSA comes with a Cache system that it is enabled by default. PYBOSSA uses
 a Redis_ server to cache some objects like projects, statistics, etc. The
 system uses the Sentinel_ feature of Redis_, so you can have several
-master/slave nodes configured with Sentinel_, and your PyBossa server will use
+master/slave nodes configured with Sentinel_, and your PYBOSSA server will use
 them "automagically".
 
 Once you have started your master Redis-server to accept connections,
 Sentinel will manage it and its slaves. If you add a slave, Sentinel will
-find it and start using it for load-balancing queries in PyBossa Cache system.
+find it and start using it for load-balancing queries in PYBOSSA Cache system.
 
 For more details about Redis_ and Sentinel_, please, read the official documentation_.
 
@@ -282,13 +282,13 @@ Then start the server, and nothing will be cached.
 
 Running asynchronous tasks in the background
 --------------------------------------------
-PyBossa uses the Python libraries RQ_ and RQScheduler_ to allow slow or
+PYBOSSA uses the Python libraries RQ_ and RQScheduler_ to allow slow or
 computationally-heavy tasks to be run in the background in an asynchronous way.
 
 Some of the tasks are run in a periodic, scheduled, basis, like the refreshment
 of the cache and notifications sent to users, while others, like the sending of
 mails are created in real time, responding to events that may happen inside the
-PyBossa server, like sending an email with a recovery password.
+PYBOSSA server, like sending an email with a recovery password.
 
 To allow all this, you will need two additional Python processes to run in the
 background: the **worker** and the **scheduler**. The scheduler will create the
@@ -310,7 +310,7 @@ easier way and with a single command.
     While the execution of the scheduler is optional (you will not have the
     improvements in performance given by them, but you may also not need them),
     the execution of the worker is mandatory for the normal functioning of the
-    PyBossa server, so make sure you run the command for it.
+    PYBOSSA server, so make sure you run the command for it.
 
 .. _RQ: http://python-rq.org/
 .. _RQScheduler: https://github.com/ui/rq-scheduler
@@ -363,14 +363,14 @@ completed:
 .. image:: http://i.imgur.com/hPtgo6S.png
 
 
-Updating PyBossa
+Updating PYBOSSA
 ================
 
-Update PyBossa core and migrating the database table structure
+Update PYBOSSA core and migrating the database table structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sometimes, the PyBossa developers add a new column or table to the PyBossa
-server, forcing you to carry out a **migration** of the database. PyBossa uses
+Sometimes, the PYBOSSA developers add a new column or table to the PYBOSSA
+server, forcing you to carry out a **migration** of the database. PYBOSSA uses
 Alembic_ for performing the migrations, so in case that your production server
 need to upgrade the DB structure to a new version, all you have to do is to::
 
@@ -394,14 +394,14 @@ Migrating Your Old DB Records
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In versions prior to v0.2.3, HTML was supported as the default option for the
-'long_description' field in projects. In new versions of PyBossa, Markdown has been
+'long_description' field in projects. In new versions of PYBOSSA, Markdown has been
 adopted as the default option. However, you can use HTML instead of Markdown
-by modifying the default PyBossa theme or using your own forked from the default
+by modifying the default PYBOSSA theme or using your own forked from the default
 one.
 
-If you were have been using PyBossa for a while you may have projects in your
+If you were have been using PYBOSSA for a while you may have projects in your
 database whose 'long_description' is in HTML format. Hence, if you are using the
-default theme for PyBossa you will no longer see them rendered as HTML and may
+default theme for PYBOSSA you will no longer see them rendered as HTML and may
 have some issues.
 
 In order to avoid this, you can run a simple script to convert all the DB project's
@@ -420,7 +420,7 @@ Markdown conversion, while the second one will convert your DB entries.
     running the pip install command.
 
 .. note::
-    The latest version of PyBossa requires PostgreSQL >= 9.3 as it is using materialized
+    The latest version of PYBOSSA requires PostgreSQL >= 9.3 as it is using materialized
     views for the dashboard. This feature is only available from PostgreSQL 9.3, so please
     upgrade the DB as soon as possible. For more information about upgrading the PostgreSQL
     database check this page_.

@@ -2,5 +2,5 @@
 Changelog v1.6.1
 ================
 
- * PyBossa security improvement for tasks and task runs.
+ * PYBOSSA security improvement for tasks and task runs.
 

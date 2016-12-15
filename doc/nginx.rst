@@ -1,12 +1,12 @@
 ======================================
-Deploying PyBossa with nginx and uwsgi
+Deploying PYBOSSA with nginx and uwsgi
 ======================================
 
-PyBossa is a python web application built using the Flask micro-framework.
+PYBOSSA is a python web application built using the Flask micro-framework.
 
-This guide describes how to make PyBossa run as a service or daemon permanently
+This guide describes how to make PYBOSSA run as a service or daemon permanently
 in the background. This is useful if you want to run a production ready single
-PyBossa web server. If you only want to test PyBossa please follow only :doc:`install`.
+PYBOSSA web server. If you only want to test PYBOSSA please follow only :doc:`install`.
 
 Pre-requisites:
 
@@ -15,15 +15,15 @@ Pre-requisites:
   * supervisord
   * Redis and sentinel as service (with supervisord)
   * RQ-Scheduler and RQ-Worker as service (with supervisord)
-  * PyBossa as service (with supervisord)
+  * PYBOSSA as service (with supervisord)
 
 First steps
 -----------
 
 If you have not done already: Please create a new user account, e.g. pybossa
-(a non root at best) which will run the PyBossa instance.
+(a non root at best) which will run the PYBOSSA instance.
 You then have to follow the instructions from :doc:`install` first to get
-a runnable PyBossa. After you've done that please continue with this guide.
+a runnable PYBOSSA. After you've done that please continue with this guide.
 
 Installing nginx and uwsgi
 --------------------------
@@ -37,19 +37,19 @@ in the (virtualenv-)installation directory of pybossa you need to install uwsgi:
 
    pip install -U uwsgi
 
-Configuring nginx and uwsgi for PyBossa
+Configuring nginx and uwsgi for PYBOSSA
 ---------------------------------------
 
-We assume you only want to run PyBossa on your nginx webserver. If you want to
+We assume you only want to run PYBOSSA on your nginx webserver. If you want to
 run also other services on the same server you need to modify the nginx config files!
 
-You have to copy and adapt the following files from your local PyBossa
+You have to copy and adapt the following files from your local PYBOSSA
 installation:
 
  * contrib/nginx/pybossa
  * contrib/pybossa.ini
 
-The PyBossa virtual host file (**contrib/nginx/pybossa**) has the
+The PYBOSSA virtual host file (**contrib/nginx/pybossa**) has the
 following directives::
 
     location / { try_files $uri @pybossa; }
@@ -62,7 +62,7 @@ following directives::
     location  /static {
 
                 # change that to your pybossa static directory
-                alias /home/pybossa/pybossa/pybossa/themes/default/static;
+                alias /home/Scifabric/pybossa/pybossa/themes/default/static;
 
                 autoindex on;
                 expires max;
@@ -85,7 +85,7 @@ please delete the default config in sites-enabled (do not worry there is a backu
 
     sudo rm /etc/nginx/sites-enabled/default
 
-Enable the PyBossa site::
+Enable the PYBOSSA site::
 
     sudo ln -s /etc/nginx/sites-available/pybossa /etc/nginx/sites-enabled/pybossa
 
@@ -97,7 +97,7 @@ Creating the pybossa.ini file for uwsgi
 ---------------------------------------
 
 You have to copy the **pybossa.ini.template** file to
-pybossa.ini in your PyBossa installation and adapt the paths to match your configuration!
+pybossa.ini in your PYBOSSA installation and adapt the paths to match your configuration!
 
 The content of this file is the following::
 
@@ -117,7 +117,7 @@ The content of this file is the following::
 Install supervisord
 -------------------
 
-Supervisord is used to let PyBossa and its RQ system run as Daemon in the background.
+Supervisord is used to let PYBOSSA and its RQ system run as Daemon in the background.
 It shares some of the same goals of programs like launchd, daemontools, and runit.
 
 Install it::
@@ -179,21 +179,21 @@ console::
 
   ps aux | grep rq
 
-Setup PyBossa itself
+Setup PYBOSSA itself
 --------------------
 
-This steps are recommended to do when you run PyBossa in nginx. Open your **settings_local.py** in your PyBossa
+This steps are recommended to do when you run PYBOSSA in nginx. Open your **settings_local.py** in your PYBOSSA
 installation and uncomment or delete the two lines with **HOST** and **PORT**, e.g.::
 
   # HOST = '0.0.0.0'
   # PORT = 12000
 
-After that specify the full server URL where your PyBossa is reachable, e.g.::
+After that specify the full server URL where your PYBOSSA is reachable, e.g.::
 
   SERVER_NAME = mypybossa.com
   PORT = 80
 
-Let PyBossa run as service
+Let PYBOSSA run as service
 --------------------------
 
 Finally we need to let pybossa run as service. Adjust again the paths and
@@ -208,16 +208,16 @@ Restart supervisor fully::
   sudo service supervisor stop
   sudo service supervisor start
 
-You should now have a running PyBossa production ready webserver on your nginx.
+You should now have a running PYBOSSA production ready webserver on your nginx.
 Open your browser and check your configured domain http://example.com.
 
 Congratulations! :)
 
 
-How to update PyBossa service
+How to update PYBOSSA service
 -----------------------------
 
-Upgrading and updating PyBossa as service works the same as for a standalone
+Upgrading and updating PYBOSSA as service works the same as for a standalone
 version. Please follow instructions on :doc:`install`.
 However a few extra steps are required after you updated.
 
@@ -227,10 +227,10 @@ You need to restart all supervisor controlled services after updating::
   sudo supervisorctl restart rq-worker
   sudo supervisorctl restart pybossa
 
-Logs of PyBossa services
+Logs of PYBOSSA services
 ------------------------
 
-You can find logs of all PyBossa services in this directory::
+You can find logs of all PYBOSSA services in this directory::
 
   cd /var/log/supervisor
 
@@ -238,16 +238,16 @@ You can find logs of all PyBossa services in this directory::
 Last words about Security and Scaling
 --------------------------------------
 
-This guide does not cover how to secure your PyBossa installation.
+This guide does not cover how to secure your PYBOSSA installation.
 As every web server you have to make it secure
 (like e.g. strong passwords, automatic Ubuntu security updates, firewall,
 access restrictions).
 Please use guides on the Internet to do so.
 
-PyBossa can also be scaled horizontally to run with redundant servers and with zero
+PYBOSSA can also be scaled horizontally to run with redundant servers and with zero
 downtime over many redis, db and web servers with load balancers in between.
 
-If you need a secure and/or scalable PyBossa installation please contact us.
+If you need a secure and/or scalable PYBOSSA installation please contact us.
 We will be glad to help you and we can even do all the hosting, customization,
 administration and installation for you when you want for a small fee.
 

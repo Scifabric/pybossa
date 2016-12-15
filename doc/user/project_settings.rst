@@ -3,7 +3,7 @@ Configuring the Project
 =======================
 
 If you are the owner of a project, you can configure it using the web
-interface. When you are the owner (also an administrator of the PyBossa server) a new 
+interface. When you are the owner (also an administrator of the PYBOSSA server) a new 
 link in the left local navigation bar of the project will appear with the
 name **Settings**.
 
@@ -96,7 +96,7 @@ The page shows four different blocks:
 Task Scheduler
 --------------
 
-PyBossa provides different task scheduler that will send tasks to the users in
+PYBOSSA provides different task scheduler that will send tasks to the users in
 very different ways. 
 
 |
@@ -186,7 +186,7 @@ randomly.
 Task Priority
 --------------
 
-PyBossa allows you to prioritize the tasks, or in other words, which tasks
+PYBOSSA allows you to prioritize the tasks, or in other words, which tasks
 should be delivered first to the volunteers.
 
 |
@@ -216,7 +216,7 @@ Task Redundancy
 The Task Redundancy is a feature that will allow you to analyze statistically
 the results that your project are getting for each of its tasks.
 
-PyBossa by default assigns a value of 30 task runs --answers-- per task, as
+PYBOSSA by default assigns a value of 30 task runs --answers-- per task, as
 this value is commonly used for analyzing the population statistically.
 
 This page will allow you to change the default value, 30, to whatever you like
@@ -273,7 +273,7 @@ navigation bar:
 .. image:: http://i.imgur.com/HCuQDLJ.png
 |
 
-Tasks can be imported using any of the PyBossa built-in importers, such
+Tasks can be imported using any of the PYBOSSA built-in importers, such
 as :ref:`csv-import` and :ref:`epicollect-import`. To set up an autoimporter,
 please refer to the instructions for :ref:`csv-import`, :ref:`epicollect-import`,
 :ref:`flickr-import` or :ref:`twitter-import`, as the procedure is the same:
