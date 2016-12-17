@@ -105,6 +105,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
+        self.signin(email="tester2@tester.com", password="tester")
         res = self.app.get("/admin", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.status)
@@ -180,6 +181,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
+        self.signin(email="tester2@tester.com", password="tester")
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert res.status == "403 FORBIDDEN", res.status
 
@@ -206,6 +208,7 @@ class TestAdmin(web.Helper):
         mock_webhook.return_value = html_request
 
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         print project
@@ -330,6 +333,7 @@ class TestAdmin(web.Helper):
     def test_09_admin_users_as_admin(self):
         """Test ADMIN users works as an admin user"""
         self.register()
+        self.signin()
         res = self.app.get('/admin/users', follow_redirects=True)
         assert "Manage Admin Users" in res.data, res.data
 
@@ -350,6 +354,7 @@ class TestAdmin(web.Helper):
     def test_10_admin_user_not_listed(self):
         """Test ADMIN users does not list himself works"""
         self.register()
+        self.signin()
         res = self.app.get('/admin/users', follow_redirects=True)
         assert "Manage Admin Users" in res.data, res.data
         assert "Current Users with Admin privileges" not in res.data, res.data
@@ -359,6 +364,7 @@ class TestAdmin(web.Helper):
     def test_11_admin_user_not_listed_in_search(self):
         """Test ADMIN users does not list himself in the search works"""
         self.register()
+        self.signin()
         data = {'user': 'john'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
         assert "Manage Admin Users" in res.data, res.data
