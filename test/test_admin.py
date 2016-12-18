@@ -646,6 +646,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
+        self.signin(email="juan@juan.com", password="juan")
 
         # No matter what params in the request, Forbidden is raised
         res = self.app.get('/admin/users/export', follow_redirects=True)
@@ -1166,6 +1167,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN dashboard admins can access it"""
         url = '/admin/dashboard/'
         self.register()
+        self.signin()
         self.new_project()
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 200"
@@ -1220,6 +1222,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN dashboard admins can access it with data"""
         url = '/admin/dashboard/'
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         import pybossa.dashboard.jobs as dashboard
@@ -1244,6 +1247,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN dashboard admins refresh can access it with data"""
         url = '/admin/dashboard/?refresh=1'
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         import pybossa.dashboard.jobs as dashboard
