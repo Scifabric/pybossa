@@ -356,6 +356,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_allow_anonymous_contributors(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -653,6 +654,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_auditlog_autoimporter_create(self):
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
@@ -682,6 +684,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_auditlog_autoimporter_delete(self):
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
@@ -723,6 +726,8 @@ class TestAuditlogWEB(web.Helper):
 
     @with_context
     def test_project_auditlog_access_owner(self):
+        """Test case disabled: Non admin cannot create projects in GIGwork"""
+        '''
         # Admin
         self.register()
         self.signout()
@@ -736,9 +741,12 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
+        '''
 
     @with_context
     def test_project_auditlog_access_pro(self):
+        """Test case disabled: Non admin cannot create projects in GIGwork"""
+        '''
         # Admin
         self.register()
         self.signout()
@@ -756,9 +764,12 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
+        '''
 
     @with_context
     def test_project_auditlog_access_admin(self):
+        """Test case disabled: Non admin cannot create projects in GIGwork"""
+        '''
         # Admin
         self.register()
         self.signout()
@@ -775,3 +786,4 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
+        '''
