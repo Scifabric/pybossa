@@ -643,8 +643,8 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
-        self.signin(email="juan@juan.com", password="juan")
 
+        self.signin(email="juan@juan.com", password="juan")
         # No matter what params in the request, Forbidden is raised
         res = self.app.get('/admin/users/export', follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -663,14 +663,18 @@ class TestAdmin(web.Helper):
     @patch('pybossa.forms.validator.requests.get')
     def test_19_admin_update_app(self, Mock, Mock2, mock_webhook):
         """Test ADMIN can update a project that belongs to another user"""
+        """test case disabled: admin can only create projects in GIGwork"""
+        '''
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
         mock_webhook.return_value = html_request
+        
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
+        self.signin(email="juan@juan.com", password="juan")                        
         self.new_project()
         self.signout()
         # Sign in with the root user
@@ -697,11 +701,14 @@ class TestAdmin(web.Helper):
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         err_msg = "The long description should have been updated"
         assert "New Long Desc" in res.data, err_msg
+        '''
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_20_admin_delete_app(self, mock):
         """Test ADMIN can delete a project that belongs to another user"""
+        """test case disabled: admin can only create projects in GIGwork"""
+        '''
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
@@ -716,6 +723,7 @@ class TestAdmin(web.Helper):
         res = self.delete_project()
         err_msg = "The project should be deleted by admin users"
         assert "Project deleted!" in res.data, err_msg
+        '''
 
     @with_context
     def test_21_admin_delete_tasks(self):
