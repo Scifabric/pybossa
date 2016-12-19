@@ -263,6 +263,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_create(self):
         self.register()
+        self.signin()
         self.new_project()
         self.delete_project()
         short_name = 'sampleapp'
@@ -281,6 +282,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_update_name(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -304,6 +306,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_update_short_name(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'newshort_name'
 
@@ -327,6 +330,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_description(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -419,6 +423,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_long_description(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -448,6 +453,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_password(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -483,6 +489,7 @@ class TestAuditlogWEB(web.Helper):
         mock.return_value = html_request
 
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -512,6 +519,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_task_presenter(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -541,6 +549,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_task_scheduler(self):
         self.register()
+        self.signin()
         self.new_project()
         short_name = 'sampleapp'
 
@@ -568,6 +577,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_task_priority(self):
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
@@ -596,6 +606,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_task_priority_two_tasks(self):
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         self.new_task(1)
@@ -626,6 +637,7 @@ class TestAuditlogWEB(web.Helper):
     @with_context
     def test_project_task_redundancy(self):
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
@@ -775,6 +787,7 @@ class TestAuditlogWEB(web.Helper):
         self.signout()
         # User
         self.register(name="user", password="user")
+        self.signin(email="user@user.com", password="user")
         self.new_project()
         self.new_task(1)
         self.signout()
