@@ -31,13 +31,21 @@ documentation**
 
 See [installation instructions](http://docs.pybossa.com/en/latest/installing_pybossa.html).
 
-# Running Tests
+# Testing
 
-Just run the following command:
+## Unit testing
+
+Just run:
 
 ```
   nosetests test/
 ```
+
+## Browser testing
+
+Thanks to [BrowserStack](http://browserstack.com/) we can do real cross browser testing on multiple desktop and mobile platforms.
+
+[![BrowserStack](http://i.imgur.com/E5QSnZT.png)](http://browserstack.com/)
 
 # Useful Links
 
