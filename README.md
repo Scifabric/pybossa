@@ -43,9 +43,9 @@ Just run:
 
 ## Browser testing
 
-Thanks to [BrowserStack](http://browserstack.com/) we can do real cross browser testing on multiple desktop and mobile platforms.
+[![BrowserStack](http://i.imgur.com/Pg0utrk.png)](http://browserstack.com/)
 
-[![BrowserStack](http://i.imgur.com/E5QSnZT.png)](http://browserstack.com/)
+Thanks to the support of [BrowserStack](http://browserstack.com/) we can do real cross browser testing on multiple desktop and mobile platforms.
 
 # Useful Links
 
