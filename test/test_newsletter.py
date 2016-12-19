@@ -217,6 +217,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
+        res = self.signin()
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a newsletter page."
         assert dom.find(id='newsletter') is not None, err_msg
@@ -231,6 +232,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
+        res = self.signin()
         dom = BeautifulSoup(res.data)
         user = user_repo.get(1)
         err_msg = "There should be a newsletter page."
@@ -254,6 +256,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = False
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         res = self.app.get('/account/newsletter', follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "It should return 404"
@@ -267,6 +270,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         res = self.app.get('/account/newsletter?subscribe=True',
                            follow_redirects=True)
         err_msg = "User should be subscribed"
@@ -283,6 +287,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=True&next=%s' % next_url
         res = self.app.get(url, follow_redirects=True)
@@ -300,6 +305,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         res = self.app.get('/account/newsletter?subscribe=False',
                            follow_redirects=True)
         err_msg = "User should not be subscribed"
@@ -313,6 +319,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=False&next=%s' % next_url
         res = self.app.get(url, follow_redirects=True)
@@ -328,6 +335,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         res = self.app.get('/account/newsletter?subscribe=something',
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
@@ -343,6 +351,7 @@ class TestNewsletterViewFunctions(web.Helper):
         newsletter.is_initialized.return_value = True
         newsletter.ask_user_to_subscribe.return_value = True
         self.register()
+        self.signin()
         res = self.app.get('/account/newsletter?myarg=something',
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
