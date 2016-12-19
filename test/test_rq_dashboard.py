@@ -34,6 +34,7 @@ class TestRQDashboard(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="jane", name="jane", email="jane@jane.com")
+        self.signin(email="jane@jane.com", password="p4ssw0rd")
         res = self.app.get('/admin/rq', follow_redirects=True)
 
         assert res.status_code == 403, res
@@ -41,6 +42,7 @@ class TestRQDashboard(web.Helper):
     @with_context
     def test_admin_user_can_access_dashboard(self):
         self.register()
+        self.signin()
         res = self.app.get('/admin/rq', follow_redirects=True)
 
         assert res.status_code == 200, res
