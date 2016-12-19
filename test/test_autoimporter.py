@@ -94,7 +94,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_get_admin(self):
         """Test task autoimporter works for admin user"""
         self.register()
-        self.signout()
+        self.signin()
         # User
         self.register(name="owner")
         self.new_project()
@@ -289,6 +289,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_delete_autoimporter_get_nonexisting_project(self):
         """Test task delete autoimporter to a non existing project returns 404"""
         self.register()
+        self.signin()
         res = self.app.post("/project/noExists/tasks/autoimporter/delete")
 
         assert res.status_code == 404, res.status_code
@@ -302,6 +303,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test task autoimporter get renders the template for creating new
         autoimporter if none exists"""
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % project.short_name
@@ -337,6 +339,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test task autoimporter with specific autoimporter variant argument
         shows the form for it, for each of the variants"""
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
 
@@ -398,6 +401,7 @@ class TestAutoimporterBehaviour(web.Helper):
     def test_autoimporter_shows_current_autoimporter_if_exists(self):
         """Test task autoimporter shows the current autoimporter if exists"""
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
@@ -413,6 +417,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test a valid post to autoimporter endpoint sets an autoimporter to
         the project"""
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         project = ProjectFactory.create(owner=owner)
@@ -444,6 +449,7 @@ class TestAutoimporterBehaviour(web.Helper):
     @with_context
     def test_delete_autoimporter_deletes_current_autoimporter_job(self):
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
@@ -457,6 +463,7 @@ class TestAutoimporterBehaviour(web.Helper):
     @with_context
     def test_flickr_autoimporter_page_shows_option_to_log_in_to_flickr(self):
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter?type=flickr" % project.short_name
