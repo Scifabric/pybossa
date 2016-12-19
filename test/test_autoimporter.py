@@ -111,6 +111,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_get_nonexisting_project(self):
         """Test task autoimporter to a non existing project returns 404"""
         self.register()
+        self.signin()
         res = self.app.get("/project/noExists/tasks/autoimporter")
 
         assert res.status_code == 404, res.status_code
@@ -202,6 +203,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_post_nonexisting_project(self):
         """Test task autoimporter post to a non existing project returns 404"""
         self.register()
+        self.signin()
         res = self.app.post("/project/noExists/tasks/autoimporter", data={})
 
         assert res.status_code == 404, res.status_code
