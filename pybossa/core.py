@@ -19,6 +19,7 @@
 import os
 import logging
 import humanize
+from werkzeug.exceptions import Forbidden
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
@@ -28,7 +29,7 @@ from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
-from pybossa.util import pretty_date
+from pybossa.util import pretty_date, handle_content_type
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 
@@ -443,7 +444,9 @@ def setup_error_handlers(app):
 
     @app.errorhandler(403)
     def _forbidden(e):
-        return render_template('403.html'), 403
+        response = dict(template='403.html', code=403,
+                        description=Forbidden.description)
+        return handle_content_type(response)
 
     @app.errorhandler(401)
     def _unauthorized(e):
