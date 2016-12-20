@@ -28,7 +28,7 @@ from math import ceil
 import json
 
 
-def handle_request(data):
+def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
         return jsonify(data)
