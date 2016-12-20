@@ -21,7 +21,8 @@ from functools import update_wrapper
 import csv
 import codecs
 import cStringIO
-from flask import abort, request, make_response, current_app, render_template, jsonify
+from flask import abort, request, make_response, current_app
+from flask import render_template, jsonify
 from functools import wraps
 from flask.ext.login import current_user
 from math import ceil
