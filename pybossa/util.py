@@ -31,12 +31,23 @@ import json
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
+    print type(data)
     if request.headers['Content-Type'] == 'application/json':
-        return jsonify(data)
+        if 'form' in data.keys():
+            del data['form']
+        if 'code' in data.keys():
+            return jsonify(data), data['code']
+        else:
+            return jsonify(data)
     else:
         template = data['template']
         del data['template']
-        return render_template(template, **data)
+        if 'code' in data.keys():
+            error_code = data['code']
+            del data['code']
+            return render_template(template, **data), error_code
+        else:
+            return render_template(template, **data)
 
 
 def jsonpify(f):
