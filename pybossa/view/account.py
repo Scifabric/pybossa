@@ -39,7 +39,7 @@ from rq import Queue
 import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
-from pybossa.util import Pagination
+from pybossa.util import Pagination, handle_content_type
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
@@ -124,10 +124,12 @@ def signin():
             auth['facebook'] = True
         if ('google' in current_app.blueprints):  # pragma: no cover
             auth['google'] = True
-        return render_template('account/signin.html',
-                               title="Sign in",
-                               form=form, auth=auth,
-                               next=request.args.get('next'))
+        response = dict(template='account/signin.html',
+                        title="Sign in",
+                        form=form,
+                        auth=auth,
+                        next=request.args.get('next'))
+        return handle_content_type(response)
     else:
         # User already signed in, so redirect to home page
         return redirect(url_for("home.home"))
