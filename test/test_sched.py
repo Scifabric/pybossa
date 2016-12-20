@@ -638,7 +638,7 @@ class TestSched(sched.Helper):
             self.register(fullname="John Doe" + str(i),
                           name="johndoe" + str(i),
                           password="1234" + str(i))
-            self.signin()
+            self.signin(email="johndoe" + str(i) + "@example.com", password="1234" + str(i))
             # Get Task until scheduler returns None
             res = self.app.get(url)
             data = json.loads(res.data)
