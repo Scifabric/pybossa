@@ -21,11 +21,21 @@ from functools import update_wrapper
 import csv
 import codecs
 import cStringIO
-from flask import abort, request, make_response, current_app
+from flask import abort, request, make_response, current_app, render_template, jsonify
 from functools import wraps
 from flask.ext.login import current_user
 from math import ceil
 import json
+
+
+def handle_request(data):
+    """Return HTML or JSON based on request type."""
+    if request.headers['Content-Type'] == 'application/json':
+        return jsonify(data)
+    else:
+        template = data['template']
+        del data['template']
+        return render_template(template, **data)
 
 
 def jsonpify(f):
