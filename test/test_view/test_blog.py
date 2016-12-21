@@ -221,6 +221,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, project owners can create"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         url = "/project/%s/new-blogpost" % project.short_name
@@ -270,6 +271,7 @@ class TestBlogpostView(web.Helper):
         url = "/project/%s/new-blogpost" % project.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
+        self.signin(email='user2@user.com', password='p4ssw0rd')
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -284,6 +286,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_errors(self):
         """Test blogposts create for non existing projects raises errors"""
         self.register()
+        self.signin()
         url = "/project/non-existing-project/new-blogpost"
 
         res = self.app.get(url, follow_redirects=True)
@@ -299,6 +302,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_by_owner(self, mock_redirect):
         """Test blogposts, project owners can update"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(project=project)
@@ -349,12 +353,14 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_by_non_owner(self):
         """Test blogpost update by non owner of the project is forbidden"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(project=project, title='title', body='body')
         url = "/project/%s/new-blogpost" % project.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
+        self.signin(email='user2@user.com', password='p4ssw0rd')
         url = "/project/%s/%s/update" % (project.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
@@ -373,6 +379,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_errors(self):
         """Test blogposts update for non existing projects raises errors"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project1 = ProjectFactory.create(owner=user)
         project2 = ProjectFactory.create(owner=user)
@@ -402,6 +409,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_by_owner(self, mock_redirect):
         """Test blogposts, project owner can delete"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(project=project)
@@ -436,6 +444,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_by_non_owner(self):
         """Test blogpost delete by non owner of the project is forbidden"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(project=project)
@@ -443,7 +452,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         url = "/project/%s/%s/delete" % (project.short_name, blogpost.id)
         self.register(name='notowner', email='user2@user.com')
-
+        self.signin(email='user2@user.com', password='p4ssw0rd')
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -455,6 +464,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_errors(self):
         """Test blogposts delete for non existing projects raises errors"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project1 = ProjectFactory.create(owner=user)
         project2 = ProjectFactory.create(owner=user)
