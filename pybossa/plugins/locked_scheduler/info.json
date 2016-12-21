@@ -1,0 +1,8 @@
+{
+    "identifier": "locked_scheduler",
+    "name": "LockedScheduler",
+    "author": "you@yourdomain.com",
+    "license": "AGPLv3",
+    "description": "Limit distributed tasks to task redundancy",
+    "version": "0.0.1"
+}
