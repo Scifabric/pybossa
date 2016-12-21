@@ -49,6 +49,7 @@ class TestAdmin(web.Helper):
     def test_00_first_user_is_admin(self):
         """Test ADMIN First Created user is admin works"""
         self.register()
+        self.signin()
         user = db.session.query(User).get(1)
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
 
@@ -134,6 +135,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
+        self.signin(email="tester2@tester.com", password="tester")
         self.signout()
         user = db.session.query(User).get(2)
         assert user.admin == 0, "User ID: 2 should not be admin, but it is"
@@ -276,12 +278,12 @@ class TestAdmin(web.Helper):
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_07_admin_featured_apps_add_remove_app_non_admin(self, mock):
         """Test ADMIN featured projects add-remove works as an non-admin user"""
+
         self.register()
         self.signout()
         self.register(name="John2", email="john2@john.com",
                       password="passwd")
-        self.signin(email="john2@john.com",
-                      password="passwd")
+        self.signin(email="john2@john.com", password="passwd")
         self.new_project()
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
@@ -298,18 +300,20 @@ class TestAdmin(web.Helper):
                    " but the returned status is %s" % res.status)
         assert "403 FORBIDDEN" in res.status, err_msg
 
+
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_08_admin_featured_apps_add_remove_app_anonymous(self, mock):
         """Test ADMIN featured projects add-remove works as an anonymous user"""
         self.register()
+        self.signin()
         self.new_project()
         self.signout()
         # The project is in the system but not in the front page
-        res = self.app.get('/', follow_redirects=True)
-        assert "Sign in" in res.data,\
-            "The project should not be listed in the front page"\
-            " as it is not featured"
+        #res = self.app.get('/', follow_redirects=True)
+        #assert "Create" in res.data,\
+        #    "The project should not be listed in the front page"\
+        #    " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
@@ -640,11 +644,12 @@ class TestAdmin(web.Helper):
     def test_18_admin_user_export_authenticated(self):
         """Test ADMIN user list export works as authenticated non-admin user"""
         self.register()
+        self.signin()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
-
         self.signin(email="juan@juan.com", password="juan")
+
         # No matter what params in the request, Forbidden is raised
         res = self.app.get('/admin/users/export', follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -662,19 +667,16 @@ class TestAdmin(web.Helper):
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
     def test_19_admin_update_app(self, Mock, Mock2, mock_webhook):
-        """Test ADMIN can update a project that belongs to another user"""
-        """test case disabled: admin can only create projects in GIGwork"""
+        """Test ADMIN can update a project that belongs to another user: Disabled for GIGwork"""
         '''
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
         mock_webhook.return_value = html_request
-        
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
-        self.signin(email="juan@juan.com", password="juan")                        
         self.new_project()
         self.signout()
         # Sign in with the root user
@@ -706,8 +708,7 @@ class TestAdmin(web.Helper):
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_20_admin_delete_app(self, mock):
-        """Test ADMIN can delete a project that belongs to another user"""
-        """test case disabled: admin can only create projects in GIGwork"""
+        """Test ADMIN can delete a project that belongs to another user: Disabled for GIGwork"""
         '''
         self.register()
         self.signout()
@@ -1064,7 +1065,6 @@ class TestAdmin(web.Helper):
         output = db.session.query(Category).get(obj.id)
         assert output.id == category['id'], err_msg
 
-
     @with_context
     def test_25_admin_delete_category(self):
         """Test ADMIN delete category works"""
@@ -1149,6 +1149,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 403"
         assert res.status_code == 403, err_msg
@@ -1165,7 +1166,6 @@ class TestAdmin(web.Helper):
         assert res.status_code == 403, err_msg
         data = json.loads(res.data)
         assert data.get('code') == 403, err_msg
-
 
     @with_context
     def test_admin_dashboard_admin_user(self):
