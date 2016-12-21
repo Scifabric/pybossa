@@ -49,11 +49,13 @@ class TestWebhookView(web.Helper):
         self.signout()
         # Owner
         self.register()
+        self.signin()
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
         self.signout()
         # User
         self.register(name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         url = "/project/%s/webhook" % project.short_name
         res = self.app.get(url)
         assert res.status_code == 403, res.status_code
@@ -63,9 +65,11 @@ class TestWebhookView(web.Helper):
         """Test WEBHOOK view works for non pro owner."""
         # Admin
         self.register()
+        self.signin()
         self.signout()
         # User
         self.register(name="Iser")
+        self.signin(email="Iser@example.com", password="p4ssw0rd")
         owner = user_repo.get_by(name="Iser")
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/webhook" % project.short_name
@@ -77,9 +81,11 @@ class TestWebhookView(web.Helper):
         """Test WEBHOOK view works for pro owner."""
         # Admin/owner
         self.register()
+        self.signin()
         self.signout()
         # User
         self.register(name="Iser")
+        self.signin(email="Iser@example.com", password="p4ssw0rd")
         owner = user_repo.get_by(name="Iser")
         owner.pro = True
         user_repo.save(owner)
@@ -95,9 +101,11 @@ class TestWebhookView(web.Helper):
         """Test WEBHOOK view works for admin."""
         # Admin
         self.register()
+        self.signin()
         self.signout()
         # User
         self.register(name="user", password="user")
+        self.signin(email="user@example.com", password="user")
         owner = user_repo.get(2)
         self.signout()
         # Access as admin
@@ -113,6 +121,7 @@ class TestWebhookView(web.Helper):
     def test_webhook_handler_post_oid(self):
         """Test WEBHOOK post oid works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project, n_answers=1)
@@ -134,6 +143,7 @@ class TestWebhookView(web.Helper):
     def test_webhook_handler_post_oid_404(self):
         """Test WEBHOOK post oid 404 works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project, n_answers=1)
