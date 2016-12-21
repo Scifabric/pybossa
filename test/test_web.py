@@ -65,6 +65,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_01_index(self):
         """Test WEB home page works"""
+        self.register(name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get("/", follow_redirects=True)
         assert self.html_title() in res.data, res.data
         assert "Create" in res.data, res
@@ -97,6 +99,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_01_search(self):
         """Test WEB search page works."""
+        self.register(name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get('/search')
         err_msg = "Search page should be accessible"
         assert "Search" in res.data, err_msg
@@ -120,6 +124,8 @@ class TestWeb(web.Helper):
         file_name = os.path.join(template_folder, "home", "_results.html")
         with open(file_name, "w") as f:
             f.write("foobar")
+        self.register(name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get('/results')
         assert "foobar" in res.data, res.data
         os.remove(file_name)
@@ -771,6 +777,7 @@ class TestWeb(web.Helper):
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         self.register()
+        self.signin()
         signer.dumps.return_value = ''
         render.return_value = ''
         self.update_profile(email_addr="new@mail.com")
@@ -847,6 +854,7 @@ class TestWeb(web.Helper):
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         self.register()
+        self.signin()
         user = db.session.query(User).get(1)
         user.valid_email = False
         db.session.commit()
@@ -1549,6 +1557,7 @@ class TestWeb(web.Helper):
 
         # Create an account and log in
         self.register()
+        self.signin()
         url = "/account/fake/update"
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -1615,6 +1624,7 @@ class TestWeb(web.Helper):
         assert "Please sign in to access this page." in res.data, res
 
         self.register(fullname="new", name="new")
+        self.signin(email="new@example.com", password="p4ssw0rd")
         url = "/account/johndoe2/update"
         res = self.app.get(url)
         assert res.status_code == 403
@@ -1636,6 +1646,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_05c_get_nonexistant_app_tutorial(self):
         """Test WEB get non existant project tutorial should return 404"""
+        self.register(fullname="new", name="new")
+        self.signin(email="new@example.com", password="p4ssw0rd")
         res = self.app.get('/project/noapp/tutorial', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         res = self.app_get_json('/project/noapp/tutorial')
@@ -1645,6 +1657,7 @@ class TestWeb(web.Helper):
     def test_05d_get_nonexistant_app_delete(self):
         """Test WEB get non existant project delete should return 404"""
         self.register()
+        self.signin()
         # GET
         res = self.app.get('/project/noapp/delete', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.data
@@ -2154,6 +2167,7 @@ class TestWeb(web.Helper):
         """Test WEB long description markdown is supported"""
         markdown_description = u'Markdown\n======='
         self.register()
+        self.signin()
         self.new_project(long_description=markdown_description)
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
@@ -2175,6 +2189,7 @@ class TestWeb(web.Helper):
 
         # Sign in and create a project
         res = self.register()
+        res = self.signin()
 
         res = self.new_project(method="GET")
         assert self.html_title("Create a Project") in res.data, res
@@ -2242,6 +2257,7 @@ class TestWeb(web.Helper):
     def test_11_a_create_application_errors(self, mock):
         """Test WEB create a project issues the errors"""
         self.register()
+        self.signin()
         # Required fields checks
         # Issue the error for the project.name
         res = self.new_project(name="")
@@ -2284,6 +2300,7 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
 
         self.register()
+        self.signin()
         self.new_project()
 
         # Get the Update Project web page
@@ -2328,6 +2345,7 @@ class TestWeb(web.Helper):
         mock.return_value = html_request
 
         self.register()
+        self.signin()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
 
@@ -2390,6 +2408,7 @@ class TestWeb(web.Helper):
                                     encoding='utf-8')
         mock_webhook.return_value = html_request
         self.register()
+        self.signin()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
 
@@ -2408,6 +2427,7 @@ class TestWeb(web.Helper):
                                     encoding='utf-8')
         mock_webhook.return_value = html_request
         self.register()
+        self.signin()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
 
@@ -2421,6 +2441,7 @@ class TestWeb(web.Helper):
     def test_update_project_errors(self, mock_webhook):
         """Test WEB update form validation issues the errors"""
         self.register()
+        self.signin()
         self.new_project()
         html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
                                     status_code=200,
@@ -2448,8 +2469,9 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_14_delete_application(self, mock):
         """Test WEB delete project works"""
-        self.create()
         self.register()
+        self.signin()
+        self.create()
         self.new_project()
         res = self.delete_project(method="GET")
         msg = "Project: Sample Project &middot; Delete"
@@ -2765,10 +2787,12 @@ class TestWeb(web.Helper):
         """Test WEB Project Index draft works"""
         # Create root
         self.register()
+        self.signin()
         self.new_project()
         self.signout()
         # Create a user
         self.register(fullname="jane", name="jane", email="jane@jane.com")
+        self.signin(email="jane@jane.com", password="p4ssw0rd")
         self.signout()
 
         # As Anonymous
@@ -2928,8 +2952,9 @@ class TestWeb(web.Helper):
         project1_short_name = project1.short_name
 
         db.session.query(Task).filter(Task.project_id == 1).first()
-
+        
         self.register()
+        self.signin()
         self.new_project()
         app2 = db.session.query(Project).get(2)
         self.new_task(app2.id)
@@ -3124,6 +3149,7 @@ class TestWeb(web.Helper):
     def test_30_app_id_owner(self, mock):
         """Test WEB project settings page shows the ID to the owner"""
         self.register()
+        self.signin()
         self.new_project()
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
@@ -3450,6 +3476,7 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
+        self.signin(password=password)
         res = self.app.post('/account/johndoe/update',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
@@ -3482,6 +3509,7 @@ class TestWeb(web.Helper):
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
+        self.signin()
         res = self.app.get('/account/johndoe/update')
         assert "Change your Password" in res.data
         user = User.query.get(1)
@@ -3834,6 +3862,7 @@ class TestWeb(web.Helper):
     def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
         self.register()
+        self.signin()
         self.new_project()
         res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
@@ -3901,6 +3930,7 @@ class TestWeb(web.Helper):
     def test_47_task_presenter_editor_loads(self, mock):
         """Test WEB task presenter editor loads"""
         self.register()
+        self.signin()
         self.new_project()
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
@@ -4038,6 +4068,7 @@ class TestWeb(web.Helper):
     def test_49_announcement_messages(self, mock):
         """Test WEB announcement messages works"""
         self.register()
+        self.signin()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for the root user"
         print res.data
@@ -4060,6 +4091,7 @@ class TestWeb(web.Helper):
         # Register another user
         self.register(fullname="Jane Doe", name="janedoe",
                       password="janedoe", email="jane@jane.com")
+        self.signin(email="jane@jane.com", password="janedoe")
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should not be a message for the root user"
         assert "Root Message" not in res.data, error_msg
@@ -4822,8 +4854,9 @@ class TestWeb(web.Helper):
     def test_get_import_tasks_no_params_shows_options_and_templates(self, mock):
         """Test WEB import tasks displays the different importers and template
         tasks"""
-        Fixtures.create()
         self.register()
+        self.signin()
+        Fixtures.create()
         self.new_project()
         res = self.app.get('/project/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should be a CSV importer"
@@ -5013,6 +5046,7 @@ class TestWeb(web.Helper):
         """Test task importer with specific importer variant argument
         shows the form for it, for each of the variants"""
         self.register()
+        self.signin()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
 
@@ -5341,6 +5375,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_flickr_importer_page_shows_option_to_log_into_flickr(self):
         self.register()
+        self.signin()
         owner = db.session.query(User).first()
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/import?type=flickr" % project.short_name
@@ -5487,6 +5522,7 @@ class TestWeb(web.Helper):
 
         # Authenticated user but not owner
         self.register()
+        self.signin()
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Authenticated user but not owner should get 403 FORBIDDEN in GET"
         assert res.status == '403 FORBIDDEN', err_msg
@@ -5588,6 +5624,7 @@ class TestWeb(web.Helper):
         assert "Please sign in to access this page" in res.data, err_msg
         # Authenticated user
         self.register()
+        self.signin()
         user = db.session.query(User).get(1)
         url = "/account/%s/update" % user.name
         api_key = user.api_key
@@ -5605,6 +5642,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         self.register(fullname="new", name="new")
+        self.signin(email="new@example.com", password="p4ssw0rd")
         res = self.app.post(url)
         assert res.status_code == 403, res.status_code
 
@@ -5926,7 +5964,8 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # As owner
-        self.register(fullname="owner", name="owner")
+        self.register()
+        self.signin()
         res = self.new_project()
         url = "/project/sampleapp/tasks/settings"
 
@@ -5940,6 +5979,7 @@ class TestWeb(web.Helper):
         self.signout()
         # As an authenticated user
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -5968,7 +6008,8 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", name="owner")
+        self.register()
+        self.signin()
         self.new_project()
         url = "/project/sampleapp/tasks/scheduler"
         form_id = 'task_scheduler'
@@ -5977,8 +6018,7 @@ class TestWeb(web.Helper):
         # As owner and root
         for i in range(0, 1):
             if i == 0:
-                # As owner
-                self.signin(email="owner@example.com")
+                self.signin()
                 sched = 'depth_first'
             else:
                 sched = 'default'
@@ -5998,6 +6038,7 @@ class TestWeb(web.Helper):
 
         # As an authenticated user
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -6408,6 +6449,7 @@ class TestWeb(web.Helper):
         completed yet (overall progress < 100%)"""
 
         self.register()
+        self.signin()
         user = User.query.first()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
