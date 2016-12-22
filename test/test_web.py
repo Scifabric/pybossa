@@ -567,6 +567,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_register_get(self):
         """Test WEB register user works"""
+        self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.get('/account/register')
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
@@ -603,6 +605,8 @@ class TestWeb(web.Helper):
         """Test WEB register errors works"""
         userdict = {'fullname': 'a', 'name': 'name',
                     'email_addr': None, 'password':'p'}
+        self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com", password="p4ssw0rd")
         res = self.app.post('/account/register', data=userdict)
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
@@ -935,7 +939,6 @@ class TestWeb(web.Helper):
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-
         res = self.app.post('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert "Account validation" in res.data, res
@@ -1023,10 +1026,11 @@ class TestWeb(web.Helper):
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-        res = self.app.post('/account/register', data=data,
-                            follow_redirects=True)
-        print dir(mockredirect)
-        mockredirect.assert_called_with('/')
+        self.register()
+        self.signin()
+        res = self.app.post('/account/register', data=data)
+        print dir(redirect)
+        redirect.assert_called_with('/')
 
     @with_context
     def test_register_confirmation_fails_without_key(self):
@@ -2020,6 +2024,7 @@ class TestWeb(web.Helper):
                                     encoding='utf-8')
         Mock.return_value = html_request
         self.register()
+        self.signin()
         res = self.new_project()
         project = db.session.query(Project).first()
         project.published = True
@@ -2050,6 +2055,7 @@ class TestWeb(web.Helper):
 
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
+        self.signin(email="perico@example.com", password="p4ssw0rd")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert_raises(ValueError, json.loads, res.data)
         assert self.html_title("Project: Sample Project") in res.data, res
@@ -2215,6 +2221,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project and a description is provided,
         then it is not generated from the long_description"""
         self.register()
+        self.signin()
         res = self.new_project(long_description="a" * 300, description='b')
 
         project = db.session.query(Project).first()
@@ -2225,6 +2232,7 @@ class TestWeb(web.Helper):
         """Test WEB when creating a project, the description field is
         automatically filled in by truncating the long_description"""
         self.register()
+        self.signin()
         res = self.new_project(long_description="Hello", description='')
 
         project = db.session.query(Project).first()
@@ -2235,6 +2243,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
+        self.signin()
         res = self.new_project(long_description="## Hello", description='')
 
         project = db.session.query(Project).first()
@@ -2246,6 +2255,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project, the description generated
         from the long_description is truncated to 255 chars"""
         self.register()
+        self.signin()
         res = self.new_project(long_description="a" * 300, description='')
 
         project = db.session.query(Project).first()
@@ -2532,6 +2542,7 @@ class TestWeb(web.Helper):
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
         self.register()
+        self.signin()
         self.new_project()
 
         project = db.session.query(Project).first()
@@ -2590,6 +2601,7 @@ class TestWeb(web.Helper):
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
         self.register()
+        self.signin()
         self.new_project()
 
         project = db.session.query(Project).first()
@@ -2620,6 +2632,7 @@ class TestWeb(web.Helper):
     def test_18_task_status_wip(self, mock):
         """Test WEB Task Status on going works"""
         self.register()
+        self.signin()
         self.new_project()
 
         project = db.session.query(Project).first()
@@ -2726,6 +2739,7 @@ class TestWeb(web.Helper):
     def test_20_app_index_published(self, mock):
         """Test WEB Project Index published works"""
         self.register()
+        self.signin()
         self.new_project()
         self.update_project(new_category_id="1")
         project = db.session.query(Project).first()
@@ -2947,12 +2961,14 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for a project works"""
+        self.register()
+        self.signin()
         self.create()
         project1 = db.session.query(Project).get(1)
         project1_short_name = project1.short_name
 
         db.session.query(Task).filter(Task.project_id == 1).first()
-        
+
         self.register()
         self.signin()
         self.new_project()
@@ -3178,6 +3194,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
 
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         project.published = True
@@ -3195,6 +3212,7 @@ class TestWeb(web.Helper):
     def test_31_user_profile_progress(self, mock):
         """Test WEB user progress profile page works"""
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         task = Task(project_id=project.id, n_answers=10)
@@ -3522,10 +3540,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
-        res = self.app.get('account/signin', follow_redirects=True)
-        assert "/help/terms-of-use" in res.data, res.data
-        assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
-
         res = self.app.get('account/register', follow_redirects=True)
         assert "http://okfn.org/terms-of-use/" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
@@ -3970,6 +3984,7 @@ class TestWeb(web.Helper):
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
@@ -4035,6 +4050,7 @@ class TestWeb(web.Helper):
 
         mock_webhook.return_value = html_request
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
@@ -4179,6 +4195,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_50_export_task_json(self):
         """Test WEB export Tasks to JSON works"""
+        self.register()
+        self.signin()
         Fixtures.create()
         # First test for a non-existant project
         uri = '/project/somethingnotexists/tasks/export'
@@ -4270,6 +4288,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_taskruns_json(self):
         """Test WEB export Task Runs to JSON works"""
+        self.register()
+        self.signin()
         Fixtures.create()
         # First test for a non-existant project
         uri = '/project/somethingnotexists/tasks/export'
@@ -4421,6 +4441,8 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV works"""
         # Fixtures.create()
         # First test for a non-existant project
+        self.register()
+        self.signin()
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4917,7 +4939,7 @@ class TestWeb(web.Helper):
         assert data['available_importers'] == importers, data
 
         importers = ['&type=epicollect',
-                     '&type=csv', 
+                     '&type=csv',
                      '&type=s3',
                      '&type=twitter',
                      '&type=youtube',
@@ -5137,6 +5159,7 @@ class TestWeb(web.Helper):
                                 encoding='utf-8')
         request.return_value = csv_file
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % project.short_name
@@ -5155,6 +5178,7 @@ class TestWeb(web.Helper):
         count.return_value = 1
         create.return_value = ImportReport(message='1 new task was imported successfully', metadata=None, total=1)
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % project.short_name
@@ -5172,6 +5196,7 @@ class TestWeb(web.Helper):
         from pybossa.view.projects import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
         count_tasks.return_value = MAX_NUM_SYNCHRONOUS_TASKS_IMPORT + 1
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % project.short_name
@@ -5197,6 +5222,7 @@ class TestWeb(web.Helper):
                                 encoding='utf-8')
         Mock.return_value = csv_file
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (project.short_name)
@@ -5237,6 +5263,7 @@ class TestWeb(web.Helper):
                                 encoding='utf-8')
         Mock.return_value = csv_file
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (project.short_name)
@@ -5293,6 +5320,7 @@ class TestWeb(web.Helper):
                                      encoding='utf-8')
         Mock.return_value = fake_response
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (project.short_name)),
@@ -5353,6 +5381,7 @@ class TestWeb(web.Helper):
                                      encoding='utf-8')
         request.return_value = fake_response
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (project.short_name)),
@@ -5393,6 +5422,7 @@ class TestWeb(web.Helper):
                              u'"name":"test.txt",'
                              u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % project.short_name,
@@ -5433,6 +5463,7 @@ class TestWeb(web.Helper):
         client.return_value = client_instance
 
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % project.short_name,
@@ -5461,6 +5492,7 @@ class TestWeb(web.Helper):
     def test_bulk_s3_import_works(self):
         """Test WEB bulk S3 import works"""
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % project.short_name,
@@ -6100,7 +6132,8 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", name="owner")
+        self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
 
@@ -6112,7 +6145,7 @@ class TestWeb(web.Helper):
         for i in range(0, 1):
             if i == 0:
                 # As owner
-                self.signin(email="owner@example.com")
+                self.signin()
                 n_answers = 20
             else:
                 n_answers = 10
@@ -6147,6 +6180,7 @@ class TestWeb(web.Helper):
 
         # As an authenticated user
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -6222,6 +6256,7 @@ class TestWeb(web.Helper):
         state of the task is updated in consecuence"""
         # Creat root user
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
 
@@ -6255,28 +6290,22 @@ class TestWeb(web.Helper):
         """Test WEB TASK SETTINGS priority page works"""
         # Creat root user
         self.register()
-        self.signout()
-        # Create owner
-        self.register(fullname="owner", name="owner")
+        self.signin()
         self.new_project()
         self.new_task(1)
         url = "/project/sampleapp/tasks/priority"
         form_id = 'task_priority'
-        self.signout()
 
         # As owner and root
         project = db.session.query(Project).get(1)
         _id = project.tasks[0].id
         for i in range(0, 1):
             if i == 0:
-                # As owner
-                self.signin(email="owner@example.com")
                 task_ids = str(_id)
                 priority_0 = 1.0
             else:
                 task_ids = "1"
                 priority_0 = 0.5
-                self.signin()
             res = self.app.get(url, follow_redirects=True)
             dom = BeautifulSoup(res.data)
             # Correct values
@@ -6313,6 +6342,7 @@ class TestWeb(web.Helper):
 
         # As an authenticated user
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -6572,6 +6602,7 @@ class TestWeb(web.Helper):
     def test_update_project_secret_key_owner(self):
         """Test update project secret key owner."""
         self.register()
+        self.signin()
         self.new_project()
 
         project = project_repo.get(1)
@@ -6622,11 +6653,13 @@ class TestWeb(web.Helper):
     def test_update_project_secret_key_not_owner(self):
         """Test update project secret key not owner."""
         self.register()
+        self.signin()
         self.new_project()
         self.signout()
 
         self.register(email="juan@juan.com", name="juanjuan")
 
+        self.signin(email="juan@juan.com", password="p4ssw0rd")
         project = project_repo.get(1)
 
         url = "/project/%s/resetsecretkey" % project.short_name
