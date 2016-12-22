@@ -40,10 +40,12 @@ class TestWebSse(web.Helper):
     def test_stream_uri_private_auth(self):
         """Test stream URI private auth but not owner works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         self.signout()
         self.register(fullname='Juan', name='juan', password='juana')
+        self.signin(email="juan@example.com", password='juana')
         private_uri = '/project/%s/privatestream' % project.short_name
         res = self.app.get(private_uri, follow_redirects=True)
         assert res.status_code == 403, res.data
@@ -55,6 +57,7 @@ class TestWebSse(web.Helper):
         """Test stream URI private owner works."""
         mock_sse.return_value = self.fake_sse_response
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         private_uri = '/project/%s/privatestream' % project.short_name
@@ -67,6 +70,7 @@ class TestWebSse(web.Helper):
         """Test stream URI private return 404 when SSE disabled
         for owner works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         private_uri = '/project/%s/privatestream' % project.short_name
@@ -84,6 +88,7 @@ class TestWebSse(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="name", name="name")
+        self.signin(email="name@example.com", password="p4ssw0rd")
         user = user_repo.get(2)
         project = ProjectFactory.create(owner=user)
         private_uri = '/project/%s/privatestream' % project.short_name
@@ -104,6 +109,7 @@ class TestWebSse(web.Helper):
             self.register()
             self.signout()
             self.register(fullname="name", name="name")
+            self.signin(email="name@example.com", password="p4ssw0rd")
             user = user_repo.get(2)
             project = ProjectFactory.create(owner=user)
             private_uri = '/project/%s/privatestream' % project.short_name
@@ -123,6 +129,7 @@ class TestWebSse(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="name", name="name")
+        self.signin(email="name@example.com", password="p4ssw0rd")
         user = user_repo.get(2)
         project = ProjectFactory.create(owner=user)
         private_uri = '/project/%s/publicstream' % project.short_name
@@ -142,6 +149,7 @@ class TestWebSse(web.Helper):
         """Test stream URI public owner works."""
         mock_sse.return_value = self.fake_sse_response
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         private_uri = '/project/%s/publicstream' % project.short_name
@@ -180,10 +188,12 @@ class TestWebSse(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="name", name="name")
+        self.signin(email="name@example.com", password="p4ssw0rd")
         user = user_repo.get(2)
         project = ProjectFactory.create(owner=user)
         self.signout()
         self.register(fullname="name2", name="name2")
+        self.signin(email="name2@example.com", password="p4ssw0rd")
         private_uri = '/project/%s/publicstream' % project.short_name
         res = self.app.get(private_uri, follow_redirects=True)
         assert mock_sse.called
