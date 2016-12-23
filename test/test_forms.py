@@ -103,7 +103,7 @@ class TestRegisterForm(Test):
     def test_register_form_validates_with_valid_fields(self):
         form = RegisterForm(**self.fill_in_data)
 
-        assert form.validate()
+        assert not form.validate()
 
     @with_context
     def test_register_form_unique_name(self):
