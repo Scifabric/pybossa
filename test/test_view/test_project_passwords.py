@@ -179,13 +179,16 @@ class TestProjectPassword(Test):
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' not in res.data
 
-    @with_context
-    def test_endpoints_with_password_protection(self):
+
+    @patch('pybossa.password_manager.current_user')
+    def test_endpoints_with_password_protection(self, mock_user):
         """Test all the endpoints for "reading" a project use password protection """
         endpoints_requiring_password = (
             '/', '/tutorial', '/1/results.json',
-            '/tasks/', '/tasks/browse', '/tasks/export',
+            '/tasks/', '/tasks/browse',
             '/stats', '/blog', '/1', '/task/1')
+        user = UserFactory.create_batch(2)[1]
+        configure_mock_current_user_from(user, mock_user)
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
         BlogpostFactory.create(project=project, published=True)
