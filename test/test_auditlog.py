@@ -726,6 +726,7 @@ class TestAuditlogWEB(web.Helper):
     def test_project_auditlog_access_anon(self):
         # Admin
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         short_name = 'sampleapp'
