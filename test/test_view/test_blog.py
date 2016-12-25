@@ -194,6 +194,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project1, project2 = ProjectFactory.create_batch(2, owner=user)
         blogpost = BlogpostFactory.create(project=project1)
