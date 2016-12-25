@@ -27,7 +27,6 @@ from pybossa.model.project import Project
 from helper import web as web_helper
 from pybossa.ckan import Ckan
 
-
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
@@ -37,10 +36,13 @@ class TestCkanWeb(web_helper.Helper):
     def setUp(self):
         super(TestCkanWeb, self).setUp()
         with self.flask_app.app_context():
+            self.register()
+            self.signin()
             self.create()
 
     # Tests
 
+    #@patch('pybossa.auth.current_user', new=mock_admin)
     def test_00_anonymous(self):
         """Test CKAN anonymous cannot export data via CKAN"""
         res = self.app.get(self.url, follow_redirects=True)
@@ -50,40 +52,42 @@ class TestCkanWeb(web_helper.Helper):
 
     def test_01_authenticated(self):
         """Test CKAN authenticated project owners can export data via CKAN"""
-        res = self.signin(email=self.email_addr, password=self.password)
+        res = self.signin(email="johndoe@example.com", password="p4ssw0rd")
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "The CKAN exporter should be available for the owner of the project"
         assert dom.find(id="ckan") is not None, err_msg
 
         self.signout()
-
+        
         self.signin(email=self.email_addr2, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
-        dom = BeautifulSoup(res.data)
-        err_msg = "The CKAN exporter should be ONLY available for the owner of the project"
-        assert dom.find(id="ckan")['style'] == "display:none", err_msg
+        err_msg = "The CKAN exporter should be ONLY available for the admins"
+        assert res.status_code == 403, err_msg
 
     @with_context
     def test_02_export_links(self):
         """Test CKAN export links task and task run are available"""
-        self.signin(email=self.email_addr, password=self.password)
+        res = self.signin(email="johndoe@example.com", password="p4ssw0rd")
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a warning about adding a CKAN api Key"
-        assert dom.find(id="ckan_warning") is not None, err_msg
+        assert dom.find(id="ckan") is not None, err_msg
         # Add a CKAN API key to the user
         u = db.session.query(User).filter_by(name=self.name).first()
         u.ckan_api = "ckan-api-key"
         db.session.add(u)
         db.session.commit()
+        # ckan not enabled/configured for GIGwork. disable following case
+        '''
         # Request again the page
         res = self.app.get(self.url, follow_redirects=True)
         err_msg = "There should be two buttons to export Task and Task Runs"
         dom = BeautifulSoup(res.data)
         assert dom.find(id="ckan_task") is not None, err_msg
         assert dom.find(id="ckan_task_run") is not None, err_msg
-
+        '''
+ 
 
 class TestCkanModule(Test, object):
 
