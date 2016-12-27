@@ -35,23 +35,27 @@ class DomainObject(object):
             out[col.name] = getattr(self, col.name)
         return out
 
-    def info_public_keys(self):
+    def info_public_keys(self, data=None):
         """Return a dictionary of info field with public keys."""
         out = dict()
+        if data is None:
+            data = self.dictize()
         for key in self.public_info_keys():
-            out[key] = getattr(self, 'info')['key']
+            out[key] = data.get('info').get(key)
         return out
 
-    def to_public_json(self):
+    def to_public_json(self, data=None):
         """Return a dict that can be exported to JSON
         with only public attributes."""
 
         out = dict()
+        if data is None:
+            data = self.dictize()
         for col in self.public_attributes():
             if col == 'info':
-                out[col] = self.info_public_keys()
+                out[col] = self.info_public_keys(data=data)
             else:
-                out[col] = getattr(self, col)
+                out[col] = data.get(col)
         return out
 
     def public_attributes(self):
