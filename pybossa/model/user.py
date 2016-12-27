@@ -83,6 +83,7 @@ class User(db.Model, DomainObject, UserMixin):
             return signer.check_password_hash(self.passwd_hash, password)
         return False
 
+    @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
         return ['created', 'name', 'fullname', 'locale', 'info',
