@@ -35,6 +35,33 @@ class DomainObject(object):
             out[col.name] = getattr(self, col.name)
         return out
 
+    def info_public_keys(self):
+        """Return a dictionary of info field with public keys."""
+        out = dict()
+        for key in self.public_info_keys():
+            out[key] = getattr(self, 'info')['key']
+        return out
+
+    def to_public_json(self):
+        """Return a dict that can be exported to JSON
+        with only public attributes."""
+
+        out = dict()
+        for col in self.public_attributes():
+            if col == 'info':
+                out[col] = self.info_public_keys()
+            else:
+                out[col] = getattr(self, col)
+        return out
+
+    def public_attributes(self):
+        """To be override by other class."""
+        pass
+
+    def public_info_keys(self):
+        """To be override by other class."""
+        pass
+
     @classmethod
     def undictize(cls, dict_):
         raise NotImplementedError()
