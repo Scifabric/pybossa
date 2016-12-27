@@ -41,7 +41,8 @@ class DomainObject(object):
         if data is None:
             data = self.dictize()
         for key in self.public_info_keys():
-            out[key] = data.get('info').get(key)
+            if data.get('info'):
+                out[key] = data.get('info').get(key)
         return out
 
     def to_public_json(self, data=None):
