@@ -27,7 +27,6 @@ class TestActivityFeed(Test):
         user = UserFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the same user"
-        assert update_feed[0]['id'] == user.id, err_msg
         assert update_feed[0]['fullname'] == user.fullname, err_msg
         assert update_feed[0]['name'] == user.name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
