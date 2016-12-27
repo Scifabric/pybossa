@@ -146,6 +146,15 @@ class TestPybossaUtil(object):
             assert i == page, err_msg
             page += 1
 
+        err_msg = "It should return JSON"
+        expected = dict(page=page-1,
+                        per_page=per_page,
+                        total=total_count,
+                        next=False,
+                        prev=True)
+        assert expected == p.to_json(), err_msg
+
+
     def test_unicode_csv_reader(self):
         """Test unicode_csv_reader works."""
         fake_csv = ['one, two, three']
