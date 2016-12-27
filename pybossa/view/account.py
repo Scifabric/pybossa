@@ -40,7 +40,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, handle_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -77,11 +77,12 @@ def index(page):
         user_id = None
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id)
-    return render_template('account/index.html', accounts=accounts,
-                           total=count,
-                           top_users=top_users,
-                           title="Community", pagination=pagination,
-                           update_feed=update_feed)
+    tmp = dict(template='account/index.html', accounts=accounts,
+               total=count,
+               top_users=top_users,
+               title="Community", pagination=pagination,
+               update_feed=update_feed)
+    return handle_content_type(tmp)
 
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
