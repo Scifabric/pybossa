@@ -29,12 +29,24 @@ from math import ceil
 import json
 
 
+def pagination_to_json(pagination):
+    """Transform a pagination object into a JSON one."""
+    tmp = dict(page=pagination.page,
+               per_page=pagination.per_page,
+               total=pagination.total_count,
+               next=pagination.has_next,
+               prev=pagination.has_prev)
+    return tmp
+
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
-    print type(data)
     if request.headers['Content-Type'] == 'application/json':
         if 'form' in data.keys():
             del data['form']
+        if 'pagination' in data.keys():
+            pagination = pagination_to_json(data['pagination'])
+            data['pagination'] = pagination
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
