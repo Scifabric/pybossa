@@ -45,6 +45,8 @@ def get_leaderboard(n, user_id=None):
 
     results = session.execute(sql, dict(limit=n))
 
+    u = User()
+
     top_users = []
     user_in_top = False
     for row in results:
@@ -59,7 +61,8 @@ def get_leaderboard(n, user_id=None):
             info=row.info,
             created=row.created,
             score=row.score)
-        top_users.append(user)
+        tmp = u.to_public_json(data=user)
+        top_users.append(tmp)
     if (user_id is not None):
         if not user_in_top:
             sql = text('''
@@ -87,6 +90,7 @@ def get_leaderboard(n, user_id=None):
                 info=u.info,
                 created=u.created,
                 score=-1)
+            user = u.to_public_json(data=user)
             for row in user_rank:  # pragma: no cover
                 user = dict(
                     rank=row.rank,
@@ -97,6 +101,7 @@ def get_leaderboard(n, user_id=None):
                     info=row.info,
                     created=row.created,
                     score=row.score)
+                user = u.to_public_json(data=user)
             top_users.append(user)
 
     return top_users
@@ -270,12 +275,16 @@ def get_users_page(page, per_page=24):
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = session.execute(sql, dict(limit=per_page, offset=offset))
     accounts = []
+
+    u = User()
+
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
                     task_runs=row.task_runs, info=row.info,
                     registered_ago=pretty_date(row.created))
-        accounts.append(user)
+        tmp = u.to_public_json(data=user)
+        accounts.append(tmp)
     return accounts
 
 
