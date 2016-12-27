@@ -40,7 +40,7 @@ mail_queue = Queue('email', connection=sentinel.master)
 
 @event.listens_for(Blogpost, 'after_insert')
 def add_blog_event(mapper, conn, target):
-    """Update PyBossa feed with new blog post."""
+    """Update PYBOSSA feed with new blog post."""
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
@@ -90,8 +90,8 @@ def add_task_event(mapper, conn, target):
 
 @event.listens_for(User, 'after_insert')
 def add_user_event(mapper, conn, target):
-    """Update PyBossa feed with new user."""
-    obj = target.dictize()
+    """Update PYBOSSA feed with new user."""
+    obj = target.to_public_json()
     obj['action_updated']='User'
     update_feed(obj)
 
