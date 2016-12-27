@@ -31,7 +31,7 @@ from pybossa.model.blogpost import Blogpost
 
 
 class User(db.Model, DomainObject, UserMixin):
-    '''A registered user of the PyBossa system'''
+    '''A registered user of the PYBOSSA system'''
 
     __tablename__ = 'user'
 
@@ -82,3 +82,11 @@ class User(db.Model, DomainObject, UserMixin):
         if self.passwd_hash:
             return signer.check_password_hash(self.passwd_hash, password)
         return False
+
+    def public_attributes(self):
+        """Return a list of public attributes."""
+        return ['created', 'name', 'fullname', 'locale']
+
+    def public_info_keys(self):
+        """Return a list of public info keys."""
+        return ['avatar', 'container']
