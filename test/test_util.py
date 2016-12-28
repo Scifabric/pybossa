@@ -31,6 +31,9 @@ import json
 def myjsonify(data):
     return data
 
+def myrender(template, **data):
+    return template, data
+
 
 class TestPybossaUtil(object):
 
@@ -123,6 +126,52 @@ class TestPybossaUtil(object):
         err_msg = "Pagination should exist"
         assert res.get('pagination') is not None, err_msg
         assert res.get('pagination') == pagination.to_json(), err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_html(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'text/html'
+        mockjsonify.side_effect = myjsonify
+        mockrender.side_effect = myrender
+        pagination = util.Pagination(page=1, per_page=5, total_count=10)
+        template, data = util.handle_content_type(dict(template='example.html',
+                                            pagination=pagination))
+        err_msg = "Template should be rendered"
+        assert template == 'example.html', err_msg
+        err_msg = "Template key should not exist"
+        assert data.get('template') is None, err_msg
+        err_msg = "jsonify should not be called"
+        assert mockjsonify.called is False, err_msg
+        err_msg = "render_template should be called"
+        assert mockrender.called is True, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_html_error(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'text/html'
+        mockjsonify.side_effect = myjsonify
+        mockrender.side_effect = myrender
+        template, code = util.handle_content_type(dict(template='example.html',
+                                                       code=404))
+        data = template[1]
+        template = template[0]
+        err_msg = "Template should be rendered"
+        assert template == 'example.html', err_msg
+        err_msg = "Template key should not exist"
+        assert data.get('template') is None, err_msg
+        err_msg = "jsonify should not be called"
+        assert mockjsonify.called is False, err_msg
+        err_msg = "render_template should be called"
+        assert mockrender.called is True, err_msg
+        err_msg = "There should be an error"
+        assert code == 404, err_msg
+        err_msg = "There should not be code key"
+        assert data.get('code') is None, err_msg
+
 
     def test_pretty_date(self):
         """Test pretty_date works."""
