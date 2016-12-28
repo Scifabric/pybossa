@@ -113,6 +113,12 @@ class TestModelUser(Test):
         data = user.to_public_json()
         err_msg = "There are some keys that should not be public"
         assert data.keys().sort() == public_attributes.sort(), err_msg
+        all_attributes = user.dictize().keys()
+        s = set(public_attributes)
+        private_attributes = [x for x in all_attributes if x not in s]
+        for attr in private_attributes:
+            err_msg = "This attribute should be private %s" % attr
+            assert data.get(attr) is None, err_msg
 
     @with_context
     def test_user_public_info_keys(self):
