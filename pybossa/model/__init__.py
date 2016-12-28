@@ -59,11 +59,11 @@ class DomainObject(object):
                 out[col] = data.get(col)
         return out
 
-    def public_attributes(self):
+    def public_attributes(self):  # pragma: no cover
         """To be override by other class."""
         pass
 
-    def public_info_keys(self):
+    def public_info_keys(self):  # pragma: no cover
         """To be override by other class."""
         pass
 
