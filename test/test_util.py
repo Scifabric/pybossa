@@ -17,6 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util as util
 from mock import MagicMock
+from mock import patch
+from default import with_context
 from datetime import datetime, timedelta
 import calendar
 import time
@@ -24,6 +26,10 @@ import csv
 import tempfile
 import os
 import json
+
+
+def myjsonify(data):
+    return data
 
 
 class TestPybossaUtil(object):
@@ -51,6 +57,19 @@ class TestPybossaUtil(object):
     #     assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
     #     headers = 'CONTENT-TYPE, AUTHORIZATION'
     #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res = util.handle_content_type(dict(template='example.html'))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
 
     def test_pretty_date(self):
         """Test pretty_date works."""
