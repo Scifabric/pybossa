@@ -61,6 +61,35 @@ class TestModelBase(Test):
         assert json.keys().sort() == user.public_attributes().sort(), err_msg
 
     @with_context
+    def test_info_public_keys(self):
+        """Test DomainObject to_public_json method works."""
+        user = User()
+        user.name = 'daniel'
+        user.info = dict(container='3', avatar='img.png', token='secret')
+        user_dict = user.dictize()
+        json = user.to_public_json()
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        err_msg = "There should be info keys"
+        assert json['info']['container'] == '3', err_msg
+        assert json['info']['avatar'] == 'img.png', err_msg
+        err_msg = "This key should be missing"
+        assert json['info'].get('token') is None, err_msg
+
+        json = user.to_public_json(data=user_dict)
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        err_msg = "There should be info keys"
+        assert json['info']['container'] == '3', err_msg
+        assert json['info']['avatar'] == 'img.png', err_msg
+        err_msg = "This key should be missing"
+        assert json['info'].get('token') is None, err_msg
+
+    @with_context
     def test_all(self):
         """Test MODEL works"""
         username = u'test-user-1'
