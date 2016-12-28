@@ -97,17 +97,32 @@ class TestPybossaUtil(object):
     def test_handle_content_type_json_form(self, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
-        res, code = util.handle_content_type(dict(template='example.html', code=404,
-                                            description="Not found"))
+        res = util.handle_content_type(dict(template='example.html',
+                                            form="A Form"))
         err_msg = "template key should exist"
         assert res.get('template') == 'example.html', err_msg
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
-        err_msg = "Error code should exist"
-        assert res.get('code') == 404, err_msg
-        assert code == 404, err_msg
-        err_msg = "Error description should exist"
-        assert res.get('description') is not None, err_msg
+        err_msg = "Form should not exist"
+        assert res.get('form') is None, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_pagination(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        pagination = util.Pagination(page=1, per_page=5, total_count=10)
+        res = util.handle_content_type(dict(template='example.html',
+                                            pagination=pagination))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Pagination should exist"
+        assert res.get('pagination') is not None, err_msg
+        assert res.get('pagination') == pagination.to_json(), err_msg
 
     def test_pretty_date(self):
         """Test pretty_date works."""
