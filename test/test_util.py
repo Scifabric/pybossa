@@ -71,6 +71,44 @@ class TestPybossaUtil(object):
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
 
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_error(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res, code = util.handle_content_type(dict(template='example.html', code=404,
+                                            description="Not found"))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Error code should exist"
+        assert res.get('code') == 404, err_msg
+        assert code == 404, err_msg
+        err_msg = "Error description should exist"
+        assert res.get('description') is not None, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_form(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res, code = util.handle_content_type(dict(template='example.html', code=404,
+                                            description="Not found"))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Error code should exist"
+        assert res.get('code') == 404, err_msg
+        assert code == 404, err_msg
+        err_msg = "Error description should exist"
+        assert res.get('description') is not None, err_msg
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
