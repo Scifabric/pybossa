@@ -172,7 +172,6 @@ class TestPybossaUtil(object):
         err_msg = "There should not be code key"
         assert data.get('code') is None, err_msg
 
-
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
