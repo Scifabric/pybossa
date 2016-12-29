@@ -129,7 +129,10 @@ def signin():
         return handle_content_type(response)
     else:
         # User already signed in, so redirect to home page
-        return redirect(url_for("home.home"))
+        if request.headers['Content-Type'] == 'application/json':
+            return handle_content_type(dict(next=url_for('home.home')))
+        else:
+            return redirect(url_for("home.home"))
 
 
 def _sign_in_user(user):
@@ -149,8 +152,11 @@ def signout():
 
     """
     logout_user()
-    flash(gettext('You are now signed out'), 'success')
-    return redirect(url_for('home.home'))
+    if request.headers['Content-Type'] == 'application/json':
+        return handle_content_type(dict(next=url_for('home.home')))
+    else:
+        flash(gettext('You are now signed out'), 'success')
+        return redirect(url_for('home.home'))
 
 
 def get_email_confirmation_url(account):
