@@ -148,6 +148,7 @@ def signout():
 
     """
     logout_user()
+    flash(gettext('You are now signed out'), 'success')
     return redirect_content_type(url_for('home.home'))
 
 
