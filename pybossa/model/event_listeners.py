@@ -199,7 +199,7 @@ def on_taskrun_submit(mapper, conn, target):
         project_obj['published'] = r.published
         # TODO: update with public data
         #project_obj['info'] = r.info
-        project_obj['webhook'] = r.webhook
+        #project_obj['webhook'] = r.webhook
         project_obj['id'] = target.project_id
 
     add_user_contributed_to_feed(conn, target.user_id, project_obj)
