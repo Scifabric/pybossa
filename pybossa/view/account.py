@@ -58,12 +58,8 @@ mail_queue = Queue('email', connection=sentinel.master)
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
-    """
-    Index page for all PYBOSSA registered users.
+    """Index page for all PYBOSSA registered users."""
 
-    Returns a Jinja2 rendered template with the users.
-
-    """
     update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
