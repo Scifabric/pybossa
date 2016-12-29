@@ -102,7 +102,6 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
     if user_id is not None:
         sql_query = ('select fullname, name, info from "user" \
                      where id=%s') % user_id
-        tmp.to_public_json()
         results = conn.execute(sql_query)
         for r in results:
             obj = dict(id=user_id,
