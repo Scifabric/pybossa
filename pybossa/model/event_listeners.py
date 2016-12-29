@@ -197,7 +197,8 @@ def on_taskrun_submit(mapper, conn, target):
         project_obj['name'] = r.name
         project_obj['short_name'] = r.short_name
         project_obj['published'] = r.published
-        project_obj['info'] = r.info
+        # TODO: update with public data
+        #project_obj['info'] = r.info
         project_obj['webhook'] = r.webhook
         project_obj['id'] = target.project_id
 
