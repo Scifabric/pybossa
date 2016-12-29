@@ -53,9 +53,9 @@ def handle_content_type(data):
 
 def redirect_content_type(url):
     if request.headers['Content-Type'] == 'application/json':
-        handle_content_type(dict(next=url))
+        return handle_content_type(dict(next=url))
     else:
-        redirect(url)
+        return redirect(url)
 
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""
