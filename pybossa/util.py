@@ -51,6 +51,11 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
+def redirect_content_type(url):
+    if request.headers['Content-Type'] == 'application/json':
+        handle_content_type(dict(next=url))
+    else:
+        redirect(url)
 
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""
