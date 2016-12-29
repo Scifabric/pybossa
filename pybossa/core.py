@@ -19,6 +19,8 @@
 import os
 import logging
 import humanize
+from werkzeug.exceptions import Forbidden, Unauthorized, InternalServerError
+from werkzeug.exceptions import NotFound
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
@@ -28,7 +30,7 @@ from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
-from pybossa.util import pretty_date
+from pybossa.util import pretty_date, handle_content_type
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 
@@ -435,19 +437,27 @@ def setup_error_handlers(app):
     """Setup error handlers."""
     @app.errorhandler(404)
     def _page_not_found(e):
-        return render_template('404.html'), 404
+        response = dict(template='404.html', code=404,
+                        description=NotFound.description)
+        return handle_content_type(response)
 
     @app.errorhandler(500)
     def _server_error(e):  # pragma: no cover
-        return render_template('500.html'), 500
+        response = dict(template='500.html', code=500,
+                        description=InternalServerError.description)
+        return handle_content_type(response)
 
     @app.errorhandler(403)
     def _forbidden(e):
-        return render_template('403.html'), 403
+        response = dict(template='403.html', code=403,
+                        description=Forbidden.description)
+        return handle_content_type(response)
 
     @app.errorhandler(401)
     def _unauthorized(e):
-        return render_template('401.html'), 401
+        response = dict(template='401.html', code=401,
+                        description=Unauthorized.description)
+        return handle_content_type(response)
 
 
 def setup_hooks(app):

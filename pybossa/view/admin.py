@@ -32,7 +32,7 @@ from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
 
 from pybossa.model.category import Category
-from pybossa.util import admin_required, UnicodeWriter
+from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
@@ -66,7 +66,7 @@ def index():
     """List admin actions."""
     key = NOTIFY_ADMIN + str(current_user.id)
     sentinel.master.delete(key)
-    return render_template('/admin/index.html')
+    return handle_content_type(dict(template='/admin/index.html'))
 
 
 @blueprint.route('/featured')

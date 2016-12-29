@@ -467,3 +467,77 @@ Create a Project object:
 .. code-block:: bash
 
     curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myproject", "info":{"xyz":1}}' 'http://localhost:5000/api/project?api_key=API-KEY'
+
+PYBOSSA endpoints
+-----------------
+
+The following endpoints of PYBOSSA server can be requested setting the header *Content-Type* to *application/json* so you can retrieve the data using JavaScript.
+
+.. note::
+    If a key has the value **null** is because, that view is not populating that specific field. However, that value should be retrieved in a different one. Please, see all the documentation.
+
+Account index
+~~~~~~~~~~~~~
+
+**Endpoint: /account/page/<int:page>**
+
+It returns a JSON object with the following information:
+
+* **accounts**: this key holds the list of accounts for the given page.
+* **pagination**: this key holds the pagination information.
+* **top_users**: this key holds the top users (including the user if authenticated) with their rank and scores.
+* **update_feed**: the latest actions in the server (users created, contributions, new tasks, etc.).
+* **template**: the Jinja2 template that should be rendered in case of text/html.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "accounts": [
+        {
+          "created": "2015-06-10T15:02:38.411497",
+          "fullname": "Scifabric",
+          "info": {
+            "avatar": "avatar.png",
+            "container": "user_234234dd3"
+          },
+          "locale": null,
+          "name": "Scifabric",
+          "rank": null,
+          "registered_ago": "1 year ago",
+          "score": null,
+          "task_runs": 3
+        },
+      ],
+      "pagination": {
+        "next": true,
+        "page": 3,
+        "per_page": 24,
+        "prev": true,
+        "total": 11121
+      },
+      "template": "account/index.html",
+      "title": "Community",
+      "top_users": [
+        {
+          "created": "2014-08-17T18:28:56.738119",
+          "fullname": "Buzz Bot",
+          "info": {
+            "avatar": "avatar.png",
+            "container": "user_55"
+          },
+          "locale": null,
+          "name": "buzzbot",
+          "rank": 1,
+          "registered_ago": null,
+          "score": 54247,
+          "task_runs": null
+        },
+      ],
+      "total": 11121,
+      "update_feed": []
+    }
+
+

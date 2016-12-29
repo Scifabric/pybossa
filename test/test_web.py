@@ -190,6 +190,30 @@ class TestWeb(web.Helper):
         assert "Community" in res.data, err_msg
 
     @with_context
+    def test_03_account_index_json(self):
+        """Test WEB account index JSON works."""
+        # Without users
+        res = self.app.get('/account/page/15',
+                           content_type='application/json')
+        assert res.status_code == 404, res.status_code
+        data = json.loads(res.data)
+        assert data['code'] == 404, res.status_code
+
+        self.create()
+        res = self.app.get('/account/',
+                           content_type='application/json')
+        print res.data
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        err_msg = "There should be a Community page"
+        assert data['title'] == 'Community', err_msg
+        err_msg = "There should be a next, prev item in pagination"
+        assert data['pagination']['next'] is False, err_msg
+        assert data['pagination']['prev'] is False, err_msg
+        assert data['pagination']['per_page'] == 24, err_msg
+
+
+    @with_context
     def test_register_get(self):
         """Test WEB register user works"""
         res = self.app.get('/account/register')

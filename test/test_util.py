@@ -17,6 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util as util
 from mock import MagicMock
+from mock import patch
+from default import with_context
 from datetime import datetime, timedelta
 import calendar
 import time
@@ -24,6 +26,13 @@ import csv
 import tempfile
 import os
 import json
+
+
+def myjsonify(data):
+    return data
+
+def myrender(template, **data):
+    return template, data
 
 
 class TestPybossaUtil(object):
@@ -51,6 +60,117 @@ class TestPybossaUtil(object):
     #     assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
     #     headers = 'CONTENT-TYPE, AUTHORIZATION'
     #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res = util.handle_content_type(dict(template='example.html'))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_error(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res, code = util.handle_content_type(dict(template='example.html', code=404,
+                                            description="Not found"))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Error code should exist"
+        assert res.get('code') == 404, err_msg
+        assert code == 404, err_msg
+        err_msg = "Error description should exist"
+        assert res.get('description') is not None, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_form(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res = util.handle_content_type(dict(template='example.html',
+                                            form="A Form"))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Form should not exist"
+        assert res.get('form') is None, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_json_pagination(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        pagination = util.Pagination(page=1, per_page=5, total_count=10)
+        res = util.handle_content_type(dict(template='example.html',
+                                            pagination=pagination))
+        err_msg = "template key should exist"
+        assert res.get('template') == 'example.html', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "Pagination should exist"
+        assert res.get('pagination') is not None, err_msg
+        assert res.get('pagination') == pagination.to_json(), err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_html(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'text/html'
+        mockjsonify.side_effect = myjsonify
+        mockrender.side_effect = myrender
+        pagination = util.Pagination(page=1, per_page=5, total_count=10)
+        template, data = util.handle_content_type(dict(template='example.html',
+                                            pagination=pagination))
+        err_msg = "Template should be rendered"
+        assert template == 'example.html', err_msg
+        err_msg = "Template key should not exist"
+        assert data.get('template') is None, err_msg
+        err_msg = "jsonify should not be called"
+        assert mockjsonify.called is False, err_msg
+        err_msg = "render_template should be called"
+        assert mockrender.called is True, err_msg
+
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_handle_content_type_html_error(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'text/html'
+        mockjsonify.side_effect = myjsonify
+        mockrender.side_effect = myrender
+        template, code = util.handle_content_type(dict(template='example.html',
+                                                       code=404))
+        data = template[1]
+        template = template[0]
+        err_msg = "Template should be rendered"
+        assert template == 'example.html', err_msg
+        err_msg = "Template key should not exist"
+        assert data.get('template') is None, err_msg
+        err_msg = "jsonify should not be called"
+        assert mockjsonify.called is False, err_msg
+        err_msg = "render_template should be called"
+        assert mockrender.called is True, err_msg
+        err_msg = "There should be an error"
+        assert code == 404, err_msg
+        err_msg = "There should not be code key"
+        assert data.get('code') is None, err_msg
 
     def test_pretty_date(self):
         """Test pretty_date works."""
@@ -145,6 +265,15 @@ class TestPybossaUtil(object):
             err_msg = "It should return the page: %s" % page
             assert i == page, err_msg
             page += 1
+
+        err_msg = "It should return JSON"
+        expected = dict(page=page-1,
+                        per_page=per_page,
+                        total=total_count,
+                        next=False,
+                        prev=True)
+        assert expected == p.to_json(), err_msg
+
 
     def test_unicode_csv_reader(self):
         """Test unicode_csv_reader works."""

@@ -22,10 +22,34 @@ import csv
 import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
+from flask import render_template, jsonify
 from functools import wraps
 from flask.ext.login import current_user
 from math import ceil
 import json
+
+
+def handle_content_type(data):
+    """Return HTML or JSON based on request type."""
+    if request.headers['Content-Type'] == 'application/json':
+        if 'form' in data.keys():
+            del data['form']
+        if 'pagination' in data.keys():
+            pagination = data['pagination'].to_json()
+            data['pagination'] = pagination
+        if 'code' in data.keys():
+            return jsonify(data), data['code']
+        else:
+            return jsonify(data)
+    else:
+        template = data['template']
+        del data['template']
+        if 'code' in data.keys():
+            error_code = data['code']
+            del data['code']
+            return render_template(template, **data), error_code
+        else:
+            return render_template(template, **data)
 
 
 def jsonpify(f):
@@ -190,6 +214,14 @@ class Pagination(object):
                     yield None
                 yield num
                 last = num
+
+    def to_json(self):
+        """Return the object in JSON format."""
+        return dict(page=self.page,
+                    per_page=self.per_page,
+                    total=self.total_count,
+                    next=self.has_next,
+                    prev=self.has_prev)
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):

@@ -39,8 +39,8 @@ from rq import Queue
 import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
-from pybossa.util import Pagination
-from pybossa.util import get_user_signup_method
+from pybossa.util import Pagination, handle_content_type
+from pybossa.util import get_user_signup_method, handle_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -58,12 +58,8 @@ mail_queue = Queue('email', connection=sentinel.master)
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
-    """
-    Index page for all PyBossa registered users.
+    """Index page for all PYBOSSA registered users."""
 
-    Returns a Jinja2 rendered template with the users.
-
-    """
     update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
@@ -77,11 +73,12 @@ def index(page):
         user_id = None
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id)
-    return render_template('account/index.html', accounts=accounts,
-                           total=count,
-                           top_users=top_users,
-                           title="Community", pagination=pagination,
-                           update_feed=update_feed)
+    tmp = dict(template='account/index.html', accounts=accounts,
+               total=count,
+               top_users=top_users,
+               title="Community", pagination=pagination,
+               update_feed=update_feed)
+    return handle_content_type(tmp)
 
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
@@ -124,10 +121,12 @@ def signin():
             auth['facebook'] = True
         if ('google' in current_app.blueprints):  # pragma: no cover
             auth['google'] = True
-        return render_template('account/signin.html',
-                               title="Sign in",
-                               form=form, auth=auth,
-                               next=request.args.get('next'))
+        response = dict(template='account/signin.html',
+                        title="Sign in",
+                        form=form,
+                        auth=auth,
+                        next=request.args.get('next'))
+        return handle_content_type(response)
     else:
         # User already signed in, so redirect to home page
         return redirect(url_for("home.home"))

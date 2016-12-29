@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
 # Copyright (C) 2015 SciFabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
 from nose.tools import raises
@@ -29,8 +29,9 @@ from pybossa.model.task_run import TaskRun
 of model package."""
 
 
-
 class TestModelBase(Test):
+
+    """Test class for DomainObject methods."""
 
     @raises(NotImplementedError)
     @with_context
@@ -41,6 +42,52 @@ class TestModelBase(Test):
         d = user.dictize()
         user.undictize(d)
 
+    @with_context
+    def test_to_public_json(self):
+        """Test DomainObject to_public_json method works."""
+        user = User()
+        user.name = 'daniel'
+        user_dict = user.dictize()
+        json = user.to_public_json()
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+
+        json = user.to_public_json(data=user_dict)
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+
+    @with_context
+    def test_info_public_keys(self):
+        """Test DomainObject to_public_json method works."""
+        user = User()
+        user.name = 'daniel'
+        user.info = dict(container='3', avatar='img.png', token='secret')
+        user_dict = user.dictize()
+        json = user.to_public_json()
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        err_msg = "There should be info keys"
+        assert json['info']['container'] == '3', err_msg
+        assert json['info']['avatar'] == 'img.png', err_msg
+        err_msg = "This key should be missing"
+        assert json['info'].get('token') is None, err_msg
+
+        json = user.to_public_json(data=user_dict)
+        err_msg = "Wrong value"
+        assert json['name'] == user.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        err_msg = "There should be info keys"
+        assert json['info']['container'] == '3', err_msg
+        assert json['info']['avatar'] == 'img.png', err_msg
+        err_msg = "This key should be missing"
+        assert json['info'].get('token') is None, err_msg
 
     @with_context
     def test_all(self):
@@ -90,5 +137,3 @@ class TestModelBase(Test):
         outrun = out_task.task_runs[0]
         assert outrun.info['answer'] == task_run_info['answer'], outrun
         assert outrun.user.name == username, outrun
-
-

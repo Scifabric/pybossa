@@ -18,6 +18,7 @@
 
 from default import Test
 from pybossa.cache import users as cached_users
+from pybossa.model.user import User
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 from factories import reset_all_pk_sequences
@@ -236,9 +237,9 @@ class TestUsersCache(Test):
 
         leaderboard = cached_users.get_leaderboard(3)
 
-        assert leaderboard[0]['id'] == leader.id
-        assert leaderboard[1]['id'] == second.id
-        assert leaderboard[2]['id'] == third.id
+        assert leaderboard[0]['name'] == leader.name
+        assert leaderboard[1]['name'] == second.name
+        assert leaderboard[2]['name'] == third.name
 
 
     def test_get_leaderboard_includes_specific_user_even_is_not_in_top(self):
@@ -256,15 +257,14 @@ class TestUsersCache(Test):
         leaderboard = cached_users.get_leaderboard(3, user_id=user_out_of_top.id)
 
         assert len(leaderboard) is 4
-        assert leaderboard[-1]['id'] == user_out_of_top.id
+        assert leaderboard[-1]['name'] == user_out_of_top.name
 
 
     def test_get_leaderboard_returns_fields(self):
         """Test CACHE USERS get_leaderboard returns user fields"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
-        fields = ('rank', 'id', 'name', 'fullname', 'email_addr',
-                 'info', 'created', 'score')
+        fields = User.public_attributes()
 
         leaderboard = cached_users.get_leaderboard(1)
 
@@ -305,14 +305,13 @@ class TestUsersCache(Test):
         paginated_users = cached_users.get_users_page(page=2, per_page=1)
 
         assert len(paginated_users) == 1, paginated_users
-        assert paginated_users[0]['id'] == users[1].id
+        assert paginated_users[0]['name'] == users[1].name
 
 
     def test_get_users_page_returns_fields(self):
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
-        fields = ('id', 'name', 'fullname', 'email_addr', 'created',
-                  'task_runs', 'info', 'registered_ago')
+        fields = User.public_attributes()
 
         users = cached_users.get_users_page(1)
 
