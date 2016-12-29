@@ -52,7 +52,8 @@ def add_blog_event(mapper, conn, target):
     for r in results:
         obj['name'] = r.name
         obj['short_name'] = r.short_name
-        obj['info'] = r.info
+        # TODO: add only public info
+        # obj['info'] = r.info
     update_feed(obj)
     # Notify volunteers
     mail_queue.enqueue(notify_blog_users,
@@ -84,7 +85,8 @@ def add_task_event(mapper, conn, target):
     for r in results:
         obj['name'] = r.name
         obj['short_name'] = r.short_name
-        obj['info'] = r.info
+        # TODO: add only public info
+        # obj['info'] = r.info
     update_feed(obj)
 
 
