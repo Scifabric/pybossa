@@ -47,7 +47,7 @@ def add_blog_event(mapper, conn, target):
     obj = dict(id=target.project_id,
                name=None,
                short_name=None,
-               #info=None,
+               info=None,
                action_updated='Blog')
     for r in results:
         obj['name'] = r.name
@@ -80,7 +80,7 @@ def add_task_event(mapper, conn, target):
     obj = dict(id=target.project_id,
                name=None,
                short_name=None,
-               #info=None,
+               info=None,
                action_updated='Task')
     for r in results:
         obj['name'] = r.name
@@ -190,13 +190,14 @@ def on_taskrun_submit(mapper, conn, target):
                    name=None,
                    short_name=None,
                    published=False,
-                   #info=None,
+                   info=None,
                    webhook=None,
                    action_updated='TaskCompleted')
     for r in results:
         project_obj['name'] = r.name
         project_obj['short_name'] = r.short_name
         project_obj['published'] = r.published
+        # TODO: update with public data
         #project_obj['info'] = r.info
         project_obj['webhook'] = r.webhook
         project_obj['id'] = target.project_id
