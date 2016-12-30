@@ -51,7 +51,8 @@ requirements = [
     "Flask-Assets",
     "jsmin",
     "libsass",
-    "pyjwt"
+    "pyjwt",
+    "flask_json_multidict"
 ]
 
 setup(
