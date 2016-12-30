@@ -196,7 +196,7 @@ def register():
     Returns a Jinja2 template
 
     """
-    form = RegisterForm(request.form)
+    form = RegisterForm(request.body)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,
@@ -213,8 +213,10 @@ def register():
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
-    return render_template('account/register.html',
-                           title=gettext("Register"), form=form)
+        print form.errors
+    data = dict(template='account/register.html',
+                title=gettext("Register"), form=form)
+    return handle_content_type(data)
 
 
 @blueprint.route('/newsletter')
