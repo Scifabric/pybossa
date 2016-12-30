@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
 
 from rq import Queue
@@ -63,7 +63,7 @@ def add_blog_event(mapper, conn, target):
 
 @event.listens_for(Project, 'after_insert')
 def add_project_event(mapper, conn, target):
-    """Update PyBossa feed with new project."""
+    """Update PYBOSSA feed with new project."""
     obj = dict(id=target.id,
                name=target.name,
                short_name=target.short_name,
@@ -73,7 +73,7 @@ def add_project_event(mapper, conn, target):
 
 @event.listens_for(Task, 'after_insert')
 def add_task_event(mapper, conn, target):
-    """Update PyBossa feed with new task."""
+    """Update PYBOSSA feed with new task."""
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)

@@ -1,28 +1,28 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """
-PyBossa Account view for web projects.
+PYBOSSA Account view for web projects.
 
 This module exports the following endpoints:
-    * Accounts index: list of all registered users in PyBossa
-    * Signin: method for signin into PyBossa
-    * Signout: method for signout from PyBossa
-    * Register: method for creating a new PyBossa account
+    * Accounts index: list of all registered users in PYBOSSA
+    * Signin: method for signin into PYBOSSA
+    * Signout: method for signout from PYBOSSA
+    * Register: method for creating a new PYBOSSA account
     * Profile: method to manage user's profile (update data, reset password...)
 
 """
@@ -84,7 +84,7 @@ def index(page):
 @blueprint.route('/signin', methods=['GET', 'POST'])
 def signin():
     """
-    Signin method for PyBossa users.
+    Signin method for PYBOSSA users.
 
     Returns a Jinja2 template with the result of signing process.
 
@@ -143,9 +143,9 @@ def _sign_in_user(user):
 @blueprint.route('/signout')
 def signout():
     """
-    Signout PyBossa users.
+    Signout PYBOSSA users.
 
-    Returns a redirection to PyBossa home page.
+    Returns a redirection to PYBOSSA home page.
 
     """
     logout_user()
@@ -191,7 +191,7 @@ def confirm_email():
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """
-    Register method for creating a PyBossa account.
+    Register method for creating a PYBOSSA account.
 
     Returns a Jinja2 template
 
@@ -223,7 +223,7 @@ def register():
 @login_required
 def newsletter_subscribe():
     """
-    Register method for subscribing user to PyBossa newsletter.
+    Register method for subscribing user to PYBOSSA newsletter.
 
     Returns a Jinja2 template
 
