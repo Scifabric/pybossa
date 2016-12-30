@@ -20,12 +20,13 @@ import os
 import logging
 import humanize
 from werkzeug.exceptions import Forbidden, Unauthorized, InternalServerError
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack
 from flask.ext.login import current_user
 from flask.ext.babel import gettext
 from flask.ext.assets import Bundle
+from flask_json_multidict import get_json_multidict
 from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -70,6 +71,7 @@ def create_app(run_as_server=True):
     setup_jinja2_filters(app)
     setup_newsletter(app)
     setup_sse(app)
+    setup_json_serializer(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -95,6 +97,10 @@ def configure_app(app):
         print "Slave binds are misssing, adding Master as slave too."
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
+
+
+def setup_json_serializer(app):
+    app.json_encoder = JSONEncoder
 
 
 def setup_sse(app):
@@ -250,6 +256,8 @@ def setup_babel(app):
         if (lang is None or lang == '' or
                 lang.lower() not in locales):
             lang = app.config.get('DEFAULT_LOCALE') or 'en'
+        if request.headers['Content-Type'] == 'application/json':
+            lang = 'en'
         return lang.lower()
     return babel
 
@@ -435,6 +443,12 @@ def setup_jinja(app):
 
 def setup_error_handlers(app):
     """Setup error handlers."""
+    # @app.errorhandler(400)
+    # def _page_not_found(e):
+    #     response = dict(template='400.html', code=400,
+    #                     description=BadRequest.description)
+    #     return handle_content_type(response)
+
     @app.errorhandler(404)
     def _page_not_found(e):
         response = dict(template='404.html', code=404,
@@ -483,6 +497,10 @@ def setup_hooks(app):
             user = user_repo.get_by(api_key=apikey)
             if user:
                 _request_ctx_stack.top.user = user
+        # Handle forms
+        request.body = request.form
+        if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+            request.body = get_json_multidict(request)
 
     @app.context_processor
     def _global_template_context():
