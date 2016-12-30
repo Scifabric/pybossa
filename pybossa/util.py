@@ -23,6 +23,7 @@ import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
 from flask import render_template, jsonify
+from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
 from math import ceil
@@ -33,7 +34,10 @@ def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
         if 'form' in data.keys():
-            del data['form']
+            tmp = data['form']
+            data['form'] = tmp.data
+            data['form']['csrf'] = generate_csrf()
+            data['form']['errors'] = tmp.errors
         if 'pagination' in data.keys():
             pagination = data['pagination'].to_json()
             data['pagination'] = pagination
