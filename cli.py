@@ -125,7 +125,7 @@ def delete_hard_bounces():
 
 def bootstrap_avatars():
     """Download current links from user avatar and projects to real images hosted in the
-    PyBossa server."""
+    PYBOSSA server."""
     import requests
     import os
     import time
