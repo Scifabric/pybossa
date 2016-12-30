@@ -31,9 +31,9 @@ class Helper(Test):
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
         if title is None:
-            return "<title>PYBOSSA - PYBOSSA by Scifabric</title>"
+            return "<title>PYBOSSA - PyBossa by Scifabric</title>"
         else:
-            return "<title>PYBOSSA &middot; %s - PYBOSSA by Scifabric</title>" % title
+            return "<title>PYBOSSA &middot; %s - PyBossa by Scifabric</title>" % title
 
     @patch('pybossa.view.account.signer')
     def register(self, mock, fullname="John Doe", name="johndoe",
