@@ -54,7 +54,7 @@ class TestEngageUsers(Test):
         """Test JOB get inactive users returns a list of jobs."""
 
         today = datetime.datetime.today()
-        old_date = today - datetime.timedelta(days=120)
+        old_date = today - datetime.timedelta(days=30)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
         if calendar.isleap(today.year):
             n_days_year = 366
@@ -63,10 +63,11 @@ class TestEngageUsers(Test):
         one_year = today - datetime.timedelta(days=n_days_year)
         one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
         user = UserFactory.create()
-        # 3 months old contribution
+        user_recent = UserFactory.create()
+        # 1 month old contribution
         tr = TaskRunFactory.create(finish_time=date_str)
         # 1 year old contribution
-        TaskRunFactory.create(finish_time=one_year_str)
+        tr_year = TaskRunFactory.create(finish_time=one_year_str)
         # User with a contribution from a long time ago
         TaskRunFactory.create(finish_time="2010-08-08T18:23:45.714110",
                               user=user)
@@ -80,13 +81,12 @@ class TestEngageUsers(Test):
             jobs.append(job)
 
         msg = "There should be one job."
-        print jobs
-        assert len(jobs) == 1,  msg
+        assert len(jobs) == 1, msg
         job = jobs[0]
         args = job['args'][0]
         assert job['queue'] == 'quaterly', job['queue']
         assert len(args['recipients']) == 1
-        assert args['recipients'][0] == user.email_addr, args['recipients'][0]
+        assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
         assert "UNSUBSCRIBE" in args['body']
         assert "Update" in args['html']
 

@@ -194,13 +194,10 @@ def get_inactive_users_jobs(queue='quaterly'):
     # First users that have participated once but more than 3 months ago
     sql = text('''SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
-               AND user_id NOT IN
-               (SELECT user_id FROM task_run WHERE user_id IS NOT NULL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - '3 month'::INTERVAL
-               GROUP BY task_run.user_id order by user_id)
+               >= NOW() - '12 month'::INTERVAL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - '1 year'::INTERVAL
+               < NOW() - '3 month'::INTERVAL
                GROUP BY user_id ORDER BY user_id;''')
     results = db.slave_session.execute(sql)
     for row in results:
