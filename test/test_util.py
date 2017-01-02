@@ -97,17 +97,25 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_json_form(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.generate_csrf')
+    def test_handle_content_type_json_form(self, mockcsrf, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
+        mockcsrf.return_value = "yourcsrf"
+        form = MagicMock(data=dict(foo=1), errors=None)
         res = util.handle_content_type(dict(template='example.html',
-                                            form="A Form"))
+                                            form=form))
         err_msg = "template key should exist"
         assert res.get('template') == 'example.html', err_msg
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
-        err_msg = "Form should not exist"
-        assert res.get('form') is None, err_msg
+        err_msg = "Form should exist"
+        assert res.get('form'), err_msg
+        err_msg = "Form should have a csrf key/value"
+        assert res.get('form').get('csrf') == 'yourcsrf', err_msg
+        err_msg = "There should be the keys of the form"
+        keys = ['foo', 'errors', 'csrf']
+        assert res.get('form').keys().sort() == keys.sort(), err_msg
 
     @with_context
     @patch('pybossa.util.request')
