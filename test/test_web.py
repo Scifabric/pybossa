@@ -259,6 +259,24 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    def test_register_wrong_content_type(self):
+        """Test WEB Register JSON wrong content type."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=userdict,
+                                content_type='application/json')
+            print res.data
+            errors = json.loads(res.data)
+            err_msg = "The browser (or proxy) sent a request that this server could not understand."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
     def test_register_csrf_missing(self):
         """Test WEB Register JSON CSRF token missing."""
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
