@@ -213,7 +213,6 @@ def register():
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
-        print form.errors
     data = dict(template='account/register.html',
                 title=gettext("Register"), form=form)
     return handle_content_type(data)
