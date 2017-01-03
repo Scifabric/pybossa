@@ -32,6 +32,7 @@ requirements = [
     "redis>=2.9, <2.10",
     "sphinx>=1.2.2, <2.0",
     "coverage",
+    "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
     "pillow>=3.0, <3.1",
