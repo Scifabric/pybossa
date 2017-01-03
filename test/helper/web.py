@@ -23,6 +23,7 @@ from default import Test, db, Fixtures, with_context
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from werkzeug.http import parse_cookie
 
 
 class Helper(Test):
@@ -210,3 +211,13 @@ class Helper(Test):
                            content_type='application/json')
         csrf = json.loads(res.data).get('form').get('csrf')
         return csrf
+
+    def check_cookie(self, response, name):
+        # Checks for existence of a cookie and verifies the value of it
+        cookies = response.headers.getlist('Set-Cookie')
+        for cookie in cookies:
+            c_key, c_value = parse_cookie(cookie).items()[0]
+            if c_key == name:
+                return c_value
+        # Cookie not found
+        return False
