@@ -259,27 +259,63 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    def test_register_csrf_missing(self):
+        """Test WEB Register JSON CSRF token missing."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json')
+            errors = json.loads(res.data)
+            err_msg = "CSRF token missing or incorrect."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
+    def test_register_csrf_wrong(self):
+        """Test WEB Register JSON CSRF token wrong."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': 'wrong'})
+            errors = json.loads(res.data)
+            err_msg = "CSRF token missing or incorrect."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
     def test_register_json_errors_get(self):
         """Test WEB register errors JSON works"""
-        csrf = self.get_csrf('/account/register')
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
 
-        userdict = {'fullname': 'a', 'name': 'name',
-                    'email_addr': None, 'password': 'p'}
+            userdict = {'fullname': 'a', 'name': 'name',
+                        'email_addr': None, 'password': 'p'}
 
-        res = self.app.post('/account/register', data=json.dumps(userdict),
-                            content_type='application/json',
-                            headers={'X-CSRFToken': csrf})
-        # The output should have a mime-type: application/json
-        errors = json.loads(res.data).get('form').get('errors')
-        assert res.mimetype == 'application/json', res.data
-        err_msg = "There should be an error with the email"
-        assert errors.get('email_addr'), err_msg
-        err_msg = "There should be an error with fullname"
-        assert errors.get('fullname'), err_msg
-        err_msg = "There should be an error with password"
-        assert errors.get('password'), err_msg
-        err_msg = "There should NOT be an error with name"
-        assert errors.get('name') is None, err_msg
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            # The output should have a mime-type: application/json
+            errors = json.loads(res.data).get('form').get('errors')
+            assert res.mimetype == 'application/json', res.data
+            err_msg = "There should be an error with the email"
+            assert errors.get('email_addr'), err_msg
+            err_msg = "There should be an error with fullname"
+            assert errors.get('fullname'), err_msg
+            err_msg = "There should be an error with password"
+            assert errors.get('password'), err_msg
+            err_msg = "There should NOT be an error with name"
+            assert errors.get('name') is None, err_msg
 
 
     @with_context
@@ -320,7 +356,8 @@ class TestWeb(web.Helper):
         account validation is enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
-        csrf = self.get_csrf('/account/register')
+        # csrf = self.get_csrf('/account/register')
+        csrf = 2
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
@@ -330,6 +367,7 @@ class TestWeb(web.Helper):
                             content_type='application/json',
                             headers={'X-CSRFToken': csrf})
         print res.data
+        assert 1 == 0, res
         del data['confirm']
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
