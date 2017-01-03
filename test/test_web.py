@@ -222,6 +222,32 @@ class TestWeb(web.Helper):
         assert self.html_title("Register") in res.data, res
 
     @with_context
+    def test_register_get_json(self):
+        """Test WEB register JSON user works"""
+        from pybossa.forms.account_view_forms import RegisterForm
+        res = self.app.get('/account/register',
+                           content_type='application/json')
+        data = json.loads(res.data)
+
+        form = RegisterForm()
+        expected_fields = form.data.keys()
+
+        err_msg = "There should be a form"
+        assert data.get('form'), err_msg
+        for field in expected_fields:
+            err_msg = "%s form field is missing"
+            assert field in data.get('form').keys(), err_msg
+        err_msg = "There should be a CSRF field"
+        assert data.get('form').get('csrf'), err_msg
+        err_msg = "There should be no errors"
+        assert data.get('form').get('errors') == {}, err_msg
+        err_msg = "There should be a template field"
+        assert data.get('template') == 'account/register.html', err_msg
+        err_msg = "There should be a title"
+        assert data.get('title') == 'Register', err_msg
+
+
+    @with_context
     def test_register_errors_get(self):
         """Test WEB register errors works"""
         userdict = {'fullname': 'a', 'name': 'name',
