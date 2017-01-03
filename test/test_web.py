@@ -514,10 +514,13 @@ class TestWeb(web.Helper):
     def test_register_post_valid_data_validation_disabled(self, redirect):
         """Test WEB register post with valid form data and account validation
         disabled redirects to home page"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-        res = self.app.post('/account/register', data=data)
+        res = self.app.post('/account/register', data=data,
+                            follow_redirects=True)
         print dir(redirect)
         redirect.assert_called_with('/')
 
