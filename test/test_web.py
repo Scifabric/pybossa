@@ -259,6 +259,33 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    def test_register_json_errors_get(self):
+        """Test WEB register errors JSON works"""
+        # First get the CSRF token
+        res = self.app.get('/account/register',
+                           content_type='application/json')
+        csrf = json.loads(res.data).get('form').get('csrf')
+
+        userdict = {'fullname': 'a', 'name': 'name',
+                    'email_addr': None, 'password':'p'}
+
+        res = self.app.post('/account/register', data=json.dumps(userdict),
+                            content_type='application/json',
+                            headers={'X-CSRFToken': csrf})
+        # The output should have a mime-type: application/json
+        errors = json.loads(res.data).get('form').get('errors')
+        assert res.mimetype == 'application/json', res.data
+        err_msg = "There should be an error with the email"
+        assert errors.get('email_addr'), err_msg
+        err_msg = "There should be an error with fullname"
+        assert errors.get('fullname'), err_msg
+        err_msg = "There should be an error with password"
+        assert errors.get('password'), err_msg
+        err_msg = "There should NOT be an error with name"
+        assert errors.get('name') is None, err_msg
+
+
+    @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
