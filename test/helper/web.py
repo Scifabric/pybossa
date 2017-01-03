@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 from mock import patch
 
 from default import Test, db, Fixtures, with_context
@@ -202,3 +203,10 @@ class Helper(Test):
         else:
             return self.app.get("/project/%s/update" % short_name,
                                 follow_redirects=True)
+
+    def get_csrf(self, endpoint):
+        """Return csrf token for endpoint."""
+        res = self.app.get(endpoint,
+                           content_type='application/json')
+        csrf = json.loads(res.data).get('form').get('csrf')
+        return csrf

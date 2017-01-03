@@ -261,10 +261,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_register_json_errors_get(self):
         """Test WEB register errors JSON works"""
-        # First get the CSRF token
-        res = self.app.get('/account/register',
-                           content_type='application/json')
-        csrf = json.loads(res.data).get('form').get('csrf')
+        csrf = self.get_csrf('/account/register')
 
         userdict = {'fullname': 'a', 'name': 'name',
                     'email_addr': None, 'password':'p'}
@@ -313,6 +310,36 @@ class TestWeb(web.Helper):
         assert 'recipients' in mail_data.keys()
         assert 'body' in mail_data.keys()
         assert 'html' in mail_data.keys()
+
+    @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_post_json_creates_email_with_link(self, signer, render, queue):
+        """Test WEB register post JSON creates and sends the confirmation email if
+        account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        res = self.app.post('/account/register', data=data)
+        del data['confirm']
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_any_call('/account/email/validate_account.md',
+                               user=data,
+                               confirm_url='http://localhost/account/register/confirmation?key=')
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
+
 
     @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
