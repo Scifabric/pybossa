@@ -58,7 +58,7 @@ def create_app(run_as_server=True):
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
-    if run_as_server:
+    if run_as_server:  # pragma: no cover
         setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
