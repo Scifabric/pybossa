@@ -51,9 +51,12 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
-def redirect_content_type(url):
+def redirect_content_type(url, message=None):
+    data = dict(next=url)
+    if message is not None:
+        data['message'] = message
     if request.headers['Content-Type'] == 'application/json':
-        return handle_content_type(dict(next=url))
+        return handle_content_type(data)
     else:
         return redirect(url)
 

@@ -149,7 +149,7 @@ def signout():
     """
     logout_user()
     flash(gettext('You are now signed out'), 'success')
-    return redirect_content_type(url_for('home.home'))
+    return redirect_content_type(url_for('home.home'), message='success')
 
 
 def get_email_confirmation_url(account):
