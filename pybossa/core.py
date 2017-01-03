@@ -444,7 +444,7 @@ def setup_jinja(app):
 def setup_error_handlers(app):
     """Setup error handlers."""
     # @app.errorhandler(400)
-    # def _page_not_found(e):
+    # def _bad_request(e):
     #     response = dict(template='400.html', code=400,
     #                     description=BadRequest.description)
     #     return handle_content_type(response)
@@ -568,6 +568,12 @@ def setup_hooks(app):
             news=news,
             notify_admin=notify_admin,
             plugins=plugins)
+
+    @csrf.error_handler
+    def csrf_error_handler(reason):
+        response = dict(template='400.html', code=400,
+                        description=reason)
+        return handle_content_type(response)
 
 
 def setup_jinja2_filters(app):
