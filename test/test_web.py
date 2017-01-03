@@ -356,31 +356,29 @@ class TestWeb(web.Helper):
         account validation is enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
-        # csrf = self.get_csrf('/account/register')
-        csrf = 2
-        data = dict(fullname="John Doe", name="johndoe",
-                    password="p4ssw0rd", confirm="p4ssw0rd",
-                    email_addr="johndoe@example.com")
-        signer.dumps.return_value = ''
-        render.return_value = ''
-        res = self.app.post('/account/register', data=json.dumps(data),
-                            content_type='application/json',
-                            headers={'X-CSRFToken': csrf})
-        print res.data
-        assert 1 == 0, res
-        del data['confirm']
-        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe",
+                        password="p4ssw0rd", confirm="p4ssw0rd",
+                        email_addr="johndoe@example.com")
+            signer.dumps.return_value = ''
+            render.return_value = ''
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            del data['confirm']
+            current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
-        signer.dumps.assert_called_with(data, salt='account-validation')
-        render.assert_any_call('/account/email/validate_account.md',
-                               user=data,
-                               confirm_url='http://localhost/account/register/confirmation?key=')
-        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
-        mail_data = queue.enqueue.call_args[0][1]
-        assert 'subject' in mail_data.keys()
-        assert 'recipients' in mail_data.keys()
-        assert 'body' in mail_data.keys()
-        assert 'html' in mail_data.keys()
+            signer.dumps.assert_called_with(data, salt='account-validation')
+            render.assert_any_call('/account/email/validate_account.md',
+                                   user=data,
+                                   confirm_url='http://localhost/account/register/confirmation?key=')
+            assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+            mail_data = queue.enqueue.call_args[0][1]
+            assert 'subject' in mail_data.keys()
+            assert 'recipients' in mail_data.keys()
+            assert 'body' in mail_data.keys()
+            assert 'html' in mail_data.keys()
 
 
     @with_context
