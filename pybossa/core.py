@@ -499,7 +499,8 @@ def setup_hooks(app):
                 _request_ctx_stack.top.user = user
         # Handle forms
         request.body = request.form
-        if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+        if (request.method == 'POST' and
+                request.headers['Content-Type'] == 'application/json'):
             request.body = get_json_multidict(request)
 
     @app.context_processor
