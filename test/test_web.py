@@ -264,7 +264,7 @@ class TestWeb(web.Helper):
         csrf = self.get_csrf('/account/register')
 
         userdict = {'fullname': 'a', 'name': 'name',
-                    'email_addr': None, 'password':'p'}
+                    'email_addr': None, 'password': 'p'}
 
         res = self.app.post('/account/register', data=json.dumps(userdict),
                             content_type='application/json',
@@ -320,12 +320,16 @@ class TestWeb(web.Helper):
         account validation is enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        csrf = self.get_csrf('/account/register')
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
         signer.dumps.return_value = ''
         render.return_value = ''
-        res = self.app.post('/account/register', data=data)
+        res = self.app.post('/account/register', data=json.dumps(data),
+                            content_type='application/json',
+                            headers={'X-CSRFToken': csrf})
+        print res.data
         del data['confirm']
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
