@@ -199,7 +199,6 @@ def register():
     try:
         form = RegisterForm(request.body)
         if request.method == 'POST' and form.validate():
-            print "HOLA"
             account = dict(fullname=form.fullname.data, name=form.name.data,
                            email_addr=form.email_addr.data,
                            password=form.password.data)
