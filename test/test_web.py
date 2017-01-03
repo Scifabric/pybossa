@@ -418,6 +418,40 @@ class TestWeb(web.Helper):
         assert user.email_addr != 'new@email.com', msg
 
     @with_context
+    def test_register_json(self):
+        """Test WEB register JSON creates a new user and logs in."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe", password='daniel',
+                        email_addr="new@mail.com", confirm='daniel')
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf},
+                                follow_redirects=False)
+            cookie = self.check_cookie(res, 'remember_token')
+            err_msg = "User should be logged in"
+            assert "johndoe" in cookie, err_msg
+
+    @with_context
+    def test_register_json_error(self):
+        """Test WEB register JSON does not create a new user
+        and does not log in."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe", password='daniel',
+                        email_addr="new@mailcom", confirm='')
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf},
+                                follow_redirects=False)
+            cookie = self.check_cookie(res, 'remember_token')
+            err_msg = "User should not be logged in"
+            assert cookie is False, err_msg
+            errors = json.loads(res.data)
+            assert errors.get('form').get('errors').get('password'), err_msg
+
+
+    @with_context
     def test_confirm_email_returns_404(self):
         """Test WEB confirm_email returns 404 when disabled."""
         res = self.app.get('/account/confir-email', follow_redirects=True)
