@@ -172,6 +172,19 @@ class TestPybossaUtil(object):
         err_msg = "There should not be code key"
         assert data.get('code') is None, err_msg
 
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_redirect_content_type_json(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res = util.redirect_content_type('http://next.uri')
+        err_msg = "next URI is wrong in redirction"
+        assert res.get('next') == 'http://next.uri', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
