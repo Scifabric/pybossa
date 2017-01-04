@@ -196,29 +196,26 @@ def register():
     Returns a Jinja2 template
 
     """
-    try:
-        form = RegisterForm(request.body)
-        if request.method == 'POST' and form.validate():
-            account = dict(fullname=form.fullname.data, name=form.name.data,
-                           email_addr=form.email_addr.data,
-                           password=form.password.data)
-            confirm_url = get_email_confirmation_url(account)
-            if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
-                return _create_account(account)
-            msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
-                       recipients=[account['email_addr']],
-                       body=render_template('/account/email/validate_account.md',
-                                            user=account, confirm_url=confirm_url))
-            msg['html'] = markdown(msg['body'])
-            mail_queue.enqueue(send_mail, msg)
-            return render_template('account/account_validation.html')
-        if request.method == 'POST' and not form.validate():
-            flash(gettext('Please correct the errors'), 'error')
-        data = dict(template='account/register.html',
-                    title=gettext("Register"), form=form)
-        return handle_content_type(data)
-    except TypeError:
-        return abort(400)
+    form = RegisterForm(request.body)
+    if request.method == 'POST' and form.validate():
+        account = dict(fullname=form.fullname.data, name=form.name.data,
+                       email_addr=form.email_addr.data,
+                       password=form.password.data)
+        confirm_url = get_email_confirmation_url(account)
+        if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
+            return _create_account(account)
+        msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
+                   recipients=[account['email_addr']],
+                   body=render_template('/account/email/validate_account.md',
+                                        user=account, confirm_url=confirm_url))
+        msg['html'] = markdown(msg['body'])
+        mail_queue.enqueue(send_mail, msg)
+        return render_template('account/account_validation.html')
+    if request.method == 'POST' and not form.validate():
+        flash(gettext('Please correct the errors'), 'error')
+    data = dict(template='account/register.html',
+                title=gettext("Register"), form=form)
+    return handle_content_type(data)
 
 
 @blueprint.route('/newsletter')
