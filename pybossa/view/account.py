@@ -583,7 +583,7 @@ def forgot_password():
     Returns a Jinja2 template.
 
     """
-    form = ForgotPasswordForm(request.form)
+    form = ForgotPasswordForm(request.body)
     if form.validate_on_submit():
         user = user_repo.get_by(email_addr=form.email_addr.data)
         if user and user.email_addr:
@@ -633,6 +633,8 @@ def forgot_password():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Something went wrong, please correct the errors on the '
               'form'), 'error')
+    data = dict(template='/account/password_forgot.html',
+                form=form)
     return render_template('/account/password_forgot.html', form=form)
 
 
