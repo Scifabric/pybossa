@@ -233,13 +233,21 @@ class TestApiCommon(TestAPI):
 
     def test_cors(self):
         """Test CORS decorator works."""
-        res = self.app.get('/api/project/1')
+        res = self.app.options('/api/project/1',
+                           headers={'Access-Control-Request-Method': 'GET',
+                                    'Access-Control-Request-Headers': 'Authorization',
+                           })
         err_msg = "CORS should be enabled"
-        print res.headers
         assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
         methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
         for m in methods:
+            err_msg = "Access-Control-Allow-Methods: %s is missing" % m
             assert m in res.headers['Access-Control-Allow-Methods'], err_msg
         assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
-        headers = 'CONTENT-TYPE, AUTHORIZATION'
-        assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+        test_headers = ['Content-Type', 'Authorization']
+        for header in test_headers:
+            err_msg = "Access-Control-Allow-Headers: %s is missing" % header
+            headers={'Access-Control-Request-Method': 'GET',
+                     'Access-Control-Request-Headers': header}
+            res = self.app.options('/api/project/1', headers=headers)
+            assert res.headers['Access-Control-Allow-Headers'] == header, err_msg
