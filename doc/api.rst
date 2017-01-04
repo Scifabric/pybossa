@@ -541,3 +541,9 @@ It returns a JSON object with the following information:
     }
 
 
+**Endpoint: /account/signout**
+
+It returns a JSON object with the following information:
+
+* **next**: suggested redirection after the sign out.
+* **message**: message displaying `success` for sign out.
