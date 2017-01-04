@@ -481,6 +481,10 @@ Account index
 
 **Endpoint: /account/page/<int:page>**
 
+*Allowed methods*: **GET**
+
+**GET**
+
 It returns a JSON object with the following information:
 
 * **accounts**: this key holds the list of accounts for the given page.
@@ -540,4 +544,75 @@ It returns a JSON object with the following information:
       "update_feed": []
     }
 
+Account registration
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/register**
 
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **form**: The form fields that need to be sent for creating an account. It contains the CSRF token for validating the POST, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title of the page.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "form": {
+        "confirm": null,
+        "csrf": "token,"
+        "email_addr": null,
+        "errors": {},
+        "fullname": null,
+        "name": null,
+        "password": null
+      },
+      "template": "account/register.html",
+      "title": "Register"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **next**: URL that you JavaScript can follow as a redirect. It is not mandatory.
+
+**Example output**
+
+.. code-block:: python
+    {
+        "next":"/about"
+    }
+
+
+If there's an error in the form fields, you will get them in the **form.errors** key:
+
+.. code-block:: python
+
+    {
+      "form": {
+        "confirm": "daniel",
+        "csrf": "token",
+        "email_addr": "daniel",
+        "errors": {
+          "email_addr": [
+            "Invalid email address."
+          ],
+          "name": [
+            "The user name is already taken"
+          ]
+        },
+        "fullname": "daniel",
+        "name": "daniel",
+        "password": "daniel"
+      },
+      "template": "account/register.html",
+      "title": "Register"
+    }
