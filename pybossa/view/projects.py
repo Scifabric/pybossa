@@ -219,6 +219,7 @@ def draft(page):
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
+@login_required
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
     return project_index(page, cached_projects.get_all, category, False, True)
@@ -529,6 +530,7 @@ def update(short_name):
 
 
 @blueprint.route('/<short_name>/')
+@login_required
 def details(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
@@ -758,6 +760,7 @@ def password_required(short_name):
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
+@login_required
 def task_presenter(short_name, task_id):
     project, owner, ps = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
@@ -813,6 +816,7 @@ def task_presenter(short_name, task_id):
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
+@login_required
 def presenter(short_name):
 
     def invite_new_volunteers(project, ps):
@@ -888,6 +892,7 @@ def tutorial(short_name):
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
+@login_required
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
@@ -911,6 +916,7 @@ def export(short_name, task_id):
 
 
 @blueprint.route('/<short_name>/tasks/')
+@login_required
 def tasks(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
@@ -949,6 +955,7 @@ def tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
+@login_required
 def tasks_browse(short_name, page=1):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
@@ -1031,6 +1038,7 @@ def delete_tasks(short_name):
 
 
 @blueprint.route('/<short_name>/tasks/export')
+@login_required
 @admin_or_subadmin_required
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
@@ -1170,6 +1178,7 @@ def export_to(short_name):
 
 
 @blueprint.route('/<short_name>/stats')
+@login_required
 def show_stats(short_name):
     """Returns Project Stats"""
     project, owner, ps = project_by_shortname(short_name)
