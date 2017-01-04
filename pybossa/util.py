@@ -34,6 +34,10 @@ def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
         data['flash'] = get_flashed_messages()
+        if len(data['flash']) > 0:
+            data['flash'] = data['flash'][-1]
+        else:
+            data['flash'] = None
         if 'form' in data.keys():
             tmp = data['form']
             data['form'] = tmp.data
