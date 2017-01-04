@@ -107,6 +107,15 @@ ITSDANGEROUSKEY_.
 .. _ITSDANGEROUSKEY: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L35
 .. _`It's dangerous`: http://pythonhosted.org/itsdangerous/
 
+CORS configuration
+==================
+
+By default PYBOSSA has the api endpoints configured with **Access-Control-Allow-Origin: ***. However, you can change it to whatever you want via the config file. Take a look into the
+official documentation for `Flask-CORS` for all the available options.
+
+.. _`Flask-CORS`: https://flask-cors.readthedocs.io/en/latest/
+
+
 Modifying the Brand name
 ========================
 

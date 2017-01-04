@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import current_app
 from flask_wtf import Form
@@ -245,7 +245,7 @@ class GenericBulkTaskImportForm(object):
 
 class LoginForm(Form):
 
-    """Login Form class for signin into PyBossa."""
+    """Login Form class for signin into PYBOSSA."""
 
     email = TextField(lazy_gettext('E-mail'),
                       [validators.Required(
@@ -259,7 +259,7 @@ class LoginForm(Form):
 
 class RegisterForm(Form):
 
-    """Register Form Class for creating an account in PyBossa."""
+    """Register Form Class for creating an account in PYBOSSA."""
 
     err_msg = lazy_gettext("Full name must be between 3 and %(fullname)s "
                            "characters long", fullname=USER_FULLNAME_MAX_LENGTH)
@@ -296,7 +296,7 @@ class RegisterForm(Form):
 
 class UpdateProfileForm(Form):
 
-    """Form Class for updating PyBossa's user Profile."""
+    """Form Class for updating PYBOSSA's user Profile."""
 
     id = IntegerField(label=None, widget=HiddenInput())
 

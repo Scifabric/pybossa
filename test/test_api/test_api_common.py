@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from default import with_context
 from nose.tools import assert_equal, assert_raises
@@ -233,13 +233,21 @@ class TestApiCommon(TestAPI):
 
     def test_cors(self):
         """Test CORS decorator works."""
-        res = self.app.get('/api/project/1')
+        res = self.app.options('/api/project/1',
+                           headers={'Access-Control-Request-Method': 'GET',
+                                    'Access-Control-Request-Headers': 'Authorization',
+                           })
         err_msg = "CORS should be enabled"
-        print res.headers
         assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
         methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
         for m in methods:
+            err_msg = "Access-Control-Allow-Methods: %s is missing" % m
             assert m in res.headers['Access-Control-Allow-Methods'], err_msg
         assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
-        headers = 'CONTENT-TYPE, AUTHORIZATION'
-        assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+        test_headers = ['Content-Type', 'Authorization']
+        for header in test_headers:
+            err_msg = "Access-Control-Allow-Headers: %s is missing" % header
+            headers={'Access-Control-Request-Method': 'GET',
+                     'Access-Control-Request-Headers': header}
+            res = self.app.options('/api/project/1', headers=headers)
+            assert res.headers['Access-Control-Allow-Headers'] == header, err_msg

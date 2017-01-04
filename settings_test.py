@@ -20,7 +20,7 @@ MAIL_USERNAME = None
 MAIL_PASSWORD = None
 MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
-MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
+MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
 ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
@@ -37,7 +37,7 @@ MAIL_USERNAME = None
 MAIL_PASSWORD = None
 MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
-MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
+MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
 ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'zip']
 UPLOAD_FOLDER = '/tmp/'
 UPLOAD_METHOD = 'local'

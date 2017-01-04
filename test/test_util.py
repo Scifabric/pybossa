@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util as util
 from mock import MagicMock
 from mock import patch
@@ -97,17 +97,25 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_json_form(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.generate_csrf')
+    def test_handle_content_type_json_form(self, mockcsrf, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
+        mockcsrf.return_value = "yourcsrf"
+        form = MagicMock(data=dict(foo=1), errors=None)
         res = util.handle_content_type(dict(template='example.html',
-                                            form="A Form"))
+                                            form=form))
         err_msg = "template key should exist"
         assert res.get('template') == 'example.html', err_msg
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
-        err_msg = "Form should not exist"
-        assert res.get('form') is None, err_msg
+        err_msg = "Form should exist"
+        assert res.get('form'), err_msg
+        err_msg = "Form should have a csrf key/value"
+        assert res.get('form').get('csrf') == 'yourcsrf', err_msg
+        err_msg = "There should be the keys of the form"
+        keys = ['foo', 'errors', 'csrf']
+        assert res.get('form').keys().sort() == keys.sort(), err_msg
 
     @with_context
     @patch('pybossa.util.request')
@@ -562,3 +570,20 @@ class TestRankProjects(object):
         assert ranked[2]['name'] == 'third', ranked[2]['name']
         assert ranked[3]['name'] == 'fourth', ranked[3]['name']
         assert ranked[4]['name'] == 'last', ranked[4]['name']
+
+class TestJSONEncoder(object):
+
+    def test_jsonencoder(self):
+        """Test JSON encoder."""
+        from pybossa.extensions import JSONEncoder
+        from speaklater import make_lazy_string
+        encoder = JSONEncoder()
+        sval = "Hello world"
+        string = make_lazy_string(lambda: sval)
+
+        encoder = JSONEncoder()
+
+        data = encoder.encode(dict(foo=string))
+        data = json.loads(data)
+        err_msg = "The encoder should manage lazystrings"
+        assert data.get('foo') == sval, err_msg

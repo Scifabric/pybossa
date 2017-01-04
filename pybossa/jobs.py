@@ -1,21 +1,21 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""Jobs module for running background tasks in PyBossa server."""
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+"""Jobs module for running background tasks in PYBOSSA server."""
 from datetime import datetime
 import math
 import requests
@@ -80,7 +80,7 @@ def enqueue_job(job):
     return True
 
 def enqueue_periodic_jobs(queue_name):
-    """Enqueue all PyBossa periodic jobs."""
+    """Enqueue all PYBOSSA periodic jobs."""
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
@@ -194,13 +194,10 @@ def get_inactive_users_jobs(queue='quaterly'):
     # First users that have participated once but more than 3 months ago
     sql = text('''SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
-               AND user_id NOT IN
-               (SELECT user_id FROM task_run WHERE user_id IS NOT NULL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - '3 month'::INTERVAL
-               GROUP BY task_run.user_id order by user_id)
+               >= NOW() - '12 month'::INTERVAL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - '1 year'::INTERVAL
+               < NOW() - '3 month'::INTERVAL
                GROUP BY user_id ORDER BY user_id;''')
     results = db.slave_session.execute(sql)
     for row in results:

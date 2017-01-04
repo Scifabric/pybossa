@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import project_repo
 from pybossa.jobs import warn_old_project_owners, get_non_updated_projects
@@ -87,7 +87,7 @@ class TestOldProjects(Test):
             warn_old_project_owners()
             project = project_repo.get(project_id)
             assert len(outbox) == 1, outbox
-            subject = 'Your PyBossa project: %s has been inactive' % project.name
+            subject = 'Your PYBOSSA project: %s has been inactive' % project.name
             assert outbox[0].subject == subject
             err_msg = "project.contacted field should be True"
             assert project.contacted, err_msg
@@ -122,7 +122,7 @@ class TestOldProjects(Test):
 
             warn_old_project_owners()
             assert len(outbox) == 1, outbox
-            subject = 'Your PyBossa project: %s has been inactive' % project.name
+            subject = 'Your PYBOSSA project: %s has been inactive' % project.name
             assert outbox[0].subject == subject
             err_msg = "project.contacted field should be True"
             assert project.contacted, err_msg

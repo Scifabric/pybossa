@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, with_context, flask_app
 from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
@@ -43,7 +43,7 @@ class TestImportTasksJob(Test):
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PYBOSSA team.' % project.name
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
@@ -59,7 +59,7 @@ class TestImportTasksJob(Test):
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         project = ProjectFactory.create(info=dict(autoimporter=form_data))
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PYBOSSA team.' % project.name
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
@@ -76,7 +76,7 @@ class TestImportTasksJob(Test):
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         project = ProjectFactory.create(info=dict(autoimporter=form_data))
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PYBOSSA team.' % project.name
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 

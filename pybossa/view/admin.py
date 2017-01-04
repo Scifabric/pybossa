@@ -1,21 +1,21 @@
 # -* -coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""Admin view for PyBossa."""
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+"""Admin view for PYBOSSA."""
 from rq import Queue
 from flask import Blueprint
 from flask import render_template
@@ -74,7 +74,7 @@ def index():
 @login_required
 @admin_required
 def featured(project_id=None):
-    """List featured projects of PyBossa."""
+    """List featured projects of PYBOSSA."""
     try:
         if request.method == 'GET':
             categories = cached_cat.get_all()
@@ -121,7 +121,7 @@ def featured(project_id=None):
 @login_required
 @admin_required
 def users(user_id=None):
-    """Manage users of PyBossa."""
+    """Manage users of PYBOSSA."""
     form = SearchForm(request.form)
     users = [user for user in user_repo.filter_by(admin=True)
              if user.id != current_user.id]
@@ -368,7 +368,7 @@ def update_category(id):
 @login_required
 @admin_required
 def dashboard():
-    """Show PyBossa Dashboard."""
+    """Show PYBOSSA Dashboard."""
     try:
         if request.args.get('refresh') == '1':
             db_jobs = get_dashboard_jobs()
