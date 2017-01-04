@@ -32,6 +32,7 @@ requirements = [
     "redis>=2.9, <2.10",
     "sphinx>=1.2.2, <2.0",
     "coverage",
+    "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
     "pillow>=3.0, <3.1",
@@ -51,7 +52,9 @@ requirements = [
     "Flask-Assets",
     "jsmin",
     "libsass",
-    "pyjwt"
+    "pyjwt",
+    "flask_json_multidict",
+    "flask-cors>=3.0.2, <3.0.3"
 ]
 
 setup(
@@ -65,16 +68,16 @@ setup(
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
     dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
-                        'git+https://github.com/PyBossa/rq-dashboard.git#egg=rq-dashboard'],
+                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard'],
 
     # metadata for upload to PyPI
-    author = 'SciFabric LTD',
+    author = 'Scifabric LTD',
     author_email = 'info@scifabric.com',
     description = 'Open Source CrowdSourcing framework',
-    long_description = '''PyBossa is an open source crowdsourcing solution for volunteer computing, thinking and sensing ''',
+    long_description = '''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
     license = 'AGPLv3',
     url = 'http://pybossa.com',
-    download_url = 'https://github.com/PyBossa/pybossa',
+    download_url = 'https://github.com/Scifabric/pybossa',
     include_package_data = True,
     classifiers = [
         'Development Status :: 5 - Production/Stable',

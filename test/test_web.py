@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
 import os
@@ -63,7 +63,7 @@ class TestWeb(web.Helper):
     def test_01_index(self):
         """Test WEB home page works"""
         res = self.app.get("/", follow_redirects=True)
-        assert self.html_title() in res.data, res
+        assert self.html_title() in res.data, res.data
         assert "Create" in res.data, res
 
     @with_context
@@ -222,6 +222,32 @@ class TestWeb(web.Helper):
         assert self.html_title("Register") in res.data, res
 
     @with_context
+    def test_register_get_json(self):
+        """Test WEB register JSON user works"""
+        from pybossa.forms.account_view_forms import RegisterForm
+        res = self.app.get('/account/register',
+                           content_type='application/json')
+        data = json.loads(res.data)
+
+        form = RegisterForm()
+        expected_fields = form.data.keys()
+
+        err_msg = "There should be a form"
+        assert data.get('form'), err_msg
+        for field in expected_fields:
+            err_msg = "%s form field is missing"
+            assert field in data.get('form').keys(), err_msg
+        err_msg = "There should be a CSRF field"
+        assert data.get('form').get('csrf'), err_msg
+        err_msg = "There should be no errors"
+        assert data.get('form').get('errors') == {}, err_msg
+        err_msg = "There should be a template field"
+        assert data.get('template') == 'account/register.html', err_msg
+        err_msg = "There should be a title"
+        assert data.get('title') == 'Register', err_msg
+
+
+    @with_context
     def test_register_errors_get(self):
         """Test WEB register errors works"""
         userdict = {'fullname': 'a', 'name': 'name',
@@ -230,6 +256,84 @@ class TestWeb(web.Helper):
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
         assert "correct the errors" in res.data, res.data
+
+
+    @with_context
+    def test_register_wrong_content_type(self):
+        """Test WEB Register JSON wrong content type."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=userdict,
+                                content_type='application/json')
+            print res.data
+            errors = json.loads(res.data)
+            err_msg = "The browser (or proxy) sent a request that this server could not understand."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
+    def test_register_csrf_missing(self):
+        """Test WEB Register JSON CSRF token missing."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json')
+            errors = json.loads(res.data)
+            err_msg = "CSRF token missing or incorrect."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
+    def test_register_csrf_wrong(self):
+        """Test WEB Register JSON CSRF token wrong."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            userdict = {'fullname': 'a', 'name': 'name',
+                       'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': 'wrong'})
+            errors = json.loads(res.data)
+            err_msg = "CSRF token missing or incorrect."
+            assert errors.get('description') == err_msg, err_msg
+            err_msg = "Error code should be 400"
+            assert errors.get('code') == 400, err_msg
+            assert res.status_code == 400, err_msg
+
+
+    @with_context
+    def test_register_json_errors_get(self):
+        """Test WEB register errors JSON works"""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+
+            userdict = {'fullname': 'a', 'name': 'name',
+                        'email_addr': None, 'password': 'p'}
+
+            res = self.app.post('/account/register', data=json.dumps(userdict),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            # The output should have a mime-type: application/json
+            errors = json.loads(res.data).get('form').get('errors')
+            assert res.mimetype == 'application/json', res.data
+            err_msg = "There should be an error with the email"
+            assert errors.get('email_addr'), err_msg
+            err_msg = "There should be an error with fullname"
+            assert errors.get('fullname'), err_msg
+            err_msg = "There should be an error with password"
+            assert errors.get('password'), err_msg
+            err_msg = "There should NOT be an error with name"
+            assert errors.get('name') is None, err_msg
 
 
     @with_context
@@ -260,6 +364,40 @@ class TestWeb(web.Helper):
         assert 'recipients' in mail_data.keys()
         assert 'body' in mail_data.keys()
         assert 'html' in mail_data.keys()
+
+    @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_post_json_creates_email_with_link(self, signer, render, queue):
+        """Test WEB register post JSON creates and sends the confirmation email if
+        account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe",
+                        password="p4ssw0rd", confirm="p4ssw0rd",
+                        email_addr="johndoe@example.com")
+            signer.dumps.return_value = ''
+            render.return_value = ''
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            del data['confirm']
+            current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+
+            signer.dumps.assert_called_with(data, salt='account-validation')
+            render.assert_any_call('/account/email/validate_account.md',
+                                   user=data,
+                                   confirm_url='http://localhost/account/register/confirmation?key=')
+            assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+            mail_data = queue.enqueue.call_args[0][1]
+            assert 'subject' in mail_data.keys()
+            assert 'recipients' in mail_data.keys()
+            assert 'body' in mail_data.keys()
+            assert 'html' in mail_data.keys()
+
 
     @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
@@ -296,6 +434,40 @@ class TestWeb(web.Helper):
         assert user.valid_email is False, msg
         msg = "Email should remain not updated, as it's not been validated"
         assert user.email_addr != 'new@email.com', msg
+
+    @with_context
+    def test_register_json(self):
+        """Test WEB register JSON creates a new user and logs in."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe", password='daniel',
+                        email_addr="new@mail.com", confirm='daniel')
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf},
+                                follow_redirects=False)
+            cookie = self.check_cookie(res, 'remember_token')
+            err_msg = "User should be logged in"
+            assert "johndoe" in cookie, err_msg
+
+    @with_context
+    def test_register_json_error(self):
+        """Test WEB register JSON does not create a new user
+        and does not log in."""
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            csrf = self.get_csrf('/account/register')
+            data = dict(fullname="John Doe", name="johndoe", password='daniel',
+                        email_addr="new@mailcom", confirm='')
+            res = self.app.post('/account/register', data=json.dumps(data),
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf},
+                                follow_redirects=False)
+            cookie = self.check_cookie(res, 'remember_token')
+            err_msg = "User should not be logged in"
+            assert cookie is False, err_msg
+            errors = json.loads(res.data)
+            assert errors.get('form').get('errors').get('password'), err_msg
+
 
     @with_context
     def test_confirm_email_returns_404(self):
@@ -360,10 +532,13 @@ class TestWeb(web.Helper):
     def test_register_post_valid_data_validation_disabled(self, redirect):
         """Test WEB register post with valid form data and account validation
         disabled redirects to home page"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-        res = self.app.post('/account/register', data=data)
+        res = self.app.post('/account/register', data=data,
+                            follow_redirects=True)
         print dir(redirect)
         redirect.assert_called_with('/')
 

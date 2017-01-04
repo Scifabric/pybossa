@@ -1,22 +1,22 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """
-This module exports all the extensions used by PyBossa.
+This module exports all the extensions used by PYBOSSA.
 
 The objects are:
     * sentinel: for caching data, ratelimiting, etc.
@@ -39,7 +39,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
-           'plugin_manager', 'assets']
+           'plugin_manager', 'assets', 'JSONEncoder', 'cors']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -126,3 +126,18 @@ plugin_manager = PluginManager()
 
 from flask.ext.assets import Environment
 assets = Environment()
+
+from flask.json import JSONEncoder as BaseEncoder
+from speaklater import _LazyString
+
+class JSONEncoder(BaseEncoder): # pragma: no cover
+    """JSON Encoder to deal with Babel lazy strings."""
+    def default(self, o):
+        if isinstance(o, _LazyString):
+            return str(o)
+
+        return BaseEncoder.default(self, o)
+
+# CORS
+from flask_cors import CORS
+cors = CORS()

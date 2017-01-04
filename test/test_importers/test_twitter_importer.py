@@ -1,20 +1,20 @@
 # -*- coding: utf8 -*-
-# This file is part of PyBossa.
+# This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 SciFabric LTD.
+# Copyright (C) 2015 Scifabric LTD.
 #
-# PyBossa is free software: you can redistribute it and/or modify
+# PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBossa is distributed in the hope that it will be useful,
+# PYBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from mock import patch, Mock
@@ -293,7 +293,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
         return {
             u'contributors': None,
             u'truncated': False,
-            u'text': u'Burning news! PyBossa v1.2.1 released! This version gets all new @PyBossa releases in your admin page! https://t.co/WkOXc3YL6s',
+            u'text': u'Burning news! PYBOSSA v1.2.1 released! This version gets all new @PYBOSSA releases in your admin page! https://t.co/WkOXc3YL6s',
             u'is_quote_status': False,
             u'in_reply_to_status_id': None,
             u'id': _id,
@@ -336,11 +336,11 @@ class TestBulkTaskTwitterImportFromAccount(object):
                 u'geo_enabled': True,
                 u'profile_banner_url': u'https://pbs.twimg.com/profile_banners/497181885/1401885123',
                 u'profile_background_image_url': u'http://abs.twimg.com/images/themes/theme1/bg.png',
-                u'screen_name': u'PyBossa',
+                u'screen_name': u'PYBOSSA',
                 u'lang': u'en',
                 u'profile_background_tile': False,
                 u'favourites_count': 185,
-                u'name': u'PyBossa',
+                u'name': u'PYBOSSA',
                 u'notifications': False,
                 u'url': u'http://t.co/ASSBcIRZjY',
                 u'created_at': u'Sun Feb 19 18:17:39 +0000 2012',
