@@ -570,3 +570,20 @@ class TestRankProjects(object):
         assert ranked[2]['name'] == 'third', ranked[2]['name']
         assert ranked[3]['name'] == 'fourth', ranked[3]['name']
         assert ranked[4]['name'] == 'last', ranked[4]['name']
+
+class TestJSONEncoder(object):
+
+    def test_jsonencoder(self):
+        """Test JSON encoder."""
+        from pybossa.extensions import JSONEncoder
+        from speaklater import make_lazy_string
+        encoder = JSONEncoder()
+        sval = "Hello world"
+        string = make_lazy_string(lambda: sval)
+
+        encoder = JSONEncoder()
+
+        data = encoder.encode(dict(foo=string))
+        data = json.loads(data)
+        err_msg = "The encoder should manage lazystrings"
+        assert data.get('foo') == sval, err_msg
