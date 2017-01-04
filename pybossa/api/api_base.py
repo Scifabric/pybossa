@@ -73,7 +73,7 @@ class APIBase(MethodView):
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
-    def options(self):  # pragma: no cover
+    def options(self, **kwargs):  # pragma: no cover
         """Return '' for Options method."""
         return ''
 
