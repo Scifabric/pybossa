@@ -635,7 +635,7 @@ def forgot_password():
               'form'), 'error')
     data = dict(template='/account/password_forgot.html',
                 form=form)
-    return render_template('/account/password_forgot.html', form=form)
+    return handle_content_type(data)
 
 
 @blueprint.route('/<name>/resetapikey', methods=['POST'])
