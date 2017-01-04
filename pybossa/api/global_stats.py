@@ -22,12 +22,12 @@ This package adds GET method for Global Stats.
 
 """
 import json
-from api_base import APIBase, cors_headers
+from api_base import APIBase
 from flask import Response
 import pybossa.cache.site_stats as stats
 import pybossa.cache.projects as cached_projects
 import pybossa.cache.categories as cached_categories
-from pybossa.util import jsonpify, crossdomain
+from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
 from werkzeug.exceptions import MethodNotAllowed
 
@@ -42,7 +42,6 @@ class GlobalStatsAPI(APIBase):
     """
 
     @jsonpify
-    @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=300, per=15 * 60)
     def get(self, oid=None):
         """Return global stats."""

@@ -53,7 +53,8 @@ requirements = [
     "jsmin",
     "libsass",
     "pyjwt",
-    "flask_json_multidict"
+    "flask_json_multidict",
+    "flask-cors>=3.0.2, <3.0.3"
 ]
 
 setup(

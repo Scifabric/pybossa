@@ -34,7 +34,7 @@ import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
+from pybossa.util import jsonpify, get_user_id_or_ip
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -57,13 +57,10 @@ from pybossa.auth import jwt_authorize_project
 
 blueprint = Blueprint('api', __name__)
 
-cors_headers = ['Content-Type', 'Authorization']
-
 error = ErrorStatus()
 
 
 @blueprint.route('/')
-@crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def index():  # pragma: no cover
     """Return dummy text for welcome page."""
@@ -105,7 +102,6 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 @jsonpify
 @blueprint.route('/app/<project_id>/newtask')
 @blueprint.route('/project/<project_id>/newtask')
-@crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
@@ -167,7 +163,6 @@ def _retrieve_new_task(project_id):
 @blueprint.route('/project/<short_name>/userprogress')
 @blueprint.route('/app/<int:project_id>/userprogress')
 @blueprint.route('/project/<int:project_id>/userprogress')
-@crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def user_progress(project_id=None, short_name=None):
     """API endpoint for user progress.
@@ -204,7 +199,6 @@ def user_progress(project_id=None, short_name=None):
 
 @jsonpify
 @blueprint.route('/auth/project/<short_name>/token')
-@crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def auth_jwt_project(short_name):
     """Create a JWT for a project via its secret KEY."""

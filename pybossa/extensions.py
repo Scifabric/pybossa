@@ -39,7 +39,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
-           'plugin_manager', 'assets', 'JSONEncoder']
+           'plugin_manager', 'assets', 'JSONEncoder', 'cors']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -137,3 +137,7 @@ class JSONEncoder(BaseEncoder): # pragma: no cover
             return str(o)
 
         return BaseEncoder.default(self, o)
+
+# CORS
+from flask_cors import CORS
+cors = CORS()

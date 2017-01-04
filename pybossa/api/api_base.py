@@ -31,7 +31,7 @@ from flask import request, abort, Response
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-from pybossa.util import jsonpify, crossdomain
+from pybossa.util import jsonpify
 from pybossa.core import ratelimits
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
@@ -58,8 +58,6 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         }
 
 
-cors_headers = ['Content-Type', 'Authorization']
-
 error = ErrorStatus()
 
 
@@ -75,13 +73,11 @@ class APIBase(MethodView):
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
-    @crossdomain(origin='*', headers=cors_headers)
     def options(self):  # pragma: no cover
         """Return '' for Options method."""
         return ''
 
     @jsonpify
-    @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
         """Get an object.
@@ -193,7 +189,6 @@ class APIBase(MethodView):
         return limit, offset
 
     @jsonpify
-    @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
         """Post an item to the DB with the request.data JSON object.
@@ -227,7 +222,6 @@ class APIBase(MethodView):
         return inst
 
     @jsonpify
-    @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, oid):
         """Delete a single item from the DB.
@@ -263,7 +257,6 @@ class APIBase(MethodView):
         return inst
 
     @jsonpify
-    @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def put(self, oid):
         """Update a single item in the DB.

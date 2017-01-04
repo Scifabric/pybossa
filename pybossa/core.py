@@ -72,6 +72,7 @@ def create_app(run_as_server=True):
     setup_newsletter(app)
     setup_sse(app)
     setup_json_serializer(app)
+    setup_cors(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -102,6 +103,9 @@ def configure_app(app):
 def setup_json_serializer(app):
     app.json_encoder = JSONEncoder
 
+
+def setup_cors(app):
+    cors.init_app(app, resources=app.config.get('CORS_RESOURCES'))
 
 def setup_sse(app):
     if app.config['SSE']:
