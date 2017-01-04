@@ -200,6 +200,21 @@ class TestPybossaUtil(object):
         err_msg = "message should exist"
         assert res.get('message') == 'hallo123', err_msg
 
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_redirect_content_type_json_html(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'text/html'
+        mockjsonify.side_effect = myjsonify
+        res = util.redirect_content_type('/')
+        err_msg = "redirect 302 should be the response"
+        assert res.status_code == 302, err_msg
+        err_msg = "redirect to / should be done"
+        assert res.location == "/", err_msg
+        err_msg = "jsonify should not be called"
+        assert mockjsonify.called is False, err_msg
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
