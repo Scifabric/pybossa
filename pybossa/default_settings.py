@@ -126,3 +126,9 @@ PRO_FEATURES = {
     'autoimporter':          True,
     'better_stats':          True
 }
+
+CORS_RESOURCES = {r"/api/*": {"origins": "*",
+                              "allow_headers": ['Content-Type',
+                                                'Authorization'],
+                              "methods": "*"
+                              }}
