@@ -444,11 +444,13 @@ class TestWeb(web.Helper):
     @with_context
     def test_contribution_time_shown_in_pro_owned_projects(self):
         pro_owner = UserFactory.create(pro=True)
+        pro_owner.set_password('1234')
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
         update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
+        self.signin(email=pro_owner.email_addr, password='1234')
         res = self.app.get(pro_url)
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' in res.data
@@ -1638,12 +1640,16 @@ class TestWeb(web.Helper):
     @with_context
     def test_05a_get_nonexistant_app(self):
         """Test WEB get not existant project should return 404"""
+        self.register()
+        self.signin()
         res = self.app.get('/project/nonapp', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
     def test_05b_get_nonexistant_app_newtask(self):
         """Test WEB get non existant project newtask should return 404"""
+        self.register()
+        self.signin()
         res = self.app.get('/project/noapp/presenter', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         res = self.app.get('/project/noapp/newtask', follow_redirects=True)
@@ -1916,6 +1922,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_05d_get_nonexistant_app_task(self):
         """Test WEB get non existant project task should return 404"""
+        self.register()
+        self.signin()
         res = self.app.get('/project/noapp/task', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Pagination
@@ -1935,6 +1943,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_05d_get_nonexistant_app_results_json(self):
         """Test WEB get non existant project results json should return 404"""
+        self.register()
+        self.signin()
         res = self.app.get('/project/noapp/24/results.json', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
@@ -1950,6 +1960,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_06_applications_2(self):
         """Test WEB projects index with projects"""
+        self.register()
+        self.signin()
         self.create()
 
         res = self.app.get('/project/category/featured', follow_redirects=True)
@@ -2585,8 +2597,6 @@ class TestWeb(web.Helper):
             db.session.commit()
             self.app.get('api/project/%s/newtask' % project.id)
 
-        self.signout()
-
         project = db.session.query(Project).first()
 
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
@@ -2643,7 +2653,6 @@ class TestWeb(web.Helper):
         task = Task(project_id=project.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
-        self.signout()
 
         project = db.session.query(Project).first()
 
@@ -2729,6 +2738,9 @@ class TestWeb(web.Helper):
         category = CategoryFactory.create(name='category', short_name='cat')
         for project in ProjectFactory.create_batch(2, category=category):
             TaskFactory.create(project=project)
+        admin_user = UserFactory.create(admin=True)
+        admin_user.set_password('1234')
+        self.signin(email=admin_user.email_addr, password='1234')
         page1 = self.app.get('/project/category/%s/' % category.short_name)
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
@@ -2748,11 +2760,11 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         project.published = True
         db.session.commit()
-        self.signout()
+        #self.signout()
 
         res = self.app.get('project/category/featured', follow_redirects=True)
         assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
-        assert "draft" not in res.data, res.data
+        assert "Draft" in res.data, res.data
         assert "Sample Project" in res.data, res.data
 
     @with_context
@@ -2844,9 +2856,10 @@ class TestWeb(web.Helper):
                  .first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        assert 'TaskPresenter' in res.data, res.data
-        msg = "?next=%2Fproject%2F" + project.short_name + "%2Ftask%2F" + str(task.id)
-        assert msg in res.data, res.data
+        #commented as anonymous access is disabled for GIGwork
+        #assert 'TaskPresenter' in res.data, res.data
+        #msg = "?next=%2Fproject%2F" + project.short_name + "%2Ftask%2F" + str(task.id)
+        #assert msg in res.data, res.data
 
         # Try with only registered users
         project.allow_anonymous_contributors = False
@@ -2854,7 +2867,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        assert "sign in to participate" in res.data
+        assert "sign in" in res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous_json(self):
@@ -2938,6 +2951,7 @@ class TestWeb(web.Helper):
         guard.return_value = fake_guard_instance
         self.create()
         self.register()
+        self.signin()
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
@@ -2979,7 +2993,6 @@ class TestWeb(web.Helper):
         self.new_task(app2.id)
         task2 = db.session.query(Task).filter(Task.project_id == 2).first()
         task2_id = task2.id
-        self.signout()
 
         res = self.app.get('/project/%s/task/%s' % (project1_short_name, task2_id))
         assert "Error" in res.data, res.data
@@ -3030,6 +3043,7 @@ class TestWeb(web.Helper):
         project1.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         self.register()
+        self.signin()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
@@ -3077,6 +3091,8 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).get(1)
         project.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
+        self.register()
+        self.signin()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
@@ -3124,6 +3140,7 @@ class TestWeb(web.Helper):
         project.info = dict(task_presenter="the real presenter")
         db.session.commit()
         self.register()
+        self.signin()
         # First time accessing the project should show the presenter
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         err_msg = "There should be a presenter for the project"
@@ -3134,7 +3151,8 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_29_non_tutorial_anonymous_user(self):
-        """Test WEB project without tutorials work as an anonymous user"""
+        """Test WEB project without tutorials work as an anonymous user. Disabled for GIGwork"""
+        '''
         self.create()
         project = db.session.query(Project).get(1)
         project.info = dict(task_presenter="the real presenter")
@@ -3146,6 +3164,7 @@ class TestWeb(web.Helper):
         # Second time accessing the project should show the presenter
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         assert "the real presenter" in res.data, err_msg
+        '''
 
     @with_context
     def test_message_is_flashed_contributing_to_project_without_presenter(self):
@@ -3205,8 +3224,6 @@ class TestWeb(web.Helper):
         self.signout()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
-        assert "Sample Project" in res.data, ("Project name should be shown"
-                                              " to users")
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in \
             res.data, "Project ID should be shown to the owner"
 
@@ -5939,9 +5956,9 @@ class TestWeb(web.Helper):
 
         # All users are allowed to participate by default
         # As Anonymous user
-        res = self.app.get(url, follow_redirects=True)
-        err_msg = "The anonymous user should be able to participate"
-        assert project.name in res.data, err_msg
+        #res = self.app.get(url, follow_redirects=True)
+        #err_msg = "The anonymous user should be able to participate"
+        #assert project.name in res.data, err_msg
 
         # As registered user
         self.register()
@@ -5960,8 +5977,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % project.name
-        assert msg in res.data, err_msg
+        assert "sign in" in res.data, err_msg
 
         # As registered user
         res = self.signin()
@@ -5976,7 +5992,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Only authenticated users can participate"
-        assert "You have to sign in" in res.data, err_msg
+        assert "sign in" in res.data, err_msg
 
     @with_context
     def test_70_public_user_profile(self):
