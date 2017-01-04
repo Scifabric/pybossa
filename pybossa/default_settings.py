@@ -130,5 +130,5 @@ PRO_FEATURES = {
 CORS_RESOURCES = {r"/api/*": {"origins": "*",
                               "allow_headers": ['Content-Type',
                                                 'Authorization'],
-                              "methods": "*"
+                              "max_age": 21600
                               }}
