@@ -47,7 +47,7 @@ class UserAPI(APIBase):
 
     # Attributes that are visible only for admins or everyone if the user
     # has privacy_mode disabled
-    allowed_attributes = ('name', 'locale', 'fullname', 'created')
+    allowed_attributes = public_attributes + ('fullname', 'created')
 
     def _select_attributes(self, user_data):
         if current_user.is_authenticated() and current_user.admin:
