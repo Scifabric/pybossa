@@ -670,6 +670,7 @@ def _import_tasks(project, **form_data):
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def setup_autoimporter(short_name):
     pro = pro_features()
     if not pro['autoimporter_enabled']:
@@ -722,6 +723,7 @@ def setup_autoimporter(short_name):
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
 @login_required
+@admin_required
 def delete_autoimporter(short_name):
     pro = pro_features()
     if not pro['autoimporter_enabled']:
@@ -893,6 +895,7 @@ def tutorial(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 @login_required
+@admin_or_subadmin_required
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
@@ -1615,6 +1618,7 @@ def update_blogpost(short_name, id):
 
 @blueprint.route('/<short_name>/<int:id>/delete', methods=['POST'])
 @login_required
+@admin_required
 def delete_blogpost(short_name, id):
     project = project_by_shortname(short_name)[0]
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
