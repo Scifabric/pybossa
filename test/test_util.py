@@ -185,6 +185,21 @@ class TestPybossaUtil(object):
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
 
+    @with_context
+    @patch('pybossa.util.request')
+    @patch('pybossa.util.render_template')
+    @patch('pybossa.util.jsonify')
+    def test_redirect_content_type_json_message(self, mockjsonify, mockrender, mockrequest):
+        mockrequest.headers.__getitem__.return_value = 'application/json'
+        mockjsonify.side_effect = myjsonify
+        res = util.redirect_content_type('http://next.uri', message='hallo123')
+        err_msg = "next URI is wrong in redirction"
+        assert res.get('next') == 'http://next.uri', err_msg
+        err_msg = "jsonify should be called"
+        assert mockjsonify.called, err_msg
+        err_msg = "message should exist"
+        assert res.get('message') == 'hallo123', err_msg
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
