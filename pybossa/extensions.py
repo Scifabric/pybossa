@@ -130,7 +130,8 @@ assets = Environment()
 from flask.json import JSONEncoder as BaseEncoder
 from speaklater import _LazyString
 
-class JSONEncoder(BaseEncoder):
+class JSONEncoder(BaseEncoder): # pragma: no cover
+    """JSON Encoder to deal with Babel lazy strings."""
     def default(self, o):
         if isinstance(o, _LazyString):
             return str(o)
