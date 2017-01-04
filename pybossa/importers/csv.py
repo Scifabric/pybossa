@@ -157,7 +157,6 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         while retry < 5:
             try:
                 csv_file = FileStorage(open(csv_filename, 'r'))
-                current_app.logger.info('LOCAL_CSV_UPLOAD: csv_file: {0}'.format(csv_file))
                 break
             except IOError, e:
                 time.sleep(1)
