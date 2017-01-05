@@ -22,7 +22,7 @@ import csv
 import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
-from flask import render_template, jsonify, get_flashed_messages
+from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
@@ -65,6 +65,14 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
+def redirect_content_type(url, message=None):
+    data = dict(next=url)
+    if message is not None:
+        data['message'] = message
+    if request.headers['Content-Type'] == 'application/json':
+        return handle_content_type(data)
+    else:
+        return redirect(url)
 
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""

@@ -40,7 +40,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
-from pybossa.util import get_user_signup_method, handle_content_type
+from pybossa.util import get_user_signup_method, handle_content_type, redirect_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -129,8 +129,7 @@ def signin():
         return handle_content_type(response)
     else:
         # User already signed in, so redirect to home page
-        return redirect(url_for("home.home"))
-
+        return redirect_content_type(url_for("home.home"))
 
 def _sign_in_user(user):
     login_user(user, remember=True)
@@ -150,7 +149,7 @@ def signout():
     """
     logout_user()
     flash(gettext('You are now signed out'), 'success')
-    return redirect(url_for('home.home'))
+    return redirect_content_type(url_for('home.home'), message='success')
 
 
 def get_email_confirmation_url(account):

@@ -710,6 +710,20 @@ class TestWeb(web.Helper):
         assert self.html_title("Profile") in res.data, res
         assert "Welcome back %s" % "John Doe" in res.data, res
 
+
+    @with_context
+    def test_05_test_signout_json(self):
+        """Test WEB signout works with json."""
+        res = self.app.get('/account/signout',
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        err_msg = "next URI is wrong in redirction"
+        assert data['next'] == '/', err_msg
+        err_msg = "success message missing"
+        assert data['message'] == 'success', err_msg
+
+
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_profile_applications(self, mock):
