@@ -21,26 +21,36 @@ from pybossa.model import make_timestamp
 
 class ContributionsGuard(object):
 
-    KEY_PREFIX = 'pybossa:task_requested:user:%s:task:%s'
+    KEY_PREFIX = 'pybossa:task_requested:user:{0}:task:{1}'
+    PRESENTED_KEY_PREFIX = 'pybossa:task_presented:user:{0}:task:{1}'
     STAMP_TTL = 60 * 60
 
     def __init__(self, redis_conn):
         self.conn = redis_conn
 
+
+    # Task requested guards
+
     def stamp(self, task, user):
+        """Cache the time that a task was requested by a client
+        for a given user.
+        """
         key = self._create_key(task, user)
         self.conn.setex(key, self.STAMP_TTL, make_timestamp())
 
     def check_task_stamped(self, task, user):
+        """Check if a task was requested by a user."""
         key = self._create_key(task, user)
         task_requested = self.conn.get(key) is not None
         return task_requested
 
     def retrieve_timestamp(self, task, user):
+        """Get the cached timestamp for a task requested by a user."""
         key = self._create_key(task, user)
         return self.conn.get(key)
 
     def _create_key(self, task, user):
+        """Create a Redis key for a given task and a user."""
         user_id = user['user_id'] or user['user_ip']
         if user.get('external_uid'):
             user_id = user['external_uid']
@@ -49,3 +59,31 @@ class ContributionsGuard(object):
     def _remove_task_stamped(self, task, user):
         key = self._create_key(task, user)
         return self.conn.delete(key)
+
+
+    # Task presented guards
+
+    def stamp_presented_time(self, task, user):
+        """Cache the time that a task was presented on a client."""
+        key = self._create_presented_time_key(task, user)
+        self.conn.setex(key, self.STAMP_TTL, make_timestamp())
+
+    def check_task_presented_stamped(self, task, user):
+        """Check if a task was presented to a user."""
+        key = self._create_presented_time_key(task, user)
+        task_presented = self.conn.get(key) is not None
+        return task_presented
+
+    def retrieve_presented_timestamp(self, task, user):
+        """Get the cached timestamp for a task presented to a user."""
+        key = self._create_presented_time_key(task, user)
+        return self.conn.get(key)
+
+    def _create_presented_time_key(self, task, user):
+        """Create a Redis key for the presented time of a given task
+        to a given user. user must have a user_id. We only cache
+        presented time for users with a user_id to prevent calling
+        /cachePresentedTime directly.
+        """
+        user_id = user['user_id'] or None
+        return self.PRESENTED_KEY_PREFIX.format(user_id, task)
