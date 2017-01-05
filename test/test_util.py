@@ -233,13 +233,13 @@ class TestPybossaUtil(object):
     def test_redirect_content_type_json_message(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
-        res = util.redirect_content_type('http://next.uri', message='hallo123')
+        res = util.redirect_content_type('http://next.uri', status='hallo123')
         err_msg = "next URI is wrong in redirction"
         assert res.get('next') == 'http://next.uri', err_msg
         err_msg = "jsonify should be called"
         assert mockjsonify.called, err_msg
-        err_msg = "message should exist"
-        assert res.get('message') == 'hallo123', err_msg
+        err_msg = "status should exist"
+        assert res.get('status') == 'hallo123', err_msg
 
     @with_context
     @patch('pybossa.util.request')
