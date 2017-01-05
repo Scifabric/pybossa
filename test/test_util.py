@@ -79,6 +79,7 @@ class TestPybossaUtil(object):
         err_msg = "It should be None"
         assert msg is None, err_msg
 
+
     @with_context
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
@@ -97,7 +98,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_json_error(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_handle_content_type_json_error(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res, code = util.handle_content_type(dict(template='example.html', code=404,
@@ -117,7 +119,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.generate_csrf')
-    def test_handle_content_type_json_form(self, mockcsrf, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_handle_content_type_json_form(self, mocklast, mockcsrf, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         mockcsrf.return_value = "yourcsrf"
@@ -140,7 +143,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_json_pagination(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_handle_content_type_json_pagination(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
