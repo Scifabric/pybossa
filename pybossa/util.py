@@ -38,16 +38,20 @@ def last_flashed_message():
     else:
         return None
 
+def form_to_json(form):
+    """Return a form in JSON format."""
+    tmp = form.data
+    tmp['errors'] = form.errors
+    tmp['csrf'] = generate_csrf()
+    return tmp
+
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
         data['flash'] = last_flashed_message()
         if 'form' in data.keys():
-            tmp = data['form']
-            data['form'] = tmp.data
-            data['form']['csrf'] = generate_csrf()
-            data['form']['errors'] = tmp.errors
+            data['form'] = form_to_json(data['form'])
         if 'pagination' in data.keys():
             pagination = data['pagination'].to_json()
             data['pagination'] = pagination
