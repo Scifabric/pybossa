@@ -616,3 +616,70 @@ If there's an error in the form fields, you will get them in the **form.errors**
       "template": "account/register.html",
       "title": "Register"
     }
+
+Account recover password
+~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/forgot-password**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **form**: the form fields that need to be sent for creating an account. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "form": {
+        "csrf": "token,"
+        "email_addr": null
+      },
+      "template": "account/password_forgot.html"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": [
+        "We don't have this email in our records. You may have signed up with a different email or used Twitter, Facebook, or Google to sign-in"
+      ],
+      "form": {
+        "csrf": "1483549683.06##cc1c7ff101b2a14a89cac5462e5028e6235ddb31",
+        "email_addr": "algo@algo.com",
+        "errors": {}
+      },
+      "template": "/account/password_forgot.html"
+    }
+
+If there's an error in the form fields, you will get them in the **form.errors** key:
+
+.. code-block:: python
+
+    {
+      "flash": "Something went wrong, please correct the errors on the form",
+      "form": {
+        "csrf": "1483552042.97##f0e36b1b113934532ff9c8003b120365ff45f5e4",
+        "email_addr": "algoom",
+        "errors": {
+          "email_addr": [
+            "Invalid email address."
+          ]
+        }
+      },
+      "template": "/account/password_forgot.html"
+    }

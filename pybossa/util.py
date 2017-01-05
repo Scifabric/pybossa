@@ -22,7 +22,7 @@ import csv
 import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
-from flask import render_template, jsonify
+from flask import render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
@@ -30,9 +30,19 @@ from math import ceil
 import json
 
 
+def last_flashed_message():
+    """Return last flashed message by flask."""
+    messages = get_flashed_messages()
+    if len(messages) > 0:
+        return messages[-1]
+    else:
+        return None
+
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
+        data['flash'] = last_flashed_message()
         if 'form' in data.keys():
             tmp = data['form']
             data['form'] = tmp.data
