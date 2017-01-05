@@ -617,6 +617,17 @@ If there's an error in the form fields, you will get them in the **form.errors**
       "title": "Register"
     }
 
+Account sign out
+~~~~~~~~~~~~~~~~
+**Endpoint: /account/signout**
+
+*Allowed methods*: **GET**
+
+It returns a JSON object with the following information:
+
+* **next**: suggested redirection after the sign out.
+* **message**: message displaying `success` for sign out.
+
 Account recover password
 ~~~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /account/forgot-password**
