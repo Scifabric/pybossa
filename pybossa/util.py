@@ -39,6 +39,7 @@ def last_flashed_message():
     else:
         return None
 
+
 def form_to_json(form):
     """Return a form in JSON format."""
     tmp = form.data
