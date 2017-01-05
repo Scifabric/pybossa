@@ -202,6 +202,48 @@ def _retrieve_new_task(project_id):
 
 
 @jsonpify
+@blueprint.route('/app/<task_id>/cachePresentedTime')
+@blueprint.route('/task/<task_id>/cachePresentedTime')
+@crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def cache_presented_time(task_id):
+    """Cache presented time to Redis."""
+
+    # 'force' set to False since we do not want to overwrite
+    # the presented time on browser reloads or accidental logouts.
+    set_cache_presented_time(task_id, force=False)
+    return Response(json.dumps({}), mimetype="application/json")
+
+def set_cache_presented_time(task_id, force=False):
+    """Cache in Redis the initial datetime that a task was presented to a user.
+    If force=True, cache will be updated if there is no key or an existing key.
+    If force=False, cache will only be updated if no key exists.
+    """
+    guard = ContributionsGuard(sentinel.master)
+
+    # usr can only be a registered user with a user_id
+    usr = get_user_id_or_ip()['user_id'] or None
+
+    # Only set cache if usr is not None so that the cache cannot be set by calling the API directly.
+    # Set presented_time value if presented_time_key does not exist yet.
+    # The presented time cannot be reset until it times out. 
+    # This will eliminate the ability for someone to manipulate the presented time
+    # to make it look like they spent less time on a task than they actually did.
+    # Besides user manipulation, if guards against browser reloads and accidental logouts.
+    # This is an appropriate solution since we do not have complete information
+    # regarding whether or not a user actually looked at a task before a browser reload,
+    # logout or timeout.
+    if usr is not None and not guard.check_task_presented_stamped(task_id, get_user_id_or_ip()):
+        guard.stamp_presented_time(task_id, get_user_id_or_ip())
+
+    # Only overwrite an existing presented_time_value if force = True.
+    # This should ONLY be used if there is no way for a user to take advantage
+    # of this feature to manuipulate the presented time.
+    elif force == True:
+        guard.stamp_presented_time(task_id, get_user_id_or_ip())
+
+
+@jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/project/<short_name>/userprogress')
 @blueprint.route('/app/<int:project_id>/userprogress')
