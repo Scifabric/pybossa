@@ -22,13 +22,41 @@ This module exports the following variables:
     * SUCCESS
     * ERROR
     * WARNING
+    * FORBIDDEN
+    * NOTFOUND
+    * BADREQUEST
+    * INTERNALSERVERERROR
+    * NOTFOUND
+    * UNAUTHORIZED
 
 """
+from werkzeug.exceptions import Forbidden, Unauthorized, InternalServerError
+from werkzeug.exceptions import NotFound, BadRequest
 
-__all__ = ['SUCCESS', 'ERROR', 'WARNING']
+__all__ = ['SUCCESS', 'ERROR', 'WARNING', 'FORBIDDEN', 'NOTFOUND', 'BADREQUEST',
+           'NOTFOUND', 'INTERNALSERVERERROR', 'UNAUTHORIZED']
 
 SUCCESS = "success"
 
 ERROR = "error"
 
 WARNING = "warning"
+
+FORBIDDEN = Forbidden.description
+
+NOTFOUND = NotFound.description
+
+BADREQUEST = BadRequest.description
+
+INTERNALSERVERERROR = InternalServerError.description
+
+UNAUTHORIZED = Unauthorized.description
+
+assert SUCCESS
+assert ERROR
+assert WARNING
+assert FORBIDDEN
+assert NOTFOUND
+assert BADREQUEST
+assert INTERNALSERVERERROR
+assert UNAUTHORIZED
