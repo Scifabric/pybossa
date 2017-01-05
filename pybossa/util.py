@@ -18,6 +18,7 @@
 """Module with PYBOSSA utils."""
 from datetime import timedelta, datetime
 from functools import update_wrapper
+from flask_wtf import Form
 import csv
 import codecs
 import cStringIO
@@ -50,11 +51,11 @@ def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
         data['flash'] = last_flashed_message()
-        if 'form' in data.keys():
-            data['form'] = form_to_json(data['form'])
-        if 'pagination' in data.keys():
-            pagination = data['pagination'].to_json()
-            data['pagination'] = pagination
+        for item in data.keys():
+            if isinstance(data[item], Form):
+                data[item] = form_to_json(data[item])
+            if isinstance(data[item], Pagination):
+                data[item] = data[item].to_json()
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
