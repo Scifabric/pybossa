@@ -318,14 +318,18 @@ def _show_public_profile(user):
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
     title = "%s &middot; User Profile" % user_dict['fullname']
-    return render_template('/account/public_profile.html',
-                           title=title,
-                           user=user_dict,
-                           projects=projects_contributed,
-                           projects_created=projects_created)
+
+    response = dict(template='/account/public_profile.html',
+               title=title,
+               user=user_dict,
+               projects=projects_contributed,
+               projects_created=projects_created)
+
+    return handle_content_type(response)
 
 
 def _show_own_profile(user):
+    user_dict = cached_users.get_user_summary(user.name)
     rank_and_score = cached_users.rank_and_score(user.id)
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
@@ -334,13 +338,13 @@ def _show_own_profile(user):
     projects_published, projects_draft = _get_user_projects(user.id)
     cached_users.get_user_summary(user.name)
 
-    tmp = dict(template='account/profile.html', title=gettext("Profile"),
+    response = dict(template='account/profile.html', title=gettext("Profile"),
                projects_contrib=projects_contributed,
                projects_published=projects_published,
                projects_draft=projects_draft,
-               user=user.name)
+               user=user_dict)
 
-    return handle_content_type(tmp)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<name>/applications')
