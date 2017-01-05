@@ -73,7 +73,7 @@ class Helper(Test):
                        subscribed=False,
                        new_name=None,
                        btn='Profile',
-                       content_type="text/html",
+                       content_type="multipart/form-data",
                        csrf=None,
                        follow_redirects=True):
         """Helper function to update the profile of users"""
