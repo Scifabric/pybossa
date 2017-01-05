@@ -61,11 +61,30 @@ class TestPybossaUtil(object):
     #     headers = 'CONTENT-TYPE, AUTHORIZATION'
     #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
 
+    @patch('pybossa.util.get_flashed_messages')
+    def test_last_flashed_messages(self, mockflash):
+        """Test last_flashed_message returns the last one."""
+        messages = ['foo', 'bar']
+        mockflash.return_value = messages
+        msg = util.last_flashed_message()
+        err_msg = "It should be the last message"
+        assert msg == messages[-1], err_msg
+
+    @patch('pybossa.util.get_flashed_messages')
+    def test_last_flashed_messages_none(self, mockflash):
+        """Test last_flashed_message returns the none."""
+        messages = []
+        mockflash.return_value = messages
+        msg = util.last_flashed_message()
+        err_msg = "It should be None"
+        assert msg is None, err_msg
+
     @with_context
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_json(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_handle_content_type_json(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res = util.handle_content_type(dict(template='example.html'))
