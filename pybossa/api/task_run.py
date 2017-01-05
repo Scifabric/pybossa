@@ -36,11 +36,15 @@ from pybossa.gig_utils import json_traverse
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
+from datetime import datetime
 
 
 class TaskRunAPI(APIBase):
 
     """Class API for domain object TaskRun."""
+
+    DEFAULT_DATETIME = '1900-01-01T00:00:00.000000'
+    DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
@@ -62,8 +66,7 @@ class TaskRunAPI(APIBase):
         self._validate_project_and_task(taskrun, task)
         self._ensure_task_was_requested(task, guard)
         self._add_user_info(taskrun)
-        self._add_created_timestamp(taskrun, task, guard)
-
+        self._add_timestamps(taskrun, task.id, guard)
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
@@ -97,6 +100,34 @@ class TaskRunAPI(APIBase):
     def _add_created_timestamp(self, taskrun, task, guard):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
         guard._remove_task_stamped(task, get_user_id_or_ip())
+
+    def _add_timestamps(self, taskrun, task_id, guard):
+        finish_time = datetime.now().isoformat()
+
+        # /cachePresentedTime API only caches when there is a user_id
+        # otherwise it returns an arbitrary valid timestamp so that answer can be submitted
+        if guard.retrieve_presented_timestamp(task_id, get_user_id_or_ip()):
+            created = self._validate_datetime(guard.retrieve_presented_timestamp(task_id, get_user_id_or_ip()))
+        else:
+            created = datetime.strptime(self.DEFAULT_DATETIME, self.DATETIME_FORMAT).isoformat()
+
+        # sanity check
+        if created < finish_time:
+            taskrun.created = created
+            taskrun.finish_time = finish_time
+        else:
+            # return an arbitrary valid timestamp so that answer can be submitted
+            created = datetime.strptime(self.DEFAULT_DATETIME, self.DATETIME_FORMAT)
+            taskrun.created = created.isoformat()
+            taskrun.finish_time = finish_time
+
+    def _validate_datetime(self, timestamp):
+        try:
+            timestamp = datetime.strptime(timestamp, self.DATETIME_FORMAT)
+        except:
+            # return an arbitrary valid timestamp so that answer can be submitted
+            timestamp = datetime.strptime(self.DEFAULT_DATETIME, self.DATETIME_FORMAT)
+        return timestamp.isoformat()
 
 
 def _upload_files_from_json(task_run_info, upload_path):
