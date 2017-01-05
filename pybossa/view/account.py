@@ -429,12 +429,13 @@ def update_profile(name):
                                    title=title_msg,
                                    show_passwd_form=show_passwd_form)
 
-    return render_template('/account/update.html',
-                           form=update_form,
-                           upload_form=avatar_form,
-                           password_form=password_form,
-                           title=title_msg,
-                           show_passwd_form=show_passwd_form)
+    data = dict(template='/account/update.html',
+                form=update_form,
+                upload_form=avatar_form,
+                password_form=password_form,
+                title=title_msg,
+                show_passwd_form=show_passwd_form)
+    return handle_content_type(data)
 
 
 def _handle_avatar_update(user, avatar_form):
