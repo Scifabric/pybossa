@@ -20,6 +20,7 @@ from mock import MagicMock
 from mock import patch
 from default import with_context
 from datetime import datetime, timedelta
+from flask_wtf import Form
 import calendar
 import time
 import csv
@@ -128,7 +129,7 @@ class TestPybossaUtil(object):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         mockcsrf.return_value = "yourcsrf"
-        form = MagicMock(data=dict(foo=1), errors=None)
+        form = MagicMock(spec=Form, data=dict(foo=1), errors=None)
         res = util.handle_content_type(dict(template='example.html',
                                             form=form))
         err_msg = "template key should exist"
