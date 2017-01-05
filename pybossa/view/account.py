@@ -150,8 +150,8 @@ def signout():
 
     """
     logout_user()
-    flash(gettext('You are now signed out'), 'success')
-    return redirect_content_type(url_for('home.home'), message='success')
+    flash(gettext('You are now signed out'), SUCCESS)
+    return redirect_content_type(url_for('home.home'), status=SUCCESS)
 
 
 def get_email_confirmation_url(account):
@@ -445,8 +445,11 @@ def update_profile(name):
 def _handle_avatar_update(user, avatar_form):
     if avatar_form.validate_on_submit():
         _file = request.files['avatar']
+        print "HOLA archivo"
+        print _file
         coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                        avatar_form.x2.data, avatar_form.y2.data)
+        print coordinates
         prefix = time.time()
         _file.filename = "%s_avatar.png" % prefix
         container = "user_%s" % user.id
