@@ -311,9 +311,12 @@ def profile(name):
 
 
 def _show_public_profile(user):
-    user_dict = cached_users.get_user_summary(user.name)
+    # TODO: Show only public information for users and projects
+    user_dict = cached_users.public_get_user_summary(user.name)
+    print user_dict
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_created = cached_users.published_projects_cached(user.id)
+
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)

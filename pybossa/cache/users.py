@@ -145,6 +145,26 @@ def get_user_summary(name):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_get_user_summary(name):
+    """Sanitize user summary for public usage"""
+    private_user = get_user_summary(name)
+    public_user = None
+    if private_user is not None:
+        container_info = dict()
+        # make only container image info public
+        if 'container' in private_user['info']:
+            public_info = dict(container=private_user['info']['container'])
+        public_user = dict(fullname=private_user['fullname'],
+                           info=public_info,
+                           n_answers=private_user['n_answers'],
+                           name=private_user['name'],
+                           rank=private_user['rank'],
+                           score=private_user['score'],
+                           total=private_user['total'])
+    return public_user
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
     """Return rank and score for a user."""
     # See: https://gist.github.com/tokumine/1583695
