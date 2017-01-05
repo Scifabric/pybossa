@@ -40,12 +40,14 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
-from pybossa.util import get_user_signup_method, handle_content_type, redirect_content_type
+from pybossa.util import get_user_signup_method
+from pybossa.util import handle_content_type, redirect_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
+from pybossa.messages import *
 
 from pybossa.forms.account_view_forms import *
 
@@ -419,7 +421,9 @@ def update_profile(name):
         else:
             return abort(415)
         if succeed:
-            return redirect(url_for('.update_profile', name=user.name))
+            return redirect_content_type(url_for('.update_profile',
+                                                 name=user.name),
+                                         status=SUCCESS)
         else:
             data = dict(template='/account/update.html',
                         form=update_form,
