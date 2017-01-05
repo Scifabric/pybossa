@@ -30,14 +30,19 @@ from math import ceil
 import json
 
 
+def last_flashed_message():
+    """Return last flashed message by flask."""
+    messages = get_flashed_messages()
+    if len(messages) > 0:
+        return messages[-1]
+    else:
+        return None
+
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
-        data['flash'] = get_flashed_messages()
-        if len(data['flash']) > 0:
-            data['flash'] = data['flash'][-1]
-        else:
-            data['flash'] = None
+        data['flash'] = last_flashed_message()
         if 'form' in data.keys():
             tmp = data['form']
             data['form'] = tmp.data
