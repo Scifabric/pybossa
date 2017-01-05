@@ -334,11 +334,13 @@ def _show_own_profile(user):
     projects_published, projects_draft = _get_user_projects(user.id)
     cached_users.get_user_summary(user.name)
 
-    return render_template('account/profile.html', title=gettext("Profile"),
-                           projects_contrib=projects_contributed,
-                           projects_published=projects_published,
-                           projects_draft=projects_draft,
-                           user=user)
+    tmp = dict(template='account/profile.html', title=gettext("Profile"),
+               projects_contrib=projects_contributed,
+               projects_published=projects_published,
+               projects_draft=projects_draft,
+               user=user.name)
+
+    return handle_content_type(tmp)
 
 
 @blueprint.route('/<name>/applications')
