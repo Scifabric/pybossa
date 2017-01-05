@@ -392,7 +392,7 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    if request.form.get('btn') != 'Profile':
+    if request.body.get('btn') != 'Profile':
         update_form = UpdateProfileForm(formdata=None, obj=user)
     else:
         update_form = UpdateProfileForm(obj=user)
@@ -405,16 +405,16 @@ def update_profile(name):
     if request.method == 'POST':
         # Update user avatar
         succeed = False
-        if request.form.get('btn') == 'Upload':
+        if request.body.get('btn') == 'Upload':
             succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
-        elif request.form.get('btn') == 'Profile':
+        elif request.body.get('btn') == 'Profile':
             succeed = _handle_profile_update(user, update_form)
         # Update user password
-        elif request.form.get('btn') == 'Password':
+        elif request.body.get('btn') == 'Password':
             succeed = _handle_password_update(user, password_form)
         # Update user external services
-        elif request.form.get('btn') == 'External':
+        elif request.body.get('btn') == 'External':
             succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
@@ -422,12 +422,13 @@ def update_profile(name):
         if succeed:
             return redirect(url_for('.update_profile', name=user.name))
         else:
-            return render_template('/account/update.html',
-                                   form=update_form,
-                                   upload_form=avatar_form,
-                                   password_form=password_form,
-                                   title=title_msg,
-                                   show_passwd_form=show_passwd_form)
+            data = dict(template='/account/update.html',
+                        form=update_form,
+                        upload_form=avatar_form,
+                        password_form=password_form,
+                        title=title_msg,
+                        show_passwd_form=show_passwd_form)
+            return handle_content_type(data)
 
     data = dict(template='/account/update.html',
                 form=update_form,
