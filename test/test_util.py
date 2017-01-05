@@ -214,7 +214,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_redirect_content_type_json(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_redirect_content_type_json(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri')
@@ -227,7 +228,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_redirect_content_type_json_message(self, mockjsonify, mockrender, mockrequest):
+    @patch('pybossa.util.last_flashed_message')
+    def test_redirect_content_type_json_message(self, mocklast, mockjsonify, mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri', message='hallo123')
