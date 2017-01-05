@@ -721,7 +721,7 @@ class TestWeb(web.Helper):
         err_msg = "next URI is wrong in redirction"
         assert data['next'] == '/', err_msg
         err_msg = "success message missing"
-        assert data['message'] == 'success', err_msg
+        assert data['status'] == 'success', err_msg
 
 
     @with_context
