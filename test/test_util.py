@@ -85,7 +85,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.last_flashed_message')
-    def test_handle_content_type_json(self, mocklast, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_json(self, mocklast, mockjsonify,
+                                      mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res = util.handle_content_type(dict(template='example.html'))
@@ -99,7 +100,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.last_flashed_message')
-    def test_handle_content_type_json_error(self, mocklast, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_json_error(self, mocklast, mockjsonify,
+                                            mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res, code = util.handle_content_type(dict(template='example.html', code=404,
@@ -120,7 +122,9 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.generate_csrf')
     @patch('pybossa.util.last_flashed_message')
-    def test_handle_content_type_json_form(self, mocklast, mockcsrf, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_json_form(self, mocklast, mockcsrf,
+                                           mockjsonify, mockrender,
+                                           mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         mockcsrf.return_value = "yourcsrf"
@@ -144,7 +148,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.last_flashed_message')
-    def test_handle_content_type_json_pagination(self, mocklast, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_json_pagination(self, mocklast, mockjsonify,
+                                                 mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
@@ -162,7 +167,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_html(self, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_html(self, mockjsonify,
+                                      mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'text/html'
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
@@ -182,7 +188,8 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
-    def test_handle_content_type_html_error(self, mockjsonify, mockrender, mockrequest):
+    def test_handle_content_type_html_error(self, mockjsonify,
+                                            mockrender, mockrequest):
         mockrequest.headers.__getitem__.return_value = 'text/html'
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
