@@ -2051,6 +2051,123 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.signer')
+    def test_45_password_reset_link_json(self, signer, queue):
+        """Test WEB password reset email form"""
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': "johndoe@example.com"}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        err_msg = "Mimetype should be application/json"
+        assert res.mimetype == 'application/json', err_msg
+        err_msg = "Flash message should be included"
+        assert data.get('flash'), err_msg
+        assert ("We don't have this email in our records. You may have"
+                " signed up with a different email or used Twitter, "
+                "Facebook, or Google to sign-in") in data.get('flash'), err_msg
+
+        self.register()
+        self.register(name='janedoe')
+        self.register(name='google')
+        self.register(name='facebook')
+        user = User.query.get(1)
+        jane = User.query.get(2)
+        jane.twitter_user_id = 10
+        google = User.query.get(3)
+        google.google_user_id = 103
+        facebook = User.query.get(4)
+        facebook.facebook_user_id = 104
+        db.session.add_all([jane, google, facebook])
+        db.session.commit()
+
+        data = {'password': user.passwd_hash, 'user': user.name}
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': user.email_addr}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+        resdata = json.loads(res.data)
+        signer.dumps.assert_called_with(data, salt='password-reset')
+        enqueue_call = queue.enqueue.call_args_list[0]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+        assert 'To recover your password' in enqueue_call[0][1]['html']
+        err_msg = "There should be a flash message"
+        assert resdata.get('flash'), err_msg
+        assert "send you an email" in resdata.get('flash'), err_msg
+
+        data = {'password': jane.passwd_hash, 'user': jane.name}
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': 'janedoe@example.com'}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+
+        resdata = json.loads(res.data)
+
+        enqueue_call = queue.enqueue.call_args_list[1]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Twitter account to ' in enqueue_call[0][1]['body']
+        assert 'your Twitter account to ' in enqueue_call[0][1]['html']
+        err_msg = "There should be a flash message"
+        assert resdata.get('flash'), err_msg
+        assert "send you an email" in resdata.get('flash'), err_msg
+
+        data = {'password': google.passwd_hash, 'user': google.name}
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': 'google@example.com'}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+
+        resdata = json.loads(res.data)
+
+        enqueue_call = queue.enqueue.call_args_list[2]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Google account to ' in enqueue_call[0][1]['body']
+        assert 'your Google account to ' in enqueue_call[0][1]['html']
+        err_msg = "There should be a flash message"
+        assert resdata.get('flash'), err_msg
+        assert "send you an email" in resdata.get('flash'), err_msg
+
+        data = {'password': facebook.passwd_hash, 'user': facebook.name}
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': 'facebook@example.com'}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+
+        enqueue_call = queue.enqueue.call_args_list[3]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Facebook account to ' in enqueue_call[0][1]['body']
+        assert 'your Facebook account to ' in enqueue_call[0][1]['html']
+        err_msg = "There should be a flash message"
+        assert resdata.get('flash'), err_msg
+        assert "send you an email" in resdata.get('flash'), err_msg
+
+        # Test with not valid form
+        csrf = self.get_csrf('/account/forgot-password')
+        res = self.app.post('/account/forgot-password',
+                            data=json.dumps({'email_addr': ''}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+
+        resdata = json.loads(res.data)
+        msg = "Something went wrong, please correct the errors"
+        assert msg in resdata.get('flash'), res.data
+        assert resdata.get('form').get('errors').get('email_addr') is not None, resdata
+
+
+    @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.signer')
     def test_45_password_reset_link(self, signer, queue):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
