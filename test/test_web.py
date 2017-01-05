@@ -37,6 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.messages import *
 from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
@@ -745,6 +746,124 @@ class TestWeb(web.Helper):
         url = '/account/%s/applications' % Fixtures.name2
         res = self.app.get(url)
         assert res.status_code == 403, res.status_code
+
+    @with_context
+    def test_05_update_user_profile_json(self):
+        """Test WEB update user profile JSON"""
+
+        # Create an account and log in
+        self.register()
+        url = "/account/fake/update"
+        res = self.app.get(url, content_type="application/json")
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data.get('code') == 404, res.status_code
+
+        # Update profile with new data
+        res = self.update_profile(method="GET", content_type="application/json")
+        data = json.loads(res.data)
+        msg = "Update your profile: %s" % "John Doe"
+        err_msg = "There should be a title"
+        assert data['title'] == msg, err_msg
+        err_msg = "There should be 3 forms"
+        assert data['form'] is not None, err_msg
+        assert data['password_form'] is not None, err_msg
+        assert data['upload_form'] is not None, err_msg
+        err_msg = "There should be a csrf token"
+        assert data['form']['csrf'] is not None, err_msg
+        assert data['password_form']['csrf'] is not None, err_msg
+        assert data['upload_form']['csrf'] is not None, err_msg
+
+        csrf = data['form']['csrf']
+
+        res = self.update_profile(fullname="John Doe 2",
+                                  email_addr="johndoe2@example",
+                                  locale="en",
+                                  content_type="application/json",
+                                  csrf=csrf)
+        data = json.loads(res.data)
+
+        err_msg = "There should be errors"
+        assert data['form']['errors'] is not None, err_msg
+        assert data['form']['errors']['email_addr'] is not None, err_msg
+
+        res = self.update_profile(fullname="John Doe 2",
+                                  email_addr="johndoe2@example.com",
+                                  locale="en",
+                                  content_type="application/json",
+                                  csrf=csrf)
+        data = json.loads(res.data)
+        title = "Update your profile: John Doe 2"
+        assert data.get('status') == SUCCESS, res.data
+        user = user_repo.get_by(email_addr='johndoe2@example.com')
+        url = '/account/%s/update' % user.name
+        assert data.get('next') == url, res.data
+        flash = u"Your profile has been updated!"
+        err_msg = "There should be a flash message"
+        assert data.get('flash') == flash, (data, err_msg)
+        err_msg = "It should return the same updated data"
+        assert "John Doe 2" == user.fullname, user.fullname
+        assert "johndoe" == user.name, err_msg
+        assert "johndoe2@example.com" == user.email_addr, err_msg
+        assert user.subscribed is False, err_msg
+
+        # Updating the username field forces the user to re-log in
+        res = self.update_profile(fullname="John Doe 2",
+                                  email_addr="johndoe2@example.com",
+                                  locale="en",
+                                  new_name="johndoe2",
+                                  content_type='application/json',
+                                  csrf=csrf)
+        data = json.loads(res.data)
+        err_msg = "Update should work"
+        assert data.get('status') == SUCCESS, (err_msg, data)
+        url = "/account/johndoe2/update"
+        assert data.get('next') == url, (err_msg, data)
+        res = self.app.get(url, follow_redirects=False,
+                           content_type='application/json')
+        assert res.status_code == 302, res.status_code
+        assert "/account/signin" in res.data, res.data
+
+        res = self.signin(method="POST", email="johndoe2@example.com",
+                          password="p4ssw0rd",
+                          next="%2Faccount%2Fprofile")
+        assert "Welcome back John Doe 2" in res.data, res.data
+        assert "John Doe 2" in res.data, res
+        assert "johndoe2" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
+
+        res = self.app.get('/', follow_redirects=False)
+        assert "::logged-in::johndoe2" in res.data, res.data
+
+
+        res = self.signout(follow_redirects=False,
+                           content_type="application/json")
+
+        data = json.loads(res.data)
+        err_msg = "User should be logged out"
+        assert self.check_cookie(res, 'remember_token') == "", err_msg
+        assert data.get('status') == SUCCESS, (err_msg, data)
+        assert data.get('next') == '/', (err_msg, data)
+        assert "You are now signed out" == data.get('flash'), (err_msg, data)
+        res = self.app.get('/', follow_redirects=False)
+        assert "::logged-in::johndoe2" not in res.data, err_msg
+
+        # A user must be signed in to access the update page, the page
+        # the title will be the redirection to log in
+        res = self.update_profile(method="GET", follow_redirects=False,
+                                  content_type="application/json")
+        err_msg = "User should be requested to log in"
+        assert res.status_code == 302, err_msg
+        assert "/account/signin" in res.data, err_msg
+
+        self.register(fullname="new", name="new")
+        url = "/account/johndoe2/update"
+        res = self.app.get(url, content_type="application/json")
+        data = json.loads(res.data)
+        assert res.status_code == 403
+        assert data.get('code') == 403
+        assert data.get('description') == FORBIDDEN, data
+
 
     @with_context
     def test_05_update_user_profile(self):
