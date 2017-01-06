@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import with_context, mock_contributions_guard
+from default import (with_context, mock_contributions_guard,
+                     mock_contributions_guard_presented_time)
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch
@@ -519,7 +520,8 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
-        """Test API TaskRun creation and auth for authenticated external uid"""
+        """Test API TaskRun creation and auth for authenticated external uid: Disabled for GIGwork"""
+        '''
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
@@ -584,11 +586,13 @@ class TestTaskrunAPI(TestAPI):
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson, headers=headers)
         assert tmp.status_code == 403, tmp.data
+        '''
 
     @with_context
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
-        authenticated user"""
+        anonymous user: Disabled for GIGwork"""
+        '''
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -612,11 +616,14 @@ class TestTaskrunAPI(TestAPI):
         self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
         success = self.app.post(url, data=datajson)
         assert success.status_code == 200, success.data
+        '''
+
 
     @with_context
     def test_taskrun_post_requires_newtask_first_external_uid(self):
         """Test API TaskRun post fails if task was not previously requested for
-        external user"""
+        external user: Disabled for GIGwork"""
+        '''
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
         headers = {'Authorization': project.secret_key}
@@ -672,7 +679,7 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/taskrun?external_uid={}'.format(external_uid)
         success = self.app.post(url, data=datajson, headers=headers)
         assert success.status_code == 200, success.data
-
+        '''
 
 
     @with_context
@@ -875,15 +882,17 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_updates_task_state(self, guard, mock_request):
         """Test API TaskRun POST updates task state"""
         guard.return_value = mock_contributions_guard(True)
+        user1 = UserFactory.create()
+        user2 = UserFactory.create()
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, n_answers=2)
-        url = '/api/taskrun?api_key=%s' % project.owner.api_key
 
         # Post first taskrun
+        url = '/api/taskrun?api_key={}'.format(user1.api_key)
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
-            user_id=project.owner.id,
+            user_id=user1.id,
             info='my task result')
         datajson = json.dumps(data)
         mock_request.data = datajson
@@ -903,6 +912,7 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
+            user_id=user2.id,
             info='my task result anon')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
@@ -957,10 +967,10 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
-    def test_taskrun_created_with_time_it_was_requested_on_creation(self, guard):
+    def test_taskrun_created_with_time_it_was_presented_on_creation(self, guard):
         """Test API taskrun post adds the created timestamp of the moment the task
-        was requested by the user"""
-        guard.return_value = mock_contributions_guard(True, "a while ago")
+        was presented to the user"""
+        guard.return_value = mock_contributions_guard_presented_time(True)
 
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -975,7 +985,7 @@ class TestTaskrunAPI(TestAPI):
         resp = self.app.post(url, data=datajson)
         taskrun = task_repo.filter_task_runs_by(task_id=data['task_id'])[0]
 
-        assert taskrun.created == "a while ago", taskrun.created
+        assert taskrun.created == '2015-11-18T16:29:25.496327', taskrun.created
 
     @with_context
     def test_taskrun_cannot_be_deleted_associated_result(self):
