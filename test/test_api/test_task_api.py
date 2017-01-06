@@ -649,3 +649,19 @@ class TestTaskAPI(TestAPI):
                                            project.owner.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    @patch('pybossa.api.task_run.request')
+    def test_cache_presented_time_authenticated_user(self, mock_request):
+        """Test API cachepresentedtime as an authenticated user works."""
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+
+        mock_request.current_user.id = user.id
+
+        url = '/api/task/{0}/cachePresentedTime'.format(task.id)
+        res = self.app.get(url)
+        out = json.loads(res.data)
+        assert_equal(res.status, '200 OK', res.data)
+        assert_equal(out, {}, out)
