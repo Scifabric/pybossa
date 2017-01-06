@@ -405,7 +405,8 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.request')
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_anonymous_post(self, guard, mock_request):
-        """Test API TaskRun creation and auth for anonymous users"""
+        """Test API TaskRun creation and auth for anonymous users. Disabled for GIGwork"""
+        '''
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -457,6 +458,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = ("Anonymous users should be only allowed to post \
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
+        '''
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
@@ -530,6 +532,7 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             project_id=project.id,
             task_id=task.id,
+            user_id=project.owner.id,
             info='my task result',
             external_uid=external_uid)
 
@@ -582,19 +585,20 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson, headers=headers)
         assert tmp.status_code == 403, tmp.data
 
-
     @with_context
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
-        anonymous user"""
+        authenticated user"""
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
             project_id=project.id,
             task_id=task.id,
+            user_id=project.owner.id,
             info='my task result')
         datajson = json.dumps(data)
-        fail = self.app.post('/api/taskrun', data=datajson)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
+        fail = self.app.post(url, data=datajson)
         err = json.loads(fail.data)
 
         assert fail.status_code == 403, fail.status_code
@@ -605,8 +609,8 @@ class TestTaskrunAPI(TestAPI):
         assert err['target'] == 'taskrun', err
 
         # Succeeds after requesting a task
-        self.app.get('/api/project/%s/newtask' % project.id)
-        success = self.app.post('/api/taskrun', data=datajson)
+        self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
+        success = self.app.post(url, data=datajson)
         assert success.status_code == 200, success.data
 
     @with_context
@@ -894,7 +898,8 @@ class TestTaskrunAPI(TestAPI):
 
         # Post second taskrun
         mock_request.remote_addr = '127.0.0.0'
-        url = '/api/taskrun'
+        admin = UserFactory.create()
+        url = '/api/taskrun?api_key=%s' % admin.api_key
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
