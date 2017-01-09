@@ -694,3 +694,141 @@ If there's an error in the form fields, you will get them in the **form.errors**
       },
       "template": "/account/password_forgot.html"
     }
+
+Account update profile
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/<name>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **form**: the form fields that need to be sent for updating account. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **password_form**: the form fields that need to be sent for updating the account's password. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **upload_form**: the form fields that need to be sent for updating the account's avatar. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": null,
+      "form": {
+        "ckan_api": null,
+        "csrf": "token",
+        "email_addr": "email@emai.com",
+        "errors": {},
+        "fullname": "John Doe",
+        "id": 0,
+        "locale": "en",
+        "name": "johndoe",
+        "privacy_mode": true,
+        "subscribed": true
+      },
+      "password_form": {
+        "confirm": null,
+        "csrf": "token",
+        "current_password": null,
+        "errors": {},
+        "new_password": null
+      },
+      "show_passwd_form": true,
+      "template": "/account/update.html",
+      "title": "Update your profile: John Doe",
+      "upload_form": {
+        "avatar": null,
+        "csrf": "token",
+        "errors": {},
+        "id": null,
+        "x1": 0,
+        "x2": 0,
+        "y1": 0,
+        "y2": 0
+      }
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+As this endpoint supports **three** different forms, you must specify which form are
+you targetting adding an extra key: **btn**. The options for this key are:
+
+* **Profile**: to update the **form**.
+  **Upload**: to update the **upload_form**.
+  **Password**: to update the **password_form**.
+  **External**: to update the **form** but only the external services.
+
+.. note::
+    Be sure to respect the Uppercase in the first letter, otherwise it will fail.
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": "Your profile has been updated!",
+      "next": "/account/pruebaadfadfa/update",
+      "status": "success"
+    }
+
+
+If there's an error in the form fields, you will get them in the **form.errors** key:
+
+.. code-block:: python
+    {
+      "flash": "Please correct the errors",
+      "form": {
+        "ckan_api": null,
+        "csrf": "token",
+        "email_addr": "pruebaprueba.com",
+        "errors": {
+          "email_addr": [
+            "Invalid email address."
+          ]
+        },
+        "fullname": "prueba de json",
+        "id": 0,
+        "locale": "es",
+        "name": "pruebaadfadfa",
+        "privacy_mode": true,
+        "subscribed": true
+      },
+      "password_form": {
+        "confirm": "",
+        "csrf": "token",
+        "current_password": "",
+        "errors": {},
+        "new_password": ""
+      },
+      "show_passwd_form": true,
+      "template": "/account/update.html",
+      "title": "Update your profile: John Doe",
+      "upload_form": {
+        "avatar": "",
+        "csrf": "token",
+        "errors": {},
+        "id": 0,
+        "x1": 0,
+        "x2": 0,
+        "y1": 0,
+        "y2": 0
+      }
+    }
+
+.. note::
+    For updating the avatar is very important to not set the *Content-Type*. If you
+    are using jQuery, set it to False, so the file is handled properly.
+
+    The (x1,x2,y1,y2) are the coordinates for cutting the image and create the avatar.
+
+    (x1,y1) are the offset left of the cropped area and  the offset top of the cropped 
+    area respectively; and (x2,y2) are the width and height of the crop.

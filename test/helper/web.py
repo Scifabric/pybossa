@@ -72,27 +72,40 @@ class Helper(Test):
                        email_addr="johndoe@example.com",
                        subscribed=False,
                        new_name=None,
-                       btn='Profile'):
+                       btn='Profile',
+                       content_type="multipart/form-data",
+                       csrf=None,
+                       follow_redirects=True):
         """Helper function to update the profile of users"""
         url = "/account/%s/update" % name
         if new_name:
             name = new_name
         if (method == "POST"):
+            payload = {'id': id, 'fullname': fullname,
+                       'name': name,
+                       'locale': locale,
+                       'email_addr': email_addr,
+                       'btn': btn}
+            if content_type == 'application/json':
+                payload = json.dumps(payload)
+            headers = None
+            if csrf:
+                headers = {'X-CSRFToken': csrf}
             return self.app.post(url,
-                                 data={'id': id,
-                                       'fullname': fullname,
-                                       'name': name,
-                                       'locale': locale,
-                                       'email_addr': email_addr,
-                                       'btn': btn},
-                                 follow_redirects=True)
+                                 data=payload,
+                                 follow_redirects=follow_redirects,
+                                 content_type=content_type,
+                                 headers=headers)
         else:
             return self.app.get(url,
-                                follow_redirects=True)
+                                follow_redirects=follow_redirects,
+                                content_type=content_type)
 
-    def signout(self):
+    def signout(self, follow_redirects=True, content_type="text/html"):
         """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
+        return self.app.get('/account/signout',
+                            follow_redirects=follow_redirects,
+                            content_type=content_type)
 
     def create_categories(self):
         with self.flask_app.app_context():

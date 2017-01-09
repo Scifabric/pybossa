@@ -18,6 +18,7 @@
 """Module with PYBOSSA utils."""
 from datetime import timedelta, datetime
 from functools import update_wrapper
+from flask_wtf import Form
 import csv
 import codecs
 import cStringIO
@@ -32,25 +33,33 @@ import json
 
 def last_flashed_message():
     """Return last flashed message by flask."""
-    messages = get_flashed_messages()
+    messages = get_flashed_messages(with_categories=True)
     if len(messages) > 0:
         return messages[-1]
     else:
         return None
 
 
+def form_to_json(form):
+    """Return a form in JSON format."""
+    tmp = form.data
+    tmp['errors'] = form.errors
+    tmp['csrf'] = generate_csrf()
+    return tmp
+
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
-        data['flash'] = last_flashed_message()
-        if 'form' in data.keys():
-            tmp = data['form']
-            data['form'] = tmp.data
-            data['form']['csrf'] = generate_csrf()
-            data['form']['errors'] = tmp.errors
-        if 'pagination' in data.keys():
-            pagination = data['pagination'].to_json()
-            data['pagination'] = pagination
+        message_and_status = last_flashed_message()
+        if message_and_status:
+            data['flash'] = message_and_status[1]
+            data['status'] = message_and_status[0]
+        for item in data.keys():
+            if isinstance(data[item], Form):
+                data[item] = form_to_json(data[item])
+            if isinstance(data[item], Pagination):
+                data[item] = data[item].to_json()
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
@@ -65,10 +74,10 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
-def redirect_content_type(url, message=None):
+def redirect_content_type(url, status=None):
     data = dict(next=url)
-    if message is not None:
-        data['message'] = message
+    if status is not None:
+        data['status'] = status
     if request.headers['Content-Type'] == 'application/json':
         return handle_content_type(data)
     else:
