@@ -231,6 +231,7 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     @patch('pybossa.util.last_flashed_message')
     def test_redirect_content_type_json_message(self, mocklast, mockjsonify, mockrender, mockrequest):
+        mocklast.return_value = None
         mockrequest.headers.__getitem__.return_value = 'application/json'
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri', status='hallo123')
