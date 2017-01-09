@@ -643,6 +643,89 @@ class TestWeb(web.Helper):
         assert user.check_password('password')
 
     @with_context
+    def test_04_signin_signout_json(self):
+        """Test WEB sign in and sign out JSON works"""
+        res = self.register()
+        # Log out as the registration already logs in the user
+        res = self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data.get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        res = self.signin(email='', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+
+        data = json.loads(res.data)
+        err_msg = "There should be errors in email"
+        assert data.get('form').get('errors'), (err_msg, data)
+        assert data.get('form').get('errors').get('email'), (err_msg, data)
+        msg = "Please correct the errors"
+        assert data.get('flash') == msg, (data, err_msg)
+        res = self.signin(password='', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (data, err_msg)
+        msg = "You must provide a password"
+        assert msg in data.get('form').get('errors').get('password'), (err_msg, data)
+
+        # res = self.signin(email='', password='')
+        # assert "Please correct the errors" in res.data, res
+        # assert "The e-mail is required" in res.data, res
+        # assert "You must provide a password" in res.data, res
+
+        # # Non-existant user
+        # msg = "Ooops, we didn't find you in the system"
+        # res = self.signin(email='wrongemail')
+        # assert msg in res.data, res.data
+
+        # res = self.signin(email='wrongemail', password='wrongpassword')
+        # assert msg in res.data, res
+
+        # # Real user but wrong password or username
+        # msg = "Ooops, Incorrect email/password"
+        # res = self.signin(password='wrongpassword')
+        # assert msg in res.data, res
+
+        # res = self.signin()
+        # assert self.html_title() in res.data, res
+        # assert "Welcome back %s" % "John Doe" in res.data, res
+
+        # # Check profile page with several information chunks
+        # res = self.profile()
+        # assert self.html_title("Profile") in res.data, res
+        # assert "John Doe" in res.data, res
+        # assert "johndoe@example.com" in res.data, res
+
+        # # Log out
+        # res = self.signout()
+        # assert self.html_title() in res.data, res
+        # assert "You are now signed out" in res.data, res
+
+        # # Request profile as an anonymous user
+        # # Check profile page with several information chunks
+        # res = self.profile()
+        # assert "John Doe" in res.data, res
+        # assert "johndoe@example.com" not in res.data, res
+
+        # # Try to access protected areas like update
+        # res = self.app.get('/account/johndoe/update', follow_redirects=True)
+        # # As a user must be signed in to access, the page the title will be the
+        # # redirection to log in
+        # assert self.html_title("Sign in") in res.data, res.data
+        # assert "Please sign in to access this page." in res.data, res.data
+
+        # res = self.signin(next='%2Faccount%2Fprofile')
+        # assert self.html_title("Profile") in res.data, res
+        # assert "Welcome back %s" % "John Doe" in res.data, res
+
+
+    @with_context
     def test_04_signin_signout(self):
         """Test WEB sign in and sign out works"""
         res = self.register()

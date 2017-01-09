@@ -49,18 +49,29 @@ class Helper(Test):
         return self.app.get('/account/register/confirmation?key=fake-key',
                             follow_redirects=True)
 
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
+    def signin(self, method="POST", email="johndoe@example.com",
+               password="p4ssw0rd", next=None,
+               content_type="text/html", follow_redirects=True, csrf=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
+        headers = None
         if next is not None:
             url = url + '?next=' + next
         if method == "POST":
-            return self.app.post(url, data={'email': email,
-                                            'password': password},
-                                 follow_redirects=True)
+            payload = {'email': email, 'password': password}
+            if content_type == 'application/json':
+                data = json.dumps(payload)
+            else:
+                data = payload
+            if csrf:
+                headers = {'X-CSRFToken': csrf}
+            return self.app.post(url, data=data,
+                                 content_type=content_type,
+                                 follow_redirects=follow_redirects,
+                                 headers=headers)
         else:
-            return self.app.get(url, follow_redirects=True)
+            return self.app.get(url, follow_redirects=follow_redirects,
+                                content_type=content_type, headers=headers)
 
     def profile(self, name="johndoe"):
         """Helper function to check profile of signed in user"""
