@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 from bs4 import BeautifulSoup
-
 from helper import web as web_helper
 from default import flask_app, with_context
 from mock import patch
@@ -181,7 +181,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
     @with_context
     def test_06_user_public_profile(self):
         """Test PRIVACY user public profile privacy is respected"""
-        # As Anonymou user
+        # As Anonymous user
         url = "/account/%s" % self.name
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
@@ -201,6 +201,34 @@ class TestPrivacyWebPublic(web_helper.Helper):
         err_msg = "Public User Profile page should be shown to admin users"
         assert dom.find(id='enforce_privacy') is None, err_msg
         self.signout()
+
+
+    @with_context
+    def test_07_user_public_profile_json(self):
+        """Test PRIVACY user public profile privacy is respected for API access"""
+        # As Anonymous user
+        url = "/account/%s" % self.name
+        # TODO: is full url right? Want to avoid redirect on API calls.
+        full_url = 'http://localhost%s/' % url
+        res = self.app.get(full_url, content_type='application/json')
+        print res.data
+        data = json.loads(res.data)
+        err_msg = "Public User Profile name should be visible"
+        assert data['user']['name'] == self.name, err_msg
+        # # As Authenticated user but NOT ADMIN
+        # self.signin()
+        # res = self.app.get(url, content_type='application/json')
+        # dom = BeautifulSoup(res.data)
+        # err_msg = "Public User Profile page should be shown to authenticated users"
+        # assert dom.find(id='enforce_privacy') is None, err_msg
+        # self.signout
+        # # As Authenticated user but ADMIN
+        # self.signin(email=self.root_addr, password=self.root_password)
+        # res = self.app.get(url, follow_redirects=True)
+        # dom = BeautifulSoup(res.data)
+        # err_msg = "Public User Profile page should be shown to admin users"
+        # assert dom.find(id='enforce_privacy') is None, err_msg
+        # self.signout()
 
 
 class TestPrivacyWebPrivacy(web_helper.Helper):
