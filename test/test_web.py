@@ -2058,6 +2058,54 @@ class TestWeb(web.Helper):
         assert response_user is None, response_user
 
     @with_context
+    def test_41_password_change_json(self):
+        """Test WEB password JSON changing"""
+        password = "mehpassword"
+        self.register(password=password)
+        url = '/account/johndoe/update'
+        csrf = self.get_csrf(url)
+        payload = {'current_password': password,
+                   'new_password': "p4ssw0rd",
+                   'confirm': "p4ssw0rd",
+                   'btn': 'Password'}
+        res = self.app.post(url,
+                            data=json.dumps(payload),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert "Yay, you changed your password succesfully!" == data.get('flash'), res.data
+        assert data.get('status') == SUCCESS, data
+
+        password = "p4ssw0rd"
+        self.signin(password=password)
+        payload['current_password'] = "wrongpasswor"
+        res = self.app.post(url,
+                            data=json.dumps(payload),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+        msg = "Your current password doesn't match the one in our records"
+        data = json.loads(res.data)
+        assert msg == data.get('flash'), data
+        assert data.get('status') == ERROR, data
+
+        res = self.app.post('/account/johndoe/update',
+                            data=json.dumps({'current_password': '',
+                                  'new_password': '',
+                                  'confirm': '',
+                                  'btn': 'Password'}),
+                            follow_redirects=False,
+                            content_type="application/json",
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        msg = "Please correct the errors"
+        err_msg = "There should be a flash message"
+        assert data.get('flash') == msg, (err_msg, data)
+        assert data.get('status') == ERROR, (err_msg, data)
+
+
+    @with_context
     def test_41_password_change(self):
         """Test WEB password changing"""
         password = "mehpassword"
