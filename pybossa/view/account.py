@@ -91,7 +91,7 @@ def signin():
     Returns a Jinja2 template with the result of signing process.
 
     """
-    form = LoginForm(request.form)
+    form = LoginForm(request.body)
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
