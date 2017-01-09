@@ -33,7 +33,7 @@ import json
 
 def last_flashed_message():
     """Return last flashed message by flask."""
-    messages = get_flashed_messages()
+    messages = get_flashed_messages(with_categories=True)
     if len(messages) > 0:
         return messages[-1]
     else:
@@ -51,7 +51,10 @@ def form_to_json(form):
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     if request.headers['Content-Type'] == 'application/json':
-        data['flash'] = last_flashed_message()
+        message_and_status = last_flashed_message()
+        if message_and_status:
+            data['flash'] = message_and_status[1]
+            data['status'] = message_and_status[0]
         for item in data.keys():
             if isinstance(data[item], Form):
                 data[item] = form_to_json(data[item])
