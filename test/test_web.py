@@ -2104,6 +2104,38 @@ class TestWeb(web.Helper):
         assert data.get('flash') == msg, (err_msg, data)
         assert data.get('status') == ERROR, (err_msg, data)
 
+    @with_context
+    def test_42_avatar_change_json(self):
+        """Test WEB avatar JSON changing"""
+        import io
+        self.register()
+        user = user_repo.get_by(name='johndoe')
+        print user
+        url = '/account/johndoe/update'
+        csrf = self.get_csrf(url)
+        payload = {'avatar': (io.BytesIO(b"abcdef"), 'test.jpg'),
+                   'id': user.id,
+                   'x1': "100",
+                   'x2': '100',
+                   'y1': '300',
+                   'y2': '300',
+                   'btn': 'Upload'}
+        res = self.app.post(url,
+                            data=payload,
+                            follow_redirects=True,
+                            content_type="multipart/form-data",
+                            headers={'X-CSRFToken': csrf})
+        err_msg = "Avatar should be updated"
+        assert "Your avatar has been updated!" in res.data, (res.data, err_msg)
+
+        payload['avatar'] = None
+        res = self.app.post(url,
+                            data=payload,
+                            follow_redirects=True,
+                            content_type="multipart/form-data",
+                            headers={'X-CSRFToken': csrf})
+        msg = "You have to provide an image file to update your avatar"
+        assert msg in res.data, (res.data, msg)
 
     @with_context
     def test_41_password_change(self):
