@@ -152,6 +152,7 @@ def public_get_user_summary(name):
     if private_user is not None:
         container_info = dict()
         # make only container image info public
+        public_info = dict()
         if 'container' in private_user['info']:
             public_info = dict(container=private_user['info']['container'])
         public_user = dict(fullname=private_user['fullname'],
