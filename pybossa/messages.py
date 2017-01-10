@@ -34,13 +34,15 @@ from werkzeug.exceptions import Forbidden, Unauthorized, InternalServerError
 from werkzeug.exceptions import NotFound, BadRequest
 
 __all__ = ['SUCCESS', 'ERROR', 'WARNING', 'FORBIDDEN', 'NOTFOUND', 'BADREQUEST',
-           'NOTFOUND', 'INTERNALSERVERERROR', 'UNAUTHORIZED']
+           'INFO', 'NOTFOUND', 'INTERNALSERVERERROR', 'UNAUTHORIZED']
 
 SUCCESS = "success"
 
 ERROR = "error"
 
 WARNING = "warning"
+
+INFO = "info"
 
 FORBIDDEN = Forbidden.description
 
