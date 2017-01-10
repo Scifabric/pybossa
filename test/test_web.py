@@ -674,53 +674,89 @@ class TestWeb(web.Helper):
         msg = "You must provide a password"
         assert msg in data.get('form').get('errors').get('password'), (err_msg, data)
 
-        # res = self.signin(email='', password='')
-        # assert "Please correct the errors" in res.data, res
-        # assert "The e-mail is required" in res.data, res
-        # assert "You must provide a password" in res.data, res
+        res = self.signin(email='', password='',
+                          content_type='application/json',
+                          follow_redirects=False,
+                          csrf=csrf)
+        msg = "Please correct the errors"
+        data = json.loads(res.data)
+        err_msg = "There should be a flash message"
+        assert data.get('flash') == msg, (err_msg, data)
+        msg = "The e-mail is required"
+        assert data.get('form').get('errors').get('email')[0] == msg, (msg, data)
+        msg = "You must provide a password"
+        assert data.get('form').get('errors').get('password')[0] == msg, (msg, data)
 
-        # # Non-existant user
-        # msg = "Ooops, we didn't find you in the system"
-        # res = self.signin(email='wrongemail')
-        # assert msg in res.data, res.data
 
-        # res = self.signin(email='wrongemail', password='wrongpassword')
-        # assert msg in res.data, res
+        # Non-existant user
+        msg = "Ooops, we didn't find you in the system"
+        res = self.signin(email='wrongemail', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == INFO, (data)
 
-        # # Real user but wrong password or username
-        # msg = "Ooops, Incorrect email/password"
-        # res = self.signin(password='wrongpassword')
-        # assert msg in res.data, res
+        res = self.signin(email='wrongemail', password='wrongpassword')
+        res = self.signin(email='wrongemail', password='wrongpassword',
+                          content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == INFO, (data)
 
-        # res = self.signin()
-        # assert self.html_title() in res.data, res
-        # assert "Welcome back %s" % "John Doe" in res.data, res
+        # Real user but wrong password or username
+        msg = "Ooops, Incorrect email/password"
+        res = self.signin(password='wrongpassword',
+                          content_type="application/json",
+                          csrf=csrf,
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == ERROR, (data)
 
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=False)
+        data = json.loads(res.data)
+        msg = "Welcome back John Doe"
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, (msg, data)
+        assert data.get('next') == '/', (msg, data)
+
+        # TODO: add JSON support to profile page.
         # # Check profile page with several information chunks
         # res = self.profile()
         # assert self.html_title("Profile") in res.data, res
         # assert "John Doe" in res.data, res
         # assert "johndoe@example.com" in res.data, res
 
-        # # Log out
-        # res = self.signout()
-        # assert self.html_title() in res.data, res
-        # assert "You are now signed out" in res.data, res
+        # Log out
+        res = self.signout(content_type="application/json",
+                           follow_redirects=False)
+        msg = "You are now signed out"
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, data
+        assert data.get('next') == '/', data
 
+        # TODO: add json to profile public page
         # # Request profile as an anonymous user
         # # Check profile page with several information chunks
         # res = self.profile()
         # assert "John Doe" in res.data, res
         # assert "johndoe@example.com" not in res.data, res
 
-        # # Try to access protected areas like update
-        # res = self.app.get('/account/johndoe/update', follow_redirects=True)
-        # # As a user must be signed in to access, the page the title will be the
-        # # redirection to log in
-        # assert self.html_title("Sign in") in res.data, res.data
-        # assert "Please sign in to access this page." in res.data, res.data
+        # Try to access protected areas like update
+        res = self.app.get('/account/johndoe/update', follow_redirects=True,
+                           content_type="application/json")
+        # As a user must be signed in to access, the page the title will be the
+        # redirection to log in
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Please sign in to access this page." in res.data, res.data
 
-        # res = self.signin(next='%2Faccount%2Fprofile')
+        # TODO: Add JSON to profile
+        # res = self.signin(next='%2Faccount%2Fprofile',
+        #                   content_type="application/json",
+        #                   csrf=csrf)
         # assert self.html_title("Profile") in res.data, res
         # assert "Welcome back %s" % "John Doe" in res.data, res
 
