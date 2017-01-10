@@ -617,6 +617,91 @@ If there's an error in the form fields, you will get them in the **form.errors**
       "title": "Register"
     }
 
+
+Account sign in
+~~~~~~~~~~~~~~~
+**Endpoint: /account/signin**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **auth**: list of supported authentication methods using different social networks like Google, Facebook and Twitter.
+* **form**: the form fields that need to be sent for signing a user. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "auth": {
+        "facebook": true,
+        "google": true,
+        "twitter": true
+      },
+      "form": {
+        "csrf": "token",
+        "email": null,
+        "errors": {},
+        "password": null
+      },
+      "next": null,
+      "template": "account/signin.html",
+      "title": "Sign in"
+    }
+
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "auth": {
+        "facebook": true,
+        "google": true,
+        "twitter": true
+      },
+      "flash": "Please correct the errors",
+      "form": {
+        "csrf": "token",
+        "email": "prueba@prueba.com",
+        "errors": {
+          "password": [
+            "You must provide a password"
+          ]
+        },
+        "password": ""
+      },
+      "next": null,
+      "status": "error",
+      "template": "account/signin.html",
+      "title": "Sign in"
+    }
+
+
+If the login is successful, then, you will get something like this:
+
+.. code-block:: python
+
+    {
+      "flash": "Welcome back John Doe",
+      "next": "/",
+      "status": "success"
+    }
+
 Account sign out
 ~~~~~~~~~~~~~~~~
 **Endpoint: /account/signout**
