@@ -27,7 +27,7 @@ before_script:
 script:
     - alembic -c alembictest.ini stamp head
     - alembic -c alembictest.ini upgrade head
-    - nosetests test/
+    - travis_wait 30 nosetests test/
 notifications:
   hipchat: 11e2176ebb4b7372ee0d1fbc8abf4d@Github
   slack:
