@@ -202,16 +202,14 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert dom.find(id='enforce_privacy') is None, err_msg
         self.signout()
 
-
     @with_context
     def test_07_user_public_profile_json(self):
         '''Test PRIVACY user public profile privacy is respected for API access'''
         # As Anonymous user
         url = '/account/%s' % self.name
-        # TODO: is full url right? Want to avoid redirect on API calls.
+        # Use a full url to avoid redirection on API access.
         full_url = 'http://localhost%s/' % url
         res = self.app.get(full_url, content_type='application/json')
-        print res.data
         data = json.loads(res.data)
         # this data should be public visible
         err_msg = 'name should be public'
@@ -245,20 +243,6 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'registered_ago' not in data['user'], err_msg
         err_msg = 'valid_email should not be public'
         assert 'valid_email' not in data['user'], err_msg
-        # # As Authenticated user but NOT ADMIN
-        # self.signin()
-        # res = self.app.get(url, content_type='application/json')
-        # dom = BeautifulSoup(res.data)
-        # err_msg = 'Public User Profile page should be shown to authenticated users'
-        # assert dom.find(id='enforce_privacy') is None, err_msg
-        # self.signout
-        # # As Authenticated user but ADMIN
-        # self.signin(email=self.root_addr, password=self.root_password)
-        # res = self.app.get(url, follow_redirects=True)
-        # dom = BeautifulSoup(res.data)
-        # err_msg = 'Public User Profile page should be shown to admin users'
-        # assert dom.find(id='enforce_privacy') is None, err_msg
-        # self.signout()
 
 
 class TestPrivacyWebPrivacy(web_helper.Helper):
