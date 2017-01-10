@@ -278,6 +278,7 @@ class TestAdmin(web.Helper):
         self.signin()
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
+        print res.data
         assert "Juan Jose" in res.data, "username should be searchable"
         # Check with uppercase
         data = {'user': 'JUAN'}

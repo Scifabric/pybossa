@@ -51,7 +51,7 @@ class Helper(Test):
 
     def signin(self, method="POST", email="johndoe@example.com",
                password="p4ssw0rd", next=None,
-               content_type="text/html", follow_redirects=True, csrf=None):
+               content_type="multipart/form-data", follow_redirects=True, csrf=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
         headers = None

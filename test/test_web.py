@@ -529,8 +529,8 @@ class TestWeb(web.Helper):
         assert "Just one more step, please" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.account.redirect', wraps=redirect)
-    def test_register_post_valid_data_validation_disabled(self, redirect):
+    @patch('pybossa.util.redirect', wraps=redirect)
+    def test_register_post_valid_data_validation_disabled(self, mockredirect):
         """Test WEB register post with valid form data and account validation
         disabled redirects to home page"""
         from flask import current_app
@@ -540,8 +540,8 @@ class TestWeb(web.Helper):
                     email_addr="johndoe@example.com")
         res = self.app.post('/account/register', data=data,
                             follow_redirects=True)
-        print dir(redirect)
-        redirect.assert_called_with('/')
+        print dir(mockredirect)
+        mockredirect.assert_called_with('/')
 
     def test_register_confirmation_fails_without_key(self):
         """Test WEB register confirmation returns 403 if no 'key' param is present"""
