@@ -1487,10 +1487,17 @@ class TestWeb(web.Helper):
         assert not project.needs_password(), 'Password not deleted'
 
     @with_context
-    def test_update_application_errors(self):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_update_project_errors(self, mock_webhook):
         """Test WEB update form validation issues the errors"""
         self.register()
         self.new_project()
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
+
+        mock_webhook.return_value = html_request
 
         res = self.update_project(new_name="")
         assert "This field is required" in res.data
