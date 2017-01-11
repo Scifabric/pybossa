@@ -662,7 +662,7 @@ def _import_tasks(project, **form_data):
         flash(report.message)
     else:
         importer_queue.enqueue(import_tasks, project.id, **form_data)
-        flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
+        flash(gettext("You&#39;re trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
     return redirect_content_type(url_for('.tasks',
                                          short_name=project.short_name))
