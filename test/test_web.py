@@ -529,8 +529,8 @@ class TestWeb(web.Helper):
         assert "Just one more step, please" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.account.redirect', wraps=redirect)
-    def test_register_post_valid_data_validation_disabled(self, redirect):
+    @patch('pybossa.util.redirect', wraps=redirect)
+    def test_register_post_valid_data_validation_disabled(self, mockredirect):
         """Test WEB register post with valid form data and account validation
         disabled redirects to home page"""
         from flask import current_app
@@ -540,8 +540,8 @@ class TestWeb(web.Helper):
                     email_addr="johndoe@example.com")
         res = self.app.post('/account/register', data=data,
                             follow_redirects=True)
-        print dir(redirect)
-        redirect.assert_called_with('/')
+        print dir(mockredirect)
+        mockredirect.assert_called_with('/')
 
     def test_register_confirmation_fails_without_key(self):
         """Test WEB register confirmation returns 403 if no 'key' param is present"""
@@ -641,6 +641,125 @@ class TestWeb(web.Helper):
 
         assert user is not None
         assert user.check_password('password')
+
+    @with_context
+    def test_04_signin_signout_json(self):
+        """Test WEB sign in and sign out JSON works"""
+        res = self.register()
+        # Log out as the registration already logs in the user
+        res = self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data.get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        res = self.signin(email='', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+
+        data = json.loads(res.data)
+        err_msg = "There should be errors in email"
+        assert data.get('form').get('errors'), (err_msg, data)
+        assert data.get('form').get('errors').get('email'), (err_msg, data)
+        msg = "Please correct the errors"
+        assert data.get('flash') == msg, (data, err_msg)
+        res = self.signin(password='', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (data, err_msg)
+        msg = "You must provide a password"
+        assert msg in data.get('form').get('errors').get('password'), (err_msg, data)
+
+        res = self.signin(email='', password='',
+                          content_type='application/json',
+                          follow_redirects=False,
+                          csrf=csrf)
+        msg = "Please correct the errors"
+        data = json.loads(res.data)
+        err_msg = "There should be a flash message"
+        assert data.get('flash') == msg, (err_msg, data)
+        msg = "The e-mail is required"
+        assert data.get('form').get('errors').get('email')[0] == msg, (msg, data)
+        msg = "You must provide a password"
+        assert data.get('form').get('errors').get('password')[0] == msg, (msg, data)
+
+
+        # Non-existant user
+        msg = "Ooops, we didn't find you in the system"
+        res = self.signin(email='wrongemail', content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == INFO, (data)
+
+        res = self.signin(email='wrongemail', password='wrongpassword')
+        res = self.signin(email='wrongemail', password='wrongpassword',
+                          content_type="application/json",
+                          follow_redirects=False, csrf=csrf)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == INFO, (data)
+
+        # Real user but wrong password or username
+        msg = "Ooops, Incorrect email/password"
+        res = self.signin(password='wrongpassword',
+                          content_type="application/json",
+                          csrf=csrf,
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), (msg, data)
+        assert data.get('status') == ERROR, (data)
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=False)
+        data = json.loads(res.data)
+        msg = "Welcome back John Doe"
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, (msg, data)
+        assert data.get('next') == '/', (msg, data)
+
+        # TODO: add JSON support to profile page.
+        # # Check profile page with several information chunks
+        # res = self.profile()
+        # assert self.html_title("Profile") in res.data, res
+        # assert "John Doe" in res.data, res
+        # assert "johndoe@example.com" in res.data, res
+
+        # Log out
+        res = self.signout(content_type="application/json",
+                           follow_redirects=False)
+        msg = "You are now signed out"
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, data
+        assert data.get('next') == '/', data
+
+        # TODO: add json to profile public page
+        # # Request profile as an anonymous user
+        # # Check profile page with several information chunks
+        # res = self.profile()
+        # assert "John Doe" in res.data, res
+        # assert "johndoe@example.com" not in res.data, res
+
+        # Try to access protected areas like update
+        res = self.app.get('/account/johndoe/update', follow_redirects=True,
+                           content_type="application/json")
+        # As a user must be signed in to access, the page the title will be the
+        # redirection to log in
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Please sign in to access this page." in res.data, res.data
+
+        # TODO: Add JSON to profile
+        # res = self.signin(next='%2Faccount%2Fprofile',
+        #                   content_type="application/json",
+        #                   csrf=csrf)
+        # assert self.html_title("Profile") in res.data, res
+        # assert "Welcome back %s" % "John Doe" in res.data, res
+
 
     @with_context
     def test_04_signin_signout(self):
@@ -1368,10 +1487,17 @@ class TestWeb(web.Helper):
         assert not project.needs_password(), 'Password not deleted'
 
     @with_context
-    def test_update_application_errors(self):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_update_project_errors(self, mock_webhook):
         """Test WEB update form validation issues the errors"""
         self.register()
         self.new_project()
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
+
+        mock_webhook.return_value = html_request
 
         res = self.update_project(new_name="")
         assert "This field is required" in res.data

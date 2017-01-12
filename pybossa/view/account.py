@@ -91,7 +91,7 @@ def signin():
     Returns a Jinja2 template with the result of signing process.
 
     """
-    form = LoginForm(request.form)
+    form = LoginForm(request.body)
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
@@ -136,9 +136,10 @@ def signin():
 def _sign_in_user(user):
     login_user(user, remember=True)
     if newsletter.ask_user_to_subscribe(user):
-        return redirect(url_for('account.newsletter_subscribe',
-                                 next=request.args.get('next')))
-    return redirect(request.args.get("next") or url_for("home.home"))
+        return redirect_content_type(url_for('account.newsletter_subscribe',
+                                             next=request.args.get('next')))
+    return redirect_content_type(request.args.get("next")
+                                 or url_for("home.home"))
 
 
 @blueprint.route('/signout')
