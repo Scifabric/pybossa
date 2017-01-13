@@ -40,12 +40,14 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
-from pybossa.util import get_user_signup_method, handle_content_type, redirect_content_type
+from pybossa.util import get_user_signup_method
+from pybossa.util import handle_content_type, redirect_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
+from pybossa.messages import *
 
 from pybossa.forms.account_view_forms import *
 
@@ -89,7 +91,7 @@ def signin():
     Returns a Jinja2 template with the result of signing process.
 
     """
-    form = LoginForm(request.form)
+    form = LoginForm(request.body)
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
@@ -134,9 +136,10 @@ def signin():
 def _sign_in_user(user):
     login_user(user, remember=True)
     if newsletter.ask_user_to_subscribe(user):
-        return redirect(url_for('account.newsletter_subscribe',
-                                 next=request.args.get('next')))
-    return redirect(request.args.get("next") or url_for("home.home"))
+        return redirect_content_type(url_for('account.newsletter_subscribe',
+                                             next=request.args.get('next')))
+    return redirect_content_type(request.args.get("next")
+                                 or url_for("home.home"))
 
 
 @blueprint.route('/signout')
@@ -148,8 +151,8 @@ def signout():
 
     """
     logout_user()
-    flash(gettext('You are now signed out'), 'success')
-    return redirect_content_type(url_for('home.home'), message='success')
+    flash(gettext('You are now signed out'), SUCCESS)
+    return redirect_content_type(url_for('home.home'), status=SUCCESS)
 
 
 def get_email_confirmation_url(account):
@@ -398,7 +401,7 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    if request.form.get('btn') != 'Profile':
+    if request.body.get('btn') != 'Profile':
         update_form = UpdateProfileForm(formdata=None, obj=user)
     else:
         update_form = UpdateProfileForm(obj=user)
@@ -411,36 +414,40 @@ def update_profile(name):
     if request.method == 'POST':
         # Update user avatar
         succeed = False
-        if request.form.get('btn') == 'Upload':
+        if request.body.get('btn') == 'Upload':
             succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
-        elif request.form.get('btn') == 'Profile':
+        elif request.body.get('btn') == 'Profile':
             succeed = _handle_profile_update(user, update_form)
         # Update user password
-        elif request.form.get('btn') == 'Password':
+        elif request.body.get('btn') == 'Password':
             succeed = _handle_password_update(user, password_form)
         # Update user external services
-        elif request.form.get('btn') == 'External':
+        elif request.body.get('btn') == 'External':
             succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
             return abort(415)
         if succeed:
-            return redirect(url_for('.update_profile', name=user.name))
+            return redirect_content_type(url_for('.update_profile',
+                                                 name=user.name),
+                                         status=SUCCESS)
         else:
-            return render_template('/account/update.html',
-                                   form=update_form,
-                                   upload_form=avatar_form,
-                                   password_form=password_form,
-                                   title=title_msg,
-                                   show_passwd_form=show_passwd_form)
+            data = dict(template='/account/update.html',
+                        form=update_form,
+                        upload_form=avatar_form,
+                        password_form=password_form,
+                        title=title_msg,
+                        show_passwd_form=show_passwd_form)
+            return handle_content_type(data)
 
-    return render_template('/account/update.html',
-                           form=update_form,
-                           upload_form=avatar_form,
-                           password_form=password_form,
-                           title=title_msg,
-                           show_passwd_form=show_passwd_form)
+    data = dict(template='/account/update.html',
+                form=update_form,
+                upload_form=avatar_form,
+                password_form=password_form,
+                title=title_msg,
+                show_passwd_form=show_passwd_form)
+    return handle_content_type(data)
 
 
 def _handle_avatar_update(user, avatar_form):

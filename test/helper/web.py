@@ -49,18 +49,29 @@ class Helper(Test):
         return self.app.get('/account/register/confirmation?key=fake-key',
                             follow_redirects=True)
 
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
+    def signin(self, method="POST", email="johndoe@example.com",
+               password="p4ssw0rd", next=None,
+               content_type="multipart/form-data", follow_redirects=True, csrf=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
+        headers = None
         if next is not None:
             url = url + '?next=' + next
         if method == "POST":
-            return self.app.post(url, data={'email': email,
-                                            'password': password},
-                                 follow_redirects=True)
+            payload = {'email': email, 'password': password}
+            if content_type == 'application/json':
+                data = json.dumps(payload)
+            else:
+                data = payload
+            if csrf:
+                headers = {'X-CSRFToken': csrf}
+            return self.app.post(url, data=data,
+                                 content_type=content_type,
+                                 follow_redirects=follow_redirects,
+                                 headers=headers)
         else:
-            return self.app.get(url, follow_redirects=True)
+            return self.app.get(url, follow_redirects=follow_redirects,
+                                content_type=content_type, headers=headers)
 
     def profile(self, name="johndoe"):
         """Helper function to check profile of signed in user"""
@@ -72,27 +83,40 @@ class Helper(Test):
                        email_addr="johndoe@example.com",
                        subscribed=False,
                        new_name=None,
-                       btn='Profile'):
+                       btn='Profile',
+                       content_type="multipart/form-data",
+                       csrf=None,
+                       follow_redirects=True):
         """Helper function to update the profile of users"""
         url = "/account/%s/update" % name
         if new_name:
             name = new_name
         if (method == "POST"):
+            payload = {'id': id, 'fullname': fullname,
+                       'name': name,
+                       'locale': locale,
+                       'email_addr': email_addr,
+                       'btn': btn}
+            if content_type == 'application/json':
+                payload = json.dumps(payload)
+            headers = None
+            if csrf:
+                headers = {'X-CSRFToken': csrf}
             return self.app.post(url,
-                                 data={'id': id,
-                                       'fullname': fullname,
-                                       'name': name,
-                                       'locale': locale,
-                                       'email_addr': email_addr,
-                                       'btn': btn},
-                                 follow_redirects=True)
+                                 data=payload,
+                                 follow_redirects=follow_redirects,
+                                 content_type=content_type,
+                                 headers=headers)
         else:
             return self.app.get(url,
-                                follow_redirects=True)
+                                follow_redirects=follow_redirects,
+                                content_type=content_type)
 
-    def signout(self):
+    def signout(self, follow_redirects=True, content_type="text/html"):
         """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
+        return self.app.get('/account/signout',
+                            follow_redirects=follow_redirects,
+                            content_type=content_type)
 
     def create_categories(self):
         with self.flask_app.app_context():
@@ -174,33 +198,34 @@ class Helper(Test):
             return self.app.get("/project/%s/delete" % short_name,
                                 follow_redirects=True)
 
-    def update_project(self, method="POST", short_name="sampleapp", id=1,
-                           new_name="Sample Project", new_short_name="sampleapp",
-                           new_description="Description",
-                           new_allow_anonymous_contributors='false',
-                           new_category_id="1",
-                           new_long_description="Long desc",
-                           new_sched="random",
-                           new_webhook='http://server.com',
-                           new_protect='false',
-                           new_password=''):
+    def update_project(self,
+                       method="POST", short_name="sampleapp", id=1,
+                       new_name="Sample Project",
+                       new_short_name="sampleapp",
+                       new_description="Description",
+                       new_allow_anonymous_contributors=False,
+                       new_category_id=1,
+                       new_long_description="Long desc",
+                       new_sched="random",
+                       new_webhook='http://server.com',
+                       new_protect=False,
+                       new_password=None):
         """Helper function to update a project"""
+        payload = dict(id=id,
+                       name=new_name,
+                       short_name=new_short_name,
+                       description=new_description,
+                       allow_anonymous_contributors=new_allow_anonymous_contributors,
+                       category_id=new_category_id,
+                       long_description=new_long_description,
+                       sched=new_sched,
+                       webhook=new_webhook,
+                       protect=new_protect,
+                       password=new_password)
+
         if method == "POST":
             return self.app.post("/project/%s/update" % short_name,
-                                 data={
-                                    'id': id,
-                                    'name': new_name,
-                                    'short_name': new_short_name,
-                                    'description': new_description,
-                                    'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                    'category_id': new_category_id,
-                                    'long_description': new_long_description,
-                                    'sched': new_sched,
-                                    'webhook': new_webhook,
-                                    'protect': new_protect,
-                                    'password': new_password,
-                                    'btn': 'Save'},
-                                 follow_redirects=True)
+                                 data=payload, follow_redirects=True)
         else:
             return self.app.get("/project/%s/update" % short_name,
                                 follow_redirects=True)
