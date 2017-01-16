@@ -54,7 +54,8 @@ requirements = [
     "libsass",
     "pyjwt",
     "flask_json_multidict",
-    "flask-cors>=3.0.2, <3.0.3"
+    "flask-cors>=3.0.2, <3.0.3",
+    "webassets>=0.12.1, <0.12.2"
 ]
 
 setup(
