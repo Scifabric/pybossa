@@ -780,6 +780,84 @@ If there's an error in the form fields, you will get them in the **form.errors**
       "template": "/account/password_forgot.html"
     }
 
+Account name
+~~~~~~~~~~~~
+**Endpoint: /account/<name>
+
+*Allowed methods*: **GET**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **projects_contrib**: a list of projects the user has contributed too.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+* **user**: User information, including fullname, rank etc.
+
+**Example output**
+
+If you are not logged in or requesting details of another user you will only get public viewable information. If you are logged in you will also get private information in the user field. Sample output of public information:
+
+.. code-block:: python
+
+    {
+        "projects_contrib": [
+            {
+                "description": "this is a project",
+                "info": {
+                    "n_tasks": 8,
+                    "n_volunteers": 1,
+                    "name": "flickrproject1",
+                    "overall_progress": 0,
+                    "short_name": "flickrproject1"
+                    }
+            }
+        ],
+        "template": "/account/public_profile.html",
+        "title": "John &middot; User Profile",
+        "user": {
+            "fullname": "Joen Doe",
+            "info": {
+                "container": "user_4953"
+            },
+            "n_answers": 56,
+            "name": "JohnDoe",
+            "rank": 1813,
+            "score": 56,
+            "total": 11091
+        }
+    }
+
+Example of logged in user:
+
+.. code-block:: python
+
+    {
+        ...
+        "user": {
+            "api_key": "aa3ee485-896d-488a-83f7-88a29bf45171",
+            "confirmation_email_sent": false,
+            "created": "2014-08-11T08:59:32.079599",
+            "email_addr": "johndoe@johndoe.com",
+            "facebook_user_id": null,
+            "fullname": "John Doe",
+            "google_user_id": null,
+            "id": 4953,
+            "info": {
+                "container": "user_4953"
+            },
+            "n_answers": 56,
+            "name": "JohnDoe",
+            "rank": 1813,
+            "registered_ago": "2 years ago",
+            "score": 56,
+            "total": 11091,
+            "twitter_user_id": null,
+            "valid_email": true
+        }
+    }
+
 Account update profile
 ~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /account/<name>/update**
