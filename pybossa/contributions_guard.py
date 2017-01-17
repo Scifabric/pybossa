@@ -68,7 +68,7 @@ class ContributionsGuard(object):
         key = self._create_presented_time_key(task, user)
         self.conn.setex(key, self.STAMP_TTL, make_timestamp())
 
-    def check_task_presented_stamped(self, task, user):
+    def check_task_presented_timestamp(self, task, user):
         """Check if a task was presented to a user."""
         key = self._create_presented_time_key(task, user)
         task_presented = self.conn.get(key) is not None

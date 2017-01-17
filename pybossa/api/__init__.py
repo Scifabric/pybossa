@@ -233,7 +233,7 @@ def set_cache_presented_time(task_id, force=False):
     # This is an appropriate solution since we do not have complete information
     # regarding whether or not a user actually looked at a task before a browser reload,
     # logout or timeout.
-    if usr is not None and not guard.check_task_presented_stamped(task_id, get_user_id_or_ip()):
+    if usr is not None and not guard.check_task_presented_timestamp(task_id, get_user_id_or_ip()):
         guard.stamp_presented_time(task_id, get_user_id_or_ip())
 
     # Only overwrite an existing presented_time_value if force = True.
