@@ -520,8 +520,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
-        """Test API TaskRun creation and auth for authenticated external uid: Disabled for GIGwork"""
-        '''
+        """Test API TaskRun creation and auth for authenticated external uid"""
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
@@ -586,13 +585,11 @@ class TestTaskrunAPI(TestAPI):
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson, headers=headers)
         assert tmp.status_code == 403, tmp.data
-        '''
 
     @with_context
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
-        anonymous user: Disabled for GIGwork"""
-        '''
+        authenticated user"""
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -616,8 +613,6 @@ class TestTaskrunAPI(TestAPI):
         self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
         success = self.app.post(url, data=datajson)
         assert success.status_code == 200, success.data
-        '''
-
 
     @with_context
     def test_taskrun_post_requires_newtask_first_external_uid(self):
@@ -882,17 +877,15 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_updates_task_state(self, guard, mock_request):
         """Test API TaskRun POST updates task state"""
         guard.return_value = mock_contributions_guard(True)
-        user1 = UserFactory.create()
-        user2 = UserFactory.create()
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, n_answers=2)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
 
         # Post first taskrun
-        url = '/api/taskrun?api_key={}'.format(user1.api_key)
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
-            user_id=user1.id,
+            user_id=project.owner.id,
             info='my task result')
         datajson = json.dumps(data)
         mock_request.data = datajson
@@ -912,7 +905,6 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
-            user_id=user2.id,
             info='my task result anon')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
