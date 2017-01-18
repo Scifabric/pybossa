@@ -812,6 +812,16 @@ If you are not logged in or requesting details of another user you will only get
                 "short_name": "test12334"
             }
         ],
+        "projects_created": [
+            {
+                "description": "Youtube 1",
+                "n_tasks": 15,
+                "n_volunteers": 0,
+                "name": "JohnDoe Youtube 1",
+                "overall_progress": 0,
+                "short_name": "johnyoutube1"
+            },
+        ]
         "template": "/account/public_profile.html",
         "title": "John &middot; User Profile",
         "user": {

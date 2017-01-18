@@ -255,6 +255,24 @@ def published_projects_cached(user_id):
     return published_projects(user_id)
 
 
+def public_published_projects(user_id):
+    """Return projects that user_id has contributed to. Public information only"""
+    unsanitized_projects = published_projects(user_id)
+    public_projects = []
+    if unsanitized_projects:
+        p = Project()
+        for project in unsanitized_projects:
+            public_project = p.to_public_json(data=project)
+            public_projects.append(public_project)
+    return public_projects
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_published_projects_cached(user_id):
+    """Return published projects (cached version)."""
+    return public_published_projects(user_id)
+
+
 def draft_projects(user_id):
     """Return draft projects for user_id."""
     sql = text('''
