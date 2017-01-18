@@ -805,6 +805,10 @@ If you are not logged in or requesting details of another user you will only get
         "projects_contrib": [
             {
                 "description": "this is a project",
+                "info": {
+                    "container": "123",
+                    "thumbnail": "thumbnailx"
+                },
                 "n_tasks": 4,
                 "n_volunteers": 0,
                 "name": "test12334",
@@ -815,6 +819,10 @@ If you are not logged in or requesting details of another user you will only get
         "projects_created": [
             {
                 "description": "Youtube 1",
+                "info": {
+                    "container": "345",
+                    "thumbnail": "thumbnaily"
+                },
                 "n_tasks": 15,
                 "n_volunteers": 0,
                 "name": "JohnDoe Youtube 1",
@@ -832,8 +840,7 @@ If you are not logged in or requesting details of another user you will only get
             "n_answers": 56,
             "name": "JohnDoe",
             "rank": 1813,
-            "score": 56,
-            "total": 11091
+            "score": 56
         }
     }
 
@@ -860,7 +867,7 @@ Example of logged in user:
             "rank": 1813,
             "registered_ago": "2 years ago",
             "score": 56,
-            "total": 11091,
+            "total": 10046,
             "twitter_user_id": null,
             "valid_email": true
         }

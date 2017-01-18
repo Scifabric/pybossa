@@ -220,8 +220,6 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'rank' in data['user'], err_msg
         err_msg = 'score should be public'
         assert 'score' in data['user'], err_msg
-        err_msg = 'total should be public'
-        assert 'total' in data['user'], err_msg
         # this data should not be public
         err_msg = 'id should not be public'
         assert 'id' not in data['user'], err_msg
@@ -229,8 +227,6 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'api_key' not in data['user'], err_msg
         err_msg = 'confirmation_email_sent should not be public'
         assert 'confirmation_email_sent' not in data['user'], err_msg
-        err_msg = 'created should not be public'
-        assert 'created' not in data['user'], err_msg
         err_msg = 'email_addr should not be public'
         assert 'email_addr' not in data['user'], err_msg
         err_msg = 'google_user_id should not be public'
@@ -239,8 +235,6 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'facebook_user_id' not in data['user'], err_msg
         err_msg = 'twitter_user_id should not be public'
         assert 'twitter_user_id' not in data['user'], err_msg
-        err_msg = 'registered_ago should not be public'
-        assert 'registered_ago' not in data['user'], err_msg
         err_msg = 'valid_email should not be public'
         assert 'valid_email' not in data['user'], err_msg
 
