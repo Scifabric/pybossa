@@ -24,21 +24,18 @@ from StringIO import StringIO
 from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call
-from flask import Response, redirect
+from flask import redirect
 from itsdangerous import BadSignature
-from collections import namedtuple
 from pybossa.util import get_user_signup_method, unicode_csv_reader
-from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
-from werkzeug.exceptions import NotFound
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.messages import *
-from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
+from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
@@ -3978,6 +3975,31 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return a 404"
         assert res.status_code == 404, err_msg
+
+    @with_context
+    def test_71_public_user_profile_json(self):
+        """Test JSON WEB public user profile works"""
+
+        res = self.app.get('/account/nonexistent/',
+                           content_type='application/json')
+        assert res.status_code == 404, res.status_code
+        data = json.loads(res.data)
+        assert data['code'] == 404, res.status_code
+
+        Fixtures.create()
+
+        # Should work as an anonymous user
+        url = '/account/%s/' % Fixtures.name
+        res = self.app.get(url, content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        err_msg = 'there should be a title for the user page'
+        assert data['title'] == 'T Tester &middot; User Profile', err_msg
+        err_msg = 'there should be a user name'
+        assert data['user']['name'] == 'tester', err_msg
+        err_msg = 'there should not be a user id'
+        assert 'id' not in data['user'], err_msg
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

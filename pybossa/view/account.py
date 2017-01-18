@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -41,7 +41,7 @@ from flask.ext.babel import gettext
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
 from pybossa.util import get_user_signup_method
-from pybossa.util import handle_content_type, redirect_content_type
+from pybossa.util import redirect_content_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -133,13 +133,14 @@ def signin():
         # User already signed in, so redirect to home page
         return redirect_content_type(url_for("home.home"))
 
+
 def _sign_in_user(user):
     login_user(user, remember=True)
     if newsletter.ask_user_to_subscribe(user):
         return redirect_content_type(url_for('account.newsletter_subscribe',
                                              next=request.args.get('next')))
-    return redirect_content_type(request.args.get("next")
-                                 or url_for("home.home"))
+    return redirect_content_type(request.args.get("next") or
+                                 url_for("home.home"))
 
 
 @blueprint.route('/signout')
@@ -314,34 +315,41 @@ def profile(name):
 
 
 def _show_public_profile(user):
-    user_dict = cached_users.get_user_summary(user.name)
-    projects_contributed = cached_users.projects_contributed_cached(user.id)
-    projects_created = cached_users.published_projects_cached(user.id)
+    user_dict = cached_users.public_get_user_summary(user.name)
+    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
+    projects_created = cached_users.public_published_projects_cached(user.id)
+
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
     title = "%s &middot; User Profile" % user_dict['fullname']
-    return render_template('/account/public_profile.html',
-                           title=title,
-                           user=user_dict,
-                           projects=projects_contributed,
-                           projects_created=projects_created)
+
+    response = dict(template='/account/public_profile.html',
+                    title=title,
+                    user=user_dict,
+                    projects=projects_contributed,
+                    projects_created=projects_created)
+
+    return handle_content_type(response)
 
 
 def _show_own_profile(user):
+    user_dict = cached_users.get_user_summary(user.name)
     rank_and_score = cached_users.rank_and_score(user.id)
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
     cached_users.get_user_summary(user.name)
 
-    return render_template('account/profile.html', title=gettext("Profile"),
-                           projects_contrib=projects_contributed,
-                           projects_published=projects_published,
-                           projects_draft=projects_draft,
-                           user=user)
+    response = dict(template='account/profile.html', title=gettext("Profile"),
+                    projects_contrib=projects_contributed,
+                    projects_published=projects_published,
+                    projects_draft=projects_draft,
+                    user=user_dict)
+
+    return handle_content_type(response)
 
 
 @blueprint.route('/<name>/applications')
@@ -373,6 +381,7 @@ def _get_user_projects(user_id):
     projects_published = cached_users.published_projects(user_id)
     projects_draft = cached_users.draft_projects(user_id)
     return projects_published, projects_draft
+
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
@@ -458,7 +467,7 @@ def _handle_avatar_update(user, avatar_form):
         if user.info.get('avatar'):
             uploader.delete_file(user.info['avatar'], container)
         user.info = {'avatar': _file.filename,
-                             'container': container}
+                     'container': container}
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your avatar has been updated! It may \
@@ -483,7 +492,7 @@ def _handle_profile_update(user, update_form):
                            name=update_form.name.data,
                            email_addr=update_form.email_addr.data)
             confirm_url = get_email_confirmation_url(account)
-            subject = ('You have updated your email in %s! Verify it' \
+            subject = ('You have updated your email in %s! Verify it'
                        % current_app.config.get('BRAND'))
             msg = dict(subject=subject,
                        recipients=[update_form.email_addr.data],

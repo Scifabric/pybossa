@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +22,7 @@ from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
+from pybossa.model.project import Project
 
 
 session = db.slave_session
@@ -145,6 +146,17 @@ def get_user_summary(name):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_get_user_summary(name):
+    """Sanitize user summary for public usage"""
+    private_user = get_user_summary(name)
+    public_user = None
+    if private_user is not None:
+        u = User()
+        public_user = u.to_public_json(data=private_user)
+    return public_user
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
     """Return rank and score for a user."""
     # See: https://gist.github.com/tokumine/1583695
@@ -195,6 +207,24 @@ def projects_contributed_cached(user_id):
     return projects_contributed(user_id)
 
 
+def public_projects_contributed(user_id):
+    """Return projects that user_id has contributed to. Public information only"""
+    unsanitized_projects = projects_contributed(user_id)
+    public_projects = []
+    if unsanitized_projects:
+        p = Project()
+        for project in unsanitized_projects:
+            public_project = p.to_public_json(data=project)
+            public_projects.append(public_project)
+    return public_projects
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_projects_contributed_cached(user_id):
+    """Return projects contributed too (cached version)."""
+    return public_projects_contributed(user_id)
+
+
 def published_projects(user_id):
     """Return published projects for user_id."""
     sql = text('''
@@ -223,6 +253,24 @@ def published_projects(user_id):
 def published_projects_cached(user_id):
     """Return published projects (cached version)."""
     return published_projects(user_id)
+
+
+def public_published_projects(user_id):
+    """Return projects that user_id has contributed to. Public information only"""
+    unsanitized_projects = published_projects(user_id)
+    public_projects = []
+    if unsanitized_projects:
+        p = Project()
+        for project in unsanitized_projects:
+            public_project = p.to_public_json(data=project)
+            public_projects.append(public_project)
+    return public_projects
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_published_projects_cached(user_id):
+    """Return published projects (cached version)."""
+    return public_published_projects(user_id)
 
 
 def draft_projects(user_id):
