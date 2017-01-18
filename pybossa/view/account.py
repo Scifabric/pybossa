@@ -641,7 +641,7 @@ def forgot_password():
                           "recovery instructions!"),
                   'success')
         else:
-            flash(gettext("We don't have this email in our records. "
+            flash(gettext("We don\'t have this email in our records. "
                           "You may have signed up with a different "
                           "email or used Twitter, Facebook, or "
                           "Google to sign-in"), 'error')
