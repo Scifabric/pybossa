@@ -12,7 +12,7 @@ from pybossa.api.task_run import TaskRunAPI
 from pybossa.auth.task import TaskAuth
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.error import ErrorStatus
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 import json
 
 __plugin__ = "LockedScheduler"
@@ -25,13 +25,20 @@ TIMEOUT = ContributionsGuard.STAMP_TTL
 KEY_PREFIX = "pybossa:project:task_requested:timestamps:{0}:{1}"
 
 session = sched.session
+error = ErrorStatus()
 
 
-def get_task(project_id, user_id=None, user_ip=None,
-             external_uid=None, offset=0):
-    """Add here the logic for your scheduler."""
+def get_new_task(project_id, user_id=None, user_ip=None,
+                 external_uid=None, offset=0):
+    """
+    Select a new task to be returned to the contributor. For each incomplete
+    task, check if the number of users working on the task is smaller than the
+    number of answers still needed. In that case, acquire a lock on the task
+    and return the task to the user. If offset is nonzero, skip that amount
+    of available tasks before returning to the user.
+    """
     if offset > 2:
-        raise BadRequest
+        raise BadRequest()
     sql = text('''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers
            FROM task
@@ -44,13 +51,10 @@ def get_task(project_id, user_id=None, user_ip=None,
            ''')
     rows = session.execute(sql, dict(project_id=project_id, user_id=user_id))
 
-    redis_conn = sentinel.master
-    lock_manager = LockManager(redis_conn, TIMEOUT)
-
     skipped = 0
-    for task_id, count, n_answer in rows:
-        key = KEY_PREFIX.format(project_id, task_id)
-        if lock_manager.acquire_lock(key, user_id, n_answer - count):
+    for task_id, taskcount, n_answers in rows:
+        remaining = n_answers - taskcount
+        if acquire_lock(project_id, task_id, user_id, remaining):
             if skipped == offset:
                 return session.query(sched.Task).get(task_id)
             else:
@@ -63,8 +67,8 @@ def with_custom_scheduler(f):
     def wrapper(project_id, sched, user_id=None,
                 user_ip=None, external_uid=None, offset=0):
         if sched == SCHEDULER_NAME:
-            return get_task(project_id, user_id, user_ip,
-                            external_uid, offset=offset)
+            return get_new_task(project_id, user_id, user_ip,
+                                external_uid, offset=offset)
         return f(project_id, sched, user_id=user_id, user_ip=user_ip,
                  external_uid=external_uid, offset=offset)
     return wrapper
@@ -78,29 +82,42 @@ def variants_with_custom_scheduler(f):
 
 
 def with_task_lock_check(f):
+    """
+    Wrap the post method for TaskRunApi. If the scheduler is set, check
+    if the user holds a lock before submitting the task. Release the lock
+    if the task is submitted successfully
+    """
     @wraps(f)
     def wrapper(self):
-        ret_val = f(self)
         project_id, task_id, user_id = get_task_run_info()
-        sched = get_project_scheduler(project_id)
-        is_error = isinstance(ret_val, ErrorStatus)
-        if sched == SCHEDULER_NAME and not is_error:
-            key = KEY_PREFIX.format(project_id, task_id)
-            redis_conn = sentinel.master
-            lock_manager = LockManager(redis_conn, TIMEOUT)
-            lock_manager.release_lock(key, user_id)
-        return ret_val
+        scheduler = get_project_scheduler(project_id)
+        if scheduler != SCHEDULER_NAME:
+            return f(self)
+        try:
+            return _locked_post(f, self, project_id, task_id, user_id)
+        except Exception as e:
+            return error.format_exception(
+                e,
+                target=self.__class__.__name__.lower(),
+                action='POST'
+            )
     return wrapper
+
+
+def _locked_post(f, self, project_id, task_id, user_id):
+    if not has_lock(project_id, task_id, user_id):
+        raise Forbidden('You must request a task first!')
+    ret_val = f(self)
+    if not isinstance(ret_val, ErrorStatus):
+        release_lock(project_id, task_id, user_id)
+    return ret_val
 
 
 def with_read_auth(f):
     """
-    Wrap TaskAuth._read to disallow direct access to
-    a particular task unless the user already has locked it
+    Wrap TaskAuth._read to disallow direct access to a particular
+    task unless the user already has locked it (or is an admin)
     """
-    redis_conn = sentinel.master
-    lock_manager = LockManager(redis_conn, TIMEOUT)
-
     @wraps(f)
     def wrapper(self, user, task):
         if task is not None:
@@ -108,10 +125,9 @@ def with_read_auth(f):
             task_id = task.id
             scheduler = get_project_scheduler(project_id)
             if scheduler == SCHEDULER_NAME:
-                key = KEY_PREFIX.format(project_id, task_id)
-                return lock_manager.has_lock(key, user.id)
+                is_admin = not user.is_anonymous() and user.admin
+                return is_admin or has_lock(project_id, task_id, user.id)
         return f(self, user, task)
-
     return wrapper
 
 
@@ -129,6 +145,28 @@ def get_task_run_info():
 def get_project_scheduler(project_id):
     project = project_repo.get(project_id)
     return project.info.get("sched")
+
+
+def has_lock(project_id, task_id, user_id):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    return lock_manager.has_lock(key, user_id)
+
+
+def acquire_lock(project_id, task_id, user_id, limit):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    return lock_manager.acquire_lock(key, user_id, limit)
+
+
+def release_lock(project_id, task_id, user_id):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    lock_manager.release_lock(key, user_id)
+
+
+def get_key(project_id, task_id):
+    return KEY_PREFIX.format(project_id, task_id)
 
 
 class LockedScheduler(Plugin):
