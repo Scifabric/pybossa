@@ -211,7 +211,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         full_url = 'http://localhost%s/' % url
         res = self.app.get(full_url, content_type='application/json')
         data = json.loads(res.data)
-        # this data should be public visible
+        # this data should be public visible in user
         err_msg = 'name should be public'
         assert data['user']['name'] == self.name, err_msg
         err_msg = 'fullname should be public'
@@ -220,7 +220,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'rank' in data['user'], err_msg
         err_msg = 'score should be public'
         assert 'score' in data['user'], err_msg
-        # this data should not be public
+        # this data should not be public in user
         err_msg = 'id should not be public'
         assert 'id' not in data['user'], err_msg
         err_msg = 'api_key should not be public'
@@ -237,6 +237,31 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'twitter_user_id' not in data['user'], err_msg
         err_msg = 'valid_email should not be public'
         assert 'valid_email' not in data['user'], err_msg
+        # public projects data
+        project = data['projects'][0]
+        err_msg = 'info should be public'
+        assert 'info' in project, err_msg
+        err_msg = 'description should be public'
+        assert 'description' in project, err_msg
+        err_msg = 'short_name should be public'
+        assert 'short_name' in project, err_msg
+        err_msg = 'n_volunteers should be public'
+        assert 'n_volunteers' in project, err_msg
+        err_msg = 'overall_progress should be public'
+        assert 'overall_progress' in project, err_msg
+        err_msg = 'name should be public'
+        assert 'name' in project, err_msg
+        # non public projects data
+        err_msg = 'id should not be public'
+        assert 'id' not in project, err_msg
+        err_msg = 'owner_id should not be public'
+        assert 'owner_id' not in project, err_msg
+        err_msg = 'results should not be public'
+        assert 'results' not in project['info'], err_msg
+        err_msg = 'task_presenter should not be public'
+        assert 'task_presenter' not in project['info'], err_msg
+        err_msg = 'tutorial should not be public'
+        assert 'tutorial' not in project['info'], err_msg
 
 
 class TestPrivacyWebPrivacy(web_helper.Helper):
