@@ -24,21 +24,18 @@ from StringIO import StringIO
 from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call
-from flask import Response, redirect
+from flask import redirect
 from itsdangerous import BadSignature
-from collections import namedtuple
 from pybossa.util import get_user_signup_method, unicode_csv_reader
-from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
-from werkzeug.exceptions import NotFound
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.messages import *
-from pybossa.core import user_repo, sentinel, project_repo, result_repo, signer
+from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
