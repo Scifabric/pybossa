@@ -22,6 +22,7 @@ from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
+from pybossa.model.project import Project
 
 
 session = db.slave_session
@@ -204,6 +205,24 @@ def projects_contributed(user_id):
 def projects_contributed_cached(user_id):
     """Return projects contributed too (cached version)."""
     return projects_contributed(user_id)
+
+
+def public_projects_contributed(user_id):
+    """Return projects that user_id has contributed to. Public information only"""
+    unsanitized_projects = projects_contributed(user_id)
+    public_projects = []
+    if unsanitized_projects:
+        p = Project()
+        for project in unsanitized_projects:
+            public_project = p.to_public_json(data=project)
+            public_projects.append(public_project)
+    return public_projects
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def public_projects_contributed_cached(user_id):
+    """Return projects contributed too (cached version)."""
+    return public_projects_contributed(user_id)
 
 
 def published_projects(user_id):

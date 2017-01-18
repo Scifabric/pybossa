@@ -48,7 +48,6 @@ from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
-from pybossa.model.project import Project
 
 from pybossa.forms.account_view_forms import *
 
