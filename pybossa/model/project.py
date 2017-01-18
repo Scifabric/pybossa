@@ -113,3 +113,8 @@ class Project(db.Model, DomainObject):
 
     def has_presenter(self):
         return self.info.get('task_presenter') not in ('', None)
+
+    @classmethod
+    def public_attributes(self):
+        """Return a list of public attributes."""
+        return ['description', 'n_tasks', 'n_volunteers', 'name', 'overall_progress', 'short_name']

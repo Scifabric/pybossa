@@ -48,6 +48,7 @@ from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
+from pybossa.model.project import Project
 
 from pybossa.forms.account_view_forms import *
 
@@ -316,8 +317,8 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.public_get_user_summary(user.name)
-    projects_contributed = cached_users.projects_contributed_cached(user.id)
-    projects_created = cached_users.published_projects_cached(user.id)
+    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
+    projects_created = cached_users.public_published_projects_cached(user.id)
 
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
@@ -339,7 +340,7 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
     cached_users.get_user_summary(user.name)
 

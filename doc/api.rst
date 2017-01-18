@@ -805,13 +805,11 @@ If you are not logged in or requesting details of another user you will only get
         "projects_contrib": [
             {
                 "description": "this is a project",
-                "info": {
-                    "n_tasks": 8,
-                    "n_volunteers": 1,
-                    "name": "flickrproject1",
-                    "overall_progress": 0,
-                    "short_name": "flickrproject1"
-                    }
+                "n_tasks": 4,
+                "n_volunteers": 0,
+                "name": "test12334",
+                "overall_progress": 0,
+                "short_name": "test12334"
             }
         ],
         "template": "/account/public_profile.html",
