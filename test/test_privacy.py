@@ -260,7 +260,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'results' not in project['info'], err_msg
         err_msg = 'task_presenter should not be public'
         assert 'task_presenter' not in project['info'], err_msg
-        err_msg = 'tutorial should not be public'
+        err_msg = 'tutorial
         assert 'tutorial' not in project['info'], err_msg
 
 

@@ -3977,6 +3977,31 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, err_msg
 
     @with_context
+    def test_71_public_user_profile_json(self):
+        """Test JSON WEB public user profile works"""
+
+        res = self.app.get('/account/nonexistent/',
+                           content_type='application/json')
+        assert res.status_code == 404, res.status_code
+        data = json.loads(res.data)
+        assert data['code'] == 404, res.status_code
+
+        Fixtures.create()
+
+        # Should work as an anonymous user
+        url = '/account/%s/' % Fixtures.name
+        res = self.app.get(url, content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        err_msg = 'there should be a title for the user page'
+        assert data['title'] == 'T Tester &middot; User Profile', err_msg
+        err_msg = 'there should be a user name'
+        assert data['user']['name'] == 'tester', err_msg
+        err_msg = 'there should not be a user id'
+        assert 'id' not in data['user'], err_msg
+
+
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_74_task_settings_page(self, mock):
         """Test WEB TASK SETTINGS page works"""
