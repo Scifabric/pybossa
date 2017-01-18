@@ -245,6 +245,8 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'description' in project, err_msg
         err_msg = 'short_name should be public'
         assert 'short_name' in project, err_msg
+        err_msg = 'n_tasks should be public'
+        assert 'n_tasks' in project, err_msg
         err_msg = 'n_volunteers should be public'
         assert 'n_volunteers' in project, err_msg
         err_msg = 'overall_progress should be public'
