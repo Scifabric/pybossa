@@ -1063,3 +1063,47 @@ It returns a JSON object with the following information:
         u'flash': u'You reset your password successfully!', 
         u'next': u'/'
     }
+
+Account reset API Key 
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/<user>/resetapikey**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **csrf**: The CSRF token for validating the post.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "form":
+            {
+                "csrf": "token",
+            }
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **status**: A status message, indicating if something went wrong.
+* **next**: Suggested URL to redirect the user.
+
+**Example output**
+
+.. code-block:: python
+ 
+    {
+        u'status': u'success', 
+        u'flash': u'New API-KEY generated', 
+        u'next': u'/account/<user>'
+    }
