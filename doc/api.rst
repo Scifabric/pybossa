@@ -1010,3 +1010,56 @@ If there's an error in the form fields, you will get them in the **form.errors**
 
     (x1,y1) are the offset left of the cropped area and  the offset top of the cropped 
     area respectively; and (x2,y2) are the width and height of the crop.
+
+
+Account reset password
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/reset-password**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+*Required arguments*:  **key** a string required to validate the link for updating
+the password of the user. This key is sent to the user via email after requesting to
+reset the password. 
+
+It returns a JSON object with the following information:
+
+* **form**: the form fields that need to be sent for updating account. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "confirm": null,
+        "csrf": "token",
+        "current_password": null,
+        "errors": {},
+        "new_password": null
+      },
+      "template": "/account/password_reset.html"
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **status**: A status message, indicating if something went wrong.
+* **next**: Suggested URL to redirect the user.
+
+**Example output**
+
+.. code-block:: python
+ 
+    {
+        u'status': u'success', 
+        u'flash': u'You reset your password successfully!', 
+        u'next': u'/'
+    }

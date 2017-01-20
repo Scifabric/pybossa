@@ -2319,6 +2319,102 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.signer.loads')
+    def test_44_password_reset_json_key_errors(self, Mock):
+        """Test WEB password reset JSON key errors are caught"""
+        self.register()
+        user = User.query.get(1)
+        userdict = {'user': user.name, 'password': user.passwd_hash}
+        fakeuserdict = {'user': user.name, 'password': 'wronghash'}
+        fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
+        fakeuserdict_form = {'user': user.name, 'passwd': 'p4ssw0rD'}
+        key = signer.dumps(userdict, salt='password-reset')
+        returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
+                   fakeuserdict, userdict, userdict, fakeuserdict_err]
+
+        def side_effects(*args, **kwargs):
+            result = returns.pop(0)
+            if isinstance(result, BadSignature):
+                raise result
+            return result
+        Mock.side_effect = side_effects
+        # Request with no key
+        content_type = 'application/json'
+        res = self.app.get('/account/reset-password',
+                           content_type=content_type,
+                           follow_redirects=False)
+        assert 403 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+        # Request with invalid key
+        res = self.app.get('/account/reset-password?key=foo',
+                           content_type=content_type,
+                           follow_redirects=True)
+        assert 403 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+
+        # Request with key exception
+        res = self.app.get('/account/reset-password?key=%s' % (key),
+                           follow_redirects=True,
+                           content_type=content_type)
+        assert 403 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+
+        res = self.app.get('/account/reset-password?key=%s' % (key),
+                           follow_redirects=True,
+                           content_type=content_type)
+        assert 200 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('form'), data
+        assert data.get('form').get('csrf'), data
+        keys = ['current_password', 'new_password', 'confirm']
+        for key in keys:
+            assert key in data.get('form').keys(), data
+
+        res = self.app.get('/account/reset-password?key=%s' % (key),
+                           follow_redirects=True,
+                           content_type=content_type)
+        assert 403 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+
+        # Check validation
+        payload = {'new_password': '', 'confirm': '#4a4'}
+        res = self.app.post('/account/reset-password?key=%s' % (key),
+                            data=json.dumps(payload),
+                            content_type=content_type,
+                            follow_redirects=False)
+
+        msg = "Please correct the errors"
+        data = json.loads(res.data)
+        assert msg in data.get('flash'), data
+        assert data.get('form').get('errors'), data
+        assert data.get('form').get('errors').get('new_password'), data
+
+
+        res = self.app.post('/account/reset-password?key=%s' % (key),
+                            data=json.dumps({'new_password': 'p4ssw0rD',
+                                             'confirm': 'p4ssw0rD'}),
+                            follow_redirects=False,
+                            content_type=content_type)
+        data = json.loads(res.data)
+        msg = "You reset your password successfully!"
+        assert msg in data.get('flash'), data
+        assert data.get('status') == SUCCESS, data
+
+
+        # Request without password
+        res = self.app.get('/account/reset-password?key=%s' % (key),
+                           follow_redirects=False,
+                           content_type=content_type)
+        assert 403 == res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+
+
+    @with_context
+    @patch('pybossa.view.account.signer.loads')
     def test_44_password_reset_key_errors(self, Mock):
         """Test WEB password reset key errors are caught"""
         self.register()
