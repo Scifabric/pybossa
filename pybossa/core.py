@@ -20,7 +20,7 @@ import os
 import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
-    flash, _app_ctx_stack
+    flash, _app_ctx_stack, abort
 from flask.ext.login import current_user
 from flask.ext.babel import gettext
 from flask.ext.assets import Bundle
@@ -505,7 +505,10 @@ def setup_hooks(app):
         if (request.method == 'POST' and
                 request.headers['Content-Type'] == 'application/json' and
                 request.data):
-            request.body = get_json_multidict(request)
+            try:
+                request.body = get_json_multidict(request)
+            except TypeError:
+                abort(400)
 
     @app.context_processor
     def _global_template_context():
