@@ -672,4 +672,4 @@ def reset_api_key(name):
     cached_users.delete_user_summary(user.name)
     msg = gettext('New API-KEY generated')
     flash(msg, 'success')
-    return redirect(url_for('account.profile', name=name))
+    return redirect_content_type(url_for('account.profile', name=name))
