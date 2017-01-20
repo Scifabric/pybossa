@@ -2339,31 +2339,23 @@ class TestWeb(web.Helper):
         Mock.side_effect = side_effects
         # Request with no key
         content_type = 'application/json'
-        res = self.app.get('/account/reset-password',
-                           content_type=content_type,
-                           follow_redirects=False)
+        res = self.app_get_json('/account/reset-password')
         assert 403 == res.status_code
         data = json.loads(res.data)
         assert data.get('code') == 403, data
         # Request with invalid key
-        res = self.app.get('/account/reset-password?key=foo',
-                           content_type=content_type,
-                           follow_redirects=True)
+        res = self.app_get_json('/account/reset-password?key=foo')
         assert 403 == res.status_code
         data = json.loads(res.data)
         assert data.get('code') == 403, data
 
         # Request with key exception
-        res = self.app.get('/account/reset-password?key=%s' % (key),
-                           follow_redirects=True,
-                           content_type=content_type)
+        res = self.app_get_json('/account/reset-password?key=%s' % (key))
         assert 403 == res.status_code
         data = json.loads(res.data)
         assert data.get('code') == 403, data
 
-        res = self.app.get('/account/reset-password?key=%s' % (key),
-                           follow_redirects=True,
-                           content_type=content_type)
+        res = self.app_get_json('/account/reset-password?key=%s' % (key))
         assert 200 == res.status_code
         data = json.loads(res.data)
         assert data.get('form'), data
@@ -2372,19 +2364,16 @@ class TestWeb(web.Helper):
         for key in keys:
             assert key in data.get('form').keys(), data
 
-        res = self.app.get('/account/reset-password?key=%s' % (key),
-                           follow_redirects=True,
-                           content_type=content_type)
+        res = self.app_get_json('/account/reset-password?key=%s' % (key))
         assert 403 == res.status_code
         data = json.loads(res.data)
         assert data.get('code') == 403, data
 
         # Check validation
         payload = {'new_password': '', 'confirm': '#4a4'}
-        res = self.app.post('/account/reset-password?key=%s' % (key),
-                            data=json.dumps(payload),
-                            content_type=content_type,
-                            follow_redirects=False)
+        res = self.app_post_json('/account/reset-password?key=%s' % (key),
+                                 data=payload)
+
 
         msg = "Please correct the errors"
         data = json.loads(res.data)
@@ -2393,11 +2382,9 @@ class TestWeb(web.Helper):
         assert data.get('form').get('errors').get('new_password'), data
 
 
-        res = self.app.post('/account/reset-password?key=%s' % (key),
-                            data=json.dumps({'new_password': 'p4ssw0rD',
-                                             'confirm': 'p4ssw0rD'}),
-                            follow_redirects=False,
-                            content_type=content_type)
+        res = self.app_post_json('/account/reset-password?key=%s' % (key),
+                                 data={'new_password': 'p4ssw0rD',
+                                       'confirm': 'p4ssw0rD'})
         data = json.loads(res.data)
         msg = "You reset your password successfully!"
         assert msg in data.get('flash'), data
@@ -2405,9 +2392,7 @@ class TestWeb(web.Helper):
 
 
         # Request without password
-        res = self.app.get('/account/reset-password?key=%s' % (key),
-                           follow_redirects=False,
-                           content_type=content_type)
+        res = self.app_get_json('/account/reset-password?key=%s' % (key))
         assert 403 == res.status_code
         data = json.loads(res.data)
         assert data.get('code') == 403, data
