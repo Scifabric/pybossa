@@ -579,7 +579,7 @@ def reset_password():
     user = user_repo.get_by_name(username)
     if user.passwd_hash != userdict.get('password'):
         abort(403)
-    form = ChangePasswordForm(request.form)
+    form = ChangePasswordForm(request.body)
     if form.validate_on_submit():
         user.set_password(form.new_password.data)
         user_repo.update(user)
@@ -587,7 +587,8 @@ def reset_password():
         return _sign_in_user(user)
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
-    return render_template('/account/password_reset.html', form=form)
+    response = dict(template='/account/password_reset.html', form=form)
+    return handle_content_type(response)
 
 
 @blueprint.route('/forgot-password', methods=['GET', 'POST'])
