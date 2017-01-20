@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 from sqlalchemy import text
 from pybossa.core import db
 from pybossa.core import create_app, sentinel
@@ -69,6 +70,15 @@ class Test(object):
         with self.flask_app.app_context():
             rebuild_db()
             reset_all_pk_sequences()
+
+    def app_get_json(self, url, follow_redirects=False, headers=None):
+        return self.app.get(url, follow_redirects=follow_redirects,
+                            headers=headers, content_type='application/json')
+
+    def app_post_json(self, url, data, follow_redirects=False, headers=None):
+        return self.app.post(url, data=json.dumps(data),
+                             follow_redirects=follow_redirects,
+                             headers=headers, content_type='application/json')
 
     def tearDown(self):
         with self.flask_app.app_context():
