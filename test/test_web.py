@@ -3924,6 +3924,52 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, res.status_code
 
     @with_context
+    def test_57_reset_api_key_json(self):
+        """Test WEB reset api key JSON works"""
+        url = "/account/johndoe/update"
+        # Anonymous user
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "Anonymous user should be redirected for authentication"
+        assert "Please sign in to access this page" in res.data, err_msg
+        res = self.app_post_json(url, data=dict(foo=1), follow_redirects=True)
+        assert "Please sign in to access this page" in res.data, res.data
+        # Authenticated user
+        self.register()
+        user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
+        api_key = user.api_key
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "Authenticated user should get access to reset api key page"
+        assert res.status_code == 200, err_msg
+        data = json.loads(res.data)
+        assert data.get('form').get('name') == user.name, (err_msg, data)
+
+        url = "/account/%s/resetapikey" % user.name
+        res = self.app_post_json(url, follow_redirects=True)
+        err_msg = "Authenticated user should be able to reset his api key"
+        assert res.status_code == 200, err_msg
+        data = json.loads(res.data)
+        assert data.get('status') == SUCCESS, err_msg
+        assert data.get('next') == "/account/%s/" % user.name, (err_msg, data)
+        user = db.session.query(User).get(1)
+        err_msg = "New generated API key should be different from old one"
+        assert api_key != user.api_key, (err_msg, data)
+        self.signout()
+
+        self.register(fullname="new", name="new")
+        res = self.app_post_json(url)
+        assert res.status_code == 403, res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 403, data
+
+        url = "/account/fake/resetapikey"
+        res = self.app_post_json(url)
+        assert res.status_code == 404, res.status_code
+        data = json.loads(res.data)
+        assert data.get('code') == 404, data
+
+
+    @with_context
     @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude': 0, 'longitude': 0}])
     def test_58_global_stats(self, mock1):
         """Test WEB global stats of the site works"""
