@@ -268,13 +268,28 @@ class TestWeb(web.Helper):
             res = self.app.post('/account/register', data=userdict,
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf})
-            print res.data
             errors = json.loads(res.data)
-            err_msg = "The browser (or proxy) sent a request that this server could not understand."
             assert errors.get('status') == ERROR, errors
             assert errors.get('form').get('name') is None, errors
             assert len(errors.get('form').get('errors').get('email_addr')) > 0, errors
 
+            res = self.app_post_json(url, data="{stringoftext")
+            data = json.loads(res.data)
+            err_msg = "The browser (or proxy) sent a request that this server could not understand."
+            assert res.status_code == 400, data
+            assert data.get('code') == 400, data
+            assert data.get('description') == err_msg, data
+
+            data = json.dumps(userdict)
+            data += "}"
+            print data
+            res = self.app.post('/account/register', data=data,
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            data = json.loads(res.data)
+            assert res.status_code == 400, data
+            assert data.get('code') == 400, data
+            assert data.get('description') == err_msg, data
 
     @with_context
     def test_register_csrf_missing(self):
