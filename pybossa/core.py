@@ -503,7 +503,8 @@ def setup_hooks(app):
         # Handle forms
         request.body = request.form
         if (request.method == 'POST' and
-                request.headers['Content-Type'] == 'application/json'):
+                request.headers['Content-Type'] == 'application/json' and
+                request.data):
             request.body = get_json_multidict(request)
 
     @app.context_processor
