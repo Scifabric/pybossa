@@ -3944,29 +3944,33 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data.get('form').get('name') == user.name, (err_msg, data)
 
-        url = "/account/%s/resetapikey" % user.name
-        res = self.app_post_json(url, follow_redirects=True)
-        err_msg = "Authenticated user should be able to reset his api key"
-        assert res.status_code == 200, err_msg
-        data = json.loads(res.data)
-        assert data.get('status') == SUCCESS, err_msg
-        assert data.get('next') == "/account/%s/" % user.name, (err_msg, data)
-        user = db.session.query(User).get(1)
-        err_msg = "New generated API key should be different from old one"
-        assert api_key != user.api_key, (err_msg, data)
-        self.signout()
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            url = "/account/%s/resetapikey" % user.name
+            csrf = self.get_csrf(url)
+            headers = {'X-CSRFToken': csrf}
+            res = self.app_post_json(url,
+                                     follow_redirects=True, headers=headers)
+            err_msg = "Authenticated user should be able to reset his api key"
+            assert res.status_code == 200, err_msg
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, err_msg
+            assert data.get('next') == "/account/%s/" % user.name, (err_msg, data)
+            user = db.session.query(User).get(1)
+            err_msg = "New generated API key should be different from old one"
+            assert api_key != user.api_key, (err_msg, data)
+            self.signout()
 
-        self.register(fullname="new", name="new")
-        res = self.app_post_json(url)
-        assert res.status_code == 403, res.status_code
-        data = json.loads(res.data)
-        assert data.get('code') == 403, data
+            self.register(fullname="new", name="new")
+            res = self.app_post_json(url, headers=headers)
+            assert res.status_code == 403, res.status_code
+            data = json.loads(res.data)
+            assert data.get('code') == 403, data
 
-        url = "/account/fake/resetapikey"
-        res = self.app_post_json(url)
-        assert res.status_code == 404, res.status_code
-        data = json.loads(res.data)
-        assert data.get('code') == 404, data
+            url = "/account/fake/resetapikey"
+            res = self.app_post_json(url, headers=headers)
+            assert res.status_code == 404, res.status_code
+            data = json.loads(res.data)
+            assert data.get('code') == 404, data
 
 
     @with_context
