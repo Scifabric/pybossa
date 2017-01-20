@@ -60,8 +60,9 @@ class NotAllowedChars(object):
             self.message = message
 
     def __call__(self, form, field):
-        if any(c in field.data for c in self.not_valid_chars):
-            raise ValidationError(self.message)
+        if field.data:
+            if any(c in field.data for c in self.not_valid_chars):
+                raise ValidationError(self.message)
 
 
 class CommaSeparatedIntegers(object):
