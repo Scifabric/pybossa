@@ -38,6 +38,8 @@ from rq import Queue
 
 import pybossa.model as model
 from flask.ext.babel import gettext
+from flask_wtf.csrf import generate_csrf
+from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
 from pybossa.util import get_user_signup_method
@@ -654,7 +656,7 @@ def forgot_password():
     return handle_content_type(data)
 
 
-@blueprint.route('/<name>/resetapikey', methods=['POST'])
+@blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
 @login_required
 def reset_api_key(name):
     """
@@ -663,13 +665,17 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
-    user = user_repo.get_by_name(name)
-    if not user:
-        return abort(404)
-    ensure_authorized_to('update', user)
-    user.api_key = model.make_uuid()
-    user_repo.update(user)
-    cached_users.delete_user_summary(user.name)
-    msg = gettext('New API-KEY generated')
-    flash(msg, 'success')
-    return redirect(url_for('account.profile', name=name))
+    if request.method == 'POST':
+        user = user_repo.get_by_name(name)
+        if not user:
+            return abort(404)
+        ensure_authorized_to('update', user)
+        user.api_key = model.make_uuid()
+        user_repo.update(user)
+        cached_users.delete_user_summary(user.name)
+        msg = gettext('New API-KEY generated')
+        flash(msg, 'success')
+        return redirect_content_type(url_for('account.profile', name=name))
+    else:
+        csrf = dict(form=dict(csrf=generate_csrf()))
+        return jsonify(csrf)

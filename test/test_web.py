@@ -260,19 +260,36 @@ class TestWeb(web.Helper):
     def test_register_wrong_content_type(self):
         """Test WEB Register JSON wrong content type."""
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            url = '/account/register'
+            csrf = self.get_csrf(url)
             userdict = {'fullname': 'a', 'name': 'name',
                        'email_addr': None, 'password': 'p'}
 
             res = self.app.post('/account/register', data=userdict,
-                                content_type='application/json')
-            print res.data
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
             errors = json.loads(res.data)
-            err_msg = "The browser (or proxy) sent a request that this server could not understand."
-            assert errors.get('description') == err_msg, err_msg
-            err_msg = "Error code should be 400"
-            assert errors.get('code') == 400, err_msg
-            assert res.status_code == 400, err_msg
+            assert errors.get('status') == ERROR, errors
+            assert errors.get('form').get('name') is None, errors
+            assert len(errors.get('form').get('errors').get('email_addr')) > 0, errors
 
+            res = self.app_post_json(url, data="{stringoftext")
+            data = json.loads(res.data)
+            err_msg = "The browser (or proxy) sent a request that this server could not understand."
+            assert res.status_code == 400, data
+            assert data.get('code') == 400, data
+            assert data.get('description') == err_msg, data
+
+            data = json.dumps(userdict)
+            data += "}"
+            print data
+            res = self.app.post('/account/register', data=data,
+                                content_type='application/json',
+                                headers={'X-CSRFToken': csrf})
+            data = json.loads(res.data)
+            assert res.status_code == 400, data
+            assert data.get('code') == 400, data
+            assert data.get('description') == err_msg, data
 
     @with_context
     def test_register_csrf_missing(self):
@@ -3922,6 +3939,56 @@ class TestWeb(web.Helper):
         url = "/account/fake/resetapikey"
         res = self.app.post(url)
         assert res.status_code == 404, res.status_code
+
+    @with_context
+    def test_57_reset_api_key_json(self):
+        """Test WEB reset api key JSON works"""
+        url = "/account/johndoe/update"
+        # Anonymous user
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "Anonymous user should be redirected for authentication"
+        assert "Please sign in to access this page" in res.data, err_msg
+        res = self.app_post_json(url, data=dict(foo=1), follow_redirects=True)
+        assert "Please sign in to access this page" in res.data, res.data
+        # Authenticated user
+        self.register()
+        user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
+        api_key = user.api_key
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "Authenticated user should get access to reset api key page"
+        assert res.status_code == 200, err_msg
+        data = json.loads(res.data)
+        assert data.get('form').get('name') == user.name, (err_msg, data)
+
+        with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            url = "/account/%s/resetapikey" % user.name
+            csrf = self.get_csrf(url)
+            headers = {'X-CSRFToken': csrf}
+            res = self.app_post_json(url,
+                                     follow_redirects=True, headers=headers)
+            err_msg = "Authenticated user should be able to reset his api key"
+            assert res.status_code == 200, err_msg
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, err_msg
+            assert data.get('next') == "/account/%s/" % user.name, (err_msg, data)
+            user = db.session.query(User).get(1)
+            err_msg = "New generated API key should be different from old one"
+            assert api_key != user.api_key, (err_msg, data)
+            self.signout()
+
+            self.register(fullname="new", name="new")
+            res = self.app_post_json(url, headers=headers)
+            assert res.status_code == 403, res.status_code
+            data = json.loads(res.data)
+            assert data.get('code') == 403, data
+
+            url = "/account/fake/resetapikey"
+            res = self.app_post_json(url, headers=headers)
+            assert res.status_code == 404, res.status_code
+            data = json.loads(res.data)
+            assert data.get('code') == 404, data
+
 
     @with_context
     @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude': 0, 'longitude': 0}])

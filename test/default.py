@@ -75,10 +75,15 @@ class Test(object):
         return self.app.get(url, follow_redirects=follow_redirects,
                             headers=headers, content_type='application/json')
 
-    def app_post_json(self, url, data, follow_redirects=False, headers=None):
-        return self.app.post(url, data=json.dumps(data),
-                             follow_redirects=follow_redirects,
-                             headers=headers, content_type='application/json')
+    def app_post_json(self, url, data=None, follow_redirects=False, headers=None):
+        if data:
+            return self.app.post(url, data=json.dumps(data),
+                                 follow_redirects=follow_redirects,
+                                 headers=headers, content_type='application/json')
+        else:
+            return self.app.post(url,
+                                 follow_redirects=follow_redirects,
+                                 headers=headers, content_type='application/json')
 
     def tearDown(self):
         with self.flask_app.app_context():
