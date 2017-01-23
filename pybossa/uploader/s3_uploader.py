@@ -71,8 +71,7 @@ def s3_upload_tmp_file(tmp_file, filename, headers, directory=""):
     """
     try:
         check_type(tmp_file.name)
-        with io.open(tmp_file.name, encoding="utf8") as fp:
-            url = s3_upload_file(fp, filename, headers, directory)
+        url = s3_upload_file(tmp_file.name, filename, headers, directory)
     finally:
         os.unlink(tmp_file.name)
     return url
@@ -85,20 +84,26 @@ def form_upload_directory(directory, filename):
     return "/".join(part for part in parts if part)
 
 
-def s3_upload_file(fp, filename, headers, directory=""):
+def s3_upload_file(source_file_name, target_file_name, headers, directory=""):
     """
     Upload a file-type object to s3
+    :param source_file_name: name in local file system of the file to upload
+    :param target_file_name: file name as should appear in S3
+    :param headers: a dictionary of headers to set on the S3 object
+    :param directory: path in s3 where the object needs to be stored
     """
     if "S3_BUCKET" not in app.config:
         raise InternalServerError("S3 bucket not configured")
 
-    filename = secure_filename(filename)
+    filename = secure_filename(target_file_name)
     upload_key = form_upload_directory(directory, filename)
     conn = boto.connect_s3(app.config.get("S3_KEY"),
                            app.config.get("S3_SECRET"))
     bucket = conn.get_bucket(app.config["S3_BUCKET"])
 
     key = bucket.new_key(upload_key)
-    key.set_contents_from_file(fp, headers=headers)
+    key.set_contents_from_filename(
+        source_file_name, headers=headers,
+        policy="bucket-owner-full-control")
 
     return key.generate_url(0).split('?', 1)[0]
