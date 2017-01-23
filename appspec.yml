@@ -8,10 +8,10 @@ hooks:
     - location: scripts/pre_install
       timeout: 300
       runas: root  
-#  AfterInstall:
-#    - location: scripts/post_install
-#      timeout: 300
-#      runas: root        
+  AfterInstall:
+    - location: scripts/post_install
+      timeout: 300
+      runas: root        
 permissions:
 # 1) For newly deployment folder "pybossa" under /home/ubuntu/pybossa/
 #  owner = ubuntu, group = ubuntu and mode = 775 (drwxrwxr-x).
