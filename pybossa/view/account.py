@@ -241,14 +241,15 @@ def newsletter_subscribe():
             user_repo.update(user)
         if request.args.get('subscribe') == 'True':
             newsletter.subscribe_user(user)
-            flash("You are subscribed to our newsletter!")
-            return redirect(next_url)
+            flash("You are subscribed to our newsletter!", 'success')
+            return redirect_content_type(next_url)
         elif request.args.get('subscribe') == 'False':
-            return redirect(next_url)
+            return redirect_content_type(next_url)
         else:
-            return render_template('account/newsletter.html',
-                                   title=gettext("Subscribe to our Newsletter"),
-                                   next=next_url)
+            response = dict(template='account/newsletter.html',
+                            title=gettext("Subscribe to our Newsletter"),
+                            next=next_url)
+            return handle_content_type(response)
     else:
         return abort(404)
 
