@@ -143,15 +143,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, res.status_code
 
     @with_context
-    def test_00000_results_not_found_json(self):
-        """Test WEB JSON results page returns 404 when no template is found works."""
-        res = self.app_get_json('/results')
-        data = json.loads(res.data)
-        assert res.status_code == 404, res.status_code
-        assert data.get('code') == 404, data
-
-
-    @with_context
     def test_leaderboard(self):
         """Test WEB leaderboard works"""
         user = UserFactory.create()
