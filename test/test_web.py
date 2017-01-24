@@ -996,6 +996,58 @@ class TestWeb(web.Helper):
         res = self.app.get(url)
         assert res.status_code == 403, res.status_code
 
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_profile_projects(self, mock):
+        """Test WEB user profile project page works."""
+        self.create()
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.new_project()
+        url = '/account/%s/projects' % Fixtures.name
+        res = self.app.get(url)
+        assert "Projects" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
+        assert Fixtures.project_name in res.data, res.data
+
+        url = '/account/fakename/projects'
+        res = self.app.get(url)
+        assert res.status_code == 404, res.status_code
+
+        url = '/account/%s/projects' % Fixtures.name2
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_profile_projects_json(self, mock):
+        """Test WEB user profile project page works."""
+        self.create()
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.new_project()
+        url = '/account/%s/projects' % Fixtures.name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['title'] == 'Projects', data
+        assert data['template'] == 'account/projects.html', data
+        assert 'projects_draft' in data, data
+        assert 'projects_published' in data, data
+
+        assert data['projects_draft'][0]['id'] == 2
+        assert data['projects_published'][0]['id'] == 1
+        assert data['projects_published'][0]['name'] == Fixtures.project_name
+
+        url = '/account/fakename/projects'
+        res = self.app.get(url)
+        assert res.status_code == 404, res.status_code
+
+        url = '/account/%s/projects' % Fixtures.name2
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+
+
     @with_context
     def test_05_update_user_profile_json(self):
         """Test WEB update user profile JSON"""
