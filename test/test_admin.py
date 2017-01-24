@@ -106,6 +106,21 @@ class TestAdmin(web.Helper):
         assert "403 FORBIDDEN" in res.status, err_msg
 
     @with_context
+    def test_01_admin_index_authenticated_json(self):
+        """Test ADMIN JSON index page works as signed in user"""
+        self.register()
+        self.signout()
+        self.register(name="tester2", email="tester2@tester.com",
+                      password="tester")
+        res = self.app_get_json("/admin/")
+        data = json.loads(res.data)
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.status)
+        assert "403 FORBIDDEN" in res.status, err_msg
+        assert data.get('code') == 403, err_msg
+
+
+    @with_context
     def test_02_second_user_is_not_admin(self):
         """Test ADMIN Second Created user is NOT admin works"""
         self.register()
@@ -269,6 +284,19 @@ class TestAdmin(web.Helper):
         assert "Manage Admin Users" in res.data, res.data
 
     @with_context
+    def test_09_admin_users_as_admin_json(self):
+        """Test ADMIN JSON users works as an admin user"""
+        self.register()
+        res = self.app_get_json('/admin/users')
+        data = json.loads(res.data)
+        assert data.get('form') is not None, data
+        assert data.get('form').get('csrf') is not None, data
+        # See next test
+        assert data.get('users') == [], data
+        assert data.get('found') == [], data
+
+
+    @with_context
     def test_10_admin_user_not_listed(self):
         """Test ADMIN users does not list himself works"""
         self.register()
@@ -288,40 +316,97 @@ class TestAdmin(web.Helper):
         assert "John" not in res.data, res.data
 
     @with_context
-    def test_12_admin_user_search(self):
-        """Test ADMIN users search works"""
-        # Create two users
+    def test_11_admin_user_not_listed_in_search_json(self):
+        """Test ADMIN JSON users does not list himself in the search works"""
+        self.register()
+        data = {'user': 'john'}
+        res = self.app_post_json('/admin/users', data=data)
+        dat = json.loads(res.data)
+        assert dat.get('found') == [], dat
+
+
+    @with_context
+    def test_12_admin_user_search_json(self):
+        """test ADMIN JSON users search works"""
+        # create two users
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", name="juan",
+        self.register(fullname="juan jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
-        # Signin with admin user
+        # signin with admin user
         self.signin()
         data = {'user': 'juan'}
-        res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        print res.data
-        assert "Juan Jose" in res.data, "username should be searchable"
-        # Check with uppercase
-        data = {'user': 'JUAN'}
-        res = self.app.post('/admin/users', data=data, follow_redirects=True)
+        res = self.app_post_json('/admin/users', data=data)
+        dat = json.loads(res.data)
+        assert len(dat.get('found')) == 1, dat
+        assert "juan jose" in dat.get('found')[0].get('fullname'), "username should be searchable"
+        # check with uppercase
+        data = {'user': 'juan'}
+        res = self.app_post_json('/admin/users', data=data)
         err_msg = "username search should be case insensitive"
-        assert "Juan Jose" in res.data, err_msg
-        # Search fullname
-        data = {'user': 'Jose'}
-        res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "Juan Jose" in res.data, "fullname should be searchable"
-        # Check with uppercase
-        data = {'user': 'JOsE'}
-        res = self.app.post('/admin/users', data=data, follow_redirects=True)
+        dat = json.loads(res.data)
+        assert len(dat.get('found')) == 1, dat
+        assert "juan jose" in dat.get('found')[0].get('fullname'), err_msg
+        # search fullname
+        data = {'user': 'jose'}
+        res = self.app_post_json('/admin/users', data=data)
+        dat = json.loads(res.data)
+        assert len(dat.get('found')) == 1, dat
+        assert "juan jose" in dat.get('found')[0].get('fullname'), "fullname should be searchable"
+        # check with uppercase
+        data = {'user': 'jose'}
+        res = self.app_post_json('/admin/users', data=data)
+        dat = json.loads(res.data)
+        assert len(dat.get('found')) == 1, dat
         err_msg = "fullname search should be case insensitive"
-        assert "Juan Jose" in res.data, err_msg
-        # Warning should be issued for non-found users
-        data = {'user': 'nothingExists'}
-        res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        warning = ("We didn't find a user matching your query: <strong>%s</strong>" %
+        assert "juan jose" in dat.get('found')[0].get('fullname'), err_msg
+        # warning should be issued for non-found users
+        data = {'user': 'nothingexists'}
+        res = self.app_post_json('/admin/users', data=data)
+        warning = ("We didn't find")
+        err_msg = "a flash message should be returned for non-found users"
+        dat = json.loads(res.data)
+        assert warning in dat.get('flash'), (err_msg, dat)
+        assert dat.get('status') == 'message', dat
+
+
+
+    @with_context
+    def test_12_admin_user_search(self):
+        """test admin users search works"""
+        # create two users
+        self.register()
+        self.signout()
+        self.register(fullname="juan jose", name="juan",
+                      email="juan@juan.com", password="juan")
+        self.signout()
+        # signin with admin user
+        self.signin()
+        data = {'user': 'juan'}
+        res = self.app.post('/admin/users', data=data, follow_redirects=true)
+        print res.data
+        assert "juan jose" in res.data, "username should be searchable"
+        # check with uppercase
+        data = {'user': 'juan'}
+        res = self.app.post('/admin/users', data=data, follow_redirects=true)
+        err_msg = "username search should be case insensitive"
+        assert "juan jose" in res.data, err_msg
+        # search fullname
+        data = {'user': 'jose'}
+        res = self.app.post('/admin/users', data=data, follow_redirects=true)
+        assert "juan jose" in res.data, "fullname should be searchable"
+        # check with uppercase
+        data = {'user': 'jose'}
+        res = self.app.post('/admin/users', data=data, follow_redirects=true)
+        err_msg = "fullname search should be case insensitive"
+        assert "juan jose" in res.data, err_msg
+        # warning should be issued for non-found users
+        data = {'user': 'nothingexists'}
+        res = self.app.post('/admin/users', data=data, follow_redirects=true)
+        warning = ("we didn't find a user matching your query: <strong>%s</strong>" %
                    data['user'])
-        err_msg = "A flash message should be returned for non-found users"
+        err_msg = "a flash message should be returned for non-found users"
         assert warning in res.data, err_msg
 
     @with_context
