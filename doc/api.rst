@@ -1919,8 +1919,10 @@ Admin featured projects
 Gives you all featured projects on PYBOSSA.
 
 * **categories**: Gives you a list of categories where projects can be featured.
+* **form**: The form fields that need to be sent for feature and unfeature a project. It contains the CSRF token for validating the POST/DELETE.
 * **projects**: Featured projects grouped by categories.
 * **template**: The Jinja2 template that could be rendered.
+
 
 **Example output**
 
@@ -1987,6 +1989,9 @@ Gives you all featured projects on PYBOSSA.
           },
           ...
         ]
+      },
+      "form": {
+        "csrf": "secret_token_here"
       },
       "template": "/admin/projects.html"
     }
