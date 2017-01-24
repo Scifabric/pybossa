@@ -254,8 +254,8 @@ class TestPrivacyWebPublic(web_helper.Helper):
         err_msg = 'name should be public'
         assert 'name' in project, err_msg
         # non public projects data
-        err_msg = 'id should not be public'
-        assert 'id' not in project, err_msg
+        # err_msg = 'id should not be public'
+        # assert 'id' not in project, err_msg
         err_msg = 'owner_id should not be public'
         assert 'owner_id' not in project, err_msg
         err_msg = 'results should not be public'

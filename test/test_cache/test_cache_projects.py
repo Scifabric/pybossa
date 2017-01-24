@@ -23,6 +23,7 @@ from factories import UserFactory, ProjectFactory, TaskFactory, \
 from mock import patch
 import datetime
 from pybossa.core import result_repo
+from pybossa.model.project import Project
 
 
 class TestProjectsCache(Test):
@@ -142,9 +143,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS get_draft returns the required info
         about each project"""
 
-        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
-                  'last_activity', 'last_activity_raw', 'overall_progress',
-                  'n_tasks', 'n_volunteers', 'owner', 'info', 'updated')
+        fields = Project().public_attributes()
 
         ProjectFactory.create(published=False)
 
@@ -152,6 +151,8 @@ class TestProjectsCache(Test):
 
         for field in fields:
             assert draft.has_key(field), "%s not in project info" % field
+            if field == 'info':
+                assert sorted(draft['info'].keys()) == sorted(Project().public_info_keys())
 
 
     def test_get_top_returns_projects_with_most_taskruns(self):

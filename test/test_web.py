@@ -65,11 +65,45 @@ class TestWeb(web.Helper):
         assert "Create" in res.data, res
 
     @with_context
+    def test_01_index_json(self):
+        """Test WEB JSON home page works"""
+        project = ProjectFactory.create(featured=True)
+        user = UserFactory.create()
+        for i in range(0, 31):
+            TaskRunFactory.create(user=user, project=project)
+        res = self.app_get_json("/")
+        data = json.loads(res.data)
+        keys = ['top_projects', 'categories_projects', 'categories', 'template',
+                'top_users']
+        for key in keys:
+            assert key in data.keys(), data
+        assert project.category.short_name in data.get('categories_projects').keys(), data
+        projects = data.get('categories_projects').get(project.category.short_name)
+        for cat in data.get('categories_projects').keys():
+            for p in data.get('categories_projects')[cat]:
+                assert p['info'].keys() == Project().public_info_keys()
+        for p in data.get('top_projects'):
+            assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
+
+        for u in data.get('top_users'):
+            assert sorted(u['info'].keys()) == sorted(User().public_info_keys()), u
+
+
+    @with_context
     def test_01_search(self):
         """Test WEB search page works."""
         res = self.app.get('/search')
         err_msg = "Search page should be accessible"
         assert "Search" in res.data, err_msg
+
+    @with_context
+    def test_01_search_json(self):
+        """Test WEB JSON search page works."""
+        res = self.app_get_json('/search')
+        err_msg = "Search page should be accessible"
+        data = json.loads(res.data)
+        assert data.get('template') == '/home/search.html', err_msg
+
 
     @with_context
     def test_result_view(self):
@@ -85,12 +119,28 @@ class TestWeb(web.Helper):
         assert "foobar" in res.data, res.data
         os.remove(file_name)
 
+
+    @with_context
+    def test_result_view_json(self):
+        """Test WEB JSON result page works."""
+        import os
+        APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+        template_folder = os.path.join(APP_ROOT, '..', 'pybossa',
+                                       self.flask_app.template_folder)
+        file_name = os.path.join(template_folder, "home", "_results.html")
+        with open(file_name, "w") as f:
+            f.write("foobar")
+        res = self.app_get_json('/results')
+        data = json.loads(res.data)
+        assert data.get('template') == '/home/_results.html', data
+        os.remove(file_name)
+
+
     @with_context
     def test_00000_results_not_found(self):
         """Test WEB results page returns 404 when no template is found works."""
         res = self.app.get('/results')
         assert res.status_code == 404, res.status_code
-
 
     @with_context
     def test_leaderboard(self):

@@ -53,7 +53,8 @@ def get_top(n=4):
                        info=row.info,
                        n_volunteers=n_volunteers(row.id),
                        n_completed_tasks=n_completed_tasks(row.id))
-        top_projects.append(project)
+
+        top_projects.append(Project().to_public_json(project))
     return top_projects
 
 
@@ -259,7 +260,7 @@ def get_all_featured(category=None):
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
                        info=row.info)
-        projects.append(project)
+        projects.append(Project().to_public_json(project))
     return projects
 
 
@@ -319,7 +320,7 @@ def get_all_draft(category=None):
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
                        info=row.info)
-        projects.append(project)
+        projects.append(Project().to_public_json(project))
     return projects
 
 
@@ -388,7 +389,7 @@ def get_all(category):
                        n_tasks=n_tasks(row.id),
                        n_volunteers=n_volunteers(row.id),
                        info=row.info)
-        projects.append(project)
+        projects.append(Project().to_public_json(project))
     return projects
 
 
