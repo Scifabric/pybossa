@@ -85,6 +85,15 @@ class TestAdmin(web.Helper):
         assert "Please sign in to access this page" in res.data, err_msg
 
     @with_context
+    def test_01_admin_index_anonymous_json(self):
+        """Test ADMIN JSON index page works as anonymous user"""
+        res = self.app_get_json("/admin/", follow_redirects=True)
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.data)
+        assert "Please sign in to access this page" in res.data, err_msg
+
+
+    @with_context
     def test_01_admin_index_authenticated(self):
         """Test ADMIN index page works as signed in user"""
         self.register()
