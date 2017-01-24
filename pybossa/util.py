@@ -47,6 +47,10 @@ def form_to_json(form):
     tmp['csrf'] = generate_csrf()
     return tmp
 
+def user_to_json(user):
+    """Return a user in JSON format."""
+    return user.dictize()
+
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
@@ -67,7 +71,10 @@ def handle_content_type(data):
                         cat = cat.to_public_json()
                     tmp.append(cat)
                 data[item] = tmp
-
+            if (item == 'users'):
+                data[item] = [user_to_json(user) for user in data[item]]
+            if (item == 'found'):
+                data[item] = [user_to_json(user) for user in data[item]]
 
         if 'code' in data.keys():
             return jsonify(data), data['code']

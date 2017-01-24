@@ -33,6 +33,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
+from pybossa.util import redirect_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
@@ -122,7 +123,7 @@ def featured(project_id=None):
 @admin_required
 def users(user_id=None):
     """Manage users of PYBOSSA."""
-    form = SearchForm(request.form)
+    form = SearchForm(request.body)
     users = [user for user in user_repo.filter_by(admin=True)
              if user.id != current_user.id]
 
@@ -134,12 +135,14 @@ def users(user_id=None):
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
-        return render_template('/admin/users.html', found=found, users=users,
-                               title=gettext("Manage Admin Users"),
-                               form=form)
+        response = dict(template='/admin/users.html', found=found, users=users,
+                        title=gettext("Manage Admin Users"),
+                        form=form)
+        return handle_content_type(response)
 
-    return render_template('/admin/users.html', found=[], users=users,
-                           title=gettext("Manage Admin Users"), form=form)
+    response = dict(template='/admin/users.html', found=[], users=users,
+                    title=gettext("Manage Admin Users"), form=form)
+    return handle_content_type(response)
 
 
 @blueprint.route('/users/export')
