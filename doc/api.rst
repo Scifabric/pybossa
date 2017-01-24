@@ -1107,3 +1107,41 @@ It returns a JSON object with the following information:
         u'flash': u'New API-KEY generated', 
         u'next': u'/account/<user>'
     }
+
+
+Account subscribe to newsletter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/newsletter
+
+*Allowed methods*: **GET**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **template**: The template that Jinja2 will render.
+* **title**: The title of the endpoint.
+* **next**: The next URL.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "template": "account/newsletter.html",
+        "title": "Subscribe to our Newsletter",
+        "next": "/"
+    }
+
+If you want to subscribe a user, then you have to call the same endpoint with
+the following argument: *subscribe=true*
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "flash": "You are subscribed to our newsletter",
+        "status": "success",
+        "next": "/"
+    }

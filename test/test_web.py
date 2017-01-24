@@ -644,6 +644,28 @@ class TestWeb(web.Helper):
         self.app.get('/account/register/confirmation?key=valid-key')
         url_for.assert_called_with('home.home')
 
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    @patch('pybossa.view.account.url_for')
+    @patch('pybossa.view.account.signer')
+    def test_newsletter_json(self, fake_signer, url_for, newsletter):
+        """Test WEB confirm email shows newsletter or home with JSON."""
+        newsletter.ask_user_to_subscribe.return_value = True
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = True
+        url = '/account/newsletter'
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data.get('title') == 'Subscribe to our Newsletter', data
+        assert data.get('template') == 'account/newsletter.html', data
+
+
+        res = self.app_get_json(url + "?subscribe=True")
+        data = json.loads(res.data)
+        assert data.get('flash') == 'You are subscribed to our newsletter!', data
+        assert data.get('status') == SUCCESS, data
+
+
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_creates_new_account(self, fake_signer):
         """Test WEB register confirmation creates the new account"""
