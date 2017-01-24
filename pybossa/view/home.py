@@ -69,18 +69,21 @@ def home():
 @blueprint.route("about")
 def about():
     """Render the about template."""
-    return render_template("/home/about.html")
+    response = dict(template="/home/about.html")
+    return handle_content_type(response)
 
 
 @blueprint.route("search")
 def search():
     """Render search results page."""
-    return render_template("/home/search.html")
+    response = dict(template="/home/search.html")
+    return handle_content_type(response)
 
 @blueprint.route("results")
 def result():
     """Render a results page."""
     try:
-        return render_template("/home/_results.html")
+        response = dict(template="/home/_results.html")
+        return handle_content_type(response)
     except TemplateNotFound:
         return abort(404)
