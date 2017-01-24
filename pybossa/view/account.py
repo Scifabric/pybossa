@@ -190,7 +190,7 @@ def confirm_email():
         flash(msg, 'info')
         user.confirmation_email_sent = True
         user_repo.update(user)
-    return redirect(url_for('.profile', name=current_user.name))
+    return redirect_content_type(url_for('.profile', name=current_user.name))
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])

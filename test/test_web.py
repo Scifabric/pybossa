@@ -528,6 +528,50 @@ class TestWeb(web.Helper):
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
     @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_validate_email_json(self, signer, render, queue):
+        """Test WEB validate email sends the confirmation email
+        if account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = False
+        db.session.commit()
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        data = dict(fullname=user.fullname, name=user.name,
+                    email_addr=user.email_addr)
+
+        res = self.app_get_json('/account/confirm-email')
+
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_any_call('/account/email/validate_email.md',
+                               user=data,
+                               confirm_url='http://localhost/account/register/confirmation?key=')
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
+        assert mail_data['recipients'][0] == data['email_addr']
+        user = db.session.query(User).get(1)
+        msg = "Confirmation email flag not updated"
+        assert user.confirmation_email_sent, msg
+        msg = "Email not marked as invalid"
+        assert user.valid_email is False, msg
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        # JSON validation
+        data = json.loads(res.data)
+        assert data.get('status') == INFO, data
+        assert "An e-mail has been sent to" in data.get('flash'), data
+        assert data.get('next') == '/account/' + user.name + "/", data
+
+
+    @with_context
     def test_register_post_valid_data_validation_enabled(self):
         """Test WEB register post with valid form data and account validation
         enabled"""
