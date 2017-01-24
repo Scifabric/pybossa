@@ -124,7 +124,7 @@ def _graph_data_from_query(results, column, label=None):
 def _format_projects_data(results):
     formatted_projects = []
     for row in results:
-        datum = dict(day=row.day, id=row.id, short_name=row.short_name,
+        datum = dict(day=row.day.strftime('%Y-%m-%d'), id=row.id, short_name=row.short_name,
                      p_name=row.name, owner_id=row.owner_id, u_name=row.u_name,
                      email_addr=row.email_addr)
         formatted_projects.append(datum)
