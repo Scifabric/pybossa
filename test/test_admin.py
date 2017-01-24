@@ -707,6 +707,39 @@ class TestAdmin(web.Helper):
         assert dom.find(id='categories') is not None, err_msg
 
     @with_context
+    def test_22_admin_list_categories_json(self):
+        """Test ADMIN JSON list categories works"""
+        self.create()
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app_get_json(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        # Admin user
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "Admin users should be get a list of Categories"
+        assert data.get('categories') is not None, err_msg
+        assert data.get('template') == 'admin/categories.html', err_msg
+        assert data.get('form') is not None, err_msg
+        assert data.get('form').get('csrf') is not None, err_msg
+        assert data.get('n_projects_per_category') is not None, err_msg
+        assert data.get('n_projects_per_category').get('thinking') == 1, err_msg
+
+
+    @with_context
     def test_23_admin_add_category(self):
         """Test ADMIN add category works"""
         self.create()
@@ -737,6 +770,114 @@ class TestAdmin(web.Helper):
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category form validation should work"
         assert "Please correct the errors" in res.data, err_msg
+
+    @with_context
+    def test_23_admin_add_category_json(self):
+        """Test ADMIN JSON add category works"""
+        self.create()
+        category = {'name': 'cat', 'short_name': 'cat',
+                    'description': 'description', 'id': ""}
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        data = json.loads(res.data)
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        # Admin
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_post_json(url, data=category)
+        err_msg = "Category should be added"
+        data = json.loads(res.data)
+        assert "Category added" in data.get('flash'), err_msg
+        assert data.get('status') == 'success', err_msg
+        assert category['name'] in data.get('n_projects_per_category').keys(), err_msg
+
+        # Create the same category again should fail
+        res = self.app_post_json(url, data=category)
+        err_msg = "Category form validation should work"
+        data = json.loads(res.data)
+        assert "Please correct the errors" in data.get('flash'), err_msg
+        assert data.get('status') == 'error', err_msg
+        assert len(data.get('form').get('errors').get('name')) == 1, err_msg
+
+    @with_context
+    def test_24_admin_update_category_json(self):
+        """Test ADMIN JSON update category works"""
+        self.create()
+        obj = db.session.query(Category).get(1)
+        _name = obj.name
+        category = obj.dictize()
+
+        # Anonymous user GET
+        url = '/admin/categories/update/%s' % obj.id
+        res = self.app_get_json(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        # Anonymous user POST
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin GET
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_post_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        # Authenticated user but not admin POST
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        data = json.loads(res.data)
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        # Admin GET
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "Category should be listed for admin user"
+        assert data.get('category').get('name') == _name, err_msg
+        assert data.get('form') is not None, data
+        assert data.get('form').get('csrf') is not None, data
+        # Check 404
+        url_404 = '/admin/categories/update/5000'
+        res = self.app_get_json(url_404, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data.get('code') == 404, data
+        # Admin POST
+        res = self.app_post_json(url, data=category)
+        err_msg = "Category should be updated"
+        data = json.loads(res.data)
+        assert "Category updated" in data.get('flash'), err_msg
+        assert data.get('status') == 'success', err_msg
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert category['name'] == data.get('category').get('name'), err_msg
+        updated_category = db.session.query(Category).get(obj.id)
+        assert updated_category.name == obj.name, err_msg
+        # With not valid form
+        category['name'] = None
+        res = self.app_post_json(url, data=category)
+        data = json.loads(res.data)
+        assert "Please correct the errors" in data.get('flash'), err_msg
+        assert data.get('form').get('errors') is not None, data
+        assert len(data.get('form').get('errors').get('name')) ==1, data
+
 
     @with_context
     def test_24_admin_update_category(self):
@@ -789,6 +930,77 @@ class TestAdmin(web.Helper):
         category['name'] = None
         res = self.app.post(url, data=category, follow_redirects=True)
         assert "Please correct the errors" in res.data, err_msg
+
+    @with_context
+    def test_25_admin_delete_category_json(self):
+        """Test ADMIN JSON delete category works"""
+        self.create()
+        obj = db.session.query(Category).get(2)
+        category = obj.dictize()
+
+        # Anonymous user GET
+        url = '/admin/categories/del/%s' % obj.id
+        res = self.app_get_json(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        # Anonymous user POST
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin GET
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_post_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        # Authenticated user but not admin POST
+        res = self.app_post_json(url, data=category)
+        err_msg = "Non-Admin users should get 403"
+        data = json.loads(res.data)
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data.get('form') is not None, data
+        assert data.get('form').get('csrf') is not None, data
+        assert data.get('category') is not None, data
+        assert data.get('category').get('id') == category['id'], data
+        # Admin POST
+        res = self.app_post_json(url, data=category)
+        data = json.loads(res.data)
+        err_msg = "Category should be deleted"
+        assert "Category deleted" in data.get('flash'), (err_msg, data)
+        assert data.get('status') == 'success', err_msg
+        output = db.session.query(Category).get(obj.id)
+        assert output is None, err_msg
+        # Non existant category
+        category['id'] = 5000
+        url = '/admin/categories/del/5000'
+        res = self.app_post_json(url, data=category)
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data.get('code') == 404, data
+
+        # Now try to delete the only available Category
+        obj = db.session.query(Category).first()
+        url = '/admin/categories/del/%s' % obj.id
+        category = obj.dictize()
+        res = self.app_post_json(url, data=category)
+        print res.data
+        data = json.loads(res.data)
+        err_msg = "Category should not be deleted"
+        assert "Sorry" in data.get('flash'), data
+        assert data.get('status') == 'warning', data
+        output = db.session.query(Category).get(obj.id)
+        assert output.id == category['id'], err_msg
+
 
     @with_context
     def test_25_admin_delete_category(self):

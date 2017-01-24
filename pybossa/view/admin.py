@@ -28,6 +28,7 @@ from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
+from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
 
@@ -259,7 +260,7 @@ def categories():
             form = CategoryForm()
         if request.method == 'POST':
             ensure_authorized_to('create', Category)
-            form = CategoryForm(request.form)
+            form = CategoryForm(request.body)
             del form.id
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
@@ -278,11 +279,12 @@ def categories():
             n_projects_per_category[c.short_name] = \
                 cached_projects.n_count(c.short_name)
 
-        return render_template('admin/categories.html',
-                               title=gettext('Categories'),
-                               categories=categories,
-                               n_projects_per_category=n_projects_per_category,
-                               form=form)
+        response = dict(template='admin/categories.html',
+                        title=gettext('Categories'),
+                        categories=categories,
+                        n_projects_per_category=n_projects_per_category,
+                        form=form)
+        return handle_content_type(response)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
@@ -299,21 +301,23 @@ def del_category(id):
             if len(cached_cat.get_all()) > 1:
                 ensure_authorized_to('delete', category)
                 if request.method == 'GET':
-                    return render_template('admin/del_category.html',
-                                           title=gettext('Delete Category'),
-                                           category=category)
+                    response = dict(template='admin/del_category.html',
+                                    title=gettext('Delete Category'),
+                                    category=category,
+                                    form=dict(csrf=generate_csrf()))
+                    return handle_content_type(response)
                 if request.method == 'POST':
                     project_repo.delete_category(category)
                     msg = gettext("Category deleted")
                     flash(msg, 'success')
                     cached_cat.reset()
-                    return redirect(url_for(".categories"))
+                    return redirect_content_type(url_for(".categories"))
             else:
                 msg = gettext('Sorry, it is not possible to delete the only'
                               ' available category. You can modify it, '
                               ' click the edit button')
                 flash(msg, 'warning')
-                return redirect(url_for('.categories'))
+                return redirect_content_type(url_for('.categories'))
         else:
             abort(404)
     except HTTPException:
@@ -335,12 +339,13 @@ def update_category(id):
             form = CategoryForm(obj=category)
             form.populate_obj(category)
             if request.method == 'GET':
-                return render_template('admin/update_category.html',
-                                       title=gettext('Update Category'),
-                                       category=category,
-                                       form=form)
+                response = dict(template='admin/update_category.html',
+                                title=gettext('Update Category'),
+                                category=category,
+                                form=form)
+                return handle_content_type(response)
             if request.method == 'POST':
-                form = CategoryForm(request.form)
+                form = CategoryForm(request.body)
                 if form.validate():
                     slug = form.name.data.lower().replace(" ", "")
                     new_category = Category(id=form.id.data,
@@ -350,14 +355,15 @@ def update_category(id):
                     cached_cat.reset()
                     msg = gettext("Category updated")
                     flash(msg, 'success')
-                    return redirect(url_for(".categories"))
+                    return redirect_content_type(url_for(".categories"))
                 else:
                     msg = gettext("Please correct the errors")
                     flash(msg, 'success')
-                    return render_template('admin/update_category.html',
-                                           title=gettext('Update Category'),
-                                           category=category,
-                                           form=form)
+                    response = dict(template='admin/update_category.html',
+                                    title=gettext('Update Category'),
+                                    category=category,
+                                    form=form)
+                    return handle_content_type(response)
         else:
             abort(404)
     except HTTPException:
