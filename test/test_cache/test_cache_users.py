@@ -308,7 +308,7 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user, published=True)
-        private_fields = ('id', 'owner_id')
+        private_fields = ('owner_id')
         public_fields = ('name', 'short_name', 'description',
                          'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
