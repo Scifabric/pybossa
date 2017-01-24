@@ -28,6 +28,7 @@ from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
+from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
 
@@ -300,21 +301,23 @@ def del_category(id):
             if len(cached_cat.get_all()) > 1:
                 ensure_authorized_to('delete', category)
                 if request.method == 'GET':
-                    return render_template('admin/del_category.html',
-                                           title=gettext('Delete Category'),
-                                           category=category)
+                    response = dict(template='admin/del_category.html',
+                                    title=gettext('Delete Category'),
+                                    category=category,
+                                    form=dict(csrf=generate_csrf()))
+                    return handle_content_type(response)
                 if request.method == 'POST':
                     project_repo.delete_category(category)
                     msg = gettext("Category deleted")
                     flash(msg, 'success')
                     cached_cat.reset()
-                    return redirect(url_for(".categories"))
+                    return redirect_content_type(url_for(".categories"))
             else:
                 msg = gettext('Sorry, it is not possible to delete the only'
                               ' available category. You can modify it, '
                               ' click the edit button')
                 flash(msg, 'warning')
-                return redirect(url_for('.categories'))
+                return redirect_content_type(url_for('.categories'))
         else:
             abort(404)
     except HTTPException:

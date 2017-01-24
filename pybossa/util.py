@@ -75,6 +75,8 @@ def handle_content_type(data):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
+            if (item == 'category'):
+                data[item] = data[item].to_public_json()
 
         if 'code' in data.keys():
             return jsonify(data), data['code']
