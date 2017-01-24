@@ -23,10 +23,11 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 from flask import abort
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Conflict
 from pybossa.model.task import Task
 from pybossa.core import result_repo
 from api_base import APIBase
+from pybossa.core import task_repo
 
 
 class TaskAPI(APIBase):
@@ -44,3 +45,10 @@ class TaskAPI(APIBase):
     def _update_attribute(self, new, old):
         if (new.state == 'completed') and (old.n_answers <= new.n_answers):
             new.state = 'ongoing'
+
+    def _preprocess_post_data(self, data):
+        project_id = data["project_id"]
+        info = data["info"]
+        found = task_repo.get_task_by(project_id=project_id, info=info)
+        if found:
+            raise Conflict("Task already present")
