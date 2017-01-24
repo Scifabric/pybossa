@@ -87,9 +87,11 @@ def featured(project_id=None):
                     category=c.short_name,
                     page=1,
                     per_page=n_projects)
-            return render_template('/admin/projects.html',
-                                   projects=projects,
-                                   categories=categories)
+            response = dict(template = '/admin/projects.html',
+                            projects=projects,
+                            categories=categories,
+                            form=dict(csrf=generate_csrf()))
+            return handle_content_type(response)
         else:
             project = project_repo.get(project_id)
             if project:

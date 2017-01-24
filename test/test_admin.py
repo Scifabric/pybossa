@@ -140,10 +140,33 @@ class TestAdmin(web.Helper):
         assert "Manage featured projects" in res.data, res.data
 
     @with_context
+    def test_03_2_admin_featured_apps_as_admin_json(self):
+        """Test ADMIN featured projects works as an admin user json"""
+        self.register()
+        self.signin()
+        res = self.app_get_json('/admin/featured')
+        data = json.loads(res.data)
+        assert 'categories' in data, data
+        assert 'projects' in data, data
+        err_msg = 'template wrong'
+        assert data['template'] == '/admin/projects.html', err_msg
+        assert 'form' in data, data
+        assert 'csrf' in data['form'], data
+
+    @with_context
     def test_04_admin_featured_apps_as_anonymous(self):
         """Test ADMIN featured projects works as an anonymous user"""
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Please sign in to access this page" in res.data, res.data
+
+    @with_context
+    def test_04_2_admin_featured_apps_as_anonymous_json(self):
+        """Test ADMIN featured projects works as an anonymous user json"""
+        res = self.app_get_json('/admin/featured')
+        assert res.status_code == 302, res.status_code
+        err_msg = 'private information leaked'
+        assert 'categories' not in res.data, err_msg
+        assert 'projects' not in res.data, err_msg
 
     @with_context
     def test_05_admin_featured_apps_as_user(self):
@@ -154,6 +177,19 @@ class TestAdmin(web.Helper):
                       password="tester")
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert res.status == "403 FORBIDDEN", res.status
+
+    @with_context
+    def test_05_2_admin_featured_apps_as_user_json(self):
+        """Test ADMIN featured projects works as a signed in user json"""
+        self.register()
+        self.signout()
+        self.register(name="tester2", email="tester2@tester.com",
+                      password="tester")
+        res = self.app_get_json('/admin/featured')
+        assert res.status == "403 FORBIDDEN", res.status
+        err_msg = 'private information leaked'
+        assert 'categories' not in res.data, err_msg
+        assert 'projects' not in res.data, err_msg
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
