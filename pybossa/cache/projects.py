@@ -53,7 +53,8 @@ def get_top(n=4):
                        info=row.info,
                        n_volunteers=n_volunteers(row.id),
                        n_completed_tasks=n_completed_tasks(row.id))
-        top_projects.append(project)
+
+        top_projects.append(Project().to_public_json(project))
     return top_projects
 
 
