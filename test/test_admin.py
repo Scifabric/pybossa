@@ -772,6 +772,46 @@ class TestAdmin(web.Helper):
         assert "Please correct the errors" in res.data, err_msg
 
     @with_context
+    def test_23_admin_add_category_json(self):
+        """Test ADMIN JSON add category works"""
+        self.create()
+        category = {'name': 'cat', 'short_name': 'cat',
+                    'description': 'description', 'id': ""}
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_post_json(url, data=category, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        data = json.loads(res.data)
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        # Admin
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_post_json(url, data=category)
+        err_msg = "Category should be added"
+        data = json.loads(res.data)
+        assert "Category added" in data.get('flash'), err_msg
+        assert data.get('status') == 'success', err_msg
+        assert category['name'] in data.get('n_projects_per_category').keys(), err_msg
+
+        # Create the same category again should fail
+        res = self.app_post_json(url, data=category)
+        err_msg = "Category form validation should work"
+        data = json.loads(res.data)
+        assert "Please correct the errors" in data.get('flash'), err_msg
+        assert data.get('status') == 'error', err_msg
+        assert len(data.get('form').get('errors').get('name')) == 1, err_msg
+
+
+    @with_context
     def test_24_admin_update_category(self):
         """Test ADMIN update category works"""
         self.create()
