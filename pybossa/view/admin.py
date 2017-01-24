@@ -259,7 +259,7 @@ def categories():
             form = CategoryForm()
         if request.method == 'POST':
             ensure_authorized_to('create', Category)
-            form = CategoryForm(request.form)
+            form = CategoryForm(request.body)
             del form.id
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
@@ -278,11 +278,12 @@ def categories():
             n_projects_per_category[c.short_name] = \
                 cached_projects.n_count(c.short_name)
 
-        return render_template('admin/categories.html',
-                               title=gettext('Categories'),
-                               categories=categories,
-                               n_projects_per_category=n_projects_per_category,
-                               form=form)
+        response = dict(template='admin/categories.html',
+                        title=gettext('Categories'),
+                        categories=categories,
+                        n_projects_per_category=n_projects_per_category,
+                        form=form)
+        return handle_content_type(response)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
