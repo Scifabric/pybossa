@@ -339,12 +339,13 @@ def update_category(id):
             form = CategoryForm(obj=category)
             form.populate_obj(category)
             if request.method == 'GET':
-                return render_template('admin/update_category.html',
-                                       title=gettext('Update Category'),
-                                       category=category,
-                                       form=form)
+                response = dict(template='admin/update_category.html',
+                                title=gettext('Update Category'),
+                                category=category,
+                                form=form)
+                return handle_content_type(response)
             if request.method == 'POST':
-                form = CategoryForm(request.form)
+                form = CategoryForm(request.body)
                 if form.validate():
                     slug = form.name.data.lower().replace(" ", "")
                     new_category = Category(id=form.id.data,
@@ -354,14 +355,15 @@ def update_category(id):
                     cached_cat.reset()
                     msg = gettext("Category updated")
                     flash(msg, 'success')
-                    return redirect(url_for(".categories"))
+                    return redirect_content_type(url_for(".categories"))
                 else:
                     msg = gettext("Please correct the errors")
                     flash(msg, 'success')
-                    return render_template('admin/update_category.html',
-                                           title=gettext('Update Category'),
-                                           category=category,
-                                           form=form)
+                    response = dict(template='admin/update_category.html',
+                                    title=gettext('Update Category'),
+                                    category=category,
+                                    form=form)
+                    return handle_content_type(response)
         else:
             abort(404)
     except HTTPException:
