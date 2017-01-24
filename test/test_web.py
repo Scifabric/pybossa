@@ -4214,6 +4214,16 @@ class TestWeb(web.Helper):
         err_msg = 'there should not be a user id'
         assert 'id' not in data['user'], err_msg
 
+    @with_context
+    def test_72_profile_url_json(self):
+        """Test JSON WEB public user profile works"""
+
+        res = self.app.get('/account/profile',
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['next'] == '/account/signin'
+        assert data['status'] == 'not_signed_in'
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

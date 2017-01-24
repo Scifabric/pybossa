@@ -265,6 +265,19 @@ class TestPrivacyWebPublic(web_helper.Helper):
         err_msg = 'tutorial should not be public'
         assert 'tutorial' not in project['info'], err_msg
 
+    @with_context
+    def test_08_user_public_profile_json(self):
+        '''Test PRIVACY user public profile privacy is respected for API access'''
+        # As Anonymous user
+        url = '/account/profile'
+        # Use a full url to avoid redirection on API access.
+        full_url = 'http://localhost%s/' % url
+        res = self.app.get(full_url, content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'no information should be shown here'
+        assert 'user' not in data, err_msg
+        assert 'projects' not in data, err_msg
+
 
 class TestPrivacyWebPrivacy(web_helper.Helper):
 

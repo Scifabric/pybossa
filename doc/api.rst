@@ -873,6 +873,28 @@ Example of logged in user:
         }
     }
 
+Account profile
+~~~~~~~~~~~~
+**Endpoint: /account/profile
+
+*Allowed methods*: **GET**
+
+**GET**
+
+If logged in you will get the same information as on /account/<name> (see above). If you are not logged in you will get the following example output
+
+**Example output**
+
+If you are not logged in you will get this output:
+
+**Example output**
+
+.. code-block:: python
+    {
+      "next": "/account/signin",
+      "status": "not_signed_in"
+    }
+
 Account update profile
 ~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /account/<name>/update**

@@ -296,8 +296,11 @@ def _update_user_with_valid_email(user, email_addr):
 def redirect_profile():
     """Redirect method for profile."""
     if current_user.is_anonymous():  # pragma: no cover
-        return redirect(url_for('.signin'))
-    return redirect(url_for('.profile', name=current_user.name), 302)
+        return redirect_content_type(url_for('.signin'), status='not_signed_in')
+    if (request.headers['Content-Type'] == 'application/json') and current_user.is_authenticated():
+        return _show_own_profile(current_user)
+    else:
+        return redirect_content_type(url_for('.profile', name=current_user.name))
 
 
 @blueprint.route('/<name>/', methods=['GET'])
