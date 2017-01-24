@@ -38,3 +38,12 @@ class Category(db.Model, DomainObject):
     description = Column(Text, nullable=False)
     #: UTC timestamp when the Category was created
     created = Column(Text, default=make_timestamp)
+
+    @classmethod
+    def public_attributes(self):
+        """Return a list of public attributes."""
+        return ['description', 'short_name', 'created', 'id', 'name']
+
+    def public_info_keys(self):
+        """Return a list of public info keys."""
+        return []
