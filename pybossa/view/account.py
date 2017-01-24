@@ -377,10 +377,11 @@ def projects(name):
     user = user_repo.get(current_user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
 
-    return render_template('account/projects.html',
-                           title=gettext("Projects"),
-                           projects_published=projects_published,
-                           projects_draft=projects_draft)
+    response = dict(template='account/projects.html',
+                    title=gettext("Projects"),
+                    projects_published=projects_published,
+                    projects_draft=projects_draft)
+    return handle_content_type(response)
 
 
 def _get_user_projects(user_id):
