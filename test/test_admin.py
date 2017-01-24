@@ -64,6 +64,19 @@ class TestAdmin(web.Helper):
         sentinel_mock.assert_called_with(key)
 
     @with_context
+    @patch('pybossa.view.admin.sentinel.master.delete')
+    def test_01_admin_index_json(self, sentinel_mock):
+        """Test ADMIN JSON index page works"""
+        self.register()
+        res = self.app_get_json("/admin/")
+        data = json.loads(res.data)
+        err_msg = "There should be an index page for admin users and projects"
+        assert data.get('template') == '/admin/index.html'
+        key = "notify:admin:1"
+        sentinel_mock.assert_called_with(key)
+
+
+    @with_context
     def test_01_admin_index_anonymous(self):
         """Test ADMIN index page works as anonymous user"""
         res = self.app.get("/admin", follow_redirects=True)
