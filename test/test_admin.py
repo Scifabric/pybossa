@@ -177,6 +177,19 @@ class TestAdmin(web.Helper):
         assert res.status == "403 FORBIDDEN", res.status
 
     @with_context
+    def test_05_2_admin_featured_apps_as_user_json(self):
+        """Test ADMIN featured projects works as a signed in user json"""
+        self.register()
+        self.signout()
+        self.register(name="tester2", email="tester2@tester.com",
+                      password="tester")
+        res = self.app_get_json('/admin/featured')
+        assert res.status == "403 FORBIDDEN", res.status
+        err_msg = 'private information leaked'
+        assert 'categories' not in res.data, err_msg
+        assert 'projects' not in res.data, err_msg
+
+    @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_06_admin_featured_apps_add_remove_app(self, mock):
         """Test ADMIN featured projects add-remove works as an admin user"""
