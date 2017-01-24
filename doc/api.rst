@@ -1747,3 +1747,86 @@ to update it.
       "next": "/admin/categories",
       "status": "success"
     }
+
+Admin featured projects
+~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/featured**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you all featured projects on PYBOSSA.
+
+* **categories**: Gives you a list of categories where projects can be featured.
+* **projects**: Featured projects grouped by categories.
+* **tamplte**: The Jinja2 template that could be rendered.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "categories": [
+        {
+          "created": "2013-06-18T11:13:44.789149",
+          "description": "Art projects",
+          "id": 3,
+          "name": "Art",
+          "short_name": "art"
+        },
+        {
+          "created": "2013-06-18T11:14:54.737672",
+          "description": "Humanities projects",
+          "id": 4,
+          "name": "Humanities",
+          "short_name": "humanities"
+        },
+        ...
+      ],
+      "projects": {
+        "art": [
+          {
+            "created": "2013-12-10T06:54:48.222642",
+            "description": "Description",
+            "id": 1069,
+            "info": {
+              "container": "user_3738",
+              "thumbnail": "app_1069_thumbnail_1410772175.32.png"
+            },
+            "last_activity": "just now",
+            "last_activity_raw": null,
+            "n_tasks": 13,
+            "n_volunteers": 0,
+            "name": "AAAA Test",
+            "overall_progress": 0,
+            "owner": "John Doe",
+            "short_name": "AAAATest",
+            "updated": "2014-11-05T14:55:07.564118"
+          },
+          ...
+        ]
+        "humanities": [
+          {
+            "created": "2014-10-21T12:20:51.194485",
+            "description": "test project",
+            "id": 2144,
+            "info": {
+              "container": null,
+              "thumbnail": null
+            },
+            "last_activity": "2 years ago",
+            "last_activity_raw": "2014-10-21T12:31:51.560422",
+            "n_tasks": 9,
+            "n_volunteers": 2,
+            "name": "zak's test",
+            "overall_progress": 0,
+            "owner": "John Doe Cousin",
+            "short_name": "cousintest",
+            "updated": "2014-11-05T14:55:07.564118"
+          },
+          ...
+        ]
+      },
+      "template": "/admin/projects.html"
+    }
