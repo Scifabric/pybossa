@@ -874,7 +874,7 @@ Example of logged in user:
     }
 
 Account profile
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 **Endpoint: /account/profile
 
 *Allowed methods*: **GET**
@@ -893,6 +893,64 @@ If you are not logged in you will get this output:
     {
       "next": "/account/signin",
       "status": "not_signed_in"
+    }
+
+Account update profile
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/<name>/projects**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+The user needs to be logged in. It returns a JSON object with the following information:
+
+* **projects_draft**: a list of draft projects of the user.
+* **projects_published**: a list of published projects of the user.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "projects_draft": [
+        {
+          "description": "This should be the Youtube Project",
+          "id": 3169,
+          "info": {
+            "task_presenter": "..."
+          },
+          "n_tasks": 0,
+          "n_volunteers": 0,
+          "name": "Youtube_Test1",
+          "overall_progress": 0,
+          "owner_id": 4953,
+          "short_name": "youtube_test1"
+        },
+        ...
+      ],
+      "projects_published": [
+        {
+          "description": "Youtube 1",
+          "id": 3206,
+          "info": {
+            "results": "",
+            "task_presenter": ".."
+            "tutorial": ""
+          },
+          "n_tasks": 15,
+          "n_volunteers": 0,
+          "name": "Youtube 1",
+          "overall_progress": 0,
+          "owner_id": 4953,
+          "short_name": "youtube1"
+        },
+        ...
+      ],
+      "template": "account/projects.html",
+      "title": "Projects"
     }
 
 Account update profile
