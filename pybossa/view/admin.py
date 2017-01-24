@@ -404,7 +404,7 @@ def dashboard():
             active_anon_last_week=active_anon_last_week,
             draft_projects_last_week=draft_projects_last_week,
             published_projects_last_week=published_projects_last_week,
-            #update_projects_last_week=update_projects_last_week,
+            update_projects_last_week=update_projects_last_week,
             new_tasks_week=new_tasks_week,
             new_task_runs_week=new_task_runs_week,
             new_users_week=new_users_week,
@@ -413,9 +413,10 @@ def dashboard():
             wait=False)
         return handle_content_type(response)
     except ProgrammingError as e:
-        return render_template('admin/dashboard.html',
-                               title=gettext('Dashboard'),
-                               wait=True)
+        response = dict(template='admin/dashboard.html',
+                        title=gettext('Dashboard'),
+                        wait=True)
+        return handle_content_type(response)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)

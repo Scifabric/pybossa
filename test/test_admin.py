@@ -1071,6 +1071,15 @@ class TestAdmin(web.Helper):
         assert "Sign in" in res.data, err_msg
 
     @with_context
+    def test_admin_dashboard_json(self):
+        """Test ADMIN JSON dashboard requires admin"""
+        url = '/admin/dashboard/'
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "It should require login"
+        assert "Sign in" in res.data, err_msg
+
+
+    @with_context
     def test_admin_dashboard_auth_user(self):
         """Test ADMIN dashboard requires admin"""
         url = '/admin/dashboard/'
@@ -1082,6 +1091,20 @@ class TestAdmin(web.Helper):
         assert res.status_code == 403, err_msg
 
     @with_context
+    def test_admin_dashboard_auth_user_json(self):
+        """Test ADMIN JSON dashboard requires admin"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.signout()
+        self.register(fullname="juan", name="juan")
+        res = self.app_get_json(url)
+        err_msg = "It should return 403"
+        assert res.status_code == 403, err_msg
+        data = json.loads(res.data)
+        assert data.get('code') == 403, err_msg
+
+
+    @with_context
     def test_admin_dashboard_admin_user(self):
         """Test ADMIN dashboard admins can access it"""
         url = '/admin/dashboard/'
@@ -1091,6 +1114,49 @@ class TestAdmin(web.Helper):
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
         assert "No data" in res.data, res.data
+
+    @with_context
+    def test_admin_dashboard_admin_user_json(self):
+        """Test ADMIN JSON dashboard admins can access it"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        res = self.app_get_json(url)
+        print res.data
+        err_msg = "It should return 200"
+        data = json.loads(res.data)
+        assert res.status_code == 200, err_msg
+        assert data.get('wait') == True, data
+
+    @with_context
+    def test_admin_dashboard_admin_user_data_json(self):
+        """Test ADMIN JSON dashboard admins can access it with data"""
+        url = '/admin/dashboard/'
+        self.register()
+        self.new_project()
+        self.new_task(1)
+        import pybossa.dashboard.jobs as dashboard
+        dashboard.active_anon_week()
+        dashboard.active_users_week()
+        dashboard.new_users_week()
+        dashboard.new_tasks_week()
+        dashboard.new_task_runs_week()
+        dashboard.draft_projects_week()
+        dashboard.published_projects_week()
+        dashboard.update_projects_week()
+        dashboard.returning_users_week()
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        keys = ['active_anon_last_week', 'published_projects_last_week',
+                'new_tasks_week', 'title', 'update_feed',
+                'draft_projects_last_week', 'update_projects_last_week',
+                'new_users_week', 'template', 'new_task_runs_week',
+                'returning_users_week', 'active_users_last_week', 'wait']
+        for key in keys:
+            assert key in data.keys(), data
+
 
     @with_context
     def test_admin_dashboard_admin_user_data(self):
@@ -1139,3 +1205,35 @@ class TestAdmin(web.Helper):
         assert "No data" not in res.data, res.data
         assert "New Users" in res.data, res.data
         assert mock.enqueue.called
+
+    @with_context
+    @patch('pybossa.view.admin.DASHBOARD_QUEUE')
+    def test_admin_dashboard_admin_refresh_user_data_json(self, mock):
+        """Test ADMIN JSON dashboard admins refresh can access it with data"""
+        url = '/admin/dashboard/?refresh=1'
+        self.register()
+        self.new_project()
+        self.new_task(1)
+        import pybossa.dashboard.jobs as dashboard
+        dashboard.active_anon_week()
+        dashboard.active_users_week()
+        dashboard.new_users_week()
+        dashboard.new_tasks_week()
+        dashboard.new_task_runs_week()
+        dashboard.draft_projects_week()
+        dashboard.published_projects_week()
+        dashboard.update_projects_week()
+        dashboard.returning_users_week()
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "It should return 200"
+        assert res.status_code == 200, err_msg
+        assert mock.enqueue.called
+        keys = ['active_anon_last_week', 'published_projects_last_week',
+                'new_tasks_week', 'title', 'update_feed',
+                'draft_projects_last_week', 'update_projects_last_week',
+                'new_users_week', 'template', 'new_task_runs_week',
+                'returning_users_week', 'active_users_last_week', 'wait']
+        for key in keys:
+            assert key in data.keys(), data
+
