@@ -895,8 +895,8 @@ If you are not logged in you will get this output:
       "status": "not_signed_in"
     }
 
-Account update profile
-~~~~~~~~~~~~~~~~~~~~~~
+Account projects
+~~~~~~~~~~~~~~~~
 **Endpoint: /account/<name>/projects**
 
 *Allowed methods*: **GET**
