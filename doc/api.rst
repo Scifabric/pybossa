@@ -1107,3 +1107,28 @@ It returns a JSON object with the following information:
         u'flash': u'New API-KEY generated', 
         u'next': u'/account/<user>'
     }
+
+Account confirm email
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /account/confirm-email**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+If account validation is enabled, then, using this endpoint the user will receive an email
+to validate its account. It returns a JSON object with the following information:
+
+* **flash**: A message stating that an email has been sent.
+* **status**: The status of the call.
+* **next**: The next url.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "flash": 'Ane email has been sent to validate your e-mail address.',
+        'status': 'info',
+        'next': '/account/<username>/'
+    }
