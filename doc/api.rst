@@ -1920,7 +1920,7 @@ Gives you all featured projects on PYBOSSA.
 
 * **categories**: Gives you a list of categories where projects can be featured.
 * **projects**: Featured projects grouped by categories.
-* **tamplte**: The Jinja2 template that could be rendered.
+* **template**: The Jinja2 template that could be rendered.
 
 **Example output**
 
@@ -1989,4 +1989,96 @@ Gives you all featured projects on PYBOSSA.
         ]
       },
       "template": "/admin/projects.html"
+    }
+
+Admin un-/feature projects
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/featured/<int:project_id>**
+
+*Allowed methods*: **POST / DELETE**
+
+**POST**
+
+Features a specific project.
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use the following header: "X-CSRFToken".
+
+**Example output**
+
+On Success it will give you the project information
+
+.. code-block:: python
+    {
+      "info": {
+        "task_presenter": "...",
+        "container": "user_3738",
+        "thumbnail": "app_1069_thumbnail_1410772175.32.png"
+      },
+      "updated": "2017-01-24T17:21:07.545983",
+      "category_id": 3,
+      "description": "Description",
+      "short_name": "AAAATest",
+      "created": "2013-12-10T06:54:48.222642",
+      "webhook": null,
+      "long_description": "AAAATest\n\n",
+      "featured": false,
+      "allow_anonymous_contributors": true,
+      "published": true,
+      "secret_key": "dfgojdsfgsgd",
+      "owner_id": 3738,
+      "contacted": null,
+      "id": 1069,
+      "name": "AAAA Test"
+    }
+
+If a project is already featured:
+
+.. code-block:: python
+    {
+      "code": 400,
+      "description": "CSRF token missing or incorrect.",
+      "template": "400.html"
+    }
+
+
+**DELETE**
+
+Unfeatures a specific project.
+
+To send a valid DELETE request you need to pass the *csrf token* in the headers. Use the following header: "X-CSRFToken".
+
+**Example output**
+
+On Success it will give you the project information
+
+.. code-block:: python
+    {
+      "info": {
+        "task_presenter": "...",
+        "container": "user_3738",
+        "thumbnail": "app_1069_thumbnail_1410772175.32.png"
+      },
+      "updated": "2017-01-24T17:21:07.545983",
+      "category_id": 3,
+      "description": "Description",
+      "short_name": "AAAATest",
+      "created": "2013-12-10T06:54:48.222642",
+      "webhook": null,
+      "long_description": "AAAATest\n\n",
+      "featured": false,
+      "allow_anonymous_contributors": true,
+      "published": true,
+      "secret_key": "2ffgjngdf6bcbc38ba52561d4",
+      "owner_id": 3738,
+      "contacted": null,
+      "id": 1069,
+      "name": "AAAA Test"
+    }
+
+If a project is already unfeatured:
+
+.. code-block:: python
+    {
+      "status_code": 415,
+      "error": "Project.id 1069 is not featured"
     }
