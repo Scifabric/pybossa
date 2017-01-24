@@ -215,7 +215,7 @@ def add_admin(user_id=None):
                 ensure_authorized_to('update', user)
                 user.admin = True
                 user_repo.update(user)
-                return redirect(url_for(".users"))
+                return redirect_content_type(url_for(".users"))
             else:
                 msg = "User not found"
                 return format_error(msg, 404)
@@ -236,7 +236,7 @@ def del_admin(user_id=None):
                 ensure_authorized_to('update', user)
                 user.admin = False
                 user_repo.update(user)
-                return redirect(url_for('.users'))
+                return redirect_content_type(url_for('.users'))
             else:
                 msg = "User.id not found"
                 return format_error(msg, 404)
