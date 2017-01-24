@@ -707,6 +707,39 @@ class TestAdmin(web.Helper):
         assert dom.find(id='categories') is not None, err_msg
 
     @with_context
+    def test_22_admin_list_categories_json(self):
+        """Test ADMIN JSON list categories works"""
+        self.create()
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app_get_json(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=self.email_addr2, password=self.password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        assert data.get('code') == 403, err_msg
+        self.signout()
+
+        # Admin user
+        self.signin(email=self.root_addr, password=self.root_password)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "Admin users should be get a list of Categories"
+        assert data.get('categories') is not None, err_msg
+        assert data.get('template') == 'admin/categories.html', err_msg
+        assert data.get('form') is not None, err_msg
+        assert data.get('form').get('csrf') is not None, err_msg
+        assert data.get('n_projects_per_category') is not None, err_msg
+        assert data.get('n_projects_per_category').get('thinking') == 1, err_msg
+
+
+    @with_context
     def test_23_admin_add_category(self):
         """Test ADMIN add category works"""
         self.create()
