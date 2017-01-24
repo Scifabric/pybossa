@@ -60,6 +60,9 @@ def handle_content_type(data):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
+            if (item == 'categories'):
+                data[item] = [cat.to_public_json() for cat in data[item] \
+                              if type(cat) != dict]
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
