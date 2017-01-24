@@ -69,7 +69,7 @@ class TestDashBoardDraftProject(Test):
 
         assert len(res) == 1, res
         res = res[0]
-        assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+        assert res['day'] == day, res['day']
         assert res['id'] == p.id
         assert res['short_name'] == p.short_name
         assert res['p_name'] == p.name
@@ -118,7 +118,7 @@ class TestDashBoardPublishedProject(Test):
 
         assert len(res) == 1, res
         res = res[0]
-        assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+        assert res['day'] == day, res['day']
         assert res['id'] == p.id
         assert res['short_name'] == p.short_name
         assert res['p_name'] == p.name
@@ -169,7 +169,7 @@ class TestDashBoardUpdateProject(Test):
 
         assert len(res) == 1, res
         res = res[0]
-        assert res['day'].strftime('%Y-%m-%d') == day, res['day']
+        assert res['day'] == day, res['day']
         assert res['id'] == p.id
         assert res['short_name'] == p.short_name
         assert res['p_name'] == p.name

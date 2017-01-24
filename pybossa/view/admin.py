@@ -398,8 +398,8 @@ def dashboard():
         returning_users_week = dashb.format_returning_users()
         update_feed = get_update_feed()
 
-        return render_template(
-            'admin/dashboard.html',
+        response = dict(
+            template='admin/dashboard.html',
             title=gettext('Dashboard'),
             active_users_last_week=active_users_last_week,
             active_anon_last_week=active_anon_last_week,
@@ -412,10 +412,12 @@ def dashboard():
             returning_users_week=returning_users_week,
             update_feed=update_feed,
             wait=False)
+        return handle_content_type(response)
     except ProgrammingError as e:
-        return render_template('admin/dashboard.html',
-                               title=gettext('Dashboard'),
-                               wait=True)
+        response = dict(template='admin/dashboard.html',
+                        title=gettext('Dashboard'),
+                        wait=True)
+        return handle_content_type(response)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
