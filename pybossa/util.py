@@ -61,8 +61,14 @@ def handle_content_type(data):
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
             if (item == 'categories'):
-                data[item] = [cat.to_public_json() for cat in data[item] \
-                              if type(cat) != dict]
+                tmp = []
+                for cat in data[item]:
+                    if type(cat) != dict:
+                        cat = cat.to_public_json()
+                    tmp.append(cat)
+                data[item] = tmp
+
+
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:

@@ -24,7 +24,7 @@ from flask import render_template
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
-from pybossa.util import rank
+from pybossa.util import rank, handle_content_type
 from jinja2.exceptions import TemplateNotFound
 
 
@@ -62,7 +62,8 @@ def home():
             d['top_users'] = cached_users.get_leaderboard(10)
     if not current_app.config['ENFORCE_PRIVACY']:
         d['top_users'] = cached_users.get_leaderboard(10)
-    return render_template('/home/index.html', **d)
+    response = dict(template='/home/index.html', **d)
+    return handle_content_type(response)
 
 
 @blueprint.route("about")
