@@ -184,7 +184,6 @@ class TestUsersCache(Test):
 
         # check privacy
         err_msg = 'private information is in public record'
-        assert 'id' not in projects_contributed[0], err_msg
         assert 'owner_id' not in projects_contributed[0], err_msg
         assert 'task_presenter' not in projects_contributed[0]['info']
 
@@ -204,7 +203,6 @@ class TestUsersCache(Test):
 
         # check privacy
         err_msg = 'private information is in public record'
-        assert 'id' not in projects_contributed[0], err_msg
         assert 'owner_id' not in projects_contributed[0], err_msg
         assert 'task_presenter' not in projects_contributed[0]['info']
 
@@ -327,7 +325,7 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user, published=True)
-        private_fields = ('id', 'owner_id')
+        private_fields = ('owner_id')
         public_fields = ('name', 'short_name', 'description',
                          'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
