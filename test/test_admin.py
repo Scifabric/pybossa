@@ -150,6 +150,8 @@ class TestAdmin(web.Helper):
         assert 'projects' in data, data
         err_msg = 'template wrong'
         assert data['template'] == '/admin/projects.html', err_msg
+        assert 'form' in data, data
+        assert 'csrf' in data['form'], data
 
     @with_context
     def test_04_admin_featured_apps_as_anonymous(self):
