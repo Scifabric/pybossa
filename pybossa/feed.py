@@ -23,6 +23,7 @@ try:
 except ImportError:  # pragma: no cover
     import pickle
 
+from flask import current_app
 
 FEED_KEY = 'pybossa_feed'
 
@@ -38,9 +39,12 @@ def get_update_feed():
     data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
     feed = []
     for u in data:
-        tmp = pickle.loads(u[0])
-        tmp['updated'] = u[1]
-        if tmp.get('info') and type(tmp.get('info')) == unicode:
-            tmp['info'] = json.loads(tmp['info'])
-        feed.append(tmp)
+        try:
+            tmp = pickle.loads(u[0])
+            tmp['updated'] = u[1]
+            if tmp.get('info') and type(tmp.get('info')) == unicode:
+                tmp['info'] = json.loads(tmp['info'])
+            feed.append(tmp)
+        except Exception as e:
+            current_app.logger.error('{0}\ndata: {1}'.format(e, u))
     return feed
