@@ -18,6 +18,7 @@
 """Help view for PYBOSSA."""
 from flask import Blueprint
 from flask import render_template
+from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from random import choice
@@ -60,5 +61,6 @@ def cookies_policy():
 @blueprint.route('/privacy')
 def privacy():
     """Render help/privacy policy page."""
-    return render_template('help/privacy.html',
-                           title='Help: Cookies Policy')
+    response = dict(template='help/privacy.html',
+                    title='Privacy Policy')
+    return handle_content_type(response)
