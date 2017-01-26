@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,9 +18,11 @@
 """Help view for PYBOSSA."""
 from flask import Blueprint
 from flask import render_template
+from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from random import choice
+from readability.readability import Document
 
 blueprint = Blueprint('help', __name__)
 
@@ -60,5 +62,9 @@ def cookies_policy():
 @blueprint.route('/privacy')
 def privacy():
     """Render help/privacy policy page."""
-    return render_template('help/privacy.html',
-                           title='Help: Cookies Policy')
+    # use readability to remove styling and headers
+    cleaned_up_content = Document(render_template('help/privacy.html')).summary()
+    response = dict(template='help/privacy.html',
+                    content=cleaned_up_content,
+                    title='Privacy Policy')
+    return handle_content_type(response)
