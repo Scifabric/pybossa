@@ -57,4 +57,4 @@ class ProjectAuth(object):
 
     def _only_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
-                (project.owner_id == user.id or user.admin))
+                (project.owner_id == user.id or user.admin or (user.subadmin and any(project.id == co.project_id for co in user.coowned_projects))))

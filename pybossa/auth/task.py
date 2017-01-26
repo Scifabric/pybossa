@@ -49,5 +49,5 @@ class TaskAuth(object):
     def _only_admin_or_owner(self, user, task):
         if not user.is_anonymous():
             project = self.project_repo.get(task.project_id)
-            return (project.owner_id == user.id or user.admin)
+            return (project.owner_id == user.id or user.admin or any(project.id == co.project_id for co in user.coowned_projects))
         return False

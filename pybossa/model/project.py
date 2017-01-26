@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text
+from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text, Table
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON
@@ -29,6 +29,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
+from pybossa.model.project_coowner import ProjectCoowner
 
 
 class Project(db.Model, DomainObject):
@@ -76,6 +77,7 @@ class Project(db.Model, DomainObject):
                              order_by='TaskRun.finish_time.desc()')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='project')
+    coowners = relationship("User", lazy='subquery', single_parent=True, secondary="project_coowner")
 
     def needs_password(self):
         return self.get_passwd_hash() is not None

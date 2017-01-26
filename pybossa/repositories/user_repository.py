@@ -48,12 +48,15 @@ class UserRepository(Repository):
         return self._filter_by(User, limit, offset, yielded,
                                last_id, fulltextsearch, desc, **filters)
 
-    def search_by_name(self, keyword):
+    def search_by_name(self, keyword, **filters):
         if len(keyword) == 0:
             return []
         keyword = '%' + keyword.lower() + '%'
-        return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
-                                  func.lower(User.fullname).like(keyword))).all()
+        query = self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
+                                  func.lower(User.fullname).like(keyword)))
+        if filters is not None:
+            query = query.filter_by(**filters)
+        return query.all()
 
     def total_users(self):
         return self.db.session.query(User).count()

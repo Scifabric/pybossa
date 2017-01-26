@@ -574,6 +574,9 @@ def setup_hooks(app):
         # Available plugins
         plugins = plugin_manager.plugins
 
+        def is_coowner(project_id):
+            return current_user.is_authenticated and any(project_id == co.project_id for co in current_user.coowned_projects)
+
         return dict(
             brand=app.config['BRAND'],
             title=app.config['TITLE'],
@@ -591,7 +594,8 @@ def setup_hooks(app):
             upload_method=app.config['UPLOAD_METHOD'],
             news=news,
             notify_admin=notify_admin,
-            plugins=plugins)
+            plugins=plugins,
+            is_coowner=is_coowner)
 
     @csrf.error_handler
     def csrf_error_handler(reason):

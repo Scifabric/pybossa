@@ -29,6 +29,7 @@ from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.project import Project
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
+from pybossa.model.project_coowner import ProjectCoowner
 
 
 class User(db.Model, DomainObject, UserMixin):
@@ -68,6 +69,7 @@ class User(db.Model, DomainObject, UserMixin):
     task_runs = relationship(TaskRun, backref='user')
     projects = relationship(Project, backref='owner')
     blogposts = relationship(Blogpost, backref='owner')
+    coowned_projects = relationship(ProjectCoowner, backref='coowner_id', lazy='joined')
 
 
     def get_id(self):

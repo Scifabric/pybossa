@@ -67,6 +67,7 @@ from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
+from pybossa.forms.admin_view_forms import *
 
 blueprint = Blueprint('project', __name__)
 
@@ -1697,7 +1698,7 @@ def project_stream_uri_private(short_name):
     if current_app.config.get('SSE'):
         project, owner, ps = project_by_shortname(short_name)
 
-        if (current_user.id == project.owner_id or current_user.admin):
+        if (current_user.id == project.owner_id or any(project.id == co.project_id for co in current_user.coowned_projects) or current_user.admin):
             return Response(project_event_stream(short_name, 'private'),
                             mimetype="text/event-stream",
                             direct_passthrough=True)
@@ -1810,3 +1811,88 @@ def reset_secret_key(short_name):
     msg = gettext('New secret key generated')
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))
+
+@blueprint.route('/<short_name>/coowners', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def coowners(short_name):
+    """Manage coowners of a project."""
+    form = SearchForm(request.form)
+    project = project_repo.get_by_shortname(short_name)
+    coowners = project.coowners
+
+    if request.method == 'POST' and form.user.data:
+        query = form.user.data
+        found = [user for user in user_repo.search_by_name(query, subadmin=True)]
+        [ensure_authorized_to('update', found_user) for found_user in found]
+        found = [type('', (object,), { "user": user, "isCoowner":any(user.id == coowner.id for coowner in coowners)}) for user in found]
+        if not found:
+            flash("<strong>Ooops!</strong> We didn't find a user "
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+        return render_template('/projects/coowners.html', project=project, short_name=short_name, found=found, coowners=coowners,
+                               title=gettext("Manage Co-owners"),
+                               form=form, pro_features=pro_features())
+
+    return render_template('/projects/coowners.html', project=project, short_name=short_name, found=[], coowners=coowners,
+                           title=gettext("Manage Co-owners"), form=form, pro_features=pro_features())
+
+
+@blueprint.route('/<short_name>/addcoowner/<int:user_id>')
+@login_required
+@admin_required
+def add_coowner(short_name, user_id=None):
+    """Add coowner."""
+    try:
+    	project = project_repo.get_by_shortname(short_name)
+
+    	current_app.logger.info(short_name)
+    	current_app.logger.info(user_id)
+    	current_app.logger.info(project)
+
+        if project and user_id:
+        	user = user_repo.get(user_id)
+        	if user:
+        		current_app.logger.info("user has a value")
+        		ensure_authorized_to('update', user)
+        		current_app.logger.info(user.id)
+        		current_app.logger.info(len(project.coowners))
+        		if all(user.id != x.id for x in project.coowners):
+        			current_app.logger.info("Predicate returned true")
+        			project.coowners.append(user)
+        			project_repo.update(project)
+
+        			current_app.logger.info("Updated, I think")
+
+        		return redirect(url_for(".coowners", short_name=short_name))
+        	else:
+        		msg = "User not found"
+        		return format_error(msg, 404)
+    except Exception as e:  # pragma: no cover
+    	current_app.logger.error(e)
+    	return abort(500)
+
+
+@blueprint.route('/<short_name>/delcoowner/<int:user_id>')
+@login_required
+@admin_required
+def del_coowner(short_name, user_id=None):
+    """Del coowner."""
+    try:
+    	project = project_repo.get_by_shortname(short_name)
+
+        if project and user_id:
+            user = user_repo.get(user_id)
+            if user:
+                ensure_authorized_to('update', user)
+                project.coowners.remove(user)
+                project_repo.update(project)
+                return redirect(url_for('.coowners', short_name=short_name))
+            else:
+                msg = "User.id not found"
+                return format_error(msg, 404)
+        else:  # pragma: no cover
+            msg = "User.id is missing for method del_coowner"
+            return format_error(msg, 415)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)
