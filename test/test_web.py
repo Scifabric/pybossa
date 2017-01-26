@@ -41,6 +41,7 @@ from pybossa.importers import ImportReport
 from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
+from nose.tools import assert_raises
 
 
 class TestWeb(web.Helper):
@@ -4221,6 +4222,20 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a privacy policy page"
         assert "Privacy" in res.data, err_msg
+        assert_raises(ValueError, json.loads, res.data)
+
+    @with_context
+    def test_60_help_privacy_json(self):
+        """Test privacy json endpoint"""
+        url = "/help/privacy"
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Template wrong'
+        assert data['template'] == 'help/privacy.html', err_msg
+        err_msg = 'Title wrong'
+        assert data['title'] == 'Privacy Policy', err_msg
+        err_msg = "There should be HTML content"
+        assert '<body' in data['content'], err_msg
 
     @with_context
     def test_69_allow_anonymous_contributors(self):
