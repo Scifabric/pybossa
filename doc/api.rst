@@ -2098,7 +2098,6 @@ Help privacy
 
 Gives you the privacy policy for your PYBOSSA
 
-* **content**: Simplified HTML of rendered privacy policy.
 * **template**: The Jinja2 template that could be rendered.
 * **title**: the title for the endpoint.
 
@@ -2106,7 +2105,28 @@ Gives you the privacy policy for your PYBOSSA
 
 .. code-block:: python
     {
-      "content": "<html><body><p>privacy policy here</p></body></html>"
-      "template": "help/privacy.html",
-      "title": "Privacy Policy"
+      "template": "help/license.html",
+      "title": "Help: Licenses"
     }
+
+Help license
+~~~~~~~~~~~~
+**Endpoint: /help/license**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the license page for your PYBOSSA
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "template": "help/license.html",
+      "title": "Help: Licenses"
+    }
+
