@@ -2110,3 +2110,27 @@ Gives you the privacy policy for your PYBOSSA
       "template": "help/privacy.html",
       "title": "Privacy Policy"
     }
+
+Help terms of use
+~~~~~~~~~~~~~~~~~
+**Endpoint: /help/terms-of-use**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the terms of use for your PYBOSSA
+
+* **content**: Simplified HTML of rendered terms of use.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "content": "<html><body><p>Terms of use text</p></body></html>"
+      "template": "help/tos.html",
+      "title": "Help: Terms of Use"
+    }
+
