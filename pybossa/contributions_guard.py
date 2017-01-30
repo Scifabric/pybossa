@@ -24,6 +24,7 @@ class ContributionsGuard(object):
     KEY_PREFIX = 'pybossa:task_requested:user:{0}:task:{1}'
     PRESENTED_KEY_PREFIX = 'pybossa:task_presented:user:{0}:task:{1}'
     STAMP_TTL = 60 * 60
+    OTP_TTL = 60 * 10
 
     def __init__(self, redis_conn):
         self.conn = redis_conn
@@ -87,3 +88,16 @@ class ContributionsGuard(object):
         """
         user_id = user['user_id'] or None
         return self.PRESENTED_KEY_PREFIX.format(user_id, task)
+
+    # OTP
+
+    def _create_otpsecret_key(self, user_email):
+        return "OTPSECRET:user_email:{0}".format(user_email)
+
+    def add_otp_secret(self, user_email, otpsecret):
+        key = self._create_otpsecret_key(user_email)
+        self.conn.setex(key, self.OTP_TTL, otpsecret)
+
+    def retrieve_user_otp_secret(self, user_email):
+        key = self._create_otpsecret_key(user_email)
+        return self.conn.get(key)
