@@ -355,6 +355,7 @@ def warm_cache():  # pragma: no cover
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
     from pybossa.util import rank
+    from pybossa.core import user_repo
 
     def warm_project(_id, short_name, featured=False):
         if _id not in projects_cached:
@@ -393,10 +394,12 @@ def warm_cache():  # pragma: no cover
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
         # print "Getting stats for %s" % user['name']
+        print user_repo
+        u = user_repo.get_by_name(user['name'])
         cached_users.get_user_summary(user['name'])
-        cached_users.projects_contributed_cached(user['id'])
-        cached_users.published_projects_cached(user['id'])
-        cached_users.draft_projects_cached(user['id'])
+        cached_users.projects_contributed_cached(u.id)
+        cached_users.published_projects_cached(u.id)
+        cached_users.draft_projects_cached(u.id)
 
     return True
 
