@@ -4182,6 +4182,20 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a help api page"
         assert "API Help" in res.data, err_msg
+        assert_raises(ValueError, json.loads, res.data)
+
+    def test_59_help_api_json(self):
+        """Test WEB help api json exists"""
+        Fixtures.create()
+        url = "/help/api"
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = 'Template wrong'
+        assert data['template'] == 'help/api.html', err_msg
+        err_msg = 'Title wrong'
+        assert data['title'] == 'Help: API', err_msg
+        err_msg = 'project id missing'
+        assert 'project_id' in data, err_msg
 
     @with_context
     def test_59_help_license(self):

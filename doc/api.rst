@@ -2088,6 +2088,29 @@ If a project is already unfeatured:
       "error": "Project.id 1069 is not featured"
     }
 
+Help API
+~~~~~~~~
+**Endpoint: /help/api**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the API help for your PYBOSSA
+
+* **project_id**: a project id for the help example text. If no project exists it is null.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "project_id": 1104,
+      "template": "help/privacy.html",
+      "title": "API Help"
+    }
+
 Help privacy
 ~~~~~~~~~~~~
 **Endpoint: /help/privacy**
