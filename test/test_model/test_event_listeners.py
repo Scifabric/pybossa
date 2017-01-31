@@ -90,6 +90,43 @@ class TestModelEventListeners(Test):
         mock_update_feed.assert_called_with(obj)
 
     @with_context
+    @patch('pybossa.model.event_listeners.push_webhook')
+    @patch('pybossa.model.event_listeners.create_result', return_value=1)
+    @patch('pybossa.model.event_listeners.update_task_state')
+    @patch('pybossa.model.event_listeners.is_task_completed', return_value=True)
+    @patch('pybossa.model.event_listeners.add_user_contributed_to_feed')
+    @patch('pybossa.model.event_listeners.update_feed')
+    def test_on_taskrun_submit_event(self, mock_update_feed,
+                                     mock_add_user,
+                                     mock_is_task,
+                                     mock_update_task,
+                                     mock_create_result,
+                                     mock_push):
+        """Test on_taskrun_submit is called."""
+        conn = MagicMock()
+        target = MagicMock()
+        target.id = 1
+        target.project_id = 1
+        target.task_id = 2
+        target.user_id = 3
+        tmp = Project(id=1, name='name', short_name='short_name',
+                      info=dict(container=1, thumbnail="avatar.png"),
+                      published=True,
+                      webhook='http://localhost.com')
+        conn.execute.return_value = [tmp]
+        on_taskrun_submit(None, conn, target)
+        obj = tmp.to_public_json()
+        obj['action_updated'] = 'TaskCompleted'
+        mock_add_user.assert_called_with(conn, target.user_id, obj)
+        mock_update_task.assert_called_with(conn, target.task_id)
+        mock_update_feed.assert_called_once_with(obj)
+        obj_with_webhook = tmp.to_public_json()
+        obj_with_webhook['webhook'] = tmp.webhook
+        obj_with_webhook['action_updated'] = 'TaskCompleted'
+        mock_push.assert_called_with(obj_with_webhook, target.task_id, 1)
+
+
+    @with_context
     @patch('pybossa.model.event_listeners.update_feed')
     def test_add_user_event(self, mock_update_feed):
         """Test add_user_event is called."""
