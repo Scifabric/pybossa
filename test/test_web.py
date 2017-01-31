@@ -4185,7 +4185,7 @@ class TestWeb(web.Helper):
         assert_raises(ValueError, json.loads, res.data)
 
     def test_59_help_api_json(self):
-        """Test WEB help api page exists"""
+        """Test WEB help api json exists"""
         Fixtures.create()
         url = "/help/api"
         res = self.app_get_json(url, follow_redirects=True)
