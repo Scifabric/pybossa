@@ -94,16 +94,12 @@ class TestModelEventListeners(Test):
     def test_add_user_event(self, mock_update_feed):
         """Test add_user_event is called."""
         conn = MagicMock()
-        target = MagicMock()
-        target.id = 1
-        target.project_id = 1
-        tmp = MagicMock()
-        tmp.name = 'name'
-        tmp.short_name = 'short_name'
-        tmp.info = dict()
-        conn.execute.return_value = [tmp]
-        add_user_event(None, conn, target)
+        user = User(name="John", fullname="John")
+        add_user_event(None, conn, user)
         assert mock_update_feed.called
+        obj = user.to_public_json()
+        obj['action_updated'] = 'User'
+        mock_update_feed.assert_called_with(obj)
 
     @with_context
     @patch('pybossa.model.event_listeners.create_result')
