@@ -76,16 +76,15 @@ def add_task_event(mapper, conn, target):
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    obj = dict(id=target.project_id,
-               name=None,
-               short_name=None,
-               info=None,
-               action_updated='Task')
+    obj = dict(action_updated='Task')
+    tmp = dict()
     for r in results:
-        obj['name'] = r.name
-        obj['short_name'] = r.short_name
-        # TODO: add only public info
-        # obj['info'] = r.info
+        tmp['id'] = target.project_id
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        tmp['info'] = r.info
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
 
 
@@ -185,25 +184,20 @@ def on_taskrun_submit(mapper, conn, target):
     sql_query = ('select name, short_name, published, webhook, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    project_obj = dict(id=target.project_id,
-                   name=None,
-                   short_name=None,
-                   published=False,
-                   info=None,
-                   webhook=None,
-                   action_updated='TaskCompleted')
+    tmp = dict()
+    project_obj = dict(action_updated='TaskCompleted')
     for r in results:
-        project_obj['name'] = r.name
-        project_obj['short_name'] = r.short_name
-        project_obj['published'] = r.published
-        # TODO: update with public data
-        # project_obj['info'] = r.info
-        # project_obj['webhook'] = r.webhook
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        _published = r.published
+        tmp['info'] = r.info
         _webhook = r.webhook
-        project_obj['id'] = target.project_id
+        tmp['id'] = target.project_id
+
+    project_obj.update(Project().to_public_json(tmp))
 
     add_user_contributed_to_feed(conn, target.user_id, project_obj)
-    if is_task_completed(conn, target.task_id) and project_obj['published']:
+    if is_task_completed(conn, target.task_id) and _published:
         update_task_state(conn, target.task_id)
         update_feed(project_obj)
         result_id = create_result(conn, target.project_id, target.task_id)
