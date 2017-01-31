@@ -104,15 +104,15 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
                      where id=%s') % user_id
         results = conn.execute(sql_query)
         for r in results:
-            obj = dict(id=user_id,
+            tmp = dict(id=user_id,
                        name=r.name,
                        fullname=r.fullname,
-                       # TODO: update with only public items.
-                       #info=r.info,
-                       project_name=project_obj['name'],
-                       project_short_name=project_obj['short_name'],
-                       action_updated='UserContribution')
-        update_feed(obj)
+                       info=r.info)
+            tmp = User().to_public_json(tmp)
+            tmp['project_name'] = project_obj['name']
+            tmp['project_short_name'] = project_obj['short_name']
+            tmp['action_updated'] = 'UserContribution'
+        update_feed(tmp)
 
 
 def is_task_completed(conn, task_id):
