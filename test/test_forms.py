@@ -80,6 +80,14 @@ class TestValidator(Test):
         val = validator.ReservedName('project', current_app)
         val(form, form.name)
 
+    @with_context
+    @raises(ValidationError)
+    def test_check_password_strength(self):
+        """Test VALIDATOR ReservedName for project URLs"""
+        form = RegisterForm()
+        form.password.data = 'Abcd12345' # no special char in password raises ValidationError
+        u = validator.CheckPasswordStrength()
+        u.__call__(form, form.password)
 
 
 class TestRegisterForm(Test):
@@ -188,3 +196,44 @@ class TestRegisterForm(Test):
 
         assert not form.validate()
         assert "Passwords must match" in form.errors['password'], form.errors
+
+    @with_context
+    def test_register_password_min_length(self):
+        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'abc'
+        form = RegisterForm(**self.fill_in_data)
+
+        assert not form.validate()
+        assert "Password must be between 8 and 15 characters" in form.errors['password']
+
+    @with_context
+    def test_register_password_special_char(self):
+        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'Abcd12345'
+        form = RegisterForm(**self.fill_in_data)
+
+        assert not form.validate()
+        assert "Password must contain atleast one uppercase alpha, "\
+			"lowercase alpha, numeric and special character !@$%^&*#" in form.errors['password']
+
+    @with_context
+    def test_register_password_uppercase_char(self):
+        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'abcd12345!'
+        form = RegisterForm(**self.fill_in_data)
+
+        assert not form.validate()
+        assert "Password must contain atleast one uppercase alpha, "\
+			"lowercase alpha, numeric and special character !@$%^&*#" in form.errors['password']
+
+    @with_context
+    def test_register_password_lowercase_char(self):
+        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'ABCD12345!'
+        form = RegisterForm(**self.fill_in_data)
+
+        assert not form.validate()
+        assert "Password must contain atleast one uppercase alpha, "\
+			"lowercase alpha, numeric and special character !@$%^&*#" in form.errors['password']
+
+    @with_context
+    def test_register_password_valid_password(self):
+        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'Abcd12345!'
+        form = RegisterForm(**self.fill_in_data)
+        assert form.validate()

@@ -116,3 +116,39 @@ class ReservedName(object):
         if is_reserved_name(self.blueprint, field.data):
             raise ValidationError(self.message)
 
+class CheckPasswordStrength(object):
+    """ apply strong password policy """
+    
+    pwd_min_len = 8
+    pwd_max_len = 15
+    
+    # password must contain following characters;
+    # at least one character from each category
+    required_chars = [r'[A-Z]', r'[a-z]', r'[0-9]', r'[!@$%^&*#]']
+
+    def __init__(self, message=None):
+        
+        self.default_message = lazy_gettext(u'Password must contain atleast one uppercase alpha, '\
+					'lowercase alpha, numeric and special character !@$%%^&*#')
+
+        if not message:
+            self.message = self.default_message
+        else:
+            self.message = message
+
+    def __call__(self, form, field):
+        if not self._check_password_strength(form, field):
+            raise ValidationError(self.message)
+
+    def _check_password_strength(self, form, field):
+        pwd = field.data
+        pwdlen = len(pwd)
+        if pwdlen < self.pwd_min_len or pwdlen > self.pwd_max_len:
+            self.message = lazy_gettext(u'Password must be between {0} and {1} characters'\
+					.format(self.pwd_min_len, self.pwd_max_len))
+            return False
+
+        is_pwd_valid = all(re.search(ch, pwd) for ch in self.required_chars)
+        if not is_pwd_valid:
+            self.message = self.default_message
+        return is_pwd_valid
