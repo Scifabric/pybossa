@@ -4190,6 +4190,18 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a help license page"
         assert "Licenses" in res.data, err_msg
+        assert_raises(ValueError, json.loads, res.data)
+
+    @with_context
+    def test_59_help_license_json(self):
+        """Test WEB help license json exists."""
+        url = "/help/license"
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = 'Template wrong'
+        assert data['template'] == 'help/license.html', err_msg
+        err_msg = 'Title wrong'
+        assert data['title'] == 'Help: Licenses', err_msg
 
     @with_context
     def test_59_about(self):

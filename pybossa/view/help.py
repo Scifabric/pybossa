@@ -43,7 +43,9 @@ def api():
 @blueprint.route('/license')
 def license():
     """Render help/license page."""
-    return render_template('help/license.html', title='Help: Licenses')
+    response = dict(template='help/license.html',
+                    title='Help: Licenses')
+    return handle_content_type(response)
 
 
 @blueprint.route('/terms-of-use')

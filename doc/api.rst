@@ -2111,6 +2111,27 @@ Gives you the privacy policy for your PYBOSSA
       "title": "Privacy Policy"
     }
 
+Help license
+~~~~~~~~~~~~
+**Endpoint: /help/license**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the license page for your PYBOSSA
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "template": "help/license.html",
+      "title": "Help: Licenses"
+    }
+
 Help terms of use
 ~~~~~~~~~~~~~~~~~
 **Endpoint: /help/terms-of-use**
@@ -2133,4 +2154,3 @@ Gives you the terms of use for your PYBOSSA
       "template": "help/tos.html",
       "title": "Help: Terms of Use"
     }
-
