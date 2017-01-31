@@ -80,13 +80,14 @@ class TestModelEventListeners(Test):
         target = MagicMock()
         target.id = 1
         target.project_id = 1
-        tmp = MagicMock()
-        tmp.name = 'name'
-        tmp.short_name = 'short_name'
-        tmp.info = dict()
+        tmp = Project(id=1, name='name', short_name='short_name',
+                      info=dict(container=1, thumbnail="avatar.png"))
         conn.execute.return_value = [tmp]
         add_task_event(None, conn, target)
         assert mock_update_feed.called
+        obj = tmp.to_public_json()
+        obj['action_updated'] = 'Task'
+        mock_update_feed.assert_called_with(obj)
 
     @with_context
     @patch('pybossa.model.event_listeners.update_feed')
