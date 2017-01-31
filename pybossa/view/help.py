@@ -36,8 +36,10 @@ def api():
         project_id = choice(projects)['id']
     else:  # pragma: no cover
         project_id = None
-    return render_template('help/api.html', title="Help: API",
-                           project_id=project_id)
+    response = dict(template='help/api.html',
+                    title="Help: API",
+                    project_id=project_id)
+    return handle_content_type(response)
 
 
 @blueprint.route('/license')
