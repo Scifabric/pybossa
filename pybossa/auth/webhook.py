@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.core import is_coowner
 
 class WebhookAuth(object):
 
@@ -39,7 +40,7 @@ class WebhookAuth(object):
         if user.is_anonymous() or (webhook is None and project_id is None):
             return False
         project = self._get_project(webhook, project_id)
-        return user.admin or user.id == project.owner_id or any(project.id == co.project_id for co in user.coowned_projects)
+        return user.admin or user.id == project.owner_id or is_coowner(project.id, user)
 
     def _update(self, user, webhook, project_id=None):
         return False

@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.core import is_coowner
+
 
 class TaskAuth(object):
     _specific_actions = []
@@ -49,5 +51,5 @@ class TaskAuth(object):
     def _only_admin_or_owner(self, user, task):
         if not user.is_anonymous():
             project = self.project_repo.get(task.project_id)
-            return (project.owner_id == user.id or user.admin or any(project.id == co.project_id for co in user.coowned_projects))
+            return (project.owner_id == user.id or user.admin or is_coowner(project.id, user))
         return False

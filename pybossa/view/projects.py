@@ -34,7 +34,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, sentinel, db)
+                          csv_exporter, importer, sentinel, db, is_coowner)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -1697,8 +1697,7 @@ def project_stream_uri_private(short_name):
     """Returns stream."""
     if current_app.config.get('SSE'):
         project, owner, ps = project_by_shortname(short_name)
-
-        if (current_user.id == project.owner_id or any(project.id == co.project_id for co in current_user.coowned_projects) or current_user.admin):
+        if (current_user.id == project.owner_id or is_coowner(project.id) or current_user.admin):
             return Response(project_event_stream(short_name, 'private'),
                             mimetype="text/event-stream",
                             direct_passthrough=True)
@@ -1845,28 +1844,21 @@ def add_coowner(short_name, user_id=None):
     try:
     	project = project_repo.get_by_shortname(short_name)
 
-    	current_app.logger.info(short_name)
-    	current_app.logger.info(user_id)
-    	current_app.logger.info(project)
-
+    	current_app.logger.debug("adding user_id: %d, to project: %s" % (user_id,short_name))
         if project and user_id:
         	user = user_repo.get(user_id)
         	if user:
-        		current_app.logger.info("user has a value")
         		ensure_authorized_to('update', user)
-        		current_app.logger.info(user.id)
-        		current_app.logger.info(len(project.coowners))
         		if all(user.id != x.id for x in project.coowners):
-        			current_app.logger.info("Predicate returned true")
         			project.coowners.append(user)
         			project_repo.update(project)
-
-        			current_app.logger.info("Updated, I think")
 
         		return redirect(url_for(".coowners", short_name=short_name))
         	else:
         		msg = "User not found"
         		return format_error(msg, 404)
+        else:
+        	current_app.logger.error("Couldn't find project: %s" % short_name)
     except Exception as e:  # pragma: no cover
     	current_app.logger.error(e)
     	return abort(500)
@@ -1888,10 +1880,10 @@ def del_coowner(short_name, user_id=None):
                 project_repo.update(project)
                 return redirect(url_for('.coowners', short_name=short_name))
             else:
-                msg = "User.id not found"
+                msg = "User.id %d not found" % user_id
                 return format_error(msg, 404)
         else:  # pragma: no cover
-            msg = "User.id is missing for method del_coowner"
+            msg = "Project: %s or user.id: %d are missing for method del_coowner" % (short_name, user_id)
             return format_error(msg, 415)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)

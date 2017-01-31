@@ -54,7 +54,7 @@ class UserRepository(Repository):
         keyword = '%' + keyword.lower() + '%'
         query = self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
                                   func.lower(User.fullname).like(keyword)))
-        if filters is not None:
+        if filters:
             query = query.filter_by(**filters)
         return query.all()
 

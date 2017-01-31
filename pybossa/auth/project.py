@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.core import is_coowner
 
 class ProjectAuth(object):
     _specific_actions = ['publish']
@@ -57,4 +58,4 @@ class ProjectAuth(object):
 
     def _only_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
-                (project.owner_id == user.id or user.admin or (user.subadmin and any(project.id == co.project_id for co in user.coowned_projects))))
+                (project.owner_id == user.id or user.admin or (user.subadmin and is_coowner(project.id, user))))
