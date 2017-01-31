@@ -188,7 +188,6 @@ def on_taskrun_submit(mapper, conn, target):
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
     tmp = dict()
-    project_obj = dict(action_updated='TaskCompleted')
     for r in results:
         tmp['name'] = r.name
         tmp['short_name'] = r.short_name
@@ -197,15 +196,19 @@ def on_taskrun_submit(mapper, conn, target):
         _webhook = r.webhook
         tmp['id'] = target.project_id
 
-    project_obj.update(Project().to_public_json(tmp))
+    project_public = dict()
+    project_public.update(Project().to_public_json(tmp))
+    project_public['action_updated'] = 'TaskCompleted'
 
-    add_user_contributed_to_feed(conn, target.user_id, project_obj)
+    add_user_contributed_to_feed(conn, target.user_id, project_public)
     if is_task_completed(conn, target.task_id) and _published:
         update_task_state(conn, target.task_id)
-        update_feed(project_obj)
+        update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
-        project_obj['webhook'] = _webhook
-        push_webhook(project_obj, target.task_id, result_id)
+        project_private = dict()
+        project_private.update(project_public)
+        project_private['webhook'] = _webhook
+        push_webhook(project_private, target.task_id, result_id)
 
 
 @event.listens_for(Blogpost, 'after_insert')
