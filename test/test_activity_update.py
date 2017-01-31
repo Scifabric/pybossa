@@ -74,7 +74,6 @@ class TestActivityFeed(Test):
         task_run = TaskRunFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the same task_run"
-        assert update_feed[0]['id'] == task_run.user.id, err_msg
         assert update_feed[0]['name'] == task_run.user.name, err_msg
         assert update_feed[0]['fullname'] == task_run.user.fullname, err_msg
         assert update_feed[0]['project_name'] == task_run.project.name, err_msg
