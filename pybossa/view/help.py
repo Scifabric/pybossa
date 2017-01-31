@@ -45,7 +45,9 @@ def api():
 @blueprint.route('/license')
 def license():
     """Render help/license page."""
-    return render_template('help/license.html', title='Help: Licenses')
+    response = dict(template='help/license.html',
+                    title='Help: Licenses')
+    return handle_content_type(response)
 
 
 @blueprint.route('/terms-of-use')
@@ -61,8 +63,11 @@ def tos():
 @blueprint.route('/cookies-policy')
 def cookies_policy():
     """Render help/cookies-policy page."""
-    return render_template('help/cookies_policy.html',
-                           title='Help: Cookies Policy')
+    cleaned_up_content = Document(render_template('help/cookies_policy.html')).summary()
+    response = dict(template='help/cookies_policy.html',
+                    content=cleaned_up_content,
+                    title='Help: Cookies Policy')
+    return handle_content_type(response)
 
 
 @blueprint.route('/privacy')
