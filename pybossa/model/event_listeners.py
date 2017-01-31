@@ -44,16 +44,15 @@ def add_blog_event(mapper, conn, target):
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    obj = dict(id=target.project_id,
-               name=None,
-               short_name=None,
-               info=None,
-               action_updated='Blog')
+    obj = dict(action_updated='Blog')
+    tmp = dict()
     for r in results:
-        obj['name'] = r.name
-        obj['short_name'] = r.short_name
-        # TODO: add only public info
-        # obj['info'] = r.info
+        tmp['id'] = target.project_id
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        tmp['info'] = r.info
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
     # Notify volunteers
     mail_queue.enqueue(notify_blog_users,
