@@ -63,10 +63,13 @@ def add_blog_event(mapper, conn, target):
 @event.listens_for(Project, 'after_insert')
 def add_project_event(mapper, conn, target):
     """Update PYBOSSA feed with new project."""
-    obj = dict(id=target.id,
+    tmp = dict(id=target.id,
                name=target.name,
                short_name=target.short_name,
-               action_updated='Project')
+               info=target.info)
+    obj = dict(action_updated='Project')
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
 
 
