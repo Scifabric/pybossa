@@ -22,6 +22,7 @@ from default import Test, with_context
 from factories import ProjectFactory
 from factories import UserFactory
 from factories import TaskRunFactory
+from factories import TaskFactory
 
 
 class TestProjectsStats(Test):
@@ -86,7 +87,8 @@ class TestProjectsStats(Test):
     def test_warm_project(self):
         """Test JOB warm_project works."""
         project = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1)
         for i in range(0,30):
-            TaskRunFactory.create()
+            TaskRunFactory.create(project=project, task=task)
         res = warm_cache()
         assert res, res
