@@ -4218,6 +4218,20 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a TOS page"
         assert "Terms for use" in res.data, err_msg
+        assert_raises(ValueError, json.loads, res.data)
+
+    @with_context
+    def test_59_help_tos_json(self):
+        """Test WEB help TOS json endpoint exists"""
+        url = "/help/terms-of-use"
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Template wrong'
+        assert data['template'] == 'help/tos.html', err_msg
+        err_msg = 'Title wrong'
+        assert data['title'] == 'Help: Terms of Use', err_msg
+        err_msg = "There should be HTML content"
+        assert '<body' in data['content'], err_msg
 
     @with_context
     def test_59_help_policy(self):

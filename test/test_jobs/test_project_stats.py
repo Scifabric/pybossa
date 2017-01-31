@@ -17,9 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.jobs import get_project_jobs, create_dict_jobs, get_project_stats
+from pybossa.jobs import warm_cache
 from default import Test, with_context
 from factories import ProjectFactory
 from factories import UserFactory
+from factories import TaskRunFactory
+from factories import TaskFactory
 
 
 class TestProjectsStats(Test):
@@ -79,3 +82,13 @@ class TestProjectsStats(Test):
 
         err_msg = "There should be only 0 jobs"
         assert len(jobs) == 0, err_msg
+
+    @with_context
+    def test_warm_project(self):
+        """Test JOB warm_project works."""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(n_answers=1)
+        for i in range(0,30):
+            TaskRunFactory.create(project=project, task=task)
+        res = warm_cache()
+        assert res, res

@@ -44,16 +44,15 @@ def add_blog_event(mapper, conn, target):
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    obj = dict(id=target.project_id,
-               name=None,
-               short_name=None,
-               info=None,
-               action_updated='Blog')
+    obj = dict(action_updated='Blog')
+    tmp = dict()
     for r in results:
-        obj['name'] = r.name
-        obj['short_name'] = r.short_name
-        # TODO: add only public info
-        # obj['info'] = r.info
+        tmp['id'] = target.project_id
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        tmp['info'] = r.info
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
     # Notify volunteers
     mail_queue.enqueue(notify_blog_users,
@@ -64,10 +63,13 @@ def add_blog_event(mapper, conn, target):
 @event.listens_for(Project, 'after_insert')
 def add_project_event(mapper, conn, target):
     """Update PYBOSSA feed with new project."""
-    obj = dict(id=target.id,
+    tmp = dict(id=target.id,
                name=target.name,
                short_name=target.short_name,
-               action_updated='Project')
+               info=target.info)
+    obj = dict(action_updated='Project')
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
 
 
@@ -77,16 +79,15 @@ def add_task_event(mapper, conn, target):
     sql_query = ('select name, short_name, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    obj = dict(id=target.project_id,
-               name=None,
-               short_name=None,
-               info=None,
-               action_updated='Task')
+    obj = dict(action_updated='Task')
+    tmp = dict()
     for r in results:
-        obj['name'] = r.name
-        obj['short_name'] = r.short_name
-        # TODO: add only public info
-        # obj['info'] = r.info
+        tmp['id'] = target.project_id
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        tmp['info'] = r.info
+    tmp = Project().to_public_json(tmp)
+    obj.update(tmp)
     update_feed(obj)
 
 
@@ -104,15 +105,15 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
                      where id=%s') % user_id
         results = conn.execute(sql_query)
         for r in results:
-            obj = dict(id=user_id,
+            tmp = dict(id=user_id,
                        name=r.name,
                        fullname=r.fullname,
-                       # TODO: update with only public items.
-                       #info=r.info,
-                       project_name=project_obj['name'],
-                       project_short_name=project_obj['short_name'],
-                       action_updated='UserContribution')
-        update_feed(obj)
+                       info=r.info)
+            tmp = User().to_public_json(tmp)
+            tmp['project_name'] = project_obj['name']
+            tmp['project_short_name'] = project_obj['short_name']
+            tmp['action_updated'] = 'UserContribution'
+        update_feed(tmp)
 
 
 def is_task_completed(conn, task_id):
@@ -186,30 +187,28 @@ def on_taskrun_submit(mapper, conn, target):
     sql_query = ('select name, short_name, published, webhook, info from project \
                  where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    project_obj = dict(id=target.project_id,
-                   name=None,
-                   short_name=None,
-                   published=False,
-                   info=None,
-                   webhook=None,
-                   action_updated='TaskCompleted')
+    tmp = dict()
     for r in results:
-        project_obj['name'] = r.name
-        project_obj['short_name'] = r.short_name
-        project_obj['published'] = r.published
-        # TODO: update with public data
-        # project_obj['info'] = r.info
-        # project_obj['webhook'] = r.webhook
+        tmp['name'] = r.name
+        tmp['short_name'] = r.short_name
+        _published = r.published
+        tmp['info'] = r.info
         _webhook = r.webhook
-        project_obj['id'] = target.project_id
+        tmp['id'] = target.project_id
 
-    add_user_contributed_to_feed(conn, target.user_id, project_obj)
-    if is_task_completed(conn, target.task_id) and project_obj['published']:
+    project_public = dict()
+    project_public.update(Project().to_public_json(tmp))
+    project_public['action_updated'] = 'TaskCompleted'
+
+    add_user_contributed_to_feed(conn, target.user_id, project_public)
+    if is_task_completed(conn, target.task_id) and _published:
         update_task_state(conn, target.task_id)
-        update_feed(project_obj)
+        update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
-        project_obj['webhook'] = _webhook
-        push_webhook(project_obj, target.task_id, result_id)
+        project_private = dict()
+        project_private.update(project_public)
+        project_private['webhook'] = _webhook
+        push_webhook(project_private, target.task_id, result_id)
 
 
 @event.listens_for(Blogpost, 'after_insert')

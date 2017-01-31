@@ -51,7 +51,11 @@ def license():
 @blueprint.route('/terms-of-use')
 def tos():
     """Render help/terms-of-use page."""
-    return render_template('help/tos.html', title='Help: Terms of Use')
+    cleaned_up_content = Document(render_template('help/tos.html')).summary()
+    response = dict(template='help/tos.html',
+                    content=cleaned_up_content,
+                    title='Help: Terms of Use')
+    return handle_content_type(response)
 
 
 @blueprint.route('/cookies-policy')
