@@ -507,10 +507,10 @@ def webhook(url, payload=None, oid=None):
         webhook.response_status_code = None
         webhook_repo.save(webhook)
     finally:
-        if project.published and webhook.response_status_code != 200:
+        if project.published and webhook.response_status_code != 200 and current_app.config.get('ADMINS'):
             subject = "Broken: %s webhook failed" % project.name
             body = 'Sorry, but the webhook failed'
-            mail_dict = dict(recipients=['teleyinex@gmail.com'],
+            mail_dict = dict(recipients=current_app.config.get('ADMINS'),
                              subject=subject, body=body, html=webhook.response)
             send_mail(mail_dict)
     if current_app.config.get('SSE'):
