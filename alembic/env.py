@@ -3,9 +3,6 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-#import sys
-#sys.path.append('/home/ubuntu/pybossa/pybossa/model')
-
 from pybossa.model.user import User
 
 # this is the Alembic Config object, which provides
