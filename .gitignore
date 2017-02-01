@@ -39,3 +39,6 @@ pybossa/translations
 pybossa/plugins/
 !pybossa/plugins/__init__.py
 test/test_cache.py
+cover/*
+coverage.xml
+htmlcov/*
