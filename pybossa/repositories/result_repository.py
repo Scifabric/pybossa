@@ -20,6 +20,7 @@ from sqlalchemy import cast, Date
 from pybossa.repositories import Repository
 from pybossa.model.result import Result
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from sqlalchemy import text
 
 
 class ResultRepository(Repository):
@@ -61,6 +62,14 @@ class ResultRepository(Repository):
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+    def delete_results_from_project(self, project):
+        sql = text('''
+                   DELETE FROM result WHERE project_id=:project_id;
+                   ''')
+        self.db.session.execute(sql, dict(project_id=project.id))
+        self.db.session.commit()
+
 
     def _validate_can_be(self, action, result):
         if not isinstance(result, Result):

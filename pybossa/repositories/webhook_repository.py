@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy import text
 from pybossa.model.webhook import Webhook
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -55,6 +55,13 @@ class WebhookRepository(object):
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+    def delete_entries_from_project(self, project):
+        sql = text('''
+                   DELETE FROM webhook WHERE project_id=:project_id;
+                   ''')
+        self.db.session.execute(sql, dict(project_id=project.id))
+        self.db.session.commit()
 
     def _validate_can_be(self, action, webhook):
         if not isinstance(webhook, Webhook):
