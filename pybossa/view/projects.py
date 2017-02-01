@@ -57,7 +57,7 @@ from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo, result_repo, webhook_repo
 from pybossa.core import webhook_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
@@ -1567,6 +1567,8 @@ def publish(short_name):
     project.published = True
     project_repo.save(project)
     task_repo.delete_taskruns_from_project(project)
+    result_repo.delete_results_from_project(project)
+    webhook_repo.delete_entries_from_project(project)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
