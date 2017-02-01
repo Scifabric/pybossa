@@ -19,7 +19,7 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import TaskRunFactory
+from factories import TaskRunFactory, ProjectFactory
 from pybossa.repositories import WebhookRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.model.webhook import Webhook
@@ -85,3 +85,14 @@ class TestWebhookRepository(Test):
         bad_object = dict()
 
         assert_raises(WrongObjectError, self.webhook_repo.save, bad_object)
+
+    def test_delete_entries_from_project(self):
+        """Test delete entries from project works."""
+        project = ProjectFactory.create()
+        wh = Webhook(project_id=project.id)
+        self.webhook_repo.save(wh)
+        self.webhook_repo.delete_entries_from_project(project)
+        res = self.webhook_repo.get_by(project_id=project.id)
+        assert res is None
+
+
