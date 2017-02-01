@@ -3,6 +3,11 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
+#import sys
+#sys.path.append('/home/ubuntu/pybossa/pybossa/model')
+
+from pybossa.model.user import User
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -15,7 +20,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = User.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
