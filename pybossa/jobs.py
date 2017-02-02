@@ -694,17 +694,16 @@ def check_failed():
     for job_id in job_ids:
         KEY = 'pybossa:job:failed:%s' % job_id
         job = fq.fetch_job(job_id)
-        if sentinel.master.exists(KEY):
+        if sentinel.slave.exists(KEY):
             sentinel.master.incr(KEY)
         else:
-            sentinel.master.set(KEY, 1)
             ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
-            sentinel.master.expire(ttl, KEY)
-        if sentinel.master.get(KEY) < FAILED_JOBS_RETRIES:
+            sentinel.master.setex(KEY, ttl, 1)
+        if int(sentinel.slave.get(KEY)) < FAILED_JOBS_RETRIES:
             requeue_job(job_id)
         else:
             KEY = 'pybossa:job:failed:mailed:%s' % job_id
-            if (not sentinel.master.exists(KEY) and
+            if (not sentinel.slave.exists(KEY) and
                     current_app.config.get('ADMINS')):
                 subject = "JOB: %s has failed more than 3 times" % job_id
                 body = "Please, review the background jobs of your server."
@@ -714,9 +713,8 @@ def check_failed():
                 mail_dict = dict(recipients=current_app.config.get('ADMINS'),
                                  subject=subject, body=body)
                 send_mail(mail_dict)
-                sentinel.master.set(KEY, True)
                 ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
-                sentinel.master.expire(ttl, KEY)
+                sentinel.master.setex(KEY, ttl, True)
     if count > 0:
         return "JOBS: %s You have failed the system." % job_ids
     else:
