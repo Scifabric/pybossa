@@ -18,7 +18,7 @@
 
 import json
 from pybossa.core import sentinel
-from pybossa.jobs import check_failed
+from pybossa.jobs import check_failed, get_maintenance_jobs
 from default import Test, with_context, FakeResponse, db
 from redis import StrictRedis
 from mock import patch, MagicMock, call
@@ -30,6 +30,12 @@ class TestMaintenance(Test):
         super(TestMaintenance, self).setUp()
         self.connection = StrictRedis()
         self.connection.flushall()
+
+    def test_get_maintenance_jobs(self):
+        """Test get maintenance jobs works."""
+        res = get_maintenance_jobs().next()
+        assert res['queue'] == 'maintenance'
+
 
     @with_context
     @patch('pybossa.jobs.send_mail')
