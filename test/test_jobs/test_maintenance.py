@@ -37,17 +37,17 @@ class TestMaintenance(Test):
     @patch('rq.get_failed_queue', autospec=True)
     def test_check_failed(self, mock_failed_queue, mock_requeue_job, mock_send_mail):
         """Test JOB check failed works."""
-        #mock_failed_queue = MagicMock()
         fq = MagicMock
         fq.job_ids = ['1']
         job = MagicMock()
         fq.fetch_job = job
         mock_failed_queue.return_value = fq
-        for i in range(self.flask_app.config.get('FAILED_JOBS_RETRIES')):
+        for i in range(self.flask_app.config.get('FAILED_JOBS_RETRIES') - 1):
             response = check_failed()
             msg = "JOBS: ['1'] You have failed the system."
             assert msg == response, response
             mock_requeue_job.assert_called_with('1')
+            assert not mock_send_mail.called
         response = check_failed()
         assert mock_send_mail.called
         mock_send_mail.reset_mock()
