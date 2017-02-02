@@ -49,6 +49,7 @@ class TaskAPI(APIBase):
     def _preprocess_post_data(self, data):
         project_id = data["project_id"]
         info = data["info"]
-        found = task_repo.get_task_by(project_id=project_id, info=info)
+        found = task_repo.get_task_by(project_id=project_id, info=info,
+                                      state='ongoing')
         if found:
             raise Conflict("Task already present")
