@@ -325,7 +325,7 @@ them.
 Receiving e-mails with errors
 =============================
 
-If you want to receive an e-mail when an error occurs in the PYBOSSA server,
+If you want to receive an e-mail when an error occurs in the PYBOSSA server (webhooks, background jobs, etc.),
 uncomment the ADMINS_ config variable and add a list of e-mails.
 
 .. _ADMINS: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L64
