@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import requests
 from pybossa.jobs import webhook
 from default import Test, with_context, FakeResponse, db
 from factories import ProjectFactory
@@ -133,6 +134,51 @@ class TestWebHooks(Test):
         response.text = "<html>Something broken</html>"
         response.status_code = 500
         mock_post.return_value = response
+        project = ProjectFactory.create(published=True)
+        payload = dict(event='task_completed',
+                       project_short_name=project.short_name,
+                       project_id=project.id,
+                       task_id=1,
+                       result_id=1,
+                       fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        wbh = WebhookFactory.create()
+        tmp = webhook('url', payload=payload, oid=wbh.id)
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        subject = "Broken: %s webhook failed" % project.name
+        body = 'Sorry, but the webhook failed'
+        mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
+                         subject=subject, body=body, html=tmp.response)
+        mock_send_mail.assert_called_with(mail_dict)
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.requests.post')
+    def test_trigger_fails_webhook_with_no_url(self, mock_post, mock_send_mail):
+        """Test WEBHOOK fails and sends email is triggered when no URL or failed connection."""
+        mock_post.side_effect = requests.exceptions.ConnectionError('Not URL')
+        project = ProjectFactory.create(published=True)
+        payload = dict(event='task_completed',
+                       project_short_name=project.short_name,
+                       project_id=project.id,
+                       task_id=1,
+                       result_id=1,
+                       fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        wbh = WebhookFactory.create()
+        tmp = webhook(None, payload=payload, oid=wbh.id)
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        #mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        subject = "Broken: %s webhook failed" % project.name
+        body = 'Sorry, but the webhook failed'
+        mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
+                         subject=subject, body=body, html=tmp.response)
+        mock_send_mail.assert_called_with(mail_dict)
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.requests.post', side_effect=requests.exceptions.ConnectionError())
+    def test_trigger_fails_webhook_with_url_connection_error(self, mock_post, mock_send_mail):
+        """Test WEBHOOK fails and sends email is triggered when there is a connection error."""
         project = ProjectFactory.create(published=True)
         payload = dict(event='task_completed',
                        project_short_name=project.short_name,
