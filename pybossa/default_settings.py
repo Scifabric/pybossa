@@ -132,3 +132,6 @@ CORS_RESOURCES = {r"/api/*": {"origins": "*",
                                                 'Authorization'],
                               "max_age": 21600
                               }}
+
+FAILED_JOBS_RETRIES = 3
+FAILED_JOBS_MAILS = 7
