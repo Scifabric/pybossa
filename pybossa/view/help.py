@@ -32,10 +32,10 @@ def api():
     """Render help/api page."""
     categories = cached_cat.get_used()
     projects = cached_projects.get(categories[0]['short_name'])
-    # if len(projects) > 0:
-    #     project_id = choice(projects)['id']
-    # else:  # pragma: no cover
-    project_id = None
+    if len(projects) > 0:
+        project_id = choice(projects)['id']
+    else:  # pragma: no cover
+        project_id = None
     response = dict(template='help/api.html',
                     title="Help: API",
                     project_id=project_id)
