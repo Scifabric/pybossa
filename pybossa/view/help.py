@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Help view for PYBOSSA."""
+from random import choice
 from flask import Blueprint
 from flask import render_template
 from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
-from random import choice
 from readability.readability import Document
 
 blueprint = Blueprint('help', __name__)
