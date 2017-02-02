@@ -1336,6 +1336,63 @@ It returns a JSON object with the following information:
   ]
 }
 
+
+Leaderboard
+~~~~~~~~~~~
+**Endpoint: /leaderboard**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows you the top 20 contributors rank in a sorted leaderboard.
+If you are logged in you will also get the rank of yourself even when you are
+not visible on the top public leaderboard.
+
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+* **top_users**: Sorted list of leaderboard top users.
+
+**Example output**
+
+for logged in user JohnDoe (normally not visible in public leaderboard):
+
+.. code-block:: python
+    {
+        "template": "/stats/index.html",
+        "title": "Community Leaderboard",
+        "top_users": [
+            {
+                "created": "2014-08-17T18:28:56.738119",
+                "fullname": "Buzz Bot",
+                "info": {
+                    "avatar": "1410771548.09_avatar.png",
+                    "container": "user_5305"
+                },
+                "n_answers": null,
+                "name": "buzzbot",
+                "rank": 1,
+                "registered_ago": null,
+                "score": 54259
+            },
+            ... ,
+            {
+                "created": "2014-08-11T08:59:32.079599",
+                "fullname": "JohnDoe",
+                "info": {
+                    "avatar": null,
+                    "container": "user_4953"
+                },
+                "n_answers": null,
+                "name": "JohnDoe",
+                "rank": 1813,
+                "registered_ago": null,
+                "score": 56
+            }
+        ]
+    }
+
+
 Admin users
 ~~~~~~~~~~~
 **Endpoint: /admin/users**
