@@ -648,6 +648,8 @@ def setup_scheduled_jobs(app):  # pragma: no cover
     first_quaterly_execution = get_quarterly_date(datetime.utcnow())
     JOBS = [dict(name=enqueue_periodic_jobs, args=['email'], kwargs={},
                  interval=(1 * MINUTE), timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['maintenance'], kwargs={},
+                 interval=(1 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['super'], kwargs={},
                  interval=(10 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['high'], kwargs={},

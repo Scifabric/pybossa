@@ -116,9 +116,10 @@ def get_periodic_jobs(queue):
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
+    failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
-            weekly_update_jobs]
+            weekly_update_jobs, failed_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -132,6 +133,11 @@ def get_default_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='super')
     yield dict(name=news, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='low')
+
+def get_maintenance_jobs():
+    """Return mantainance jobs."""
+    yield dict(name=check_failed, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='maintenance')
 
 
 def get_export_task_jobs(queue):
@@ -675,3 +681,43 @@ def news():
         score += 1
     if notify:
         notify_news_admins()
+
+def check_failed():
+    """Check the jobs that have failed and requeue them."""
+    from rq import Queue, get_failed_queue, requeue_job
+    from pybossa.core import sentinel
+
+    fq = get_failed_queue()
+    job_ids = fq.job_ids
+    count = len(job_ids)
+    FAILED_JOBS_RETRIES = current_app.config.get('FAILED_JOBS_RETRIES')
+    for job_id in job_ids:
+        KEY = 'pybossa:job:failed:%s' % job_id
+        job = fq.fetch_job(job_id)
+        if sentinel.master.exists(KEY):
+            sentinel.master.incr(KEY)
+        else:
+            sentinel.master.set(KEY, 1)
+            ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
+            sentinel.master.expire(ttl, KEY)
+        if sentinel.master.get(KEY) < FAILED_JOBS_RETRIES:
+            requeue_job(job_id)
+        else:
+            KEY = 'pybossa:job:failed:mailed:%s' % job_id
+            if (not sentinel.master.exists(KEY) and
+                    current_app.config.get('ADMINS')):
+                subject = "JOB: %s has failed more than 3 times" % job_id
+                body = "Please, review the background jobs of your server."
+                body += "\n This is the trace error\n\n"
+                body += "------------------------------\n\n"
+                body += job.exc_info
+                mail_dict = dict(recipients=current_app.config.get('ADMINS'),
+                                 subject=subject, body=body)
+                send_mail(mail_dict)
+                sentinel.master.set(KEY, True)
+                ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
+                sentinel.master.expire(ttl, KEY)
+    if count > 0:
+        return "JOBS: %s You have failed the system." % job_ids
+    else:
+        return "You have not failed the system"
