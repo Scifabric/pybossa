@@ -18,7 +18,7 @@
 # Cache global variables for timeouts
 
 from default import Test, db
-from factories import TaskFactory, TaskRunFactory
+from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import ResultRepository
 from pybossa.core import task_repo, result_repo
 from nose.tools import assert_raises
@@ -225,3 +225,14 @@ class TestResultRepository(Test):
         bad_object = dict()
 
         assert_raises(WrongObjectError, self.result_repo.update, bad_object)
+
+    def test_delete_results_from_project(self):
+        """Test delte_results_from_project works."""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project,n_answers=1)
+        taskrun = TaskRunFactory.create(task=task, project=project)
+        result = result_repo.get_by(project_id=task.project.id)
+        assert result
+        result_repo.delete_results_from_project(project)
+        result = result_repo.get_by(project_id=task.project.id)
+        assert result is None

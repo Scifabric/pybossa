@@ -21,6 +21,7 @@ MAIL_PASSWORD = None
 MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
 MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
+ADMINS = ['admin@broken.com']
 ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
