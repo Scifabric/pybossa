@@ -1020,4 +1020,4 @@ class TestTaskrunAPI(TestAPI):
 
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
 
-        assert result is None, result
+        assert result is not None, result
