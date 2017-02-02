@@ -20,6 +20,7 @@ from flask import Blueprint, current_app
 from flask import render_template
 from flask.ext.login import current_user
 from pybossa.cache import users as cached_users
+from pybossa.util import handle_content_type
 
 blueprint = Blueprint('leaderboard', __name__)
 
@@ -34,5 +35,6 @@ def index():
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id)
 
-    return render_template('/stats/index.html', title="Community Leaderboard",
-                           top_users=top_users)
+    response = dict(template='/stats/index.html', title="Community Leaderboard",
+                    top_users=top_users)
+    return handle_content_type(response)

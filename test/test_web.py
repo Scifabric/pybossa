@@ -151,6 +151,36 @@ class TestWeb(web.Helper):
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert user.name in res.data, res.data
+        assert_raises(ValueError, json.loads, res.data)
+
+    @with_context
+    def test_leaderboard_json(self):
+        """Test leaderboard json works"""
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user)
+        res = self.app_get_json('/leaderboard/')
+        data = json.loads(res.data)
+        err_msg = 'Template wrong'
+        assert data['template'] == '/stats/index.html', err_msg
+        err_msg = 'Title wrong'
+        assert data['title'] == 'Community Leaderboard', err_msg
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        first_user = data['top_users'][0]
+        assert 'created' in first_user, err_msg
+        assert first_user['fullname'] == 'User 1', err_msg
+        assert first_user['name'] == 'user1', err_msg
+        assert first_user['rank'] == 1, err_msg
+        assert first_user['score'] == 1, err_msg
+        assert 'registered_ago' in first_user, err_msg
+        assert 'n_answers' in first_user, err_msg
+        assert 'info' in first_user, err_msg
+        assert 'avatar' in first_user['info'], err_msg
+        assert 'container' in first_user['info'], err_msg
+        err_msg = 'privacy leak in user information'
+        assert 'id' not in first_user, err_msg
+        assert 'api_key' not in first_user, err_msg
 
     @with_context
     @patch('pybossa.cache.project_stats.pygeoip', autospec=True)

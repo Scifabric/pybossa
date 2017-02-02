@@ -78,7 +78,7 @@ Tasks will have only one parent: the associated project.
 
 Task Runs will have only two parents: the associated task and associated project.
 
-.. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS 
+.. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS
 
 
 .. _rate-limiting:
@@ -121,7 +121,7 @@ List
 ~~~~
 
 List domain objects::
-     
+
     GET http://{pybossa-site-url}/api/{domain-object}
 
 
@@ -135,11 +135,11 @@ For example, if an anonymous user access the generic api endpoints like::
     GET http://{pybossa-site-url}/api/project
 
 It will return all the projects from the DB, ordering them by ID. If you access it
-like authenticating yourself:: 
+like authenticating yourself::
 
     GET http://{pybossa-site-url}/api/project?api_key=YOURKEY
 
-Then, you will get your own list of projects. In other words, the projects that you 
+Then, you will get your own list of projects. In other words, the projects that you
 own. If you don't have a project, but you want to explore the API then you can use
 the **all=1** argument::
 
@@ -153,7 +153,7 @@ For example, you can get a list of your Projects like this::
     GET http://{pybossa-site-url}/api/project?api_key=YOURKEY
     GET http://{pybossa-site-url}/api/project?api_key=YOURKEY&all=1
 
-Or a list of available Categories:: 
+Or a list of available Categories::
 
     GET http://{pybossa-site-url}/api/category
 
@@ -187,14 +187,14 @@ Finally, you can get a list of users by doing::
 
 .. note::
     **DEPRECATED (see next Note for a better and faster solution)**
-    You can use the keyword **offset=N** in any **GET** query to skip that many 
-    rows before beginning to get rows. If both **offset** and **limit** appear, 
-    then **offset** rows are skipped before starting to count the **limit** rows 
+    You can use the keyword **offset=N** in any **GET** query to skip that many
+    rows before beginning to get rows. If both **offset** and **limit** appear,
+    then **offset** rows are skipped before starting to count the **limit** rows
     that are returned.
 
 .. note::
     You can paginate the results of any GET query using the last ID of the
-    domain object that you have received and the parameter: **last_id**. For 
+    domain object that you have received and the parameter: **last_id**. For
     example, to get the next 20 items
     after the last project ID that you've received you will write the query
     like this: GET /api/project?last_id={{last_id}}.
@@ -259,7 +259,7 @@ For adding more keys::
 
     info=key1::value1|key2::value2|keyN::valueN
 
-These parameters will be ANDs, so, it will return objects that have those keys with 
+These parameters will be ANDs, so, it will return objects that have those keys with
 and **and** operator.
 
 It is also possible to use full text search queries within those first level keys. For
@@ -412,7 +412,7 @@ Using your own user database
 
 Since version v2.3.0 PYBOSSA supports external User IDs. This means that you can
 easily use your own database of users without having to registering them in the
-PYBOSSA server. As a benefit, you will be able to track your own users within the 
+PYBOSSA server. As a benefit, you will be able to track your own users within the
 PYBOSSA server providing a very simple and easy experience for them.
 
 A typical case for this would be for example a native phone app (Android, iOS or Windows).
@@ -435,7 +435,7 @@ Now your phone app will have to authenticate to the server to get tasks and post
 To do it, all you have to do is to create an HTTP Request with an Authorization Header like this::
 
     HEADERS Authorization: project.secret_key
-    GET http://{pybossa-site-url}/api/auth/project/short_name/token 
+    GET http://{pybossa-site-url}/api/auth/project/short_name/token
 
 That request will return a JWT token for you. With that token, you will be able to start
 requesting tasks for your user base passing again an authorization header. Imagine a user
@@ -445,8 +445,8 @@ from your database is identified like this: '1xa'::
     GET http://{pybossa-site-url}/api/{project.id}/newtask?external_uid=1xa
 
 
-That will return a task for the user ID 1xa that belongs to your database but not to 
-PYBOSSA. Then, once the user has completed the task you will be able to submit it like 
+That will return a task for the user ID 1xa that belongs to your database but not to
+PYBOSSA. Then, once the user has completed the task you will be able to submit it like
 this::
 
     HEADERS Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
@@ -454,9 +454,9 @@ this::
 
 
 .. note::
-    The TaskRun object needs to have the external_uid field filled with 1xa. 
+    The TaskRun object needs to have the external_uid field filled with 1xa.
 
-As simple as that! 
+As simple as that!
 
 
 Command line Example Usage of the API
@@ -577,7 +577,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -656,7 +656,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -739,7 +739,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -1010,7 +1010,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 As this endpoint supports **three** different forms, you must specify which form are
@@ -1088,7 +1088,7 @@ If there's an error in the form fields, you will get them in the **form.errors**
 
     The (x1,x2,y1,y2) are the coordinates for cutting the image and create the avatar.
 
-    (x1,y1) are the offset left of the cropped area and  the offset top of the cropped 
+    (x1,y1) are the offset left of the cropped area and  the offset top of the cropped
     area respectively; and (x2,y2) are the width and height of the crop.
 
 
@@ -1102,7 +1102,7 @@ Account reset password
 
 *Required arguments*:  **key** a string required to validate the link for updating
 the password of the user. This key is sent to the user via email after requesting to
-reset the password. 
+reset the password.
 
 It returns a JSON object with the following information:
 
@@ -1125,7 +1125,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -1137,14 +1137,14 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
- 
+
     {
-        u'status': u'success', 
-        u'flash': u'You reset your password successfully!', 
+        u'status': u'success',
+        u'flash': u'You reset your password successfully!',
         u'next': u'/'
     }
 
-Account reset API Key 
+Account reset API Key
 ~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /account/<user>/resetapikey**
 
@@ -1169,7 +1169,7 @@ It returns a JSON object with the following information:
 
 **POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -1181,10 +1181,10 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
- 
+
     {
-        u'status': u'success', 
-        u'flash': u'New API-KEY generated', 
+        u'status': u'success',
+        u'flash': u'New API-KEY generated',
         u'next': u'/account/<user>'
     }
 
@@ -1252,7 +1252,7 @@ to validate its account. It returns a JSON object with the following information
     }
 
 
-Home 
+Home
 ~~~~
 **Endpoint: /**
 
@@ -1336,6 +1336,63 @@ It returns a JSON object with the following information:
   ]
 }
 
+
+Leaderboard
+~~~~~~~~~~~
+**Endpoint: /leaderboard/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows you the top 20 contributors rank in a sorted leaderboard.
+If you are logged in you will also get the rank of yourself even when you are
+not visible on the top public leaderboard.
+
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+* **top_users**: Sorted list of leaderboard top users.
+
+**Example output**
+
+for logged in user JohnDoe (normally not visible in public leaderboard):
+
+.. code-block:: python
+    {
+        "template": "/stats/index.html",
+        "title": "Community Leaderboard",
+        "top_users": [
+            {
+                "created": "2014-08-17T18:28:56.738119",
+                "fullname": "Buzz Bot",
+                "info": {
+                    "avatar": "1410771548.09_avatar.png",
+                    "container": "user_5305"
+                },
+                "n_answers": null,
+                "name": "buzzbot",
+                "rank": 1,
+                "registered_ago": null,
+                "score": 54259
+            },
+            ... ,
+            {
+                "created": "2014-08-11T08:59:32.079599",
+                "fullname": "JohnDoe",
+                "info": {
+                    "avatar": null,
+                    "container": "user_4953"
+                },
+                "n_answers": null,
+                "name": "JohnDoe",
+                "rank": 1813,
+                "registered_ago": null,
+                "score": 56
+            }
+        ]
+    }
+
+
 Admin users
 ~~~~~~~~~~~
 **Endpoint: /admin/users**
@@ -1395,9 +1452,9 @@ It returns a JSON object with the following information:
       ]
     }
 
-**POST** 
+**POST**
 
-To send a valid POST request you need to pass the *csrf token* in the headers. Use 
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
 the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
@@ -1528,7 +1585,7 @@ It removes a user from the admin group. It returns a JSON object with the follow
     deleting from the admin group.
 
 
-Admin categories 
+Admin categories
 ~~~~~~~~~~~~~~~~
 **Endpoint: /admin/categories**
 
