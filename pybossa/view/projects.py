@@ -295,9 +295,6 @@ def task_presenter_editor(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, "Task Presenter Editor")
-    if not current_user.admin and not current_user.subadmin:
-        ensure_authorized_to('read', project)
-        ensure_authorized_to('update', project)
 
     pro = pro_features()
 
@@ -1058,7 +1055,6 @@ def export_to(short_name):
             redirect_to_password = _check_if_redirect_to_password(project)
             if redirect_to_password:
                 return redirect_to_password
-
 
     def respond():
         return render_template('/projects/export.html',
