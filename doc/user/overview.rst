@@ -701,11 +701,11 @@ After completing the previous three steps, your project will be almost ready.
 The final step is to *publish* it, because now it will still be a draft, and it
 will be hidden to everyone but you (and admins).
 
-When your project is a draft, you can contribute to it and the answers will be
-stored in the database so you can have access to them, but no results will be
-created. However, in the moment of publishing the project all the answers will
-be flushed, so don't be afraid and try it as much as you can until you are sure
-that everything works as expected.
+When your project is a draft, you can contribute to it and the answers (task runs) and results
+will be stored in the database so you can have access to them (and test the webhooks solution if
+you want to do real-time analysis). However, in the moment of publishing the project all the task runs
+and results (as well as the webhooks log entries) will be flushed, so don't be afraid and try it as 
+much as you can until you are sure that everything works as expected.
 Once you think the project is ready for the world to see it, just click 
 in the Publish button:
 
