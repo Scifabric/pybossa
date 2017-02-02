@@ -1339,7 +1339,7 @@ It returns a JSON object with the following information:
 
 Leaderboard
 ~~~~~~~~~~~
-**Endpoint: /leaderboard**
+**Endpoint: /leaderboard/**
 
 *Allowed methods*: **GET**
 
