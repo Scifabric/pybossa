@@ -36,6 +36,20 @@ class TestMaintenance(Test):
         res = get_maintenance_jobs().next()
         assert res['queue'] == 'maintenance'
 
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('rq.requeue_job', autospec=True)
+    @patch('rq.get_failed_queue', autospec=True)
+    def test_check_failed_variant(self, mock_failed_queue, mock_requeue_job, mock_send_mail):
+        """Test JOB check failed works when no failed jobs."""
+        fq = MagicMock
+        fq.job_ids = []
+        job = MagicMock()
+        fq.fetch_job = job
+        mock_failed_queue.return_value = fq
+        response = check_failed()
+        msg = "You have not failed the system"
+        assert msg == response, response
 
     @with_context
     @patch('pybossa.jobs.send_mail')
