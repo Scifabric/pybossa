@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Help view for PYBOSSA."""
+from random import choice
 from flask import Blueprint
 from flask import render_template
 from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
-from random import choice
 from readability.readability import Document
 
 blueprint = Blueprint('help', __name__)
@@ -32,10 +32,10 @@ def api():
     """Render help/api page."""
     categories = cached_cat.get_used()
     projects = cached_projects.get(categories[0]['short_name'])
-    # if len(projects) > 0:
-    #     project_id = choice(projects)['id']
-    # else:  # pragma: no cover
-    project_id = None
+    if len(projects) > 0:
+        project_id = choice(projects)['id']
+    else:  # pragma: no cover
+        project_id = None
     response = dict(template='help/api.html',
                     title="Help: API",
                     project_id=project_id)
