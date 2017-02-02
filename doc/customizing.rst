@@ -330,6 +330,20 @@ uncomment the ADMINS_ config variable and add a list of e-mails.
 
 .. _ADMINS: https://github.com/Scifabric/pybossa/blob/master/settings_local.py.tmpl#L64
 
+Background jobs error notifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can change the default behavior for receiving emails regarding failed background jobs. The two
+config variables are the following:
+
+* **FAILED_JOBS_MAILS** = 7 (days)
+* **FAILED_JOBS_RETRIES** = 3 (times)
+
+FAILED_JOBS_MAILS instructs the system to send you a reminder after 7 days, if you have not solved the issue
+with the background job.
+
+FAILED_JOBS_RETRIES instructs the system to retry the job N times. By default is 3.
+
 Enabling Logging
 ================
 
