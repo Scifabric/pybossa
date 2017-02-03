@@ -157,7 +157,7 @@ def published_projects(user_id):
                project.info
                FROM project
                WHERE project.published=true
-               AND project.owner_id=:user_id;
+               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id));
                ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
@@ -204,7 +204,7 @@ def draft_projects(user_id):
                project.owner_id,
                project.info
                FROM project
-               WHERE project.owner_id=:user_id
+               WHERE (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))
                AND project.published=false;
                ''')
     projects_draft = []
