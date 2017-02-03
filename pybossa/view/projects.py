@@ -1813,17 +1813,18 @@ def reset_secret_key(short_name):
 
 @blueprint.route('/<short_name>/coowners', methods=['GET', 'POST'])
 @login_required
-@admin_required
 def coowners(short_name):
     """Manage coowners of a project."""
     form = SearchForm(request.form)
     project = project_repo.get_by_shortname(short_name)
     coowners = project.coowners
 
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query, subadmin=True)]
-        [ensure_authorized_to('update', found_user) for found_user in found]
+        found = [user for user in user_repo.search_by_name(query, subadmin=True) if user.id != current_user.id]
         found = [type('', (object,), { "user": user, "isCoowner":any(user.id == coowner.id for coowner in coowners)}) for user in found]
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
@@ -1838,17 +1839,18 @@ def coowners(short_name):
 
 @blueprint.route('/<short_name>/addcoowner/<int:user_id>')
 @login_required
-@admin_required
 def add_coowner(short_name, user_id=None):
     """Add coowner."""
     try:
     	project = project_repo.get_by_shortname(short_name)
 
+    	ensure_authorized_to('read', project)
+    	ensure_authorized_to('update', project)
+
     	current_app.logger.debug("adding user_id: %d, to project: %s" % (user_id,short_name))
         if project and user_id:
         	user = user_repo.get(user_id)
         	if user:
-        		ensure_authorized_to('update', user)
         		if all(user.id != x.id for x in project.coowners):
         			project.coowners.append(user)
         			project_repo.update(project)
@@ -1866,16 +1868,17 @@ def add_coowner(short_name, user_id=None):
 
 @blueprint.route('/<short_name>/delcoowner/<int:user_id>')
 @login_required
-@admin_required
 def del_coowner(short_name, user_id=None):
     """Del coowner."""
     try:
     	project = project_repo.get_by_shortname(short_name)
 
+    	ensure_authorized_to('read', project)
+    	ensure_authorized_to('update', project)
+
         if project and user_id:
             user = user_repo.get(user_id)
             if user:
-                ensure_authorized_to('update', user)
                 project.coowners.remove(user)
                 project_repo.update(project)
                 return redirect(url_for('.coowners', short_name=short_name))
