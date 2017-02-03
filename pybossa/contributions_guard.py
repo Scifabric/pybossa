@@ -24,7 +24,7 @@ class ContributionsGuard(object):
     KEY_PREFIX = 'pybossa:task_requested:user:{0}:task:{1}'
     PRESENTED_KEY_PREFIX = 'pybossa:task_presented:user:{0}:task:{1}'
     STAMP_TTL = 60 * 60
-    OTP_TTL = 60 * 10
+    OTP_TTL = 60 * 5
 
     def __init__(self, redis_conn):
         self.conn = redis_conn

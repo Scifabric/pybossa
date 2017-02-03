@@ -89,7 +89,7 @@ def index(page=1):
     return handle_content_type(tmp)
 
 
-def _email_two_factor_auth(user):
+def _email_two_factor_auth(user, invalid_token=False):
     # send email to user that has details on
     # how to apply TOTP to login to pybossa
     if user and user.email_addr:
@@ -103,15 +103,17 @@ def _email_two_factor_auth(user):
         if otpsecret is None:
             guard.add_otp_secret(user.email_addr, None)
             flash(gettext("Problem with generating one time password"), 'error')
+            current_app.logger.error("Problem with generating one time password for email: %s" %user.email_addr)
         else:
             otpcode = otpsecret.totp()
             guard.add_otp_secret(user.email_addr, otpcode)
-            print '********** OTP code generated before sending email: %r' % otpcode
+            current_app.logger.info('********** OTP code generated before sending email: %r, for email: %s' % (otpcode, user.email_addr))
             msg['html'] = render_template(
                                 '/account/email/otp.html',
                                 user=user, otpcode=otpcode)
             mail_queue.enqueue(send_mail, msg)
-            flash(gettext("An email has been sent to you with one time password"),'success')
+            if not invalid_token:
+                flash(gettext("An email has been sent to you with one time password"),'success')
     else:
         flash(gettext("We don't have this email in our records. "
                       "You may have signed up with a different "
@@ -121,10 +123,9 @@ def _email_two_factor_auth(user):
 
 @blueprint.route('/<email>/otpvalidation', methods=['GET', 'POST'])
 def otpvalidation(email):
-    print '********** inside otpvalidation. request: %r' % request
     form = OTPForm(request.form)
     otp = form.otp.data
-    print '************ user email: %r' % email
+    current_app.logger.info('validating otp for user email: %r' % email)
     user = user_repo.get_by(email_addr=email)
     if request.method == 'POST' and form.validate():
         guard = ContributionsGuard(sentinel.master)
@@ -138,10 +139,16 @@ def otpvalidation(email):
                 return redirect(url_for("home.home"))
             else:
                 # invalid otp
-                msg = gettext("Invalid one time password")
+                msg = gettext("Invalid one time password, a newly generated one time password was sent to your email.")
                 flash(msg, 'error')
-        print '******** Invalid OTP. retrieved: %r, submitted: %r, email: %r' % (otpcode, otp, email)
-        _email_two_factor_auth(user)
+        else:
+            # invalid otp
+            msg = gettext("Expired one time password, a newly generated one time password was sent to your email.")
+            flash(msg, 'error')
+
+        current_app.logger.error('******** Invalid OTP. retrieved: %r, submitted: %r, email: %r' % (otpcode, otp, email))
+        # incase of an invalid or expired password
+        _email_two_factor_auth(user, True)
         otpform = OTPForm(request.form)
     return render_template('/account/otpvalidation.html',
                 title="Verify OTP",
