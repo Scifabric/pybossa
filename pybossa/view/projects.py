@@ -510,7 +510,8 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    template_args = {"project": project, "title": title,
+    template_args = {"project": project,
+                     "title": title,
                      "owner":  cached_users.public_get_user_summary(owner.name),
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
