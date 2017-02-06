@@ -46,6 +46,7 @@ from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
+from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
@@ -510,7 +511,7 @@ def details(short_name):
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     template_args = {"project": project, "title": title,
-                     "owner": owner,
+                     "owner":  cached_users.public_get_user_summary(owner.name),
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
