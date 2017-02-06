@@ -33,6 +33,7 @@ from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
+from datetime import timedelta
 
 
 def create_app(run_as_server=True):
@@ -101,6 +102,9 @@ def configure_app(app):
     # Two factor authentication
     global twofactor_auth
     twofactor_auth = app.config.get('ENABLE_TWO_FACTOR_AUTH')
+
+    if app.config.get('PERMANENT_SESSION_LIFETIME'):
+        app.permanent_session_lifetime = timedelta(minutes=int(app.config['PERMANENT_SESSION_LIFETIME']))
 
 
 def setup_json_serializer(app):

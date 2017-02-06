@@ -216,7 +216,7 @@ def signin():
 
 
 def _sign_in_user(user):
-    login_user(user, remember=True)
+    login_user(user, remember=False)
     if newsletter.ask_user_to_subscribe(user):
         return redirect_content_type(url_for('account.newsletter_subscribe',
                                              next=request.args.get('next')))
