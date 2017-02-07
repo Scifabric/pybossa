@@ -617,6 +617,17 @@ If there's an error in the form fields, you will get them in the **form.errors**
       "title": "Register"
     }
 
+If email confirmation is required for registering you will get this account validation
+result when all input data is correct. Note: Keep in mind that account is not
+created fully until the user confirmed his email.
+
+.. code-block:: python
+
+    {
+      "status": "sent",
+      "template": "account/account_validation.html",
+      "title": "Account validation"
+    }
 
 Account sign in
 ~~~~~~~~~~~~~~~
