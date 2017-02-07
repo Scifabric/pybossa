@@ -216,7 +216,7 @@ def register():
         msg['html'] = markdown(msg['body'])
         mail_queue.enqueue(send_mail, msg)
         data = dict(template='account/account_validation.html',
-                    title=gettext("Account validation"),
+                    title=gettext("Register"),
                     status='sent')
         return handle_content_type(data)
     if request.method == 'POST' and not form.validate():
