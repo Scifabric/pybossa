@@ -215,7 +215,10 @@ def register():
                                         user=account, confirm_url=confirm_url))
         msg['html'] = markdown(msg['body'])
         mail_queue.enqueue(send_mail, msg)
-        return render_template('account/account_validation.html')
+        data = dict(template='account/account_validation.html',
+                    title=gettext("Account validation"),
+                    status='sent')
+        return handle_content_type(data)
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     data = dict(template='account/register.html',
