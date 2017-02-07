@@ -677,13 +677,67 @@ class TestWeb(web.Helper):
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)
         assert data['status'] == 'sent'
         assert data['template'] == 'account/account_validation.html'
         assert data['title'] == 'Account validation'
+
+    @with_context
+    def test_register_post_valid_data_validation_enabled_wrong_data_json(self):
+        """Test WEB register post with valid form data and account validation
+        enabled for JSON"""
+        from flask import current_app
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="anotherp4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert data['status'] == 'error'
+        assert data['form']['errors']['password'][0] == 'Passwords must match'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'email_addr' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'fullname' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'name' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="wrongemail")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert data['status'] == 'error'
+        assert data['form']['errors']['email_addr'][0] == 'Invalid email address.'
 
     @with_context
     @patch('pybossa.util.redirect', wraps=redirect)
