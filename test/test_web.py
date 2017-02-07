@@ -664,13 +664,14 @@ class TestWeb(web.Helper):
 
         res = self.app.post('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
-        assert "Register" in res.data, res
+        assert "Account validation" in res.data, res
         assert "Just one more step, please" in res.data, res.data
+        assert_raises(ValueError, json.loads, res.data)
 
     @with_context
     def test_register_post_valid_data_validation_enabled_json(self):
         """Test WEB register post with valid form data and account validation
-        enabled"""
+        enabled for JSON"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
@@ -679,7 +680,10 @@ class TestWeb(web.Helper):
 
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
-        print res.data
+        data = json.loads(res.data)
+        assert data['status'] == 'sent'
+        assert data['template'] == 'account/account_validation.html'
+        assert data['title'] == 'Account validation'
 
     @with_context
     @patch('pybossa.util.redirect', wraps=redirect)
