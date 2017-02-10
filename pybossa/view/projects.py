@@ -631,6 +631,7 @@ def import_task(short_name):
             try:
                 if not project.has_presenter():
                     msg = "Task presenter is empty, please create a task presenter first."
+                    flash(gettext(msg), 'error')
                 else:
                     return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
