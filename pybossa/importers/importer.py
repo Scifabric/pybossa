@@ -75,15 +75,14 @@ class Importer(object):
                 msg = gettext('Could not load project info')
             else:
                 project_headers = project.get_presenter_headers()
-                if not project_headers:
-                    msg = gettext('It looks like task presenter code does not utilize any columns.')
-                elif len(headers) < len(project_headers):
-                    msg = 'Imported columns do not match task presenter code'
-                else:
-                    for h in project_headers:
-                        if h not in headers:
-                            msg = 'Imported columns do not match task presenter code'
-                            break
+                if project_headers:
+                    if len(headers) < len(project_headers):
+                        msg = 'Imported columns do not match task presenter code'
+                    else:
+                        for h in project_headers:
+                            if h not in headers:
+                                msg = 'Imported columns do not match task presenter code'
+                                break
 
             if msg:
                 # Failed validation

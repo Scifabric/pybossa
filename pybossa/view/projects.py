@@ -629,11 +629,7 @@ def import_task(short_name):
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
             try:
-                if not project.has_presenter():
-                    msg = "Task presenter is empty, please create a task presenter first."
-                    flash(gettext(msg), 'error')
-                else:
-                    return _import_tasks(project, **form.get_import_data())
+                return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
                 flash(gettext(str(err_msg)), 'error')
             except Exception as inst:  # pragma: no cover
