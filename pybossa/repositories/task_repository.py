@@ -136,14 +136,27 @@ class TaskRepository(Repository):
         cached_projects.clean_project(element.project_id)
         self._delete_zip_files_from_store(project)
 
-    def delete_valid_from_project(self, project):
-        """Delete only tasks that have no results associated."""
-        sql = text('''
-                   DELETE FROM task WHERE task.project_id=:project_id
-                   AND task.id NOT IN
-                   (SELECT task_id FROM result
-                   WHERE result.project_id=:project_id GROUP BY result.task_id);
-                   ''')
+    def delete_valid_from_project(self, project, force_reset=False):
+        sql = None
+        if not force_reset:
+            """Delete only tasks that have no results associated."""
+            sql = text('''
+                DELETE FROM task WHERE task.project_id=:project_id
+                AND task.id NOT IN
+                (SELECT task_id FROM result
+                WHERE result.project_id=:project_id GROUP BY result.task_id);
+                ''')
+        else:
+            """force reset, remove all results."""
+            sql = text('''
+                BEGIN;
+
+                DELETE FROM task_run WHERE project_id=:project_id;
+                DELETE FROM result WHERE project_id=:project_id;
+                DELETE FROM task WHERE task.project_id=:project_id;
+                
+                COMMIT;
+                ''')
         self.db.session.execute(sql, dict(project_id=project.id))
         self.db.session.commit()
         cached_projects.clean_project(project.id)
