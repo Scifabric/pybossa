@@ -30,6 +30,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.project_coowner import ProjectCoowner
+import re
 
 
 class Project(db.Model, DomainObject):
@@ -136,3 +137,14 @@ class Project(db.Model, DomainObject):
             return list(set(default).union(set(extra)))
         else:
             return default
+
+    def get_presenter_headers(self):
+        if not self.has_presenter():
+            return None
+
+        headers = set(re.findall('\.info\.(\w+)\W', self.info.get('task_presenter')))
+
+        if len(headers) < 1:
+            return None
+
+        return headers

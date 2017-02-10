@@ -28,6 +28,7 @@ class BulkTaskImport(object):
     """Class to import tasks in bulk."""
 
     importer_id = None
+    _headers = None
 
     def tasks(self):
         """Return a generator with all the tasks imported."""
@@ -36,6 +37,9 @@ class BulkTaskImport(object):
     def count_tasks(self):
         """Return amount of tasks to be imported."""
         return len([task for task in self.tasks()])
+
+    def headers(self):
+        return self._headers
 
     def import_metadata(self):
         return None

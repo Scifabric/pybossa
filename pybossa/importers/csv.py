@@ -56,7 +56,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         row_number = 0
         for row in csvreader:
             if not headers:
-                headers = row
+                headers = self._headers = row
                 self._check_no_duplicated_headers(headers)
                 self._check_no_empty_headers(headers)
                 field_headers = set(headers) & fields
@@ -178,7 +178,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))
         csvreader = unicode_csv_reader(csvcontent)
-        return self._import_csv_tasks(csvreader)
+        return list(self._import_csv_tasks(csvreader))
 
     def tasks(self):
         """Get tasks from a given URL."""

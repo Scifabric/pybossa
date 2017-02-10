@@ -629,9 +629,12 @@ def import_task(short_name):
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
             try:
-                return _import_tasks(project, **form.get_import_data())
+                if not project.has_presenter():
+                    msg = "Task presenter is empty, please create a task presenter first."
+                else:
+                    return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
-                flash(err_msg, 'error')
+                flash(gettext(str(err_msg)), 'error')
             except Exception as inst:  # pragma: no cover
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
@@ -659,7 +662,7 @@ def import_task(short_name):
 def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
-        report = importer.create_tasks(task_repo, project.id, **form_data)
+        report = importer.create_tasks(task_repo, project, **form_data)
         flash(report.message)
     else:
         importer_queue.enqueue(import_tasks, project.id, **form_data)

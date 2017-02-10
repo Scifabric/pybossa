@@ -38,7 +38,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
         form_data = dict(type='csv', csv_url='http://fakecsv.com')
-        self.importer.create_tasks(task_repo, project.id, **form_data)
+        self.importer.create_tasks(task_repo, project, **form_data)
         task = task_repo.get_task(1)
 
         assert task is not None
@@ -56,7 +56,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
         form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
-        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+        result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
@@ -72,7 +72,7 @@ class TestImporterPublicMethods(Test):
         TaskFactory.create(project=project, info={'question': 'question'})
         form_data = dict(type='flickr', album_id='1234')
 
-        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+        result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 1, len(tasks)
@@ -89,7 +89,7 @@ class TestImporterPublicMethods(Test):
         project = ProjectFactory.create()
         form_data = dict(type='flickr', album_id='1234')
 
-        result = self.importer.create_tasks(task_repo, project.id, **form_data)
+        result = self.importer.create_tasks(task_repo, project, **form_data)
 
         assert result.message == '1 new task was imported successfully', result.message
         assert result.total == 1, result.total

@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from flask import current_app
 from flask.ext.babel import gettext
 from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
 from .dropbox import BulkTaskDropboxImport
@@ -24,6 +25,7 @@ from .twitterapi import BulkTaskTwitterImport
 from .youtubeapi import BulkTaskYoutubeImport
 from .epicollect import BulkTaskEpiCollectPlusImport
 from .s3 import BulkTaskS3Import
+from .base import BulkImportException
 
 class Importer(object):
 
@@ -55,7 +57,7 @@ class Importer(object):
         self._importers['youtube'] = BulkTaskYoutubeImport
         self._importer_constructor_params['youtube'] = youtube_params
 
-    def create_tasks(self, task_repo, project_id, **form_data):
+    def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
@@ -63,10 +65,35 @@ class Importer(object):
         empty = True
         n = 0
         importer = self._create_importer_for(**form_data)
-        for task_data in importer.tasks():
-            task = Task(project_id=project_id)
+
+        tasks = importer.tasks()
+        headers = importer.headers()
+
+        if headers:
+            msg = None
+            if not project:
+                msg = gettext('Could not load project info')
+            else:
+                project_headers = project.get_presenter_headers()
+                if not project_headers:
+                    msg = gettext('It looks like task presenter code does not utilize any columns.')
+                elif len(headers) < len(project_headers):
+                    msg = 'Imported columns do not match task presenter code'
+                else:
+                    for h in project_headers:
+                        if h not in headers:
+                            msg = 'Imported columns do not match task presenter code'
+                            break
+
+            if msg:
+                # Failed validation
+                current_app.logger.error(msg)
+                raise BulkImportException(msg)
+
+        for task_data in tasks:
+            task = Task(project_id=project.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            found = task_repo.get_task_by(project_id=project_id, info=task.info)
+            found = task_repo.get_task_by(project_id=project.id, info=task.info)
             if found is None:
                 task_repo.save(task)
                 n += 1
