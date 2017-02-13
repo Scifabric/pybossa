@@ -1034,11 +1034,11 @@ def delete_tasks(short_name):
     else:
         force_reset = request.form.get("force_reset") == 'true'
         task_repo.delete_valid_from_project(project, force_reset=force_reset)
-        
+
         if not force_reset:
             msg = gettext("Tasks and taskruns with no associated results have been deleted")
         else:
-            msg = gettext("all tasks and taskruns associated with this project have been deleted")
+            msg = gettext("All tasks and taskruns associated with this project have been deleted")
 
         flash(msg, 'success')
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
