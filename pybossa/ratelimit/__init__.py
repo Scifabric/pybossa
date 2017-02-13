@@ -30,6 +30,8 @@ from flask import request, g
 from werkzeug.exceptions import TooManyRequests
 from pybossa.core import sentinel
 from pybossa.error import ErrorStatus
+from flask.ext.login import current_user
+from flask import current_app
 
 error = ErrorStatus()
 
@@ -52,6 +54,9 @@ class RateLimit(object):
         self.limit = limit
         self.per = per
         self.send_x_headers = send_x_headers
+
+        if not current_user.is_anonymous() and current_user.admin:
+            self.limit *= current_app.config.get("ADMIN_RATE_MULTIPLIER", 1)
 
         p = sentinel.master.pipeline()
         p.incr(self.key)
