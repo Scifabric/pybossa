@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -279,8 +279,18 @@ class TestWeb(web.Helper):
         assert data['code'] == 404, res.status_code
 
         self.create()
-        res = self.app.get('/account/',
-                           content_type='application/json')
+        res = self.app_get_json('/account/')
+        print res.data
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        err_msg = "There should be a Community page"
+        assert data['title'] == 'Community', err_msg
+        err_msg = "There should be a next, prev item in pagination"
+        assert data['pagination']['next'] is False, err_msg
+        assert data['pagination']['prev'] is False, err_msg
+        assert data['pagination']['per_page'] == 24, err_msg
+        # page 1 should also work
+        res = self.app_get_json('/account/page/1')
         print res.data
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
