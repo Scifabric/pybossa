@@ -58,13 +58,10 @@ blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('email', connection=sentinel.master)
 
-@blueprint.route('/')
-def index_page_1():
-    """Index page 1 for /account/ too"""
-    return index(1)
 
+@blueprint.route('/')
 @blueprint.route('/page/<int:page>')
-def index(page):
+def index(page=1):
     """Index page for all PYBOSSA registered users."""
 
     update_feed = get_update_feed()
