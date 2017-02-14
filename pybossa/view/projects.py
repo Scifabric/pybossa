@@ -1038,7 +1038,7 @@ def delete_tasks(short_name):
         if not force_reset:
             msg = gettext("Tasks and taskruns with no associated results have been deleted")
         else:
-            msg = gettext("All tasks and taskruns associated with this project have been deleted")
+            msg = gettext("All tasks, taskruns and results associated with this project have been deleted")
 
         flash(msg, 'success')
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
