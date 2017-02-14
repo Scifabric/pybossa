@@ -27,7 +27,6 @@ from pybossa.model.project_stats import ProjectStats
 session = db.slave_session
 
 
-@memoize(timeout=ONE_HOUR * 3)
 def n_available_tasks(project_id, user_id=None, user_ip=None):
     """Return the number of tasks for a given project a user can contribute to.
 
