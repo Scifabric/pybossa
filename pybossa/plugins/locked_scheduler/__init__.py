@@ -122,13 +122,15 @@ def with_read_auth(f):
     def wrapper(self, user, task):
         if task is not None:
             project_id = task.project_id
-            task_id = task.id
             scheduler = get_project_scheduler(project_id)
             if scheduler == SCHEDULER_NAME:
-                is_admin = not user.is_anonymous() and user.admin
-                return is_admin or has_lock(project_id, task_id, user.id)
+                return can_read(user) or has_lock(project_id, task.id, user.id)
         return f(self, user, task)
     return wrapper
+
+
+def can_read(user):
+    return not user.is_anonymous() and (user.admin or user.subadmin)
 
 
 def get_task_run_info():
