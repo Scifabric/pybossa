@@ -26,6 +26,7 @@ This package adds GET, POST, PUT and DELETE errors for the API:
 """
 import json
 from flask import Response
+from flask import current_app, request
 
 
 class ErrorStatus(object):
@@ -58,12 +59,13 @@ class ErrorStatus(object):
         Returns a Flask Response with the error.
 
         """
+        self.log_exception()
         exception_cls = e.__class__.__name__
         if self.error_status.get(exception_cls):
             status = self.error_status.get(exception_cls)
         else: # pragma: no cover
             status = 500
-        if exception_cls in ('BadRequest', 'Forbidden','Unauthorized'):
+        if exception_cls in ('BadRequest', 'Forbidden', 'Unauthorized'):
             e.message = e.description
         error = dict(action=action.upper(),
                      status="failed",
@@ -73,3 +75,9 @@ class ErrorStatus(object):
                      exception_msg=str(e.message))
         return Response(json.dumps(error), status=status,
                         mimetype='application/json')
+
+    def log_exception(self):
+        current_app.logger.exception('Exception on {} [{}]'.format(
+            request.path, request.method))
+        current_app.logger.error('{}\n{}\n'.format(
+            request.values, request.data))
