@@ -43,6 +43,7 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip, rank
+from pybossa.util import handle_content_type, redirect_content_type
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
@@ -138,12 +139,13 @@ def redirect_old_draft(page):
 def index(page):
     """List projects in the system"""
     if cached_projects.n_count('featured') > 0:
-        return project_index(page, cached_projects.get_all_featured, 'featured',
-                         True, False)
+        return project_index(page, cached_projects.get_all_featured,
+                             'featured',
+                             True, False)
     else:
         categories = cached_cat.get_all()
         cat_short_name = categories[0].short_name
-        return redirect(url_for('.project_cat_index', category=cat_short_name))
+        return redirect_content_type(url_for('.project_cat_index', category=cat_short_name))
 
 
 def project_index(page, lookup, category, fallback, use_count):
@@ -185,11 +187,12 @@ def project_index(page, lookup, category, fallback, use_count):
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
-        "categories": categories}
+        "categories": categories,
+        "template": '/projects/index.html'}
 
     if use_count:
         template_args.update({"count": count})
-    return render_template('/projects/index.html', **template_args)
+    return handle_content_type(template_args)
 
 
 @blueprint.route('/category/draft/', defaults={'page': 1})
