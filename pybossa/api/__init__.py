@@ -63,6 +63,7 @@ from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
+from pybossa.cache.helpers import n_available_tasks
 
 blueprint = Blueprint('api', __name__)
 
@@ -254,10 +255,11 @@ def user_progress(project_id=None, short_name=None):
 
     Return a JSON object with two fields regarding the tasks for the user:
         { 'done': 10,
-          'total: 100
+          'total: 100,
+          'remaining': 90
         }
        This will mean that the user has done a 10% of the available tasks for
-       him
+       him and 90 tasks are yet to be submitted
 
     """
     if project_id or short_name:
@@ -274,7 +276,8 @@ def user_progress(project_id=None, short_name=None):
             else:
                 query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
-            tmp = dict(done=taskrun_count, total=n_tasks(project.id))
+            num_available_tasks = n_available_tasks(project.id, current_user.id)
+            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
