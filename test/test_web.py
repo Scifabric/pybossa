@@ -1443,7 +1443,38 @@ class TestWeb(web.Helper):
         assert Fixtures.project_short_name in res.data, res.data
 
     @with_context
-    def test_06_featured_apps(self):
+    def test_06_featured_project_json(self):
+        """Test WEB JSON projects index shows featured projects in all the pages works"""
+        self.create()
+
+        project = db.session.query(Project).get(1)
+        project.featured = True
+        db.session.add(project)
+        db.session.commit()
+        # Update one task to have more answers than expected
+        task = db.session.query(Task).get(1)
+        task.n_answers = 1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(Task).get(1)
+        cat = db.session.query(Category).get(1)
+        url = '/project/category/featured/'
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'pagination' in data.keys(), data
+        assert 'active_cat' in data.keys(), data
+        assert 'categories' in data.keys(), data
+        assert 'projects' in data.keys(), data
+        assert data['pagination']['next'] is False, data
+        assert data['pagination']['prev'] is False, data
+        assert data['pagination']['total'] == 1L, data
+        assert data['active_cat']['name'] == 'Featured', data
+        assert len(data['projects']) == 1, data
+        assert data['projects'][0]['id'] == project.id, data
+
+
+    @with_context
+    def test_06_featured_projects(self):
         """Test WEB projects index shows featured projects in all the pages works"""
         self.create()
 
