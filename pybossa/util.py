@@ -71,6 +71,10 @@ def handle_content_type(data):
                         cat = cat.to_public_json()
                     tmp.append(cat)
                 data[item] = tmp
+            if (item == 'active_cat'):
+                if type(data[item]) != dict:
+                    cat = data[item].to_public_json()
+                data[item] = cat
             if (item == 'users'):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'found'):
@@ -81,6 +85,7 @@ def handle_content_type(data):
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
+            print data
             return jsonify(data)
     else:
         template = data['template']
