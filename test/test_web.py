@@ -1583,6 +1583,7 @@ class TestWeb(web.Helper):
         assert 'title' in data, res.data
         # private information
         assert 'api_key' in data['owner'], res.data
+        assert 'email_addr' in data['owner'], res.data
         assert 'secret_key' in data['project'], res.data
         assert 'owner_id' in data['project'], res.data
 
@@ -1608,6 +1609,7 @@ class TestWeb(web.Helper):
         assert 'title' in data, res.data
         # private information
         assert 'api_key' not in data['owner'], res.data
+        assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
         assert 'owner_id' not in data['project'], res.data
 
@@ -1632,6 +1634,7 @@ class TestWeb(web.Helper):
         assert 'title' in data, res.data
         # private information
         assert 'api_key' not in data['owner'], res.data
+        assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
         assert 'owner_id' not in data['project'], res.data
 
