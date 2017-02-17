@@ -551,17 +551,21 @@ def settings(short_name):
     ensure_authorized_to('update', project)
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return render_template('/projects/settings.html',
-                           project=project,
-                           owner=owner,
-                           n_tasks=n_tasks,
-                           overall_progress=overall_progress,
-                           n_task_runs=n_task_runs,
-                           last_activity=last_activity,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
-                           title=title,
-                           pro_features=pro)
+    owner_serialized = cached_users.get_user_summary(owner.name)
+    response = dict(template='/projects/settings.html',
+                    project=project,
+                    owner=owner_serialized,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_projects.n_completed_tasks(
+                        project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(
+                        project.get('id')),
+                    title=title,
+                    pro_features=pro)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
