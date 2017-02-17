@@ -2411,3 +2411,36 @@ Gives you the list of featured projects.
       "template": "/projects/index.html",
       "title": "Projects"
     }
+
+Project Creation
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/new**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Gives you the list of required fields in the form to create a project.
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+* **form**: The form fields that need to be sent for creating the project. It contains the CSRF token for validating the POST, as well as an errors field in case that something is wrong.
+
+
+
+**Example output**
+
+.. code-block:: python
+    {
+      "errors": false,
+      "form": {
+        "csrf": "token",
+        "description": null,
+        "errors": {},
+        "long_description": null,
+        "name": null,
+        "short_name": null
+      },
+      "template": "projects/new.html",
+      "title": "Create a Project"
+    }
