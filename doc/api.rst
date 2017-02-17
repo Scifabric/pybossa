@@ -1347,6 +1347,146 @@ It returns a JSON object with the following information:
   ]
 }
 
+Project shortname
+~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project information and owner information.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for logged in user JohnDoe:
+
+.. code-block:: python
+    {
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "akjhfd85-8afd6-48af-f7afg-kjhsfdlkjhf1",
+        "confirmation_email_sent": false,
+        "created": "2014-08-11T08:59:32.079599",
+        "email_addr": "johndoe@johndoe.com",
+        "facebook_user_id": null,
+        "fullname": "John Doe",
+        "google_user_id": null,
+        "id": 1234,
+        "info": {
+          "container": "user_1234"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56,
+        "total": 11093,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 2,
+        "contacted": true,
+        "contrib_button": "can_contribute",
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 4567,
+        "info": {
+          "task_presenter": "<div> .... "
+        },
+        "long_description": "flickr678\r\n",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "flickr678",
+        "owner_id": 9876,
+        "published": true,
+        "secret_key": "veryverysecretkey",
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626",
+        "webhook": null
+      },
+      "template": "/projects/project.html",
+      "title": "Project: flickr678"
+    }
+
+Anonymous and other user output:
+
+.. code-block:: python
+    {
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": null,
+          "container": "user_4953"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "id": 4567,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626"
+      },
+      "template": "/projects/project.html",
+      "title": "Project: flickr678"
+    }
+
 
 Leaderboard
 ~~~~~~~~~~~
