@@ -2073,6 +2073,49 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_20_json_project_index_draft(self, mock):
+        """Test WEB JSON Project Index draft works"""
+        # Create root
+        self.register()
+        self.new_project()
+        self.signout()
+        # Create a user
+        self.register(fullname="jane", name="jane", email="jane@jane.com")
+        self.signout()
+
+        # As Anonymous
+        res = self.app_get_json('/project/category/draft/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous should not see draft apps"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # As authenticated but not admin
+        self.signin(email="jane@jane.com", password="p4ssw0rd")
+        res = self.app_get_json('/project/category/draft/', follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 403, "Non-admin should not see draft apps"
+        assert data.get('code') == 403, data
+        self.signout()
+
+        # As Admin
+        self.signin()
+        res = self.app_get_json('/project/category/draft/')
+        data = json.loads(res.data)
+        project = project_repo.get(1)
+        assert 'pagination' in data.keys(), data
+        assert 'active_cat' in data.keys(), data
+        assert 'categories' in data.keys(), data
+        assert 'projects' in data.keys(), data
+        assert data['pagination']['next'] is False, data
+        assert data['pagination']['prev'] is False, data
+        assert data['pagination']['total'] == 1L, data
+        assert data['active_cat']['name'] == 'Draft', data
+        assert len(data['projects']) == 1, data
+        assert data['projects'][0]['id'] == project.id, data
+
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_20_app_index_draft(self, mock):
         """Test WEB Project Index draft works"""
         # Create root
