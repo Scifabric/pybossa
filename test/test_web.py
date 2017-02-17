@@ -1471,6 +1471,7 @@ class TestWeb(web.Helper):
         # private information
         assert 'api_key' in data['owner'], res.data
         assert 'secret_key' in data['project'], res.data
+        assert 'owner_id' in data['project'], res.data
 
         # res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         # assert_raises(ValueError, json.loads, res.data)
@@ -1495,6 +1496,7 @@ class TestWeb(web.Helper):
         # private information
         assert 'api_key' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
+        assert 'owner_id' not in data['project'], res.data
 
         # res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         # assert res.status == '200 OK', res.status
@@ -1518,6 +1520,7 @@ class TestWeb(web.Helper):
         # private information
         assert 'api_key' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
+        assert 'owner_id' not in data['project'], res.data
 
         # res = self.app.get('/project/sampleapp/settings')
         # assert res.status == '403 FORBIDDEN', res.status
