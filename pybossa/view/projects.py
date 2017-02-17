@@ -216,12 +216,13 @@ def project_cat_index(category, page):
 @login_required
 def new():
     ensure_authorized_to('create', Project)
-    form = ProjectForm(request.form)
+    form = ProjectForm(request.body)
 
     def respond(errors):
-        return render_template('projects/new.html',
-                               title=gettext("Create a Project"),
-                               form=form, errors=errors)
+        response = dict(template='projects/new.html',
+                        title=gettext("Create a Project"),
+                        form=form, errors=errors)
+        return handle_content_type(response)
 
     def _description_from_long_description():
         if form.description.data:
@@ -248,12 +249,12 @@ def new():
     category_by_default = cached_cat.get_all()[0]
 
     project = Project(name=form.name.data,
-              short_name=form.short_name.data,
-              description=_description_from_long_description(),
-              long_description=form.long_description.data,
-              owner_id=current_user.id,
-              info=info,
-              category_id=category_by_default.id)
+                      short_name=form.short_name.data,
+                      description=_description_from_long_description(),
+                      long_description=form.long_description.data,
+                      owner_id=current_user.id,
+                      info=info,
+                      category_id=category_by_default.id)
 
     project_repo.save(project)
 
@@ -265,10 +266,11 @@ def new():
           gettext('Guide and Documentation') +
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PYBOSSA.JS, etc.'),
-          'info')
+          'success')
     auditlogger.add_log_entry(None, project, current_user)
 
-    return redirect(url_for('.update', short_name=project.short_name))
+    return redirect_content_type(url_for('.update',
+                                         short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
