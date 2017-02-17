@@ -21,9 +21,14 @@ from helper import web
 from mock import patch
 from factories import CategoryFactory
 from pybossa.messages import *
+from pybossa.core import project_repo
 
 
 class TestJsonProject(web.Helper):
+
+    def setUp(self):
+        super(TestJsonProject, self).setUp()
+        CategoryFactory.create()
 
     @with_context
     def test_project_new_anon(self):
@@ -38,7 +43,6 @@ class TestJsonProject(web.Helper):
     def test_project_new_auth(self):
         """Test JSON PROJECT (GET/POST) New works."""
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
-            CategoryFactory.create()
             self.register()
             url = '/project/new'
             res = self.app_get_json(url, follow_redirects=True)
@@ -72,4 +76,6 @@ class TestJsonProject(web.Helper):
             assert data.get('status') == SUCCESS, data
             url_next = '/project/%s/update' % project['short_name']
             assert data.get('next') == url_next, data
-
+            db_project = project_repo.get(1)
+            err_msg = "It should be the same project"
+            assert db_project.name == project['name'], err_msg
