@@ -1613,9 +1613,7 @@ class TestWeb(web.Helper):
         assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
-        assert res.status == '200 OK', res.status
-        # err_msg = "Anonymous user should be redirected to sign in page"
-        # assert "Please sign in to access this page" in res.data, err_msg
+        assert res.status != '200 OK', res.status
 
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
@@ -1638,8 +1636,8 @@ class TestWeb(web.Helper):
         assert 'secret_key' not in data['project'], res.data
         assert 'owner_id' not in data['project'], res.data
 
-        # res = self.app.get('/project/sampleapp/settings')
-        # assert res.status == '403 FORBIDDEN', res.status
+        res = self.app_get_json('/project/sampleapp/settings')
+        assert res.status != '200 OK', res.status
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
