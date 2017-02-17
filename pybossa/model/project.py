@@ -142,7 +142,17 @@ class Project(db.Model, DomainObject):
         if not self.has_presenter():
             return None
 
-        headers = set(re.findall('\.info\.(\w+)\W', self.info.get('task_presenter')))
+        headers = set()
+        search_backward_stop = 0
+        for match in re.finditer('\.info\.([a-zA-Z0-9_]+)', self.info.get('task_presenter')):
+            comment_start = self.info.get('task_presenter').rfind('/*', search_backward_stop, match.start())
+            if comment_start > -1:
+                search_backward_stop = comment_start
+                comment_end = self.info.get('task_presenter').rfind('*/', search_backward_stop, match.start())
+                if comment_end < 0:
+                    continue
+            headers.add(match.group(1))
+            search_backward_stop = match.end()
 
         if len(headers) < 1:
             return None
