@@ -1487,6 +1487,32 @@ Anonymous and other user output:
       "title": "Project: flickr678"
     }
 
+Project settings
+~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/settings**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project information and owner information.
+Only works for authenticated users for their own projects (or admins).
+Anonymous users will get a 302 to login page.
+Logged in users with access rights will get a 403 when it's not their own project.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+The example output matches **/project/<short_name>/**
 
 Leaderboard
 ~~~~~~~~~~~
