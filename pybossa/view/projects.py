@@ -551,20 +551,10 @@ def settings(short_name):
     ensure_authorized_to('update', project)
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-
-    if owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
-
+    owner_serialized = cached_users.get_user_summary(owner.name)
     response = dict(template='/projects/settings.html',
-                    project=project_sanitized,
-                    owner=owner_sanitized,
+                    project=project,
+                    owner=owner_serialized,
                     n_tasks=n_tasks,
                     overall_progress=overall_progress,
                     n_task_runs=n_task_runs,

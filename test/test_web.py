@@ -1589,6 +1589,23 @@ class TestWeb(web.Helper):
 
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '200 OK', res.status
+        data = json.loads(res.data)
+        assert 'last_activity' in data, res.data
+        assert 'n_completed_tasks' in data, res.data
+        assert 'n_task_runs' in data, res.data
+        assert 'n_tasks' in data, res.data
+        assert 'n_volunteers' in data, res.data
+        assert 'overall_progress' in data, res.data
+        assert 'owner' in data, res.data
+        assert 'pro_features' in data, res.data
+        assert 'project' in data, res.data
+        assert 'template' in data, res.data
+        assert 'title' in data, res.data
+        # private information
+        assert 'api_key' in data['owner'], res.data
+        assert 'email_addr' in data['owner'], res.data
+        assert 'secret_key' in data['project'], res.data
+        assert 'owner_id' in data['project'], res.data
 
         self.signout()
 
@@ -1613,7 +1630,7 @@ class TestWeb(web.Helper):
         assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
-        assert res.status != '200 OK', res.status
+        assert res.status == '302 FOUND', res.status
 
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
@@ -1637,7 +1654,7 @@ class TestWeb(web.Helper):
         assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
-        assert res.status != '200 OK', res.status
+        assert res.status == '403 FORBIDDEN', res.status
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
