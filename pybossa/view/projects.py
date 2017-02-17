@@ -514,7 +514,10 @@ def details(short_name):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        project_sanitized = Project().to_public_json(project)
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project)
+        else:    # HTML
+            project_sanitized = project
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
     template_args = {"project": project_sanitized,
                      "title": title,
