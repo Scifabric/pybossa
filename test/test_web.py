@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -279,8 +279,18 @@ class TestWeb(web.Helper):
         assert data['code'] == 404, res.status_code
 
         self.create()
-        res = self.app.get('/account/',
-                           content_type='application/json')
+        res = self.app_get_json('/account/')
+        print res.data
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        err_msg = "There should be a Community page"
+        assert data['title'] == 'Community', err_msg
+        err_msg = "There should be a next, prev item in pagination"
+        assert data['pagination']['next'] is False, err_msg
+        assert data['pagination']['prev'] is False, err_msg
+        assert data['pagination']['per_page'] == 24, err_msg
+        # page 1 should also work
+        res = self.app_get_json('/account/page/1')
         print res.data
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
@@ -664,8 +674,80 @@ class TestWeb(web.Helper):
 
         res = self.app.post('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
-        assert self.html_title() in res.data, res
+        assert "Account validation" in res.data, res
         assert "Just one more step, please" in res.data, res.data
+        assert_raises(ValueError, json.loads, res.data)
+
+    @with_context
+    def test_register_post_valid_data_validation_enabled_json(self):
+        """Test WEB register post with valid form data and account validation
+        enabled for JSON"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert data['status'] == 'sent'
+        assert data['template'] == 'account/account_validation.html'
+        assert data['title'] == 'Account validation'
+
+    @with_context
+    def test_register_post_valid_data_validation_enabled_wrong_data_json(self):
+        """Test WEB register post with valid form data and account validation
+        enabled for JSON"""
+        from flask import current_app
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="anotherp4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert data['status'] == 'error'
+        assert data['form']['errors']['password'][0] == 'Passwords must match'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'email_addr' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'fullname' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert 'name' in data['form']['errors']
+        assert data['status'] == 'error'
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="wrongemail")
+        res = self.app_post_json('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = json.loads(res.data)
+        assert data['status'] == 'error'
+        assert data['form']['errors']['email_addr'][0] == 'Invalid email address.'
 
     @with_context
     @patch('pybossa.util.redirect', wraps=redirect)
@@ -1361,7 +1443,38 @@ class TestWeb(web.Helper):
         assert Fixtures.project_short_name in res.data, res.data
 
     @with_context
-    def test_06_featured_apps(self):
+    def test_06_featured_project_json(self):
+        """Test WEB JSON projects index shows featured projects in all the pages works"""
+        self.create()
+
+        project = db.session.query(Project).get(1)
+        project.featured = True
+        db.session.add(project)
+        db.session.commit()
+        # Update one task to have more answers than expected
+        task = db.session.query(Task).get(1)
+        task.n_answers = 1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(Task).get(1)
+        cat = db.session.query(Category).get(1)
+        url = '/project/category/featured/'
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'pagination' in data.keys(), data
+        assert 'active_cat' in data.keys(), data
+        assert 'categories' in data.keys(), data
+        assert 'projects' in data.keys(), data
+        assert data['pagination']['next'] is False, data
+        assert data['pagination']['prev'] is False, data
+        assert data['pagination']['total'] == 1L, data
+        assert data['active_cat']['name'] == 'Featured', data
+        assert len(data['projects']) == 1, data
+        assert data['projects'][0]['id'] == project.id, data
+
+
+    @with_context
+    def test_06_featured_projects(self):
         """Test WEB projects index shows featured projects in all the pages works"""
         self.create()
 
