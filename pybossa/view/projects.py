@@ -43,7 +43,7 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
-                          handle_content_type)
+                          handle_content_type, redirect_content_type)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
