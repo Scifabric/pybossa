@@ -1550,7 +1550,6 @@ class TestWeb(web.Helper):
         assert res.status == '403 FORBIDDEN', res.status
 
     @with_context
-
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_10_get_application_json(self, Mock, mock2):
