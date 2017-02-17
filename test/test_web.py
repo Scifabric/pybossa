@@ -1587,9 +1587,8 @@ class TestWeb(web.Helper):
         assert 'secret_key' in data['project'], res.data
         assert 'owner_id' in data['project'], res.data
 
-        # res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
-        # assert_raises(ValueError, json.loads, res.data)
-        # assert res.status == '200 OK', res.status
+        res = self.app_get_json('/project/sampleapp/settings')
+        assert res.status == '200 OK', res.status
 
         self.signout()
 
@@ -1620,6 +1619,7 @@ class TestWeb(web.Helper):
 
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
+        res = self.app_get_json('/project/sampleapp/')
         data = json.loads(res.data)
         assert 'last_activity' in data, res.data
         assert 'n_completed_tasks' in data, res.data
