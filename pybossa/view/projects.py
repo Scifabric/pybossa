@@ -510,10 +510,15 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    project = Project().to_public_json(project) # TODO: make non public for authorized
-    template_args = {"project": project,
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        project_sanitized = Project().to_public_json(project)
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    template_args = {"project": project_sanitized,
                      "title": title,
-                     "owner":  cached_users.public_get_user_summary(owner.name),
+                     "owner":  owner_sanitized,
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
