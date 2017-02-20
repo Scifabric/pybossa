@@ -36,9 +36,6 @@ class WebhookRepository(Repository):
 
     def filter_by(self, limit=None, offset=0, **filters):
         return self._filter_by(Webhook, limit, offset, **filters)
-        #query = self.db.session.query(Webhook).filter_by(**filters)
-        #query = query.order_by(Webhook.id).limit(limit).offset(offset)
-        #return query.all()
 
     def save(self, webhook):
         self._validate_can_be('saved', webhook)
