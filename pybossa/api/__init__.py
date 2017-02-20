@@ -163,7 +163,7 @@ def _retrieve_new_task(project_id):
 @blueprint.route('/project/<short_name>/userprogress')
 @blueprint.route('/app/<int:project_id>/userprogress')
 @blueprint.route('/project/<int:project_id>/userprogress')
-@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+#@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def user_progress(project_id=None, short_name=None):
     """API endpoint for user progress.
 

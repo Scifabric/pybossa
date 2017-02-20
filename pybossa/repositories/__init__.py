@@ -64,7 +64,7 @@ class Repository(object):
         if len(clauses) != 1:
             return and_(*clauses), queries, headlines, order_by_ranks
         else:
-            return (and_(*clauses), )
+            return (and_(*clauses), ), queries, headlines, order_by_ranks
 
 
     def handle_info_json(self, model, info, fulltextsearch=None):
@@ -104,6 +104,10 @@ class Repository(object):
         if filters.get('owner_id'):
             owner_id = filters.get('owner_id')
             del filters['owner_id']
+        data = self.generate_query_from_keywords(model,
+                         fulltextsearch,
+                         **filters)
+
         query_args, queries, headlines, orders = self.generate_query_from_keywords(model,
                                                                fulltextsearch,
                                                                **filters)
