@@ -38,7 +38,7 @@ PYBOSSA.
 import json
 from pybossa.model.project import Project
 from sqlalchemy.sql import and_
-from sqlalchemy import cast, Text, func
+from sqlalchemy import cast, Text, func, Date
 from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
@@ -125,6 +125,27 @@ class Repository(object):
             query = query.add_column(orders[0])
             query = query.order_by('rank DESC')
         return query
+
+    def filter_by(self, model, limit=None, offset=0, yielded=False,
+                  last_id=None, fulltextsearch=None, desc=False,
+                  **filters):
+        """Filter by using several arguments and ordering items."""
+        query = self.create_context(filters, fulltextsearch, model)
+        if last_id:
+            query = query.filter(model.id > last_id)
+            query = query.order_by(model.id).limit(limit)
+        else:
+            if desc:
+                query = query.order_by(cast(model.created, Date).desc())\
+                        .limit(limit).offset(offset)
+            else:
+                query = query.order_by(model.id).limit(limit).offset(offset)
+
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
+        return query.all()
+
 
 from project_repository import ProjectRepository
 from user_repository import UserRepository
