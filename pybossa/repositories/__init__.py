@@ -49,7 +49,6 @@ class Repository(object):
 
     def generate_query_from_keywords(self, model, fulltextsearch=None,
                                      **kwargs):
-        print model
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
                        if key != 'info']
@@ -116,8 +115,15 @@ class Repository(object):
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
-            query = self.db.session.query(model)\
-                        .filter(model.project_id.in_(subquery), *query_args)
+            if (model != Project):
+                query = self.db.session.query(model)\
+                            .filter(model.project_id.in_(subquery),
+                                    *query_args)
+            else:
+                query = self.db.session.query(model)\
+                            .filter(model.id.in_(subquery),
+                                    *query_args)
+
         else:
             query = self.db.session.query(model).filter(*query_args)
         if len(headlines) > 0:
@@ -137,8 +143,12 @@ class Repository(object):
             query = query.order_by(model.id).limit(limit)
         else:
             if desc:
-                query = query.order_by(cast(model.created, Date).desc())\
-                        .limit(limit).offset(offset)
+                if model != Project:
+                    query = query.order_by(cast(model.created, Date).desc())\
+                            .limit(limit).offset(offset)
+                else:
+                    query = query.order_by(cast(model.updated, Date).desc())\
+                            .limit(limit).offset(offset)
             else:
                 query = query.order_by(model.id).limit(limit).offset(offset)
 
