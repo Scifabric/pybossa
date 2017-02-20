@@ -52,6 +52,7 @@ class TaskRepository(Repository):
                         .limit(limit).offset(offset)
             else:
                 query = query.order_by(Task.id).limit(limit).offset(offset)
+
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)

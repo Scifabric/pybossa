@@ -78,7 +78,7 @@ class APIBase(MethodView):
         return ''
 
     @jsonpify
-    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    #@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
         """Get an object.
 
@@ -96,19 +96,30 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            raise e
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
+        import inspect
         if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
-        for item, headline in query_result:
+        for result in query_result:
             try:
+                if (result.__class__ != self.__class__):
+                    (item, headline, rank) = result
+                else:
+                    item = result
+                    headline = None
+                    rank = None
                 datum = self._create_dict_from_model(item)
-                datum['headline'] = headline
+                if headline:
+                    datum['headline'] = headline
+                if rank:
+                    datum['rank'] = rank
                 ensure_authorized_to('read', item)
                 items.append(datum)
             except (Forbidden, Unauthorized):
