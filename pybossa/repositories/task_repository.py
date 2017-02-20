@@ -42,7 +42,7 @@ class TaskRepository(Repository):
                         last_id=None, fulltextsearch=None, desc=False,
                         **filters):
 
-        return self.filter_by(Task, limit, offset, yielded, last_id,
+        return self._filter_by(Task, limit, offset, yielded, last_id,
                               fulltextsearch, desc, **filters)
 
     def count_tasks_with(self, **filters):
@@ -63,20 +63,9 @@ class TaskRepository(Repository):
     def filter_task_runs_by(self, limit=None, offset=0, last_id=None,
                             yielded=False, fulltextsearch=None,
                             desc=False, **filters):
-        query = self.create_context(filters, fulltextsearch, TaskRun)
-        if last_id:
-            query = query.filter(TaskRun.id > last_id)
-            query = query.order_by(TaskRun.id).limit(limit)
-        else:
-            if desc:
-                query = query.order_by(cast(TaskRun.created, Date).desc())\
-                        .limit(limit).offset(offset)
-            else:
-                query = query.order_by(TaskRun.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(TaskRun, limit, offset, yielded, last_id,
+                              fulltextsearch, desc, **filters)
+
 
     def count_task_runs_with(self, **filters):
         query_args, _, _, _ = self.generate_query_from_keywords(TaskRun, **filters)

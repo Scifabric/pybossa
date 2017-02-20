@@ -126,7 +126,7 @@ class Repository(object):
             query = query.order_by('rank DESC')
         return query
 
-    def filter_by(self, model, limit=None, offset=0, yielded=False,
+    def _filter_by(self, model, limit=None, offset=0, yielded=False,
                   last_id=None, fulltextsearch=None, desc=False,
                   **filters):
         """Filter by using several arguments and ordering items."""
