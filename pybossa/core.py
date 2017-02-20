@@ -50,7 +50,7 @@ def create_app(run_as_server=True):
     setup_babel(app)
     setup_markdown(app)
     setup_db(app)
-    setup_repositories()
+    setup_repositories(app)
     setup_exporter(app)
     mail.init_app(app)
     sentinel.init_app(app)
@@ -175,7 +175,7 @@ def setup_db(app):
             return response_or_exc
 
 
-def setup_repositories():
+def setup_repositories(app):
     """Setup repositories."""
     from pybossa.repositories import UserRepository
     from pybossa.repositories import ProjectRepository
@@ -191,10 +191,11 @@ def setup_repositories():
     global auditlog_repo
     global webhook_repo
     global result_repo
+    language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
     blog_repo = BlogRepository(db)
-    task_repo = TaskRepository(db)
+    task_repo = TaskRepository(db, language)
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)

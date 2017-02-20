@@ -105,10 +105,12 @@ class APIBase(MethodView):
         if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
-        for item in query_result:
+        for item, headline in query_result:
             try:
-                items.append(self._create_dict_from_model(item))
+                datum = self._create_dict_from_model(item)
+                datum['headline'] = headline
                 ensure_authorized_to('read', item)
+                items.append(datum)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()

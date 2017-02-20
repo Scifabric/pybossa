@@ -39,7 +39,7 @@ class TaskRepository(Repository):
         return self.db.session.query(Task).filter(*filters).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
-                        last_id=None, fulltextsearch=None, desc=False,
+                        last_id=None, fulltextsearch=None, language='english', desc=False,
                         **filters):
 
         query = self.create_context(filters, fulltextsearch, Task)
@@ -75,7 +75,7 @@ class TaskRepository(Repository):
     def filter_task_runs_by(self, limit=None, offset=0, last_id=None,
                             yielded=False, fulltextsearch=None,
                             desc=False, **filters):
-        query = self.create_context(filters, fulltextsearch, TaskRun)
+        query = self.create_context(filters, fulltextsearch, language, TaskRun)
         if last_id:
             query = query.filter(TaskRun.id > last_id)
             query = query.order_by(TaskRun.id).limit(limit)

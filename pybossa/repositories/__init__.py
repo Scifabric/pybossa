@@ -43,22 +43,31 @@ from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
 
-    def __init__(self, db):
+    def __init__(self, db, language='english'):
         self.db = db
+        self.language = language
 
-    def generate_query_from_keywords(self, model, fulltextsearch=None, **kwargs):
+    def generate_query_from_keywords(self, model, fulltextsearch=None,
+                                     **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
                        if key != 'info']
         if 'info' in kwargs.keys():
-            clauses = clauses + self.handle_info_json(model, kwargs['info'],
-                                                      fulltextsearch)
-        return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+            #clauses = clauses + self.handle_info_json(model, kwargs['info'],
+            #                                          fulltextsearch)
+            queries, headlines = self.handle_info_json(model, kwargs['info'],
+                                                       fulltextsearch)
+            clauses = clauses + queries
+        if len(clauses) != 1:
+            return and_(*clauses), queries, headlines
+        else:
+            return (and_(*clauses), )
 
 
     def handle_info_json(self, model, info, fulltextsearch=None):
         """Handle info JSON query filter."""
         clauses = []
+        headlines = []
         if '::' in info:
             pairs = info.split('|')
             for pair in pairs:
@@ -68,6 +77,8 @@ class Repository(object):
                         vector = _entity_descriptor(model, 'info')[k].astext
                         clause = func.to_tsvector(vector).match(v)
                         clauses.append(clause)
+                        headline = func.ts_headline(self.language, vector, func.to_tsquery(v))
+                        headlines.append(headline)
                     else:
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
@@ -75,7 +86,7 @@ class Repository(object):
             info = json.dumps(info)
             clauses.append(cast(_entity_descriptor(model, 'info'),
                                 Text) == info)
-        return clauses
+        return clauses, headlines
 
 
     def create_context(self, filters, fulltextsearch, model):
@@ -86,10 +97,9 @@ class Repository(object):
         if filters.get('owner_id'):
             owner_id = filters.get('owner_id')
             del filters['owner_id']
-        query_args = self.generate_query_from_keywords(model,
+        query_args, queries, headlines = self.generate_query_from_keywords(model,
                                                        fulltextsearch,
                                                        **filters)
-
         if owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
@@ -98,6 +108,8 @@ class Repository(object):
                         .filter(model.project_id.in_(subquery), *query_args)
         else:
             query = self.db.session.query(model).filter(*query_args)
+
+        query = query.add_column(headlines[0])
         return query
 
 from project_repository import ProjectRepository
