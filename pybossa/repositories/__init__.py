@@ -119,7 +119,7 @@ class Repository(object):
             query = query.add_column(headlines[0])
         if len(orders) > 0:
             query = query.add_column(orders[0])
-            query = query.order_by('rank')
+            query = query.order_by('rank DESC')
         return query
 
 from project_repository import ProjectRepository
