@@ -163,7 +163,7 @@ class TestResultRepository(Test):
         info = 'foo::word'
         res = self.result_repo.filter_by(info=info, fulltextsearch='1')
         assert len(res) == 1, len(res)
-        assert res[0].info['foo'] == text, res[0]
+        assert res[0][0].info['foo'] == text, res[0]
 
         res = self.result_repo.filter_by(info=info)
         assert len(res) == 0, len(res)
@@ -179,7 +179,7 @@ class TestResultRepository(Test):
         info = 'foo::word&bar|bar::foo'
         res = self.result_repo.filter_by(info=info, fulltextsearch='1')
         assert len(res) == 1, len(res)
-        assert res[0].info['foo'] == text, res[0]
+        assert res[0][0].info['foo'] == text, res[0]
 
 
     def test_info_json_search_result(self):
