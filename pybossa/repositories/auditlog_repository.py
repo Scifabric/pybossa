@@ -18,11 +18,12 @@
 
 from sqlalchemy.exc import IntegrityError
 
+from pybossa.repositories import Repository
 from pybossa.model.auditlog import Auditlog
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-class AuditlogRepository(object):
+class AuditlogRepository(Repository):
 
     def __init__(self, db):
         self.db = db
@@ -34,9 +35,7 @@ class AuditlogRepository(object):
         return self.db.session.query(Auditlog).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, **filters):
-        query = self.db.session.query(Auditlog).filter_by(**filters)
-        query = query.order_by(Auditlog.id).limit(limit).offset(offset)
-        return query.all()
+        return self._filter_by(Auditlog, limit, offset, **filters)
 
     def save(self, auditlog):
         self._validate_can_be('saved', auditlog)

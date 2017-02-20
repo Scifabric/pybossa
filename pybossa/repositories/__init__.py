@@ -49,6 +49,7 @@ class Repository(object):
 
     def generate_query_from_keywords(self, model, fulltextsearch=None,
                                      **kwargs):
+        print model
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
                        if key != 'info']
