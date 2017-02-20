@@ -19,11 +19,12 @@
 from sqlalchemy import or_, func
 from sqlalchemy.exc import IntegrityError
 
+from pybossa.repositories import Repository
 from pybossa.model.user import User
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-class UserRepository(object):
+class UserRepository(Repository):
 
     def __init__(self, db):
         self.db = db
@@ -44,16 +45,8 @@ class UserRepository(object):
                   fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
-        query = self.db.session.query(User).filter_by(**filters)
-        if last_id:
-            query = query.filter(User.id > last_id)
-            query = query.order_by(User.id).limit(limit)
-        else:
-            query = query.order_by(User.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(User, limit, offset, yielded,
+                               last_id, fulltextsearch, desc, **filters)
 
     def search_by_name(self, keyword):
         if len(keyword) == 0:
