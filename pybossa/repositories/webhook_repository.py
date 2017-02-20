@@ -18,11 +18,12 @@
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
+from pybossa.repositories import Repository
 from pybossa.model.webhook import Webhook
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-class WebhookRepository(object):
+class WebhookRepository(Repository):
 
     def __init__(self, db):
         self.db = db
@@ -34,9 +35,10 @@ class WebhookRepository(object):
         return self.db.session.query(Webhook).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, **filters):
-        query = self.db.session.query(Webhook).filter_by(**filters)
-        query = query.order_by(Webhook.id).limit(limit).offset(offset)
-        return query.all()
+        return self._filter_by(Webhook, limit, offset, **filters)
+        #query = self.db.session.query(Webhook).filter_by(**filters)
+        #query = query.order_by(Webhook.id).limit(limit).offset(offset)
+        #return query.all()
 
     def save(self, webhook):
         self._validate_can_be('saved', webhook)
