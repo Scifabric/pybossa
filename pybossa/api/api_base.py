@@ -78,7 +78,7 @@ class APIBase(MethodView):
         return ''
 
     @jsonpify
-    #@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
         """Get an object.
 
@@ -96,7 +96,6 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
-            raise e
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
