@@ -133,7 +133,6 @@ class TestApiCommon(TestAPI):
         taskrun_oc = TaskRunFactory.create(task=task_oc, user=users[0],
                                         info={'answer': 'annakarenina'})
         for p in projects:
-            print p.owner_id
             task_tmp = TaskFactory.create(project=p)
             TaskRunFactory.create(task=task_tmp)
 
