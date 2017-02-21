@@ -443,3 +443,17 @@ def publish_channel(sentinel, project_short_name, data, type, private=True):
         channel = "channel_%s_%s" % ("public", project_short_name)
     msg = dict(type=type, data=data)
     sentinel.master.publish(channel, json.dumps(msg))
+
+# See https://github.com/flask-restful/flask-restful/issues/332#issuecomment-63155660
+def fuzzyboolean(value):
+    if type(value) == bool:
+        return value
+
+    if not value:
+        raise ValueError("boolean type must be non-null")
+    value = value.lower()
+    if value in ('false', 'no', 'off', 'n', '0',):
+        return False
+    if value in ('true', 'yes', 'on', 'y', '1',):
+        return True
+    raise ValueError("Invalid literal for boolean(): {}".format(value))

@@ -38,7 +38,7 @@ PYBOSSA.
 import json
 from pybossa.model.project import Project
 from sqlalchemy.sql import and_
-from sqlalchemy import cast, Text, func, Date
+from sqlalchemy import cast, Text, func, Date, desc
 from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
@@ -133,25 +133,41 @@ class Repository(object):
             query = query.order_by('rank DESC')
         return query
 
+    def _set_orderby_desc(self, query, model, limit,
+                          last_id, offset, descending, orderby):
+        """Return an updated query with the proper orderby and desc."""
+        if orderby in ['created', 'updated', 'finish_time']:
+            if descending:
+                query = query.order_by(desc(
+                                            cast(getattr(model,
+                                                         orderby),
+                                                 Date)))
+            else:
+                query = query.order_by(cast(getattr(model, orderby), Date))
+        else:
+            if descending:
+                query = query.order_by(desc(getattr(model, orderby)))
+            else:
+                query = query.order_by(getattr(model, orderby))
+        if last_id:
+            query = query.limit(limit)
+        else:
+            query = query.limit(limit).offset(offset)
+        return query
+
+
     def _filter_by(self, model, limit=None, offset=0, yielded=False,
                   last_id=None, fulltextsearch=None, desc=False,
-                  **filters):
+                  orderby='id', **filters):
         """Filter by using several arguments and ordering items."""
         query = self.create_context(filters, fulltextsearch, model)
         if last_id:
             query = query.filter(model.id > last_id)
-            query = query.order_by(model.id).limit(limit)
+            query = self._set_orderby_desc(query, model, limit,
+                                           last_id, offset, desc, orderby)
         else:
-            if desc:
-                if model != Project:
-                    query = query.order_by(cast(model.created, Date).desc())\
-                            .limit(limit).offset(offset)
-                else:
-                    query = query.order_by(cast(model.updated, Date).desc())\
-                            .limit(limit).offset(offset)
-            else:
-                query = query.order_by(model.id).limit(limit).offset(offset)
-
+            query = self._set_orderby_desc(query, model, limit,
+                                           last_id, offset, desc, orderby)
         if yielded:
             limit = limit or 1
             return query.yield_per(limit)
