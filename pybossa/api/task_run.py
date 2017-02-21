@@ -66,7 +66,7 @@ class TaskRunAPI(APIBase):
         self._validate_project_and_task(taskrun, task)
         self._ensure_task_was_requested(task, guard)
         self._add_user_info(taskrun)
-        self._add_timestamps(taskrun, task.id, guard)
+        self._add_timestamps(taskrun, task, guard)
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
@@ -101,13 +101,13 @@ class TaskRunAPI(APIBase):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
         guard._remove_task_stamped(task, get_user_id_or_ip())
 
-    def _add_timestamps(self, taskrun, task_id, guard):
+    def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.now().isoformat()
 
         # /cachePresentedTime API only caches when there is a user_id
         # otherwise it returns an arbitrary valid timestamp so that answer can be submitted
-        if guard.retrieve_presented_timestamp(task_id, get_user_id_or_ip()):
-            created = self._validate_datetime(guard.retrieve_presented_timestamp(task_id, get_user_id_or_ip()))
+        if guard.retrieve_presented_timestamp(task, get_user_id_or_ip()):
+            created = self._validate_datetime(guard.retrieve_presented_timestamp(task, get_user_id_or_ip()))
         else:
             created = datetime.strptime(self.DEFAULT_DATETIME, self.DATETIME_FORMAT).isoformat()
 
