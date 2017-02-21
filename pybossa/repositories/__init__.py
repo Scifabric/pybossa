@@ -38,27 +38,40 @@ PYBOSSA.
 import json
 from pybossa.model.project import Project
 from sqlalchemy.sql import and_
-from sqlalchemy import cast, Text, func
+from sqlalchemy import cast, Text, func, Date, desc
 from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
 
-    def __init__(self, db):
+    def __init__(self, db, language='english'):
         self.db = db
+        self.language = language
 
-    def generate_query_from_keywords(self, model, fulltextsearch=None, **kwargs):
+    def generate_query_from_keywords(self, model, fulltextsearch=None,
+                                     **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
                        if key != 'info']
+        queries = []
+        headlines = []
+        order_by_ranks = []
         if 'info' in kwargs.keys():
-            clauses = clauses + self.handle_info_json(model, kwargs['info'],
-                                                      fulltextsearch)
-        return and_(*clauses) if len(clauses) != 1 else (and_(*clauses), )
+            #clauses = clauses + self.handle_info_json(model, kwargs['info'],
+            #                                          fulltextsearch)
+            queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
+                                                                       fulltextsearch)
+            clauses = clauses + queries
+        if len(clauses) != 1:
+            return and_(*clauses), queries, headlines, order_by_ranks
+        else:
+            return (and_(*clauses), ), queries, headlines, order_by_ranks
 
 
     def handle_info_json(self, model, info, fulltextsearch=None):
         """Handle info JSON query filter."""
         clauses = []
+        headlines = []
+        order_by_ranks = []
         if '::' in info:
             pairs = info.split('|')
             for pair in pairs:
@@ -68,6 +81,11 @@ class Repository(object):
                         vector = _entity_descriptor(model, 'info')[k].astext
                         clause = func.to_tsvector(vector).match(v)
                         clauses.append(clause)
+                        if len(headlines) == 0:
+                            headline = func.ts_headline(self.language, vector, func.to_tsquery(v))
+                            headlines.append(headline)
+                            order = func.ts_rank_cd(func.to_tsvector(vector), func.to_tsquery(v), 4).label('rank')
+                            order_by_ranks.append(order)
                     else:
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
@@ -75,7 +93,7 @@ class Repository(object):
             info = json.dumps(info)
             clauses.append(cast(_entity_descriptor(model, 'info'),
                                 Text) == info)
-        return clauses
+        return clauses, headlines, order_by_ranks
 
 
     def create_context(self, filters, fulltextsearch, model):
@@ -86,19 +104,75 @@ class Repository(object):
         if filters.get('owner_id'):
             owner_id = filters.get('owner_id')
             del filters['owner_id']
-        query_args = self.generate_query_from_keywords(model,
-                                                       fulltextsearch,
-                                                       **filters)
+        data = self.generate_query_from_keywords(model,
+                         fulltextsearch,
+                         **filters)
 
+        query_args, queries, headlines, orders = self.generate_query_from_keywords(model,
+                                                               fulltextsearch,
+                                                               **filters)
         if owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
-            query = self.db.session.query(model)\
-                        .filter(model.project_id.in_(subquery), *query_args)
+            if (model != Project):
+                query = self.db.session.query(model)\
+                            .filter(model.project_id.in_(subquery),
+                                    *query_args)
+            else:
+                query = self.db.session.query(model)\
+                            .filter(model.id.in_(subquery),
+                                    *query_args)
+
         else:
             query = self.db.session.query(model).filter(*query_args)
+        if len(headlines) > 0:
+            query = query.add_column(headlines[0])
+        if len(orders) > 0:
+            query = query.add_column(orders[0])
+            query = query.order_by('rank DESC')
         return query
+
+    def _set_orderby_desc(self, query, model, limit,
+                          last_id, offset, descending, orderby):
+        """Return an updated query with the proper orderby and desc."""
+        if orderby in ['created', 'updated', 'finish_time']:
+            if descending:
+                query = query.order_by(desc(
+                                            cast(getattr(model,
+                                                         orderby),
+                                                 Date)))
+            else:
+                query = query.order_by(cast(getattr(model, orderby), Date))
+        else:
+            if descending:
+                query = query.order_by(desc(getattr(model, orderby)))
+            else:
+                query = query.order_by(getattr(model, orderby))
+        if last_id:
+            query = query.limit(limit)
+        else:
+            query = query.limit(limit).offset(offset)
+        return query
+
+
+    def _filter_by(self, model, limit=None, offset=0, yielded=False,
+                  last_id=None, fulltextsearch=None, desc=False,
+                  orderby='id', **filters):
+        """Filter by using several arguments and ordering items."""
+        query = self.create_context(filters, fulltextsearch, model)
+        if last_id:
+            query = query.filter(model.id > last_id)
+            query = self._set_orderby_desc(query, model, limit,
+                                           last_id, offset, desc, orderby)
+        else:
+            query = self._set_orderby_desc(query, model, limit,
+                                           last_id, offset, desc, orderby)
+        if yielded:
+            limit = limit or 1
+            return query.yield_per(limit)
+        return query.all()
+
 
 from project_repository import ProjectRepository
 from user_repository import UserRepository

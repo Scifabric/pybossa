@@ -112,13 +112,8 @@ PYBOSSA, as it is really simple to check those values:
         pass # Do your stuff
 
 
-Operations
-----------
-
-The following operations are supported:
-
 List
-~~~~
+----
 
 List domain objects::
 
@@ -173,6 +168,21 @@ Finally, you can get a list of users by doing::
 
     GET http://{pybossa-site-url}/api/user
 
+Order by
+--------
+
+Any query can be ordered by an attribute of the domain object that you are querying. For example
+you can get a list of tasks ordered by ID::
+
+    GET http://{pybossa-site-url}/api/task?orderby=id
+
+If you want, you can order them in descending order::
+
+    GET http://{pybossa-site-url}/api/task?orderby=id&desc=true
+
+
+Check all the attritbutes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
+
 .. note::
     Please, notice that in order to keep users privacy, only their locale and
     nickname will be shared by default. Optionally, users can disable privacy
@@ -200,7 +210,7 @@ Finally, you can get a list of users by doing::
     like this: GET /api/project?last_id={{last_id}}.
 
 Get
-~~~
+---
 
 Get a specific domain object by id (by default any GET action will return only
 20 objects, you can get more or less objects using the **limit** option).
@@ -229,7 +239,7 @@ Any other error will return the same object but with the proper status code and
 error message.
 
 Search
-~~~~~~
+------
 
 Get a list of domain objects by its fields. Returns a list of domain objects
 matching the query::
@@ -262,8 +272,10 @@ For adding more keys::
 These parameters will be ANDs, so, it will return objects that have those keys with
 and **and** operator.
 
-It is also possible to use full text search queries within those first level keys. For
-searching like that all you have to do is adding the following argument::
+Full text search
+----------------
+
+It is also possible to use full text search queries within those first level keys (as seen before). For searching like that all you have to do is adding the following argument::
 
     info=key1::value1&fulltextsearch=1
 
@@ -277,6 +289,49 @@ Another option could be the following::
 This second query will return objects that has the words word1 and word2. It's important
 to escape the & operator with %26 to use the and operator.
 
+When you use the fulltextsearch argument, the API will return the objects enriched with the following two fields:
+
+ * **headline**: The matched words of the key1::value1 found, with <b></b> items to highlight them.
+ * **rank**: The ranking returned by the database. Ranking attempts to measure how relevant documents are to a particular query, so that when there are many matches the most relevant ones can be shown first.
+
+Here you have an example of the expected output for an api call like this:: 
+
+    /api/task?project_id=1&info=name::ipsum%26bravo&fulltextsearch=1 
+
+.. code-block:: python
+
+    [
+      {
+        "info": {
+          "url": "https://domain.com/img.png",
+          "name": "Lore ipsum delta bravo",
+        },
+        "n_answers": 1,
+        "quorum": 0,
+        "links": [
+          "<link rel='parent' title='project' href='http://localhost:5000/api/project/1'/>"
+        ],
+        "calibration": 0,
+        "headline": "Lore <b>ipsum</b> delta <b>bravo</b>",
+        "created": "2016-05-10T11:20:45.005725",
+        "rank": 0.05,
+        "state": "completed",
+        "link": "<link rel='self' title='task' href='http://localhost:5001/api/task/1'/>",
+        "project_id": 1,
+        "id": 1,
+        "priority_0": 0
+      },
+    ]
+
+.. note::
+	When you use the fulltextsearch API the results are always sorted by rank, showing first the most relevant ones to your query.
+
+.. note::
+    We use PostgreSQL ts_rank_cd with the following configuration: ts_rank_cd(textsearch, query, 4). For more details check the official documentation of PostgreSQL.
+
+.. note::
+	By default PYBOSSA uses English for the searches. You can customize this behavior using any of the supported languages by PostgreSQL changing the settings_local.py config variable: *FULLTEXTSEARCH_LANGUAGE* = 'spanish'. 
+
 .. note::
     By default all GET queries return a maximum of 20 objects unless the
     **limit** keyword is used to get more: limit=50. However, a maximum amount
@@ -287,15 +342,8 @@ to escape the & operator with %26 to use the and operator.
     list []
 
 
-Finally you can also get the results ordered by date of creation listing first the latest
-domain objects (projects, tasks, task runs and results) using the following argument
-in the URL::
-
-    GET http://server.com/api/project?desc=true
-
-
 Create
-~~~~~~
+------
 
 Create a domain object. Returns created domain object.::
 
@@ -321,7 +369,7 @@ If an error occurs, the action will return a JSON object like this:
 Where **target** will refer to a Project, Task or TaskRun object.
 
 Update
-~~~~~~
+------
 
 Update a domain object::
 
@@ -347,7 +395,7 @@ If an error occurs, the action will return a JSON object like this:
 Where **target** will refer to a project, Task or TaskRun object.
 
 Delete
-~~~~~~
+------
 
 Delete a domain object::
 
@@ -374,7 +422,7 @@ Where **target** will refer to a Project, Task or TaskRun object.
 
 
 Requesting a new task for current user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 You can request a new task for the current user (anonymous or authenticated)
 by::
@@ -391,7 +439,7 @@ available for the user, otherwise it will return **None**.
 
 
 Requesting the user's oAuth tokens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 A user who has registered or signed in with any of the third parties supported
 by PYBOSSA (currently Twitter, Facebook and Google) can request his own oAuth
@@ -408,7 +456,7 @@ Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 'facebook' or 'google'.
 
 Using your own user database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Since version v2.3.0 PYBOSSA supports external User IDs. This means that you can
 easily use your own database of users without having to registering them in the

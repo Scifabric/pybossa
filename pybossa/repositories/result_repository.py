@@ -39,20 +39,11 @@ class ResultRepository(Repository):
             filters['last_version'] = True
         if filters['last_version'] is False:
             filters.pop('last_version')
-        query = self.create_context(filters, fulltextsearch, Result)
-        if last_id:
-            query = query.filter(Result.id > last_id)
-            query = query.order_by(Result.id).limit(limit)
-        else:
-            if desc:
-                query = query.order_by(cast(Result.created, Date).desc())\
-                        .limit(limit).offset(offset)
-            else:
-                query = query.order_by(Result.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+
+        return self._filter_by(Result, limit, offset,
+                              yielded, last_id,
+                              fulltextsearch,
+                              desc, **filters)
 
     def update(self, result):
         self._validate_can_be('updated', result)

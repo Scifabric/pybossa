@@ -135,3 +135,5 @@ CORS_RESOURCES = {r"/api/*": {"origins": "*",
 
 FAILED_JOBS_RETRIES = 3
 FAILED_JOBS_MAILS = 7
+
+FULLTEXTSEARCH_LANGUAGE = 'english'

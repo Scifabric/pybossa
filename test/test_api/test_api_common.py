@@ -133,7 +133,6 @@ class TestApiCommon(TestAPI):
         taskrun_oc = TaskRunFactory.create(task=task_oc, user=users[0],
                                         info={'answer': 'annakarenina'})
         for p in projects:
-            print p.owner_id
             task_tmp = TaskFactory.create(project=p)
             TaskRunFactory.create(task=task_tmp)
 
@@ -224,8 +223,10 @@ class TestApiCommon(TestAPI):
 
     def test_jsonpify(self):
         """Test API jsonpify decorator works."""
-        res = self.app.get('/api/project/1?callback=mycallback')
+        project = ProjectFactory.create()
+        res = self.app.get('/api/project/%s?callback=mycallback' % project.id)
         err_msg = "mycallback should be included in the response"
+        print res.data
         assert "mycallback" in res.data, err_msg
         err_msg = "Status code should be 200"
         assert res.status_code == 200, err_msg

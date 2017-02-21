@@ -31,7 +31,7 @@ from flask import request, abort, Response
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-from pybossa.util import jsonpify
+from pybossa.util import jsonpify, fuzzyboolean
 from pybossa.core import ratelimits
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
@@ -102,13 +102,25 @@ class APIBase(MethodView):
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
+        import inspect
         if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
-        for item in query_result:
+        for result in query_result:
             try:
-                items.append(self._create_dict_from_model(item))
+                if (result.__class__ != self.__class__):
+                    (item, headline, rank) = result
+                else:
+                    item = result
+                    headline = None
+                    rank = None
+                datum = self._create_dict_from_model(item)
+                if headline:
+                    datum['headline'] = headline
+                if rank:
+                    datum['rank'] = rank
                 ensure_authorized_to('read', item)
+                items.append(datum)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
@@ -135,8 +147,8 @@ class APIBase(MethodView):
         """Returns a list with the results of the query"""
         repo_info = repos[self.__class__.__name__]
         if oid is None:
-            limit, offset = self._set_limit_and_offset()
-            results = self._filter_query(repo_info, limit, offset)
+            limit, offset, orderby = self._set_limit_and_offset()
+            results = self._filter_query(repo_info, limit, offset, orderby)
         else:
             repo = repo_info['repo']
             query_func = repo_info['get']
@@ -150,11 +162,11 @@ class APIBase(MethodView):
             del filters['owner_id']
         return filters
 
-    def _filter_query(self, repo_info, limit, offset):
+    def _filter_query(self, repo_info, limit, offset, orderby):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc']:
+                         'fulltextsearch', 'desc', 'orderby']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
@@ -164,16 +176,19 @@ class APIBase(MethodView):
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
         fulltextsearch = request.args.get('fulltextsearch')
-        desc = request.args.get('desc')
+        desc = request.args.get('desc') if request.args.get('desc') else False
+        desc = fuzzyboolean(desc)
         if last_id:
             results = getattr(repo, query_func)(limit=limit, last_id=last_id,
                                                 fulltextsearch=fulltextsearch,
                                                 desc=False,
+                                                orderby=orderby,
                                                 **filters)
         else:
             results = getattr(repo, query_func)(limit=limit, offset=offset,
                                                 fulltextsearch=fulltextsearch,
                                                 desc=desc,
+                                                orderby=orderby,
                                                 **filters)
         return results
 
@@ -186,7 +201,11 @@ class APIBase(MethodView):
             offset = int(request.args.get('offset'))
         except (ValueError, TypeError):
             offset = 0
-        return limit, offset
+        try:
+            orderby = request.args.get('orderby') if request.args.get('orderby') else 'id'
+        except (ValueError, TypeError):
+            orderby = 'updated'
+        return limit, offset, orderby
 
     @jsonpify
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))

@@ -18,11 +18,12 @@
 
 from sqlalchemy.exc import IntegrityError
 
+from pybossa.repositories import Repository
 from pybossa.model.blogpost import Blogpost
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-class BlogRepository(object):
+class BlogRepository(Repository):
 
     def __init__(self, db):
         self.db = db
@@ -35,16 +36,8 @@ class BlogRepository(object):
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   **filters):
-        query = self.db.session.query(Blogpost).filter_by(**filters)
-        if last_id:
-            query = query.filter(Blogpost.id > last_id)
-            query = query.order_by(Blogpost.id).limit(limit)
-        else:
-            query = query.order_by(Blogpost.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(Blogpost, limit, offset, yielded, 
+                               last_id, **filters)
 
     def save(self, blogpost):
         self._validate_can_be('saved', blogpost)

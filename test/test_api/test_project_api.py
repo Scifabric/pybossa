@@ -27,11 +27,16 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTas
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.project import Project
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 result_repo = ResultRepository(db)
 
 class TestProjectAPI(TestAPI):
+
+    def setUp(self):
+        super(TestProjectAPI, self).setUp()
+        db.session.query(Project).delete()
 
     def create_result(self, n_results=1, n_answers=1, owner=None,
                       filter_by=False):
@@ -56,11 +61,12 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        project = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
+        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
         projects = ProjectFactory.create_batch(8, info={'total': 150})
-        project = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
-        projects.insert(0, project)
-        projects.append(project)
+
+        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
+        projects.insert(0, project1)
+        projects.append(project2)
         res = self.app.get('/api/project')
         data = json.loads(res.data)
         dataNoDesc = data
@@ -85,20 +91,53 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 5, data
 
-
         # Keyset pagination
         url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
         res = self.app.get(url)
         data = json.loads(res.data)
-        assert len(data) == 5, data
-        assert data[0]['id'] == projects[5].id, data
+        assert len(data) == 5, len(data)
+        assert data[0]['id'] == projects[5].id, (data[0]['id'], projects[5].id)
 
         # Desc filter
-        url = "/api/project?desc=true"
+        url = "/api/project?orderby=updated&desc=true"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['updated'] == projects[len(projects)-1].updated, err_msg
+
+        # Orderby filter
+        url = "/api/project?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['id'] == projects[len(projects)-1].id, err_msg
+
+        # Orderby filter non attribute
+        url = "/api/project?orderby=wrongattribute&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should return 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
+        # Desc filter
+        url = "/api/project?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        projects_by_id = sorted(projects, key=lambda x: x.id, reverse=False)
+        for i in range(len(projects_by_id)):
+            assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
+
+        url = "/api/project?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        projects_by_id = sorted(projects, key=lambda x: x.id, reverse=True)
+        for i in range(len(projects_by_id)):
+            assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
+
 
 
     @with_context
@@ -642,6 +681,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
+        print data
 
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
