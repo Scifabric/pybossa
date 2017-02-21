@@ -98,19 +98,12 @@ class ProjectRepository(Repository):
 
     def filter_categories_by(self, limit=None, offset=0, yielded=False,
                              last_id=None, fulltextsearch=None,
+                             orderby='id',
                              desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
-        query = self.db.session.query(Category).filter_by(**filters)
-        if last_id:
-            query = query.filter(Category.id > last_id)
-            query = query.order_by(Category.id).limit(limit)
-        else:
-            query = query.order_by(Category.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(Category, limit, offset, yielded, last_id,
+                               fulltextsearch, desc, orderby, **filters)
 
     def save_category(self, category):
         self._validate_can_be('saved as a Category', category, klass=Category)

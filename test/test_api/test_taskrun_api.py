@@ -124,7 +124,7 @@ class TestTaskrunAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
-        url = "/api/taskrun?desc=true"
+        url = "/api/taskrun?desc=true&orderby=created"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
