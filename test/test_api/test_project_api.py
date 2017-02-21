@@ -94,11 +94,27 @@ class TestProjectAPI(TestAPI):
         assert data[0]['id'] == projects[5].id, data
 
         # Desc filter
-        url = "/api/project?desc=true"
+        url = "/api/project?orderby=updated&desc=true"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['updated'] == projects[len(projects)-1].updated, err_msg
+
+        # Orderby filter
+        url = "/api/project?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['id'] == projects[len(projects)-1].id, err_msg
+
+        # Orderby filter non attribute
+        url = "/api/project?orderby=wrongattribute&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should return 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
 
 
     @with_context
