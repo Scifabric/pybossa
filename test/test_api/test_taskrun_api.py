@@ -26,6 +26,7 @@ from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db
 from pybossa.auth.errcodes import *
+from pybossa.model.task_run import TaskRun
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -33,6 +34,10 @@ result_repo = ResultRepository(db)
 
 
 class TestTaskrunAPI(TestAPI):
+
+    def setUp(self):
+        super(TestTaskrunAPI, self).setUp()
+        db.session.query(TaskRun).delete()
 
     def create_result(self, n_results=1, n_answers=1, owner=None,
                       filter_by=False):
@@ -67,8 +72,8 @@ class TestTaskrunAPI(TestAPI):
                                     info={'answer': 'annakarenina'})
         date_new = '2019-01-01T14:37:30.642119'
         date_old = '2014-01-01T14:37:30.642119'
-        TaskRunFactory.create(created=date_new)
-        TaskRunFactory.create(created=date_old)
+        t21 = TaskRunFactory.create(created=date_new)
+        t22 = TaskRunFactory.create(created=date_old)
 
         project_ids = [project.id, project_two.id]
         # As anon, it sould return everything
@@ -130,7 +135,37 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "It should get the last item first."
         assert data[0]['created'] == date_new, err_msg
 
+        # Desc filter
+        url = "/api/taskrun?orderby=wrongattribute"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
 
+        taskruns.append(t21.dictize())
+        taskruns.append(t22.dictize())
+
+        # Desc filter
+        url = "/api/taskrun?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=False)
+
+        for i in range(20):
+            assert taskruns_by_id[i]['id'] == data[i]['id']
+
+        # Desc filter
+        url = "/api/taskrun?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
+        for i in range(20):
+            print data[i]['id']
+            assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context
     def test_query_taskrun(self):
