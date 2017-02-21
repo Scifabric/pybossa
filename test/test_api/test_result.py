@@ -74,11 +74,27 @@ class TestResultAPI(TestAPI):
         result.created = '2119-01-01T14:37:30.642119'
         result_repo.update(result)
 
-        url = '/api/result?desc=true'
+        url = '/api/result?orderby=created&desc=true'
         res = self.app.get(url)
         data = json.loads(res.data)
+        print data
         err_msg = "It should get the last item first."
         assert data[0]['created'] == '2119-01-01T14:37:30.642119', err_msg
+
+        url = '/api/result?orderby=id&desc=false'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be sorted by id."
+        assert data[1]['id'] == result.id, err_msg
+
+        url = '/api/result?orderby=wrongattribute'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
 
         url = '/api/result'
         res = self.app.get(url)

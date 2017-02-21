@@ -80,6 +80,37 @@ class TestTaskAPI(TestAPI):
         err_msg = "It should get the last item first."
         assert data[0]['created'] == tasks[len(tasks)-1]['created'], err_msg
 
+        # Desc filter
+        url = "/api/task?orderby=wrongattribute"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
+        # Desc filter
+        url = "/api/task?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        tasks_by_id = sorted(tasks, key=lambda x: x['id'], reverse=False)
+        i = 0
+        for t in tasks_by_id:
+            assert tasks_by_id[i]['id'] == data[i]['id']
+            i += 1
+
+        # Desc filter
+        url = "/api/task?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        tasks_by_id = sorted(tasks, key=lambda x: x['id'], reverse=True)
+        i = 0
+        for t in tasks_by_id:
+            assert tasks_by_id[i]['id'] == data[i]['id']
+            i += 1
+
 
     @with_context
     def test_task_query_without_params_with_context(self):
