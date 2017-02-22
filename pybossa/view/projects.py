@@ -967,17 +967,39 @@ def tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
+@blueprint.route('/<short_name>/tasks/browse/<int:page>/<int:records_per_page>')
 @login_required
-def tasks_browse(short_name, page=1):
+def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
 
+    try:
+        (display_columns, task_id, pcomplete1, pcomplete2,
+            hide_completed, ftime1, ftime2, priority1, priority2,
+            order_by) = get_tasks_browse_args(request.args)
+    except (ValueError, TypeError):
+        flash(gettext('Invalid filtering criteria'), 'error')
+        abort(404)
+
     def respond():
-        per_page = 10
+        per_page = records_per_page
         offset = (page - 1) * per_page
-        count = ps.n_tasks
-        page_tasks = cached_projects.browse_tasks(project.get('id'), per_page, offset)
+        #count = n_tasks
+        current_app.logger.info("Before browse Tasks")
+        project_tasks = cached_projects.browse_tasks(project.get('id'),
+            display_columns=display_columns,
+            task_id=task_id,
+            pcomplete1=pcomplete1,
+            pcomplete2=pcomplete2,
+            hide_completed=hide_completed,
+            ftime1=ftime1,
+            ftime2=ftime2,
+            priority1=priority1,
+            priority2=priority2,
+            order_by=order_by)
+        count = len(project_tasks)
+        page_tasks = project_tasks[offset:offset+per_page]
         if not page_tasks and page != 1:
             abort(404)
 
@@ -987,6 +1009,18 @@ def tasks_browse(short_name, page=1):
                                                                     owner,
                                                                     current_user,
                                                                     ps)
+        filter_data = {
+        'display_columns': display_columns,
+        'task_id':task_id,
+        'pcomplete1':pcomplete1,
+        'pcomplete2':pcomplete2,
+        'hide_completed':hide_completed,
+        'ftime1':ftime1,
+        'ftime2':ftime2,
+        'priority1':priority1,
+        'priority2':priority2,
+        'order_by':order_by,
+        'changed':False }
 
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
@@ -998,7 +1032,8 @@ def tasks_browse(short_name, page=1):
                     overall_progress=ps.overall_progress,
                     n_volunteers=ps.n_volunteers,
                     n_completed_tasks=ps.n_completed_tasks,
-                    pro_features=pro)
+                    pro_features=pro,
+                    filter_data=filter_data)
 
         return handle_content_type(data)
 
@@ -1010,6 +1045,36 @@ def tasks_browse(short_name, page=1):
         ensure_authorized_to('read', project)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
+
+def get_tasks_browse_args(args):
+    task_id,pcomplete1,pcomplete2,hide_completed,ftime1,ftime2,priority1,priority2,order_by,display_columns = (None,)*10
+    # ignore display_columns for now
+    if args.get('task_id'):
+        task_id = int(args.get('task_id'))
+    if args.get('pcomplete1'):
+        pcomplete1 = float(args.get('pcomplete1')) / 100
+    if args.get('pcomplete2'):
+        pcomplete2 = float(args.get('pcomplete2')) / 100
+    if args.get('hide_completed'):
+        hide_completed = args.get('hide_completed').lower() == 'true'
+    ftime1 = None
+    ftime2 = None
+    if args.get('priority1'):
+        priority1 = float(args.get('priority1'))
+    if args.get('priority2'):
+        priority2 = float(args.get('priority2'))
+    if args.get('order_by'):
+        allowed_columns = cached_projects.browse_tasks.allowed_fields
+        columns_list = '|'.join(allowed_columns.keys())
+        expression = '^(' + columns_list + ')\s+(asc|desc)(,\s*(' + columns_list + ')\s+(asc|desc))*$'
+        order_by = args.get('order_by').strip().lower()
+        if re.match(expression, order_by):
+            for key, value in allowed_columns.iteritems():
+                order_by = order_by.replace(key, value)
+        else:
+            raise ValueError('order_by value sent by the user is invalid: %s' % args.get('order_by'))
+
+    return (display_columns, task_id, pcomplete1, pcomplete2, hide_completed, ftime1, ftime2, priority1, priority2, order_by)
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])

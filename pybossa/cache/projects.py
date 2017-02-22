@@ -16,11 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for projects."""
+from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
-from pybossa.util import pretty_date
+from pybossa.util import pretty_date, static_vars
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
+from datetime import datetime
 
 
 session = db.slave_session
@@ -57,27 +59,56 @@ def get_top(n=4):
         top_projects.append(Project().to_public_json(project))
     return top_projects
 
-
-#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
-def browse_tasks(project_id, limit=10, offset=0):
+@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+@static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'cdate': 'task.created' })
+def browse_tasks(project_id, **args):
     """Cache browse tasks view for a project."""
+    current_app.logger.info(args.get('browse_tasks, am I cached???'))
+    filters = get_task_filters(**args)
+    print filters
     sql = text('''
-               SELECT task.id, task.n_answers, sum(counter.n_task_runs) as n_task_runs
-               FROM task, counter
-               WHERE task.id=counter.task_id and task.project_id=:project_id
-               GROUP BY task.id
-               ORDER BY task.id ASC LIMIT :limit OFFSET :offset
-               ''')
+               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0
+               FROM task LEFT OUTER JOIN
+               (SELECT task_id, COUNT(id) AS ct, MAX(finish_time) as ft FROM task_run
+               WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+               ON task.id=log_counts.task_id
+               WHERE task.project_id=:project_id''' + filters +
+               " ORDER BY %s" % (args.get('order_by') or 'id ASC')
+               )
     results = session.execute(sql, dict(project_id=project_id,
-                                        limit=limit,
-                                        offset=offset))
+      filters=filters
+      ))
     tasks = []
     for row in results:
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                    n_answers=row.n_answers)
+                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=row.ft, finish_days=[(datetime.now() - row.ft).days if row.ft else None])
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return tasks
+
+def get_task_filters(**args):
+  filters = ''
+  current_app.logger.info("inside get filters")
+  if args.get('task_id'):
+    filters += ' AND id=%d'%args['task_id']
+  if args.get('hide_completed') and args.get('hide_completed') is True:
+    filters += " AND task.state='%s'"% 'ongoing'
+  if args.get('pcomplete1') is not None:
+    filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete1')
+  if args.get('pcomplete2') is not None:
+    filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete2')
+  if args.get('priority1') is not None:
+    filters += " AND priority_0 >= %f" % args.get('priority1')
+  if args.get('priority2') is not None:
+    filters += " AND priority_0 <= %f" % args.get('priority2')
+
+  if args.get('ftime1'):
+    filters += " AND ft >= '%s'" % args.get('ftime1')
+  if args.get('ftime2'):
+    filters += " AND ft <= '%s'" % args.get('ftime2')
+  current_app.logger.info(filters)
+  return filters
+
 
 
 def _pct_status(n_task_runs, n_answers):
@@ -453,8 +484,8 @@ def get_all_projects():
         project = dict(name=row.name, short_name=row.short_name)
         projects.append(project)
     return projects
-    
-    
+
+
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")

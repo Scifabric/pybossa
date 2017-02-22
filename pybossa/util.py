@@ -120,6 +120,13 @@ def redirect_content_type(url, status=None):
     else:
         return redirect(url)
 
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+    return decorate
+    
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""
     @wraps(f)
