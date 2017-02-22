@@ -132,8 +132,7 @@ def new_task(project_id):
             guard = ContributionsGuard(sentinel.master)
             for task in tasks:
                 guard.stamp(task, get_user_id_or_ip())
-                usr = get_user_id_or_ip()['user_id'] or None
-                if usr is not None and not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
+                if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
                     guard.stamp_presented_time(task, get_user_id_or_ip())
 
             data = [task.dictize() for task in tasks]
