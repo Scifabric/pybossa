@@ -145,6 +145,10 @@ class Project(db.Model, DomainObject):
         headers = set()
         search_backward_stop = 0
         for match in re.finditer('\.info\.([a-zA-Z0-9_]+)', self.info.get('task_presenter')):
+            linebreak_index = self.info.get('task_presenter').rfind('\n', search_backward_stop, match.start())
+            if self.info.get('task_presenter').rfind('//', linebreak_index if linebreak_index > -1 else search_backward_stop, match.start()) > -1:
+                continue
+
             comment_start = self.info.get('task_presenter').rfind('/*', search_backward_stop, match.start())
             if comment_start > -1:
                 search_backward_stop = comment_start
