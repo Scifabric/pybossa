@@ -63,7 +63,7 @@ def get_top(n=4):
 @static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'cdate': 'task.created' })
 def browse_tasks(project_id, **args):
     """Cache browse tasks view for a project."""
-    current_app.logger.info(args.get('browse_tasks, am I cached???'))
+    current_app.logger.info('browse_tasks, am I cached???')
     filters = get_task_filters(**args)
     print filters
     sql = text('''
@@ -81,7 +81,7 @@ def browse_tasks(project_id, **args):
     tasks = []
     for row in results:
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=row.ft, finish_days=[(datetime.now() - row.ft).days if row.ft else None])
+                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=row.ft, finish_days=(datetime.now() - datetime.strptime(row.ft, "%Y-%m-%dT%H:%M:%S.%f")).days if row.ft else None)
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return tasks

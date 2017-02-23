@@ -1012,13 +1012,13 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         filter_data = {
         'display_columns': display_columns,
         'task_id':task_id,
-        'pcomplete1':pcomplete1,
-        'pcomplete2':pcomplete2,
+        'pcomplete1':(pcomplete1*100) if pcomplete1 else None,
+        'pcomplete2':(pcomplete2*100) if pcomplete2 else None,
         'hide_completed':hide_completed,
         'ftime1':ftime1,
         'ftime2':ftime2,
-        'priority1':priority1,
-        'priority2':priority2,
+        'priority1':(priority1*100) if priority1 else None,
+        'priority2':(priority2*100) if priority2 else None,
         'order_by':order_by,
         'changed':False }
 
@@ -1033,6 +1033,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     n_volunteers=ps.n_volunteers,
                     n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro,
+                    records_per_page=records_per_page,
                     filter_data=filter_data)
 
         return handle_content_type(data)
@@ -1057,12 +1058,22 @@ def get_tasks_browse_args(args):
         pcomplete2 = float(args.get('pcomplete2')) / 100
     if args.get('hide_completed'):
         hide_completed = args.get('hide_completed').lower() == 'true'
-    ftime1 = None
-    ftime2 = None
+
+    isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
+    if args.get('ftime1'):
+        if re.match(isoStringFormat, args.get('ftime1')):
+            ftime1 = args.get('ftime1')
+        else:
+            raise ValueError('ftime1 date format error, value: %s'%args.get('ftime1'))
+    if args.get('ftime2'):
+        if re.match(isoStringFormat, args.get('ftime2')):
+            ftime2 = args.get('ftime2')
+        else:
+            raise ValueError('ftime2 date format error, value: %s'%args.get('ftime2'))
     if args.get('priority1'):
-        priority1 = float(args.get('priority1'))
+        priority1 = float(args.get('priority1')) / 100
     if args.get('priority2'):
-        priority2 = float(args.get('priority2'))
+        priority2 = float(args.get('priority2')) / 100
     if args.get('order_by'):
         allowed_columns = cached_projects.browse_tasks.allowed_fields
         columns_list = '|'.join(allowed_columns.keys())
