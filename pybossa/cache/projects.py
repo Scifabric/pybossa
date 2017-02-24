@@ -442,7 +442,7 @@ def get_all(category):
            category.short_name=:category
            AND "user".id=project.owner_id
            AND project.published=true
-           AND (project.info->>'passwd_hash') IS NULL
+           AND coalesce(project.hidden, false)=false
            GROUP BY project.id, "user".id ORDER BY project.name;''')
 
     results = session.execute(sql, dict(category=category))
@@ -469,7 +469,7 @@ def get(category, page=1, per_page=5):
     """Return a list of published projects with a pagination for a given category.
     """
     offset = (page - 1) * per_page
-    return get_all(category)[offset:offset+per_page]
+    return get_all(category)[offset:offset + per_page]
 
 
 # TODO: find a convenient cache timeout and cache, if needed
