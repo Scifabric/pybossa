@@ -149,16 +149,36 @@ def public_projects_contributed_cached(user_id):
     return public_projects_contributed(user_id)
 
 
-def published_projects(user_id):
+allowed_project_columns = {
+    "created_on": "created",
+    "project_name": "name"
+}
+
+
+def get_project_browse_args(args):
+    if args is None:
+        args = {}
+    query_str = args.get("order_by", "created_on desc")
+    col, order = query_str.split(":") if ":" in query_str \
+        else (query_str, "")
+    column = allowed_project_columns.get(col) or "created"
+    sort_order = order if order in ("asc", "desc") else "desc"
+    return dict(column=column, order=sort_order)
+
+
+def published_projects(user_id, args=None):
     """Return published projects for user_id."""
+    sort_args = get_project_browse_args(args)
+    print sort_args
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
                project.info
                FROM project
                WHERE project.published=true
-               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id));
-               ''')
+               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))
+               order by {column} {order};
+               '''.format(**sort_args))
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:

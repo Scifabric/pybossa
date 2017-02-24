@@ -461,7 +461,8 @@ def projects(name):
         return abort(403)
 
     user = user_repo.get(current_user.id)
-    projects_published, projects_draft = _get_user_projects(user.id)
+    args = request.args
+    projects_published, projects_draft = _get_user_projects(user.id, args)
 
     response = dict(template='account/projects.html',
                     title=gettext("Projects"),
@@ -470,8 +471,8 @@ def projects(name):
     return handle_content_type(response)
 
 
-def _get_user_projects(user_id):
-    projects_published = cached_users.published_projects(user_id)
+def _get_user_projects(user_id, opts):
+    projects_published = cached_users.published_projects(user_id, opts)
     projects_draft = cached_users.draft_projects(user_id)
     return projects_published, projects_draft
 
