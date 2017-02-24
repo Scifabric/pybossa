@@ -25,7 +25,7 @@ that includes the signature.
 @param $pkey Is the path to the private key file that will be used to
 calculate the signature
 """
-import M2Crypto
+import rsa
 import hashlib
 import base64
 
@@ -67,7 +67,8 @@ def calculate_buffer(data, salt):
 def sign(data, salt, pkey):
     """Sign data."""
     strBuffer = calculate_buffer(data, salt)
-    rsa = M2Crypto.RSA.load_key(pkey)
-    digest = hashlib.new('sha512', strBuffer).digest()
-    data['signature'] = base64.b64encode(rsa.sign(digest, "sha512"))
+    with open(pkey, 'r') as f:
+        private_key_string = f.read()
+    private_key = rsa.PrivateKey.load_pkcs1(private_key_string)
+    data['signature'] = base64.b64encode(rsa.sign(strBuffer, private_key, 'SHA-512'))
     return data
