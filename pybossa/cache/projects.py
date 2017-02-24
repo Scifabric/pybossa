@@ -60,14 +60,12 @@ def get_top(n=4):
     return top_projects
 
 @memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
-@static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'cdate': 'task.created' })
+@static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
 def browse_tasks(project_id, **args):
     """Cache browse tasks view for a project."""
-    current_app.logger.info('browse_tasks, am I cached???')
     filters = get_task_filters(**args)
-    print filters
     sql = text('''
-               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0
+               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
                FROM task LEFT OUTER JOIN
                (SELECT task_id, COUNT(id) AS ct, MAX(finish_time) as ft FROM task_run
                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
@@ -80,15 +78,17 @@ def browse_tasks(project_id, **args):
       ))
     tasks = []
     for row in results:
+        finish_time = datetime.strptime(row.ft, "%Y-%m-%dT%H:%M:%S.%f")
+        created = datetime.strptime(row.created, "%Y-%m-%dT%H:%M:%S.%f")
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=row.ft, finish_days=(datetime.now() - datetime.strptime(row.ft, "%Y-%m-%dT%H:%M:%S.%f")).days if row.ft else None)
+                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time.strftime('%y-%m-%d %H:%M'), finish_days=(datetime.now() - finish_time).days if row.ft else None,
+                    created=created.strftime('%y-%m-%d %H:%M'))
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return tasks
 
 def get_task_filters(**args):
   filters = ''
-  current_app.logger.info("inside get filters")
   if args.get('task_id'):
     filters += ' AND id=%d'%args['task_id']
   if args.get('hide_completed') and args.get('hide_completed') is True:
@@ -101,12 +101,15 @@ def get_task_filters(**args):
     filters += " AND priority_0 >= %f" % args.get('priority1')
   if args.get('priority2') is not None:
     filters += " AND priority_0 <= %f" % args.get('priority2')
-
+  if args.get('created1'):
+    filters += " AND task.created >= '%s'" % args.get('created1')
+  if args.get('created2'):
+    filters += " AND task.created <= '%s'" % args.get('created2')
   if args.get('ftime1'):
     filters += " AND ft >= '%s'" % args.get('ftime1')
   if args.get('ftime2'):
     filters += " AND ft <= '%s'" % args.get('ftime2')
-  current_app.logger.info(filters)
+  
   return filters
 
 

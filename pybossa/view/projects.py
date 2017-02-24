@@ -976,9 +976,10 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
     try:
         (display_columns, task_id, pcomplete1, pcomplete2,
-            hide_completed, ftime1, ftime2, priority1, priority2,
-            order_by) = get_tasks_browse_args(request.args)
-    except (ValueError, TypeError):
+            hide_completed, created1, created2, ftime1, ftime2, priority1, priority2,
+            order_by, order_by_dict) = get_tasks_browse_args(request.args)
+    except (ValueError, TypeError) as err:
+        current_app.logger.error(err)
         flash(gettext('Invalid filtering criteria'), 'error')
         abort(404)
 
@@ -993,6 +994,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
             pcomplete1=pcomplete1,
             pcomplete2=pcomplete2,
             hide_completed=hide_completed,
+            created1=created1,
+            created2=created2,
             ftime1=ftime1,
             ftime2=ftime2,
             priority1=priority1,
@@ -1015,11 +1018,13 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         'pcomplete1':(pcomplete1*100) if pcomplete1 else None,
         'pcomplete2':(pcomplete2*100) if pcomplete2 else None,
         'hide_completed':hide_completed,
+        'created1':created1,
+        'created2':created2,
         'ftime1':ftime1,
         'ftime2':ftime2,
         'priority1':(priority1*100) if priority1 else None,
         'priority2':(priority2*100) if priority2 else None,
-        'order_by':order_by,
+        'order_by':order_by_dict,
         'changed':False }
 
         data = dict(template='/projects/tasks_browse.html',
@@ -1048,8 +1053,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     return respond()
 
 def get_tasks_browse_args(args):
-    task_id,pcomplete1,pcomplete2,hide_completed,ftime1,ftime2,priority1,priority2,order_by,display_columns = (None,)*10
-    # ignore display_columns for now
+    task_id,pcomplete1,pcomplete2,hide_completed,created1,created2,ftime1,ftime2,priority1,priority2,order_by,display_columns,order_by_dict = (None,)*13
     if args.get('task_id'):
         task_id = int(args.get('task_id'))
     if args.get('pcomplete1'):
@@ -1060,6 +1064,16 @@ def get_tasks_browse_args(args):
         hide_completed = args.get('hide_completed').lower() == 'true'
 
     isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
+    if args.get('created1'):
+        if re.match(isoStringFormat, args.get('created1')):
+            created1 = args.get('created1')
+        else:
+            raise ValueError('created1 date format error, value: %s'%args.get('created1'))
+    if args.get('created2'):
+        if re.match(isoStringFormat, args.get('created2')):
+            created2 = args.get('created2')
+        else:
+            raise ValueError('created2 date format error, value: %s'%args.get('created2'))
     if args.get('ftime1'):
         if re.match(isoStringFormat, args.get('ftime1')):
             ftime1 = args.get('ftime1')
@@ -1074,18 +1088,29 @@ def get_tasks_browse_args(args):
         priority1 = float(args.get('priority1')) / 100
     if args.get('priority2'):
         priority2 = float(args.get('priority2')) / 100
+    if args.get('display_columns'):
+        display_columns = json.loads(args.get('display_columns'))
+    if not isinstance(display_columns, list):
+        display_columns = [ 'task_id', 'priority', 'pcomplete', 'created', 'actions' ]
     if args.get('order_by'):
         allowed_columns = cached_projects.browse_tasks.allowed_fields
-        columns_list = '|'.join(allowed_columns.keys())
-        expression = '^(' + columns_list + ')\s+(asc|desc)(,\s*(' + columns_list + ')\s+(asc|desc))*$'
         order_by = args.get('order_by').strip().lower()
-        if re.match(expression, order_by):
-            for key, value in allowed_columns.iteritems():
-                order_by = order_by.replace(key, value)
-        else:
-            raise ValueError('order_by value sent by the user is invalid: %s' % args.get('order_by'))
+        order_by_dict = dict()
+        for clause in order_by.split(','):
+            order_by_field = clause.split(' ')
+            print len(order_by_field)
+            print order_by_field[0] not in allowed_columns
+            print order_by_field[0] not in allowed_columns.keys()
+            if len(order_by_field) != 2 or order_by_field[0] not in allowed_columns:
+                raise ValueError('order_by value sent by the user is invalid: %s' % args.get('order_by'))
+            if order_by_field[0] in order_by_dict:
+                raise ValueError('order_by field is duplicated: %s' % args.get('order_by'))
+            order_by_dict[order_by_field[0]] = order_by_field[1]
 
-    return (display_columns, task_id, pcomplete1, pcomplete2, hide_completed, ftime1, ftime2, priority1, priority2, order_by)
+        for key, value in allowed_columns.iteritems():
+            order_by = order_by.replace(key, value)
+        
+    return (display_columns, task_id, pcomplete1, pcomplete2, hide_completed, created1, created2, ftime1, ftime2, priority1, priority2, order_by, order_by_dict)
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
