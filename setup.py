@@ -40,7 +40,7 @@ requirements = [
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
     "rq-scheduler>=0.5.1, <0.5.2",
-    "rq-dashboard",
+    "rq-dashboard>=0.3.7",
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
     "flask-plugins",
