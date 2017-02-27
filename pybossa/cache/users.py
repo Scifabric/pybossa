@@ -155,21 +155,15 @@ allowed_project_columns = {
 }
 
 
-def get_project_browse_args(args):
-    if args is None:
-        args = {}
-    query_str = args.get("order_by", "created_on desc")
-    col, order = query_str.split(":") if ":" in query_str \
-        else (query_str, "")
-    column = allowed_project_columns.get(col) or "created"
-    sort_order = order if order in ("asc", "desc") else "desc"
-    return dict(column=column, order=sort_order)
-
-
 def published_projects(user_id, args=None):
     """Return published projects for user_id."""
-    sort_args = get_project_browse_args(args)
-    print sort_args
+    if args is None:
+        args = dict(column=None, order=None)
+    sort_args = dict(column=args.get("column"), order=args.get("order"))
+    if sort_args.get("order") not in ("asc", "desc"):
+        sort_args["order"] = "desc"
+    sort_args["column"] = allowed_project_columns.get(sort_args["column"], "created")
+
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
