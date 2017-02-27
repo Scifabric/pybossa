@@ -33,7 +33,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-    csv_exporter, importer, sentinel)
+                          csv_exporter, importer, sentinel)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -42,10 +42,11 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
-from pybossa.util import Pagination, admin_required, get_user_id_or_ip, rank
-from pybossa.util import handle_content_type, redirect_content_type
+from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
+                          handle_content_type, redirect_content_type)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
+from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
@@ -58,8 +59,8 @@ from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo, result_repo, webhook_repo
-from pybossa.core import webhook_repo, auditlog_repo
+from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
+                          result_repo, webhook_repo, auditlog_repo)
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 
@@ -513,8 +514,18 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    template_args = {"project": project, "title": title,
-                     "owner": owner,
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project)
+        else:    # HTML
+            project_sanitized = project
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    template_args = {"project": project_sanitized,
+                     "title": title,
+                     "owner":  owner_sanitized,
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
@@ -526,7 +537,8 @@ def details(short_name):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
         template_args['ckan_pkg_name'] = short_name
-    return render_template(template, **template_args)
+    response = dict(template=template, **template_args)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/settings')
@@ -541,17 +553,21 @@ def settings(short_name):
     ensure_authorized_to('update', project)
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return render_template('/projects/settings.html',
-                           project=project,
-                           owner=owner,
-                           n_tasks=n_tasks,
-                           overall_progress=overall_progress,
-                           n_task_runs=n_task_runs,
-                           last_activity=last_activity,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
-                           title=title,
-                           pro_features=pro)
+    owner_serialized = cached_users.get_user_summary(owner.name)
+    response = dict(template='/projects/settings.html',
+                    project=project,
+                    owner=owner_serialized,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_projects.n_completed_tasks(
+                        project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(
+                        project.get('id')),
+                    title=title,
+                    pro_features=pro)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])

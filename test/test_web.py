@@ -1519,17 +1519,20 @@ class TestWeb(web.Helper):
         TaskFactory.create(project=project)
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
+        assert_raises(ValueError, json.loads, res.data)
         msg = "Project: Sample Project"
         assert self.html_title(msg) in res.data, res
         err_msg = "There should be a contribute button"
         assert "Start Contributing Now!" in res.data, err_msg
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
+        assert_raises(ValueError, json.loads, res.data)
         assert res.status == '200 OK', res.status
         self.signout()
 
         # Now as an anonymous user
         res = self.app.get('/project/sampleapp', follow_redirects=True)
+        assert_raises(ValueError, json.loads, res.data)
         assert self.html_title("Project: Sample Project") in res.data, res
         assert "Start Contributing Now!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
@@ -1540,9 +1543,116 @@ class TestWeb(web.Helper):
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
+        assert_raises(ValueError, json.loads, res.data)
         assert self.html_title("Project: Sample Project") in res.data, res
         assert "Start Contributing Now!" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings')
+        assert res.status == '403 FORBIDDEN', res.status
+
+    @with_context
+    @patch('pybossa.ckan.requests.get')
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_10_get_application_json(self, Mock, mock2):
+        """Test WEB project URL/<short_name> works JSON"""
+        # Sign in and create a project
+        html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
+                                    status_code=200,
+                                    headers={'content-type': 'application/json'},
+                                    encoding='utf-8')
+        Mock.return_value = html_request
+        self.register()
+        res = self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
+        TaskFactory.create(project=project)
+
+        res = self.app_get_json('/project/sampleapp/')
+        data = json.loads(res.data)
+        assert 'last_activity' in data, res.data
+        assert 'n_completed_tasks' in data, res.data
+        assert 'n_task_runs' in data, res.data
+        assert 'n_tasks' in data, res.data
+        assert 'n_volunteers' in data, res.data
+        assert 'overall_progress' in data, res.data
+        assert 'owner' in data, res.data
+        assert 'pro_features' in data, res.data
+        assert 'project' in data, res.data
+        assert 'template' in data, res.data
+        assert 'title' in data, res.data
+        # private information
+        assert 'api_key' in data['owner'], res.data
+        assert 'email_addr' in data['owner'], res.data
+        assert 'secret_key' in data['project'], res.data
+        assert 'owner_id' in data['project'], res.data
+
+        res = self.app_get_json('/project/sampleapp/settings')
+        assert res.status == '200 OK', res.status
+        data = json.loads(res.data)
+        assert 'last_activity' in data, res.data
+        assert 'n_completed_tasks' in data, res.data
+        assert 'n_task_runs' in data, res.data
+        assert 'n_tasks' in data, res.data
+        assert 'n_volunteers' in data, res.data
+        assert 'overall_progress' in data, res.data
+        assert 'owner' in data, res.data
+        assert 'pro_features' in data, res.data
+        assert 'project' in data, res.data
+        assert 'template' in data, res.data
+        assert 'title' in data, res.data
+        # private information
+        assert 'api_key' in data['owner'], res.data
+        assert 'email_addr' in data['owner'], res.data
+        assert 'secret_key' in data['project'], res.data
+        assert 'owner_id' in data['project'], res.data
+
+        self.signout()
+
+        # Now as an anonymous user
+        res = self.app_get_json('/project/sampleapp/')
+        data = json.loads(res.data)
+        assert 'last_activity' in data, res.data
+        assert 'n_completed_tasks' in data, res.data
+        assert 'n_task_runs' in data, res.data
+        assert 'n_tasks' in data, res.data
+        assert 'n_volunteers' in data, res.data
+        assert 'overall_progress' in data, res.data
+        assert 'owner' in data, res.data
+        assert 'pro_features' in data, res.data
+        assert 'project' in data, res.data
+        assert 'template' in data, res.data
+        assert 'title' in data, res.data
+        # private information
+        assert 'api_key' not in data['owner'], res.data
+        assert 'email_addr' not in data['owner'], res.data
+        assert 'secret_key' not in data['project'], res.data
+        assert 'owner_id' not in data['project'], res.data
+
+        res = self.app_get_json('/project/sampleapp/settings')
+        assert res.status == '302 FOUND', res.status
+
+        # Now with a different user
+        self.register(fullname="Perico Palotes", name="perico")
+        res = self.app_get_json('/project/sampleapp/')
+        data = json.loads(res.data)
+        assert 'last_activity' in data, res.data
+        assert 'n_completed_tasks' in data, res.data
+        assert 'n_task_runs' in data, res.data
+        assert 'n_tasks' in data, res.data
+        assert 'n_volunteers' in data, res.data
+        assert 'overall_progress' in data, res.data
+        assert 'owner' in data, res.data
+        assert 'pro_features' in data, res.data
+        assert 'project' in data, res.data
+        assert 'template' in data, res.data
+        assert 'title' in data, res.data
+        # private information
+        assert 'api_key' not in data['owner'], res.data
+        assert 'email_addr' not in data['owner'], res.data
+        assert 'secret_key' not in data['project'], res.data
+        assert 'owner_id' not in data['project'], res.data
+
+        res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
     @with_context
