@@ -434,6 +434,7 @@ def update(short_name):
             new_project.short_name = form.short_name.data
             new_project.description = form.description.data
             new_project.long_description = form.long_description.data
+            new_project.hidden = form.hidden.data
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
@@ -1067,12 +1068,10 @@ def export_to(short_name):
     loading_text = gettext("Exporting data..., this may take a while")
     pro = pro_features()
 
-    if not current_user.admin and not current_user.subadmin:
-        ensure_authorized_to('read', project)
-        if project.needs_password():
-            redirect_to_password = _check_if_redirect_to_password(project)
-            if redirect_to_password:
-                return redirect_to_password
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
 
     def respond():
         return render_template('/projects/export.html',

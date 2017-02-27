@@ -394,6 +394,7 @@ def get_all(category):
            category.short_name=:category
            AND "user".id=project.owner_id
            AND project.published=true
+           AND project.hidden=false
            AND EXISTS (select 1 from task where task.project_id=project.id
                        and task.state='ongoing')
            GROUP BY project.id, "user".id ORDER BY project.name;''')

@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('project', sa.Column('hidden', sa.Integer, default=0))
+    op.add_column('project', sa.Column('hidden', sa.Boolean))
+    op.execute('UPDATE project SET hidden=false')
+    op.alter_column('project', 'hidden', nullable=False)
 
 
 def downgrade():
