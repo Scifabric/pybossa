@@ -381,7 +381,6 @@ def n_count(category):
     return count
 
 
-# @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_all(category):
     """Return a list of published projects for a given category.
     """
