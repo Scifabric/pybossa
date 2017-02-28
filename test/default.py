@@ -463,6 +463,6 @@ def mock_contributions_guard(stamped=True, timestamp='2015-11-18T16:29:25.496327
 
 def mock_contributions_guard_presented_time(stamped=True, timestamp='2015-11-18T16:29:25.496327'):
     fake_guard_instance = MagicMock()
-    fake_guard_instance.check_task_presented_timestamp.return_value = stamped
+    fake_guard_instance.check_task_presented_stamped.return_value = stamped
     fake_guard_instance.retrieve_presented_timestamp.return_value = timestamp
     return fake_guard_instance
