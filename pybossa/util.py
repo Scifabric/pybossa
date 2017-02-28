@@ -513,6 +513,7 @@ def publish_channel(sentinel, project_short_name, data, type, private=True):
     msg = dict(type=type, data=data)
     sentinel.master.publish(channel, json.dumps(msg))
 
+
 # See https://github.com/flask-restful/flask-restful/issues/332#issuecomment-63155660
 def fuzzyboolean(value):
     if type(value) == bool:
@@ -603,3 +604,22 @@ def refresh_materialized_view(db, view):
         db.session.execute(sql)
         db.session.commit()
         return "Materialized view refreshed"
+
+
+def generate_invitation_email_for_new_user(user, project_slugs=None):
+    server_url = current_app.config.get('SERVER_URL')
+
+    user_manual_url=current_app.config.get('USER_MANUAL_URL')
+    project_urls = []
+    for project_slug in project_slugs:
+        project_url = None if not project_slug and not len(project_slug) else server_url + '/project/' + project_slug
+        if project_url:
+            project_urls.append(project_url)
+    msg = dict(subject='New account with GIGwork',
+               recipients=[user['email_addr']],
+               bcc=[current_user.email_addr])
+    msg['html'] = render_template('/account/email/newaccount_invite.html',
+                                  user=user, project_urls=project_urls,
+                                  user_manual_url=user_manual_url,
+                                  server_url=server_url)
+    return msg
