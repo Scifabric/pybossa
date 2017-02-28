@@ -209,6 +209,15 @@ Check all the attritbutes that you can use to order by in the `Domain Object sec
     after the last project ID that you've received you will write the query
     like this: GET /api/project?last_id={{last_id}}.
 
+Related data
+~~~~~~~~~~~~
+
+For Tasks, TaskRuns and Results you can get the associated data using the argument: *related=True*.
+
+This flag will allow you to get in one call all the TaskRuns and Result for a given task. You can do the same for a TaskRun getting the Task and associated Result, and for a Result getting all the task_runs and associated Task.
+
+Projects do not have this feature, as it will be too expensive for the API.
+
 Get
 ---
 
