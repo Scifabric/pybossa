@@ -54,7 +54,8 @@ class BlogpostAuth(object):
     def _update(self, user, blogpost, project_id=None):
         if user.is_anonymous():
             return False
-        return blogpost.user_id == user.id
+
+        return blogpost.user_id == user.id or (project_id is not None and is_coowner(project_id, user))
 
     def _delete(self, user, blogpost, project_id=None):
         if user.is_anonymous():
