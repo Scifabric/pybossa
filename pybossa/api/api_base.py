@@ -136,6 +136,36 @@ class APIBase(MethodView):
 
     def _add_hateoas_links(self, item):
         obj = item.dictize()
+        related = request.args.get('related')
+        if related:
+            if item.__class__.__name__ == 'Task':
+                obj['task_runs'] = []
+                obj['results'] = []
+                task_runs = task_repo.filter_task_runs_by(task_id=item.id)
+                results = result_repo.filter_by(task_id=item.id, last_version=True)
+                for tr in task_runs:
+                    obj['task_runs'].append(tr.dictize())
+                for r in results:
+                    obj['results'].append(tr.dictize())
+
+            if item.__class__.__name__ == 'TaskRun':
+                tasks = task_repo.filter_tasks_by(id=item.task_id)
+                results = result_repo.filter_by(task_id=item.task_id, last_version=True)
+                obj['result'] = None
+                for t in tasks:
+                    obj['task'] = t.dictize()
+                for r in results:
+                    obj['result'] = r.dictize()
+
+            if item.__class__.__name__ == 'Result':
+                tasks = task_repo.filter_tasks_by(id=item.task_id)
+                task_runs = task_repo.filter_task_runs_by(task_id=item.task_id)
+                obj['task_runs'] = []
+                for t in tasks:
+                    obj['task'] = t.dictize()
+                for tr in task_runs:
+                    obj['task_runs'].append(tr.dictize())
+
         links, link = self.hateoas.create_links(item)
         if links:
             obj['links'] = links
@@ -166,7 +196,7 @@ class APIBase(MethodView):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc', 'orderby']:
+                         'fulltextsearch', 'desc', 'orderby', 'related']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
