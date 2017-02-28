@@ -70,6 +70,15 @@ class TestTaskAPI(TestAPI):
         task = tasks[0]
         assert task['info']['question'] == 'answer', task
 
+        # Related
+        res = self.app.get('/api/task?related=True')
+        tasks = json.loads(res.data)
+        assert len(tasks) == 10, tasks
+        task = tasks[0]
+        assert task['info']['question'] == 'answer', task
+        assert task['task_runs'] == [], task
+        assert task['result'] == None, task
+
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 

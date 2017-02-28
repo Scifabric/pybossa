@@ -140,13 +140,13 @@ class APIBase(MethodView):
         if related:
             if item.__class__.__name__ == 'Task':
                 obj['task_runs'] = []
-                obj['results'] = []
+                obj['result'] = None
                 task_runs = task_repo.filter_task_runs_by(task_id=item.id)
                 results = result_repo.filter_by(task_id=item.id, last_version=True)
                 for tr in task_runs:
                     obj['task_runs'].append(tr.dictize())
                 for r in results:
-                    obj['results'].append(tr.dictize())
+                    obj['result'] = r.dictize()
 
             if item.__class__.__name__ == 'TaskRun':
                 tasks = task_repo.filter_tasks_by(id=item.task_id)
