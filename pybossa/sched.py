@@ -16,29 +16,58 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
-from sqlalchemy.sql import func, desc
-from sqlalchemy import and_
+from sqlalchemy.sql import func, desc, text
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
-from pybossa.core import db
+from pybossa.core import db, sentinel, project_repo
+from redis_lock import LockManager
+from contributions_guard import ContributionsGuard
+from werkzeug.exceptions import BadRequest
 import random
 
 
 session = db.slave_session
 
 
+DEFAULT_SCHEDULER = 'locked_scheduler'
+
+
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0', desc=True):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
-        'default': get_depth_first_task,
+        'default': get_locked_task,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
+        'locked_scheduler': get_locked_task,
         'incremental': get_incremental_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
+
+
+def can_post(project_id, task_id, user_id):
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked_scheduler':
+        return has_lock(project_id, task_id, user_id)
+    else:
+        return True
+
+
+def can_read_task(task, user):
+    project_id = task.project_id
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked_scheduler':
+        return has_read_access(user) or has_lock(project_id, task.id, user.id)
+    else:
+        return True
+
+
+def after_save(project_id, task_id, user_id):
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked_scheduler':
+        release_lock(project_id, task_id, user_id)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -89,7 +118,7 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
     transcriptions.
     """
     candidate_tasks = get_candidate_task_ids(project_id, user_id, user_ip,
-                                                external_uid, limit, offset, 
+                                                external_uid, limit, offset,
                                                 orderby='priority_0', desc=True)
     total_remaining = len(candidate_tasks)
     if total_remaining == 0:
@@ -131,9 +160,82 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
     return _handle_tuples(data)
 
 
+def get_locked_task(project_id, user_id=None, user_ip=None,
+                    external_uid=None, offset=0):
+    """ Select a new task to be returned to the contributor.
+
+    For each incomplete task, check if the number of users working on the task
+    is smaller than the number of answers still needed. In that case, acquire
+    a lock on the task and return the task to the user. If offset is nonzero,
+    skip that amount of available tasks before returning to the user.
+    """
+    if offset > 2:
+        raise BadRequest()
+    sql = text('''
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers
+           FROM task
+           LEFT JOIN task_run ON (task.id = task_run.task_id)
+           WHERE NOT EXISTS
+           (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+           user_id=:user_id AND task_id=task.id)
+           AND task.project_id=:project_id AND task.state !='completed'
+           group by task.id ORDER BY priority_0 DESC, id ASC LIMIT 10;
+           ''')
+    rows = session.execute(sql, dict(project_id=project_id, user_id=user_id))
+
+    skipped = 0
+    for task_id, taskcount, n_answers in rows:
+        remaining = n_answers - taskcount
+        if acquire_lock(project_id, task_id, user_id, remaining):
+            if skipped == offset:
+                return [session.query(Task).get(task_id)]
+            else:
+                skipped += 1
+    return None
+
+
+KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
+TIMEOUT = ContributionsGuard.STAMP_TTL
+
+
+def has_lock(project_id, task_id, user_id):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    return lock_manager.has_lock(key, user_id)
+
+
+def acquire_lock(project_id, task_id, user_id, limit):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    return lock_manager.acquire_lock(key, user_id, limit)
+
+
+def release_lock(project_id, task_id, user_id):
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    key = get_key(project_id, task_id)
+    lock_manager.release_lock(key, user_id)
+
+
+def get_key(project_id, task_id):
+    return KEY_PREFIX.format(project_id, task_id)
+
+
+def get_project_scheduler(project_id):
+    project = project_repo.get(project_id)
+    scheduler = project.info.get('sched', 'default')
+    if scheduler == 'default':
+        return DEFAULT_SCHEDULER
+    return scheduler
+
+
+def has_read_access(user):
+    return not user.is_anonymous() and (user.admin or user.subadmin)
+
+
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
-            ('depth_first', 'Depth First')]
+            ('depth_first', 'Depth First'),
+            ('locked_scheduler', 'Locked Scheduler')]
 
 
 def _set_orderby_desc(query, orderby, descending):
@@ -152,6 +254,7 @@ def _set_orderby_desc(query, orderby, descending):
             query = query.order_by(getattr(Task, orderby).asc())
     #query = query.order_by(Task.id.asc())
     return query
+
 
 def _handle_tuples(data):
     """Handle tuples when query returns several columns."""

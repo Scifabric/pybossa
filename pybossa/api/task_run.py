@@ -37,6 +37,7 @@ from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from datetime import datetime
+from pybossa.sched import can_post, after_save
 
 
 class TaskRunAPI(APIBase):
@@ -53,10 +54,15 @@ class TaskRunAPI(APIBase):
         task_id = data['task_id']
         project_id = data['project_id']
         user_id = current_user.id
+        self.check_can_post(project_id, task_id, user_id)
         info = data['info']
         path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
         _upload_files_from_json(info, path)
         _upload_files_from_request(info, request.files, path)
+
+    def check_can_post(self, project_id, task_id, user_id):
+        if not can_post(project_id, task_id, user_id):
+            raise Forbidden("You must request a task first!")
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
@@ -100,6 +106,9 @@ class TaskRunAPI(APIBase):
     def _add_created_timestamp(self, taskrun, task, guard):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
         guard._remove_task_stamped(task, get_user_id_or_ip())
+
+    def _after_save(self, instance):
+        after_save(instance.project_id, instance.task_id, instance.user_id)
 
     def _add_timestamps(self, taskrun, task_id, guard):
         finish_time = datetime.now().isoformat()

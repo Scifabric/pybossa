@@ -274,6 +274,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
+            self._after_save(inst)
             self._log_changes(None, inst)
             return json.dumps(inst.dictize())
         except Exception as e:
@@ -427,6 +428,12 @@ class APIBase(MethodView):
         validate the creation (POST) or modification (PUT) of a domain object
         for reasons other than business logic ones (e.g. overlapping of a
         project name witht a URL).
+        """
+        pass
+
+    def _after_save(self, instance):
+        """Method to be overriden by inheriting classes to perform operations
+        after new object has been saved
         """
         pass
 

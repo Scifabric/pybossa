@@ -781,6 +781,9 @@ def task_presenter(short_name, task_id):
     else:
         ensure_authorized_to('read', project)
 
+    if not sched.can_read_task(task, current_user):
+        raise abort(403)
+
     if current_user.is_anonymous():
         if not project.allow_anonymous_contributors:
             msg = ("Oops! You have to sign in to participate in "
