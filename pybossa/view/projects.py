@@ -1851,28 +1851,28 @@ def coowners(short_name):
 def add_coowner(short_name, user_id=None):
     """Add coowner."""
     try:
-    	project = project_repo.get_by_shortname(short_name)
+        project = project_repo.get_by_shortname(short_name)
 
-    	ensure_authorized_to('read', project)
-    	ensure_authorized_to('update', project)
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
 
-    	current_app.logger.debug("adding user_id: %d, to project: %s" % (user_id,short_name))
+        current_app.logger.debug("adding user_id: %d, to project: %s" % (user_id,short_name))
         if project and user_id:
-        	user = user_repo.get(user_id)
-        	if user:
-        		if all(user.id != x.id for x in project.coowners):
-        			project.coowners.append(user)
-        			project_repo.update(project)
+            user = user_repo.get(user_id)
+            if user:
+                if all(user.id != x.id for x in project.coowners):
+                    project.coowners.append(user)
+                    project_repo.update(project)
 
-        		return redirect(url_for(".coowners", short_name=short_name))
-        	else:
-        		msg = "User not found"
-        		return format_error(msg, 404)
+                return redirect(url_for(".coowners", short_name=short_name))
+            else:
+                msg = "User not found"
+                return format_error(msg, 404)
         else:
-        	current_app.logger.error("Couldn't find project: %s" % short_name)
+            current_app.logger.error("Couldn't find project: %s" % short_name)
     except Exception as e:  # pragma: no cover
-    	current_app.logger.error(e)
-    	return abort(500)
+        current_app.logger.error(e)
+        return abort(500)
 
 
 @blueprint.route('/<short_name>/delcoowner/<int:user_id>')
@@ -1880,10 +1880,10 @@ def add_coowner(short_name, user_id=None):
 def del_coowner(short_name, user_id=None):
     """Del coowner."""
     try:
-    	project = project_repo.get_by_shortname(short_name)
+        project = project_repo.get_by_shortname(short_name)
 
-    	ensure_authorized_to('read', project)
-    	ensure_authorized_to('update', project)
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
 
         if project and user_id:
             user = user_repo.get(user_id)
