@@ -1687,8 +1687,21 @@ def results(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    template_args = {"project": project, "title": title,
-                     "owner": owner,
+
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project)
+        else:    # HTML
+            project_sanitized = project
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+
+    owner_dict = cached_users.get_user_summary(owner.name)
+    template_args = {"project": project_sanitized,
+                     "title": title,
+                     "owner": owner_sanitized,
                      "n_tasks": n_tasks,
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
@@ -1698,7 +1711,9 @@ def results(short_name):
                      "pro_features": pro,
                      "n_results": n_results}
 
-    return render_template('/projects/results.html', **template_args)
+    response = dict(template = '/projects/results.html', **template_args)
+
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/resetsecretkey', methods=['POST'])
