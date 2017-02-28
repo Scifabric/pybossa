@@ -61,6 +61,7 @@ class TestTaskAPI(TestAPI):
         t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
         tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
         t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119', info={'question': 'answer'})
+
         tasks.insert(0, t1)
         tasks.append(t2)
 
@@ -69,6 +70,7 @@ class TestTaskAPI(TestAPI):
         assert len(tasks) == 10, tasks
         task = tasks[0]
         assert task['info']['question'] == 'answer', task
+
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -111,6 +113,15 @@ class TestTaskAPI(TestAPI):
             assert tasks_by_id[i]['id'] == data[i]['id']
             i += 1
 
+        # Related
+        taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
+        res = self.app.get('/api/task?id=' + str(t2.id) + '&related=True')
+        data = json.loads(res.data)
+        task = data[0]
+        assert task['info']['question'] == 'answer', task
+        assert len(task['task_runs']) == 8, task
+        assert len(task['task_runs']) == len(taskruns), task
+        assert task['result'] == None, task
 
     @with_context
     def test_task_query_without_params_with_context(self):
