@@ -81,8 +81,9 @@ def browse_tasks(project_id, **args):
         finish_time = datetime.strptime(row.ft, "%Y-%m-%dT%H:%M:%S.%f")
         created = datetime.strptime(row.created, "%Y-%m-%dT%H:%M:%S.%f")
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time.strftime('%y-%m-%d %H:%M'), finish_days=(datetime.now() - finish_time).days if row.ft else None,
+                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time.strftime('%y-%m-%d %H:%M'),
                     created=created.strftime('%y-%m-%d %H:%M'))
+        #finish_days=(datetime.now() - finish_time).days if row.ft else None
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return tasks
