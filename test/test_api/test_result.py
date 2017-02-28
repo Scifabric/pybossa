@@ -69,6 +69,33 @@ class TestResultAPI(TestAPI):
         assert result['task_id'] == 1, result
         assert result['created'] is not None, result
 
+        # Related
+        res = self.app.get('/api/result?related=True')
+        results = json.loads(res.data)
+        assert len(results) == 1, results
+        result = results[0]
+        assert result['info'] is None, result
+        assert len(result['task_run_ids']) == 10, result
+        assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
+        assert result['project_id'] == 1, result
+        assert result['task_id'] == 1, result
+        assert result['created'] is not None, result
+        assert result['task']['id'] == result['task_id'], result
+        assert len(result['task_runs']) == 10, result
+        for tr in result['task_runs']:
+            assert tr['task_id'] == result['task_id'], tr
+            url = '/api/taskrun?id=%s&related=True' % tr['id']
+            taskrun = self.app.get(url)
+            taskrun = json.loads(taskrun.data)[0]
+            assert taskrun['result']['id'] == result['id'], taskrun['result']
+            assert taskrun['task']['id'] == result['task_id'], taskrun['task']
+        url = '/api/task?id=%s&related=True' % result['task_id']
+        task = self.app.get(url)
+        task = json.loads(task.data)[0]
+        assert task['result']['id'] == result['id'], task['result']
+        for tr in task['task_runs']:
+            assert tr['id'] in result['task_run_ids'], task['task']
+
         result = self.create_result(n_answers=10)
         result = result_repo.get(2)
         result.created = '2119-01-01T14:37:30.642119'

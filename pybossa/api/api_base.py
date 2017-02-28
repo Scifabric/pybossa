@@ -151,6 +151,7 @@ class APIBase(MethodView):
             if item.__class__.__name__ == 'TaskRun':
                 tasks = task_repo.filter_tasks_by(id=item.task_id)
                 results = result_repo.filter_by(task_id=item.task_id, last_version=True)
+                obj['task'] = None
                 obj['result'] = None
                 for t in tasks:
                     obj['task'] = t.dictize()
