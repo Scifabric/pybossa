@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField, FieldList
+    SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -332,6 +332,11 @@ class RegisterForm(Form):
                               pb_validator.CheckPasswordStrength()])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
+    projects = project_repo.get_all()
+    project_choices = [ (proj.short_name, proj.name) for proj in projects ]
+    project_choices.sort(key=lambda tup: tup[0])
+    project_choices.insert(0, ('', ''))
+    project_slug = SelectMultipleField(lazy_gettext('Project'), choices=project_choices)
 
 
 class UpdateProfileForm(Form):
