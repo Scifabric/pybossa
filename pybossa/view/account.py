@@ -42,7 +42,7 @@ from flask_wtf.csrf import generate_csrf
 from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter, twofactor_auth
 from pybossa.util import Pagination, handle_content_type, admin_required
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
 from pybossa.cache import users as cached_users
@@ -288,7 +288,8 @@ def register():
                        password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
-            return _create_account(account)
+            project_slugs=form.project_slug.data
+            return _create_account(account, project_slugs=project_slugs)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
@@ -355,7 +356,7 @@ def confirm_account():
     return _create_account(userdict)
 
 
-def _create_account(user_data):
+def _create_account(user_data, project_slugs=None):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
@@ -363,6 +364,9 @@ def _create_account(user_data):
     new_user.set_password(user_data['password'])
     user_repo.save(new_user)
     flash(gettext('Created user succesfully!'), 'success')
+    user_info = dict(fullname=user_data['fullname'], email_addr=user_data['email_addr'], password=user_data['password'])
+    msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
+    mail_queue.enqueue(send_mail, msg)
     return redirect(url_for("home.home"))
 
 def _update_user_with_valid_email(user, email_addr):
