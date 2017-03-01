@@ -235,7 +235,7 @@ def has_read_access(user):
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
-            ('locked_scheduler', 'Locked Scheduler')]
+            ('locked_scheduler', 'Locked')]
 
 
 def _set_orderby_desc(query, orderby, descending):
