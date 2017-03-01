@@ -270,6 +270,8 @@ def get_all_featured(category=None):
            FROM project, "user"
            WHERE project.featured=true
            AND "user".id=project.owner_id
+           AND EXISTS (select 1 from task where task.project_id=project.id
+                       and task.state='ongoing')
            GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
