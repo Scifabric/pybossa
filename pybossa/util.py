@@ -607,12 +607,13 @@ def refresh_materialized_view(db, view):
 
 
 def generate_invitation_email_for_new_user(user, project_slugs=None):
-    server_url = current_app.config.get('SERVER_URL')
 
+    project_slugs = project_slugs or []
+    server_url = current_app.config.get('SERVER_URL')
     user_manual_url=current_app.config.get('USER_MANUAL_URL')
     project_urls = []
     for project_slug in project_slugs:
-        project_url = None if not project_slug and not len(project_slug) else server_url + '/project/' + project_slug
+        project_url = None if not project_slug else server_url + '/project/' + project_slug
         if project_url:
             project_urls.append(project_url)
     msg = dict(subject='New account with GIGwork',
