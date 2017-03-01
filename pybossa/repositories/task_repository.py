@@ -175,10 +175,22 @@ class TaskRepository(Repository):
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
         Use raw SQL for performance"""
-        sql = text('''
-                   UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE project_id=:project_id''')
-        self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
+        tasks = self.filter_tasks_by(project_id=project.id)
+
+        for task in tasks:
+            task.n_answers = n_answer
+            task.state = 'ongoing'
+            #self.db.session.merge(task)
+
+        self.db.session.bulk_save_objects(tasks)
+
+        # Used Alchemy ORM instead of SQL queries to allow triggering events
+        #sql = text('''
+        #           UPDATE task SET n_answers=:n_answers,
+        #           state='ongoing' WHERE project_id=:project_id''')
+        #self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
+
+
         # Update task.state according to their new n_answers value
         sql = text('''
                    WITH project_tasks AS (

@@ -240,6 +240,45 @@ def on_taskrun_submit(mapper, conn, target):
         project_private['webhook'] = _webhook
         push_webhook(project_private, target.task_id, result_id)
 
+@event.listens_for(Task.n_answers, 'set', raw=True)
+def on_taskredundancy_set(target, value, old_value, initiator):
+  task_id = target.key[1][0]
+  conn = target.session
+  project_id = target.attrs['project_id'].value
+
+  if value > old_value:
+    sql_query = ("DELETE FROM result WHERE task_id=%s AND \
+      (SELECT COUNT(id) FROM task_run WHERE task_id=%s) < %s") % (task_id, task_id, value)
+    conn.execute(sql_query)
+  elif value < old_value:
+    sql_query = ('select count(id) from task_run where task_run.task_id=%s') % task_id
+    n_answers = conn.scalar(sql_query)
+    if n_answers >= value:
+      # Get project details
+      sql_query = ('select name, short_name, published, webhook, info from project \
+                   where id=%s') % project_id
+      results = conn.execute(sql_query)
+      project_obj = dict(id=project_id,
+        name=None,
+        short_name=None,
+        published=False,
+        info=None,
+        webhook=None,
+        action_updated='TaskCompleted')
+
+      for r in results:
+        project_obj['name'] = r.name
+        project_obj['short_name'] = r.short_name
+        project_obj['published'] = r.published
+        project_obj['info'] = r.info
+        project_obj['webhook'] = r.webhook
+        project_obj['id'] = project_id
+
+      if project_obj['published']:
+        update_task_state(conn, task_id)
+        update_feed(project_obj)
+        result_id = create_result(conn, project_id, task_id)
+        push_webhook(project_obj, task_id, result_id)
 
 @event.listens_for(Blogpost, 'after_insert')
 @event.listens_for(Blogpost, 'after_update')
