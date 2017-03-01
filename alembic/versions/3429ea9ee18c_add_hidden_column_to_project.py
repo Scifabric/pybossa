@@ -1,4 +1,4 @@
-"""add hidden column
+"""add hidden column to project table
 
 Revision ID: 3429ea9ee18c
 Revises: 41eb366742cf

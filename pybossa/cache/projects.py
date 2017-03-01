@@ -381,8 +381,45 @@ def n_count(category):
     return count
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_all(category):
     """Return a list of published projects for a given category.
+    """
+    sql = text(
+        '''SELECT project.id, project.name, project.short_name,
+           project.description, project.info, project.created, project.updated,
+           project.category_id, project.featured, "user".fullname AS owner
+           FROM "user", project
+           LEFT OUTER JOIN category ON project.category_id=category.id
+           WHERE
+           category.short_name=:category
+           AND "user".id=project.owner_id
+           AND project.published=true
+           AND (project.info->>'passwd_hash') IS NULL
+           GROUP BY project.id, "user".id ORDER BY project.name;''')
+
+    results = session.execute(sql, dict(category=category))
+    projects = []
+    for row in results:
+        project = dict(id=row.id,
+                       name=row.name, short_name=row.short_name,
+                       created=row.created,
+                       updated=row.updated,
+                       description=row.description,
+                       owner=row.owner,
+                       featured=row.featured,
+                       last_activity=pretty_date(last_activity(row.id)),
+                       last_activity_raw=last_activity(row.id),
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=row.info)
+        projects.append(project)
+    return projects
+
+
+def get_published_incomplete(category):
+    """Return a list of published, incomplete projects for a given category.
     """
     sql = text(
         '''SELECT project.id, project.name, project.short_name,
@@ -423,7 +460,7 @@ def get(category, page=1, per_page=5):
     """Return a list of published projects with a pagination for a given category.
     """
     offset = (page - 1) * per_page
-    return get_all(category)[offset:offset+per_page]
+    return get_published_incomplete(category)[offset:offset + per_page]
 
 
 # TODO: find a convenient cache timeout and cache, if needed
