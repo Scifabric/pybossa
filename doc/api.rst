@@ -1562,6 +1562,81 @@ Logged in users with access rights will get a 403 when it's not their own projec
 
 The example output matches **/project/<short_name>/**
 
+Project results
+~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/results**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows information about a project results template.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_results**: Number of results
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template for results
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_results": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John",
+        "info": {
+          "avatar": null,
+          "container": "user_4953"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 2417,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626"
+      },
+      "template": "/projects/results.html",
+      "title": "Project: flickr678"
+    }
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
