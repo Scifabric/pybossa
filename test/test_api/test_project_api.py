@@ -91,6 +91,14 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 5, data
 
+        # Related
+        res = self.app.get("/api/project?limit=1&related=True")
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        keys = ['tasks', 'task_runs', 'results']
+        for key in keys:
+            assert key not in data[0].keys()
+
         # Keyset pagination
         url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
         res = self.app.get(url)

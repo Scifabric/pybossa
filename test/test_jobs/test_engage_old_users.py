@@ -21,6 +21,7 @@ from default import Test, with_context
 from factories import TaskRunFactory, UserFactory
 from pybossa.core import user_repo
 import datetime
+from dateutil.relativedelta import relativedelta
 import calendar
 # from mock import patch, MagicMock
 
@@ -54,13 +55,10 @@ class TestEngageUsers(Test):
         """Test JOB get inactive users returns a list of jobs."""
 
         today = datetime.datetime.today()
-        old_date = today - datetime.timedelta(days=30)
+        old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        if calendar.isleap(today.year):
-            n_days_year = 366
-        else:
-            n_days_year = 365
-        one_year = today - datetime.timedelta(days=n_days_year)
+        # substract one year and take care of leap years
+        one_year = today + relativedelta(years=-1, leapdays=1)
         one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
         user = UserFactory.create()
         user_recent = UserFactory.create()

@@ -84,6 +84,16 @@ class TestTaskrunAPI(TestAPI):
             assert tr['project_id'] in project_ids, tr
             assert tr['info']['answer'] == 'annakarenina', tr
 
+        # Related
+        res = self.app.get('/api/taskrun?related=True')
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 20, taskruns
+        for tr in taskruns:
+            assert tr['project_id'] in project_ids, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
+            assert tr['task']['id'] == tr['task_id'], tr
+            assert tr['result'] == None, tr
+
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
@@ -92,6 +102,11 @@ class TestTaskrunAPI(TestAPI):
         res = self.app.get('/api/taskrun?api_key=' + user.api_key)
         taskruns = json.loads(res.data)
         assert len(taskruns) == 0, taskruns
+
+        res = self.app.get('/api/taskrun?related=True&api_key=' + user.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 0, taskruns
+
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
