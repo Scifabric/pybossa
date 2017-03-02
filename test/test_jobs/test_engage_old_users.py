@@ -55,7 +55,7 @@ class TestEngageUsers(Test):
         """Test JOB get inactive users returns a list of jobs."""
 
         today = datetime.datetime.today()
-        old_date = today - datetime.timedelta(days=30)
+        old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
         # substract one year and take care of leap years
         one_year = today + relativedelta(years=-1, leapdays=1)
