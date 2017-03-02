@@ -625,7 +625,6 @@ def refresh_materialized_view(db, view):
 
 
 def generate_invitation_email_for_new_user(user, project_slugs=None):
-
     project_slugs = project_slugs or []
     server_url = current_app.config.get('SERVER_URL')
     user_manual_url=current_app.config.get('USER_MANUAL_URL')
@@ -640,5 +639,20 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
     msg['html'] = render_template('/account/email/newaccount_invite.html',
                                   user=user, project_urls=project_urls,
                                   user_manual_url=user_manual_url,
+                                  server_url=server_url)
+    return msg
+
+
+def generate_invitation_email_for_admins_subadmins(user, access_type):
+    if not user or not access_type:
+        return None
+
+    server_url = current_app.config.get('SERVER_URL')
+    admin_manual_url=current_app.config.get('ADMIN_MANUAL_URL')
+    msg = dict(subject='Account access update on GIGwork',
+               recipients=[user.email_addr])
+    msg['html'] = render_template('/account/email/adminsubadmin_invite.html',
+                                  username=user.fullname, access_type=access_type,
+                                  admin_manual_url=admin_manual_url,
                                   server_url=server_url)
     return msg
