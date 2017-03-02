@@ -36,6 +36,7 @@ from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
+from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
@@ -48,11 +49,13 @@ from StringIO import StringIO
 
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
-
+from pybossa.jobs import send_mail
 
 blueprint = Blueprint('admin', __name__)
 
 DASHBOARD_QUEUE = Queue('super', connection=sentinel.master)
+
+mail_queue = Queue('super', connection=sentinel.master)
 
 def format_error(msg, status_code):
     """Return error as a JSON response."""
@@ -219,6 +222,9 @@ def add_admin(user_id=None):
                 ensure_authorized_to('update', user)
                 user.admin = True
                 user_repo.update(user)
+                msg = generate_invitation_email_for_admins_subadmins(user, "Admin")
+                if msg:
+                    mail_queue.enqueue(send_mail, msg)
                 return redirect_content_type(url_for(".users"))
             else:
                 msg = "User not found"
@@ -525,7 +531,7 @@ def dashboard():
         current_app.logger.error(e)
         return abort(500)
 
-    
+
 @blueprint.route('/subadminusers', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -549,8 +555,8 @@ def subadminusers(user_id=None):
 
     return render_template('/admin/subadminusers.html', found=[], users=users,
                            title=gettext("Manage Subadmin Users"), form=form)
-                           
-                                   
+
+
 @blueprint.route('/users/addsubadmin/<int:user_id>')
 @login_required
 @admin_required
@@ -563,6 +569,9 @@ def add_subadmin(user_id=None):
                 ensure_authorized_to('update', user)
                 user.subadmin = True
                 user_repo.update(user)
+                msg = generate_invitation_email_for_admins_subadmins(user, "Subadmin")
+                if msg:
+                    mail_queue.enqueue(send_mail, msg)
                 return redirect(url_for(".subadminusers"))
             else:
                 msg = "User not found"
@@ -593,4 +602,4 @@ def del_subadmin(user_id=None):
             return format_error(msg, 415)
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
-        return abort(500)    
+        return abort(500)
