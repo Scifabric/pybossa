@@ -5054,6 +5054,16 @@ class TestWeb(web.Helper):
         assert dom.find(id="noresult") is not None, res.data
 
     @with_context
+    def test_results_json(self):
+        """Test WEB results shows no data as no template and no data."""
+        tr = TaskRunFactory.create()
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        print res.data
+
+    @with_context
     def test_results_with_values(self):
         """Test WEB results with values are not shown as no template but data."""
         task = TaskFactory.create(n_answers=1)
