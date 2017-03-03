@@ -30,6 +30,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
+from pybossa.util import pretty_date, datetime_filter
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
@@ -616,6 +617,10 @@ def setup_jinja2_filters(app):
     @app.template_filter('disqus_sso')
     def _disqus_sso(obj): # pragma: no cover
         return get_disqus_sso(obj)
+
+    @app.template_filter('datetime')
+    def _datetime_filter(s,f=None):
+        return datetime_filter(s,f)
 
 
 def setup_csrf_protection(app):

@@ -57,6 +57,33 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
         n_tasks = row.n_tasks
     return n_tasks
 
+def oldest_available_task(project_id, user_id, user_ip=None):
+    """Return the timestamp of the oldest task with the highest priority that a user can contribute to.
+    """
+    if user_id and not user_ip:
+        query = text('''SELECT created FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       project_id=:project_id AND user_id=:user_id
+                       AND task_id=task.id)
+                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+        result = session.scalar(query, dict(project_id=project_id,
+                                             user_id=user_id))
+    else:
+        # Anonymous access isn't supported, therefore the else statement will never execute. Maybe in the future?
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        query = text('''SELECT created FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       project_id=:project_id AND user_ip=:user_ip
+                       AND task_id=task.id)
+                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+
+        result = session.scalar(query, dict(project_id=project_id,
+                                             user_ip=user_ip))
+    #n_tasks = 0
+    #for row in result:
+    #    n_tasks = row.n_tasks
+    return result
 
 def check_contributing_state(project, user_id=None, user_ip=None,
                              external_uid=None, ps=None):

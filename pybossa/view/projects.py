@@ -68,7 +68,7 @@ from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
 from pybossa.forms.admin_view_forms import *
-from pybossa.cache.helpers import n_available_tasks
+from pybossa.cache.helpers import n_available_tasks, oldest_available_task
 
 blueprint = Blueprint('project', __name__)
 
@@ -533,6 +533,8 @@ def update(short_name):
 def details(short_name):
     project, owner, ps = project_by_shortname(short_name)
     num_available_tasks = n_available_tasks(project.id, current_user.id)
+    n_completed_tasks_by_user = cached_projects.n_completed_tasks_by_user(project.id, current_user.id)
+    oldest_task = oldest_available_task(project.id, current_user.id)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -559,7 +561,10 @@ def details(short_name):
                      "n_completed_tasks": ps.n_completed_tasks,
                      "n_volunteers": ps.n_volunteers,
                      "pro_features": pro,
-                     "n_available_tasks": num_available_tasks}
+                     "n_available_tasks": num_available_tasks,
+                     "n_completed_tasks_by_user": n_completed_tasks_by_user,
+                     "oldest_available_task": oldest_task
+                     }
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
