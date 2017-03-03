@@ -420,6 +420,7 @@ def get_all(category):
     return projects
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_published_incomplete(category):
     """Return a list of published, incomplete projects for a given category.
     """
