@@ -207,6 +207,36 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
+def parseDateString(source):
+    if not isinstance(source, (date, datetime)):
+        try:
+            return datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
+        except Exception, e:
+            return source
+
+    return source
+
+def convertEstToUtc(source):
+    import dateutil.tz
+
+    source = parseDateString(source)
+
+    utc = dateutil.tz.gettz('UTC')
+    est = dateutil.tz.gettz('America/New_York')
+
+    #naive to EST to UTC
+    return source.replace(tzinfo=est).astimezone(utc)
+
+def convertUtcToEst(source):
+    import dateutil.tz
+
+    source = parseDateString(source)
+
+    utc = dateutil.tz.gettz('UTC')
+    est = dateutil.tz.gettz('America/New_York')
+
+    #naive to EST to UTC
+    return source.replace(tzinfo=utc).astimezone(est)
 
 # Fromhttp://stackoverflow.com/q/1551382
 def pretty_date(time=False):

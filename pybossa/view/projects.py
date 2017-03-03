@@ -46,7 +46,8 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url, admin_or_subadmin_required)
+                          get_avatar_url, admin_or_subadmin_required,
+                          convertEstToUtc)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -1066,22 +1067,22 @@ def get_tasks_browse_args(args):
     isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
     if args.get('created1'):
         if re.match(isoStringFormat, args.get('created1')):
-            created1 = args.get('created1')
+            created1 = convertEstToUtc(args.get('created1')).isoformat(timespec='microseconds')
         else:
             raise ValueError('created1 date format error, value: %s'%args.get('created1'))
     if args.get('created2'):
         if re.match(isoStringFormat, args.get('created2')):
-            created2 = args.get('created2')
+            created2 = convertEstToUtc(args.get('created2')).isoformat(timespec='microseconds')
         else:
             raise ValueError('created2 date format error, value: %s'%args.get('created2'))
     if args.get('ftime1'):
         if re.match(isoStringFormat, args.get('ftime1')):
-            ftime1 = args.get('ftime1')
+            ftime1 = convertEstToUtc(args.get('ftime1')).isoformat(timespec='microseconds')
         else:
             raise ValueError('ftime1 date format error, value: %s'%args.get('ftime1'))
     if args.get('ftime2'):
         if re.match(isoStringFormat, args.get('ftime2')):
-            ftime2 = args.get('ftime2')
+            ftime2 = convertEstToUtc(args.get('ftime2')).isoformat(timespec='microseconds')
         else:
             raise ValueError('ftime2 date format error, value: %s'%args.get('ftime2'))
     if args.get('priority1'):
@@ -1109,7 +1110,7 @@ def get_tasks_browse_args(args):
 
         for key, value in allowed_columns.iteritems():
             order_by = order_by.replace(key, value)
-        
+
     return (display_columns, task_id, pcomplete1, pcomplete2, hide_completed, created1, created2, ftime1, ftime2, priority1, priority2, order_by, order_by_dict)
 
 
