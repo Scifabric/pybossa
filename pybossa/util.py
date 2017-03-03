@@ -254,11 +254,20 @@ def pretty_date(time=False):
     return ' '.join([str(day_diff / 365), "years ago"])
 
 def datetime_filter(source, fmt):
+
+    import dateutil.tz
+
     if not isinstance(source, (date, datetime)):
         try:
             source = datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
         except Exception, e:
             return source
+
+    utc = dateutil.tz.gettz('UTC')
+    est = dateutil.tz.gettz('America/New_York')
+
+    #naive to UTC to local
+    source = source.replace(tzinfo=utc).astimezone(est)
     return source.strftime(fmt)
 
 
