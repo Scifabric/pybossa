@@ -253,13 +253,13 @@ def pretty_date(time=False):
         return ' '.join([str(day_diff / 365), "year ago"])
     return ' '.join([str(day_diff / 365), "years ago"])
 
-def datetime_filter(source, format='%y-%m-%d %H:%M'):
+def datetime_filter(source, fmt):
     if not isinstance(source, (date, datetime)):
         try:
             source = datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
         except Exception, e:
             return source
-    return source.strftime(format)
+    return source.strftime(fmt)
 
 
 class Pagination(object):
