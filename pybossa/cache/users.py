@@ -277,3 +277,17 @@ def get_users_page(page, per_page=24):
 def delete_user_summary(name):
     """Delete from cache the user summary."""
     delete_memoized(get_user_summary, name)
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_metadata(name):
+    sql = text("""
+    SELECT info->'metadata' FROM public.user WHERE name=:name;
+    """)
+
+    cursor = session.execute(sql, dict(name=name))
+    row = cursor.fetchone()
+    return row[0] or {}
+
+def delete_user_metadata(name):
+    delete_memoized(get_metadata, name)

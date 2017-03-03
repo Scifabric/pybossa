@@ -65,6 +65,7 @@ class User(db.Model, DomainObject, UserMixin):
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     subadmin = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
+    meta_data= Column(MutableDict.as_mutable(JSON), default=dict())
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')

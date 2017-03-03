@@ -17,28 +17,29 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import current_app
+from flask import request
+from flask.ext.babel import lazy_gettext
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
+from werkzeug.utils import secure_filename
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
+from wtforms import SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
-from flask.ext.babel import lazy_gettext, gettext
 
-from pybossa.core import project_repo, user_repo
-from pybossa.sched import sched_variants
 import validator as pb_validator
-import re
-from wtforms.validators import ValidationError
-from flask import request
-from werkzeug.utils import secure_filename
+from pybossa import util
+from pybossa.core import project_repo, user_repo
 from pybossa.core import uploader
 from pybossa.cache import projects as cached_projects
 from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
 import os
-from flask import current_app
+from pybossa.forms.fields.time_field import TimeField
+from pybossa.sched import sched_variants
+from validator import TimeFieldsValidator
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -479,6 +480,7 @@ class CategoryForm(Form):
     description = TextField(lazy_gettext('Description'),
                             [validators.Required()])
 
+
 ### Common forms
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -487,6 +489,7 @@ class AvatarUploadForm(Form):
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+
 
 class BulkUserCSVImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='usercsvimport')
@@ -522,3 +525,21 @@ class GenericUserImportForm(object):
         if form_name is None:
             return None
         return self._forms[form_name](*form_args, **form_kwargs)
+
+
+class MetadataForm(Form):
+    """Form for admins to add metadata for users."""
+    languages = SelectMultipleField(lazy_gettext('Language(s)'), choices=util.languages())
+    location = SelectField(lazy_gettext('Location'), choices=util.countries())
+    start_time = TimeField(lazy_gettext('Start Time'),
+        [TimeFieldsValidator(["end_time", "timezone"],
+        message="Start time, End time, and Timezone must be filled out for submission")])
+    end_time = TimeField(lazy_gettext('End Time'),
+        [TimeFieldsValidator(["start_time", "timezone"],
+        message="Start time, End time, and Timezone must be filled out for submission")])
+    timezone = SelectField(lazy_gettext('Timezone'),
+        [TimeFieldsValidator(["start_time", "end_time"],
+        message="Start time, End time, and Timezone must be filled out for submission")],
+        choices=util.timezones())
+    user_type = SelectField(lazy_gettext('Type of user'), choices=util.user_types())
+    review = TextAreaField(lazy_gettext('Additional comments'))

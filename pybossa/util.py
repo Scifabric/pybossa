@@ -39,6 +39,7 @@ import hashlib
 import hmac
 import simplejson
 import time
+import pycountry
 
 
 def last_flashed_message():
@@ -753,3 +754,76 @@ class AttrDict(OrderedDict):
 
     def dictize(self):
         return self
+
+
+def timezones():
+    tz = [("", ""), ("ACT", "Australia Central Time"),
+        ("AET", "Australia Eastern Time"),
+        ("AGT", "Argentina Standard Time"),
+        ("ART", "(Arabic) Egypt Standard Time"),
+        ("AST", "Alaska Standard Time"),
+        ("BET", "Brazil Eastern Time"),
+        ("BST", "Bangladesh Standard Time"),
+        ("CAT", "Central African Time"),
+        ("CNT", "Canada Newfoundland Time"),
+        ("CST", "Central Standard Time"),
+        ("CTT", "China Taiwan Time"),
+        ("EAT", "Eastern African Time"),
+        ("ECT", "European Central Time"),
+        ("EET", "Eastern European Time"),
+        ("EST", "Eastern Standard Time"),
+        ("GMT", "Greenwich Mean Time"),
+        ("HST", "Hawaii Standard Time"),
+        ("IET", "Indiana Eastern Standard Time"),
+        ("IST", "India Standard Time"),
+        ("JST", "Japan Standard Time"),
+        ("MET", "Middle East Time"),
+        ("MIT", "Midway Islands Time"),
+        ("MST", "Mountain Standard Time"),
+        ("NET", "Near East Time"),
+        ("NST", "New Zealand Standard Time"),
+        ("PLT", "Pakistan Lahore Time"),
+        ("PNT", "Phoenix Standard Time"),
+        ("PRT", "Puerto Rick and US Virgin Islands Time"),
+        ("PST", "Pacific Standard Time"),
+        ("SST", "Solomon Standard Time"),
+        ("UTC", "Universal Coordinated Time"),
+        ("VST", "Vietnam Standard Time")]
+    return tz
+
+
+def user_types():
+    types = [("", ""),
+        ("Temporary Employee", "Temporary Employee"),
+        ("Intern", "Intern"),
+        ("Full-time Employee", "Full-time Employee"),
+        ("Part-time Employee", "Part-time Employee"),
+        ("Vendor", "Vendor"),
+        ("Freelancer", "Freelancer"),
+        ("Subcontractor", "Subcontractor")]
+    return types
+
+
+def languages():
+    langs = [("English", "English"),
+        ("Arabic", "Arabic"),
+        ("Bengali", "Bengali"),
+        ("Chinese", "Chinese"),
+        ("French", "French"),
+        ("German", "German"),
+        ("Hindi", "Hindi"),
+        ("Italian", "Italian"),
+        ("Japanese", "Japanese"),
+        ("Korean", "Korean"),
+        ("Portuguese", "Portuguese"),
+        ("Russian", "Russian"),
+        ("Spanish", "Spanish")]
+    return langs
+
+
+def countries():
+    cts = [("", "")]
+    for ct in pycountry.countries:
+        name = ct.name
+        cts.append((name, name))
+    return cts

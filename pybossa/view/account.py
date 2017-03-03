@@ -28,7 +28,6 @@ This module exports the following endpoints:
 """
 from itsdangerous import BadData
 from markdown import markdown
-import time
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
@@ -52,11 +51,14 @@ from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
 
+from pybossa.forms.forms import MetadataForm
 from pybossa.forms.account_view_forms import *
 from otpauth import OtpAuth
 from pybossa.contributions_guard import ContributionsGuard
 import os
 import base64
+
+import time
 
 blueprint = Blueprint('account', __name__)
 
@@ -417,6 +419,8 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.public_get_user_summary(user.name)
+    md = cached_users.get_metadata(user.name)
+    form = MetadataForm(**md)
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_created = cached_users.public_published_projects_cached(user.id)
 
@@ -429,7 +433,9 @@ def _show_public_profile(user):
                     title=title,
                     user=user_dict,
                     projects=projects_contributed,
-                    projects_created=projects_created)
+                    form=form,
+                    projects_created=projects_created,
+                    metadata=md)
 
     return handle_content_type(response)
 
@@ -819,3 +825,42 @@ def reset_api_key(name):
     else:
         csrf = dict(form=dict(csrf=generate_csrf()))
         return jsonify(csrf)
+
+@blueprint.route('/save_metadata/<name>', methods=['POST'])
+@login_required
+def add_metadata(name):
+    """
+    Admin can add metadata for selected user
+
+    Redirects to public profile page for selected user.
+
+    """
+    user = user_repo.get_by_name(name=name)
+    form = MetadataForm(request.form)
+    md = cached_users.get_metadata(user.name)
+    if not any(value for value in form.data.values()):
+        user.info['metadata'] = {}
+    elif form.validate():
+        metadata = dict(admin=current_user.name, time_stamp=time.ctime(),
+                        languages=form.languages.data, user_type=form.user_type.data,
+                        start_time=form.start_time.data, end_time=form.end_time.data,
+                        location=form.location.data, review=form.review.data,
+                        timezone=form.timezone.data, profile_name=user.name)
+        user.info['metadata'] = metadata
+    else:
+        projects_contributed = cached_users.projects_contributed_cached(user.id)
+        projects_created = cached_users.published_projects_cached(user.id)
+        if current_user.is_authenticated() and current_user.admin:
+            draft_projects = cached_users.draft_projects(user.id)
+            projects_created.extend(draft_projects)
+        title = "%s &middot; User Profile" % user.name
+        flash("Please fix the errors", 'message')
+        return render_template('/account/public_profile.html',
+                               title=title, user=user, metadata=md,
+                               projects=projects_contributed, form=form,
+                               projects_created=projects_created,
+                               input_form=True)
+    user_repo.update(user)
+    cached_users.delete_user_metadata(user.name)
+    flash("Input saved successfully", "info")
+    return redirect(url_for('account.profile', name=name))
