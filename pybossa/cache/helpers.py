@@ -66,7 +66,7 @@ def oldest_available_task(project_id, user_id, user_ip=None):
                        project_id=:project_id AND user_id=:user_id
                        AND task_id=task.id)
                        AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
-        result = session.scalar(query, dict(project_id=project_id,
+        return session.scalar(query, dict(project_id=project_id,
                                              user_id=user_id))
     else:
         # Anonymous access isn't supported, therefore the else statement will never execute. Maybe in the future?
@@ -78,12 +78,8 @@ def oldest_available_task(project_id, user_id, user_ip=None):
                        AND task_id=task.id)
                        AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
 
-        result = session.scalar(query, dict(project_id=project_id,
+        return session.scalar(query, dict(project_id=project_id,
                                              user_ip=user_ip))
-    #n_tasks = 0
-    #for row in result:
-    #    n_tasks = row.n_tasks
-    return result
 
 def check_contributing_state(project, user_id=None, user_ip=None,
                              external_uid=None, ps=None):
