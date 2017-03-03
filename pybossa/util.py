@@ -208,9 +208,12 @@ def crossdomain(origin=None, methods=None, headers=None,
     return decorator
 
 def parseDateString(source):
+    import dateutil.parser
+
     if not isinstance(source, (date, datetime)):
         try:
-            return datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
+            return dateutil.parser.parse(str(source))
+            #return datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
         except Exception, e:
             return source
 

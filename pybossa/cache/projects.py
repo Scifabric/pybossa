@@ -20,7 +20,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
-from pybossa.util import pretty_date, static_vars, convertUtcToEst
+from pybossa.util import pretty_date, static_vars, convertUtcToEst, convertEstToUtc
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 from datetime import datetime
 
@@ -80,9 +80,7 @@ def browse_tasks(project_id, **args):
     for row in results:
         # TODO: use Jinja filters to format date
         finish_time = convertUtcToEst(row.ft).strftime('%y-%m-%d %H:%M') if row.ft is not None else None
-        print finish_time
         created = convertUtcToEst(row.created).strftime('%y-%m-%d %H:%M') if row.created is not None else None
-        print created
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time,
                     created=created)
@@ -106,13 +104,17 @@ def get_task_filters(**args):
   if args.get('priority2') is not None:
     filters += " AND priority_0 <= %f" % args.get('priority2')
   if args.get('created1'):
-    filters += " AND task.created >= '%s'" % args.get('created1')
+    datestring = convertEstToUtc(args.get('created1')).isoformat()
+    filters += " AND task.created >= '%s'" % datestring
   if args.get('created2'):
-    filters += " AND task.created <= '%s'" % args.get('created2')
+    datestring = convertEstToUtc(args.get('created2')).isoformat()
+    filters += " AND task.created <= '%s'" % datestring
   if args.get('ftime1'):
-    filters += " AND ft >= '%s'" % args.get('ftime1')
+    datestring = convertEstToUtc(args.get('ftime1')).isoformat()
+    filters += " AND ft >= '%s'" % datestring
   if args.get('ftime2'):
-    filters += " AND ft <= '%s'" % args.get('ftime2')
+    datestring = convertEstToUtc(args.get('ftime2')).isoformat()
+    filters += " AND ft <= '%s'" % datestring
   
   return filters
 

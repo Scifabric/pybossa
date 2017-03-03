@@ -46,8 +46,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url, admin_or_subadmin_required,
-                          convertEstToUtc)
+                          get_avatar_url, admin_or_subadmin_required)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -1067,22 +1066,22 @@ def get_tasks_browse_args(args):
     isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
     if args.get('created1'):
         if re.match(isoStringFormat, args.get('created1')):
-            created1 = convertEstToUtc(args.get('created1')).isoformat(timespec='microseconds')
+            created1 = args.get('created1')
         else:
             raise ValueError('created1 date format error, value: %s'%args.get('created1'))
     if args.get('created2'):
         if re.match(isoStringFormat, args.get('created2')):
-            created2 = convertEstToUtc(args.get('created2')).isoformat(timespec='microseconds')
+            created2 = args.get('created2')
         else:
             raise ValueError('created2 date format error, value: %s'%args.get('created2'))
     if args.get('ftime1'):
         if re.match(isoStringFormat, args.get('ftime1')):
-            ftime1 = convertEstToUtc(args.get('ftime1')).isoformat(timespec='microseconds')
+            ftime1 = args.get('ftime1')
         else:
             raise ValueError('ftime1 date format error, value: %s'%args.get('ftime1'))
     if args.get('ftime2'):
         if re.match(isoStringFormat, args.get('ftime2')):
-            ftime2 = convertEstToUtc(args.get('ftime2')).isoformat(timespec='microseconds')
+            ftime2 = args.get('ftime2')
         else:
             raise ValueError('ftime2 date format error, value: %s'%args.get('ftime2'))
     if args.get('priority1'):
