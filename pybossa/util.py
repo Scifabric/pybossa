@@ -649,7 +649,8 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
     server_url = current_app.config.get('SERVER_URL')
     admin_manual_url=current_app.config.get('ADMIN_MANUAL_URL')
     msg = dict(subject='Account access update on GIGwork',
-               recipients=[user.email_addr])
+               recipients=[user.email_addr],
+               bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/adminsubadmin_invite.html',
                                   username=user.fullname, access_type=access_type,
                                   admin_manual_url=admin_manual_url,
