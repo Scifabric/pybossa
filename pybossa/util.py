@@ -626,6 +626,7 @@ def refresh_materialized_view(db, view):
 def generate_invitation_email_for_new_user(user, project_slugs=None):
     project_slugs = project_slugs or []
     server_url = current_app.config.get('SERVER_URL')
+    user_manual_label=current_app.config.get('USER_MANUAL_LABEL')
     user_manual_url=current_app.config.get('USER_MANUAL_URL')
     project_urls = []
     for project_slug in project_slugs:
@@ -637,6 +638,7 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/newaccount_invite.html',
                                   user=user, project_urls=project_urls,
+                                  user_manual_label=user_manual_label,
                                   user_manual_url=user_manual_url,
                                   server_url=server_url)
     return msg
