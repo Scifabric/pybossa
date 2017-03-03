@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import is_coowner
+from werkzeug.exceptions import NotFound
 
 
 class TaskAuth(object):
@@ -51,5 +52,7 @@ class TaskAuth(object):
     def _only_admin_or_owner(self, user, task):
         if not user.is_anonymous():
             project = self.project_repo.get(task.project_id)
-            return (project.owner_id == user.id or user.admin or is_coowner(project.id, user))
+            if project is None:
+                raise NotFound("Invalid project ID")
+            return project.owner_id == user.id or user.admin or is_coowner(project.id, user)
         return False
