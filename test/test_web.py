@@ -5061,7 +5061,42 @@ class TestWeb(web.Helper):
         url = '/project/%s/results' % project.short_name
         res = self.app_get_json(url)
         data = json.loads(res.data)
-        print res.data
+        err_msg='data entry missing'
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_results' in data, err_msg
+        assert 'n_task_runs' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        owner = data['owner']
+        assert 'created' in owner, err_msg
+        assert 'fullname' in owner, err_msg
+        assert 'info' in owner, err_msg
+        assert 'n_answers' in owner, err_msg
+        assert 'name' in owner, err_msg
+        assert 'rank' in owner, err_msg
+        assert 'registered_ago' in owner, err_msg
+        assert 'score' in owner, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        project = data['project']
+        assert 'created' in project, err_msg
+        assert 'description' in project, err_msg
+        assert 'featured' in project, err_msg
+        assert 'id' in project, err_msg
+        assert 'info' in project, err_msg
+        assert 'last_activity' in project, err_msg
+        assert 'last_activity_raw' in project, err_msg
+        assert 'n_tasks' in project, err_msg
+        assert 'n_volunteers' in project, err_msg
+        assert 'name' in project, err_msg
+        assert 'overall_progress' in project, err_msg
+        assert 'owner' in project, err_msg
+        assert 'short_name' in project, err_msg
+        assert 'updated' in project, err_msg
+        assert data['template']=='/projects/results.html', err_msg
+        assert 'title' in data, err_msg
 
     @with_context
     def test_results_with_values(self):
