@@ -182,7 +182,7 @@ class TaskRepository(Repository):
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
 
 
-        # Update task.state according to their new n_answers value
+        # Update task.state and result table according to their new n_answers value
         sql = text('''
                    CREATE TEMP TABLE complete_tasks ON COMMIT DROP AS (
                    SELECT task.id, array_agg(task_run.id) as task_runs
