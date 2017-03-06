@@ -5070,6 +5070,8 @@ class TestWeb(web.Helper):
         assert 'overall_progress' in data, err_msg
         assert 'owner' in data, err_msg
         owner = data['owner']
+        assert 'email_addr' not in owner, owner
+        assert 'api_key' not in owner, owner
         assert 'created' in owner, err_msg
         assert 'fullname' in owner, err_msg
         assert 'info' in owner, err_msg
@@ -5111,6 +5113,19 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert dom.find(id="noresult") is not None, res.data
+
+    @with_context
+    def test_results_with_values_json(self):
+        """Test WEB results with values are not shown as no template but data."""
+        task = TaskFactory.create(n_answers=1)
+        tr = TaskRunFactory.create(task=task)
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        result = result_repo.get_by(project_id=project.id)
+        result.info = dict(foo='bar')
+        result_repo.update(result)
+        res = self.app_get_json(url)
+        print res.data
 
     @with_context
     def test_results_with_values_and_template(self):
