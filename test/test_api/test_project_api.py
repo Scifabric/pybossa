@@ -19,7 +19,7 @@ import json
 from mock import patch, call
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import TestAPI
+from . import TestAPI
 
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
@@ -689,7 +689,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
-        print data
+        print(data)
 
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
@@ -942,7 +942,7 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
 
         res = self.app.put(url, data=data)
-        print res.data
+        print(res.data)
         error_msg = json.loads(res.data)['exception_msg']
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data

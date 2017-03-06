@@ -122,8 +122,8 @@ class Helper(Test):
         with self.flask_app.app_context():
             categories = db.session.query(Category).all()
             if len(categories) == 0:
-                print "Categories 0"
-                print "Creating default ones"
+                print("Categories 0")
+                print("Creating default ones")
                 self._create_categories()
 
 

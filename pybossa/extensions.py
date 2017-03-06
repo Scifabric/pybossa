@@ -114,11 +114,11 @@ timeouts = dict()
 ratelimits = dict()
 
 # Newsletter
-from newsletter import Newsletter
+from .newsletter import Newsletter
 newsletter = Newsletter()
 
 # Importer
-from importers import Importer
+from .importers import Importer
 importer = Importer()
 
 from flask.ext.plugins import PluginManager

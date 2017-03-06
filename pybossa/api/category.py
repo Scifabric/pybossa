@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * categories
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.category import Category
 
 

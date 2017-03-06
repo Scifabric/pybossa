@@ -18,7 +18,7 @@
 import json
 from default import with_context, mock_contributions_guard
 from nose.tools import assert_equal
-from test_api import TestAPI
+from . import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
@@ -179,7 +179,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "It should get the last item first."
         taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
         for i in range(20):
-            print data[i]['id']
+            print(data[i]['id'])
             assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context

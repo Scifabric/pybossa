@@ -168,7 +168,7 @@ def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
-        print "Export project id %d" % _id
+        print("Export project id %d" % _id)
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
@@ -332,7 +332,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
 @with_cache_disabled
 def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
-    print "Running on the background warm_up_stats"
+    print("Running on the background warm_up_stats")
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
@@ -399,8 +399,8 @@ def warm_cache():  # pragma: no cover
     # Users
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
-        # print "Getting stats for %s" % user['name']
-        print user_repo
+        # print("Getting stats for %s" % user['name'])
+        print(user_repo)
         u = user_repo.get_by_name(user['name'])
         cached_users.get_user_summary(user['name'])
         cached_users.projects_contributed_cached(u.id)

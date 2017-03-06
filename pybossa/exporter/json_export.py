@@ -70,6 +70,6 @@ class JsonExporter(Exporter):
         return super(JsonExporter, self).download_name(project, ty, 'json')
 
     def pregenerate_zip_files(self, project):
-        print "%d (json)" % project.id
+        print("%d (json)" % project.id)
         self._make_zip(project, "task")
         self._make_zip(project, "task_run")

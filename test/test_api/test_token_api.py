@@ -18,7 +18,7 @@
 import json
 from default import with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import TestAPI
+from . import TestAPI
 from pybossa.api.token import TokenAPI
 from werkzeug.exceptions import MethodNotAllowed
 

@@ -331,7 +331,7 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
         self.signout
         # As Authenticated user but ADMIN
         res = self.signin(email=self.root_addr, password=self.root_password)
-        print res.data
+        print(res.data)
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         # TODO: old requirement, remove in future versions

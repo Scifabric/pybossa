@@ -43,10 +43,14 @@ from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
 import json
-from StringIO import StringIO
-
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
+
+# Python 2/3 compatibility
+try:  # pragma: no cover
+    from StringIO import StringIO
+except ImportError:  # pragma: no cover
+    from io import StringIO
 
 
 blueprint = Blueprint('admin', __name__)
