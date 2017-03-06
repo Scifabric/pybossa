@@ -22,6 +22,7 @@ from sqlalchemy import cast, Date
 from pybossa.repositories import Repository
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.model import make_timestamp
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
@@ -175,36 +176,47 @@ class TaskRepository(Repository):
     def update_tasks_redundancy(self, project, n_answer):
         """update the n_answer of every task from a project and their state.
         Use raw SQL for performance"""
-        tasks = self.filter_tasks_by(project_id=project.id)
-
-        for task in tasks:
-            task.n_answers = n_answer
-            task.state = 'ongoing'
-            #self.db.session.merge(task)
-
-        self.db.session.bulk_save_objects(tasks)
-
-        # Used Alchemy ORM instead of SQL queries to allow triggering events
-        #sql = text('''
-        #           UPDATE task SET n_answers=:n_answers,
-        #           state='ongoing' WHERE project_id=:project_id''')
-        #self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
+        sql = text('''
+                   UPDATE task SET n_answers=:n_answers,
+                   state='ongoing' WHERE project_id=:project_id''')
+        self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
 
 
         # Update task.state according to their new n_answers value
         sql = text('''
-                   WITH project_tasks AS (
-                   SELECT task.id, task.n_answers,
-                   COUNT(task_run.id) AS n_task_runs, task.state
+                   CREATE TEMP TABLE complete_tasks ON COMMIT DROP AS (
+                   SELECT task.id, array_agg(task_run.id) as task_runs
                    FROM task, task_run
                    WHERE task_run.task_id=task.id AND task.project_id=:project_id
-                   GROUP BY task.id)
-                   UPDATE task SET state='completed'
-                   FROM project_tasks
-                   WHERE (project_tasks.n_task_runs >=:n_answers)
-                   and project_tasks.id=task.id
+                   GROUP BY task.id
+                   having COUNT(task_run.id) >=:n_answers)
                    ''')
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
+        sql = text('''
+                   UPDATE task SET state='completed'
+                   FROM complete_tasks
+                   WHERE complete_tasks.id=task.id
+                   ''')
+        self.db.session.execute(sql)
+        sql = text('''UPDATE result set last_version=false WHERE task_id IN (SELECT id FROM complete_tasks)''')
+        self.db.session.execute(sql)
+        sql = text('''
+                   INSERT INTO result
+                   (created, project_id, task_id, task_run_ids, last_version) (
+                    SELECT :ts, :project_id, complete_tasks.id, complete_tasks.task_runs, true
+                    FROM complete_tasks)''')
+        self.db.session.execute(sql, dict(project_id=project.id, ts=make_timestamp()))
+        sql = text('''
+                   CREATE TEMP TABLE incomplete_tasks ON COMMIT DROP AS (
+                   SELECT task.id
+                   FROM task
+                   WHERE task.project_id=:project_id AND task.id not IN (SELECT id FROM complete_tasks))
+                   ''')
+        self.db.session.execute(sql, dict(project_id=project.id))
+        sql = text('''DELETE FROM result WHERE result.task_id IN (SELECT id FROM incomplete_tasks)''')
+        self.db.session.execute(sql)
+
+
         self.db.session.commit()
         cached_projects.clean_project(project.id)
 
