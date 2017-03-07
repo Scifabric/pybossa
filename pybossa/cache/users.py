@@ -155,24 +155,15 @@ allowed_project_columns = {
 }
 
 
-def published_projects(user_id, args=None):
+def published_projects(user_id):
     """Return published projects for user_id."""
-    if args is None:
-        args = dict(column=None, order=None)
-    sort_args = dict(column=args.get("column"), order=args.get("order"))
-    if sort_args.get("order") not in ("asc", "desc"):
-        sort_args["order"] = "desc"
-    sort_args["column"] = allowed_project_columns.get(sort_args["column"], "created")
-
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
                project.info
                FROM project
                WHERE project.published=true
-               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))
-               order by {column} {order};
-               '''.format(**sort_args))
+               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:

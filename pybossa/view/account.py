@@ -445,28 +445,6 @@ def _show_own_profile(user):
     return handle_content_type(response)
 
 
-columns = {
-    "created_on": "Created On",
-    "project_name": "Project Name"
-}
-
-directions = {
-    "desc": "Descending",
-    "asc": "Ascending"
-}
-
-
-def get_project_browse_args(args):
-    if args is None:
-        args = {}
-    query_str = args.get("order_by", "created_on:desc")
-    col, order = query_str.split(":") if ":" in query_str \
-        else (query_str, "")
-    column = col if col in columns else "created_on"
-    sort_order = order if order in directions else "desc"
-    return dict(column=column, order=sort_order)
-
-
 @blueprint.route('/<name>/applications')
 @blueprint.route('/<name>/projects')
 @login_required
@@ -484,32 +462,16 @@ def projects(name):
         return abort(403)
 
     user = user_repo.get(current_user.id)
-    args = get_project_browse_args(request.args)
-    projects_published, projects_draft = _get_user_projects(user.id, args)
+    projects_published, projects_draft = _get_user_projects(user.id)
 
-    sort_options = {
-        "columns": {
-            "entries": columns,
-            "id": "project-column-selection",
-            "current_selection": args["column"]
-        },
-        "directions": {
-            "entries": directions,
-            "id": "project-dir-selection",
-            "current_selection": args["order"]
-        }
-    }
-
-    response = dict(template='account/projects.html',
-                    title=gettext("Projects"),
-                    projects_published=projects_published,
-                    projects_draft=projects_draft,
-                    sort_options=sort_options)
-    return handle_content_type(response)
+    return render_template('account/projects.html',
+                           title=gettext("Projects"),
+                           projects_published=projects_published,
+                           projects_draft=projects_draft)
 
 
-def _get_user_projects(user_id, opts=None):
-    projects_published = cached_users.published_projects(user_id, opts)
+def _get_user_projects(user_id):
+    projects_published = cached_users.published_projects(user_id)
     projects_draft = cached_users.draft_projects(user_id)
     return projects_published, projects_draft
 

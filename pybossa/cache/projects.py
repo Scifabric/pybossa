@@ -383,7 +383,7 @@ def n_count(category):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_all(category):
-    """Return a list of published, incomplete projects for a given category.
+    """Return a list of published projects for a given category.
     """
     sql = text(
         '''SELECT project.id, project.name, project.short_name,
@@ -422,7 +422,7 @@ def get(category, page=1, per_page=5):
     """Return a list of published projects with a pagination for a given category.
     """
     offset = (page - 1) * per_page
-    return get_all(category)[offset:offset + per_page]
+    return get_all(category)[offset:offset+per_page]
 
 
 # TODO: find a convenient cache timeout and cache, if needed
