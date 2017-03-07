@@ -224,7 +224,7 @@ def draft(page):
 @login_required
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
-    return project_index(page, cached_projects.get_all_visible, category, False, True)
+    return project_index(page, cached_projects.get_all, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
