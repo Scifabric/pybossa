@@ -1580,6 +1580,8 @@ Project results
 **GET**
 
 Shows information about a project results template.
+If the logged in user is the owner of the project you will get more detailed
+owner information and project information.
 
 * **last_activity**: Last activity on the project.
 * **n_completed_tasks**: Number of completed tasks.
@@ -1595,6 +1597,8 @@ Shows information about a project results template.
 * **title**: the title for the endpoint.
 
 **Example output**
+
+for anonymous user or when you are not the project owner:
 
 .. code-block:: python
     {
