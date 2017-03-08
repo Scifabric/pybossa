@@ -1157,15 +1157,16 @@ def show_stats(short_name):
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('/projects/non_stats.html',
-                               title=title,
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               pro_features=pro)
+        response = dict(template='/projects/non_stats.html',
+                        title=title,
+                        project=project,
+                        owner=owner,
+                        n_tasks=n_tasks,
+                        overall_progress=overall_progress,
+                        n_volunteers=n_volunteers,
+                        n_completed_tasks=n_completed_tasks,
+                        pro_features=pro)
+        return handle_content_type(response)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         project.id,
@@ -1203,19 +1204,20 @@ def show_stats(short_name):
     contrib_time = cached_projects.average_contribution_time(project.id)
     formatted_contrib_time = round(contrib_time.total_seconds(), 2)
 
-    return render_template(
-        '/projects/stats.html',
-        title=title,
-        projectStats=json.dumps(projectStats),
-        userStats=userStats,
-        project=project_dict,
-        owner=owner,
-        n_tasks=n_tasks,
-        overall_progress=overall_progress,
-        n_volunteers=n_volunteers,
-        n_completed_tasks=n_completed_tasks,
-        avg_contrib_time=formatted_contrib_time,
-        pro_features=pro)
+    response = dict(template='/projects/stats.html',
+                    title=title,
+                    projectStats=json.dumps(projectStats),
+                    userStats=userStats,
+                    project=project_dict,
+                    owner=owner,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_volunteers=n_volunteers,
+                    n_completed_tasks=n_completed_tasks,
+                    avg_contrib_time=formatted_contrib_time,
+                    pro_features=pro)
+
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/settings')
