@@ -61,9 +61,9 @@ def get_top(n=4):
 
 @memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 @static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
-def browse_tasks(project_id, **args):
+def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
-    filters = get_task_filters(**args)
+    filters = get_task_filters(args)
     sql = text('''
                SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
                FROM task LEFT OUTER JOIN
@@ -71,7 +71,8 @@ def browse_tasks(project_id, **args):
                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id''' + filters +
-               " ORDER BY %s" % (args.get('order_by') or 'id ASC')
+               " ORDER BY %s" % (args.get('order_by') or 'id ASC') +
+               " LIMIT %d offset" % (args.get("per_page"), args.get("page") * args.get("per_page"))
                )
     results = session.execute(sql, dict(project_id=project_id,
       filters=filters
@@ -89,7 +90,7 @@ def browse_tasks(project_id, **args):
         tasks.append(task)
     return tasks
 
-def get_task_filters(**args):
+def get_task_filters(args):
   filters = ''
   if args.get('task_id'):
     filters += ' AND id=%d'%args['task_id']
@@ -115,7 +116,7 @@ def get_task_filters(**args):
   if args.get('ftime2'):
     datestring = convertEstToUtc(args.get('ftime2')).isoformat()
     filters += " AND ft <= '%s'" % datestring
-  
+
   return filters
 
 

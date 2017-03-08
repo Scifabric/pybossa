@@ -975,9 +975,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     pro = pro_features()
 
     try:
-        (display_columns, task_id, pcomplete1, pcomplete2,
-            hide_completed, created1, created2, ftime1, ftime2, priority1, priority2,
-            order_by, order_by_dict) = get_tasks_browse_args(request.args)
+        args = get_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
         current_app.logger.error(err)
         flash(gettext('Invalid filtering criteria'), 'error')
@@ -986,21 +984,9 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     def respond():
         per_page = records_per_page
         offset = (page - 1) * per_page
-        #count = n_tasks
-        current_app.logger.info("Before browse Tasks")
-        project_tasks = cached_projects.browse_tasks(project.get('id'),
-            display_columns=display_columns,
-            task_id=task_id,
-            pcomplete1=pcomplete1,
-            pcomplete2=pcomplete2,
-            hide_completed=hide_completed,
-            created1=created1,
-            created2=created2,
-            ftime1=ftime1,
-            ftime2=ftime2,
-            priority1=priority1,
-            priority2=priority2,
-            order_by=order_by)
+        args["records_per_page"] = per_page
+        args["offset"] = offset
+        project_tasks = cached_projects.browse_tasks(project.get('id'), args)
         count = len(project_tasks)
         page_tasks = project_tasks[offset:offset+per_page]
         if not page_tasks and page != 1:
@@ -1012,20 +998,18 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                                                                     owner,
                                                                     current_user,
                                                                     ps)
-        filter_data = {
-        'display_columns': display_columns,
-        'task_id':task_id,
-        'pcomplete1':(pcomplete1*100) if pcomplete1 else None,
-        'pcomplete2':(pcomplete2*100) if pcomplete2 else None,
-        'hide_completed':hide_completed,
-        'created1':created1,
-        'created2':created2,
-        'ftime1':ftime1,
-        'ftime2':ftime2,
-        'priority1':(priority1*100) if priority1 else None,
-        'priority2':(priority2*100) if priority2 else None,
-        'order_by':order_by_dict,
-        'changed':False }
+        args["changed"] = False
+        if args.get("pcomplete1"):
+            args["pcomplete1"] = args["pcomplete1"]*100
+        if args.get("pcomplete2"):
+            args["pcomplete2"] = args["pcomplete2"]*100
+        if args.get("priority1"):
+            args["priority1"] = args["priority1"]*100
+        if args.get("priority2"):
+            args["priority2"] = args["priority2"]*100
+        args["order_by"] = args.pop("order_by_dict", dict())
+        args.pop("records_per_page", None)
+        args.pop("offset", None)
 
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
@@ -1039,7 +1023,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro,
                     records_per_page=records_per_page,
-                    filter_data=filter_data)
+                    filter_data=args)
 
         return handle_content_type(data)
 
@@ -1053,64 +1037,63 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     return respond()
 
 def get_tasks_browse_args(args):
-    task_id,pcomplete1,pcomplete2,hide_completed,created1,created2,ftime1,ftime2,priority1,priority2,order_by,display_columns,order_by_dict = (None,)*13
+    parsed_args = dict()
+
     if args.get('task_id'):
-        task_id = int(args.get('task_id'))
+        parsed_args["task_id"] = int(args.get('task_id'))
     if args.get('pcomplete1'):
-        pcomplete1 = float(args.get('pcomplete1')) / 100
+        parsed_args["pcomplete1"] = float(args.get('pcomplete1')) / 100
     if args.get('pcomplete2'):
-        pcomplete2 = float(args.get('pcomplete2')) / 100
+        parsed_args["pcomplete2"] = float(args.get('pcomplete2')) / 100
     if args.get('hide_completed'):
-        hide_completed = args.get('hide_completed').lower() == 'true'
+        parsed_args["hide_completed"] = args.get('hide_completed').lower() == 'true'
 
     isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
     if args.get('created1'):
         if re.match(isoStringFormat, args.get('created1')):
-            created1 = args.get('created1')
+            parsed_args["created1"] = args.get('created1')
         else:
             raise ValueError('created1 date format error, value: %s'%args.get('created1'))
     if args.get('created2'):
         if re.match(isoStringFormat, args.get('created2')):
-            created2 = args.get('created2')
+            parsed_args["created2"] = args.get('created2')
         else:
             raise ValueError('created2 date format error, value: %s'%args.get('created2'))
     if args.get('ftime1'):
         if re.match(isoStringFormat, args.get('ftime1')):
-            ftime1 = args.get('ftime1')
+            parsed_args["ftime1"] = args.get('ftime1')
         else:
             raise ValueError('ftime1 date format error, value: %s'%args.get('ftime1'))
     if args.get('ftime2'):
         if re.match(isoStringFormat, args.get('ftime2')):
-            ftime2 = args.get('ftime2')
+            parsed_args["ftime2"] = args.get('ftime2')
         else:
             raise ValueError('ftime2 date format error, value: %s'%args.get('ftime2'))
     if args.get('priority1'):
-        priority1 = float(args.get('priority1')) / 100
+        parsed_args["priority1"] = float(args.get('priority1')) / 100
     if args.get('priority2'):
-        priority2 = float(args.get('priority2')) / 100
+        parsed_args["priority2"] = float(args.get('priority2')) / 100
     if args.get('display_columns'):
-        display_columns = json.loads(args.get('display_columns'))
-    if not isinstance(display_columns, list):
-        display_columns = [ 'task_id', 'priority', 'pcomplete', 'created', 'actions' ]
+        parsed_args["display_columns"] = json.loads(args.get('display_columns'))
+    if not isinstance(parsed_args.get("display_columns"), list):
+        parsed_args["display_columns"] = [ 'task_id', 'priority', 'pcomplete', 'created', 'actions' ]
+
+    parsed_args["order_by_dict"] = dict()
     if args.get('order_by'):
         allowed_columns = cached_projects.browse_tasks.allowed_fields
-        order_by = args.get('order_by').strip().lower()
-        order_by_dict = dict()
-        for clause in order_by.split(','):
+        parsed_args["order_by"] = args.get('order_by').strip().lower()
+        for clause in parsed_args["order_by"].split(','):
             order_by_field = clause.split(' ')
-            print len(order_by_field)
-            print order_by_field[0] not in allowed_columns
-            print order_by_field[0] not in allowed_columns.keys()
             if len(order_by_field) != 2 or order_by_field[0] not in allowed_columns:
                 raise ValueError('order_by value sent by the user is invalid: %s' % args.get('order_by'))
-            if order_by_field[0] in order_by_dict:
+            if order_by_field[0] in parsed_args["order_by_dict"]:
                 raise ValueError('order_by field is duplicated: %s' % args.get('order_by'))
-            order_by_dict[order_by_field[0]] = order_by_field[1]
+            parsed_args["order_by_dict"][order_by_field[0]] = order_by_field[1]
 
         for key, value in allowed_columns.iteritems():
-            order_by = order_by.replace(key, value)
+            parsed_args["order_by"] = parsed_args["order_by"].replace(key, value)
 
-    return (display_columns, task_id, pcomplete1, pcomplete2, hide_completed, created1, created2, ftime1, ftime2, priority1, priority2, order_by, order_by_dict)
+    return parsed_args
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
