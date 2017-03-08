@@ -5083,11 +5083,13 @@ class TestWeb(web.Helper):
         assert 'pro_features' in data, err_msg
         assert 'project' in data, err_msg
         project = data['project']
+        assert 'secret_key' not in project, project
         assert 'created' in project, err_msg
         assert 'description' in project, err_msg
         assert 'featured' in project, err_msg
         assert 'id' in project, err_msg
         assert 'info' in project, err_msg
+        assert 'owner_id' not in project['info'], project['info']
         assert 'last_activity' in project, err_msg
         assert 'last_activity_raw' in project, err_msg
         assert 'n_tasks' in project, err_msg
@@ -5113,19 +5115,6 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert dom.find(id="noresult") is not None, res.data
-
-    @with_context
-    def test_results_with_values_json(self):
-        """Test WEB results with values are not shown as no template but data."""
-        task = TaskFactory.create(n_answers=1)
-        tr = TaskRunFactory.create(task=task)
-        project = project_repo.get(tr.project_id)
-        url = '/project/%s/results' % project.short_name
-        result = result_repo.get_by(project_id=project.id)
-        result.info = dict(foo='bar')
-        result_repo.update(result)
-        res = self.app_get_json(url)
-        print res.data
 
     @with_context
     def test_results_with_values_and_template(self):
