@@ -33,6 +33,7 @@ from wtforms.validators import ValidationError
 from flask import request
 from werkzeug.utils import secure_filename
 from pybossa.core import uploader
+from pybossa.cache import projects as cached_projects
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -332,8 +333,8 @@ class RegisterForm(Form):
                               pb_validator.CheckPasswordStrength()])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
-    projects = project_repo.get_all()
-    project_choices = [ (proj.short_name, proj.name) for proj in projects ]
+    projects = cached_projects.get_all_projects()
+    project_choices = [(proj['short_name'], proj['name']) for proj in projects ]
     project_choices.sort(key=lambda tup: tup[0])
     project_choices.insert(0, ('', ''))
     project_slug = SelectMultipleField(lazy_gettext('Project'), choices=project_choices)
