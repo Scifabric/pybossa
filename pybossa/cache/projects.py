@@ -438,6 +438,23 @@ def get_from_pro_user():
     return projects
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_all_projects():
+    """Return a list of published projects short_names.
+    """
+    sql = text(
+        '''SELECT name, short_name FROM project
+           WHERE project.published=true
+           ORDER BY project.short_name;''')
+
+    results = session.execute(sql)
+    projects = []
+    for row in results:
+        project = dict(name=row.name, short_name=row.short_name)
+        projects.append(project)
+    return projects
+    
+    
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")
