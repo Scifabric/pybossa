@@ -492,6 +492,7 @@ def import_tasks(project_id, from_auto=False, **form_data):
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     report = importer.create_tasks(task_repo, project, **form_data)
+    cached_projects.delete_browse_tasks(project_id)
     if from_auto:
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)

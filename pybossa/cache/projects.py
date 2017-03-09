@@ -59,7 +59,7 @@ def get_top(n=4):
         top_projects.append(Project().to_public_json(project))
     return top_projects
 
-#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 @static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
@@ -72,7 +72,7 @@ def browse_tasks(project_id, args):
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id''' + filters +
                " ORDER BY %s" % (args.get('order_by') or 'id ASC') +
-               " LIMIT %d OFFSET %d" % (args.get("records_per_page"), args.get("offset"))
+               " LIMIT %d OFFSET %d" % (args.get("records_per_page") or 10, args.get("offset") or 0)
                )
     results = session.execute(sql, dict(project_id=project_id,
       filters=filters
