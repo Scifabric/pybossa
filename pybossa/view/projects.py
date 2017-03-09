@@ -992,7 +992,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         import time
         start_time = time.time()
         (count, page_tasks) = cached_projects.browse_tasks(project.get('id'), args)
-        current_app.logger.debug("Browse Tasks data loading took %s seconds"%(time.time()-start_time)
+        current_app.logger.debug("Browse Tasks data loading took %s seconds"%(time.time()-start_time))
 
         pagination = Pagination(page, per_page, count)
 
