@@ -265,6 +265,9 @@ def user_progress(project_id=None, short_name=None):
        him and 90 tasks are yet to be submitted
 
     """
+    if current_user.is_anonymous():
+        return abort(401)
+        
     if project_id or short_name:
         if short_name:
             project = project_repo.get_by_shortname(short_name)
@@ -274,10 +277,7 @@ def user_progress(project_id=None, short_name=None):
         if project:
             # For now, keep this version, but wait until redis cache is used here for task_runs too
             query_attrs = dict(project_id=project.id)
-            if current_user.is_anonymous():
-                query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
-            else:
-                query_attrs['user_id'] = current_user.id
+            query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             num_available_tasks = n_available_tasks(project.id, current_user.id)
             tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks)
