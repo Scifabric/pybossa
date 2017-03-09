@@ -59,25 +59,26 @@ def get_top(n=4):
         top_projects.append(Project().to_public_json(project))
     return top_projects
 
-@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 @static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
     filters = get_task_filters(args)
     sql = text('''
-               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
+               SELECT COUNT(*) OVER() as total_count, task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
                FROM task LEFT OUTER JOIN
                (SELECT task_id, COUNT(id) AS ct, MAX(finish_time) as ft FROM task_run
                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id''' + filters +
                " ORDER BY %s" % (args.get('order_by') or 'id ASC') +
-               " LIMIT %d offset" % (args.get("per_page"), args.get("page") * args.get("per_page"))
+               " LIMIT %d OFFSET %d" % (args.get("records_per_page"), args.get("offset"))
                )
     results = session.execute(sql, dict(project_id=project_id,
       filters=filters
       ))
     tasks = []
+    total_count = 0
     for row in results:
         # TODO: use Jinja filters to format date
         finish_time = convertUtcToEst(row.ft).strftime('%y-%m-%d %H:%M') if row.ft is not None else None
@@ -85,10 +86,11 @@ def browse_tasks(project_id, args):
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time,
                     created=created)
-        #finish_days=(datetime.now() - finish_time).days if row.ft else None
+        if total_count == 0:
+          total_count = row.total_count
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
-    return tasks
+    return (total_count, tasks)
 
 def get_task_filters(args):
   filters = ''

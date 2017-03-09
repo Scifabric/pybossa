@@ -974,6 +974,9 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     title = project_title(project, "Tasks")
     pro = pro_features()
 
+    print page
+    print records_per_page
+
     try:
         args = get_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
@@ -986,11 +989,10 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         offset = (page - 1) * per_page
         args["records_per_page"] = per_page
         args["offset"] = offset
-        project_tasks = cached_projects.browse_tasks(project.get('id'), args)
-        count = len(project_tasks)
-        page_tasks = project_tasks[offset:offset+per_page]
-        if not page_tasks and page != 1:
-            abort(404)
+        import time
+        start_time = time.time()
+        (count, page_tasks) = cached_projects.browse_tasks(project.get('id'), args)
+        current_app.logger.debug("Browse Tasks data loading took %s seconds"%(time.time()-start_time)
 
         pagination = Pagination(page, per_page, count)
 
