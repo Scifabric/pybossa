@@ -974,10 +974,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
-
-    print page
-    print records_per_page
-
+    
     try:
         args = get_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
