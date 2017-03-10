@@ -45,7 +45,7 @@ Installing git - a distributed version control system
 PYBOSSA uses the git_ distributed version control system for handling the
 PYBOSSA server source code as well as the template projects.
 
-Git_ is a freen and open source distributed version control system designed to
+Git_ is a free and open source distributed version control system designed to
 handle everything from small to very large projects with seepd and efficiency.
 
 .. _git: http://git-scm.com/
