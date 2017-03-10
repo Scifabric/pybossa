@@ -178,7 +178,7 @@ class TaskRepository(Repository):
         Use raw SQL for performance"""
         sql = text('''
                    UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE project_id=:project_id''')
+                   state='ongoing' WHERE project_id=:project_id;''')
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
 
 
@@ -189,36 +189,36 @@ class TaskRepository(Repository):
                    FROM task, task_run
                    WHERE task_run.task_id=task.id AND task.project_id=:project_id
                    GROUP BY task.id
-                   having COUNT(task_run.id) >=:n_answers)
+                   having COUNT(task_run.id) >=:n_answers);
                    ''')
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
         # Set state to completed
         sql = text('''
                    UPDATE task SET state='completed'
                    FROM complete_tasks
-                   WHERE complete_tasks.id=task.id
+                   WHERE complete_tasks.id=task.id;
                    ''')
         self.db.session.execute(sql)
         # Deactivate previous tasks' results (if available) (redundancy was decreased)
-        sql = text('''UPDATE result set last_version=false WHERE task_id IN (SELECT id FROM complete_tasks)''')
+        sql = text('''UPDATE result set last_version=false WHERE task_id IN (SELECT id FROM complete_tasks);''')
         self.db.session.execute(sql)
         # Insert result rows (last_version=true)
         sql = text('''
                    INSERT INTO result
                    (created, project_id, task_id, task_run_ids, last_version) (
                     SELECT :ts, :project_id, complete_tasks.id, complete_tasks.task_runs, true
-                    FROM complete_tasks)''')
+                    FROM complete_tasks);''')
         self.db.session.execute(sql, dict(project_id=project.id, ts=make_timestamp()))
         # Create temp table for incomplete tasks
         sql = text('''
                    CREATE TEMP TABLE incomplete_tasks ON COMMIT DROP AS (
                    SELECT task.id
                    FROM task
-                   WHERE task.project_id=:project_id AND task.id not IN (SELECT id FROM complete_tasks))
+                   WHERE task.project_id=:project_id AND task.id not IN (SELECT id FROM complete_tasks));
                    ''')
         self.db.session.execute(sql, dict(project_id=project.id))
         # Delete results for incomplete tasks (Redundancy Increased)
-        sql = text('''DELETE FROM result WHERE result.task_id IN (SELECT id FROM incomplete_tasks)''')
+        sql = text('''DELETE FROM result WHERE result.task_id IN (SELECT id FROM incomplete_tasks);''')
         self.db.session.execute(sql)
 
 
