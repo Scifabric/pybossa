@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+#-*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
 # Copyright (C) 2017 Scifabric LTD.
@@ -2798,6 +2798,12 @@ class TestWeb(web.Helper):
         res = self.app.get('account/register', follow_redirects=True)
         assert "http://okfn.org/terms-of-use/" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
+
+    @with_context
+    def test_help_endpoint(self):
+        """Test WEB help endpoint is working"""
+        res = self.app.get('help/', follow_redirects=True)
+
 
     @with_context
     @patch('pybossa.view.account.signer.loads')
