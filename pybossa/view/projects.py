@@ -666,7 +666,8 @@ def _import_tasks(project, **form_data):
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
         report = importer.create_tasks(task_repo, project, **form_data)
         flash(report.message)
-        cached_projects.delete_browse_tasks(project.id)
+        if report.total > 0:
+            cached_projects.delete_browse_tasks(project.id)
     else:
         importer_queue.enqueue(import_tasks, project.id, **form_data)
         flash(gettext("You&#39;re trying to import a large amount of tasks, so please be patient.\
@@ -969,12 +970,12 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>/<int:records_per_page>')
-@login_required
+@admin_or_subadmin_required
 def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
-    
+
     try:
         args = get_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
@@ -999,14 +1000,14 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                                                                     current_user,
                                                                     ps)
         args["changed"] = False
-        if args.get("pcomplete1"):
-            args["pcomplete1"] = args["pcomplete1"]*100
-        if args.get("pcomplete2"):
-            args["pcomplete2"] = args["pcomplete2"]*100
-        if args.get("priority1"):
-            args["priority1"] = args["priority1"]*100
-        if args.get("priority2"):
-            args["priority2"] = args["priority2"]*100
+        if args.get("pcomplete_from"):
+            args["pcomplete_from"] = args["pcomplete_from"]*100
+        if args.get("pcomplete_to"):
+            args["pcomplete_to"] = args["pcomplete_to"]*100
+        if args.get("priority_from"):
+            args["priority_from"] = args["priority_from"]*100
+        if args.get("priority_to"):
+            args["priority_to"] = args["priority_to"]*100
         args["order_by"] = args.pop("order_by_dict", dict())
         args.pop("records_per_page", None)
         args.pop("offset", None)
@@ -1041,38 +1042,38 @@ def get_tasks_browse_args(args):
 
     if args.get('task_id'):
         parsed_args["task_id"] = int(args.get('task_id'))
-    if args.get('pcomplete1'):
-        parsed_args["pcomplete1"] = float(args.get('pcomplete1')) / 100
-    if args.get('pcomplete2'):
-        parsed_args["pcomplete2"] = float(args.get('pcomplete2')) / 100
+    if args.get('pcomplete_from'):
+        parsed_args["pcomplete_from"] = float(args.get('pcomplete_from')) / 100
+    if args.get('pcomplete_to'):
+        parsed_args["pcomplete_to"] = float(args.get('pcomplete_to')) / 100
     if args.get('hide_completed'):
         parsed_args["hide_completed"] = args.get('hide_completed').lower() == 'true'
 
     isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
-    if args.get('created1'):
-        if re.match(isoStringFormat, args.get('created1')):
-            parsed_args["created1"] = args.get('created1')
+    if args.get('created_from'):
+        if re.match(isoStringFormat, args.get('created_from')):
+            parsed_args["created_from"] = args.get('created_from')
         else:
-            raise ValueError('created1 date format error, value: %s'%args.get('created1'))
-    if args.get('created2'):
-        if re.match(isoStringFormat, args.get('created2')):
-            parsed_args["created2"] = args.get('created2')
+            raise ValueError('created_from date format error, value: %s'%args.get('created_from'))
+    if args.get('created_to'):
+        if re.match(isoStringFormat, args.get('created_to')):
+            parsed_args["created_to"] = args.get('created_to')
         else:
-            raise ValueError('created2 date format error, value: %s'%args.get('created2'))
-    if args.get('ftime1'):
-        if re.match(isoStringFormat, args.get('ftime1')):
-            parsed_args["ftime1"] = args.get('ftime1')
+            raise ValueError('created_to date format error, value: %s'%args.get('created_to'))
+    if args.get('ftime_from'):
+        if re.match(isoStringFormat, args.get('ftime_from')):
+            parsed_args["ftime_from"] = args.get('ftime_from')
         else:
-            raise ValueError('ftime1 date format error, value: %s'%args.get('ftime1'))
-    if args.get('ftime2'):
-        if re.match(isoStringFormat, args.get('ftime2')):
-            parsed_args["ftime2"] = args.get('ftime2')
+            raise ValueError('ftime_from date format error, value: %s'%args.get('ftime_from'))
+    if args.get('ftime_to'):
+        if re.match(isoStringFormat, args.get('ftime_to')):
+            parsed_args["ftime_to"] = args.get('ftime_to')
         else:
-            raise ValueError('ftime2 date format error, value: %s'%args.get('ftime2'))
-    if args.get('priority1'):
-        parsed_args["priority1"] = float(args.get('priority1')) / 100
-    if args.get('priority2'):
-        parsed_args["priority2"] = float(args.get('priority2')) / 100
+            raise ValueError('ftime_to date format error, value: %s'%args.get('ftime_to'))
+    if args.get('priority_from'):
+        parsed_args["priority_from"] = float(args.get('priority_from')) / 100
+    if args.get('priority_to'):
+        parsed_args["priority_to"] = float(args.get('priority_to')) / 100
     if args.get('display_columns'):
         parsed_args["display_columns"] = json.loads(args.get('display_columns'))
     if not isinstance(parsed_args.get("display_columns"), list):

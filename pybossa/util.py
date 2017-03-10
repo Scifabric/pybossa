@@ -213,7 +213,6 @@ def parseDateString(source):
     if not isinstance(source, (date, datetime)):
         try:
             return dateutil.parser.parse(str(source))
-            #return datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
         except Exception, e:
             return source
 
@@ -238,7 +237,7 @@ def convertUtcToEst(source):
     utc = dateutil.tz.gettz('UTC')
     est = dateutil.tz.gettz('America/New_York')
 
-    #naive to EST to UTC
+    #naive to UTC to EST
     return source.replace(tzinfo=utc).astimezone(est)
 
 # Fromhttp://stackoverflow.com/q/1551382

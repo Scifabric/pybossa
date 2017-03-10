@@ -98,25 +98,25 @@ def get_task_filters(args):
     filters += ' AND id=%d'%args['task_id']
   if args.get('hide_completed') and args.get('hide_completed') is True:
     filters += " AND task.state='%s'"% 'ongoing'
-  if args.get('pcomplete1') is not None:
-    filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete1')
-  if args.get('pcomplete2') is not None:
-    filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete2')
-  if args.get('priority1') is not None:
-    filters += " AND priority_0 >= %f" % args.get('priority1')
-  if args.get('priority2') is not None:
-    filters += " AND priority_0 <= %f" % args.get('priority2')
-  if args.get('created1'):
-    datestring = convertEstToUtc(args.get('created1')).isoformat()
+  if args.get('pcomplete_from') is not None:
+    filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete_from')
+  if args.get('pcomplete_to') is not None:
+    filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete_to')
+  if args.get('priority_from') is not None:
+    filters += " AND priority_0 >= %f" % args.get('priority_from')
+  if args.get('priority_to') is not None:
+    filters += " AND priority_0 <= %f" % args.get('priority_to')
+  if args.get('created_from'):
+    datestring = convertEstToUtc(args.get('created_from')).isoformat()
     filters += " AND task.created >= '%s'" % datestring
-  if args.get('created2'):
-    datestring = convertEstToUtc(args.get('created2')).isoformat()
+  if args.get('created_to'):
+    datestring = convertEstToUtc(args.get('created_to')).isoformat()
     filters += " AND task.created <= '%s'" % datestring
-  if args.get('ftime1'):
-    datestring = convertEstToUtc(args.get('ftime1')).isoformat()
+  if args.get('ftime_from'):
+    datestring = convertEstToUtc(args.get('ftime_from')).isoformat()
     filters += " AND ft >= '%s'" % datestring
-  if args.get('ftime2'):
-    datestring = convertEstToUtc(args.get('ftime2')).isoformat()
+  if args.get('ftime_to'):
+    datestring = convertEstToUtc(args.get('ftime_to')).isoformat()
     filters += " AND ft <= '%s'" % datestring
 
   return filters
