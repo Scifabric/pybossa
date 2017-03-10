@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import json
 from helper import web
 from default import db, with_context
 from factories import ProjectFactory, BlogpostFactory
@@ -52,6 +53,30 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert 'titleone' in res.data
         assert 'titletwo' in res.data
+
+    def test_json_blogposts_get_all(self):
+        """Test JSON blogpost GET all blogposts"""
+        user = self.create_users()[1]
+        project = ProjectFactory.create(owner=user)
+        blogpost_1 = BlogpostFactory.create(owner=user, project=project, title='titleone')
+        blogpost_2 = BlogpostFactory.create(owner=user, project=project, title='titletwo')
+
+        url = "/project/%s/blog" % project.short_name
+
+        # As anonymous
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
+
+        # As authenticated
+        self.register()
+        res = self.app_get_json(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
 
 
     def test_blogpost_get_all_errors(self):
