@@ -434,7 +434,6 @@ def update(short_name):
             new_project.short_name = form.short_name.data
             new_project.description = form.description.data
             new_project.long_description = form.long_description.data
-            new_project.hidden = form.hidden.data
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
