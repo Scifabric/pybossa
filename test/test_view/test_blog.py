@@ -80,11 +80,22 @@ class TestBlogpostView(web.Helper):
 
 
     def test_blogpost_get_all_errors(self):
-        """Test blogpost GET all raises error if the project does not exist"""
+        """test blogpost get all raises error if the project does not exist"""
         url = "/project/non-existing-project/blog"
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
+
+
+    def test_json_blogpost_get_all_errors(self):
+        """Test JSON blogpost GET all raises error if the project does not exist"""
+        url = "/project/non-existing-project/blog"
+
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data['code'] == 404
+
 
 
     def test_blogpost_get_one(self):
