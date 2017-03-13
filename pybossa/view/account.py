@@ -65,6 +65,7 @@ mail_queue = Queue('email', connection=sentinel.master)
 
 @blueprint.route('/')
 @blueprint.route('/page/<int:page>')
+@login_required
 def index(page=1):
     """Index page for all PYBOSSA registered users."""
 
@@ -393,6 +394,7 @@ def redirect_profile():
 
 
 @blueprint.route('/<name>/', methods=['GET'])
+@login_required
 def profile(name):
     """
     Get user profile.

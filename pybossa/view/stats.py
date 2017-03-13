@@ -18,16 +18,17 @@
 """Stats view on PYBOSSA."""
 import json
 from flask import Blueprint
-from flask import render_template
 
 from pybossa.cache import site_stats
 from pybossa.cache import projects as cached_projects
 from pybossa.util import handle_content_type
+from flask.ext.login import login_required
 
 blueprint = Blueprint('stats', __name__)
 
 
 @blueprint.route('/')
+@login_required
 def index():
     """Return Global Statistics for the site."""
     title = "Global Statistics"
