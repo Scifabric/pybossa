@@ -118,3 +118,61 @@ class TestBlogpostAPI(TestAPI):
         blogposts_by_id = sorted(blogposts, key=lambda x: x.id, reverse=True)
         for i in range(len(blogposts)):
             assert blogposts_by_id[i].id == data[i]['id']
+
+    @with_context
+    def test_blogpost_post(self):
+        """Test API Blogpost creation."""
+        owner = UserFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
+
+        payload = dict(title='hello', body='world', project_id=None)
+
+        # As anon
+        url = '/api/blogpost'
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        url = '/api/blogpost?api_key=%s' % user.api_key
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+        assert data['status_code'] == 415, data
+
+        # As owner
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['title'] == 'hello', data
+        assert data['body'] == 'world', data
+
+        # As owner wrong 404 project_id
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = -1
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using wrong project_id
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+
+        # As owner using reserved key 
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        payload['user_id'] = owner.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert data['exception_msg'] == 'Reserved keys in payload', data
+
+

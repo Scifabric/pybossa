@@ -24,10 +24,24 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from api_base import APIBase
 from pybossa.model.blogpost import Blogpost
+from pybossa.core import user_repo, project_repo
+from flask.ext.login import current_user
+from werkzeug.exceptions import BadRequest, NotFound
 
 
 class BlogpostAPI(APIBase):
 
     """Class API for domain object Blogpost."""
 
+    reserved_keys = set(['id', 'created', 'updated', 'user_id'])
+
     __class__ = Blogpost
+
+    def _forbidden_attributes(self, data):
+        for key in data.keys():
+            if key in self.reserved_keys:
+                raise BadRequest("Reserved keys in payload")
+
+    def _update_object(self, obj):
+        if not current_user.is_anonymous():
+            obj.user_id = current_user.id
