@@ -51,9 +51,9 @@ def user_to_json(user):
     """Return a user in JSON format."""
     return user.dictize()
 
-
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
+    from pybossa.model.project import Project
     if request.headers['Content-Type'] == 'application/json':
         message_and_status = last_flashed_message()
         if message_and_status:
@@ -64,6 +64,8 @@ def handle_content_type(data):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
+            if (item == 'blogposts'):
+                data[item] = [blog.to_public_json() for blog in data[item]]
             if (item == 'categories'):
                 tmp = []
                 for cat in data[item]:
@@ -85,7 +87,6 @@ def handle_content_type(data):
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
-            print data
             return jsonify(data)
     else:
         template = data['template']

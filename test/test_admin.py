@@ -193,14 +193,21 @@ class TestAdmin(web.Helper):
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
-    def test_06_admin_featured_apps_add_remove_app(self, mock):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_06_admin_featured_apps_add_remove_app(self, mock, mock_webhook):
         """Test ADMIN featured projects add-remove works as an admin user"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        mock_webhook.return_value = html_request
+
         self.register()
         self.new_project()
         project = db.session.query(Project).first()
+        print project
         project.published = True
         db.session.commit()
         self.update_project()
+
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Sample Project" not in res.data,\
@@ -215,6 +222,8 @@ class TestAdmin(web.Helper):
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Featured" in res.data, res.data
         assert "Sample Project" in res.data, res.data
+
+
         # Add it to the Featured list
         res = self.app.post('/admin/featured/1')
         f = json.loads(res.data)
