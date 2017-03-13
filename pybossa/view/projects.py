@@ -1499,7 +1499,7 @@ def new_blogpost(short_name):
     msg_1 = gettext('Blog post created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
 
-    return redirect_content_type(url_for('.show_blogposts', short_name=short_name))
+    return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
