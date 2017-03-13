@@ -157,3 +157,19 @@ class TestBlogpostModel(Test):
         assert owner not in db.session
         assert blogpost in db.session
         assert blogpost.owner == None, blogpost.owner
+
+    @with_context
+    def test_blogpost_public_json(self):
+        """Test BLOGPOST to public json works."""
+        self.configure_fixtures()
+        owner = User(
+            email_addr="john.doe2@example.com",
+            name="johndoe2",
+            fullname="John Doe2",
+            locale="en")
+        blogpost = Blogpost(title='title', body="body", project=self.project, owner=owner)
+        db.session.add(blogpost)
+        db.session.commit()
+
+        tmp = blogpost.to_public_json()
+        assert tmp.keys().sort() == Blogpost().public_attributes().sort()
