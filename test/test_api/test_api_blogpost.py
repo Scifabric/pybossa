@@ -42,3 +42,13 @@ class TestBlogpostAPI(TestAPI):
         assert len(data) == 1, data
         assert data[0]['user_id'] == owner.id
 
+        # As user
+        res = self.app.get(url + '?api_key=' + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # As owner
+        res = self.app.get(url + '?api_key=' + owner.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert data[0]['user_id'] == owner.id
