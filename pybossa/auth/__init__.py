@@ -20,6 +20,7 @@ import inspect
 from flask import abort
 from flask.ext.login import current_user
 from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
+from pybossa.core import projectcoowner_repo
 from pybossa.auth.errcodes import *
 
 import jwt
@@ -38,7 +39,7 @@ import auditlog
 import webhook
 import result
 import helpingmaterial
-
+import project_coowner
 assert project
 assert task
 assert taskrun
@@ -50,6 +51,7 @@ assert blogpost
 assert auditlog
 assert webhook
 assert result
+assert project_coowner
 
 
 _actions = ['create', 'read', 'update', 'delete']
@@ -64,7 +66,8 @@ _auth_classes = {'project': project.ProjectAuth,
                  'user': user.UserAuth,
                  'webhook': webhook.WebhookAuth,
                  'result': result.ResultAuth,
-                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth}
+                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth,
+                 'projectcoowner': project_coowner.ProjectCoownerAuth}
 
 
 def is_authorized(user, action, resource, **kwargs):

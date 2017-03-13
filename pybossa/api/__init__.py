@@ -28,6 +28,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * vmcp
     * completedtasks
     * completedtaskruns
+    * projectcoowners
 
 """
 
@@ -57,6 +58,7 @@ from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
 from helpingmaterial import HelpingMaterialAPI
+from project_coowner import ProjectCoownerAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -114,6 +116,7 @@ register_api(FavoritesAPI, 'api_favorites', '/favorites',
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 register_api(CompletedTaskAPI, 'api_completedtask', '/completedtask', pk='oid', pk_type='int')
 register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', pk='oid', pk_type='int')
+register_api(ProjectCoownerAPI, 'api_projectcoowner', '/projectcoowner', pk='oid', pk_type='int')
 
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
@@ -267,7 +270,6 @@ def user_progress(project_id=None, short_name=None):
     """
     if current_user.is_anonymous():
         return abort(401)
-        
     if project_id or short_name:
         if short_name:
             project = project_repo.get_by_shortname(short_name)
