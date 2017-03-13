@@ -45,7 +45,7 @@ Installing git - a distributed version control system
 PYBOSSA uses the git_ distributed version control system for handling the
 PYBOSSA server source code as well as the template projects.
 
-Git_ is a freen and open source distributed version control system designed to
+Git_ is a free and open source distributed version control system designed to
 handle everything from small to very large projects with seepd and efficiency.
 
 .. _git: http://git-scm.com/
@@ -383,11 +383,18 @@ need to upgrade the DB structure to a new version, all you have to do is to::
 The first command will get you the latest source code. Then new libraries are
 installed or upgraded. And Alembic is upgrading the database structure.
 
+Very occasionally, updates to the core code will also required pybossa.js_ to 
+be updated in your PYBOSSA theme. To update the default theme you can to this::
+  
+  cd home/pybossa/pybossa/themes/default
+  git pull origin master
+
 .. note::
     If you are using the virtualenv_ be sure to activate it before running the
     Alembic_ upgrade command.
 
 .. _Alembic: http://pypi.python.org/pypi/alembic
+.. _pybossa.js: https://github.com/Scifabric/pybossa.js
 
 
 Migrating Your Old DB Records
