@@ -81,6 +81,8 @@ class TestBlogpostAPI(TestAPI):
         assert len(data) == 1, len(data)
         assert data[0]['id'] == blogpost.id
 
+
+
         # Errors
         res = self.app.get(url + "?something")
         err = json.loads(res.data)
@@ -182,3 +184,41 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 400, data
         assert data['exception_msg'] == 'Reserved keys in payload', data
+
+    @with_context
+    def test_update_blogpost(self):
+        """Test API Blogpost update post (PUT)."""
+        user = UserFactory.create()
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        blogpost = BlogpostFactory.create(project=project)
+
+        # As anon
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s' % blogpost.id
+        res = self.app.put(url, data=json.dumps(blogpost.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, user.api_key)
+        res = self.app.put(url, data=json.dumps(blogpost.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
+        payload = blogpost.dictize()
+        del payload['user_id']
+        del payload['created']
+        del payload['id']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert data['title'] == 'new', data
+        assert data['body'] == 'new body', data
