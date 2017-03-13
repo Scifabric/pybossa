@@ -1435,24 +1435,37 @@ def new_blogpost(short_name):
 
     def respond():
         dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('projects/new_blogpost.html',
-                               title=gettext("Write a new post"),
-                               form=form,
-                               project=dict_project,
-                               owner=owner,
-                               overall_progress=overall_progress,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
-                               n_volunteers=cached_projects.n_volunteers(dict_project.get('id')),
-                               pro_features=pro)
+        response = dict(template='projects/new_blogpost.html',
+                        title=gettext("Write a new post"),
+                        form=form,
+                        project=project_sanitized,
+                        owner=owner_sanitized,
+                        overall_progress=overall_progress,
+                        n_tasks=n_tasks,
+                        n_task_runs=n_task_runs,
+                        n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
+                        n_volunteers=cached_projects.n_volunteers(dict_project.get('id')),
+                        pro_features=pro)
+        return handle_content_type(response)
 
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
 
+
     form = BlogpostForm(request.form)
     del form.id
+
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project)
+        else:    # HTML
+            project_sanitized = project
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+
 
     if request.method != 'POST':
         ensure_authorized_to('create', Blogpost, project_id=project.id)
@@ -1473,7 +1486,7 @@ def new_blogpost(short_name):
     msg_1 = gettext('Blog post created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
 
-    return redirect(url_for('.show_blogposts', short_name=short_name))
+    return redirect_content_type(url_for('.show_blogposts', short_name=short_name))
 
 
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
