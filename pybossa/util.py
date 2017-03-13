@@ -49,8 +49,7 @@ def form_to_json(form):
 
 def user_to_json(user):
     """Return a user in JSON format."""
-    return user.to_public_json()
-
+    return user.dictize()
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
@@ -78,10 +77,6 @@ def handle_content_type(data):
                 if type(data[item]) != dict:
                     cat = data[item].to_public_json()
                 data[item] = cat
-            if (item == 'owner'):
-                data[item] = user_to_json(data[item])
-            if (item == 'project'):
-                data[item] = Project().to_public_json(data[item])
             if (item == 'users'):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'found'):
