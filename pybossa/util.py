@@ -87,7 +87,6 @@ def handle_content_type(data):
         if 'code' in data.keys():
             return jsonify(data), data['code']
         else:
-            print data
             return jsonify(data)
     else:
         template = data['template']
