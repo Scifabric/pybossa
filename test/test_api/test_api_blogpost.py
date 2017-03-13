@@ -166,6 +166,14 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 403, data
 
+        # As owner using wrong attribute
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        payload['foo'] = 'bar'
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
         # As owner using reserved key 
         url = '/api/blogpost?api_key=%s' % owner.api_key
         payload['project_id'] = project.id
@@ -174,5 +182,3 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 400, data
         assert data['exception_msg'] == 'Reserved keys in payload', data
-
-
