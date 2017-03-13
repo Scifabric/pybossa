@@ -37,7 +37,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-from pybossa.core import project_repo, user_repo, task_repo, result_repo
+from pybossa.core import project_repo, user_repo, task_repo, result_repo, blog_repo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -54,7 +54,9 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'},
         'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
-                    'update': 'update'}
+                    'update': 'update'},
+        'Blogpost': {'repo': blog_repo, 'filter': 'filter_by', 'get': 'get',
+                     'update': 'update'}
         }
 
 
@@ -78,7 +80,7 @@ class APIBase(MethodView):
         return ''
 
     @jsonpify
-    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    #@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
         """Get an object.
 
@@ -96,6 +98,7 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            raise 
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
