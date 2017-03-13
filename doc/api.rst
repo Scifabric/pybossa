@@ -2667,3 +2667,78 @@ Gives you the list of required fields in the form to create a project.
       "template": "projects/new.html",
       "title": "Create a Project"
     }
+
+Project Blog list
+~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/blog**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of posted blogs by the given project short name.
+
+* **blogposts**: All the blog posts for the given project.
+* **project**: Info about the project.
+
+
+The project and owner fields will have more information if the onwer of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
+
+**Example public output**
+
+.. code-block:: python
+    {
+      "blogposts": [
+        {
+          "body": "Please, e-mail us to alejasan 4t ucm dot es if you find any bug. Thanks.",
+          "created": "2014-05-14T14:25:04.899079",
+          "id": 1,
+          "project_id": 1377,
+          "title": "We are working on the Alpha version.",
+          "user_id": 3927
+        },
+      ],
+      "n_completed_tasks": 137051,
+      "n_task_runs": 1070561,
+      "n_tasks": 169671,
+      "n_volunteers": 17499,
+      "overall_progress": 80,
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "avatar.png",
+          "container": "container"
+        },
+        "n_answers": 32814,
+        "name": "johndoe",
+        "rank": 4,
+        "registered_ago": "3 years ago",
+        "score": 32814
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1,
+        "info": {
+          "container": "container",
+          "thumbnail": "58.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Dark Skies ISS",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "darkskies",
+        "updated": "2017-01-31T09:18:28.491496"
+      },
+      "template": "projects/blog.html"
+    }
