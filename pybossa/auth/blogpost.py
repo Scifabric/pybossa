@@ -42,7 +42,6 @@ class BlogpostAuth(object):
     def _read(self, user, blogpost=None, project_id=None):
         if blogpost or project_id:
             project = self._get_project(blogpost, project_id)
-            print project
             if project:
                 return (project.published or self._is_admin_or_owner(user, project))
             if user.is_anonymous() or (blogpost is None and project_id is None):
