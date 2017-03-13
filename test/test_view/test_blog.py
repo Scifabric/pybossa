@@ -67,6 +67,11 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
+        assert 'api_key' not in data['owner'].keys()
+        assert 'email_addr' not in data['owner'].keys()
+        assert 'google_user_id' not in data['owner'].keys()
+        assert 'facebook_user_id' not in data['owner'].keys()
+        assert 'twitter_user_id' not in data['owner'].keys()
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
 
@@ -75,8 +80,31 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
+        assert 'api_key' not in data['owner'].keys()
+        assert 'email_addr' not in data['owner'].keys()
+        assert 'google_user_id' not in data['owner'].keys()
+        assert 'facebook_user_id' not in data['owner'].keys()
+        assert 'twitter_user_id' not in data['owner'].keys()
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
+
+        self.signout()
+
+        # As owner 
+        self.signin(email=user.email_addr, password=self.password)
+        res = self.app_get_json(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'api_key' in data['owner'].keys()
+        assert 'email_addr' in data['owner'].keys()
+        assert 'google_user_id' in data['owner'].keys()
+        assert 'facebook_user_id' in data['owner'].keys()
+        assert 'twitter_user_id' in data['owner'].keys()
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
+
+        self.signout()
+
 
 
     def test_blogpost_get_all_errors(self):
