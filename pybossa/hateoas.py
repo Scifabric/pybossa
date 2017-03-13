@@ -75,6 +75,12 @@ class Hateoas(object):
             # TODO: add the projects created by the user as the
             # links with rel=? (maybe 'project'??)
             return None, link
+        elif cls == 'blogpost':
+            link = self.create_link(item.id, title='blogpost')
+            if item.project_id is not None:
+                links = [self.create_link(item.project_id,
+                                          title='project', rel='parent')]
+            return links, link
         else:  # pragma: no cover
             return False
 
