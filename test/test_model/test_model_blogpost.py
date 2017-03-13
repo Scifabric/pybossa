@@ -173,4 +173,4 @@ class TestBlogpostModel(Test):
 
         tmp = blogpost.to_public_json()
         assert tmp.keys().sort() == Blogpost().public_attributes().sort()
-        assert Blogpost().public_info_keys == []
+        assert Blogpost().public_info_keys() == []
