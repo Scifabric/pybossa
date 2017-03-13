@@ -222,3 +222,61 @@ class TestBlogpostAPI(TestAPI):
         assert res.status_code == 200, res.status_code
         assert data['title'] == 'new', data
         assert data['body'] == 'new body', data
+
+        # as owner with reserved key
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
+        payload = blogpost.dictize()
+        del payload['user_id']
+        del payload['created']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 400, res.status_code
+        assert data['exception_msg'] == 'Reserved keys in payload',  data
+
+
+        # as owner with wrong key
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
+        payload = blogpost.dictize()
+        del payload['user_id']
+        del payload['created']
+        del payload['id']
+        payload['foo'] = 'bar'
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert 'foo' in data['exception_msg'], data
+
+    @with_context
+    def test_delete_blogpost(self):
+        """Test API Blogpost delete post (DEL)."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        blogpost = BlogpostFactory.create(project=project)
+        blogpost2 = BlogpostFactory.create(project=project)
+
+        # As anon
+        url = '/api/blogpost/%s' % blogpost.id
+        res = self.app.delete(url)
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, user.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
+
+        # As admin
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost2.id, admin.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
