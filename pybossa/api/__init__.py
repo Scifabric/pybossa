@@ -156,6 +156,9 @@ def _retrieve_new_task(project_id):
     else:
         limit = 1
 
+    if limit > 100:
+        limit = 100
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
