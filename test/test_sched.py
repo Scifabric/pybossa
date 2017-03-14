@@ -1017,24 +1017,22 @@ class TestSched(sched.Helper):
 
         project_id = project.id
 
-        for i in range(20):
-            task = TaskFactory.create(project=project, info={'i': i}, n_answers=10)
+        tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
 
-        tasks = db.session.query(Task).filter_by(project_id=project.id).limit(11).all()
         for t in tasks[0:10]:
-            for x in range(10):
-                self._add_task_run(project, t)
+            TaskRunFactory.create_batch(10, task=t, project=project)
 
+        tasks = db.session.query(Task).filter_by(project_id=project.id, state='ongoing').all()
         assert tasks[0].n_answers == 10
 
-        url = 'api/project/%s/newtask' % project_id
+        url = 'api/project/%s/newtask' % project.id
         res = self.app.get(url)
         data = json.loads(res.data)
 
         err_msg = "User should get a task"
         assert 'project_id' in data.keys(), err_msg
         assert data['project_id'] == project_id, err_msg
-        assert data['id'] == tasks[10].id, err_msg
+        assert data['id'] == tasks[0].id, err_msg
 
     @with_context
     def test_no_more_tasks_limit(self):
@@ -1045,23 +1043,22 @@ class TestSched(sched.Helper):
 
         project_id = project.id
 
-        for i in range(20):
-            task = TaskFactory.create(project=project, info={'i': i}, n_answers=10)
+        tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
 
-        tasks = db.session.query(Task).filter_by(project_id=project.id).limit(12).all()
         for t in tasks[0:10]:
-            for x in range(10):
-                self._add_task_run(project, t)
+            TaskRunFactory.create_batch(10, task=t, project=project)
 
+        tasks = db.session.query(Task).filter_by(project_id=project.id, state='ongoing').all()
         assert tasks[0].n_answers == 10
 
-        url = 'api/project/%s/newtask?limit=2' % project_id
+        url = 'api/project/%s/newtask?limit=2&orderby=id' % project_id
         res = self.app.get(url)
         data = json.loads(res.data)
 
         err_msg = "User should get a task"
-        i = 10
+        i = 0
         for t in data:
+            print t['id']
             assert 'project_id' in t.keys(), err_msg
             assert t['project_id'] == project_id, err_msg
             assert t['id'] == tasks[i].id, (err_msg, t, tasks[i].id)
