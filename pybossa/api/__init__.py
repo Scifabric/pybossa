@@ -119,7 +119,9 @@ def new_task(project_id):
             for task in tasks:
                 guard.stamp(task, get_user_id_or_ip())
             data = [task.dictize() for task in tasks]
-            if len(data) == 1:
+            if len(data) == 0:
+                response = make_response(json.dumps({}))
+            elif len(data) == 1:
                 response = make_response(json.dumps(data[0]))
             else:
                 response = make_response(json.dumps(data))

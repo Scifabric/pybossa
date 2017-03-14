@@ -57,10 +57,11 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                    (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                    user_id=:user_id AND task_id=task.id)
                    AND task.project_id=:project_id AND task.state !='completed'
-                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                   group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                    ''')
         rows = session.execute(sql,
-                               dict(project_id=project_id, user_id=user_id))
+                               dict(project_id=project_id, user_id=user_id,
+                                    limit=limit, offset=offset))
     else:
         if not user_ip:  # pragma: no cover
             user_ip = '127.0.0.1'
@@ -73,10 +74,11 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                        user_ip=:user_ip AND task_id=task.id)
                        AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                        ''')
             rows = session.execute(sql,
-                                   dict(project_id=project_id, user_ip=user_ip))
+                                   dict(project_id=project_id, user_ip=user_ip, 
+                                        limit=limit, offset=offset))
         else:
             sql = text('''
                        SELECT task.id, COUNT(task_run.task_id) AS taskcount
@@ -86,17 +88,16 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                        external_uid=:external_uid AND task_id=task.id)
                        AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                        ''')
             rows = session.execute(sql,
                                    dict(project_id=project_id,
-                                        external_uid=external_uid))
+                                        external_uid=external_uid, 
+                                        limit=limit, offset=offset))
 
     task_ids = [x[0] for x in rows]
-    total_remaining = len(task_ids) - offset
-    if total_remaining <= 0:
-        return None
-    return session.query(Task).get(task_ids[offset])
+    tasks = session.query(Task).filter(Task.id.in_(task_ids)).all()
+    return tasks
 
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None,

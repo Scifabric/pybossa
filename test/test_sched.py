@@ -69,7 +69,7 @@ class TestSched(sched.Helper):
         # Get a Task until scheduler returns None
         project = ProjectFactory.create()
         tasks = TaskFactory.create_batch(3, project=project, info={})
-        res = self.app.get('api/project/%s/newtask' %project.id)
+        res = self.app.get('api/project/%s/newtask' % project.id)
         data = json.loads(res.data)
         while data.get('info') is not None:
             # Save the assigned task
@@ -580,36 +580,48 @@ class TestGetBreadthFirst(Test):
 
         # now check we get task without task runs as anonymous user
         out = pybossa.sched.get_breadth_first_task(projectid)
+        assert len(out) == 1, out
+        out = out[0]
         assert out.id == taskid, out
 
         # now check we get task without task runs as a user
         owner = db.session.query(User).get(1)
         out = pybossa.sched.get_breadth_first_task(projectid, owner.id)
+        assert len(out) == 1, out
+        out = out[0]
         assert out.id == taskid, out
 
         # now check we get task without task runs as a external uid
         out = pybossa.sched.get_breadth_first_task(projectid,
                                                    external_uid=external_uid)
+        assert len(out) == 1, out
+        out = out[0]
         assert out.id == taskid, out
 
 
         # now check that offset works
         out1 = pybossa.sched.get_breadth_first_task(projectid)
         out2 = pybossa.sched.get_breadth_first_task(projectid, offset=1)
-        assert out1.id != out2.id, out
+        assert len(out1) == 1, out1
+        assert len(out2) == 1, out2
+        assert out1[0].id != out2[0].id, (out1, out2)
 
         # asking for a bigger offset (max 10)
         out2 = pybossa.sched.get_breadth_first_task(projectid, offset=11)
-        assert out2 is None, out
+        assert out2 == [], out2
 
         self._add_task_run(project, task)
         out = pybossa.sched.get_breadth_first_task(projectid)
+        assert len(out) == 1, out
+        out = out[0]
         assert out.id == taskid, out
 
         # now add 2 more taskruns. We now have 3 and 2 task runs per task
         self._add_task_run(project, task)
         self._add_task_run(project, task)
         out = pybossa.sched.get_breadth_first_task(projectid)
+        assert len(out) == 1, out
+        out = out[0]
         assert out.id == task2.id, out
 
     def _add_task_run(self, project, task, user=None):
