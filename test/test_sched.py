@@ -914,7 +914,6 @@ class TestSched(sched.Helper):
         # Request again a new task
         res = self.app.get(url)
         tasks1 = json.loads(res.data)
-        print tasks1
         # Check that we received a Task
         err_msg = "Task.id should be the same"
         assert tasks1[0].get('id') == t.id, (err_msg, tasks1[0])
