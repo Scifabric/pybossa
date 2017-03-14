@@ -480,6 +480,52 @@ class TestSched(sched.Helper):
             assert self.is_unique(at['id'], assigned_tasks), err_msg
 
     @with_context
+    def test_user_02_gets_different_tasks_limit(self):
+        """ Test SCHED newtask returns N different list of Tasks for John Doe User"""
+        # Register
+        self.register()
+        self.signin()
+
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        url = 'api/project/%s/newtask?limit=5' % project.id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        while len(data) > 0: 
+            # Check that we received a Task
+            for t in data:
+                assert t.get('id'), t
+
+                # Save the assigned task
+                assigned_tasks.append(t)
+
+                # Submit an Answer for the assigned task
+                tr = dict(project_id=t['project_id'], task_id=t['id'],
+                          info={'answer': 'No'})
+                tr = json.dumps(tr)
+
+                self.app.post('/api/taskrun', data=tr)
+                res = self.app.get(url)
+                data = json.loads(res.data)
+
+        # Check if we received the same number of tasks that the available ones
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        assert len(assigned_tasks) == len(tasks), assigned_tasks
+        # Check if all the assigned Task.id are equal to the available ones
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        err_msg = "Assigned Task not found in DB Tasks"
+        for at in assigned_tasks:
+            assert self.is_task(at['id'], tasks), err_msg
+        # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
+        for at in assigned_tasks:
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
+
+
+    @with_context
     def test_user_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         # Del previous TaskRuns
