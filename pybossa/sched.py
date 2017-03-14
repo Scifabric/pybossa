@@ -27,7 +27,7 @@ session = db.slave_session
 
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
-             external_uid=None, offset=0):
+             external_uid=None, offset=0, limit=1):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
         'default': get_depth_first_task,
@@ -35,11 +35,11 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'depth_first': get_depth_first_task,
         'incremental': get_incremental_task}
     scheduler = sched_map.get(sched, sched_map['default'])
-    return scheduler(project_id, user_id, user_ip, external_uid, offset=offset)
+    return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
-                           external_uid=None, offset=0):
+                           external_uid=None, offset=0, limit=1):
     """Get a new task which have the least number of task runs.
 
     It excludes the current user.
@@ -57,10 +57,11 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                    (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                    user_id=:user_id AND task_id=task.id)
                    AND task.project_id=:project_id AND task.state !='completed'
-                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                   group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                    ''')
         rows = session.execute(sql,
-                               dict(project_id=project_id, user_id=user_id))
+                               dict(project_id=project_id, user_id=user_id,
+                                    limit=limit, offset=offset))
     else:
         if not user_ip:  # pragma: no cover
             user_ip = '127.0.0.1'
@@ -73,10 +74,11 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                        user_ip=:user_ip AND task_id=task.id)
                        AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                        ''')
             rows = session.execute(sql,
-                                   dict(project_id=project_id, user_ip=user_ip))
+                                   dict(project_id=project_id, user_ip=user_ip, 
+                                        limit=limit, offset=offset))
         else:
             sql = text('''
                        SELECT task.id, COUNT(task_run.task_id) AS taskcount
@@ -86,39 +88,36 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                        external_uid=:external_uid AND task_id=task.id)
                        AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
                        ''')
             rows = session.execute(sql,
                                    dict(project_id=project_id,
-                                        external_uid=external_uid))
+                                        external_uid=external_uid, 
+                                        limit=limit, offset=offset))
 
     task_ids = [x[0] for x in rows]
-    total_remaining = len(task_ids) - offset
-    if total_remaining <= 0:
-        return None
-    return session.query(Task).get(task_ids[offset])
+    tasks = session.query(Task).filter(Task.id.in_(task_ids)).order_by(Task.priority_0.desc()).all()
+    return tasks
 
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None,
-                         external_uid=None, offset=0):
+                         external_uid=None, offset=0, limit=1):
     """Get a new task for a given project."""
     candidate_task_ids = get_candidate_task_ids(project_id, user_id,
-                                                user_ip, external_uid)
-    total_remaining = len(candidate_task_ids) - offset
-    if total_remaining <= 0:
-        return None
-    return session.query(Task).get(candidate_task_ids[offset])
+                                                user_ip, external_uid, limit, offset)
+    tasks = session.query(Task).filter(Task.id.in_(candidate_task_ids)).order_by(Task.priority_0.desc()).all()
+    return tasks
 
 
 def get_incremental_task(project_id, user_id=None, user_ip=None,
-                         external_uid=None, offset=0):
+                         external_uid=None, offset=0, limit=1):
     """Get a new task for a given project with its last given answer.
 
     It is an important strategy when dealing with large tasks, as
     transcriptions.
     """
     candidate_task_ids = get_candidate_task_ids(project_id, user_id, user_ip,
-                                                external_uid)
+                                                external_uid, limit, offset)
     total_remaining = len(candidate_task_ids)
     if total_remaining == 0:
         return None
@@ -134,11 +133,11 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
         task.info['last_answer'] = last_task_run.info
         # TODO: As discussed in GitHub #53
         # it is necessary to create a lock in the task!
-    return task
+    return [task]
 
 
 def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
-                           external_uid=None):
+                           external_uid=None, limit=1, offset=0):
     """Get all available tasks for a given project and user."""
     rows = None
     data = None
@@ -149,9 +148,9 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                      project_id=:project_id AND user_id=:user_id
                         AND task_id=task.id)
                      AND project_id=:project_id AND state !='completed'
-                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+                     ORDER BY priority_0 DESC, id ASC LIMIT :limit OFFSET :offset''')
         rows = session.execute(query, dict(project_id=project_id,
-                                           user_id=user_id))
+                                           user_id=user_id, limit=limit, offset=offset))
         data = [t.id for t in rows]
     else:
         if not user_ip:
@@ -163,9 +162,10 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                          project_id=:project_id AND user_ip=:user_ip
                             AND task_id=task.id)
                          AND project_id=:project_id AND state !='completed'
-                         ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+                         ORDER BY priority_0 DESC, id ASC LIMIT :limit OFFSET :offset''')
             rows = session.execute(query, dict(project_id=project_id,
-                                               user_ip=user_ip))
+                                               user_ip=user_ip, limit=limit, 
+                                               offset=offset))
             data = [t.id for t in rows]
         else:
             query = text('''
@@ -174,9 +174,10 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                          project_id=:project_id AND external_uid=:external_uid
                             AND task_id=task.id)
                          AND project_id=:project_id AND state !='completed'
-                         ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+                         ORDER BY priority_0 DESC, id ASC LIMIT :limit OFFSET :offset''')
             rows = session.execute(query, dict(project_id=project_id,
-                                               external_uid=external_uid))
+                                               external_uid=external_uid,
+                                               limit=limit, offset=offset))
             data = [t.id for t in rows]
     return data
 
