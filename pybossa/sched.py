@@ -106,8 +106,6 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
     candidate_task_ids = get_candidate_task_ids(project_id, user_id,
                                                 user_ip, external_uid, limit, offset)
     tasks = session.query(Task).filter(Task.id.in_(candidate_task_ids)).order_by(Task.priority_0.desc()).all()
-    for t in tasks:
-        print t.id
     return tasks
 
 
