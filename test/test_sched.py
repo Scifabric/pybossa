@@ -645,8 +645,8 @@ class TestSched(sched.Helper):
     def test_task_preloading(self):
         """Test TASK Pre-loading works"""
         # Del previous TaskRuns
-        self.create()
-        self.del_task_runs()
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
 
         # Register
         self.register()
@@ -654,15 +654,16 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
-        res = self.app.get('api/project/1/newtask')
+        url = 'api/project/%s/newtask' % project.id
+        res = self.app.get(url)
         task1 = json.loads(res.data)
         # Check that we received a Task
-        assert task1.get('info'),  task1
+        assert task1.get('id'),  task1
         # Pre-load the next task for the user
-        res = self.app.get('api/project/1/newtask?offset=1')
+        res = self.app.get(url + '?offset=1')
         task2 = json.loads(res.data)
         # Check that we received a Task
-        assert task2.get('info'),  task2
+        assert task2.get('id'),  task2
         # Check that both tasks are different
         assert task1.get('id') != task2.get('id'), "Tasks should be different"
         ## Save the assigned task
@@ -676,21 +677,21 @@ class TestSched(sched.Helper):
 
             self.app.post('/api/taskrun', data=tr)
         # Get two tasks again
-        res = self.app.get('api/project/1/newtask')
+        res = self.app.get(url)
         task3 = json.loads(res.data)
         # Check that we received a Task
-        assert task3.get('info'),  task1
+        assert task3.get('id'),  task1
         # Pre-load the next task for the user
-        res = self.app.get('api/project/1/newtask?offset=1')
+        res = self.app.get(url + '?offset=1')
         task4 = json.loads(res.data)
         # Check that we received a Task
-        assert task4.get('info'),  task2
+        assert task4.get('id'),  task2
         # Check that both tasks are different
         assert task3.get('id') != task4.get('id'), "Tasks should be different"
         assert task1.get('id') != task3.get('id'), "Tasks should be different"
         assert task2.get('id') != task4.get('id'), "Tasks should be different"
         # Check that a big offset returns None
-        res = self.app.get('api/project/1/newtask?offset=11')
+        res = self.app.get(url + '?offset=11')
         assert json.loads(res.data) == {}, res.data
 
     @with_context
