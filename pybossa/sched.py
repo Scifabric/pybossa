@@ -96,7 +96,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                                         limit=limit, offset=offset))
 
     task_ids = [x[0] for x in rows]
-    tasks = session.query(Task).filter(Task.id.in_(task_ids)).all()
+    tasks = session.query(Task).filter(Task.id.in_(task_ids)).order_by(Task.priority_0.desc()).all()
     return tasks
 
 
@@ -105,7 +105,9 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
     """Get a new task for a given project."""
     candidate_task_ids = get_candidate_task_ids(project_id, user_id,
                                                 user_ip, external_uid, limit, offset)
-    tasks = session.query(Task).filter(Task.id.in_(candidate_task_ids)).all()
+    tasks = session.query(Task).filter(Task.id.in_(candidate_task_ids)).order_by(Task.priority_0.desc()).all()
+    for t in tasks:
+        print t.id
     return tasks
 
 

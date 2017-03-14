@@ -886,6 +886,43 @@ class TestSched(sched.Helper):
         assert task1.get('priority_0') == 1, err_msg
 
     @with_context
+    def test_task_priority_limit(self):
+        """Test SCHED respects priority_0 field with limit"""
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
+
+        # Register
+        self.register()
+        self.signin()
+
+        # By default, tasks without priority should be ordered by task.id (FIFO)
+        tasks = db.session.query(Task).filter_by(project_id=project.id).order_by('id').all()
+        url = 'api/project/%s/newtask?limit=2' % project.id
+        res = self.app.get(url)
+        tasks1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert tasks1[0].get('id') == tasks[0].id, err_msg
+
+        # Now let's change the priority to a random task
+        import random
+        t = random.choice(tasks)
+        # Increase priority to maximum
+        t.priority_0 = 1
+        db.session.add(t)
+        db.session.commit()
+        # Request again a new task
+        res = self.app.get(url)
+        tasks1 = json.loads(res.data)
+        print tasks1
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert tasks1[0].get('id') == t.id, (err_msg, tasks1[0])
+        err_msg = "Task.priority_0 should be the 1"
+        assert tasks1[0].get('priority_0') == 1, err_msg
+
+
+    @with_context
     def test_task_priority_external_uid(self):
         """Test SCHED respects priority_0 field for externa uid"""
         # Del previous TaskRuns
