@@ -1078,6 +1078,20 @@ class TestGetBreadthFirst(Test):
         self._test_get_breadth_first_task(external_uid='234')
 
 
+    @with_context
+    def test_get_default_task_anonymous_limit(self):
+        self._test_get_breadth_first_task_limit()
+
+    @with_context
+    def test_get_breadth_first_task_user_limit(self):
+        user = self.create_users()[0]
+        self._test_get_breadth_first_task_limit(user=user)
+
+    @with_context
+    def test_get_breadth_first_task_external_user_limit(self):
+        self._test_get_breadth_first_task_limit(external_uid='234')
+
+
     def _test_get_breadth_first_task(self, user=None, external_uid=None):
         self.del_task_runs()
         if user:
@@ -1150,6 +1164,84 @@ class TestGetBreadthFirst(Test):
         assert len(out) == 1, out
         out = out[0]
         assert out.id == task2.id, out
+
+    def _test_get_breadth_first_task_limit(self, user=None, external_uid=None):
+        self.del_task_runs()
+        if user:
+            short_name = 'xyzuser'
+        else:
+            short_name = 'xyznouser'
+
+        category = db.session.query(Category).get(1)
+        project = Project(short_name=short_name, name=short_name,
+              description=short_name, category=category)
+        owner = db.session.query(User).get(1)
+
+        project.owner = owner
+        task = Task(project=project, state='0', info={})
+        task2 = Task(project=project, state='0', info={})
+        task3 = Task(project=project, state='0', info={})
+        task.project = project
+        task2.project = project
+        task3.project = project
+        db.session.add(project)
+        db.session.add(task)
+        db.session.add(task2)
+        db.session.add(task3)
+        db.session.commit()
+        taskid = task.id
+        projectid = project.id
+        # give task2 a bunch of runs
+        for idx in range(2):
+            self._add_task_run(project, task2)
+
+        # now check we get task without task runs as anonymous user
+        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
+        assert len(out) == 2, out
+        out = out[0]
+        assert out.id == taskid, out
+
+        # now check we get task without task runs as a user
+        owner = db.session.query(User).get(1)
+        out = pybossa.sched.get_breadth_first_task(projectid, owner.id, limit=2)
+        assert len(out) == 2, out
+        out = out[0]
+        assert out.id == taskid, out
+
+        # now check we get task without task runs as a external uid
+        out = pybossa.sched.get_breadth_first_task(projectid,
+                                                   external_uid=external_uid,
+                                                   limit=2)
+        assert len(out) == 2, out
+        out = out[0]
+        assert out.id == taskid, out
+
+
+        # now check that offset works
+        out1 = pybossa.sched.get_breadth_first_task(projectid, limit=2)
+        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=1, limit=2)
+        assert len(out1) == 2, out1
+        assert len(out2) == 2, out2
+        assert out1[0].id != out2[0].id, (out1, out2)
+
+        # asking for a bigger offset (max 10)
+        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=11, limit=2)
+        assert out2 == [], out2
+
+        self._add_task_run(project, task)
+        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
+        assert len(out) == 2, out
+        out = out[0]
+        assert out.id == taskid, out
+
+        # now add 2 more taskruns. We now have 3 and 2 task runs per task
+        self._add_task_run(project, task)
+        self._add_task_run(project, task)
+        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
+        assert len(out) == 2, out
+        out = out[0]
+        assert out.id == task2.id, out
+
 
     def _add_task_run(self, project, task, user=None):
         tr = TaskRun(project=project, task=task, user=user)
