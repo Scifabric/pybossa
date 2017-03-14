@@ -444,10 +444,28 @@ by::
 This will return a domain Task object in JSON format if there is a task
 available for the user, otherwise it will return **None**.
 
+You can also use **limit** to get more than 1 task for the user like this::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=100
+
+That query will return 100 tasks for the user. 
+
 .. note::
-    Some projects will want to pre-load the next task for the current user.
-    This is possible by passing the argument **?offset=1** to the **newtask**
-    endpoint.
+    That's the maximum of tasks that a user can get at once. If you pass an argument of 200,
+    PYBOSSA will convert it to 100.
+
+You can also, use **offset** to get the next tasks, if you want, allowing you to preload::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?offset=1
+
+That query will return the next task for the user, once it solves the previous task.
+
+Both arguments, limit and offset can be used together::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=2offset=2
+
+That will load the next two tasks for the user.
 
 
 Requesting the user's oAuth tokens
