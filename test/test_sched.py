@@ -423,13 +423,16 @@ class TestSched(sched.Helper):
         self.register()
         self.signin()
         project = ProjectFactory.create(owner=UserFactory.create(id=500))
-        tasks = TaskFactory.create_batch(10, project=project)
+        tasks = TaskFactory.create_batch(10, project=project, info=dict(foo=1))
 
         # Register
         url = 'api/project/%s/newtask?limit=2' % project.id
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 2, data
+        for t in data:
+            print t
+            assert t['info']['foo'] == 1, t
         self.signout()
 
     @with_context
