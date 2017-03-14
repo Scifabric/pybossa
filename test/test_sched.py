@@ -31,6 +31,7 @@ from pybossa.model.category import Category
 from pybossa.core import task_repo, project_repo
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
+from factories import reset_all_pk_sequences
 import pybossa
 
 
@@ -38,6 +39,16 @@ class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
         self.endpoints = ['project', 'task', 'taskrun']
+        with self.flask_app.app_context():
+            db.create_all()
+            self.redis_flushall()
+
+
+    def tearDown(self):
+        with self.flask_app.app_context():
+            db.drop_all()
+            self.redis_flushall()
+            #reset_all_pk_sequences()
 
 
     def get_headers_jwt(self, project):
@@ -404,6 +415,21 @@ class TestSched(sched.Helper):
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
         assert data['info'], data
+        self.signout()
+
+    @with_context
+    def test_user_01_newtask_limits(self):
+        """ Test SCHED newtask returns a Task for John Doe User with limits"""
+        self.register()
+        self.signin()
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        tasks = TaskFactory.create_batch(10, project=project)
+
+        # Register
+        url = 'api/project/%s/newtask?limit=2' % project.id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 2, data
         self.signout()
 
     @with_context
