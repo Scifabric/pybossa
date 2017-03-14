@@ -757,24 +757,23 @@ class TestSched(sched.Helper):
     @with_context
     def test_task_preloading_external_uid(self):
         """Test TASK Pre-loading for external user IDs works"""
-        # Del previous TaskRuns
-        self.create()
-        self.del_task_runs()
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
 
         assigned_tasks = []
         # Get Task until scheduler returns None
         project = project_repo.get(1)
         headers = self.get_headers_jwt(project)
-        url = 'api/project/1/newtask?external_uid=2xb'
+        url = 'api/project/%s/newtask?external_uid=2xb' % project.id
         res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
-        assert task1.get('info'),  task1
+        assert task1.get('id'),  task1
         # Pre-load the next task for the user
         res = self.app.get(url + '&offset=1', headers=headers)
         task2 = json.loads(res.data)
         # Check that we received a Task
-        assert task2.get('info'),  task2
+        assert task2.get('id'),  task2
         # Check that both tasks are different
         assert task1.get('id') != task2.get('id'), "Tasks should be different"
         ## Save the assigned task
@@ -793,12 +792,12 @@ class TestSched(sched.Helper):
         res = self.app.get(url, headers=headers)
         task3 = json.loads(res.data)
         # Check that we received a Task
-        assert task3.get('info'),  task1
+        assert task3.get('id'),  task1
         # Pre-load the next task for the user
         res = self.app.get(url + '&offset=1', headers=headers)
         task4 = json.loads(res.data)
         # Check that we received a Task
-        assert task4.get('info'),  task2
+        assert task4.get('id'),  task2
         # Check that both tasks are different
         assert task3.get('id') != task4.get('id'), "Tasks should be different"
         assert task1.get('id') != task3.get('id'), "Tasks should be different"
@@ -942,15 +941,14 @@ class TestSched(sched.Helper):
     @with_context
     def test_task_priority_external_uid(self):
         """Test SCHED respects priority_0 field for externa uid"""
-        # Del previous TaskRuns
-        self.create()
-        self.del_task_runs()
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
 
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
         project = project_repo.get(1)
         headers = self.get_headers_jwt(project)
-        url = 'api/project/1/newtask?external_uid=342'
+        url = 'api/project/%s/newtask?external_uid=342' % project.id
         res = self.app.get(url, headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
@@ -965,11 +963,11 @@ class TestSched(sched.Helper):
         db.session.add(t)
         db.session.commit()
         # Request again a new task
-        res = self.app.get(url, headers=headers)
+        res = self.app.get(url + '&orderby=priority_0&desc=true', headers=headers)
         task1 = json.loads(res.data)
         # Check that we received a Task
         err_msg = "Task.id should be the same"
-        assert task1.get('id') == t.id, err_msg
+        assert task1.get('id') == t.id, (err_msg, task1, t)
         err_msg = "Task.priority_0 should be the 1"
         assert task1.get('priority_0') == 1, err_msg
 
