@@ -133,7 +133,7 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
         task.info['last_answer'] = last_task_run.info
         # TODO: As discussed in GitHub #53
         # it is necessary to create a lock in the task!
-    return task
+    return [task]
 
 
 def get_candidate_task_ids(project_id, user_id=None, user_ip=None,

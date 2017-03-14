@@ -103,7 +103,7 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
-#@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
@@ -129,7 +129,6 @@ def new_task(project_id):
             return response
         return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
-        raise
         return error.format_exception(e, target='project', action='GET')
 
 
