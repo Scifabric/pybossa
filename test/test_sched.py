@@ -63,6 +63,22 @@ class TestSched(sched.Helper):
         assert data['info'] == 'hola', data
 
     @with_context
+    def test_anonymous_01_newtask_limits(self):
+        """ Test SCHED newtask returns a list of Tasks for the Anonymous User"""
+        project = ProjectFactory.create()
+        TaskFactory.create_batch(100, project=project, info='hola')
+
+        url = 'api/project/%s/newtask?limit=100' % project.id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 100
+        for t in data:
+            assert t['info'] == 'hola', t
+        task_ids = [task['id'] for task in data]
+        task_ids = set(task_ids)
+        assert len(task_ids) == 100, task_ids
+
+    @with_context
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
         assigned_tasks = []
@@ -80,6 +96,36 @@ class TestSched(sched.Helper):
             tr = AnonymousTaskRunFactory.create(project=project, task=task)
             res = self.app.get('api/project/%s/newtask' %project.id)
             data = json.loads(res.data)
+
+        # Check if we received the same number of tasks that the available ones
+        assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
+        # Check if all the assigned Task.id are equal to the available ones
+        err_msg = "Assigned Task not found in DB Tasks"
+        for at in assigned_tasks:
+            assert self.is_task(at['id'], tasks), err_msg
+        # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
+        for at in assigned_tasks:
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
+
+    @with_context
+    def test_anonymous_02_gets_different_tasks_limits(self):
+        """ Test SCHED newtask returns N different list of Tasks for the Anonymous User"""
+        assigned_tasks = []
+        # Get a Task until scheduler returns None
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(10, project=project, info={})
+        res = self.app.get('api/project/%s/newtask?limit=5' % project.id)
+        data = json.loads(res.data)
+        while len(data) > 0:
+            # Save the assigned task
+            for t in data:
+                assigned_tasks.append(t)
+                task = db.session.query(Task).get(t['id'])
+                # Submit an Answer for the assigned task
+                tr = AnonymousTaskRunFactory.create(project=project, task=task)
+                res = self.app.get('api/project/%s/newtask?limit=5' % project.id)
+                data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
         assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
