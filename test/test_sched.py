@@ -790,6 +790,67 @@ class TestSched(sched.Helper):
         assert json.loads(res.data) == {}, res.data
 
     @with_context
+    def test_task_preloading_external_uid_limit(self):
+        """Test TASK Pre-loading for external user IDs works with limit"""
+        # Del previous TaskRuns
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project)
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        headers = self.get_headers_jwt(project)
+        url = 'api/project/%s/newtask?external_uid=2xb&limit=2' % project.id
+        res = self.app.get(url, headers=headers)
+        tasks1 = json.loads(res.data)
+        # Check that we received a Task
+        for t in tasks1:
+            assert t.get('id'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=2', headers=headers)
+        tasks2 = json.loads(res.data)
+        # Check that we received a Task
+        for t in tasks2:
+            assert t.get('id'),  t
+        # Check that both tasks are different
+        tasks1_ids = set([task['id'] for task in tasks1])
+        tasks2_ids = set([task['id'] for task in tasks2])
+        assert len(tasks1_ids.union(tasks2_ids)) == 4, "Tasks should be different"
+        ## Save the assigned task
+        for t in tasks1:
+            assigned_tasks.append(t)
+        for t in tasks2:
+            assigned_tasks.append(t)
+
+        # Submit an Answer for the assigned and pre-loaded task
+        for t in assigned_tasks:
+            tr = dict(project_id=t['project_id'],
+                      task_id=t['id'], info={'answer': 'No'},
+                      external_uid='2xb')
+            tr = json.dumps(tr)
+
+            res = self.app.post('/api/taskrun', data=tr, headers=headers)
+        # Get two tasks again
+        res = self.app.get(url, headers=headers)
+        tasks3 = json.loads(res.data)
+        # Check that we received a Task
+        for t in tasks3:
+            assert t.get('id'),  t
+        # Pre-load the next task for the user
+        res = self.app.get(url + '&offset=2', headers=headers)
+        tasks4 = json.loads(res.data)
+        # Check that we received a Task
+        for t in tasks4:
+            assert t.get('id'),  t
+        # Check that both tasks are different
+        tasks3_ids = set([task['id'] for task in tasks3])
+        tasks4_ids = set([task['id'] for task in tasks4])
+        assert len(tasks3_ids.union(tasks4_ids)) == 4, "Tasks should be different"
+        # Check that a big offset returns None
+        res = self.app.get(url + '&offset=11', headers=headers)
+        assert json.loads(res.data) == {}, res.data
+
+
+    @with_context
     def test_task_priority(self):
         """Test SCHED respects priority_0 field"""
         # Del previous TaskRuns
