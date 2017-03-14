@@ -19,6 +19,9 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.ProjectAPI
    :members:
 
+.. autoclass:: pybossa.api.BlogpostAPI
+   :members:
+
 .. autoclass:: pybossa.api.TaskAPI
    :members:
 

@@ -46,6 +46,7 @@ from task import TaskAPI
 from task_run import TaskRunAPI
 from app import AppAPI
 from project import ProjectAPI
+from blogpost import BlogpostAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
@@ -93,6 +94,7 @@ register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
+register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
