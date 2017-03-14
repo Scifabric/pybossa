@@ -102,23 +102,27 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
-@blueprint.route('/app/<project_id>/newtask')
 @blueprint.route('/project/<project_id>/newtask')
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        task = _retrieve_new_task(project_id)
+        tasks = _retrieve_new_task(project_id)
 
-        if type(task) is Response:
-            return task
+        if type(tasks) is Response:
+            return tasks
 
         # If there is a task for the user, return it
-        if task is not None:
+        if tasks is not None:
             guard = ContributionsGuard(sentinel.master)
-            guard.stamp(task, get_user_id_or_ip())
-            response = make_response(json.dumps(task.dictize()))
+            for task in tasks:
+                guard.stamp(task, get_user_id_or_ip())
+            data = [task.dictize() for task in tasks]
+            if len(data) == 1:
+                response = make_response(json.dumps(data[0]))
+            else:
+                response = make_response(json.dumps(data))
             response.mimetype = "application/json"
             return response
         return Response(json.dumps({}), mimetype="application/json")
@@ -145,6 +149,11 @@ def _retrieve_new_task(project_id):
         if resp != True:
             return resp
 
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    else:
+        limit = 1
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
@@ -156,7 +165,8 @@ def _retrieve_new_task(project_id):
                           user_id,
                           user_ip,
                           external_uid,
-                          offset)
+                          offset,
+                          limit)
     return task
 
 
