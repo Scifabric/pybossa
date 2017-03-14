@@ -573,6 +573,57 @@ class TestSched(sched.Helper):
         for t in tasks:
             assert t.state == "completed", t.state
 
+
+    @with_context
+    def test_user_03_respects_limit_tasks_limit(self):
+        """ Test SCHED newtask respects the limit of 30 TaskRuns per list of Tasks"""
+        # Del previous TaskRuns
+        assigned_tasks = []
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(10, project=project, n_answers=10)
+        # We need one extra loop to allow the scheduler to mark a task as completed
+        url = 'api/project/%s/newtask?limit=5' % project.id
+        for i in range(11):
+            self.register(fullname="John Doe" + str(i),
+                          name="johndoe" + str(i),
+                          password="1234" + str(i))
+            self.signin()
+            # Get Task until scheduler returns None
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            while len(data) > 0:
+                # Check that we received a Task
+                for t in data:
+                    assert t.get('id'),  data
+
+                    # Save the assigned task
+                    assigned_tasks.append(t)
+
+                    # Submit an Answer for the assigned task
+                    tr = dict(project_id=t['project_id'], task_id=t['id'],
+                              info={'answer': 'No'})
+                    tr = json.dumps(tr)
+                    self.app.post('/api/taskrun', data=tr)
+                    self.redis_flushall()
+                    res = self.app.get(url)
+                    data = json.loads(res.data)
+            self.signout()
+
+        # Check if there are 30 TaskRuns per Task
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        for t in tasks:
+            assert len(t.task_runs) == 10, t.task_runs
+        # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same User"
+        for t in tasks:
+            for tr in t.task_runs:
+                assert self.is_unique(tr.user_id, t.task_runs), err_msg
+        # Check that task.state is updated to completed
+        for t in tasks:
+            assert t.state == "completed", t.state
+
+
     @with_context
     def test_task_preloading(self):
         """Test TASK Pre-loading works"""
