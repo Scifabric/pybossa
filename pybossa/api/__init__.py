@@ -103,7 +103,7 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
-@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+#@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
@@ -129,6 +129,7 @@ def new_task(project_id):
             return response
         return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
+        raise
         return error.format_exception(e, target='project', action='GET')
 
 
@@ -142,7 +143,7 @@ def _retrieve_new_task(project_id):
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
-        error = model.task.Task(info=info)
+        error = [model.task.Task(info=info)]
         return error
 
     if request.args.get('external_uid'):
