@@ -255,14 +255,17 @@ class TestSched(sched.Helper):
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         assigned_tasks = []
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(1, project=project, n_answers=10)
+
         # Get Task until scheduler returns None
         for i in range(10):
-            res = self.app.get('api/project/1/newtask')
+            res = self.app.get('api/project/%s/newtask' % project.id)
             data = json.loads(res.data)
 
-            while data.get('info') is not None:
+            while data.get('id') is not None:
                 # Check that we received a Task
-                assert data.get('info'),  data
+                assert data.get('id'), data
 
                 # Save the assigned task
                 assigned_tasks.append(data)
@@ -273,11 +276,11 @@ class TestSched(sched.Helper):
                              info={'answer': 'Yes'})
                 db.session.add(tr)
                 db.session.commit()
-                res = self.app.get('api/project/1/newtask')
+                res = self.app.get('api/project/%s/newtask' % project.id)
                 data = json.loads(res.data)
 
         # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         for t in tasks:
             assert len(t.task_runs) == 10, len(t.task_runs)
         # Check that all the answers are from different IPs
@@ -330,15 +333,18 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task for
         external user id"""
         assigned_tasks = []
+        project = ProjectFactory.create(owner=UserFactory.create(id=500))
+        TaskFactory.create_batch(1, project=project, n_answers=10)
         # Get Task until scheduler returns None
-        url = 'api/project/1/newtask?external_uid=%s' % '1xa'
+        url = 'api/project/%s/newtask?external_uid=%s' % (project.id, '1xa')
+        headers = self.get_headers_jwt(project)
         for i in range(10):
-            res = self.app.get(url)
+            res = self.app.get(url, headers=headers)
             data = json.loads(res.data)
 
-            while data.get('info') is not None:
+            while data.get('id') is not None:
                 # Check that we received a Task
-                assert data.get('info'),  data
+                assert data.get('id'),  data
 
                 # Save the assigned task
                 assigned_tasks.append(data)
@@ -350,7 +356,7 @@ class TestSched(sched.Helper):
                              info={'answer': 'Yes'})
                 db.session.add(tr)
                 db.session.commit()
-                res = self.app.get(url)
+                res = self.app.get(url, headers=headers)
                 data = json.loads(res.data)
 
         # Check if there are 30 TaskRuns per Task
