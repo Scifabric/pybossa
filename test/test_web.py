@@ -238,6 +238,32 @@ class TestWeb(web.Helper):
 
         assert 'Average contribution time' in self.app.get(url).data
 
+
+    def test_contribution_time_shown_for_admins_for_every_project_json(self):
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        owner = UserFactory.create(pro=False)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+        self.signin(email=admin.email_addr, password='1234')
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Field missing in JSON response'
+        assert 'avg_contrib_time' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'projectStats' in data, err_msg
+        assert 'userStats' in data, err_msg
+
     def test_contribution_time_shown_in_pro_owned_projects(self):
         pro_owner = UserFactory.create(pro=True)
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
@@ -247,6 +273,27 @@ class TestWeb(web.Helper):
 
         assert 'Average contribution time' in self.app.get(pro_url).data
 
+    def test_contribution_time_shown_in_pro_owned_projects_json(self):
+        pro_owner = UserFactory.create(pro=True)
+        pro_owned_project = ProjectFactory.create(owner=pro_owner)
+        task = TaskFactory.create(project=pro_owned_project)
+        TaskRunFactory.create(task=task)
+        pro_url = '/project/%s/stats' % pro_owned_project.short_name
+
+        res = self.app_get_json(pro_url)
+        data = json.loads(res.data)
+        err_msg = 'Field missing in JSON response'
+        assert 'avg_contrib_time' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'projectStats' in data, err_msg
+        assert 'userStats' in data, err_msg
+
     def test_contribution_time_not_shown_in_regular_user_owned_projects(self):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -254,6 +301,27 @@ class TestWeb(web.Helper):
         url = '/project/%s/stats' % project.short_name
 
         assert 'Average contribution time' not in self.app.get(url).data
+
+    def test_contribution_time_not_shown_in_regular_user_owned_projects_json(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        TaskRunFactory.create(task=task)
+        url = '/project/%s/stats' % project.short_name
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Field missing in JSON response'
+        assert 'avg_contrib_time' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'projectStats' in data, err_msg
+        assert 'userStats' in data, err_msg
+
 
     @with_context
     def test_03_account_index(self):
