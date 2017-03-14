@@ -341,6 +341,55 @@ class TestSched(sched.Helper):
             for tr in t.task_runs:
                 assert self.is_unique(tr.external_uid, t.task_runs), err_msg
 
+    @with_context
+    def test_external_uid_03_respects_limit_tasks_limits(self):
+        """ Test SCHED newtask respects the limit of 30 TaskRuns per list of Tasks for
+        external user id"""
+
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(2, project=project, n_answers=5)
+        url = 'api/project/%s/newtask?external_uid=%s&limit=2' % (project.id, '1xa')
+
+        headers = self.get_headers_jwt(project)
+
+
+        for i in range(5):
+            res = self.app.get(url, headers=headers)
+            data = json.loads(res.data)
+            print data
+
+            while len(data) > 0:
+                # Check that we received a Task
+                for t in data:
+                    assert t.get('id'), t
+                    # Save the assigned task
+                    assigned_tasks.append(t)
+
+                    # Submit an Answer for the assigned task
+                    tr = TaskRun(project_id=t['project_id'], task_id=t['id'],
+                                 user_ip="127.0.0.1",
+                                 external_uid='newUser' + str(i),
+                                 info={'answer': 'Yes'})
+                    db.session.add(tr)
+                    db.session.commit()
+                    res = self.app.get(url, headers=headers)
+                    data = json.loads(res.data)
+                    print data
+
+        # Check if there are 30 TaskRuns per Task
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
+        for t in tasks:
+            assert len(t.task_runs) == 5, len(t.task_runs)
+        # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same IP"
+        for t in tasks:
+            for tr in t.task_runs:
+                assert self.is_unique(tr.external_uid, t.task_runs), err_msg
+
+
 
     @with_context
     def test_user_01_newtask(self):
