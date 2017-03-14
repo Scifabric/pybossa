@@ -1019,6 +1019,37 @@ class TestSched(sched.Helper):
         assert data['project_id'] == project_id, err_msg
         assert data['id'] == tasks[10].id, err_msg
 
+    @with_context
+    def test_no_more_tasks_limit(self):
+        """Test that a users gets always tasks with limit"""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner, short_name='egil', name='egil',
+                  description='egil')
+
+        project_id = project.id
+
+        for i in range(20):
+            task = TaskFactory.create(project=project, info={'i': i}, n_answers=10)
+
+        tasks = db.session.query(Task).filter_by(project_id=project.id).limit(12).all()
+        for t in tasks[0:10]:
+            for x in range(10):
+                self._add_task_run(project, t)
+
+        assert tasks[0].n_answers == 10
+
+        url = 'api/project/%s/newtask?limit=2' % project_id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        err_msg = "User should get a task"
+        i = 10
+        for t in data:
+            assert 'project_id' in t.keys(), err_msg
+            assert t['project_id'] == project_id, err_msg
+            assert t['id'] == tasks[i].id, (err_msg, t, tasks[i].id)
+            i += 1
+
 
 class TestGetBreadthFirst(Test):
     def setUp(self):
