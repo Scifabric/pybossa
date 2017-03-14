@@ -1571,6 +1571,99 @@ Logged in users with access rights will get a 403 when it's not their own projec
 
 The example output matches **/project/<short_name>/**
 
+Project stats
+~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/stats**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project statistics.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **avg_contrib_time**: Average contribution time.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Progress (0..100).
+* **owner**: Owner user information
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **projectStats**: Project statistics.
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+* **userStats**: User statistics (anonymous and logged in users).
+
+**Example output**
+
+.. code-block:: python
+    {
+      "avg_contrib_time": 0,
+      "n_completed_tasks": 2,
+      "n_tasks": 2,
+      "n_volunteers": 59,
+      "overall_progress": 100,
+      "owner": {
+        "created": "2012-06-06T06:27:18.760254",
+        "fullname": "Daniel Lombraña González",
+        "info": {
+          "avatar": "1422360933.8_avatar.png",
+          "container": "user_3"
+        },
+        "n_answers": 2998,
+        "name": "teleyinex",
+        "rank": 66,
+        "registered_ago": "4 years ago",
+        "score": 2998
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "better_stats_enabled": true,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2013-01-10T19:58:55.454015",
+        "description": "Facial expressions that convey feelings",
+        "featured": true,
+        "id": 253,
+        "info": {
+          "container": "user_3",
+          "thumbnail": "project_253_thumbnail_1460620575.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "The Face We Make",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "thefacewemake",
+        "updated": "2016-04-14T07:56:16.114006"
+      },
+      "projectStats": "{\"userAuthStats\": {\"top5\": [], \"values\": [], \"label\": \"Authenticated Users\"} ...",
+      "template": "/projects/stats.html",
+      "title": "Project: The Face We Make &middot; Statistics",
+      "userStats": {
+        "anonymous": {
+          "pct_taskruns": 0,
+          "taskruns": 0,
+          "top5": [],
+          "users": 0
+        },
+        "authenticated": {
+          "pct_taskruns": 0,
+          "taskruns": 0,
+          "top5": [],
+          "users": 0
+        },
+        "geo": false
+      }
+    }
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
