@@ -89,6 +89,17 @@ class TestSched(sched.Helper):
         task_ids = set(task_ids)
         assert len(task_ids) == 100, task_ids
 
+        url = 'api/project/%s/newtask?limit=200' % project.id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 100
+        for t in data:
+            assert t['info'] == 'hola', t
+        task_ids = [task['id'] for task in data]
+        task_ids = set(task_ids)
+        assert len(task_ids) == 100, task_ids
+
+
     @with_context
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
