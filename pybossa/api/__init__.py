@@ -34,7 +34,7 @@ import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, get_user_id_or_ip
+from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -163,6 +163,17 @@ def _retrieve_new_task(project_id):
         offset = int(request.args.get('offset'))
     else:
         offset = 0
+
+    if request.args.get('orderby'):
+        orderby = request.args.get('orderby')
+    else:
+        orderby = 'id'
+
+    if request.args.get('desc'):
+        desc = fuzzyboolean(request.args.get('desc'))
+    else:
+        desc = False
+   
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
@@ -171,7 +182,9 @@ def _retrieve_new_task(project_id):
                           user_ip,
                           external_uid,
                           offset,
-                          limit)
+                          limit,
+                          orderby=orderby,
+                          desc=desc)
     return task
 
 
