@@ -38,6 +38,128 @@ class CsvExporter(Exporter):
                                    flat=True, info_only=info_only)
         return pd.DataFrame(flat_data)
 
+    def _format_csv_row(self, row, ty):
+        keys = sorted(self._get_keys(row, ty))
+        values = [self._get_value(row, *k.split('__')[1:])  for k in keys]
+        return values
+
+    @classmethod
+    def _get_keys(self, row, ty, parent_key=''):
+        """Recursively get keys from a dictionary.
+        Nested keys are prefixed with their parents key.
+
+        Ex:
+            >>> row = {"a": {"nested_x": "N"},
+            ...        "b": 1,
+            ...        "c": {
+            ...          "nested_y": {"double_nested": "www.example.com"},
+            ...          "nested_z": True
+            ...       }}
+            >>> exp = CsvExporter()
+            >>> sorted(exp._get_keys(row, 'taskrun'))
+            ['taskrun__a',
+             'taskrun__a__nested_x',
+             'taskrun__b',
+             'taskrun__c',
+             'taskrun__c__nested_y',
+             'taskrun__c__nested_y__double_nested',
+             'taskrun__c__nested_z']
+
+        """
+        _prefix = '{}__{}'.format(ty, parent_key)
+        keys = []
+
+        for key in row.keys():
+            keys = keys + [_prefix + key]
+            try:
+                keys = keys + self._get_keys(row[key], _prefix + key)
+            except: pass
+
+        return [str(key) for key in keys]
+
+    @classmethod
+    def _get_value(self, row, *args):
+        """Recursively get value from a dictionary by
+        passing an arbitrarily long list of nested keys.
+
+        Ex:
+            >>> row = {"a": {"nested_x": "N"},
+            ...        "b": 1,
+            ...        "c": {
+            ...          "nested_y": {"double_nested": "www.example.com"},
+            ...          "nested_z": True
+            ...       }}
+            >>> exp = CsvExporter()
+            >>> exp._get_value(row, *['c', 'nested_y', 'double_nested'])
+            'www.example.com'
+
+        """
+        while len(args) > 0:
+            for arg in args:
+                try:
+                    args = args[1:]
+                    return self._get_value(row[arg], *args)
+                except:
+                    return None
+        return str(row)
+
+    @staticmethod
+    def _merge_objects(t):
+        """Merge joined objects into a single dictionary."""
+        obj_dict = t.dictize()
+
+        try:
+            task = t.task.dictize()
+            obj_dict['task'] = task
+        except:
+            pass
+
+        try:
+            user = t.user.dictize()
+            allowed_attributes = ['name', 'fullname', 'created', 'email_addr', 'admin', 'subadmin']
+            user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
+            obj_dict['user'] = user
+        except:
+            pass
+
+        return obj_dict
+
+    def _handle_row(self, writer, t, ty):
+        normal_ty = filter(lambda char: char.isalpha(), ty)
+        writer.writerow(self._format_csv_row(self._merge_objects(t), ty=normal_ty))
+
+    def _get_csv(self, out, writer, table, id):
+        if table == 'task':
+            filter_table =  getattr(task_repo, 'filter_tasks_by')
+        # If table is task_run, user filter with additional data
+        if table == 'task_run':
+            filter_table =  getattr(task_repo, 'filter_task_runs_with_task_and_user')
+
+        for tr in filter_table(project_id=id, yielded=True):
+            self._handle_row(writer, tr, table)
+        out.seek(0)
+        yield out.read()
+
+    def _format_headers(self, t, ty):
+        obj_dict = self._merge_objects(t)
+        obj_name = t.__class__.__name__.lower()
+        headers = self._get_keys(obj_dict, obj_name)
+        return sorted(headers)
+
+    def _respond_csv(self, ty, id):
+        out = tempfile.TemporaryFile()
+        writer = UnicodeWriter(out)
+        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
+        if t is not None:
+            headers = self._format_headers(t, ty)
+            writer.writerow(headers)
+
+            return self._get_csv(out, writer, ty, id)
+        else:
+            def empty_csv(out):
+                yield out.read()
+            return empty_csv(out)
+
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
