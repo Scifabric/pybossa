@@ -278,6 +278,15 @@ use.
 
 .. _ssnn:
 
+Adding Help page
+================
+
+By default PYBOSSA provides a help endpoint where you can have your FAQ or similar information for your
+users. However, it's empty, as each project is unique. For adding that information, create in the theme
+folder: templates/help/ a file named **_index.html** and write your information in there. This will
+render the information under: http://youserver.com/help/
+
+
 Enabling Twitter, Facebook and Google authentication
 ====================================================
 

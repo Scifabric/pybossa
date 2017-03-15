@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import json
 from helper import web
 from default import db, with_context
 from factories import ProjectFactory, BlogpostFactory
@@ -53,13 +54,76 @@ class TestBlogpostView(web.Helper):
         assert 'titleone' in res.data
         assert 'titletwo' in res.data
 
+    def test_json_blogposts_get_all(self):
+        """Test JSON blogpost GET all blogposts"""
+        user = self.create_users()[1]
+        project = ProjectFactory.create(owner=user)
+        blogpost_1 = BlogpostFactory.create(owner=user, project=project, title='titleone')
+        blogpost_2 = BlogpostFactory.create(owner=user, project=project, title='titletwo')
+
+        url = "/project/%s/blog" % project.short_name
+
+        # As anonymous
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'api_key' not in data['owner'].keys()
+        assert 'email_addr' not in data['owner'].keys()
+        assert 'google_user_id' not in data['owner'].keys()
+        assert 'facebook_user_id' not in data['owner'].keys()
+        assert 'twitter_user_id' not in data['owner'].keys()
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
+
+        # As authenticated
+        self.register()
+        res = self.app_get_json(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'api_key' not in data['owner'].keys()
+        assert 'email_addr' not in data['owner'].keys()
+        assert 'google_user_id' not in data['owner'].keys()
+        assert 'facebook_user_id' not in data['owner'].keys()
+        assert 'twitter_user_id' not in data['owner'].keys()
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
+
+        self.signout()
+
+        # As owner 
+        self.signin(email=user.email_addr, password=self.password)
+        res = self.app_get_json(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'api_key' in data['owner'].keys()
+        assert 'email_addr' in data['owner'].keys()
+        assert 'google_user_id' in data['owner'].keys()
+        assert 'facebook_user_id' in data['owner'].keys()
+        assert 'twitter_user_id' in data['owner'].keys()
+        for blogpost in data['blogposts']:
+            assert blogpost['title'] in ['titleone', 'titletwo']
+
+        self.signout()
+
+
 
     def test_blogpost_get_all_errors(self):
-        """Test blogpost GET all raises error if the project does not exist"""
+        """test blogpost get all raises error if the project does not exist"""
         url = "/project/non-existing-project/blog"
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
+
+
+    def test_json_blogpost_get_all_errors(self):
+        """Test JSON blogpost GET all raises error if the project does not exist"""
+        url = "/project/non-existing-project/blog"
+
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data['code'] == 404
+
 
 
     def test_blogpost_get_one(self):

@@ -40,12 +40,15 @@ class TestSched(sched.Helper):
 
         # Register
         self.register(fullname="John Doe", name="johndoe", password="p4ssw0rd")
+        self.signout()
         self.register(fullname="Marie Doe", name="mariedoe", password="dr0wss4p")
+        self.signout()
         self.signin()
 
         # Get the only task with no runs!
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
+        print "Task:%s" % data['id']
         # Check that we received a clean Task
         assert data.get('info'), data
         assert not data.get('info').get('last_answer')
@@ -54,11 +57,12 @@ class TestSched(sched.Helper):
         tr = dict(project_id=data['project_id'], task_id=data['id'], info={'answer': 'No'})
         tr = json.dumps(tr)
 
-        self.app.post('/api/taskrun', data=tr)
+        res = self.app.post('/api/taskrun', data=tr)
+
         # No more tasks available for this user!
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
-        assert not data
+        assert not data, data
 
         #### Get the only task now with an answer as Anonimous!
         self.signout()

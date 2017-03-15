@@ -34,7 +34,7 @@ import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, get_user_id_or_ip
+from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -46,6 +46,7 @@ from task import TaskAPI
 from task_run import TaskRunAPI
 from app import AppAPI
 from project import ProjectAPI
+from blogpost import BlogpostAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
@@ -93,6 +94,7 @@ register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
+register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
@@ -100,23 +102,29 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
-@blueprint.route('/app/<project_id>/newtask')
 @blueprint.route('/project/<project_id>/newtask')
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        task = _retrieve_new_task(project_id)
+        tasks = _retrieve_new_task(project_id)
 
-        if type(task) is Response:
-            return task
+        if type(tasks) is Response:
+            return tasks
 
         # If there is a task for the user, return it
-        if task is not None:
+        if tasks is not None:
             guard = ContributionsGuard(sentinel.master)
-            guard.stamp(task, get_user_id_or_ip())
-            response = make_response(json.dumps(task.dictize()))
+            for task in tasks:
+                guard.stamp(task, get_user_id_or_ip())
+            data = [task.dictize() for task in tasks]
+            if len(data) == 0:
+                response = make_response(json.dumps({}))
+            elif len(data) == 1:
+                response = make_response(json.dumps(data[0]))
+            else:
+                response = make_response(json.dumps(data))
             response.mimetype = "application/json"
             return response
         return Response(json.dumps({}), mimetype="application/json")
@@ -134,7 +142,7 @@ def _retrieve_new_task(project_id):
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
-        error = model.task.Task(info=info)
+        error = [model.task.Task(info=info)]
         return error
 
     if request.args.get('external_uid'):
@@ -143,10 +151,29 @@ def _retrieve_new_task(project_id):
         if resp != True:
             return resp
 
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    else:
+        limit = 1
+
+    if limit > 100:
+        limit = 100
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
         offset = 0
+
+    if request.args.get('orderby'):
+        orderby = request.args.get('orderby')
+    else:
+        orderby = 'id'
+
+    if request.args.get('desc'):
+        desc = fuzzyboolean(request.args.get('desc'))
+    else:
+        desc = False
+   
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
@@ -154,7 +181,10 @@ def _retrieve_new_task(project_id):
                           user_id,
                           user_ip,
                           external_uid,
-                          offset)
+                          offset,
+                          limit,
+                          orderby=orderby,
+                          desc=desc)
     return task
 
 

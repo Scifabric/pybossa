@@ -19,6 +19,9 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.ProjectAPI
    :members:
 
+.. autoclass:: pybossa.api.BlogpostAPI
+   :members:
+
 .. autoclass:: pybossa.api.TaskAPI
    :members:
 
@@ -441,10 +444,39 @@ by::
 This will return a domain Task object in JSON format if there is a task
 available for the user, otherwise it will return **None**.
 
+You can also use **limit** to get more than 1 task for the user like this::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=100
+
+That query will return 100 tasks for the user. 
+
 .. note::
-    Some projects will want to pre-load the next task for the current user.
-    This is possible by passing the argument **?offset=1** to the **newtask**
-    endpoint.
+    That's the maximum of tasks that a user can get at once. If you pass an argument of 200,
+    PYBOSSA will convert it to 100.
+
+You can also, use **offset** to get the next tasks, if you want, allowing you to preload::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?offset=1
+
+That query will return the next task for the user, once it solves the previous task.
+
+Both arguments, limit and offset can be used together::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=2offset=2
+
+That will load the next two tasks for the user.
+
+
+Also you can request the tasks to be sorted by a Task attribute (like ID, created, etc.) using the following
+arguments: **orderby** and **desc** to sort them in descending order::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?orderby=priority_0&desc=true
+
+
+That query will return the tasks order by priority in descending order, in other words, it will return first
+the tasks with higher priority.
 
 
 Requesting the user's oAuth tokens
@@ -1570,6 +1602,85 @@ Logged in users with access rights will get a 403 when it's not their own projec
 * **title**: the title for the endpoint.
 
 The example output matches **/project/<short_name>/**
+
+Project results
+~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/results**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows information about a project results template.
+If the logged in user is the owner of the project you will get more detailed
+owner information and project information.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_results**: Number of results
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template for results
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for anonymous user or when you are not the project owner:
+
+.. code-block:: python
+    {
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_results": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John",
+        "info": {
+          "avatar": null,
+          "container": "user_4953"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 2417,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626"
+      },
+      "template": "/projects/results.html",
+      "title": "Project: flickr678"
+    }
 
 Project stats
 ~~~~~~~~~~~~~
@@ -2759,4 +2870,79 @@ Gives you the list of required fields in the form to create a project.
       },
       "template": "projects/new.html",
       "title": "Create a Project"
+    }
+
+Project Blog list
+~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/blog**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of posted blogs by the given project short name.
+
+* **blogposts**: All the blog posts for the given project.
+* **project**: Info about the project.
+
+
+The project and owner fields will have more information if the onwer of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
+
+**Example public output**
+
+.. code-block:: python
+    {
+      "blogposts": [
+        {
+          "body": "Please, e-mail us to alejasan 4t ucm dot es if you find any bug. Thanks.",
+          "created": "2014-05-14T14:25:04.899079",
+          "id": 1,
+          "project_id": 1377,
+          "title": "We are working on the Alpha version.",
+          "user_id": 3927
+        },
+      ],
+      "n_completed_tasks": 137051,
+      "n_task_runs": 1070561,
+      "n_tasks": 169671,
+      "n_volunteers": 17499,
+      "overall_progress": 80,
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "avatar.png",
+          "container": "container"
+        },
+        "n_answers": 32814,
+        "name": "johndoe",
+        "rank": 4,
+        "registered_ago": "3 years ago",
+        "score": 32814
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1,
+        "info": {
+          "container": "container",
+          "thumbnail": "58.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Dark Skies ISS",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "darkskies",
+        "updated": "2017-01-31T09:18:28.491496"
+      },
+      "template": "projects/blog.html"
     }

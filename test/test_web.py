@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+#-*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
 # Copyright (C) 2017 Scifabric LTD.
@@ -2868,6 +2868,12 @@ class TestWeb(web.Helper):
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
     @with_context
+    def test_help_endpoint(self):
+        """Test WEB help endpoint is working"""
+        res = self.app.get('help/', follow_redirects=True)
+
+
+    @with_context
     @patch('pybossa.view.account.signer.loads')
     def test_44_password_reset_json_key_errors(self, Mock):
         """Test WEB password reset JSON key errors are caught"""
@@ -5120,6 +5126,55 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert dom.find(id="noresult") is not None, res.data
+
+    @with_context
+    def test_results_json(self):
+        """Test WEB results shows no data as no template and no data."""
+        tr = TaskRunFactory.create()
+        project = project_repo.get(tr.project_id)
+        url = '/project/%s/results' % project.short_name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg='data entry missing'
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_results' in data, err_msg
+        assert 'n_task_runs' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        owner = data['owner']
+        assert 'email_addr' not in owner, owner
+        assert 'api_key' not in owner, owner
+        assert 'created' in owner, err_msg
+        assert 'fullname' in owner, err_msg
+        assert 'info' in owner, err_msg
+        assert 'n_answers' in owner, err_msg
+        assert 'name' in owner, err_msg
+        assert 'rank' in owner, err_msg
+        assert 'registered_ago' in owner, err_msg
+        assert 'score' in owner, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        project = data['project']
+        assert 'secret_key' not in project, project
+        assert 'created' in project, err_msg
+        assert 'description' in project, err_msg
+        assert 'featured' in project, err_msg
+        assert 'id' in project, err_msg
+        assert 'info' in project, err_msg
+        assert 'owner_id' not in project['info'], project['info']
+        assert 'last_activity' in project, err_msg
+        assert 'last_activity_raw' in project, err_msg
+        assert 'n_tasks' in project, err_msg
+        assert 'n_volunteers' in project, err_msg
+        assert 'name' in project, err_msg
+        assert 'overall_progress' in project, err_msg
+        assert 'owner' in project, err_msg
+        assert 'short_name' in project, err_msg
+        assert 'updated' in project, err_msg
+        assert data['template']=='/projects/results.html', err_msg
+        assert 'title' in data, err_msg
 
     @with_context
     def test_results_with_values(self):
