@@ -330,7 +330,7 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
-        res = self.app.get(url).data
+        res = self.app.get(url)
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' in res.data
 
@@ -371,7 +371,7 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
-        res = self.app.get(pro_url).data
+        res = self.app.get(pro_url)
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' in res.data
 
@@ -405,7 +405,7 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
-        res = self.app.get(url).data
+        res = self.app.get(url)
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' not in res.data
 
