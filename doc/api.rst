@@ -1690,12 +1690,14 @@ Project stats
 
 **GET**
 
-Shows project statistics.
+Shows project statistics if available.
 
 If you are not the owner of the project or anonymous then you will get only
 public available information for the owner and the project itself.
 
-* **avg_contrib_time**: Average contribution time.
+* **avg_contrib_time**: Average contribution time (NOT existing when no statistics there!).
+* **projectStats**: Project statistics (NOT existing when no statistics there!).
+* **userStats**: User statistics (NOT existing when no statistics there!).
 * **n_completed_tasks**: Number of completed tasks.
 * **n_tasks**: Number of tasks.
 * **n_volunteers**: Number of volunteers.
@@ -1703,12 +1705,12 @@ public available information for the owner and the project itself.
 * **owner**: Owner user information
 * **pro_features**: Enabled pro features for the project.
 * **project**: Project information
-* **projectStats**: Project statistics.
 * **template**: Jinja2 template.
 * **title**: the title for the endpoint.
-* **userStats**: User statistics (anonymous and logged in users).
+
 
 **Example output**
+Statistics are existing in this output:
 
 .. code-block:: python
     {
