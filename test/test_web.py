@@ -213,7 +213,6 @@ class TestWeb(web.Helper):
             db.session.add(task_run)
             db.session.commit()
             res = self.app.get('api/project/%s/newtask' % project.id)
-            assert_raises(ValueError, json.loads, res.data)
 
         # With stats
         url = '/project/%s/stats' % project.short_name
