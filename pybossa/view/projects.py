@@ -73,6 +73,21 @@ importer_queue = Queue('medium',
                        default_timeout=IMPORT_TASKS_TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
 
+
+def sanitize_project_owner(project, owner, current_user):
+    """Sanitize project and owner data."""
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project)
+        else:    # HTML
+            project_sanitized = project
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    return project_sanitized, owner_sanitized
+
+
 def project_title(project, page_name):
     if not project:  # pragma: no cover
         return "Project not found"
@@ -288,7 +303,7 @@ def task_presenter_editor(short_name):
 
     pro = pro_features()
 
-    form = TaskPresenterForm(request.form)
+    form = TaskPresenterForm(request.body)
     form.id.data = project.id
     if request.method == 'POST' and form.validate():
         db_project = project_repo.get(project.id)
@@ -300,7 +315,8 @@ def task_presenter_editor(short_name):
         project_repo.update(db_project)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.tasks', short_name=project.short_name))
+        return redirect_content_type(url_for('.tasks',
+                                             short_name=project.short_name))
 
     # It does not have a validation
     if request.method == 'POST' and not form.validate():  # pragma: no cover
@@ -326,19 +342,22 @@ def task_presenter_editor(short_name):
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
             project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-            return render_template(
-                'projects/task_presenter_options.html',
-                title=title,
-                project=project,
-                owner=owner,
-                overall_progress=overall_progress,
-                n_tasks=n_tasks,
-                n_task_runs=n_task_runs,
-                last_activity=last_activity,
-                n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                n_volunteers=cached_projects.n_volunteers(project.get('id')),
-                presenters=pres_tmpls,
-                pro_features=pro)
+            project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                        owner,
+                                                                        current_user)
+            response = dict(template='projects/task_presenter_options.html',
+                            title=title,
+                            project=project_sanitized,
+                            owner=owner_sanitized,
+                            overall_progress=overall_progress,
+                            n_tasks=n_tasks,
+                            n_task_runs=n_task_runs,
+                            last_activity=last_activity,
+                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                            n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                            presenters=pres_tmpls,
+                            pro_features=pro)
+            return handle_content_type(response)
 
         tmpl_uri = "projects/snippets/%s.html" \
             % request.args.get('template')
@@ -348,20 +367,26 @@ def task_presenter_editor(short_name):
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(gettext(msg), 'info')
-    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return render_template('projects/task_presenter_editor.html',
-                           title=title,
-                           form=form,
-                           project=dict_project,
-                           owner=owner,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           last_activity=last_activity,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.id),
-                           n_volunteers=cached_projects.n_volunteers(project.id),
-                           errors=errors,
-                           pro_features=pro)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user)
+
+    dict_project = add_custom_contrib_button_to(project_sanitized,
+                                                get_user_id_or_ip())
+    response = dict(template='projects/task_presenter_editor.html',
+                    title=title,
+                    form=form,
+                    project=dict_project,
+                    owner=owner_sanitized,
+                    overall_progress=overall_progress,
+                    n_tasks=n_tasks,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_projects.n_completed_tasks(project.id),
+                    n_volunteers=cached_projects.n_volunteers(project.id),
+                    errors=errors,
+                    pro_features=pro)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])

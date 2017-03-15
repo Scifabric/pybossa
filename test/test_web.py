@@ -3156,6 +3156,24 @@ class TestWeb(web.Helper):
         err_msg = "Transcribing documents not found"
         assert "Transcribing documents" in res.data, err_msg
 
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_47_task_presenter_editor_loads_json(self, mock):
+        """Test WEB task presenter editor JSON loads"""
+        self.register()
+        self.new_project()
+        res = self.app_get_json('/project/sampleapp/tasks/taskpresentereditor')
+        data = json.loads(res.data)
+        err_msg = "Task Presenter options not found"
+        assert "Task Presenter Editor" in data['title'], err_msg
+        presenters = ["projects/presenters/basic.html",
+                      "projects/presenters/image.html",
+                      "projects/presenters/sound.html",
+                      "projects/presenters/video.html",
+                      "projects/presenters/map.html",
+                      "projects/presenters/pdf.html"]
+        assert data['presenters'] == presenters, err_msg
+
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
@@ -3182,6 +3200,33 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
         assert "Some HTML code" in res.data, res.data
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_48_task_presenter_editor_works_json(self, mock):
+        """Test WEB task presenter editor works JSON"""
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        err_msg = "Task Presenter should be empty"
+        assert not project.info.get('task_presenter'), err_msg
+
+        url = '/project/sampleapp/tasks/taskpresentereditor?template=basic'
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "there should not be presenters"
+        assert data.get('presenters') is None, err_msg
+        assert data['form']['csrf'] is not None, data
+        assert data['form']['editor'] is not None, data
+        res = self.app_post_json(url, data={'editor': 'Some HTML code!'})
+        data = json.loads(res.data)
+        assert data['status'] == SUCCESS, data
+        project = db.session.query(Project).first()
+        assert project.info['task_presenter'] == 'Some HTML code!', err_msg
+
+        # Check it loads the previous posted code:
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['form']['editor'] == 'Some HTML code!', data
 
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
