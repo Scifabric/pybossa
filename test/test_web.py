@@ -3166,12 +3166,12 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         err_msg = "Task Presenter options not found"
         assert "Task Presenter Editor" in data['title'], err_msg
-        presenters =  ["projects/presenters/basic.html",
-                       "projects/presenters/image.html",
-                       "projects/presenters/sound.html",
-                       "projects/presenters/video.html",
-                       "projects/presenters/map.html",
-                       "projects/presenters/pdf.html"]
+        presenters = ["projects/presenters/basic.html",
+                      "projects/presenters/image.html",
+                      "projects/presenters/sound.html",
+                      "projects/presenters/video.html",
+                      "projects/presenters/map.html",
+                      "projects/presenters/pdf.html"]
         assert data['presenters'] == presenters, err_msg
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
