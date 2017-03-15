@@ -212,7 +212,8 @@ class TestWeb(web.Helper):
                                info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
-            self.app.get('api/project/%s/newtask' % project.id)
+            res = self.app.get('api/project/%s/newtask' % project.id)
+            assert_raises(ValueError, json.loads, res.data)
 
         # With stats
         url = '/project/%s/stats' % project.short_name
@@ -223,7 +224,87 @@ class TestWeb(web.Helper):
         with patch.dict(self.flask_app.config, {'GEO': True}):
             url = '/project/%s/stats' % project.short_name
             res = self.app.get(url)
+            assert_raises(ValueError, json.loads, res.data)
             assert "GeoLite" in res.data, res.data
+
+    @with_context
+    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
+    def test_project_stats_json(self, mock1):
+        """Test WEB project stats page works JSON"""
+        res = self.register()
+        res = self.signin()
+        res = self.new_project(short_name="igil")
+        returns = [Mock()]
+        returns[0].GeoIP.return_value = 'gic'
+        returns[0].GeoIP.record_by_addr.return_value = {}
+        mock1.side_effects = returns
+
+        project = db.session.query(Project).first()
+        user = db.session.query(User).first()
+        # Without stats
+        url = '/project/%s/stats' % project.short_name
+        res = self.app_get_json(url)
+        print res.status_code
+        print res
+        # assert "Sorry" in res.data, res.data
+
+        # We use a string here to check that it works too
+        task = Task(project_id=project.id, n_answers=10)
+        db.session.add(task)
+        db.session.commit()
+
+        for i in range(10):
+            task_run = TaskRun(project_id=project.id, task_id=1,
+                               user_id=user.id,
+                               info={'answer': 1})
+            db.session.add(task_run)
+            db.session.commit()
+            self.app_get_json('api/project/%s/newtask' % project.id)
+
+        # With stats
+        url = '/project/%s/stats' % project.short_name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Field missing in JSON response'
+        assert 'avg_contrib_time' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'projectStats' in data, err_msg
+        assert 'userStats' in data, err_msg
+        err_msg = 'Field should not be private'
+        assert 'id' in data['owner'], err_msg
+        assert 'api_key' in data['owner'], err_msg
+        assert 'secret_key' in data['project'], err_msg
+        assert res.status_code == 200, res.status_code
+
+        with patch.dict(self.flask_app.config, {'GEO': True}):
+            url = '/project/%s/stats' % project.short_name
+            res = self.app_get_json(url)
+            data = json.loads(res.data)
+            err_msg = 'Field missing in JSON response'
+            assert 'avg_contrib_time' in data, err_msg
+            assert 'n_completed_tasks' in data, err_msg
+            assert 'n_tasks' in data, err_msg
+            assert 'n_volunteers' in data, err_msg
+            assert 'overall_progress' in data, err_msg
+            assert 'owner' in data, err_msg
+            assert 'pro_features' in data, err_msg
+            assert 'project' in data, err_msg
+            assert 'projectStats' in data, err_msg
+            assert 'userStats' in data, err_msg
+            err_msg = 'Field should not be private'
+            assert 'id' in data['owner'], err_msg
+            assert 'api_key' in data['owner'], err_msg
+            assert 'secret_key' in data['project'], err_msg
+            assert res.status_code == 200, res.status_code
+            err_msg = 'no geo data'
+            assert data['userStats']['geo'] == True, err_msg
+
 
     def test_contribution_time_shown_for_admins_for_every_project(self):
         admin = UserFactory.create(admin=True)
@@ -235,8 +316,9 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
-
-        assert 'Average contribution time' in self.app.get(url).data
+        res = self.app.get(url).data
+        assert_raises(ValueError, json.loads, res.data)
+        assert 'Average contribution time' in res.data
 
 
     def test_contribution_time_shown_for_admins_for_every_project_json(self):
@@ -263,6 +345,11 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         assert 'projectStats' in data, err_msg
         assert 'userStats' in data, err_msg
+        err_msg = 'Field should be private'
+        assert 'id' not in data['owner'], err_msg
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
+
 
     def test_contribution_time_shown_in_pro_owned_projects(self):
         pro_owner = UserFactory.create(pro=True)
@@ -270,8 +357,9 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
-
-        assert 'Average contribution time' in self.app.get(pro_url).data
+        res = self.app.get(pro_url).data
+        assert_raises(ValueError, json.loads, res.data)
+        assert 'Average contribution time' in res.data
 
     def test_contribution_time_shown_in_pro_owned_projects_json(self):
         pro_owner = UserFactory.create(pro=True)
@@ -293,14 +381,19 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         assert 'projectStats' in data, err_msg
         assert 'userStats' in data, err_msg
+        err_msg = 'Field should be private'
+        assert 'id' not in data['owner'], err_msg
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
 
     def test_contribution_time_not_shown_in_regular_user_owned_projects(self):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
-
-        assert 'Average contribution time' not in self.app.get(url).data
+        res = self.app.get(url).data
+        assert_raises(ValueError, json.loads, res.data)
+        assert 'Average contribution time' not in res.data
 
     def test_contribution_time_not_shown_in_regular_user_owned_projects_json(self):
         project = ProjectFactory.create()
@@ -321,7 +414,10 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         assert 'projectStats' in data, err_msg
         assert 'userStats' in data, err_msg
-
+        err_msg = 'Field should be private'
+        assert 'id' not in data['owner'], err_msg
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
 
     @with_context
     def test_03_account_index(self):
