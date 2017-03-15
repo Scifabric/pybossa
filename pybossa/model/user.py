@@ -87,9 +87,9 @@ class User(db.Model, DomainObject, UserMixin):
     def public_attributes(self):
         """Return a list of public attributes."""
         return ['created', 'name', 'fullname', 'info',
-                'n_answers', 'registered_ago', 'rank', 'score']
+                'n_answers', 'registered_ago', 'rank', 'score', 'locale']
 
     @classmethod
     def public_info_keys(self):
         """Return a list of public info keys."""
-        return ['avatar', 'container']
+        return ['avatar', 'container', 'extra']

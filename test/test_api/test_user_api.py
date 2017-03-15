@@ -16,17 +16,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import with_context
+from default import with_context, Test
 from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
 from test_api import TestAPI
+from pybossa.core import db
 
 from factories import UserFactory
 
 
 
-class TestUserAPI(TestAPI):
+class TestUserAPI(Test):
+
+    def setUp(self):
+        super(TestUserAPI, self).setUp()
+        with self.flask_app.app_context():
+            db.create_all()
+            self.redis_flushall()
+
+    def tearDown(self):
+        with self.flask_app.app_context():
+            db.drop_all()
+            db.session.remove()
+            self.redis_flushall()
+            #reset_all_pk_sequences()
 
     @with_context
     def test_user_get(self):
@@ -101,20 +115,89 @@ class TestUserAPI(TestAPI):
 
 
     @with_context
-    def test_user_not_allowed_actions(self):
-        """Test POST, PUT and DELETE actions are not allowed for user
+    def test_user_not_allowed_actions_anon(self):
+        """Test POST, PUT and DELETE for ANON actions are not allowed for user
         in the API"""
+        user = UserFactory.create()
+        url = 'api/user'
+        res = self.app.post(url, data=json.dumps(user.to_public_json()))
+        data = json.loads(res.data)
+        assert res.status_code == 405, res.status_code
+        assert data['status_code'] == 405, data
 
-        user_api_instance = UserAPI()
-        post_response = self.app.post('/api/user')
-        assert post_response.status_code == 405, post_response.status_code
-        assert_raises(MethodNotAllowed, user_api_instance.post)
-        delete_response = self.app.delete('/api/user')
-        assert delete_response.status_code == 405, delete_response.status_code
-        assert_raises(MethodNotAllowed, user_api_instance.delete)
-        put_response = self.app.put('/api/user')
-        assert put_response.status_code == 405, put_response.status_code
-        assert_raises(MethodNotAllowed, user_api_instance.put)
+        url += '/%s' % user.id
+        res = self.app.put(url, data=json.dumps(dict(name='new')))
+        assert res.status_code == 401, res.data
+
+        res = self.app.delete(url)
+        assert res.status_code == 405, res.status_code
+
+    @with_context
+    def test_user_not_allowed_actions_user(self):
+        """Test POST, PUT and DELETE for USER actions are not allowed for user
+        in the API"""
+        admin = UserFactory.create()
+        auth = UserFactory.create()
+        user = UserFactory.create()
+        url = 'api/user'
+        res = self.app.post(url + '?api_key=%s' % auth.api_key,
+                            data=json.dumps(user.to_public_json()))
+        data = json.loads(res.data)
+        assert res.status_code == 405, res.status_code
+        assert data['status_code'] == 405, data
+
+        # Update another user
+        url += '/%s' % user.id
+        res = self.app.put(url + '?api_key=%s' % auth.api_key,
+                           data=json.dumps(dict(name='new')))
+        assert res.status_code == 403, res.data
+
+        res = self.app.delete(url + '?apikey=%s' % auth.api_key)
+        assert res.status_code == 405, res.status_code
+
+        # Update the same user
+        url = 'api/user/%s' % auth.id
+        res = self.app.put(url + '?api_key=%s' % auth.api_key,
+                           data=json.dumps(dict(name='new')))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        assert data['name'] == 'new', data
+
+    @with_context
+    def test_user_not_allowed_actions_admin (self):
+        """Test POST, PUT and DELETE for ADMIN actions are not allowed for user
+        in the API"""
+        admin = UserFactory.create()
+        auth = UserFactory.create()
+        user = UserFactory.create()
+        url = 'api/user'
+        res = self.app.post(url + '?api_key=%s' % admin.api_key,
+                            data=json.dumps(user.to_public_json()))
+        data = json.loads(res.data)
+        assert res.status_code == 405, res.status_code
+        assert data['status_code'] == 405, data
+
+        # Update another user
+        url += '/%s' % user.id
+        new_info = user.info
+        new_info['foo'] = 'bar'
+        res = self.app.put(url + '?api_key=%s' % admin.api_key,
+                           data=json.dumps(dict(name='new', info=new_info)))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        assert data['name'] == 'new', data
+        assert data['info']['foo'] == 'bar', data
+
+        res = self.app.delete(url + '?apikey=%s' % auth.api_key)
+        assert res.status_code == 405, res.status_code
+
+        # Update the same user
+        url = 'api/user/%s' % admin.id
+        res = self.app.put(url + '?api_key=%s' % admin.api_key,
+                           data=json.dumps(dict(name='newadmin')))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        assert data['name'] == 'newadmin', data
 
 
     @with_context
@@ -225,6 +308,7 @@ class TestUserAPI(TestAPI):
         # Add user with fullname 'Private user', privacy mode enabled
         user_with_privacy_enabled = UserFactory(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
+                                    info=dict(container=1, avatar='png', extra='badge1.png'),
                                     privacy_mode=True)
 
         # When querying with private fields
@@ -236,6 +320,9 @@ class TestUserAPI(TestAPI):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
+        assert 'email_addr' not in public_user.keys(), public_user
+        assert 'id' not in public_user.keys(), public_user
+        assert 'info' not in public_user.keys(), public_user
 
         # with a non-admin API-KEY, the result should be the same
         res = self.app.get(query + '&api_key=' + user.api_key)
@@ -243,6 +330,9 @@ class TestUserAPI(TestAPI):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
+        assert 'email_addr' not in public_user.keys(), public_user
+        assert 'id' not in public_user.keys(), public_user
+        assert 'info' not in public_user.keys(), public_user
 
         # with an admin API-KEY, all the matching results should be returned
         res = self.app.get(query + '&api_key=' + admin.api_key)
@@ -252,3 +342,7 @@ class TestUserAPI(TestAPI):
         assert public_user['name'] == 'publicUser', public_user
         private_user = data[1]
         assert private_user['name'] == 'privateUser', private_user
+        assert private_user['email_addr'] == user_with_privacy_enabled.email_addr, private_user
+        assert private_user['id'] == user_with_privacy_enabled.id, private_user
+        assert private_user['info'] == user_with_privacy_enabled.info, private_user
+

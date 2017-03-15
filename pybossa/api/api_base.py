@@ -324,6 +324,7 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             inst = self._update_instance(oid)
+            print inst
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
