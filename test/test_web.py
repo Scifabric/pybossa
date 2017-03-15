@@ -244,9 +244,24 @@ class TestWeb(web.Helper):
         # Without stats
         url = '/project/%s/stats' % project.short_name
         res = self.app_get_json(url)
-        print res.status_code
-        print res.data
-        # assert "Sorry" in res.data, res.data
+        data = json.loads(res.data)
+        err_msg = 'Field should not be present'
+        assert 'avg_contrib_time' not in data, err_msg
+        assert 'projectStats' not in data, err_msg
+        assert 'userStats' not in data, err_msg
+        err_msg = 'Field should be present'
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        err_msg = 'Field should not be private'
+        assert 'id' in data['owner'], err_msg
+        assert 'api_key' in data['owner'], err_msg
+        assert 'secret_key' in data['project'], err_msg
+        assert res.status_code == 200, res.status_code
 
         # We use a string here to check that it works too
         task = Task(project_id=project.id, n_answers=10)
