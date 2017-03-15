@@ -35,6 +35,8 @@ class UserAuth(object):
         return True
 
     def _update(self, user, resource_user):
+        if user.is_anonymous():
+            return False
         return self._create(user, resource_user) or resource_user.id == user.id
 
     def _delete(self, user, resource_user):

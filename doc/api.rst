@@ -13,6 +13,9 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.api_base.APIBase
    :members:
 
+.. autoclass:: pybossa.api.UserAPI
+   :members:
+
 .. autoclass:: pybossa.api.AppAPI
    :members:
 
@@ -547,6 +550,47 @@ this::
 
 As simple as that!
 
+User api endpint
+----------------
+
+While all the other endpoints behave the same, this one is a bit special as we deal with private information
+like emails. 
+
+Anonymous users
+~~~~~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Update an existing user via a PUT
+#. Delete an existing user via a DEL
+
+Read action will only return user name and locale for that user.
+
+Authenticated users
+~~~~~~~~~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Update an existing user via a PUT different than the same user
+#. Delete an existing user via a DEL
+
+
+Read action will only return user name and locale for that user. If the user access its own page, then
+all the information will be available to him/her.
+
+Admin users
+~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Delete an existing user via a DEL
+
+Read action can be done on any user. The admins will have access to the User IDs. This will be helpful in
+case that you want to give, for example badges, for users when using our webhooks solution. Each user has
+in the info field a new field named **extra** where that information (or anything else) could be stored.
 
 Command line Example Usage of the API
 -------------------------------------
