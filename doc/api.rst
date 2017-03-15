@@ -468,6 +468,17 @@ Both arguments, limit and offset can be used together::
 That will load the next two tasks for the user.
 
 
+Also you can request the tasks to be sorted by a Task attribute (like ID, created, etc.) using the following
+arguments: **orderby** and **desc** to sort them in descending order::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?orderby=priority_0&desc=true
+
+
+That query will return the tasks order by priority in descending order, in other words, it will return first
+the tasks with higher priority.
+
+
 Requesting the user's oAuth tokens
 ----------------------------------
 
