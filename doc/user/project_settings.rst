@@ -96,7 +96,7 @@ The page shows four different blocks:
 Task Scheduler
 --------------
 
-PYBOSSA provides different task scheduler that will send tasks to the users in
+PYBOSSA provides different task schedulers that will send tasks to the users in
 very different ways. 
 
 |
@@ -121,6 +121,7 @@ features:
    again.
 #. When a user has submitted a Task Run for a given task, the scheduler
    will send to the same user the next task.
+#. This scheduler allows the usage of **orderby** and **desc** arguments via the *api/projectID/newtask* endpoint.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
 system will be sending the project tasks in the order they were created. If
@@ -143,6 +144,7 @@ The Breadth First scheduler has the following features:
 #. It sends always the task with the least number of task runs in the system.
 #. A task will be never marked as completed, as the :ref:`task-redundancy` is
    not respected.
+#. It does not allow to use **orderby** and **desc** arguments via the *api/projectID/newtask* endpoint.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
 system will be sending the project's tasks that have less answers (in case of
@@ -180,6 +182,12 @@ randomly.
     By using this scheduler, you may end up with some tasks that receive only
     a few answers. If you want to avoid this issue, change to the other two
     schedulers.
+
+.. note::
+    This scheduler is not enabled by default, as it comes as a plugin and its main
+    purpose is to show how you can create your own scheduler using the plugin infrastructure.
+    We do not recommend to use it in any production system, as users can participate several times
+    in the same task, making the statistical analysis useless.
 
 .. _task-priority:
 
