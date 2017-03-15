@@ -260,7 +260,7 @@ def setup_babel(app):
         if (lang is None or lang == '' or
                 lang.lower() not in locales):
             lang = app.config.get('DEFAULT_LOCALE') or 'en'
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             lang = 'en'
         return lang.lower()
     return babel
@@ -504,7 +504,7 @@ def setup_hooks(app):
         # Handle forms
         request.body = request.form
         if (request.method == 'POST' and
-                request.headers['Content-Type'] == 'application/json' and
+                request.headers.get('Content-Type') == 'application/json' and
                 request.data):
             try:
                 request.body = get_json_multidict(request)
