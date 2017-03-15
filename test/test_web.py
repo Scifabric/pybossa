@@ -3156,6 +3156,24 @@ class TestWeb(web.Helper):
         err_msg = "Transcribing documents not found"
         assert "Transcribing documents" in res.data, err_msg
 
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_47_task_presenter_editor_loads_json(self, mock):
+        """Test WEB task presenter editor JSON loads"""
+        self.register()
+        self.new_project()
+        res = self.app_get_json('/project/sampleapp/tasks/taskpresentereditor')
+        data = json.loads(res.data)
+        err_msg = "Task Presenter options not found"
+        assert "Task Presenter Editor" in data['title'], err_msg
+        presenters =  ["projects/presenters/basic.html",
+                       "projects/presenters/image.html",
+                       "projects/presenters/sound.html",
+                       "projects/presenters/video.html",
+                       "projects/presenters/map.html",
+                       "projects/presenters/pdf.html"]
+        assert data['presenters'] == presenters, err_msg
+
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
