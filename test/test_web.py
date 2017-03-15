@@ -3201,6 +3201,33 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert "Some HTML code" in res.data, res.data
 
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_48_task_presenter_editor_works_json(self, mock):
+        """Test WEB task presenter editor works JSON"""
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        err_msg = "Task Presenter should be empty"
+        assert not project.info.get('task_presenter'), err_msg
+
+        url = '/project/sampleapp/tasks/taskpresentereditor?template=basic'
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = "there should not be presenters"
+        assert data.get('presenters') is None, err_msg
+        assert data['form']['csrf'] is not None, data
+        assert data['form']['editor'] is not None, data
+        res = self.app_post_json(url, data={'editor': 'Some HTML code!'})
+        data = json.loads(res.data)
+        assert data['status'] == SUCCESS, data
+        project = db.session.query(Project).first()
+        assert project.info['task_presenter'] == 'Some HTML code!', err_msg
+
+        # Check it loads the previous posted code:
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['form']['editor'] == 'Some HTML code!', data
+
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
