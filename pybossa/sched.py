@@ -40,7 +40,7 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
-                           external_uid=None, offset=0, limit=1):
+                           external_uid=None, offset=0, limit=1, orderby='id', desc=False):
     """Get a new task which have the least number of task runs.
 
     It excludes the current user.
