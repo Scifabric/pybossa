@@ -308,6 +308,7 @@ class TestUserAPI(Test):
         # Add user with fullname 'Private user', privacy mode enabled
         user_with_privacy_enabled = UserFactory(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
+                                    info=dict(container=1, avatar='png', extra='badge1.png'),
                                     privacy_mode=True)
 
         # When querying with private fields
@@ -319,6 +320,9 @@ class TestUserAPI(Test):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
+        assert 'email_addr' not in public_user.keys(), public_user
+        assert 'id' not in public_user.keys(), public_user
+        assert 'info' not in public_user.keys(), public_user
 
         # with a non-admin API-KEY, the result should be the same
         res = self.app.get(query + '&api_key=' + user.api_key)
@@ -326,6 +330,9 @@ class TestUserAPI(Test):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
+        assert 'email_addr' not in public_user.keys(), public_user
+        assert 'id' not in public_user.keys(), public_user
+        assert 'info' not in public_user.keys(), public_user
 
         # with an admin API-KEY, all the matching results should be returned
         res = self.app.get(query + '&api_key=' + admin.api_key)
@@ -335,3 +342,7 @@ class TestUserAPI(Test):
         assert public_user['name'] == 'publicUser', public_user
         private_user = data[1]
         assert private_user['name'] == 'privateUser', private_user
+        assert private_user['email_addr'] == user_with_privacy_enabled.email_addr, private_user
+        assert private_user['id'] == user_with_privacy_enabled.id, private_user
+        assert private_user['info'] == user_with_privacy_enabled.info, private_user
+
