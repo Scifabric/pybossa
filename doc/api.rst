@@ -3197,3 +3197,86 @@ If the post is successfull, you will get the following output:
       "next": "/project/asdf123/tasks/",
       "status": "success"
     }
+
+Project Delete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/delete**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+The GET endpoint allows you to get all the info about the project (see the Project endpoint as well) as well
+as the csrf token. As this endpoint does not have any form, the csrf token is not inside the form field.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "csrf": "token",
+      "last_activity": null,
+      "n_tasks": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "0"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 2,
+        "contacted": false,
+        "created": "2017-03-15T15:02:12.160810",
+        "description": "asdf",
+        "featured": false,
+        "id": 3,
+        "info": {},
+        "long_description": "asdf",
+        "name": "algo",
+        "owner_id": 12030,
+        "published": false,
+        "secret_key": "c5a77943-f5a4-484a-86bb-d69559e80357",
+        "short_name": "algo",
+        "updated": "2017-03-15T15:02:12.160823",
+        "webhook": null
+      },
+      "template": "/projects/delete.html",
+      "title": "Project: algo &middot; Delete"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "Project deleted!",
+      "next": "/account/pruebaadfadfa/",
+      "status": "success"
+    }

@@ -28,6 +28,7 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response, session
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
+from flask_wtf.csrf import generate_csrf
 from rq import Queue
 
 import pybossa.sched as sched
@@ -409,7 +410,8 @@ def delete(short_name):
                         n_tasks=n_tasks,
                         overall_progress=overall_progress,
                         last_activity=last_activity,
-                        pro_features=pro)
+                        pro_features=pro,
+                        csrf=generate_csrf())
         return handle_content_type(response)
     project_repo.delete(project)
     auditlogger.add_log_entry(project, None, current_user)
