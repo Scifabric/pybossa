@@ -401,7 +401,6 @@ def delete(short_name):
     ensure_authorized_to('delete', project)
     pro = pro_features()
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
-    print project_sanitized
     if request.method == 'GET':
         response = dict(template='/projects/delete.html',
                         title=title,
