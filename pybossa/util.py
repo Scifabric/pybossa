@@ -77,8 +77,10 @@ def handle_content_type(data):
                 if type(data[item]) != dict:
                     cat = data[item].to_public_json()
                 data[item] = cat
-            if (item == 'users'):
+            if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
+            if (item == 'users' or item =='projects' or item == 'tasks') and type(data[item]) == str: 
+                data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'category'):
