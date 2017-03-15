@@ -2998,3 +2998,202 @@ The project and owner fields will have more information if the onwer of the proj
       },
       "template": "projects/blog.html"
     }
+
+Project Task Presenter Editor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/taskpresentereditor**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+This endpoint allows you to get the list of available templates for the current project. This will only happen
+when the project has an empty template, otherwise it will load the template for you.
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+* **presenters**: List of available templates (in HTML format). The name of them without the '.html' will be the argument for the endpoint.
+* **last_activit**: last activity of the project.
+* **n_task_runs**: number of task runs.
+* **n_tasks**: number of tasks.
+* **n_volunteers**: number of volunteers.
+* **owner**: information about the owner.
+* **pro_features**: which pro features are enabled.
+* **pro_features**: which pro features are enabled.
+* **project**: info about the project.
+* **status**: status of the flash message.
+* **flash**: flash message.
+
+
+**Example output**
+
+.. code-block:: python
+     {
+      "flash": "<strong>Note</strong> You will need to upload the tasks using the<a href=\"/project/asdf123/tasks/import\"> CSV importer</a> or download the project bundle and run the <strong>createTasks.py</strong> script in your computer",
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 0,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 12030,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "presenters": [
+        "projects/presenters/basic.html",
+        "projects/presenters/image.html",
+        "projects/presenters/sound.html",
+        "projects/presenters/video.html",
+        "projects/presenters/map.html",
+        "projects/presenters/pdf.html"
+      ],
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 4,
+        "contacted": false,
+        "contrib_button": "draft",
+        "created": "2017-01-11T09:37:43.613007",
+        "description": "adsf",
+        "featured": false,
+        "id": 3,
+        "info": {
+          "passwd_hash": null,
+          "task_presenter": ""
+        },
+        "long_description": "adsf",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "asdf1324",
+        "owner_id": 12030,
+        "published": false,
+        "secret_key": "73aee9df-be47-4e4c-8192-3a8bf0ab5161",
+        "short_name": "asdf123",
+        "updated": "2017-03-15T13:20:48.022328",
+        "webhook": ""
+      },
+      "status": "info",
+      "template": "projects/task_presenter_options.html",
+      "title": "Project: asdf1324 &middot; Task Presenter Editor"
+    }   
+
+If you want to preload the template from one of the available prenters, you have to pass the following
+argument: **?template=basic** for the basic or **?template=iamge** for the image template.
+
+**Example output**
+
+.. code-block:: python
+     {
+      "errors": false,
+      "flash": "Your code will be <em>automagically</em> rendered in                       the <strong>preview section</strong>. Click in the                       preview button!",
+      "form": {
+        "csrf": "token",
+        "editor": "<div class=\"row\">\n    <div class=\"col-md-12\">\n        <h1>Write here your HTML Task Presenter</h1>\n    </div>\n</div>\n<script type=\"text/javascript\">\n(function() {\n    // Your JavaScript code\n    pybossa.taskLoaded(function(task, deferred){\n        // When the task is loaded, do....\n    });\n\n    pybossa.presentTask(function(task, deferred){\n        // Present the current task to the user\n        // Load the task data into the HTML DOM\n    });\n\n    pybossa.run('asdf123');\n})();\n</script>",
+        "errors": {},
+        "id": 3
+      },
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 0,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 4,
+        "contacted": false,
+        "contrib_button": "draft",
+        "created": "2017-01-11T09:37:43.613007",
+        "description": "adsf",
+        "featured": false,
+        "id": 3,
+        "info": {
+          "passwd_hash": null,
+          "task_presenter": ""
+        },
+        "long_description": "adsf",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "asdf1324",
+        "owner_id": 0,
+        "published": false,
+        "secret_key": "73aee9df-be47-4e4c-8192-3a8bf0ab5161",
+        "short_name": "asdf123",
+        "updated": "2017-03-15T13:20:48.022328",
+        "webhook": ""
+      },
+      "status": "info",
+      "template": "projects/task_presenter_editor.html",
+      "title": "Project: asdf1324 &middot; Task Presenter Editor"
+    }
+
+Then, you can use that template, or if you prefer you can do a POST directly without that information. As in 
+any other request involving a POST you will need the CSRFToken to validate it.
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken". You will have to POST the data fields found in the previous example,
+as it contains the information about the fields: specifically **editor** with the HTML/CSS/JS that you want
+to provide.
+
+If the post is successfull, you will get the following output:
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": "<i class=\"icon-ok\"></i> Task presenter added!",
+      "next": "/project/asdf123/tasks/",
+      "status": "success"
+    }
