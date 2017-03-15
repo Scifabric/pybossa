@@ -1387,6 +1387,47 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
+    def test_delete_project(self):
+        """Test WEB JSON delete project."""
+        owner = UserFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(short_name="algo", owner=owner)
+        # As anon
+        url = '/project/%s/delete' % project.short_name
+        res = self.app_get_json(url, follow_redirects=True)
+        assert 'signin' in res.data, res.data
+
+        url = '/project/%s/delete' % project.short_name
+        res = self.app_post_json(url)
+        assert 'signin' in res.data, res.data
+
+        # As not owner
+        url = '/project/%s/delete?api_key=%s' % (project.short_name, user.api_key)
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['code'] == 403, data
+
+        url = '/project/%s/delete?api_key=%s' % (project.short_name, user.api_key)
+        res = self.app_post_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['code'] == 403, data
+
+        # As owner
+        url = '/project/%s/delete?api_key=%s' % (project.short_name, owner.api_key)
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['project']['name'] == project.name, data
+
+        res = self.app_post_json(url)
+        data = json.loads(res.data)
+        assert data['status'] == SUCCESS, data
+        p = db.session.query(Project).get(project.id)
+        assert p is None
+
+    @with_context
     def test_05d_get_nonexistant_app_update(self):
         """Test WEB get non existant project update should return 404"""
         self.register()

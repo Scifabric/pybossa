@@ -399,19 +399,22 @@ def delete(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('delete', project)
     pro = pro_features()
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    print project_sanitized
     if request.method == 'GET':
-        return render_template('/projects/delete.html',
-                               title=title,
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               last_activity=last_activity,
-                               pro_features=pro)
+        response = dict(template='/projects/delete.html',
+                        title=title,
+                        project=project_sanitized.dictize(),
+                        owner=owner_sanitized,
+                        n_tasks=n_tasks,
+                        overall_progress=overall_progress,
+                        last_activity=last_activity,
+                        pro_features=pro)
+        return handle_content_type(response)
     project_repo.delete(project)
     auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
-    return redirect(url_for('account.profile', name=current_user.name))
+    return redirect_content_type(url_for('account.profile', name=current_user.name))
 
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
