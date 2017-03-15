@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -1180,17 +1180,31 @@ def show_stats(short_name):
     else:
         ensure_authorized_to('read', project)
 
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = project.dictize()
+        else:
+            project_sanitized = project
+        owner_sanitized = cached_users.get_user_summary(owner.name)
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = project.to_public_json()
+        else:    # HTML
+            project_sanitized = project
+        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('/projects/non_stats.html',
-                               title=title,
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               pro_features=pro)
+        response = dict(template='/projects/non_stats.html',
+                        title=title,
+                        project=project_sanitized,
+                        owner=owner_sanitized,
+                        n_tasks=n_tasks,
+                        overall_progress=overall_progress,
+                        n_volunteers=n_volunteers,
+                        n_completed_tasks=n_completed_tasks,
+                        pro_features=pro)
+        return handle_content_type(response)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         project.id,
@@ -1228,19 +1242,28 @@ def show_stats(short_name):
     contrib_time = cached_projects.average_contribution_time(project.id)
     formatted_contrib_time = round(contrib_time.total_seconds(), 2)
 
-    return render_template(
-        '/projects/stats.html',
-        title=title,
-        projectStats=json.dumps(projectStats),
-        userStats=userStats,
-        project=project_dict,
-        owner=owner,
-        n_tasks=n_tasks,
-        overall_progress=overall_progress,
-        n_volunteers=n_volunteers,
-        n_completed_tasks=n_completed_tasks,
-        avg_contrib_time=formatted_contrib_time,
-        pro_features=pro)
+    if current_user.is_authenticated() and owner.id == current_user.id:
+        project_sanitized = project_dict
+    else:   # anonymous or different owner
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = Project().to_public_json(project_dict)
+        else:    # HTML
+            project_sanitized = project_dict
+
+    response = dict(template='/projects/stats.html',
+                    title=title,
+                    projectStats=json.dumps(projectStats),
+                    userStats=userStats,
+                    project=project_sanitized,
+                    owner=owner_sanitized,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_volunteers=n_volunteers,
+                    n_completed_tasks=n_completed_tasks,
+                    avg_contrib_time=formatted_contrib_time,
+                    pro_features=pro)
+
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/settings')
