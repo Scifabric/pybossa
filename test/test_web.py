@@ -245,7 +245,7 @@ class TestWeb(web.Helper):
         url = '/project/%s/stats' % project.short_name
         res = self.app_get_json(url)
         print res.status_code
-        print res
+        print res.data
         # assert "Sorry" in res.data, res.data
 
         # We use a string here to check that it works too

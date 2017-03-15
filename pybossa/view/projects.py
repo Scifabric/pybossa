@@ -1156,7 +1156,10 @@ def show_stats(short_name):
         ensure_authorized_to('read', project)
 
     if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
+        if request.headers['Content-Type'] == 'application/json':
+            project_sanitized = project.dictize()
+        else:
+            project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers['Content-Type'] == 'application/json':
