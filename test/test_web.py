@@ -4477,6 +4477,24 @@ class TestWeb(web.Helper):
             assert "GeoLite" in res.data, res.data
 
     @with_context
+    @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude': 0, 'longitude': 0}])
+    def test_58_global_stats_json(self, mock1):
+        """Test WEB global stats JSON of the site works"""
+        Fixtures.create()
+
+        url = "/stats/"
+        res = self.app_get_json(url)
+        err_msg = "There should be a Global Statistics page of the project"
+        data = json.loads(res.data)
+        keys = ['locs', 'projects', 'show_locs', 'stats', 'tasks', 'top5_projects_24_hours', 'top5_users_24_hours', 'users']
+        assert keys.sort() == data.keys().sort(), keys
+
+
+        with patch.dict(self.flask_app.config, {'GEO': True}):
+            res = self.app.get(url, follow_redirects=True)
+            assert "GeoLite" in res.data, res.data
+
+    @with_context
     def test_59_help_api(self):
         """Test WEB help api page exists"""
         Fixtures.create()
