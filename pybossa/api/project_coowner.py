@@ -20,6 +20,8 @@ PyBossa api module for domain object ProjectCoowner via an API.
 This package adds GET, POST, PUT and DELETE methods for:
     * projectcoowners
 """
+
+import json
 from api_base import APIBase
 from pybossa.model.project_coowner import ProjectCoowner
 
@@ -31,9 +33,27 @@ class ProjectCoownerAPI(APIBase):
     __class__ = ProjectCoowner
 
     def _create_dict_from_model(self, model):
-         """Replaces the User object with the user.id."""
-         obj = super(ProjectCoownerAPI, self)._create_dict_from_model(model)
-         obj['coowner_id'] = obj['coowner_id'].id
-         return obj
+        """Replaces the User object with the user.id."""
+        obj = model.dictize()
+        obj['coowner_id'] = obj['coowner_id'].id
+        return obj
 
+    def _create_json_response(self, query_result, oid):
+        """Consolidates return objects to 1 object per project
+        with a list of coowner_ids.
 
+            original = [{"project_id": 2, "coowner_id": 3},
+                        {"project_id": 2, "coowner_id": 5},
+                        {"project_id": 3, "coowner_id": 1}]
+
+            consolidated = [{'coowner_ids': [3, 5], 'project_id': 2},
+                            {'coowner_ids': [1], 'project_id': 3}]
+
+        """
+        json_obj = super(ProjectCoownerAPI, self)._create_json_response(query_result, oid)
+        obj = json.loads(json_obj)
+        projects = list(set([i['project_id']  for i in obj]))
+        consolidated_obj = [{'project_id': project, 'coowner_ids': [coowner['coowner_id']
+                            for coowner in obj if coowner['project_id'] == project]}
+                            for project in projects]
+        return json.dumps(consolidated_obj)
