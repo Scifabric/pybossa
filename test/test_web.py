@@ -1606,7 +1606,7 @@ class TestWeb(web.Helper):
         assert p is None
 
     @with_context
-    def test_05d_get_nonexistant_app_update(self):
+    def test_05d_get_nonexistant_project_update(self):
         """Test WEB get non existant project update should return 404"""
         self.register()
         # GET
@@ -1615,6 +1615,143 @@ class TestWeb(web.Helper):
         # POST
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
+
+    @with_context
+    def test_05d_get_nonexistant_project_update_json(self):
+        """Test WEB JSON get non existant project update should return 404"""
+        self.register()
+        # GET
+        url = '/project/noapp/update'
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert res.status == '404 NOT FOUND', res.status
+        assert data['code'] == 404, data
+        # POST
+        res = self.app_post_json(url, data=dict())
+        assert res.status == '404 NOT FOUND', res.status
+        data = json.loads(res.data)
+        assert data['code'] == 404, data
+
+    @with_context
+    def test_update_project_json_as_user(self):
+        """Test WEB JSON update project as user."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, user.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+        old_data = dict()
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+    @with_context
+    def test_update_project_json_as_admin(self):
+        """Test WEB JSON update project as admin."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, admin.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['form']['csrf'] is not None, data
+        assert data['upload_form']['csrf'] is not None, data
+
+        old_data = data['form']
+        del old_data['csrf']
+        del old_data['errors']
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['status'] == SUCCESS, data
+
+        u_project = project_repo.get(project.id)
+        assert u_project.description == 'foobar', u_project
+
+
+
+
+    @with_context
+    def test_update_project_json_as_owner(self):
+        """Test WEB JSON update project."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, owner.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['form']['csrf'] is not None, data
+        assert data['upload_form']['csrf'] is not None, data
+
+        old_data = data['form']
+        del old_data['csrf']
+        del old_data['errors']
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['status'] == SUCCESS, data
+
+        u_project = project_repo.get(project.id)
+        assert u_project.description == 'foobar', u_project
+
+
+    @with_context
+    def test_update_project_json_as_owner(self):
+        """Test WEB JSON update project."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, owner.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['form']['csrf'] is not None, data
+        assert data['upload_form']['csrf'] is not None, data
+
+        old_data = data['form']
+        del old_data['csrf']
+        del old_data['errors']
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['status'] == SUCCESS, data
+
+
 
     @with_context
     def test_05d_get_nonexistant_app_import(self):
