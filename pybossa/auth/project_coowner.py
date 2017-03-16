@@ -32,7 +32,7 @@ class ProjectCoownerAuth(object):
         return False
 
     def _read(self, user, projectcoowner=None):
-        if user.admin:
+        if user.admin or user.subadmin:
             return True
         else:
             return False
