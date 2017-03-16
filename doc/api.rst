@@ -3375,3 +3375,182 @@ the following header: "X-CSRFToken".
       "next": "/account/pruebaadfadfa/",
       "status": "success"
     }
+
+
+Project update 
+~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **form**: the form fields that need to be sent for updating the project. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **upload_form**: the form fields that need to be sent for updating the project's avatar. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "csrf": "token",
+        "description": "description",
+        "errors": {},
+        "id": 3117,
+        "long_description": "long description",
+        "name": "name",
+        "password": null,
+        "protect": false,
+        "short_name": "slug",
+        "webhook": null
+      },
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 2,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2012-06-06T06:27:18.760254",
+        "email_addr": "email.com",
+        "facebook_user_id": null,
+        "fullname": "John Doe",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user",
+          "twitter_token": {
+            "oauth_token": "token",
+            "oauth_token_secret": "token"
+          }
+        },
+        "n_answers": 2414,
+        "name": "johndoe",
+        "rank": 69,
+        "registered_ago": "4 years ago",
+        "score": 2414,
+        "total": 11134,
+        "twitter_user_id": 12,
+        "valid_email": false
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "contacted": false,
+        "contrib_button": "can_contribute",
+        "created": "2015-06-29T08:23:14.201331",
+        "description": "description",
+        "featured": false,
+        "id": 0,
+        "info": {
+          "container": "user",
+          "passwd_hash": null,
+          "task_presenter": "HTML+CSS+JS,
+          "thumbnail": "thumbnail.png"
+        },
+        "long_description": "long description",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "name",
+        "owner_id": 0,
+        "published": true,
+        "secret_key": "key",
+        "short_name": "slug",
+        "updated": "2017-03-16T14:50:45.055331",
+        "webhook": null
+      },
+      "template": "/projects/update.html",
+      "title": "Project: name &middot; Update",
+      "upload_form": {
+        "avatar": null,
+        "csrf": "token",
+        "errors": {},
+        "id": null,
+        "x1": 0,
+        "x2": 0,
+        "y1": 0,
+        "y2": 0
+      }
+    }
+    
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+As this endpoint supports **two** different forms, you must specify which form are
+you targetting adding an extra key: **btn**. The options for this key are:
+
+  **Upload**: to update the **upload_form**.
+
+The other one does not need this extra key.
+
+.. note::
+    Be sure to respect the Uppercase in the first letter, otherwise it will fail.
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": "Your profile has been updated!",
+      "next": "/account/pruebaadfadfa/update",
+      "status": "success"
+    }
+
+
+If there's an error in the form fields, you will get them in the **form.errors** key:
+
+.. code-block:: python
+
+    {
+      "flash": "Please correct the errors",
+      "form": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "csrf": "token",
+        "description": "description",
+        "errors": {
+          "short_name": [
+            "This field is required."
+          ]
+        },
+        "id": 3117,
+        "long_description": "new description",
+        "name": "new name",
+        "password": null,
+        "protect": true,
+        "short_name": "",
+        "webhook": null
+      },
+      ...
+    }
+
+.. note::
+    For updating the avatar is very important to not set the *Content-Type*. If you
+    are using jQuery, set it to False, so the file is handled properly.
+
+    The (x1,x2,y1,y2) are the coordinates for cutting the image and create the avatar.
+
+    (x1,y1) are the offset left of the cropped area and  the offset top of the cropped
+    area respectively; and (x2,y2) are the width and height of the crop. And don't forget
+    to add an extra key to the form-data: 'btn' with a value Upload to select this form.
