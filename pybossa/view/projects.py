@@ -455,8 +455,8 @@ def update(short_name):
         cached_cat.reset()
         cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
-        return redirect(url_for('.details',
-                                short_name=new_project.short_name))
+        return redirect_content_type(url_for('.details',
+                                     short_name=new_project.short_name))
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -476,7 +476,7 @@ def update(short_name):
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
-        form = ProjectUpdateForm(request.form)
+        form = ProjectUpdateForm(request.body)
         categories = cached_cat.get_all()
         form.category_id.choices = [(c.id, c.name) for c in categories]
 
@@ -490,6 +490,7 @@ def update(short_name):
                 _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
+                print coordinates
                 prefix = time.time()
                 _file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
@@ -507,22 +508,24 @@ def update(short_name):
             else:
                 flash(gettext('You must provide a file to change the avatar'),
                       'error')
-            return redirect(url_for('.update', short_name=short_name))
+            return redirect_content_type(url_for('.update', short_name=short_name))
 
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return render_template('/projects/update.html',
-                           form=form,
-                           upload_form=upload_form,
-                           project=project,
-                           owner=owner,
-                           n_tasks=n_tasks,
-                           overall_progress=overall_progress,
-                           n_task_runs=n_task_runs,
-                           last_activity=last_activity,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
-                           title=title,
-                           pro_features=pro)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    response = dict(template='/projects/update.html',
+                    form=form,
+                    upload_form=upload_form,
+                    project=project_sanitized,
+                    owner=owner_sanitized,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                    title=title,
+                    pro_features=pro)
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/')
