@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from werkzeug.exceptions import BadRequest
+
 
 class ProjectCoownerAuth(object):
     _specific_actions = []
@@ -32,10 +34,14 @@ class ProjectCoownerAuth(object):
         return False
 
     def _read(self, user, projectcoowner=None):
-        if user.admin or user.subadmin:
-            return True
-        else:
-            return False
+        try:
+            if user.admin or user.subadmin:
+                return True
+            else:
+                return False
+        except:
+            # If the user does not pass an `api_key` parameter, raise an exception
+            raise BadRequest('Insufficient privilege to make request')
 
     def _update(self, user, projectcoowner):
         return False
