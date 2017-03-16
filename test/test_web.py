@@ -1606,7 +1606,7 @@ class TestWeb(web.Helper):
         assert p is None
 
     @with_context
-    def test_05d_get_nonexistant_app_update(self):
+    def test_05d_get_nonexistant_project_update(self):
         """Test WEB get non existant project update should return 404"""
         self.register()
         # GET
@@ -1615,6 +1615,24 @@ class TestWeb(web.Helper):
         # POST
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
+
+    @with_context
+    def test_05d_get_nonexistant_project_update_json(self):
+        """Test WEB JSON get non existant project update should return 404"""
+        self.register()
+        # GET
+        url = '/project/noapp/update'
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert res.status == '404 NOT FOUND', res.status
+        assert data['code'] == 404, data
+        # POST
+        res = self.app_post_json(url, data=dict())
+        assert res.status == '404 NOT FOUND', res.status
+        data = json.loads(res.data)
+        assert data['code'] == 404, data
+
+
 
     @with_context
     def test_05d_get_nonexistant_app_import(self):
