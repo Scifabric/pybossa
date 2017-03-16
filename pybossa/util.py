@@ -54,7 +54,7 @@ def user_to_json(user):
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     from pybossa.model.project import Project
-    if request.headers['Content-Type'] == 'application/json':
+    if request.headers.get('Content-Type') == 'application/json':
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
@@ -104,7 +104,7 @@ def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
         data['status'] = status
-    if request.headers['Content-Type'] == 'application/json':
+    if request.headers.get('Content-Type') == 'application/json':
         return handle_content_type(data)
     else:
         return redirect(url)
