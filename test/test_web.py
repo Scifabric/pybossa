@@ -1632,6 +1632,31 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data['code'] == 404, data
 
+    @with_context
+    def test_update_project_json_as_user(self):
+        """Test WEB JSON update project as user."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, user.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+        old_data = dict()
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
 
     @with_context
     def test_update_project_json_as_owner(self):
