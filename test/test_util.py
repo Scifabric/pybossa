@@ -87,7 +87,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json(self, mocklast, mockjsonify,
                                       mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.handle_content_type(dict(template='example.html'))
         err_msg = "template key should exist"
@@ -102,7 +105,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json_error(self, mocklast, mockjsonify,
                                             mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res, code = util.handle_content_type(
                                              dict(
@@ -128,7 +134,10 @@ class TestPybossaUtil(object):
     def test_handle_content_type_json_form(self, mocklast, mockcsrf,
                                            mockjsonify, mockrender,
                                            mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockcsrf.return_value = "yourcsrf"
         form = MagicMock(spec=Form, data=dict(foo=1), errors=None)
@@ -153,7 +162,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json_pagination(self, mocklast, mockjsonify,
                                                  mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
         res = util.handle_content_type(dict(template='example.html',
@@ -172,7 +184,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_handle_content_type_html(self, mockjsonify,
                                       mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
@@ -193,7 +208,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_handle_content_type_html_error(self, mockjsonify,
                                             mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
         template, code = util.handle_content_type(dict(template='example.html',
@@ -224,7 +242,10 @@ class TestPybossaUtil(object):
         mockjsonify,
         mockrender,
      mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri')
         err_msg = "next URI is wrong in redirction"
@@ -240,7 +261,10 @@ class TestPybossaUtil(object):
     def test_redirect_content_type_json_message(
             self, mocklast, mockjsonify, mockrender, mockrequest):
         mocklast.return_value = None
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri', status='hallo123')
         err_msg = "next URI is wrong in redirction"
@@ -256,7 +280,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_redirect_content_type_json_html(
             self, mockjsonify, mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('/')
         err_msg = "redirect 302 should be the response"

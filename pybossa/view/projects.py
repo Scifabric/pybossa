@@ -81,7 +81,7 @@ def sanitize_project_owner(project, owner, current_user):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project)
         else:    # HTML
             project_sanitized = project
@@ -547,7 +547,7 @@ def details(short_name):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project)
         else:    # HTML
             project_sanitized = project
@@ -1185,13 +1185,13 @@ def show_stats(short_name):
         ensure_authorized_to('read', project)
 
     if current_user.is_authenticated() and owner.id == current_user.id:
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = project.dictize()
         else:
             project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = project.to_public_json()
         else:    # HTML
             project_sanitized = project
@@ -1249,7 +1249,7 @@ def show_stats(short_name):
     if current_user.is_authenticated() and owner.id == current_user.id:
         project_sanitized = project_dict
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project_dict)
         else:    # HTML
             project_sanitized = project_dict
@@ -1447,7 +1447,7 @@ def show_blogposts(short_name):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project)
         else:    # HTML
             project_sanitized = project
@@ -1525,7 +1525,7 @@ def new_blogpost(short_name):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project)
         else:    # HTML
             project_sanitized = project
@@ -1770,7 +1770,7 @@ def results(short_name):
         project_sanitized = project
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             project_sanitized = Project().to_public_json(project)
         else:    # HTML
             project_sanitized = project

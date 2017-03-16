@@ -300,7 +300,7 @@ def redirect_profile():
     """Redirect method for profile."""
     if current_user.is_anonymous():  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
-    if (request.headers['Content-Type'] == 'application/json') and current_user.is_authenticated():
+    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
         return _show_own_profile(current_user)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
