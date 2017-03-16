@@ -1633,6 +1633,34 @@ class TestWeb(web.Helper):
         assert data['code'] == 404, data
 
 
+    @with_context
+    def test_update_project_json(self):
+        """Test WEB JSON update project."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, owner.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['form']['csrf'] is not None, data
+        assert data['upload_form']['csrf'] is not None, data
+
+        old_data = data['form']
+        del old_data['csrf']
+        del old_data['errors']
+
+        old_data['description'] = 'foobar'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['status'] == SUCCESS, data
+
 
     @with_context
     def test_05d_get_nonexistant_app_import(self):
