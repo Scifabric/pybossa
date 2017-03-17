@@ -618,9 +618,10 @@ def import_task(short_name):
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     pro = pro_features()
     dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project_sanitized, owner_sanitized = sanitize_project_owner(dict_project, owner, current_user)
     template_args = dict(title=title, loading_text=loading_text,
-                         project=dict_project,
-                         owner=owner,
+                         project=project_sanitized,
+                         owner=owner_sanitized,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
@@ -632,7 +633,7 @@ def import_task(short_name):
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
         raise abort(404)
-    form = GenericBulkTaskImportForm()(importer_type, request.form)
+    form = GenericBulkTaskImportForm()(importer_type, request.body)
     template_args['form'] = form
 
     if request.method == 'POST':
@@ -645,8 +646,8 @@ def import_task(short_name):
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
-        return render_template('/projects/importers/%s.html' % importer_type,
-                                **template_args)
+        template_args['template'] = '/projects/importers/%s.html' % importer_type
+        return handle_content_type(template_args)
 
     if request.method == 'GET':
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
@@ -656,13 +657,13 @@ def import_task(short_name):
             template_args['task_tmpls'] = task_tmpls
             importer_wrap = lambda i: "projects/tasks/%s.html" % i
             template_args['available_importers'] = map(importer_wrap, all_importers)
-            return render_template('/projects/task_import_options.html',
-                                   **template_args)
+            template_args['template'] = '/projects/task_import_options.html'
+            return handle_content_type(template_args)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
             template = request.args.get('template')
             form.googledocs_url.data = template_tasks.get(template)
-        return render_template('/projects/importers/%s.html' % importer_type,
-                                **template_args)
+        template_args['template'] = '/projects/importers/%s.html' % importer_type
+        return handle_content_type(template_args)
 
 
 def _import_tasks(project, **form_data):
@@ -674,7 +675,8 @@ def _import_tasks(project, **form_data):
         importer_queue.enqueue(import_tasks, project.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    return redirect(url_for('.tasks', short_name=project.short_name))
+    return redirect_content_type(url_for('.tasks',
+                                         short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])

@@ -4268,6 +4268,70 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_get_import_tasks_no_params_shows_options_and_templates_json_owner(self, mock):
+        """Test WEB import tasks JSON returns tasks's templates """
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/tasks/import?api_key=%s' % (project.short_name, owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['available_importers'] is not None, data
+        importers = ["projects/tasks/epicollect.html",
+                     "projects/tasks/csv.html",
+                     "projects/tasks/s3.html",
+                     "projects/tasks/twitter.html",
+                     "projects/tasks/youtube.html",
+                     "projects/tasks/gdocs.html",
+                     "projects/tasks/dropbox.html",
+                     "projects/tasks/flickr.html"]
+        assert data['available_importers'] == importers, data
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_get_import_tasks_no_params_shows_options_and_templates_json_admin(self, mock):
+        """Test WEB import tasks JSON returns tasks's templates """
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/tasks/import?api_key=%s' % (project.short_name, admin.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['available_importers'] is not None, data
+        importers = ["projects/tasks/epicollect.html",
+                     "projects/tasks/csv.html",
+                     "projects/tasks/s3.html",
+                     "projects/tasks/twitter.html",
+                     "projects/tasks/youtube.html",
+                     "projects/tasks/gdocs.html",
+                     "projects/tasks/dropbox.html",
+                     "projects/tasks/flickr.html"]
+        assert data['available_importers'] == importers, data
+
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_get_import_tasks_no_params_shows_options_and_templates_json_user(self, mock):
+        """Test WEB import tasks JSON returns tasks's templates """
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/tasks/import?api_key=%s' % (project.short_name, user.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['code'] == 403, data
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_get_import_tasks_no_params_shows_options_and_templates_json_anon(self, mock):
+        """Test WEB import tasks JSON returns tasks's templates """
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/tasks/import' % (project.short_name)
+        res = self.app_get_json(url, follow_redirects=True)
+        assert 'signin' in res.data, res.data
+
+
     def test_get_import_tasks_with_specific_variant_argument(self):
         """Test task importer with specific importer variant argument
         shows the form for it, for each of the variants"""
