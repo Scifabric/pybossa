@@ -5208,6 +5208,48 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_75_task_settings_scheduler_json(self, mock):
+        """Test WEB TASK SETTINGS JSON scheduler page works"""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        url = "/project/%s/tasks/scheduler" % project.short_name
+        form_id = 'task_scheduler'
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                new_url = url + '?api_key=%s' % owner.api_key
+                sched = 'depth_first'
+            else:
+                new_url = url + '?api_key=%s' % admin.api_key
+                sched = 'default'
+            res = self.app_get_json(new_url)
+            data = json.loads(res.data)
+            assert data['form']['csrf'] is not None, data
+            assert 'sched' in data['form'].keys(), data
+
+            res = self.app_post_json(new_url, data=dict(sched=sched))
+            data = json.loads(res.data)
+            project = db.session.query(Project).get(1)
+            assert project.info['sched'] == sched, err_msg
+            assert data['status'] == SUCCESS, data
+
+        # As an authenticated user
+        res = self.app_get_json(url + '?api_key=%s' % user.api_key)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
+
+
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_76_task_settings_redundancy(self, mock):
