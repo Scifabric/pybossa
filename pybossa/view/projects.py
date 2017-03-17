@@ -1013,22 +1013,27 @@ def delete_tasks(short_name):
         n_volunteers = cached_projects.n_volunteers(project.id)
         n_completed_tasks = cached_projects.n_completed_tasks(project.id)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        return render_template('projects/tasks/delete.html',
-                               project=project,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress,
-                               last_activity=last_activity,
-                               title=title,
-                               pro_features=pro)
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, 
+                                                                    owner, 
+                                                                    current_user)
+        response = dict(template='projects/tasks/delete.html',
+                        project=project_sanitized,
+                        owner=owner_sanitized,
+                        n_tasks=n_tasks,
+                        n_task_runs=n_task_runs,
+                        n_volunteers=n_volunteers,
+                        n_completed_tasks=n_completed_tasks,
+                        overall_progress=overall_progress,
+                        last_activity=last_activity,
+                        title=title,
+                        pro_features=pro,
+                        csrf=generate_csrf())
+        return handle_content_type(response)
     else:
         task_repo.delete_valid_from_project(project)
         msg = gettext("Tasks and taskruns with no associated results have been deleted")
         flash(msg, 'success')
-        return redirect(url_for('.tasks', short_name=project.short_name))
+        return redirect_content_url(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/export')
