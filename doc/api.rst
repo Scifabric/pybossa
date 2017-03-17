@@ -1821,6 +1821,35 @@ Statistics are existing in this output:
       }
     }
 
+Project stats
+~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project tasks.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **autoimporter_enabled**: If autoimporter is enabled.
+* **last_activity**: Last activity.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Progress (0..100).
+* **owner**: Owner user information
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information.
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
