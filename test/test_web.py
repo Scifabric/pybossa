@@ -4498,7 +4498,7 @@ class TestWeb(web.Helper):
         assert "type=dropbox" not in res.data
         assert "type=twitter" not in res.data
 
-    @patch('pybossa.view.projects.redirect', wraps=redirect)
+    @patch('pybossa.view.projects.redirect_content_type', wraps=redirect)
     @patch('pybossa.importers.csv.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
         """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
