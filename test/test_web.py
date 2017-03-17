@@ -5383,6 +5383,73 @@ class TestWeb(web.Helper):
         assert dom.find(id="signin") is not None, err_msg
 
     @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_77_task_settings_priority_json(self, mock):
+        """Test WEB TASK SETTINGS JSON priority page works"""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        TaskFactory.create(project=project)
+        url = "/project/%s/tasks/priority" % project.short_name
+        form_id = 'task_priority'
+
+        # As owner and root
+        project = db.session.query(Project).get(project.id)
+        _id = project.tasks[0].id
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                new_url = url + '?api_key=%s' % owner.api_key
+                task_ids = str(_id)
+                priority_0 = 1.0
+            else:
+                new_url = url + '?api_key=%s' % admin.api_key
+                task_ids = "1"
+                priority_0 = 0.5
+            res = self.app_get_json(new_url)
+            data = json.loads(res.data)
+            assert data['form']['csrf'] is not None, data
+            assert 'priority_0' in data['form'].keys(), data
+            assert 'task_ids' in data['form'].keys(), data
+            res = self.app_post_json(new_url, data=dict(task_ids=task_ids,
+                                                        priority_0=priority_0))
+            data = json.loads(res.data)
+            assert data['status'] == SUCCESS, data
+
+            err_msg = "Priority should be changed."
+            task = db.session.query(Task).get(_id)
+            assert task.id == int(task_ids), err_msg
+            assert task.priority_0 == priority_0, err_msg
+            # Wrong values, triggering the validators
+            res = self.app_post_json(new_url, data=dict(priority_0=3, task_ids="1"))
+            data = json.loads(res.data)
+            assert data['status'] == 'error', data
+            assert len(data['form']['errors']['priority_0']) == 1, data
+
+
+            res = self.app_post_json(new_url, data=dict(priority_0=3, task_ids="1, 2"))
+            data = json.loads(res.data)
+            assert data['status'] == 'error', data
+            assert len(data['form']['errors']['task_ids']) == 1, data
+
+            res = self.app_post_json(new_url, data=dict(priority_0=3, task_ids="1, a"))
+            data = json.loads(res.data)
+            assert data['status'] == 'error', data
+            assert len(data['form']['errors']['task_ids']) == 1, data
+
+
+        # As an authenticated user
+        res = self.app.get(url + '?api_key=%s' % user.api_key)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
+
+
+    @with_context
     def test_78_cookies_warning(self):
         """Test WEB cookies warning is displayed"""
         # As Anonymous

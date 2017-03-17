@@ -1389,16 +1389,20 @@ def task_priority(short_name):
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
     title = project_title(project, gettext('Task Priority'))
-    form = TaskPriorityForm()
+    form = TaskPriorityForm(request.body)
     pro = pro_features()
 
     def respond():
-        return render_template('/projects/task_priority.html',
-                               title=title,
-                               form=form,
-                               project=project,
-                               owner=owner,
-                               pro_features=pro)
+        project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
+                                                                    current_user)
+        response = dict(template='/projects/task_priority.html',
+                        title=title,
+                        form=form,
+                        project=project_sanitized.dictize(),
+                        owner=owner_sanitized,
+                        pro_features=pro)
+        return handle_content_type(response)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
