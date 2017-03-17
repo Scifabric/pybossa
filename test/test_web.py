@@ -4369,7 +4369,6 @@ class TestWeb(web.Helper):
                 res = self.app_post_json(url + importer, data=data)
                 data = json.loads(res.data)
                 assert data['flash'] == "SUCCESS", data
-                assert 1 == 0, data
 
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
