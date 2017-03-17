@@ -3554,3 +3554,131 @@ If there's an error in the form fields, you will get them in the **form.errors**
     (x1,y1) are the offset left of the cropped area and  the offset top of the cropped
     area respectively; and (x2,y2) are the width and height of the crop. And don't forget
     to add an extra key to the form-data: 'btn' with a value Upload to select this form.
+
+Project tasks import
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/import**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **available_importers**: A list of available importers for the server. To use one of the items, you have to add to the endpoint the following argument: *?type=name* where name is the string that you will find in the list of importers in the format: *projects/tasks/name.html*.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+{
+  "available_importers": [
+    "projects/tasks/epicollect.html",
+    "projects/tasks/csv.html",
+    "projects/tasks/s3.html",
+    "projects/tasks/twitter.html",
+    "projects/tasks/youtube.html",
+    "projects/tasks/gdocs.html",
+    "projects/tasks/dropbox.html",
+    "projects/tasks/flickr.html"
+  ],
+  "form": null,
+  "loading_text": "Importing tasks, this may take a while, wait...",
+  "n_completed_tasks": 0,
+  "n_tasks": 5,
+  "n_volunteers": 0,
+  "overall_progress": 0,
+  "owner": {
+    "api_key": "key",
+    "confirmation_email_sent": false,
+    "created": "2012-06-06T06:27:18.760254",
+    "email_addr": "johndoe@gmail.com",
+    "facebook_user_id": null,
+    "fullname": "John Doe",
+    "google_user_id": null,
+    "id": 0,
+    "info": {
+      "avatar": "avatar.png",
+      "container": "user",
+      "twitter_token": {
+        "oauth_token": "",
+        "oauth_token_secret": ""
+      }
+    },
+    "n_answers": 2414,
+    "name": "johndoe",
+    "rank": 69,
+    "registered_ago": "4 years ago",
+    "score": 2414,
+    "total": 11134,
+    "twitter_user_id": 12,
+    "valid_email": false
+  },
+  "pro_features": {
+    "auditlog_enabled": true,
+    "autoimporter_enabled": true,
+    "webhooks_enabled": true
+  },
+  "project": {
+    "allow_anonymous_contributors": false,
+    "category_id": 2,
+    "contacted": false,
+    "contrib_button": "can_contribute",
+    "created": "2015-06-29T08:23:14.201331",
+    "description": "old",
+    "featured": false,
+    "id": 3117,
+    "info": {
+      "container": "user",
+      "passwd_hash": null,
+      "task_presenter": "HTML+CSS+JS" 
+      "thumbnail": "avatar.png"
+    },
+    "long_description": "algo",
+    "n_blogposts": 0,
+    "n_results": 0,
+    "name": "name",
+    "owner_id": 3,
+    "published": true,
+    "secret_key": "f",
+    "short_name": "name",
+    "updated": "2017-03-17T09:15:46.867215",
+    "webhook": null
+  },
+  "target": "project.import_task",
+  "task_tmpls": [
+    "projects/tasks/gdocs-sound.html",
+    "projects/tasks/gdocs-map.html",
+    "projects/tasks/gdocs-image.html",
+    "projects/tasks/gdocs-video.html",
+    "projects/tasks/gdocs-pdf.html"
+  ],
+  "template": "/projects/task_import_options.html",
+  "title": "Project: bevan &middot; Import Tasks"
+}
+
+Therefore, if you want to import tasks from a CSV link, you will have to do the following GET::
+
+    GET server/project/<short_name>/tasks/import?type=csv
+
+That query will return the same output as before, but instead of the available_importers, you will get the the form fields and CSRF token for that importer. 
+    
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "flash": "Tasks imported",
+      "next": "/project/<short_name>/tasks/",
+      "status": "success"
+    }
