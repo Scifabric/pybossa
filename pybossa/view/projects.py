@@ -1331,9 +1331,10 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
-                        project=project_sanitized,
+                        project=project_sanitized.dictize(),
                         owner=owner_sanitized,
                         pro_features=pro)
+        return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
