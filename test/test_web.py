@@ -4764,6 +4764,52 @@ class TestWeb(web.Helper):
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
 
+    @with_context
+    def test_56_delete_tasks_json(self):
+        """Test WEB delete tasks JSON works"""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        TaskFactory.create(project=project)
+        url = '/project/%s/tasks/delete' % project.short_name
+
+        # Anonymous user
+        res = self.app_get_json(url, follow_redirects=True)
+        err_msg = "Anonymous user should be redirected for authentication"
+        assert "Please sign in to access this page" in res.data, err_msg
+        err_msg = "Anonymous user should not be allowed to delete tasks"
+        res = self.app.post(url, follow_redirects=True)
+        err_msg = "Anonymous user should not be allowed to delete tasks"
+        assert "Please sign in to access this page" in res.data, err_msg
+
+        # Authenticated user but not owner
+        res = self.app_get_json(url + '?api_key=%s' % user.api_key)
+        err_msg = "Authenticated user but not owner should get 403 FORBIDDEN in GET"
+        assert res.status == '403 FORBIDDEN', err_msg
+        res = self.app.post(url + '?api_key=%s' % user.api_key)
+        err_msg = "Authenticated user but not owner should get 403 FORBIDDEN in POST"
+        assert res.status == '403 FORBIDDEN', err_msg
+
+        # Owner
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
+        res = self.app_get_json(url + '?api_key=%s' % owner.api_key)
+        err_msg = "Owner user should get 200 in GET"
+        assert res.status == '200 OK', err_msg
+        assert len(tasks) > 0, "len(project.tasks) > 0"
+        res = self.app_post_json(url + '?api_key=%s' % owner.api_key)
+        err_msg = "Owner should get 200 in POST"
+        assert res.status == '200 OK', err_msg
+        tasks = db.session.query(Task).filter_by(project_id=project.id).all()
+        assert len(tasks) == 0, "len(project.tasks) != 0"
+
+        # Admin
+        res = self.app.get(url + '?api_key=%s' % admin.api_key)
+        err_msg = "Admin user should get 200 in GET"
+        assert res.status_code == 200, err_msg
+        res = self.app_post_json(url + '?api_key=%s' % admin.api_key)
+        err_msg = "Admin should get 200 in POST"
+        assert res.status_code == 200, err_msg
+
+
     @patch('pybossa.repositories.task_repository.uploader')
     def test_delete_tasks_removes_existing_zip_files(self, uploader):
         """Test WEB delete tasks also deletes zip files for task and taskruns"""

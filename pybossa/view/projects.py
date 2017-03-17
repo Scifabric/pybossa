@@ -1033,7 +1033,7 @@ def delete_tasks(short_name):
         task_repo.delete_valid_from_project(project)
         msg = gettext("Tasks and taskruns with no associated results have been deleted")
         flash(msg, 'success')
-        return redirect_content_url(url_for('.tasks', short_name=project.short_name))
+        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/export')
