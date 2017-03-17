@@ -4288,6 +4288,40 @@ class TestWeb(web.Helper):
                      "projects/tasks/flickr.html"]
         assert data['available_importers'] == importers, data
 
+        importers = ['&type=epicollect',
+                     '&type=csv', 
+                     '&type=s3',
+                     '&type=twitter',
+                     '&type=youtube',
+                     '&type=gdocs',
+                     '&type=dropbox',
+                     '&type=flickr']
+
+        for importer in importers:
+            res = self.app_get_json(url + importer)
+            data = json.loads(res.data)
+            assert data['form']['csrf'] is not None
+            if importer == 'epicollect':
+                assert 'epicollect_form' in data['form'].keys(), data
+                assert 'epicollect_project' in data['form'].keys(), data
+            if importer == 'csv':
+                assert 'csv_url' in data['form'].keys(), data
+            if importer == 's3':
+                assert 'files' in data['form'].keys(), data
+                assert 'bucket' in data['form'].keys(), data
+            if importer == 'twitter':
+                assert 'max_tweets' in data['form'].keys(), data
+                assert 'source' in data['form'].keys(), data
+                assert 'user_credentials' in data['form'].keys(), data
+            if importer == 'youtube':
+                assert 'playlist_url' in data['form'].keys(), data
+            if importer == 'gdocs':
+                assert 'googledocs_url' in data['form'].keys(), data
+            if importer == 'dropbox':
+                assert 'files' in data['form'].keys(), data
+            if importer == 'flickr':
+                assert 'album_id' in data['form'].keys(), data
+
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates_json_admin(self, mock):
         """Test WEB import tasks JSON returns tasks's templates """
