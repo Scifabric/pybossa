@@ -23,7 +23,7 @@ import zipfile
 from StringIO import StringIO
 from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
 from helper import web
-from mock import patch, Mock, call
+from mock import patch, Mock, call, MagicMock
 from flask import redirect
 from itsdangerous import BadSignature
 from pybossa.util import get_user_signup_method, unicode_csv_reader
@@ -4268,11 +4268,16 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    @patch('pybossa.view.projects.importer.create_tasks')
+    @patch('pybossa.view.projects.importer.count_tasks_to_import', return_value=1)
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_get_import_tasks_no_params_shows_options_and_templates_json_owner(self, mock):
+    def test_get_import_tasks_no_params_shows_options_and_templates_json_owner(self, mock, importer_count, importer_tasks):
         """Test WEB import tasks JSON returns tasks's templates """
         admin, user, owner = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
+        report = MagicMock()
+        report.message = "SUCCESS"
+        importer_tasks.return_value = report
         url = '/project/%s/tasks/import?api_key=%s' % (project.short_name, owner.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
@@ -4301,26 +4306,70 @@ class TestWeb(web.Helper):
             res = self.app_get_json(url + importer)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None
-            if importer == 'epicollect':
+            if 'epicollect' in importer:
                 assert 'epicollect_form' in data['form'].keys(), data
                 assert 'epicollect_project' in data['form'].keys(), data
-            if importer == 'csv':
+            if 'csv' in importer:
                 assert 'csv_url' in data['form'].keys(), data
             if importer == 's3':
                 assert 'files' in data['form'].keys(), data
                 assert 'bucket' in data['form'].keys(), data
-            if importer == 'twitter':
+            if 'twitter' in importer:
                 assert 'max_tweets' in data['form'].keys(), data
                 assert 'source' in data['form'].keys(), data
                 assert 'user_credentials' in data['form'].keys(), data
-            if importer == 'youtube':
+            if 'youtube' in importer:
                 assert 'playlist_url' in data['form'].keys(), data
-            if importer == 'gdocs':
+            if 'gdocs' in importer:
                 assert 'googledocs_url' in data['form'].keys(), data
-            if importer == 'dropbox':
+            if 'dropbox' in importer:
                 assert 'files' in data['form'].keys(), data
-            if importer == 'flickr':
+            if 'flickr' in importer:
                 assert 'album_id' in data['form'].keys(), data
+
+        for importer in importers:
+            if 'epicollect' in importer:
+                data = dict(epicollect_form='data', epicollect_project='project')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'csv' in importer:
+                data = dict(csv_url='http://data.com')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                print data
+                assert data['flash'] == "SUCCESS", data
+            if 's3' in importer:
+                data = dict(files='data', bucket='bucket')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'twitter' in importer:
+                data = dict(max_tweets=1, source='bucket', user_credentials='user')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'youtube' in importer:
+                data = dict(playlist_url='url')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'gdocs' in importer:
+                data = dict(googledocs_url='http://url.com')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'dropbox' in importer:
+                data = dict(files='http://domain.com')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+            if 'flickr' in importer:
+                data = dict(album_id=13)
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
+
 
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates_json_admin(self, mock):
