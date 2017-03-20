@@ -452,3 +452,39 @@ class AvatarUploadForm(Form):
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+
+class BulkUserCSVImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='usercsvimport')
+    _allowed_extensions = set(['csv'])
+    def _allowed_file(self, filename):
+        return '.' in filename and \
+            filename.rsplit('.', 1)[1] in self._allowed_extensions
+
+    def get_import_data(self):
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                flash('No file part')
+                return {'type': 'usercsvimport', 'csv_filename': None}
+            csv_file = request.files['file']
+            if csv_file.filename == '':
+                flash('No file selected')
+                return {'type': 'usercsvimport', 'csv_filename': None}
+            if csv_file and self._allowed_file(csv_file.filename):
+                filename = secure_filename(csv_file.filename)
+                tmpfile = '{0}/{1}'.format(uploader.upload_folder, filename)
+                with open(tmpfile, 'w') as fp:
+                  fp.write(csv_file.stream.read())
+                return {'type': 'usercsvimport', 'csv_filename': tmpfile}
+        return {'type': 'usercsvimport', 'csv_filename': None}
+
+
+class GenericUserImportForm(object):
+    """Callable class that will return, when called, the appropriate form
+    instance"""
+    _forms = {'usercsvimport': BulkUserCSVImportForm}
+
+    def __call__(self, form_name, *form_args, **form_kwargs):
+        if form_name is None:
+            return None
+        return self._forms[form_name](*form_args, **form_kwargs)
+    
