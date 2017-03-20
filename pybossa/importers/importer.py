@@ -26,6 +26,8 @@ from .youtubeapi import BulkTaskYoutubeImport
 from .epicollect import BulkTaskEpiCollectPlusImport
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
+from .usercsv import BulkUserCSVImport
+
 
 class Importer(object):
 
@@ -147,3 +149,53 @@ class ImportReport(object):
     @property
     def total(self):
         return self._total
+
+
+class UserImporter(object):
+
+    """Class to import data."""
+
+    def __init__(self):
+        """Init method."""
+        self._importers = dict(usercsvimport=BulkUserCSVImport)
+        self._importer_constructor_params = dict()
+
+    def count_users_to_import(self, **form_data):
+        """Count tasks to import."""
+        return self._create_importer_for(**form_data).count_users()
+
+    def _create_importer_for(self, **form_data):
+        """Create importer."""
+        importer_id = form_data.get('type')
+        params = self._importer_constructor_params.get(importer_id) or {}
+        params.update(form_data)
+        del params['type']
+        return self._importers[importer_id](**params)
+        
+    def get_all_importer_names(self):
+        """Get all importer names."""
+        return self._importers.keys()
+
+    def create_users(self, user_repo, **form_data):
+        """Create users from a remote source using an importer object and
+        avoiding the creation of repeated users"""
+
+        from pybossa.view.account import create_account
+        empty = True
+        n = 0
+        importer = self._create_importer_for(**form_data)
+        for user_data in importer.users():
+            try:
+                found = user_repo.get_by(email_addr=user_data['email_addr'])
+                if not found:
+                    project_slugs = user_data['project_slugs'].split()
+                    create_account(user_data, project_slugs=project_slugs)
+                    n += 1
+            except Exception as e:
+                traceback.print_exc()
+                
+        if n > 0:
+            msg = str(n) + " " + gettext('new users were imported successfully')
+        else:
+            msg = gettext('It looks like there were no new users created')
+        return msg
