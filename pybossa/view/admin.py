@@ -50,12 +50,15 @@ from StringIO import StringIO
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
 from pybossa.jobs import send_mail
+from pybossa.core import userimporter
 
 blueprint = Blueprint('admin', __name__)
 
 DASHBOARD_QUEUE = Queue('super', connection=sentinel.master)
 
 mail_queue = Queue('super', connection=sentinel.master)
+
+MAX_NUM_USERS_IMPORT = 100
 
 def format_error(msg, status_code):
     """Return error as a JSON response."""
@@ -603,3 +606,44 @@ def del_subadmin(user_id=None):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+
+def _import_users(**form_data):
+    number_of_users = userimporter.count_users_to_import(**form_data)
+
+    if number_of_users <= MAX_NUM_USERS_IMPORT:
+        message = userimporter.create_users(user_repo, **form_data)
+        flash(message, 'success')
+    else:
+        message = "Maximum number of users that can be imported are {0}".format(MAX_NUM_USERS_IMPORT)
+        flash(message, 'error')
+    return redirect(url_for('.index'))
+
+
+@blueprint.route('/userimport', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def userimport():
+    """Import Users in bulk using local csv containing user information; only for admins."""
+    importer_type = request.form.get('form_name') or request.args.get('type')
+    all_importers = userimporter.get_all_importer_names()
+    if importer_type is not None and importer_type not in all_importers:
+        raise abort(404)
+    form = GenericUserImportForm()(importer_type, request.form)
+
+    if request.method == 'POST':
+        if form.validate():
+            if 'file' not in request.files:
+                flash(msg, 'No file part')
+            try:
+                return _import_users(**form.get_import_data())
+            except BulkImportException as err_msg:
+                flash(err_msg, 'error')
+            except Exception as e:  # pragma: no cover
+                current_app.logger.error(e)
+                msg = 'Oops! Looks like there was an error!'
+                flash(gettext(msg), 'error')
+                return abort(500)
+        else:
+            flash(gettext('Please correct the errors'), 'error')
+    return render_template('/admin/userimport.html', form=form)
