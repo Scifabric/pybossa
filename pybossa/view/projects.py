@@ -942,19 +942,27 @@ def tasks(short_name):
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     autoimporter_enabled = feature_handler.autoimporter_enabled_for(current_user)
-    return render_template('/projects/tasks.html',
-                           title=title,
-                           project=project,
-                           owner=owner,
-                           autoimporter_enabled=autoimporter_enabled,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           overall_progress=overall_progress,
-                           last_activity=last_activity,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
-                           pro_features=pro)
 
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user)
+
+    response = dict(template='/projects/tasks.html',
+                    title=title,
+                    project=project_sanitized,
+                    owner=owner_sanitized,
+                    autoimporter_enabled=autoimporter_enabled,
+                    n_tasks=n_tasks,
+                    n_task_runs=n_task_runs,
+                    overall_progress=overall_progress,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_projects.n_completed_tasks(
+                        project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(
+                        project.get('id')),
+                    pro_features=pro)
+
+    return handle_content_type(response)
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')

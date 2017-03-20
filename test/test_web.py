@@ -3490,6 +3490,61 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
+        assert_raises(ValueError, json.loads, res.data)
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_46_tasks_exists_json(self, mock):
+        """Test WEB tasks json works."""
+        self.register()
+        self.new_project()
+        res = self.app_get_json('/project/sampleapp/tasks/')
+        data = json.loads(res.data)
+        err_msg = 'Field missing in data'
+        assert 'autoimporter_enabled' in data, err_msg
+        assert 'last_activity' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_task_runs' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        assert 'api_key' in data['owner'], err_msg
+        assert 'secret_key' in data['project'], err_msg
+
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_46_tasks_exists_json_other_user(self, mock):
+        """Test WEB tasks json works."""
+        self.register()
+        self.new_project()
+        project = db.session.query(Project).first()
+        project.published = True
+        db.session.commit()
+        TaskFactory.create(project=project)
+        self.signout()
+        res = self.app_get_json('/project/sampleapp/tasks/')
+        data = json.loads(res.data)
+        print res.data
+        err_msg = 'Field missing in data'
+        assert 'autoimporter_enabled' in data, err_msg
+        assert 'last_activity' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_task_runs' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'private data should not be exposed'
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)

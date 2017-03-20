@@ -1821,6 +1821,89 @@ Statistics are existing in this output:
       }
     }
 
+Project stats
+~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project tasks.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **autoimporter_enabled**: If autoimporter is enabled.
+* **last_activity**: Last activity.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Progress (0..100).
+* **owner**: Owner user information
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information.
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for another project where you are not the owner:
+
+.. code-block:: python
+    {
+      "autoimporter_enabled": true,
+      "last_activity": "2017-03-02T21:00:33.627277",
+      "n_completed_tasks": 184839,
+      "n_task_runs": 1282945,
+      "n_tasks": 193090,
+      "n_volunteers": 20016,
+      "overall_progress": 95,
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Smith",
+        "info": {
+          "avatar": "1410769844.15_avatar.png",
+          "container": "user_3927",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 43565,
+        "name": "pmisson",
+        "rank": 3,
+        "registered_ago": "3 years ago",
+        "score": 43565
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1377,
+        "info": {
+          "container": "user_3927",
+          "thumbnail": "app_1377_thumbnail_1410772569.58.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Cool Project",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "coolproject",
+        "updated": "2017-03-02T21:00:33.965587"
+      },
+      "template": "/projects/tasks.html",
+      "title": "Project: Cool project"
+    }
+
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
