@@ -17,5 +17,5 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Importers module for PYBOSSA."""
 
-from .importer import Importer, ImportReport
+from .importer import Importer, ImportReport, UserImporter
 from .base import BulkImportException
