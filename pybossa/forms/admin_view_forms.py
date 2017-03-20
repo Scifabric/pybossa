@@ -20,4 +20,6 @@
 from forms import (
     AnnouncementForm,
     SearchForm,
-    CategoryForm)
+    CategoryForm,
+    GenericUserImportForm,
+    BulkUserCSVImportForm)
