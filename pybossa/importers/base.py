@@ -43,3 +43,67 @@ class BulkTaskImport(object):
 
     def import_metadata(self):
         return None
+
+
+class BulkUserImport(object):
+
+    """Class to import users in bulk."""
+
+    importer_id = None
+
+    def users(self):
+        """Return a generator with all the users imported."""
+        raise NotImplementedError
+
+    def count_users(self):
+        """Return number of users to be imported."""
+        return len([user for user in self.users()])
+
+    def import_metadata(self):
+        return None        
+  
+    def _import_csv_users(self, csvreader):
+        """Import users from CSV."""
+        headers = []
+        fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                      'n_answers'])
+        field_header_index = []
+        row_number = 0
+        for row in csvreader:
+            if not headers:
+                headers = row
+                self._check_no_duplicated_headers(headers)
+                self._check_no_empty_headers(headers)
+                field_headers = set(headers) & fields
+                for field in field_headers:
+                    field_header_index.append(headers.index(field))
+            else:
+                row_number += 1
+                self._check_valid_row_length(row, row_number, headers)
+                user_data = {}
+                for idx, cell in enumerate(row):
+                    if idx in field_header_index:
+                        user_data[headers[idx]] = cell
+                    else:
+                        user_data[headers[idx]] = cell
+                yield user_data
+
+    def _check_no_duplicated_headers(self, headers):
+        if len(headers) != len(set(headers)):
+            msg = gettext('The file you uploaded has '
+                          'two headers with the same name.')
+            raise BulkImportException(msg)
+
+    def _check_no_empty_headers(self, headers):
+        stripped_headers = [header.strip() for header in headers]
+        if "" in stripped_headers:
+            position = stripped_headers.index("")
+            msg = gettext("The file you uploaded has an empty header on "
+                          "column %(pos)s.", pos=(position+1))
+            raise BulkImportException(msg)
+
+    def _check_valid_row_length(self, row, row_number, headers):
+        if len(headers) != len(row):
+            msg = gettext("The file you uploaded has an extra value on "
+                          "row %s." % (row_number+1))
+            raise BulkImportException(msg)        
