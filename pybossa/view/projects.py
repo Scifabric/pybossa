@@ -1311,17 +1311,21 @@ def task_n_answers(short_name):
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
     title = project_title(project, gettext('Redundancy'))
-    form = TaskRedundancyForm()
+    form = TaskRedundancyForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user)
     if request.method == 'GET':
-        return render_template('/projects/task_n_answers.html',
-                               title=title,
-                               form=form,
-                               project=project,
-                               owner=owner,
-                               pro_features=pro)
+        response = dict(template='/projects/task_n_answers.html',
+                        title=title,
+                        form=form,
+                        project=project_sanitized.dictize(),
+                        owner=owner_sanitized,
+                        pro_features=pro)
+        return handle_content_type(response)
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(project, form.n_answers.data)
         # Log it
@@ -1329,15 +1333,16 @@ def task_n_answers(short_name):
                               'N/A', form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
-        return redirect(url_for('.tasks', short_name=project.short_name))
+        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
     else:
         flash(gettext('Please correct the errors'), 'error')
-        return render_template('/projects/task_n_answers.html',
-                               title=title,
-                               form=form,
-                               project=project,
-                               owner=owner,
-                               pro_features=pro)
+        response = dict(template='/projects/task_n_answers.html',
+                        title=title,
+                        form=form,
+                        project=project_sanitized.dictize(),
+                        owner=owner_sanitized,
+                        pro_features=pro)
+        return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])

@@ -5371,6 +5371,64 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_76_task_settings_redundancy_json(self, mock):
+        """Test WEB TASK SETTINGS redundancy JSON page works"""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+
+        url = "/project/%s/tasks/redundancy" % project.short_name
+        form_id = 'task_redundancy'
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                new_url = url + '?api_key=%s' % owner.api_key
+                self.signin(email="owner@example.com")
+                n_answers = 20
+            else:
+                new_url = url + '?api_key=%s' % admin.api_key
+                n_answers = 10
+                self.signin()
+            res = self.app_get_json(new_url)
+            data = json.loads(res.data)
+            assert data['form']['csrf'] is not None, data
+            assert 'n_answers' in data['form'].keys(), data
+
+            res = self.app_post_json(new_url, data=dict(n_answers=n_answers))
+            data = json.loads(res.data)
+            assert data['status'] == SUCCESS, data
+            project = db.session.query(Project).get(1)
+            for t in project.tasks:
+                assert t.n_answers == n_answers, err_msg
+
+            res = self.app_post_json(new_url, data=dict(n_answers=-1))
+            data = json.loads(res.data)
+            err_msg = "Task Redundancy should be a value between 1 and 1000"
+            assert data['status'] == 'error', data
+            assert 'between 1 and 1,000' in data['form']['errors']['n_answers'][0], data
+
+            res = self.app_post_json(new_url, data=dict(n_answers=10000000000))
+            data = json.loads(res.data)
+            err_msg = "Task Redundancy should be a value between 1 and 1000"
+            assert data['status'] == 'error', data
+            assert 'between 1 and 1,000' in data['form']['errors']['n_answers'][0], err_msg
+
+        # As an authenticated user
+        res = self.app_get_json(url + '?api_key=%s' % user.api_key)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+
+        # As an anonymous user
+        res = self.app_get_json(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
+
+
     @with_context
     def test_task_redundancy_update_updates_task_state(self):
         """Test WEB when updating the redundancy of the tasks in a project, the
