@@ -25,8 +25,13 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
-import pybossa.leaderboard.jobs as leaderboard 
+import pybossa.leaderboard.jobs as leaderboard
 from pbsonesignal import PybossaOneSignal
+
+
+MINUTE = 60
+IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
+TASK_DELETE_TIMEOUT =  (20 * MINUTE)
 
 
 def schedule_job(function, scheduler):
@@ -487,6 +492,54 @@ def send_mail(message_dict):
     mail.send(message)
 
 
+def delete_bulk_tasks(data):
+    """Delete tasks in bulk from project."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    import pybossa.cache.projects as cached_projects
+
+    project_id = data['project_id']
+    project_name = data['project_name']
+    curr_user = data['curr_user']
+    force_reset = data['force_reset']
+
+    sql = text('''ALTER TABLE result DISABLE TRIGGER USER; ALTER TABLE task_run DISABLE TRIGGER USER; ALTER TABLE task DISABLE TRIGGER USER;''')
+    db.slave_session.execute(sql)
+    db.slave_session.commit()
+    if force_reset:
+        sql = text('''DELETE FROM task_run WHERE project_id=:project_id;''')
+        db.slave_session.execute(sql, dict(project_id=project_id))
+        db.slave_session.commit()
+        sql = text('''DELETE FROM result WHERE project_id=:project_id;''')
+        db.slave_session.execute(sql, dict(project_id=project_id))
+        db.slave_session.commit()
+        sql = text('''DELETE FROM task WHERE id IN (SELECT id FROM task WHERE project_id=:project_id);''')
+        db.slave_session.execute(sql, dict(project_id=project_id))
+        db.slave_session.commit()
+    else:
+
+
+        sql = text('''
+                    DELETE FROM task WHERE task.project_id=:project_id
+                    AND task.id NOT IN
+                    (SELECT task_id FROM result
+                    WHERE result.project_id=:project_id GROUP BY result.task_id);
+                    ''')
+        db.slave_session.execute(sql, dict(project_id=project_id))
+        db.slave_session.commit()
+    sql = text('''ALTER TABLE result ENABLE TRIGGER USER; ALTER TABLE task_run ENABLE TRIGGER USER; ALTER TABLE task ENABLE TRIGGER USER;''')
+    db.slave_session.execute(sql)
+    db.slave_session.commit()
+    cached_projects.clean_project(project_id)
+    msg = 'All tasks, taskruns and results were deleted from project %s!' % project_name
+    subject = 'Tasks deletion from %s' % project_name
+    body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\
+        % current_app.config.get('BRAND')
+    mail_dict = dict(recipients=[curr_user],
+                     subject=subject, body=body)
+    send_mail(mail_dict)
+
+
 def import_tasks(project_id, from_auto=False, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
@@ -755,7 +808,7 @@ def push_notification(project_id, **kwargs):
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     if project.info.get('onesignal'):
-        app_id = current_app.config.get('ONESIGNAL_APP_ID') 
+        app_id = current_app.config.get('ONESIGNAL_APP_ID')
         api_key = current_app.config.get('ONESIGNAL_API_KEY')
         client = PybossaOneSignal(app_id=app_id, api_key=api_key)
         filters = [{"field": "tag", "key": project_id, "relation": "exists"}]
