@@ -810,10 +810,12 @@ def task_presenter(short_name, task_id):
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = project_title(project, "Contribute")
-    template_args = {"project": project, "title": title, "owner": owner}
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner)
+    template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
 
     def respond(tmpl):
-        return render_template(tmpl, **template_args)
+        response = dict(template = tmpl, **template_args)
+        return handle_content_type(response)
 
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
