@@ -81,14 +81,14 @@ def sanitize_project_owner(project, owner, current_user):
         if isinstance(project, Project):
             project_sanitized = project.dictize()   # Project object
         else:
-            project_sanitized = project             # non object
+            project_sanitized = project             # dict object
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
             if isinstance(project, Project):
                 project_sanitized = project.to_public_json()            # Project object
             else:
-                project_sanitized = Project().to_public_json(project)   # non object
+                project_sanitized = Project().to_public_json(project)   # dict object
         else:    # HTML
             project_sanitized = project
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
