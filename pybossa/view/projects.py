@@ -90,7 +90,11 @@ def sanitize_project_owner(project, owner, current_user):
             else:
                 project_sanitized = Project().to_public_json(project)   # dict object
         else:    # HTML
-            project_sanitized = project
+            # Also dictize for HTML to have same output as authenticated user (see above)
+            if isinstance(project, Project):
+                project_sanitized = project.dictize()   # Project object
+            else:
+                project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
     return project_sanitized, owner_sanitized
 
