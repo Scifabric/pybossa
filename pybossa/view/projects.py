@@ -78,11 +78,17 @@ webhook_queue = Queue('high', connection=sentinel.master)
 def sanitize_project_owner(project, owner, current_user):
     """Sanitize project and owner data."""
     if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
+        if isinstance(project, Project):
+            project_sanitized = project.dictize()   # Project object
+        else:
+            project_sanitized = project             # non object
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
+            if isinstance(project, Project):
+                project_sanitized = project.to_public_json()            # Project object
+            else:
+                project_sanitized = Project().to_public_json(project)   # non object
         else:    # HTML
             project_sanitized = project
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
@@ -810,7 +816,7 @@ def task_presenter(short_name, task_id):
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = project_title(project, "Contribute")
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
     template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
 
     def respond(tmpl):
@@ -1204,18 +1210,7 @@ def show_stats(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = project.dictize()
-        else:
-            project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = project.to_public_json()
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
