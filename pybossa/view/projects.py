@@ -552,15 +552,7 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner":  owner_sanitized,
@@ -1261,13 +1253,7 @@ def show_stats(short_name):
     contrib_time = cached_projects.average_contribution_time(project.id)
     formatted_contrib_time = round(contrib_time.total_seconds(), 2)
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project_dict
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project_dict)
-        else:    # HTML
-            project_sanitized = project_dict
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     response = dict(template='/projects/stats.html',
                     title=title,
@@ -1473,24 +1459,19 @@ def show_blogposts(short_name):
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
-    response = dict(template='projects/blog.html', 
+    response = dict(template='projects/blog.html',
                     project=project_sanitized,
-                    owner=owner_sanitized, blogposts=blogposts,
+                    owner=owner_sanitized,
+                    blogposts=blogposts,
                     overall_progress=overall_progress,
                     n_tasks=n_tasks,
                     n_task_runs=n_task_runs,
-                    n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                    n_completed_tasks=cached_projects.n_completed_tasks(
+                        project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(
+                        project.get('id')),
                     pro_features=pro)
     return handle_content_type(response)
 
@@ -1551,16 +1532,7 @@ def new_blogpost(short_name):
     form = BlogpostForm(request.form)
     del form.id
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
-
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     if request.method != 'POST':
         ensure_authorized_to('create', Blogpost, project_id=project.id)
@@ -1796,17 +1768,8 @@ def results(short_name):
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
-    owner_dict = cached_users.get_user_summary(owner.name)
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner": owner_sanitized,
