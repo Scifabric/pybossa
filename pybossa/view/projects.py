@@ -410,7 +410,7 @@ def delete(short_name):
     if request.method == 'GET':
         response = dict(template='/projects/delete.html',
                         title=title,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         n_tasks=n_tasks,
                         overall_progress=overall_progress,
@@ -1326,7 +1326,7 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1343,7 +1343,7 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1367,7 +1367,7 @@ def task_scheduler(short_name):
         response = dict(template='/projects/task_scheduler.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1422,7 +1422,7 @@ def task_priority(short_name):
         response = dict(template='/projects/task_priority.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
