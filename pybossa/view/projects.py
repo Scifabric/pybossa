@@ -57,7 +57,11 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
+<<<<<<< HEAD
 from pybossa.jobs import import_tasks, webhook
+=======
+from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook, delete_bulk_tasks, TASK_DELETE_TIMEOUT
+>>>>>>> Update projects.py
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -73,11 +77,16 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task
 blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
+MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
+
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
+task_queue = Queue('medium',
+                   connection=sentinel.master,
+                   default_timeout=TASK_DELETE_TIMEOUT)
 
 
 def sanitize_project_owner(project, owner, current_user, ps=None):
@@ -1129,14 +1138,20 @@ def delete_tasks(short_name):
         return handle_content_type(response)
     else:
         force_reset = request.form.get("force_reset") == 'true'
-        task_repo.delete_valid_from_project(project, force_reset=force_reset)
+        if ps.n_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_DELETE:
+            task_repo.delete_valid_from_project(project, force_reset=force_reset)
+            if not force_reset:
+                msg = gettext("Tasks and taskruns with no associated results have been deleted")
+            else:
+                msg = gettext("All tasks, taskruns and results associated with this project have been deleted")
 
-        if not force_reset:
-            msg = gettext("Tasks and taskruns with no associated results have been deleted")
+            flash(msg, 'success')
         else:
-            msg = gettext("All tasks, taskruns and results associated with this project have been deleted")
-
-        flash(msg, 'success')
+            data = {'project_id': project.id, 'project_name': project.name,
+                    'curr_user': current_user.email_addr, 'force_reset': force_reset}
+            task_queue.enqueue(delete_bulk_tasks, data)
+            flash(gettext("You&#39;re trying to delete a large amount of tasks, so please be patient.\
+                    You will receive an email when the tasks deletion is complete."))
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
 
 
@@ -1935,7 +1950,6 @@ def coowners(short_name):
 
     return render_template('/projects/coowners.html', project=project, short_name=short_name, found=[], coowners=coowners,
                            title=gettext("Manage Co-owners"), form=form, pro_features=pro_features())
-
 
 @blueprint.route('/<short_name>/addcoowner/<int:user_id>')
 @login_required
