@@ -28,6 +28,7 @@ from pybossa.model.task import Task
 from pybossa.core import result_repo
 from api_base import APIBase
 from pybossa.core import task_repo
+import json
 
 
 class TaskAPI(APIBase):
@@ -49,7 +50,10 @@ class TaskAPI(APIBase):
     def _preprocess_post_data(self, data):
         project_id = data["project_id"]
         info = data["info"]
-        found = task_repo.get_task_by(project_id=project_id, info=info,
-                                      state='ongoing')
-        if found:
-            raise Conflict("Task already present")
+        duplicate = task_repo.find_duplicate(project_id=project_id, info=info)
+        if duplicate:
+            message = {
+                'reason': 'DUPLICATE_TASK',
+                'task_id': duplicate
+            }
+            raise Conflict(json.dumps(message))

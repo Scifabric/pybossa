@@ -26,6 +26,7 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 from sqlalchemy import text
+import json
 
 
 class TaskRepository(Repository):
@@ -49,7 +50,7 @@ class TaskRepository(Repository):
         # exported col is present in Task table
         # anything passed under filters will be
         # searched in TaskRun table instead of Task
-        # exclude exported flag from filters and make 
+        # exclude exported flag from filters and make
         # it explicitly searchable against Task table
         exp = filters.pop('exported', None)
         if exp is not None:
@@ -62,13 +63,13 @@ class TaskRepository(Repository):
             query = self.db.session.query(TaskRun).join(Task).\
 		          filter(TaskRun.task_id == Task.id).\
 		          filter(Task.state == u'completed').\
-		          filter_by(**filters)    
+		          filter_by(**filters)
 
         query = query.order_by(TaskRun.id).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
-    
+
     def count_tasks_with(self, **filters):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)
         return self.db.session.query(Task).filter(*query_args).count()
@@ -154,7 +155,7 @@ class TaskRepository(Repository):
                 DELETE FROM task_run WHERE project_id=:project_id;
                 DELETE FROM result WHERE project_id=:project_id;
                 DELETE FROM task WHERE task.project_id=:project_id;
-                
+
                 COMMIT;
                 ''')
         self.db.session.execute(sql, dict(project_id=project.id))
@@ -194,6 +195,19 @@ class TaskRepository(Repository):
         self.db.session.execute(sql, dict(n_answers=n_answer, project_id=project.id))
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+
+    def find_duplicate(self, project_id, info):
+        sql = text('''
+                   SELECT task.id as task_id
+                   FROM task
+                   WHERE task.project_id=:project_id
+                   AND task.state='ongoing'
+                   AND md5(task.info::text)=md5(:info)
+                   ''')
+        row = self.db.session.execute(sql, dict(project_id=project_id,
+                                                info=json.dumps(info))).first()
+        if row:
+            return row[0]
 
     def _validate_can_be(self, action, element):
         if not isinstance(element, Task) and not isinstance(element, TaskRun):
