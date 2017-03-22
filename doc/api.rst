@@ -1821,7 +1821,7 @@ Statistics are existing in this output:
       }
     }
 
-Project stats
+Project tasks
 ~~~~~~~~~~~~~
 **Endpoint: /project/<short_name>/tasks**
 
@@ -1903,6 +1903,67 @@ for another project where you are not the owner:
       "title": "Project: Cool project"
     }
 
+Project task id
+~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/task/<int:task_id>**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows a project task based on id.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **owner**: Owner user information
+* **project**: Project information.
+* **template**: Jinja2 template of the task HTML template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for another project where you are not the owner:
+
+.. code-block:: python
+    {
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "1458638093.9_avatar.png",
+          "container": "user_4953",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 257,
+        "name": "JohnD",
+        "rank": 840,
+        "registered_ago": "2 years ago",
+        "score": 257
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 2417,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2017-03-22T13:03:55.496660"
+      },
+      "template": "/projects/presenter.html",
+      "title": "Project: flickr678 &middot; Contribute"
+    }
 
 Leaderboard
 ~~~~~~~~~~~

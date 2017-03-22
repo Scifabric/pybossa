@@ -78,13 +78,23 @@ webhook_queue = Queue('high', connection=sentinel.master)
 def sanitize_project_owner(project, owner, current_user):
     """Sanitize project and owner data."""
     if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
+        if isinstance(project, Project):
+            project_sanitized = project.dictize()   # Project object
+        else:
+            project_sanitized = project             # dict object
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
+            if isinstance(project, Project):
+                project_sanitized = project.to_public_json()            # Project object
+            else:
+                project_sanitized = Project().to_public_json(project)   # dict object
         else:    # HTML
-            project_sanitized = project
+            # Also dictize for HTML to have same output as authenticated user (see above)
+            if isinstance(project, Project):
+                project_sanitized = project.dictize()   # Project object
+            else:
+                project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
     return project_sanitized, owner_sanitized
 
@@ -404,7 +414,7 @@ def delete(short_name):
     if request.method == 'GET':
         response = dict(template='/projects/delete.html',
                         title=title,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         n_tasks=n_tasks,
                         overall_progress=overall_progress,
@@ -546,15 +556,7 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner":  owner_sanitized,
@@ -810,10 +812,12 @@ def task_presenter(short_name, task_id):
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = project_title(project, "Contribute")
-    template_args = {"project": project, "title": title, "owner": owner}
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
 
     def respond(tmpl):
-        return render_template(tmpl, **template_args)
+        response = dict(template = tmpl, **template_args)
+        return handle_content_type(response)
 
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
@@ -1202,18 +1206,7 @@ def show_stats(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = project.dictize()
-        else:
-            project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = project.to_public_json()
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -1264,13 +1257,7 @@ def show_stats(short_name):
     contrib_time = cached_projects.average_contribution_time(project.id)
     formatted_contrib_time = round(contrib_time.total_seconds(), 2)
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project_dict
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project_dict)
-        else:    # HTML
-            project_sanitized = project_dict
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     # Handle JSON project stats depending of output (needs to be escaped for HTML)
     if request.headers.get('Content-Type') == 'application/json':
@@ -1335,7 +1322,7 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1352,7 +1339,7 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1376,7 +1363,7 @@ def task_scheduler(short_name):
         response = dict(template='/projects/task_scheduler.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1431,7 +1418,7 @@ def task_priority(short_name):
         response = dict(template='/projects/task_priority.html',
                         title=title,
                         form=form,
-                        project=project_sanitized.dictize(),
+                        project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
@@ -1482,24 +1469,19 @@ def show_blogposts(short_name):
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
-    response = dict(template='projects/blog.html', 
+    response = dict(template='projects/blog.html',
                     project=project_sanitized,
-                    owner=owner_sanitized, blogposts=blogposts,
+                    owner=owner_sanitized,
+                    blogposts=blogposts,
                     overall_progress=overall_progress,
                     n_tasks=n_tasks,
                     n_task_runs=n_task_runs,
-                    n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                    n_completed_tasks=cached_projects.n_completed_tasks(
+                        project.get('id')),
+                    n_volunteers=cached_projects.n_volunteers(
+                        project.get('id')),
                     pro_features=pro)
     return handle_content_type(response)
 
@@ -1560,16 +1542,7 @@ def new_blogpost(short_name):
     form = BlogpostForm(request.form)
     del form.id
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
-
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     if request.method != 'POST':
         ensure_authorized_to('create', Blogpost, project_id=project.id)
@@ -1805,17 +1778,8 @@ def results(short_name):
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
-    if current_user.is_authenticated() and owner.id == current_user.id:
-        project_sanitized = project
-        owner_sanitized = cached_users.get_user_summary(owner.name)
-    else:   # anonymous or different owner
-        if request.headers.get('Content-Type') == 'application/json':
-            project_sanitized = Project().to_public_json(project)
-        else:    # HTML
-            project_sanitized = project
-        owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
-    owner_dict = cached_users.get_user_summary(owner.name)
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner": owner_sanitized,

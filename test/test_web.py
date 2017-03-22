@@ -1774,6 +1774,16 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
+    def test_05d_get_nonexistant_app_task_json(self):
+        """Test WEB get non existant project task should return 404"""
+        res = self.app_get_json('/project/noapp/task')
+        assert res.status == '404 NOT FOUND', res.status
+        # Pagination
+        res = self.app_get_json('/project/noapp/task/25')
+        assert res.status == '404 NOT FOUND', res.status
+
+
+    @with_context
     def test_05d_get_nonexistant_app_results_json(self):
         """Test WEB get non existant project results json should return 404"""
         res = self.app.get('/project/noapp/24/results.json', follow_redirects=True)
@@ -2637,6 +2647,41 @@ class TestWeb(web.Helper):
         assert "sign in to participate" in res.data
 
     @with_context
+    def test_21_get_specific_ongoing_task_anonymous_json(self):
+        """Test WEB get specific ongoing task_id for
+        a project works as anonymous"""
+        self.create()
+        self.delete_task_runs()
+        project = db.session.query(Project).first()
+        task = db.session.query(Task)\
+                 .filter(Project.id == project.id)\
+                 .first()
+        res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
+        data = json.loads(res.data)
+        err_msg = 'field missing'
+        assert 'flash' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'status' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'wrong field value'
+        assert data['status'] == 'warning', err_msg
+        assert data['template'] == '/projects/presenter.html', err_msg
+        assert 'Contribute' in data['title'], err_msg
+        err_msg = 'private field data exposed'
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'email_addr' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
+
+        # Try with only registered users
+        project.allow_anonymous_contributors = False
+        db.session.add(project)
+        db.session.commit()
+        res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
+        assert res.status_code == 302
+
+    @with_context
     def test_23_get_specific_ongoing_task_user(self):
         """Test WEB get specific ongoing task_id for a project works as an user"""
         self.create()
@@ -2648,6 +2693,33 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
+
+    @with_context
+    def test_23_get_specific_ongoing_task_user_json(self):
+        """Test WEB get specific ongoing task_id for a project works as an user"""
+        self.create()
+        self.delete_task_runs()
+        self.register()
+        self.signin()
+        project = db.session.query(Project).first()
+        task = db.session.query(Task).filter(Project.id == project.id).first()
+        res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
+        data = json.loads(res.data)
+        err_msg = 'field missing'
+        assert 'owner' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'wrong field value'
+        assert data['template'] == '/projects/presenter.html', err_msg
+        assert 'Contribute' in data['title'], err_msg
+        err_msg = 'private field data exposed'
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'email_addr' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
+        err_msg = 'this field should not existing'
+        assert 'flash' not in data, err_msg
+        assert 'status' not in data, err_msg
 
     @patch('pybossa.view.projects.ContributionsGuard')
     def test_get_specific_ongoing_task_marks_task_as_requested(self, guard):
@@ -2661,6 +2733,20 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
 
         assert fake_guard_instance.stamp.called
+
+    @patch('pybossa.view.projects.ContributionsGuard')
+    def test_get_specific_ongoing_task_marks_task_as_requested_json(self, guard):
+        fake_guard_instance = mock_contributions_guard()
+        guard.return_value = fake_guard_instance
+        self.create()
+        self.register()
+        project = db.session.query(Project).first()
+        task = db.session.query(Task).filter(Project.id == project.id).first()
+        res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
+        print res.data
+
+        assert fake_guard_instance.stamp.called
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -2684,6 +2770,42 @@ class TestWeb(web.Helper):
         assert "Error" in res.data, res.data
         msg = "This task does not belong to %s" % project1_short_name
         assert msg in res.data, res.data
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_25_get_wrong_task_app_json(self, mock):
+        """Test WEB get wrong task.id for a project works"""
+        self.create()
+        project1 = db.session.query(Project).get(1)
+        project1_short_name = project1.short_name
+
+        db.session.query(Task).filter(Task.project_id == 1).first()
+
+        self.register()
+        self.new_project()
+        app2 = db.session.query(Project).get(2)
+        self.new_task(app2.id)
+        task2 = db.session.query(Task).filter(Task.project_id == 2).first()
+        task2_id = task2.id
+        self.signout()
+
+        res = self.app_get_json('/project/%s/task/%s' % (project1_short_name, task2_id))
+        print res.data
+        data = json.loads(res.data)
+        assert 'flash' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'status' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'wrong field value'
+        assert data['status'] == 'warning', err_msg
+        assert data['template'] == '/projects/task/wrong.html', err_msg
+        assert 'Contribute' in data['title'], err_msg
+        err_msg = 'private field data exposed'
+        assert 'api_key' not in data['owner'], err_msg
+        assert 'email_addr' not in data['owner'], err_msg
+        assert 'secret_key' not in data['project'], err_msg
 
     @with_context
     def test_26_tutorial_signed_user(self):
