@@ -473,7 +473,7 @@ class BulkUserCSVImportForm(Form):
                 filename = secure_filename(csv_file.filename)
                 tmpfile = '{0}/{1}'.format(uploader.upload_folder, filename)
                 with open(tmpfile, 'w') as fp:
-                  fp.write(csv_file.stream.read())
+                    fp.write(csv_file.stream.read())
                 return {'type': 'usercsvimport', 'csv_filename': tmpfile}
         return {'type': 'usercsvimport', 'csv_filename': None}
 
@@ -487,4 +487,3 @@ class GenericUserImportForm(object):
         if form_name is None:
             return None
         return self._forms[form_name](*form_args, **form_kwargs)
-    
