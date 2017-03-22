@@ -67,7 +67,7 @@ def browse_tasks(project_id, args):
     sql = text('''
                SELECT COUNT(*) OVER() as total_count, task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
                FROM task LEFT OUTER JOIN
-               (SELECT task_id, COUNT(id) AS ct, MAX(finish_time) as ft FROM task_run
+               (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct, MAX(finish_time) as ft FROM task_run
                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id''' + filters +
@@ -118,6 +118,8 @@ def get_task_filters(args):
   if args.get('ftime_to'):
     datestring = convertEstToUtc(args.get('ftime_to')).isoformat()
     filters += " AND ft <= '%s'" % datestring
+  if args.get('order_by'):
+    args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
 
   return filters
 
