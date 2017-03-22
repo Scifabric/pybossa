@@ -65,8 +65,6 @@ class BulkUserImport(object):
     def _import_csv_users(self, csvreader):
         """Import users from CSV."""
         headers = []
-        fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                      'n_answers'])
         field_header_index = []
         row_number = 0
         for row in csvreader:
@@ -74,7 +72,7 @@ class BulkUserImport(object):
                 headers = row
                 self._check_no_duplicated_headers(headers)
                 self._check_no_empty_headers(headers)
-                field_headers = set(headers) & fields
+                field_headers = set(headers)
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
