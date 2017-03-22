@@ -1259,9 +1259,15 @@ def show_stats(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
+    # Handle JSON project stats depending of output (needs to be escaped for HTML)
+    if request.headers.get('Content-Type') == 'application/json':
+        handle_projectStats = projectStats
+    else:   # HTML
+        handle_projectStats = json.dumps(projectStats)
+
     response = dict(template='/projects/stats.html',
                     title=title,
-                    projectStats=json.dumps(projectStats),
+                    projectStats=handle_projectStats,
                     userStats=userStats,
                     project=project_sanitized,
                     owner=owner_sanitized,

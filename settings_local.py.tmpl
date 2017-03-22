@@ -206,3 +206,9 @@ LIBSASS_STYLE = 'compressed'
 
 # Language to use stems, full text search, etc. from postgresql.
 # FULLTEXTSEARCH_LANGUAGE = 'english'
+
+
+# Use strict slashes at endpoints, by default True
+# This will return a 404 if and endpoint does not have the api/endpoint/
+# while if you configured as False, it will return the resource with and without the trailing /
+# STRICT_SLASHES = True

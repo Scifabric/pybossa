@@ -894,3 +894,18 @@ Just locate them in the settings_local.py file. By default, they look like::
 By choosing "True" on each of them, you are making that specific feature available
 only to pro users. On the other hand, selecting "False" makes them available
 to regular users as well.
+
+Strict Slashes
+==============
+
+By default PYBOSSA distinguish between two types of URLs for its endpoints: with and without a traling slash. In other words, if an endpoint is not declared within the code as accepting both options, accessing the same endpoint with a trailing slash will return a 404.
+
+For example, the about endpoint::
+
+    GET /about
+
+Will return the page, but with the default configuration it will return a 404 if you add a trailing slash to it::
+
+    GET /about/
+
+To disable this behavior, just use the STRICT_SLASHES option and set it to False. That option willensure that both endpoints works with and without the trailing slash.
