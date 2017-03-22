@@ -161,7 +161,7 @@ class UserImporter(object):
         self._importer_constructor_params = dict()
 
     def count_users_to_import(self, **form_data):
-        """Count tasks to import."""
+        """Count number of users to import."""
         return self._create_importer_for(**form_data).count_users()
 
     def _create_importer_for(self, **form_data):
