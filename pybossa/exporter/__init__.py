@@ -145,3 +145,24 @@ class Exporter(object):
     def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
+
+    @staticmethod
+    def _merge_objects(t):
+        """Merge joined objects into a single dictionary."""
+        obj_dict = t.dictize()
+
+        try:
+            task = t.task.dictize()
+            obj_dict['task'] = task
+        except:
+            pass
+
+        try:
+            user = t.user.dictize()
+            allowed_attributes = ['name', 'fullname', 'created', 'email_addr', 'admin', 'subadmin']
+            user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
+            obj_dict['user'] = user
+        except:
+            pass
+
+        return obj_dict

@@ -103,27 +103,6 @@ class CsvExporter(Exporter):
                     return None
         return str(row)
 
-    @staticmethod
-    def _merge_objects(t):
-        """Merge joined objects into a single dictionary."""
-        obj_dict = t.dictize()
-
-        try:
-            task = t.task.dictize()
-            obj_dict['task'] = task
-        except:
-            pass
-
-        try:
-            user = t.user.dictize()
-            allowed_attributes = ['name', 'fullname', 'created', 'email_addr', 'admin', 'subadmin']
-            user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
-            obj_dict['user'] = user
-        except:
-            pass
-
-        return obj_dict
-
     def _handle_row(self, writer, t, ty):
         normal_ty = filter(lambda char: char.isalpha(), ty)
         writer.writerow(self._format_csv_row(self._merge_objects(t), ty=normal_ty))
