@@ -79,17 +79,17 @@ class Importer(object):
                 project_headers = project.get_presenter_headers()
                 if project_headers:
                     if len(headers) < len(project_headers):
-                        msg = 'Imported columns do not match task presenter code'
+                        msg = gettext('Imported columns do not match task presenter code')
                     else:
                         for h in project_headers:
                             if h not in headers:
-                                msg = 'Imported columns do not match task presenter code'
+                                msg = gettext('Imported columns do not match task presenter code')
                                 break
 
             if msg:
                 # Failed validation
                 current_app.logger.error(msg)
-                raise BulkImportException(msg)
+                return ImportReport(message=msg, metadata=None, total=0)
 
         for task_data in tasks:
             task = Task(project_id=project.id)
