@@ -45,9 +45,6 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
 
     It excludes the current user.
 
-    Note that it **ignores** the number of answers limit for efficiency reasons
-    (this is not a big issue as all it means is that you may end up with some
-    tasks run more than is strictly needed!)
     """
     if user_id and not user_ip and not external_uid:
         sql = text('''
