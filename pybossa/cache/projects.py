@@ -96,31 +96,31 @@ def browse_tasks(project_id, args):
 def get_task_filters(args):
     filters = ''
     if args.get('task_id'):
-      filters += ' AND id=%d'%args['task_id']
+        filters += ' AND id=%d'%args['task_id']
     if args.get('hide_completed') and args.get('hide_completed') is True:
-      filters += " AND task.state='%s'"% 'ongoing'
+        filters += " AND task.state='%s'"% 'ongoing'
     if args.get('pcomplete_from') is not None:
-      filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete_from')
+        filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete_from')
     if args.get('pcomplete_to') is not None:
-      filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete_to')
+        filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete_to')
     if args.get('priority_from') is not None:
-      filters += " AND priority_0 >= %f" % args.get('priority_from')
+        filters += " AND priority_0 >= %f" % args.get('priority_from')
     if args.get('priority_to') is not None:
-      filters += " AND priority_0 <= %f" % args.get('priority_to')
+        filters += " AND priority_0 <= %f" % args.get('priority_to')
     if args.get('created_from'):
-      datestring = convertEstToUtc(args.get('created_from')).isoformat()
-      filters += " AND task.created >= '%s'" % datestring
+        datestring = convertEstToUtc(args.get('created_from')).isoformat()
+        filters += " AND task.created >= '%s'" % datestring
     if args.get('created_to'):
-      datestring = convertEstToUtc(args.get('created_to')).isoformat()
-      filters += " AND task.created <= '%s'" % datestring
+        datestring = convertEstToUtc(args.get('created_to')).isoformat()
+        filters += " AND task.created <= '%s'" % datestring
     if args.get('ftime_from'):
-      datestring = convertEstToUtc(args.get('ftime_from')).isoformat()
-      filters += " AND ft >= '%s'" % datestring
+        datestring = convertEstToUtc(args.get('ftime_from')).isoformat()
+        filters += " AND ft >= '%s'" % datestring
     if args.get('ftime_to'):
-      datestring = convertEstToUtc(args.get('ftime_to')).isoformat()
-      filters += " AND ft <= '%s'" % datestring
+        datestring = convertEstToUtc(args.get('ftime_to')).isoformat()
+        filters += " AND ft <= '%s'" % datestring
     if args.get('order_by'):
-      args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
+        args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
 
     return filters
 
