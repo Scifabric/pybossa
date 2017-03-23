@@ -152,8 +152,8 @@ class TaskRepository(Repository):
             sql = text('''
                 BEGIN;
 
-                DELETE FROM task_run WHERE project_id=:project_id;
                 DELETE FROM result WHERE project_id=:project_id;
+                DELETE FROM task_run WHERE project_id=:project_id;                
                 DELETE FROM task WHERE task.project_id=:project_id;
 
                 COMMIT;
