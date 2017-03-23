@@ -31,7 +31,7 @@ from pbsonesignal import PybossaOneSignal
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
-TASK_DELETE_TIMEOUT =  (20 * MINUTE)
+TASK_DELETE_TIMEOUT =  (10 * MINUTE)
 
 
 def schedule_job(function, scheduler):
@@ -504,34 +504,34 @@ def delete_bulk_tasks(data):
     force_reset = data['force_reset']
 
     sql = text('''ALTER TABLE result DISABLE TRIGGER USER; ALTER TABLE task_run DISABLE TRIGGER USER; ALTER TABLE task DISABLE TRIGGER USER;''')
-    db.slave_session.execute(sql)
-    db.slave_session.commit()
+    db.session.execute(sql)
+    db.session.commit()
     if force_reset:
-        sql = text('''DELETE FROM task_run WHERE project_id=:project_id;''')
-        db.slave_session.execute(sql, dict(project_id=project_id))
-        db.slave_session.commit()
         sql = text('''DELETE FROM result WHERE project_id=:project_id;''')
-        db.slave_session.execute(sql, dict(project_id=project_id))
-        db.slave_session.commit()
+        db.session.execute(sql, dict(project_id=project_id))
+        db.session.commit()
+        sql = text('''DELETE FROM task_run WHERE project_id=:project_id;''')
+        db.session.execute(sql, dict(project_id=project_id))
+        db.session.commit()
         sql = text('''DELETE FROM task WHERE id IN (SELECT id FROM task WHERE project_id=:project_id);''')
-        db.slave_session.execute(sql, dict(project_id=project_id))
-        db.slave_session.commit()
+        db.session.execute(sql, dict(project_id=project_id))
+        db.session.commit()
+        msg = "All tasks, taskruns and results associated have been deleted from project {0}".format(project_name)
     else:
-
-
         sql = text('''
                     DELETE FROM task WHERE task.project_id=:project_id
                     AND task.id NOT IN
                     (SELECT task_id FROM result
                     WHERE result.project_id=:project_id GROUP BY result.task_id);
                     ''')
-        db.slave_session.execute(sql, dict(project_id=project_id))
-        db.slave_session.commit()
+        db.session.execute(sql, dict(project_id=project_id))
+        db.session.commit()
+        msg = "Tasks and taskruns with no associated results have been deleted from project {0}".format(project_name)
+
     sql = text('''ALTER TABLE result ENABLE TRIGGER USER; ALTER TABLE task_run ENABLE TRIGGER USER; ALTER TABLE task ENABLE TRIGGER USER;''')
-    db.slave_session.execute(sql)
-    db.slave_session.commit()
+    db.session.execute(sql)
+    db.session.commit()
     cached_projects.clean_project(project_id)
-    msg = 'All tasks, taskruns and results were deleted from project %s!' % project_name
     subject = 'Tasks deletion from %s' % project_name
     body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\
         % current_app.config.get('BRAND')
