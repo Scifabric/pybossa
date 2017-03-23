@@ -199,7 +199,8 @@ class TaskRepository(Repository):
     def find_duplicate(self, project_id, info):
         """
         Find a task id in the given project with the project info using md5
-        index on info column casted as text.
+        index on info column casted as text. Md5 is used to avoid key size
+        limitations in BTree indices
         """
         sql = text('''
                    SELECT task.id as task_id
