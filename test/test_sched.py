@@ -1274,3 +1274,67 @@ class TestGetBreadthFirst(Test):
         tr = TaskRun(project=project, task=task, user=user)
         db.session.add(tr)
         db.session.commit()
+
+class TestBreadthFirst(Test):
+    def setUp(self):
+        super(TestBreadthFirst, self).setUp()
+        with self.flask_app.app_context():
+            db.create_all()
+
+    @with_context
+    def test_breadth_complete(self):
+        """Test breadth respects complete."""
+        db.session.rollback()
+        admin = UserFactory.create(id=500)
+        owner = UserFactory.create(id=501)
+        user = UserFactory.create(id=502)
+        project = ProjectFactory(owner=owner, info=dict(sched='depth_first'), category_id=1)
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=1)
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_one = json.loads(res.data)
+        taskrun = dict(project_id=project.id, task_id=task_one['id'], info=1)
+        res = self.app.post('api/taskrun', data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        #TaskRunFactory.create(task_id=task_one['id'])
+
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_two = json.loads(res.data)
+        taskrun = dict(project_id=project.id, task_id=task_two['id'], info=2)
+        res = self.app.post('api/taskrun', data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        #TaskRunFactory.create(task_id=task_two['id'])
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.get(url)
+        task_three = json.loads(res.data)
+
+        assert task_one['id'] != task_three['id'], (task_one, task_two, task_three)
+        assert task_two['id'] != task_three['id'], (task_one, task_two, task_three)
+
+        taskrun = dict(project_id=project.id, task_id=task_three['id'], info=3)
+        res = self.app.post('api/taskrun?api_key=%s' % owner.api_key, data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
+        for t in tasks:
+            assert t.state == 'completed'
+
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, admin.api_key)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four
