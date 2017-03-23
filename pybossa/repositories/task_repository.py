@@ -55,15 +55,15 @@ class TaskRepository(Repository):
         exp = filters.pop('exported', None)
         if exp is not None:
             query = self.db.session.query(TaskRun).join(Task).\
-		          filter(TaskRun.task_id == Task.id).\
-		          filter(Task.state == u'completed').\
-		          filter(Task.exported == exp).\
-		          filter_by(**filters)
+                filter(TaskRun.task_id == Task.id).\
+                filter(Task.state == u'completed').\
+                filter(Task.exported == exp).\
+                filter_by(**filters)
         else:
             query = self.db.session.query(TaskRun).join(Task).\
-		          filter(TaskRun.task_id == Task.id).\
-		          filter(Task.state == u'completed').\
-		          filter_by(**filters)
+                filter(TaskRun.task_id == Task.id).\
+                filter(Task.state == u'completed').\
+                filter_by(**filters)
 
         query = query.order_by(TaskRun.id).limit(limit).offset(offset)
         if yielded:
@@ -197,6 +197,10 @@ class TaskRepository(Repository):
         cached_projects.clean_project(project.id)
 
     def find_duplicate(self, project_id, info):
+        """
+        Find a task id in the given project with the project info using md5
+        index on info column casted as text.
+        """
         sql = text('''
                    SELECT task.id as task_id
                    FROM task
