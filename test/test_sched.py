@@ -1082,7 +1082,6 @@ class TestGetBreadthFirst(Test):
     def setUp(self):
         super(TestGetBreadthFirst, self).setUp()
         with self.flask_app.app_context():
-            #self.create()
             self.redis_flushall()
             db.drop_all()
             db.create_all()
