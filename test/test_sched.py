@@ -1173,6 +1173,12 @@ class TestGetBreadthFirst(Test):
         assert out1[0].id == tasks[0].id, (tasks[0], out1)
         assert out2[0].id == tasks[1].id, (tasks[1], out2)
 
+        # Now check that orderby works
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='created', desc=True)
+        assert out1[0].id == tasks[2].id, out1
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='created', desc=False)
+        assert out1[0].id == tasks[0].id, out1
+
         # asking for a bigger offset (max 10)
         out2 = pybossa.sched.get_breadth_first_task(project.id, offset=11)
         assert out2 == [], out2
