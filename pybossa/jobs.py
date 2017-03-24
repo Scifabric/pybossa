@@ -543,6 +543,7 @@ def delete_bulk_tasks(data):
 def import_tasks(project_id, from_auto=False, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
+    import pybossa.cache.projects as cached_projects
     project = project_repo.get(project_id)
     report = importer.create_tasks(task_repo, project, **form_data)
     cached_projects.delete_browse_tasks(project_id)
