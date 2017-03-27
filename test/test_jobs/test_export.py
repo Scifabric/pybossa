@@ -81,19 +81,27 @@ class TestExport(Test):
 
     @with_context
     @patch('pybossa.core.json_exporter')
+    @patch('pybossa.core.task_json_exporter')
     @patch('pybossa.core.csv_exporter')
-    def test_project_export(self, csv_exporter, json_exporter):
+    @patch('pybossa.core.task_csv_exporter')
+    def test_project_export(self, csv_exporter, task_csv_exporter, json_exporter, task_json_exporter):
         """Test JOB project_export works."""
         project = ProjectFactory.create()
         project_export(project.id)
         csv_exporter.pregenerate_zip_files.assert_called_once_with(project)
+        task_csv_exporter.pregenerate_zip_files.assert_called_once_with(project)
         json_exporter.pregenerate_zip_files.assert_called_once_with(project)
+        task_json_exporter.pregenerate_zip_files.assert_called_once_with(project)
 
     @with_context
     @patch('pybossa.core.json_exporter')
+    @patch('pybossa.core.task_json_exporter')
     @patch('pybossa.core.csv_exporter')
-    def test_project_export_none(self, csv_exporter, json_exporter):
+    @patch('pybossa.core.task_csv_exporter')
+    def test_project_export_none(self, csv_exporter, task_csv_exporter, json_exporter, task_json_exporter):
         """Test JOB project_export without project works."""
         project_export(0)
         assert not csv_exporter.pregenerate_zip_files.called
+        assert not task_csv_exporter.pregenerate_zip_files.called
         assert not json_exporter.pregenerate_zip_files.called
+        assert not task_json_exporter.pregenerate_zip_files.called
