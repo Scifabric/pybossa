@@ -32,7 +32,6 @@ class TestProjectCoownerAPI(TestAPI):
 
     @with_context
     def test_project_coowners_get(self):
-        import pdb; pdb.set_trace()
         """Test API query for project coowners works."""
         admin = UserFactory.create(admin=True, subadmin=False)
         project = ProjectFactory.create()
@@ -73,14 +72,14 @@ class TestProjectCoownerAPI(TestAPI):
         assert err['exception_cls'] == 'Forbidden', err_msg
 
         # Test no api_key
-        res = self.app.get('api/projectcoowner'.format(project.id)
+        res = self.app.get('api/projectcoowner'.format(project.id))
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
         assert res.status_code == 403, err_msg
         assert err['action'] == 'POST', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
 
-        res = self.app.get('api/projectcoowner?project_id={0}'.format(project.id)
+        res = self.app.get('api/projectcoowner?project_id={0}'.format(project.id))
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
         assert res.status_code == 403, err_msg
