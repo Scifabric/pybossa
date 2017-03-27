@@ -117,7 +117,7 @@ class Exporter(object):
         filename = self.download_name(project, ty)
         if uploader.file_exists(filename, self._container(project)):
             uploader.delete_file(filename, self._container(project))
-
+            
     def get_zip(self, project, ty):
         """Delete existing ZIP file directly from uploads directory,
         generate one on the fly and upload it."""
@@ -145,86 +145,3 @@ class Exporter(object):
     def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
-
-    @staticmethod
-    def merge_objects(t):
-        """Merge joined objects into a single dictionary."""
-        obj_dict = {}
-
-        try:
-            obj_dict = t.dictize()
-        except:
-            pass
-
-        try:
-            task = t.task.dictize()
-            obj_dict['task'] = task
-        except:
-            pass
-
-        try:
-            user = t.user.dictize()
-            allowed_attributes = ['name', 'fullname', 'created',
-                                  'email_addr', 'admin', 'subadmin']
-            user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
-            obj_dict['user'] = user
-        except:
-            pass
-
-        return obj_dict
-
-    @classmethod
-    def get_keys(self, row, ty, parent_key=''):
-        """Recursively get keys from a dictionary.
-        Nested keys are prefixed with their parents key.
-        Ex:
-            >>> row = {"a": {"nested_x": "N"},
-            ...        "b": 1,
-            ...        "c": {
-            ...          "nested_y": {"double_nested": "www.example.com"},
-            ...          "nested_z": True
-            ...       }}
-            >>> exp = CsvExporter()
-            >>> sorted(exp.get_keys(row, 'taskrun'))
-            ['taskrun__a',
-             'taskrun__a__nested_x',
-             'taskrun__b',
-             'taskrun__c',
-             'taskrun__c__nested_y',
-             'taskrun__c__nested_y__double_nested',
-             'taskrun__c__nested_z']
-        """
-        _prefix = '{}__{}'.format(ty, parent_key)
-        keys = []
-
-        for key in row.keys():
-            keys = keys + [_prefix + key]
-            try: 
-                keys = keys + self.get_keys(row[key], _prefix + key)
-            except: pass
-
-        return [str(key) for key in keys]
-
-    @classmethod
-    def get_value(self, row, *args):
-        """Recursively get value from a dictionary by
-        passing an arbitrarily long list of nested keys.
-        Ex:
-            >>> row = {"a": {"nested_x": "N"},
-            ...        "b": 1,
-            ...        "c": {
-            ...          "nested_y": {"double_nested": "www.example.com"},
-            ...          "nested_z": True
-            ...       }}
-            >>> exp = CsvExporter()
-            >>> exp.get_value(row, *['c', 'nested_y', 'double_nested'])
-            'www.example.com'
-        """
-        while len(args) > 0:
-            for arg in args:
-                try:
-                    args = args[1:]
-                    return self.get_value(row[arg], *args)
-                except:
-                    return None
-        return str(row)

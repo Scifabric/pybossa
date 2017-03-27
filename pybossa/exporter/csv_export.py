@@ -39,8 +39,36 @@ class CsvExporter(Exporter):
         return pd.DataFrame(flat_data)
 
     def _format_csv_row(self, row, ty):
-        keys = sorted(self.get_keys(row, ty))
-        values = [self.get_value(row, *k.split('__')[1:])  for k in keys]
+        tmp = row.keys()
+        task_keys = []
+        for k in tmp:
+            k = "%s__%s" % (ty, k)
+            task_keys.append(k)
+        if (type(row['info']) == dict):
+            task_info_keys = []
+            tmp = row['info'].keys()
+            for k in tmp:
+                k = "%sinfo__%s" % (ty, k)
+                task_info_keys.append(k)
+        else:
+            task_info_keys = []
+
+        keys = sorted(task_keys + task_info_keys)
+        values = []
+        _prefix = "%sinfo" % ty
+        for k in keys:
+            prefix, k = k.split("__", 1)
+            if prefix == _prefix:
+                if row['info'].get(k) is not None:
+                    values.append(row['info'][k])
+                else:
+                    values.append(None)
+            else:
+                if row.get(k) is not None:
+                    values.append(row[k])
+                else:
+                    values.append(None)
+
         return values
 
     @classmethod
@@ -105,27 +133,31 @@ class CsvExporter(Exporter):
 
     def _handle_row(self, writer, t, ty):
         normal_ty = filter(lambda char: char.isalpha(), ty)
-        writer.writerow(self._format_csv_row(self.merge_objects(t), ty=normal_ty))
+        writer.writerow(self._format_csv_row(t.dictize(), ty=normal_ty))
 
     def _get_csv(self, out, writer, table, id):
-        if table == 'task':
-            filter_table =  task_repo.filter_tasks_by
-        # If table is task_run, user filter with additional data
-        elif table == 'task_run':
-            filter_table =  task_repo.filter_task_runs_with_task_and_user
-        else:
-            return
-
-        for tr in filter_table(project_id=id, yielded=True):
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=id,
+                                                              yielded=True):
             self._handle_row(writer, tr, table)
         out.seek(0)
         yield out.read()
 
     def _format_headers(self, t, ty):
-        obj_dict = self.merge_objects(t)
-        obj_name = t.__class__.__name__.lower()
-        headers = self.get_keys(obj_dict, obj_name)
-        return sorted(headers)
+        tmp = t.dictize().keys()
+        task_keys = []
+        for k in tmp:
+            k = "%s__%s" % (ty, k)
+            task_keys.append(k)
+        if (type(t.info) == dict):
+            task_info_keys = []
+            tmp = t.info.keys()
+            for k in tmp:
+                k = "%sinfo__%s" % (ty, k)
+                task_info_keys.append(k)
+        else:
+            task_info_keys = []
+        keys = task_keys + task_info_keys
+        return sorted(keys)
 
     def _respond_csv(self, ty, id):
         out = tempfile.TemporaryFile()

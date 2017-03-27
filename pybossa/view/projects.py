@@ -34,7 +34,8 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, sentinel, db, is_coowner)
+                          csv_exporter, importer, sentinel, db, is_coowner,
+                          task_json_exporter, task_csv_exporter)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -57,11 +58,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-<<<<<<< HEAD
-from pybossa.jobs import import_tasks, webhook
-=======
 from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook, delete_bulk_tasks, TASK_DELETE_TIMEOUT
->>>>>>> Update projects.py
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -1189,13 +1186,13 @@ def export_to(short_name):
     def respond_json(ty):
         if ty not in supported_tables:
             return abort(404)
-        res = json_exporter.response_zip(project, ty)
+        res = task_json_exporter.response_zip(project, ty)
         return res
 
     def respond_csv(ty):
         if ty not in supported_tables:
             return abort(404)
-        res = csv_exporter.response_zip(project, ty)
+        res = task_csv_exporter.response_zip(project, ty)
         return res
 
     def create_ckan_datastore(ckan, table, package_id, records):
@@ -1217,7 +1214,7 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=project.short_name)
-            records = json_exporter.gen_json(ty, project.id)
+            records = task_json_exporter.gen_json(ty, project.id)
             if e:
                 raise e
             if package:
