@@ -5,7 +5,6 @@ Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveral
 [![DOI](https://zenodo.org/badge/12868/PyBossa/pybossa.svg)](https://zenodo.org/badge/latestdoi/12868/PyBossa/pybossa)
 
 
-
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
