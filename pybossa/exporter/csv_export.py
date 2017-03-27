@@ -39,8 +39,8 @@ class CsvExporter(Exporter):
         return pd.DataFrame(flat_data)
 
     def _format_csv_row(self, row, ty):
-        keys = sorted(self._get_keys(row, ty))
-        values = [self._get_value(row, *k.split('__')[1:])  for k in keys]
+        keys = sorted(self.get_keys(row, ty))
+        values = [self.get_value(row, *k.split('__')[1:])  for k in keys]
         return values
 
     @classmethod
@@ -105,14 +105,16 @@ class CsvExporter(Exporter):
 
     def _handle_row(self, writer, t, ty):
         normal_ty = filter(lambda char: char.isalpha(), ty)
-        writer.writerow(self._format_csv_row(self._merge_objects(t), ty=normal_ty))
+        writer.writerow(self._format_csv_row(self.merge_objects(t), ty=normal_ty))
 
     def _get_csv(self, out, writer, table, id):
         if table == 'task':
-            filter_table =  getattr(task_repo, 'filter_tasks_by')
+            filter_table =  task_repo.filter_tasks_by
         # If table is task_run, user filter with additional data
-        if table == 'task_run':
-            filter_table =  getattr(task_repo, 'filter_task_runs_with_task_and_user')
+        elif table == 'task_run':
+            filter_table =  task_repo.filter_task_runs_with_task_and_user
+        else:
+            return
 
         for tr in filter_table(project_id=id, yielded=True):
             self._handle_row(writer, tr, table)
@@ -120,9 +122,9 @@ class CsvExporter(Exporter):
         yield out.read()
 
     def _format_headers(self, t, ty):
-        obj_dict = self._merge_objects(t)
+        obj_dict = self.merge_objects(t)
         obj_name = t.__class__.__name__.lower()
-        headers = self._get_keys(obj_dict, obj_name)
+        headers = self.get_keys(obj_dict, obj_name)
         return sorted(headers)
 
     def _respond_csv(self, ty, id):
