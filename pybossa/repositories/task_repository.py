@@ -126,7 +126,7 @@ class TaskRepository(Repository):
         return self.db.session.query(TaskRun).filter(*query_args).count()
 
 
-    # Methods for querying on TaskRun objects and joining additional detials
+    # Methods for querying on TaskRun objects and joining additional details
     def filter_task_runs_with_task_and_user(self, limit=None, offset=0, last_id=None,
                                             yielded=False, fulltextsearch=None,
                                             desc=False, **filters):
