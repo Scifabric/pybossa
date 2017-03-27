@@ -139,12 +139,7 @@ Breadth First
 The Breadth First scheduler has the following features:
 
 #. It sends the tasks in the order that were created, first in first out.
-#. It ignores the :ref:`task-redundancy` value, so it will keep sending tasks
-   no matter even though that value has been achieved.
-#. It sends always the task with the least number of task runs in the system.
-#. A task will be never marked as completed, as the :ref:`task-redundancy` is
-   not respected.
-#. It does not allow to use **orderby** and **desc** arguments via the *api/projectID/newtask* endpoint.
+#. It sends always first the task with the least number of task runs in the system.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
 system will be sending the project's tasks that have less answers (in case of
@@ -156,9 +151,9 @@ as soon as possible an answer for all the available tasks.
 
 .. note::
 
-    If your project needs to do an statistical analysis, be sure to check if
-    the answer has been submitted by the same user, and how many answers you have
-    obtained per task.
+    If you use the limit and offset, the tasks will be ordered first by the 
+    number of task runs, returning always first the tasks with less number of
+    task runs for the user.
 
 Random
 ~~~~~~

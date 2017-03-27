@@ -1082,7 +1082,13 @@ class TestGetBreadthFirst(Test):
     def setUp(self):
         super(TestGetBreadthFirst, self).setUp()
         with self.flask_app.app_context():
-            self.create()
+            self.redis_flushall()
+            db.drop_all()
+            db.create_all()
+
+    def tearDown(self):
+        with self.flask_app.app_context():
+            db.session.remove()
 
 
     def del_task_runs(self, project_id=1):
@@ -1090,6 +1096,21 @@ class TestGetBreadthFirst(Test):
         db.session.query(TaskRun).filter_by(project_id=1).delete()
         db.session.commit()
         db.session.remove()
+
+    def create_task_run(self, project, user):
+        if user:
+            url_newtask = 'api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
+            url_post = 'api/taskrun?api_key=%s' % (user.api_key)
+        else:
+            url_newtask = 'api/project/%s/newtask' % (project.id)
+            url_post = 'api/taskrun'
+
+        res = self.app.get(url_newtask)
+        task = json.loads(res.data)
+        taskrun = dict(project_id=project.id, task_id=task['id'], info=task['id'])
+        res = self.app.post(url_post, data=json.dumps(taskrun))
+        data = json.loads(res.data)
+        return data
 
     @with_context
     def test_get_default_task_anonymous(self):
@@ -1120,157 +1141,234 @@ class TestGetBreadthFirst(Test):
 
 
     def _test_get_breadth_first_task(self, user=None, external_uid=None):
-        self.del_task_runs()
-        if user:
-            short_name = 'xyzuser'
-        else:
-            short_name = 'xyznouser'
-
-        category = db.session.query(Category).get(1)
-        project = Project(short_name=short_name, name=short_name,
-              description=short_name, category=category)
-        owner = db.session.query(User).get(1)
-
-        project.owner = owner
-        task = Task(project=project, state='0', info={})
-        task2 = Task(project=project, state='0', info={})
-        task.project = project
-        task2.project = project
-        db.session.add(project)
-        db.session.add(task)
-        db.session.add(task2)
-        db.session.commit()
-        taskid = task.id
-        projectid = project.id
-        # give task2 a bunch of runs
-        for idx in range(2):
-            self._add_task_run(project, task2)
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner, info=dict(sched='breadth_first'))
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=3)
 
         # now check we get task without task runs as anonymous user
-        out = pybossa.sched.get_breadth_first_task(projectid)
+        out = pybossa.sched.get_breadth_first_task(project.id)
         assert len(out) == 1, out
         out = out[0]
-        assert out.id == taskid, out
+        assert out.id == tasks[0].id, out
 
         # now check we get task without task runs as a user
-        owner = db.session.query(User).get(1)
-        out = pybossa.sched.get_breadth_first_task(projectid, owner.id)
+        out = pybossa.sched.get_breadth_first_task(project.id, user.id)
         assert len(out) == 1, out
         out = out[0]
-        assert out.id == taskid, out
+        assert out.id == tasks[0].id, out
 
         # now check we get task without task runs as a external uid
-        out = pybossa.sched.get_breadth_first_task(projectid,
+        out = pybossa.sched.get_breadth_first_task(project.id,
                                                    external_uid=external_uid)
         assert len(out) == 1, out
         out = out[0]
-        assert out.id == taskid, out
-
+        assert out.id == tasks[0].id, out
 
         # now check that offset works
-        out1 = pybossa.sched.get_breadth_first_task(projectid)
-        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=1)
+        out1 = pybossa.sched.get_breadth_first_task(project.id)
+        out2 = pybossa.sched.get_breadth_first_task(project.id, offset=1)
         assert len(out1) == 1, out1
         assert len(out2) == 1, out2
         assert out1[0].id != out2[0].id, (out1, out2)
+        assert out1[0].id == tasks[0].id, (tasks[0], out1)
+        assert out2[0].id == tasks[1].id, (tasks[1], out2)
+
+        # Now check that orderby works
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='created', desc=True)
+        assert out1[0].id == tasks[2].id, out1
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='created', desc=False)
+        assert out1[0].id == tasks[0].id, out1
 
         # asking for a bigger offset (max 10)
-        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=11)
+        out2 = pybossa.sched.get_breadth_first_task(project.id, offset=11)
         assert out2 == [], out2
 
-        self._add_task_run(project, task)
-        out = pybossa.sched.get_breadth_first_task(projectid)
+        # Create a taskrun, so the next task should be returned for anon and auth users
+        self.create_task_run(project, None)
+        out = pybossa.sched.get_breadth_first_task(project.id)
         assert len(out) == 1, out
         out = out[0]
-        assert out.id == taskid, out
+        assert out.id == tasks[1].id, out
+        out = pybossa.sched.get_breadth_first_task(project.id, user.id)
+        assert len(out) == 1, out
+        out = out[0]
+        assert out.id == tasks[1].id, out
 
-        # now add 2 more taskruns. We now have 3 and 2 task runs per task
-        self._add_task_run(project, task)
-        self._add_task_run(project, task)
-        out = pybossa.sched.get_breadth_first_task(projectid)
+        # We create another taskrun and the last task should be returned
+        self.create_task_run(project, user)
+        out = pybossa.sched.get_breadth_first_task(project.id)
         assert len(out) == 1, out
         out = out[0]
-        assert out.id == task2.id, out
+        assert out.id == tasks[2].id, out
+        out = pybossa.sched.get_breadth_first_task(project.id, owner.id)
+        assert len(out) == 1, out
+        out = out[0]
+        assert out.id == tasks[2].id, out
+
+        # Add another taskrun to first task, so we have 2, 1, 0 taskruns for each task
+        TaskRunFactory.create(task=tasks[0], project=project, id=15)
+        out = pybossa.sched.get_breadth_first_task(project.id, UserFactory.create().id)
+        assert len(out) == 1, out
+        out = out[0]
+        assert out.id == tasks[2].id, out
+
+        # Mark last task as completed, so the scheduler returns tasks[1]
+        task = task_repo.get_task(tasks[2].id)
+        task.state = 'completed'
+        task_repo.update(task)
+
+        out = pybossa.sched.get_breadth_first_task(project.id, UserFactory.create().id)
+        assert len(out) == 1, out
+        out = out[0]
+        assert out.id == tasks[1].id, out
+
 
     def _test_get_breadth_first_task_limit(self, user=None, external_uid=None):
-        self.del_task_runs()
-        if user:
-            short_name = 'xyzuser'
-        else:
-            short_name = 'xyznouser'
-
-        category = db.session.query(Category).get(1)
-        project = Project(short_name=short_name, name=short_name,
-              description=short_name, category=category)
-        owner = db.session.query(User).get(1)
-
-        project.owner = owner
-        task = Task(project=project, state='0', info={})
-        task2 = Task(project=project, state='0', info={})
-        task3 = Task(project=project, state='0', info={})
-        task.project = project
-        task2.project = project
-        task3.project = project
-        db.session.add(project)
-        db.session.add(task)
-        db.session.add(task2)
-        db.session.add(task3)
-        db.session.commit()
-        taskid = task.id
-        projectid = project.id
-        # give task2 a bunch of runs
-        for idx in range(2):
-            self._add_task_run(project, task2)
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner, info=dict(sched='breadth_first'))
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=3)
 
         # now check we get task without task runs as anonymous user
-        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
-        assert len(out) == 2, out
-        out = out[0]
-        assert out.id == taskid, out
+        limit = 2
+        out = pybossa.sched.get_breadth_first_task(project.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[0].id, out
+        assert out[1].id == tasks[1].id, out
 
         # now check we get task without task runs as a user
-        owner = db.session.query(User).get(1)
-        out = pybossa.sched.get_breadth_first_task(projectid, owner.id, limit=2)
-        assert len(out) == 2, out
-        out = out[0]
-        assert out.id == taskid, out
+        out = pybossa.sched.get_breadth_first_task(project.id, user.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[0].id, out
+        assert out[1].id == tasks[1].id, out
 
         # now check we get task without task runs as a external uid
-        out = pybossa.sched.get_breadth_first_task(projectid,
+        out = pybossa.sched.get_breadth_first_task(project.id,
                                                    external_uid=external_uid,
-                                                   limit=2)
-        assert len(out) == 2, out
-        out = out[0]
-        assert out.id == taskid, out
-
+                                                   limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[0].id, out
+        assert out[1].id == tasks[1].id, out
 
         # now check that offset works
-        out1 = pybossa.sched.get_breadth_first_task(projectid, limit=2)
-        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=1, limit=2)
-        assert len(out1) == 2, out1
-        assert len(out2) == 2, out2
-        assert out1[0].id != out2[0].id, (out1, out2)
+        out1 = pybossa.sched.get_breadth_first_task(project.id, limit=limit)
+        out2 = pybossa.sched.get_breadth_first_task(project.id, offset=1, limit=limit)
+        assert len(out1) == limit, out1
+        assert len(out2) == limit, out2
+        assert out1 != out2, (out1, out2)
+        assert out1[0].id == tasks[0].id, (tasks[0], out1)
+        assert out1[1].id == tasks[1].id, (tasks[1], out1)
+
+        assert out2[0].id == tasks[1].id, (tasks[1], out2[0])
+        assert out2[1].id == tasks[2].id, (tasks[2], out2)
 
         # asking for a bigger offset (max 10)
-        out2 = pybossa.sched.get_breadth_first_task(projectid, offset=11, limit=2)
+        out2 = pybossa.sched.get_breadth_first_task(project.id, offset=11, limit=2)
         assert out2 == [], out2
 
-        self._add_task_run(project, task)
-        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
-        assert len(out) == 2, out
-        out = out[0]
-        assert out.id == taskid, out
+        # Create a taskrun by Anon, so the next task should be returned for anon and auth users
+        self.create_task_run(project, None)
+        out = pybossa.sched.get_breadth_first_task(project.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[1].id, out
+        assert out[1].id == tasks[2].id, out
+        out = pybossa.sched.get_breadth_first_task(project.id, user.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[1].id, out
+        assert out[1].id == tasks[2].id, out
 
-        # now add 2 more taskruns. We now have 3 and 2 task runs per task
-        self._add_task_run(project, task)
-        self._add_task_run(project, task)
-        out = pybossa.sched.get_breadth_first_task(projectid, limit=2)
-        assert len(out) == 2, out
-        out = out[0]
-        assert out.id == task2.id, out
+        # We create another taskrun and the last task should be returned first, as we
+        # are getting two tasks. It should always return first the tasks with less number
+        # of task runs
+        self.create_task_run(project, user)
+        out = pybossa.sched.get_breadth_first_task(project.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[2].id, out
+        out = pybossa.sched.get_breadth_first_task(project.id, owner.id, limit=limit)
+        assert len(out) == limit, out
+        assert out[0].id == tasks[2].id, out
 
+        # Add another taskrun to first task, so we have 2, 1, 0 taskruns for each task
+        TaskRunFactory.create(task=tasks[0], project=project, id=15)
+        out = pybossa.sched.get_breadth_first_task(project.id, UserFactory.create().id, limit=limit)
+        assert len(out) == limit, out
+        out = out[0]
+        assert out.id == tasks[2].id, out
+
+        # Mark last task as completed, so the scheduler returns tasks[1]
+        task = task_repo.get_task(tasks[2].id)
+        task.state = 'completed'
+        task_repo.update(task)
+
+        out = pybossa.sched.get_breadth_first_task(project.id, UserFactory.create().id, limit=2)
+        assert len(out) == limit, out
+        out = out[0]
+        assert out.id == tasks[1].id, out
 
     def _add_task_run(self, project, task, user=None):
         tr = TaskRun(project=project, task=task, user=user)
         db.session.add(tr)
         db.session.commit()
+
+class TestBreadthFirst(Test):
+    def setUp(self):
+        super(TestBreadthFirst, self).setUp()
+        with self.flask_app.app_context():
+            db.create_all()
+
+    @with_context
+    def test_breadth_complete(self):
+        """Test breadth respects complete."""
+        db.session.rollback()
+        admin = UserFactory.create(id=500)
+        owner = UserFactory.create(id=501)
+        user = UserFactory.create(id=502)
+        project = ProjectFactory(owner=owner, info=dict(sched='depth_first'), category_id=1)
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=1)
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_one = json.loads(res.data)
+        taskrun = dict(project_id=project.id, task_id=task_one['id'], info=1)
+        res = self.app.post('api/taskrun', data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        #TaskRunFactory.create(task_id=task_one['id'])
+
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_two = json.loads(res.data)
+        taskrun = dict(project_id=project.id, task_id=task_two['id'], info=2)
+        res = self.app.post('api/taskrun', data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        #TaskRunFactory.create(task_id=task_two['id'])
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.get(url)
+        task_three = json.loads(res.data)
+
+        assert task_one['id'] != task_three['id'], (task_one, task_two, task_three)
+        assert task_two['id'] != task_three['id'], (task_one, task_two, task_three)
+
+        taskrun = dict(project_id=project.id, task_id=task_three['id'], info=3)
+        res = self.app.post('api/taskrun?api_key=%s' % owner.api_key, data=json.dumps(taskrun))
+        taskrun = json.loads(res.data)
+        assert res.status_code == 200, res.data
+
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
+        for t in tasks:
+            assert t.state == 'completed'
+
+        url = '/api/project/%s/newtask' % (project.id)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four
+
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, admin.api_key)
+        res = self.app.get(url)
+        task_four = json.loads(res.data)
+        assert task_four == {}, task_four

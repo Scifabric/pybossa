@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, func
 from sqlalchemy import and_, not_
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -41,64 +41,32 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                            external_uid=None, offset=0, limit=1, orderby='id', desc=False):
-    """Get a new task which have the least number of task runs.
-
-    It excludes the current user.
-
-    Note that it **ignores** the number of answers limit for efficiency reasons
-    (this is not a big issue as all it means is that you may end up with some
-    tasks run more than is strictly needed!)
-    """
+    """Get a new task which have the least number of task runs."""
     if user_id and not user_ip and not external_uid:
-        sql = text('''
-                   SELECT task.id, COUNT(task_run.task_id) AS taskcount
-                   FROM task
-                   LEFT JOIN task_run ON (task.id = task_run.task_id)
-                   WHERE NOT EXISTS
-                   (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-                   user_id=:user_id AND task_id=task.id)
-                   AND task.project_id=:project_id AND task.state !='completed'
-                   group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
-                   ''')
-        rows = session.execute(sql,
-                               dict(project_id=project_id, user_id=user_id,
-                                    limit=limit, offset=offset))
+        subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
+                                                            user_id=user_id)
     else:
         if not user_ip:  # pragma: no cover
             user_ip = '127.0.0.1'
         if user_ip and not external_uid:
-            sql = text('''
-                       SELECT task.id, COUNT(task_run.task_id) AS taskcount
-                       FROM task
-                       LEFT JOIN task_run ON (task.id = task_run.task_id)
-                       WHERE NOT EXISTS
-                       (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-                       user_ip=:user_ip AND task_id=task.id)
-                       AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
-                       ''')
-            rows = session.execute(sql,
-                                   dict(project_id=project_id, user_ip=user_ip, 
-                                        limit=limit, offset=offset))
+            subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
+                                                                user_ip=user_ip)
         else:
-            sql = text('''
-                       SELECT task.id, COUNT(task_run.task_id) AS taskcount
-                       FROM task
-                       LEFT JOIN task_run ON (task.id = task_run.task_id)
-                       WHERE NOT EXISTS
-                       (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-                       external_uid=:external_uid AND task_id=task.id)
-                       AND task.project_id=:project_id AND task.state !='completed'
-                       group by task.id ORDER BY taskcount, id ASC LIMIT :limit OFFSET :offset;
-                       ''')
-            rows = session.execute(sql,
-                                   dict(project_id=project_id,
-                                        external_uid=external_uid, 
-                                        limit=limit, offset=offset))
-
-    task_ids = [x[0] for x in rows]
-    tasks = session.query(Task).filter(Task.id.in_(task_ids)).order_by(Task.priority_0.desc()).all()
-    return tasks
+            subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
+                                                                external_uid=external_uid)
+    query = session.query(Task, func.count(TaskRun.task_id).label('taskcount'))\
+                   .outerjoin(TaskRun, TaskRun.task_id==Task.id)\
+                   .filter(~Task.id.in_(subquery.subquery()),
+                           Task.project_id==project_id,
+                           Task.state != 'completed')\
+                   .group_by(Task.id).order_by('taskcount')
+    if desc:
+        query = query.order_by(getattr(Task, orderby).desc())
+    else:
+        query = query.order_by(getattr(Task, orderby))
+    data = query.order_by(Task.id.asc()).limit(limit).offset(offset).all()
+    data = [task[0] for task in data]
+    return data
 
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None,
