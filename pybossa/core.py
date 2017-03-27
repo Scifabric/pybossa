@@ -619,7 +619,7 @@ def setup_jinja2_filters(app):
         return get_disqus_sso(obj)
 
     @app.template_filter('datetime')
-    def _datetime_filter(s,f='%y-%m-%d %H:%M'):
+    def _datetime_filter(s,f='%m-%d-%y %H:%M'):
         return datetime_filter(s,f)
 
 

@@ -23,6 +23,7 @@ from flask_wtf import Form
 import csv
 import codecs
 import cStringIO
+import dateutil.tz
 from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
@@ -255,12 +256,10 @@ def pretty_date(time=False):
 
 def datetime_filter(source, fmt):
 
-    import dateutil.tz
-
     if not isinstance(source, (date, datetime)):
         try:
             source = datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
-        except Exception, e:
+        except Exception:
             return source
 
     utc = dateutil.tz.gettz('UTC')
