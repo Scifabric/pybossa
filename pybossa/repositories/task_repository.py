@@ -49,6 +49,18 @@ class TaskRepository(Repository):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)
         return self.db.session.query(Task).filter(*query_args).count()
 
+    def filter_tasks_by_user_favorites(self, uid):
+        """Return tasks marked as favorited by user.id."""
+        tasks = self.db.session.query(Task).filter(Task.fav_user_ids.any(uid)).all()
+        return tasks
+
+    def get_task_favorited(self, uid, task_id):
+        """Return task marked as favorited by user.id."""
+        tasks = self.db.session.query(Task)\
+                    .filter(Task.fav_user_ids.any(uid), 
+                            Task.id==task_id)\
+                    .all()
+        return tasks[0]
 
     # Methods for queries on TaskRun objects
     def get_task_run(self, id):

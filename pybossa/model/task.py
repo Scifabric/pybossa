@@ -20,7 +20,7 @@ from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON, ARRAY
-
+from sqlalchemy.ext.mutable import MutableList
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 from pybossa.model.task_run import TaskRun
@@ -51,7 +51,7 @@ class Task(db.Model, DomainObject):
     #: Number of answers to collect for this task.
     n_answers = Column(Integer, default=30)
     #: Array of User IDs that favorited this task
-    fav_user_ids = Column(ARRAY(Integer))
+    fav_user_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 
