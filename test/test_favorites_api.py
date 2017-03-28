@@ -117,3 +117,11 @@ class TestFavoritesAPI(TestAPI):
         assert res.status_code == 200, res.status_code
         assert user.id in data['fav_user_ids'], data
         assert user2.id in data['fav_user_ids'], data
+
+    @with_context
+    def test_query_post_favorites_anon(self):
+        """Test API POST Favorites works for anon."""
+        res = self.app.post(self.url, data=json.dumps(dict(task_id=1)))
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
+        assert data['status_code'] == 401, res.status_code
