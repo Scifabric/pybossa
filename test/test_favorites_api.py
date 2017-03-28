@@ -70,3 +70,18 @@ class TestFavoritesAPI(TestAPI):
 
         res = self.app.put(self.url + '?api_key=%s' % user.id)
         assert res.status_code == 405, res.status_code
+
+    @with_context
+    def test_query_put_favorites_anon(self):
+        """Test API PUT Favorites works for anon."""
+        user = UserFactory.create()
+        user2 = UserFactory.create()
+        TaskFactory.create(fav_user_ids=[user.id])
+        TaskFactory.create(fav_user_ids=[user2.id])
+        res = self.app.put(self.url + '/1')
+        data = json.loads(res.data)
+        assert res.status_code == 405, res.status_code
+        assert data['status_code'] == 405, data
+
+        res = self.app.put(self.url)
+        assert res.status_code == 405, res.status_code
