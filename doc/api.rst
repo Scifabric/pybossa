@@ -40,6 +40,10 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.VmcpAPI
    :members:
 
+.. autoclass:: pybossa.api.FavoritesAPI
+   :members:
+
+
 Some requests will need an **API-KEY** to authenticate & authorize the
 operation. You can get your API-KEY in your *profile* account.
 
@@ -435,6 +439,28 @@ If an error occurs, the action will return a JSON object like this:
 
 Where **target** will refer to a Project, Task or TaskRun object.
 
+Favorites
+---------
+
+Authenticated users can mark a task as a favorite. This is useful for users when they
+want to see all the tasks they have done to remember them. For example, a user can mark 
+as a favorite a picture that's beautiful and that he/she has marked as favorited.
+
+For serving this purpose PYBOSSA provides the following api endpoint::
+
+    GET /api/favorites
+
+If the user is authenticated it will return all the tasks the user has marked as favorited. 
+
+To add a task as a favorite, a POST should be done with a payload of {'task_id': Task.id}::
+
+    POST /api/favorites
+
+For removing one task from the favorites, do a DELETE::
+
+    DEL /api/favorites/task.id
+
+Be sure to have always the user authenticated, otherwise the user will not be able to see it.
 
 Requesting a new task for current user
 --------------------------------------
