@@ -6114,6 +6114,36 @@ class TestWeb(web.Helper):
         assert old_key != project.secret_key, err_msg
 
     @with_context
+    def test_update_project_secret_key_owner_json(self):
+        """Test update project secret key owner."""
+        self.register()
+        self.new_project()
+
+        project = project_repo.get(1)
+
+        old_key = project.secret_key
+
+        csrf_url = "/project/%s/update" % project.short_name
+        url = "/project/%s/resetsecretkey" % project.short_name
+
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        res = self.app_post_json(url, headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert data['flash'] == 'New secret key generated', data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'success', data
+
+        project = project_repo.get(1)
+
+        err_msg = "A new key should be generated"
+        assert "New secret key generated" in res.data, err_msg
+        assert old_key != project.secret_key, err_msg
+
+
+    @with_context
     def test_update_project_secret_key_not_owner(self):
         """Test update project secret key not owner."""
         self.register()
@@ -6130,3 +6160,19 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
+    @with_context
+    def test_update_project_secret_key_not_owner_json(self):
+        """Test update project secret key not owner."""
+        self.register()
+        self.new_project()
+        self.signout()
+
+        self.register(email="juan@juan.com", name="juanjuan")
+
+        project = project_repo.get(1)
+
+        url = "/project/%s/resetsecretkey" % project.short_name
+
+        res = self.app_post_json(url)
+
+        assert res.status_code == 403, res.status_code
