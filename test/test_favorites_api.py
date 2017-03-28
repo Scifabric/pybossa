@@ -41,8 +41,8 @@ class TestFavoritesAPI(TestAPI):
         assert data['status_code'] == 401
 
     @with_context
-    def test_query_favorites_auth(self):
-        """Test API Favorites works for user."""
+    def test_query_get_favorites_auth(self):
+        """Test API GET Favorites works for user."""
         user = UserFactory.create()
         user2 = UserFactory.create()
         task = TaskFactory.create(fav_user_ids=[user.id])
@@ -55,3 +55,18 @@ class TestFavoritesAPI(TestAPI):
         assert data['id'] == task.id, (data, task)
         assert data['fav_user_ids'] == [user.id], data
         assert len(data['fav_user_ids']) == 1, data
+
+    @with_context
+    def test_query_put_favorites_auth(self):
+        """Test API PUT Favorites works for user."""
+        user = UserFactory.create()
+        user2 = UserFactory.create()
+        TaskFactory.create(fav_user_ids=[user.id])
+        TaskFactory.create(fav_user_ids=[user2.id])
+        res = self.app.put(self.url + '/1?api_key=%s' % user.id)
+        data = json.loads(res.data)
+        assert res.status_code == 405, res.status_code
+        assert data['status_code'] == 405, data
+
+        res = self.app.put(self.url + '?api_key=%s' % user.id)
+        assert res.status_code == 405, res.status_code

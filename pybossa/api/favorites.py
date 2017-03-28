@@ -88,18 +88,6 @@ class FavoritesAPI(APIBase):
 
     @jsonpify
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def put(self, oid):
-        """Not implemented."""
-        try:
-            raise MethodNotAllowed
-        except Exception as e:
-            return error.format_exception(
-                e,
-                target=self.__class__.__name__.lower(),
-                action='PUT')
-
-    @jsonpify
-    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, oid):
         """Delete User ID from task as a favorite."""
         try:
@@ -119,3 +107,14 @@ class FavoritesAPI(APIBase):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DEL')
+
+    @jsonpify
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    def put(self, oid):
+        try:
+            raise MethodNotAllowed
+        except Exception as e:
+            return error.format_exception(
+                e,
+                target=self.__class__.__name__.lower(),
+                action='PUT')
