@@ -125,3 +125,40 @@ class TestFavoritesAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 401, res.status_code
         assert data['status_code'] == 401, res.status_code
+
+    @with_context
+    def test_query_delete_favorites_anon(self):
+        """Test API DEL Favorites works for anon."""
+        res = self.app.delete(self.url + '/1')
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
+        assert data['status_code'] == 401, res.status_code
+
+        res = self.app.delete(self.url)
+        assert res.status_code == 405, res.status_code
+
+    @with_context
+    def test_query_delete_favorites_auth(self):
+        """Test API DEL Favorites works for user."""
+        user = UserFactory.create()
+        user2 = UserFactory.create()
+        task = TaskFactory.create(fav_user_ids=[user.id, user2.id])
+
+        url = self.url + '/%s?api_key=%s' % (task.id, user.api_key)
+        res = self.app.delete(url)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert user.id not in data['fav_user_ids'], data
+        assert user2.id in data['fav_user_ids'], data
+
+        url = self.url + '/%s?api_key=%s' % (task.id, user2.api_key)
+        res = self.app.delete(url)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert user.id not in data['fav_user_ids'], data
+        assert user2.id not in data['fav_user_ids'], data
+
+        url = self.url + '/%s?api_key=%s' % (task.id, user2.api_key)
+        res = self.app.delete(url)
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code

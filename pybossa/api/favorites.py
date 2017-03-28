@@ -102,13 +102,15 @@ class FavoritesAPI(APIBase):
             if current_user.is_anonymous():
                 raise abort(401)
             uid = current_user.id
-            task = task_repo.get_task_favorited(uid, oid)
-            if task is not None:
-                raise abort(415)
+            tasks = task_repo.get_task_favorited(uid, oid)
+            if tasks == []:
+                raise NotFound
+            if len(tasks) == 1:
+                task = tasks[0]
             idx = task.fav_user_ids.index(uid)
             task.fav_user_ids.pop(idx)
             task_repo.update(task)
-            return Response(json.dumps(task), 200,
+            return Response(json.dumps(task.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
             return error.format_exception(
