@@ -28,14 +28,29 @@ task_repo = TaskRepository(db)
 
 class TestFavoritesAPI(TestAPI):
 
-    url = 'api/favorites'
+    url = '/api/favorites'
 
     @with_context
     def test_query_favorites_anon(self):
         """Test API Favorites works for anon."""
         user = UserFactory.create()
-        task = TaskFactory.create(fav_user_ids=[user.id])
+        TaskFactory.create(fav_user_ids=[user.id])
         res = self.app.get(self.url)
         data = json.loads(res.data)
         assert res.status_code == 401
         assert data['status_code'] == 401
+
+    @with_context
+    def test_query_favorites_auth(self):
+        """Test API Favorites works for user."""
+        user = UserFactory.create()
+        task = TaskFactory.create(fav_user_ids=[user.id])
+        TaskFactory.create()
+        res = self.app.get(self.url + '?api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert len(data) == 1, data
+        data = data[0]
+        assert data['id'] == task.id, (data, task)
+        assert data['fav_user_ids'] == [user.id], data
+        assert len(data['fav_user_ids']) == 1, data
