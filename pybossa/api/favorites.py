@@ -25,9 +25,9 @@ This package adds GET, POST, PUT and DELETE methods for:
 import json
 from api_base import APIBase
 from pybossa.core import task_repo
-from flask.ext.login import current_user
+from flask.ext.login import current_user, request
 from flask import Response, abort
-from werkzeug.exceptions import MethodNotAllowed
+from werkzeug.exceptions import MethodNotAllowed, NotFound
 from pybossa.core import ratelimits
 from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
@@ -63,22 +63,30 @@ class FavoritesAPI(APIBase):
 
     @jsonpify
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def post(self, oid):
+    def post(self):
         """Add User ID to task as a favorite."""
         try:
+            self.valid_args()
+            data = json.loads(request.data)
+            if (len(data.keys()) != 1) or ('task_id' not in data.keys()):
+                raise abort(415)
             if current_user.is_anonymous():
                 raise abort(401)
             uid = current_user.id
-            task = task_repo.get_task_favorited(uid, oid)
-            if task is not None:
-                raise abort(415)
-            task = task_repo.get_task(oid)
-            if task.fav_user_ids is None:
-                task.fav_user_ids = [uid]
-            else:
-                task.fav_user_ids.append(uid)
-            task_repo.update(task)
-            return Response(json.dumps(task), 200,
+            tasks = task_repo.get_task_favorited(uid, data['task_id'])
+            if len(tasks) == 1:
+                task = tasks[0]
+            if len(tasks) == 0:
+                task = task_repo.get_task(data['task_id'])
+                if task is None:
+                    raise NotFound
+                if task.fav_user_ids is None:
+                    task.fav_user_ids = [uid]
+                else:
+                    task.fav_user_ids.append(uid)
+                task_repo.update(task)
+                self._log_changes(None, task)
+            return Response(json.dumps(task.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
             return error.format_exception(

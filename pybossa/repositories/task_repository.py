@@ -60,7 +60,7 @@ class TaskRepository(Repository):
                     .filter(Task.fav_user_ids.any(uid), 
                             Task.id==task_id)\
                     .all()
-        return tasks[0]
+        return tasks
 
     # Methods for queries on TaskRun objects
     def get_task_run(self, id):

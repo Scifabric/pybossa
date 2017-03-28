@@ -85,3 +85,35 @@ class TestFavoritesAPI(TestAPI):
 
         res = self.app.put(self.url)
         assert res.status_code == 405, res.status_code
+
+    @with_context
+    def test_query_post_favorites_auth(self):
+        """Test API POST Favorites works for user."""
+        user = UserFactory.create()
+        user2 = UserFactory.create()
+        task = TaskFactory.create()
+        url = self.url + '?api_key=%s' % user.api_key
+        res = self.app.post(url, data=json.dumps(dict(task_id=task.id)))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert data['fav_user_ids'] == [user.id], data
+
+        url = self.url + '?api_key=%s' % user2.api_key
+        res = self.app.post(url, data=json.dumps(dict(task_id=task.id)))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert user.id in data['fav_user_ids'], data
+        assert user2.id in data['fav_user_ids'], data
+
+        url = self.url + '?api_key=%s' % user2.api_key
+        res = self.app.post(url, data=json.dumps(dict(task_id=4000000000)))
+        data = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert data['status_code'] == 404, data
+
+        url = self.url + '?api_key=%s' % user2.api_key
+        res = self.app.post(url, data=json.dumps(dict(task_id=task.id)))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert user.id in data['fav_user_ids'], data
+        assert user2.id in data['fav_user_ids'], data
