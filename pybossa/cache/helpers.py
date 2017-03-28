@@ -57,6 +57,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
         n_tasks = row.n_tasks
     return n_tasks
 
+
 def oldest_available_task(project_id, user_id, user_ip=None):
     """Return the timestamp of the oldest task with the highest priority that a user can contribute to.
     """
@@ -80,7 +81,8 @@ def oldest_available_task(project_id, user_id, user_ip=None):
 
         return session.scalar(query, dict(project_id=project_id,
                                              user_ip=user_ip))
-        
+
+
 def n_completed_tasks_by_user(project_id, user_id):
     """Return number of completed tasks of a project."""
     sql = text('''SELECT COUNT(task_run.id) FROM task_run
@@ -88,6 +90,7 @@ def n_completed_tasks_by_user(project_id, user_id):
                 ''')
 
     return session.scalar(sql, dict(project_id=project_id, user_id=user_id)) or 0
+
 
 def check_contributing_state(project, user_id=None, user_ip=None,
                              external_uid=None, ps=None):
