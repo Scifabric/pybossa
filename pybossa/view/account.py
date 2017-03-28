@@ -135,7 +135,7 @@ def otpvalidation(email):
             if (otpcode == otp):
                 # user provided valid otp, signin user
                 msg = gettext("OTP verified. You are logged in to the system")
-                flash(msg, 'note')
+                flash(msg, 'success')
                 _sign_in_user(user)
                 return redirect(url_for("home.home"))
             else:
