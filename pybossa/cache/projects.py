@@ -169,15 +169,7 @@ def n_completed_tasks(project_id):
     for row in results:
         n_completed_tasks = row.n_completed_tasks
     return n_completed_tasks
-
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def n_completed_tasks_by_user(project_id, user_id):
-    """Return number of completed tasks of a project."""
-    sql = text('''SELECT COUNT(task_run.id) FROM task_run
-                WHERE task_run.project_id=:project_id AND task_run.user_id=:user_id;
-                ''')
-
-    return session.scalar(sql, dict(project_id=project_id, user_id=user_id)) or 0
+    
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_results(project_id):

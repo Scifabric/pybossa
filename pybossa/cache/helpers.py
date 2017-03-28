@@ -80,6 +80,14 @@ def oldest_available_task(project_id, user_id, user_ip=None):
 
         return session.scalar(query, dict(project_id=project_id,
                                              user_ip=user_ip))
+        
+def n_completed_tasks_by_user(project_id, user_id):
+    """Return number of completed tasks of a project."""
+    sql = text('''SELECT COUNT(task_run.id) FROM task_run
+                WHERE task_run.project_id=:project_id AND task_run.user_id=:user_id;
+                ''')
+
+    return session.scalar(sql, dict(project_id=project_id, user_id=user_id)) or 0
 
 def check_contributing_state(project, user_id=None, user_ip=None,
                              external_uid=None, ps=None):
