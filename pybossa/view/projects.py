@@ -991,17 +991,23 @@ def tasks_browse(short_name, page):
             abort(404)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/projects/tasks_browse.html',
-                               project=project,
-                               owner=owner,
-                               tasks=page_tasks,
-                               title=title,
-                               pagination=pagination,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               pro_features=pro)
+
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+
+        data = dict(template='/projects/tasks_browse.html',
+                    project=project_sanitized,
+                    owner=owner_sanitized,
+                    tasks=page_tasks,
+                    title=title,
+                    pagination=pagination,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_volunteers=n_volunteers,
+                    n_completed_tasks=n_completed_tasks,
+                    pro_features=pro)
+
+        return handle_content_type(data)
+
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
