@@ -44,8 +44,9 @@ class TestFavoritesAPI(TestAPI):
     def test_query_favorites_auth(self):
         """Test API Favorites works for user."""
         user = UserFactory.create()
+        user2 = UserFactory.create()
         task = TaskFactory.create(fav_user_ids=[user.id])
-        TaskFactory.create()
+        TaskFactory.create(fav_user_ids=[user2.id])
         res = self.app.get(self.url + '?api_key=%s' % user.api_key)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
