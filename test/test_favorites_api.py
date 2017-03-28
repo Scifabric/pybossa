@@ -119,6 +119,19 @@ class TestFavoritesAPI(TestAPI):
         assert user2.id in data['fav_user_ids'], data
 
     @with_context
+    def test_query_post_wrong_datafavorites_auth(self):
+        """Test API POST Favorites wrong data for user."""
+        user = UserFactory.create()
+        task = TaskFactory.create()
+        url = self.url + '?api_key=%s' % user.api_key
+        res = self.app.post(url, data=json.dumps(dict(task_id=task.id, id=3)))
+        print res.data
+        data = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert data['status_code'] == 415, data
+
+
+    @with_context
     def test_query_post_favorites_anon(self):
         """Test API POST Favorites works for anon."""
         res = self.app.post(self.url, data=json.dumps(dict(task_id=1)))

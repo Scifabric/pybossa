@@ -27,7 +27,7 @@ from api_base import APIBase
 from pybossa.core import task_repo
 from flask.ext.login import current_user, request
 from flask import Response, abort
-from werkzeug.exceptions import MethodNotAllowed, NotFound
+from werkzeug.exceptions import MethodNotAllowed, NotFound, Unauthorized
 from pybossa.core import ratelimits
 from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
@@ -69,9 +69,9 @@ class FavoritesAPI(APIBase):
             self.valid_args()
             data = json.loads(request.data)
             if (len(data.keys()) != 1) or ('task_id' not in data.keys()):
-                raise abort(415)
+                raise AttributeError
             if current_user.is_anonymous():
-                raise abort(401)
+                raise Unauthorized
             uid = current_user.id
             tasks = task_repo.get_task_favorited(uid, data['task_id'])
             if len(tasks) == 1:
