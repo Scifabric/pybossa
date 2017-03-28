@@ -998,6 +998,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         start_time = time.time()
         (count, page_tasks) = cached_projects.browse_tasks(project.get('id'), args)
         current_app.logger.debug("Browse Tasks data loading took %s seconds"%(time.time()-start_time))
+        first_task_id = cached_projects.first_task_id(project.get('id'));
 
         pagination = Pagination(page, per_page, count)
 
@@ -1030,7 +1031,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro,
                     records_per_page=records_per_page,
-                    filter_data=args)
+                    filter_data=args,
+                    first_task_id=first_task_id)
 
         return handle_content_type(data)
 

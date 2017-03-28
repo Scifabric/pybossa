@@ -136,6 +136,16 @@ def _pct_status(n_task_runs, n_answers):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def first_task_id(project_id):
+    """Return the oldest task id of a project"""
+    sql = text('''SELECT MIN(task.id) AS first_task_id FROM task
+                WHERE task.project_id=:project_id;
+                ''')
+
+    return session.scalar(sql, dict(project_id=project_id)) or 0
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(project_id):
     """Return number of tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
