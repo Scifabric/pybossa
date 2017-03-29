@@ -51,7 +51,7 @@ class Repository(object):
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
-                       if key != 'info']
+                       if key != 'info' and key != 'fav_user_ids']
         queries = []
         headlines = []
         order_by_ranks = []
@@ -61,6 +61,7 @@ class Repository(object):
             queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
                                                                        fulltextsearch)
             clauses = clauses + queries
+
         if len(clauses) != 1:
             return and_(*clauses), queries, headlines, order_by_ranks
         else:
@@ -136,6 +137,9 @@ class Repository(object):
     def _set_orderby_desc(self, query, model, limit,
                           last_id, offset, descending, orderby):
         """Return an updated query with the proper orderby and desc."""
+        if orderby == 'fav_user_ids':
+            n_favs = func.coalesce(func.array_length(model.fav_user_ids, 1), 0).label('n_favs')
+            query = query.add_column(n_favs)
         if orderby in ['created', 'updated', 'finish_time']:
             if descending:
                 query = query.order_by(desc(
@@ -145,10 +149,16 @@ class Repository(object):
             else:
                 query = query.order_by(cast(getattr(model, orderby), Date))
         else:
-            if descending:
-                query = query.order_by(desc(getattr(model, orderby)))
+            if orderby != 'fav_user_ids':
+                if descending:
+                    query = query.order_by(desc(getattr(model, orderby)))
+                else:
+                    query = query.order_by(getattr(model, orderby))
             else:
-                query = query.order_by(getattr(model, orderby))
+                if descending:
+                    query = query.order_by(desc("n_favs"))
+                else:
+                    query = query.order_by("n_favs")
         if last_id:
             query = query.limit(limit)
         else:

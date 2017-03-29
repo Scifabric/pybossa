@@ -38,6 +38,7 @@ from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo, blog_repo
+from pybossa.model import DomainObject
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -104,11 +105,13 @@ class APIBase(MethodView):
                 action='GET')
 
     def _create_json_response(self, query_result, oid):
-        import inspect
         if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
         for result in query_result:
+            # This is for n_favs orderby case
+            if not isinstance(result, DomainObject):
+                result = result[0]
             try:
                 if (result.__class__ != self.__class__):
                     (item, headline, rank) = result
@@ -125,7 +128,8 @@ class APIBase(MethodView):
                 items.append(datum)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
-                items.pop()
+                if len(items) > 0:
+                    items.pop()
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
