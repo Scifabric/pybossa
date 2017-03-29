@@ -977,6 +977,7 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>/<int:records_per_page>')
+@login_required
 @admin_or_subadmin_required
 def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
