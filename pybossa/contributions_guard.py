@@ -83,12 +83,10 @@ class ContributionsGuard(object):
 
     def _create_presented_time_key(self, task, user):
         """Create a Redis key for the presented time of a given task
-        to a given user. user must have a user_id. We only cache
-        presented time for users with a user_id to prevent calling
-        /cachePresentedTime directly.
+        to a given user. user must have a user_id.
         """
         user_id = user['user_id'] or None
-        return self.PRESENTED_KEY_PREFIX.format(user_id, task)
+        return self.PRESENTED_KEY_PREFIX.format(user_id, task.id)
 
     # OTP
 

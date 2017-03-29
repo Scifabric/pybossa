@@ -830,6 +830,9 @@ def task_presenter(short_name, task_id):
     guard = ContributionsGuard(sentinel.master)
     guard.stamp(task, get_user_id_or_ip())
 
+    if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
+        guard.stamp_presented_time(task, get_user_id_or_ip())
+
     if has_no_presenter(project):
         flash(gettext("Sorry, but this project is still a draft and does "
                       "not have a task presenter."), "error")
