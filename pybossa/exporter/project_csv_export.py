@@ -118,7 +118,7 @@ class ProjectCsvExporter(CsvExporter):
                 datafile.close()
 
     def download_name(self, project, ty):
-        return super(ProjectCsvExporter, self).download_name(project, ty, 'csv')
+        return super(ProjectCsvExporter, self).download_name(project, ty)
 
     def pregenerate_zip_files(self, project):
         print "%d (csv)" % project.id
