@@ -17,6 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from forms import (
+from .forms import (
     SearchForm,
     CategoryForm)

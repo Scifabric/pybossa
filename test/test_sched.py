@@ -206,7 +206,7 @@ class TestSched(sched.Helper):
             assert self.is_unique(at['id'], assigned_tasks), err_msg
         # Check that there are task runs saved with the external UID
         answers = task_repo.filter_task_runs_by(external_uid='1xa')
-        print answers
+        print(answers)
         err_msg = "There should be the same amount of task_runs than tasks"
         assert len(answers) == len(assigned_tasks), err_msg
         assigned_tasks_ids = sorted([at['id'] for at in assigned_tasks])

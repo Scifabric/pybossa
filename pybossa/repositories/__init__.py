@@ -174,13 +174,13 @@ class Repository(object):
         return query.all()
 
 
-from project_repository import ProjectRepository
-from user_repository import UserRepository
-from blog_repository import BlogRepository
-from task_repository import TaskRepository
-from auditlog_repository import AuditlogRepository
-from webhook_repository import WebhookRepository
-from result_repository import ResultRepository
+from .project_repository import ProjectRepository
+from .user_repository import UserRepository
+from .blog_repository import BlogRepository
+from .task_repository import TaskRepository
+from .auditlog_repository import AuditlogRepository
+from .webhook_repository import WebhookRepository
+from .result_repository import ResultRepository
 
 assert ProjectRepository
 assert UserRepository

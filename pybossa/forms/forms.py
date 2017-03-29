@@ -27,7 +27,7 @@ from flask.ext.babel import lazy_gettext, gettext
 
 from pybossa.core import project_repo, user_repo
 from pybossa.sched import sched_variants
-import validator as pb_validator
+from . import validator as pb_validator
 
 
 EMAIL_MAX_LENGTH = 254

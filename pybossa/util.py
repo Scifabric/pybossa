@@ -21,7 +21,6 @@ from functools import update_wrapper
 from flask_wtf import Form
 import csv
 import codecs
-import cStringIO
 from flask import abort, request, make_response, current_app
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
@@ -30,6 +29,14 @@ from flask.ext.login import current_user
 from math import ceil
 import json
 
+# Python 2/3 compatibility
+try:  # pragma: no cover
+    from StringIO import StringIO
+except ImportError:  # pragma: no cover
+    from io import StringIO
+
+# for python2/3 compatibility
+from six import string_types
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -144,7 +151,7 @@ def pretty_date(time=False):
     """
     import dateutil.parser
     now = datetime.now()
-    if type(time) is str or type(time) is unicode:
+    if isinstance(time, string_types):
         time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
@@ -261,7 +268,7 @@ class UnicodeWriter:
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         """Init method."""
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
+        self.queue = StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
@@ -385,7 +392,7 @@ def rank(projects):
     activity, number of volunteers, number of tasks and other criteria."""
     def earned_points(project):
         points = 0
-        if project['overall_progress'] != 100L:
+        if project['overall_progress'] != 100:
             points += 1000
         if not ('test' in project['name'].lower()
                 or 'test' in project['short_name'].lower()):

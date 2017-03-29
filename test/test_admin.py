@@ -430,7 +430,7 @@ class TestAdmin(web.Helper):
         self.signin()
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        print res.data
+        print(res.data)
         assert "juan jose" in res.data, "username should be searchable"
         # check with uppercase
         data = {'user': 'juan'}
@@ -1038,7 +1038,7 @@ class TestAdmin(web.Helper):
         url = '/admin/categories/del/%s' % obj.id
         category = obj.dictize()
         res = self.app_post_json(url, data=category)
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         err_msg = "Category should not be deleted"
         assert "Sorry" in data.get('flash'), data
@@ -1100,7 +1100,7 @@ class TestAdmin(web.Helper):
         url = '/admin/categories/del/%s' % obj.id
         category = obj.dictize()
         res = self.app.post(url, data=category, follow_redirects=True)
-        print res.data
+        print(res.data)
         err_msg = "Category should not be deleted"
         assert "Category deleted" not in res.data, err_msg
         assert category['name'] in res.data, err_msg
@@ -1167,7 +1167,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_project()
         res = self.app_get_json(url)
-        print res.data
+        print(res.data)
         err_msg = "It should return 200"
         data = json.loads(res.data)
         assert res.status_code == 200, err_msg

@@ -20,9 +20,8 @@ from default import with_context, Test
 from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
-from test_api import TestAPI
 from pybossa.core import db
-
+from . import TestAPI
 from factories import UserFactory
 
 

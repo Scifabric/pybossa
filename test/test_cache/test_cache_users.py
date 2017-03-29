@@ -98,7 +98,7 @@ class TestUsersCache(Test):
 
         first_in_rank = cached_users.rank_and_score(users[3].id)
         last_in_rank = cached_users.rank_and_score(users[0].id)
-        print first_in_rank
+        print(first_in_rank)
         assert first_in_rank['rank'] == 1, first_in_rank['rank']
         assert first_in_rank['score'] == 4, first_in_rank['score']
         assert last_in_rank['rank'] == 4, last_in_rank['rank']

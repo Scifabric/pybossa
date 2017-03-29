@@ -19,7 +19,7 @@
 import json
 from default import flask_app, with_context
 from mock import patch, Mock, mock_open
-from test_api import TestAPI
+from . import TestAPI
 import rsa
 
 class TestVmcpAPI(TestAPI):

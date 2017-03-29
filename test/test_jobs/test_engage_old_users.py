@@ -148,7 +148,7 @@ class TestNonContributors(Test):
             jobs.append(job)
 
         msg = "There should be one job."
-        print jobs
+        print(jobs)
         assert len(jobs) == 1,  msg
         job = jobs[0]
         args = job['args'][0]

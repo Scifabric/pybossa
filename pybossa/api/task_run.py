@@ -28,7 +28,7 @@ from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel
 from pybossa.contributions_guard import ContributionsGuard

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from test_api import TestAPI
+from . import TestAPI
 from factories import ProjectFactory
 
 

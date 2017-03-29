@@ -55,7 +55,7 @@ def get_key_to_hash(*args, **kwargs):
     for i in args:
         key_to_hash += ":%s" % i
     # Attach any kwargs
-    for key in sorted(kwargs.iterkeys()):
+    for key, val in sorted(kwargs.items()):
         key_to_hash += ":%s" % kwargs[key]
     return key_to_hash
 

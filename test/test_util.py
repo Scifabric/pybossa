@@ -53,7 +53,7 @@ class TestPybossaUtil(object):
     #     """Test CORS decorator works."""
     #     res = self.app.get('/api/app/1')
     #     err_msg = "CORS should be enabled"
-    #     print res.headers
+    #     print(res.headers)
     #     assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
     #     methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
     #     for m in methods:

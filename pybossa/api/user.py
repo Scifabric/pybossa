@@ -22,7 +22,7 @@ This package adds GET method for:
     * users
 
 """
-from api_base import APIBase, error, jsonpify, ratelimits, ratelimit
+from .api_base import APIBase, error, jsonpify, ratelimits, ratelimit
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed
 from flask import request

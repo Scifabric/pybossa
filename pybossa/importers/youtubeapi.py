@@ -19,9 +19,15 @@ from .base import BulkTaskImport, BulkImportException
 from flask.ext.babel import gettext
 from apiclient.discovery import build
 from apiclient.errors import HttpError
-from urlparse import urlparse, parse_qs
 import json
 import re
+
+# Python 2/3 compatibility
+try:  # pragma: no cover
+    from urlparse import urlparse, parse_qs
+except ImportError:  # pragma: no cover
+    from urllib.parse import urlparse, parse_qs
+
 
 class BulkTaskYoutubeImport(BulkTaskImport):
 

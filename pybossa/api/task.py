@@ -26,7 +26,7 @@ from flask import abort
 from werkzeug.exceptions import BadRequest
 from pybossa.model.task import Task
 from pybossa.core import result_repo
-from api_base import APIBase
+from .api_base import APIBase
 
 
 class TaskAPI(APIBase):

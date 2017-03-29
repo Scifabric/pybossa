@@ -17,11 +17,15 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import requests
-from StringIO import StringIO
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
-
 from .base import BulkTaskImport, BulkImportException
+
+# Python 2/3 compatibility
+try:  # pragma: no cover
+    from StringIO import StringIO
+except ImportError:  # pragma: no cover
+    from io import StringIO
 
 
 class BulkTaskCSVImport(BulkTaskImport):

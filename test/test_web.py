@@ -20,7 +20,13 @@ import json
 import os
 import shutil
 import zipfile
-from StringIO import StringIO
+
+# Python 2/3 compatibility
+try:  # pragma: no cover
+    from StringIO import StringIO
+except ImportError:  # pragma: no cover
+    from io import StringIO
+
 from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call, MagicMock
@@ -458,7 +464,7 @@ class TestWeb(web.Helper):
 
         self.create()
         res = self.app_get_json('/account/')
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -469,7 +475,7 @@ class TestWeb(web.Helper):
         assert data['pagination']['per_page'] == 24, err_msg
         # page 1 should also work
         res = self.app_get_json('/account/page/1')
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -551,7 +557,7 @@ class TestWeb(web.Helper):
 
             data = json.dumps(userdict)
             data += "}"
-            print data
+            print(data)
             res = self.app.post('/account/register', data=data,
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf})
@@ -939,7 +945,7 @@ class TestWeb(web.Helper):
                     email_addr="johndoe@example.com")
         res = self.app.post('/account/register', data=data,
                             follow_redirects=True)
-        print dir(mockredirect)
+        print(dir(mockredirect))
         mockredirect.assert_called_with('/')
 
     def test_register_confirmation_fails_without_key(self):
@@ -3193,7 +3199,7 @@ class TestWeb(web.Helper):
         import io
         self.register()
         user = user_repo.get_by(name='johndoe')
-        print user
+        print(user)
         url = '/account/johndoe/update'
         csrf = self.get_csrf(url)
         payload = {'avatar': (io.BytesIO(b"abcdef"), 'test.jpg'),
@@ -3809,7 +3815,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for the root user"
-        print res.data
+        print(res.data)
         assert "Root Message" in res.data, error_msg
         error_msg = "There should be a message for the user"
         assert "User Message" in res.data, error_msg
@@ -4033,7 +4039,7 @@ class TestWeb(web.Helper):
         exported_tasks = []
         n = 0
         for row in csvreader:
-            print row
+            print(row)
             if n != 0:
                 exported_tasks.append(row)
             else:

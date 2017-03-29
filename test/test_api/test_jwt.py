@@ -18,7 +18,7 @@
 import json
 from default import flask_app, with_context
 from mock import patch, Mock
-from test_api import TestAPI
+from . import TestAPI
 from factories import ProjectFactory
 from pybossa.auth import jwt_authorize_project
 
