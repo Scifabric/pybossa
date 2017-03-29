@@ -38,7 +38,8 @@ PYBOSSA.
 import json
 from pybossa.model.project import Project
 from sqlalchemy.sql import and_
-from sqlalchemy import cast, Text, func, Date, desc
+from sqlalchemy import cast, Text, func, desc
+from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
@@ -145,9 +146,9 @@ class Repository(object):
                 query = query.order_by(desc(
                                             cast(getattr(model,
                                                          orderby),
-                                                 Date)))
+                                                 TIMESTAMP)))
             else:
-                query = query.order_by(cast(getattr(model, orderby), Date))
+                query = query.order_by(cast(getattr(model, orderby), TIMESTAMP))
         else:
             if orderby != 'fav_user_ids':
                 if descending:
