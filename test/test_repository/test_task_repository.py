@@ -34,6 +34,38 @@ class TestTaskRepositoryForTaskQueries(Test):
         self.task_repo = TaskRepository(db)
 
 
+    def test_orderby(self):
+        """Test orderby."""
+        project = ProjectFactory.create()
+        task1 = TaskFactory.create(fav_user_ids=[1], project=project)
+        task2 = TaskFactory.create(fav_user_ids=None, project=project)
+        task3 = TaskFactory.create(fav_user_ids=[1, 2, 3], project=project)
+
+        task = self.task_repo.filter_tasks_by(orderby='id', desc=True,
+                                              project_id=project.id, limit=1)[0]
+        assert task == task3, (task, task3)
+
+        task = self.task_repo.filter_tasks_by(orderby='id', desc=False,
+                                              project_id=project.id, limit=1)[0]
+        assert task == task1, (task, task1)
+
+
+        task = self.task_repo.filter_tasks_by(orderby='created', desc=True,
+                                              project_id=project.id)[0]
+        assert task == task3, (task.id, task3.id)
+
+        task = self.task_repo.filter_tasks_by(orderby='created', desc=False,
+                                              project_id=project.id)[0]
+        assert task == task1, (task.created, task1.created)
+
+        task = self.task_repo.filter_tasks_by(orderby='fav_user_ids', desc=True,
+                                              project_id=project.id)[0][0]
+        assert task == task3, (task.id, task3.id)
+
+        task = self.task_repo.filter_tasks_by(orderby='fav_user_ids', desc=False,
+                                              project_id=project.id)[0][0]
+        assert task == task2, (task.fav_user_ids, task2.fav_user_ids)
+
     def test_handle_info_json_plain_text(self):
         """Test handle info in JSON as plain text works."""
         TaskFactory.create(info='answer')

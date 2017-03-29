@@ -49,6 +49,7 @@ from project import ProjectAPI
 from blogpost import BlogpostAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
@@ -98,6 +99,7 @@ register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
+register_api(FavoritesAPI, 'api_favorites', '/favorites', pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 

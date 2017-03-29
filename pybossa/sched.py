@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
-from sqlalchemy.sql import text, func
-from sqlalchemy import and_, not_
+from sqlalchemy.sql import func, desc
+from sqlalchemy import and_
+from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.core import db
@@ -60,13 +61,9 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                            Task.project_id==project_id,
                            Task.state != 'completed')\
                    .group_by(Task.id).order_by('taskcount')
-    if desc:
-        query = query.order_by(getattr(Task, orderby).desc())
-    else:
-        query = query.order_by(getattr(Task, orderby))
-    data = query.order_by(Task.id.asc()).limit(limit).offset(offset).all()
-    data = [task[0] for task in data]
-    return data
+    query = _set_orderby_desc(query, orderby, desc)
+    data = query.limit(limit).offset(offset).all()
+    return _handle_tuples(data)
 
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None,
@@ -110,35 +107,53 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                            external_uid=None, limit=1, offset=0,
                            orderby='priority_0', desc=True):
     """Get all available tasks for a given project and user."""
-    rows = None
     data = None
     if user_id and not user_ip and not external_uid:
         subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, user_id=user_id)
-        query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
-                                                Task.project_id == project_id,
-                                                Task.state != 'completed'))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
         if user_ip and not external_uid:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, user_ip=user_ip)
-            query = session.query(Task).filter(and_(not_(Task.id.in_(subquery.subquery())),
-                                                    Task.project_id == project_id,
-                                                    Task.state != 'completed'))
         else:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, external_uid=external_uid)
-            query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
-                                                    Task.project_id == project_id,
-                                                    Task.state != 'completed'))
 
-    if desc:
-        query = query.order_by(getattr(Task, orderby).desc())
-    else:
-        query = query.order_by(getattr(Task, orderby))
-    data = query.order_by(Task.id.asc()).limit(limit).offset(offset).all()
-    return data
+    query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
+                                            Task.project_id == project_id,
+                                            Task.state != 'completed'))
+    query = _set_orderby_desc(query, orderby, desc)
+    data = query.limit(limit).offset(offset).all()
+    return _handle_tuples(data)
 
 
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First')]
+
+
+def _set_orderby_desc(query, orderby, descending):
+    """Set order by to query."""
+    if orderby == 'fav_user_ids':
+        n_favs = func.coalesce(func.array_length(Task.fav_user_ids, 1), 0).label('n_favs')
+        query = query.add_column(n_favs)
+        if descending:
+            query = query.order_by(desc("n_favs"))
+        else:
+            query = query.order_by("n_favs")
+    else:
+        if descending:
+            query = query.order_by(getattr(Task, orderby).desc())
+        else:
+            query = query.order_by(getattr(Task, orderby))
+    query = query.order_by(Task.id.asc())
+    return query
+
+def _handle_tuples(data):
+    """Handle tuples when query returns several columns."""
+    tmp = []
+    for datum in data:
+        if isinstance(datum, DomainObject):
+            tmp.append(datum)
+        else:
+            tmp.append(datum[0])
+    return tmp
