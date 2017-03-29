@@ -970,9 +970,9 @@ def tasks(short_name):
 
     return handle_content_type(response)
 
-@blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
+@blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
-def tasks_browse(short_name, page):
+def tasks_browse(short_name, page=1):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
