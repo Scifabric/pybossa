@@ -427,6 +427,81 @@ class TestSched(sched.Helper):
                 assert self.is_unique(tr.external_uid, t.task_runs), err_msg
 
 
+    def test_newtask_breadth_orderby(self):
+        """Test SCHED breadth first works with orderby."""
+        project = ProjectFactory.create(info=dict(sched="breadth_first"))
+        task1 = TaskFactory.create(project=project, fav_user_ids=None)
+        task2 = TaskFactory.create(project=project, fav_user_ids=[1,2,3])
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'id', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'id', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'created', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'created', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'fav_user_ids', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'fav_user_ids', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+        assert data['fav_user_ids'] == task2.fav_user_ids, data
+
+
+    def test_newtask_default_orderby(self):
+        """Test SCHED depth first works with orderby."""
+        project = ProjectFactory.create(info=dict(sched="default"))
+        task1 = TaskFactory.create(project=project, fav_user_ids=None)
+        task2 = TaskFactory.create(project=project, fav_user_ids=[1,2,3])
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'id', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'id', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'created', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'created', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'fav_user_ids', False)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task1.id, data
+
+        url = "/api/project/%s/newtask?orderby=%s&desc=%s" % (project.id, 'fav_user_ids', True)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert data['id'] == task2.id, data
+        assert data['fav_user_ids'] == task2.fav_user_ids, data
+
 
     @with_context
     def test_user_01_newtask(self):
@@ -1178,6 +1253,21 @@ class TestGetBreadthFirst(Test):
         assert out1[0].id == tasks[2].id, out1
         out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='created', desc=False)
         assert out1[0].id == tasks[0].id, out1
+
+        # Now check that orderby works with fav_user_ids
+        t = task_repo.get_task(tasks[1].id)
+        t.fav_user_ids = [1, 2, 3, 4, 5]
+        task_repo.update(t)
+        t = task_repo.get_task(tasks[2].id)
+        t.fav_user_ids = [1, 2, 3]
+        task_repo.update(t)
+
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='fav_user_ids', desc=True)
+        assert out1[0].id == tasks[1].id, out1
+        assert out1[0].fav_user_ids == [1, 2, 3, 4, 5], out1[0].dictize()
+        out1 = pybossa.sched.get_breadth_first_task(project.id, orderby='fav_user_ids', desc=False, offset=1)
+        assert out1[0].id == tasks[2].id, out1[0].dictize()
+        assert out1[0].fav_user_ids == [1, 2, 3], out1
 
         # asking for a bigger offset (max 10)
         out2 = pybossa.sched.get_breadth_first_task(project.id, offset=11)
