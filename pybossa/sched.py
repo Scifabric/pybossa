@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
 from sqlalchemy.sql import func
-from sqlalchemy import and_, not_
+from sqlalchemy import and_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
