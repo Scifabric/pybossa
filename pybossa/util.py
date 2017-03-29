@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PyBossa utils."""
+from collections import OrderedDict
 from datetime import timedelta, datetime, date
 from functools import update_wrapper
 from flask_wtf import Form
@@ -120,13 +121,15 @@ def redirect_content_type(url, status=None):
     else:
         return redirect(url)
 
+
 def static_vars(**kwargs):
     def decorate(func):
         for k in kwargs:
             setattr(func, k, kwargs[k])
         return func
     return decorate
-    
+
+
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""
     @wraps(f)
@@ -699,3 +702,19 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
                                   admin_manual_url=admin_manual_url,
                                   server_url=server_url)
     return msg
+
+
+class AttrDict(OrderedDict):
+    def __getattr__(self, name):
+        if not name.startswith('_'):
+            return self[name]
+        return super(AttrDict, self).__getattr__(name)
+
+    def __setattr__(self, name, value):
+        if not name.startswith('_'):
+            self[name] = value
+        else:
+            super(AttrDict, self).__setattr__(name, value)
+
+    def dictize(self):
+        return self

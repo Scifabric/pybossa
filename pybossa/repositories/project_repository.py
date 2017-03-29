@@ -18,6 +18,7 @@
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import cast, Date
+from sqlalchemy.sql import text
 
 from pybossa.repositories import Repository
 from pybossa.model.project import Project
@@ -25,6 +26,7 @@ from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
+from pybossa.util import AttrDict
 
 
 class ProjectRepository(Repository):
@@ -156,3 +158,143 @@ class ProjectRepository(Repository):
         uploader.delete_file(csv_tasks_filename, container)
         uploader.delete_file(json_taskruns_filename, container)
         uploader.delete_file(csv_taskruns_filename, container)
+
+    def get_projects_report(self, base_url):
+        sql = text(
+            '''WITH completed_tasks AS 
+              (
+                 SELECT
+                    task.project_id,
+                    COUNT(DISTINCT task.id) AS value,
+                    MAX(task_run.finish_time) AS ft 
+                 FROM task INNER JOIN task_run on task.id = task_run.task_id 
+                 WHERE task.state = 'completed' 
+                 GROUP BY task.project_id 
+              ), all_tasks AS 
+              (
+                 SELECT
+                    project_id,
+                    COUNT(task.id) AS value 
+                 FROM task 
+                 GROUP BY project_id 
+              ), workers AS 
+              (
+                 SELECT DISTINCT
+                    project_id,
+                    user_id,
+                    public.user.fullname,
+                    public.user.email_addr 
+                 FROM task_run INNER JOIN public.user ON task_run.user_id = public.user.id 
+              ), n_workers AS 
+              (
+                 SELECT
+                    project_id,
+                    COUNT(user_id) as value 
+                 FROM workers 
+                 GROUP BY project_id 
+              )
+              SELECT
+                 project.id,
+                 project.name,
+                 project.short_name,
+                 project.description,
+                 project.long_description,
+                 project.created,
+                 u.name as owner_name,
+                 u.email_addr as owner_email,
+                 (
+                    SELECT
+                       string_agg(concat('(', co.name, ';', co.email_addr, ')'), '|') 
+                    FROM project INNER JOIN project_coowner on project.id = project_coowner.project_id 
+                       INNER JOIN public.user as co ON project_coowner.coowner_id = co.id 
+                 )
+                 as coowners,
+                 category.name as category_name,
+                 project.allow_anonymous_contributors,
+                 (
+                    COALESCE(project.info::json ->> 'passwd_hash', 'null') != 'null' 
+                 )
+                 as password_protected,
+                 project.webhook,
+                 COALESCE(project.info::json ->> 'sched', 'default') as scheduler,
+                 completed_tasks.value IS NOT NULL as has_completed,
+                 completed_tasks.ft,
+                 CASE
+                    WHEN
+                       all_tasks.value = 0 
+                       OR completed_tasks.value IS NULL 
+                    THEN
+                       0 
+                    ELSE
+                       completed_tasks.value * 100 / all_tasks.value 
+                 END
+                 as percent_complete, COALESCE(all_tasks.value, 0) AS n_tasks, COALESCE(all_tasks.value, 0) - COALESCE(completed_tasks.value, 0) AS pending_tasks, COALESCE(n_workers.value, 0) as n_workers, 
+                 (
+                    SELECT
+                       n_answers 
+                    FROM
+                       task 
+                    WHERE
+                       project_id = project.id 
+                    ORDER BY
+                       task.id DESC LIMIT 1
+                 )
+                 as n_answers,
+                 (
+                    SELECT
+                       string_agg(concat('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|') 
+                    FROM
+                       workers 
+                    WHERE
+                       project.id = workers.project_id 
+                 )
+                 as workers 
+              FROM
+                 project 
+                 INNER JOIN
+                    public.user as u 
+                    on project.owner_id = u.id 
+                 INNER JOIN
+                    category 
+                    on project.category_id = category.id 
+                 LEFT OUTER JOIN
+                    completed_tasks 
+                    ON project.id = completed_tasks.project_id 
+                 LEFT OUTER JOIN
+                    all_tasks 
+                    ON project.id = all_tasks.project_id 
+                 LEFT OUTER JOIN
+                    n_workers 
+                    ON project.id = n_workers.project_id;''')
+
+        results = self.db.session.execute(sql)
+        projects = []
+
+        for row in results:
+            project = AttrDict([('id', row.id),
+              ('name', row.name),
+              ('short_name', row.short_name),
+              ('url', base_url + row.short_name),
+              ('description', row.description),
+              ('long_description', row.long_description),
+              ('created', row.created),
+              ('owner_name', row.owner_name),
+              ('owner_email', row.owner_email),
+              ('coowners', row.coowners),
+              ('category_name', row.category_name),
+              ('allow_anonymous_contributors', row.allow_anonymous_contributors),
+              ('password_protected', row.password_protected),
+              ('webhook', row.webhook),
+              ('scheduler', row.scheduler),
+              ('has_completed', row.has_completed),
+              ('finish_time', row.ft),
+              ('percent_complete', row.percent_complete),
+              ('n_tasks', row.n_tasks),
+              ('pending_tasks', row.pending_tasks),
+              ('n_workers', row.n_workers), 
+              ('n_answers', row.n_answers),
+              ('workers', row.workers)
+              ])
+
+            projects.append(project)
+        return projects

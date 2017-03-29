@@ -151,14 +151,17 @@ def setup_exporter(app):
     global task_csv_exporter
     global json_exporter
     global task_json_exporter
+    global project_csv_exporter
     from pybossa.exporter.csv_export import CsvExporter
     from pybossa.exporter.task_csv_export import TaskCsvExporter
     from pybossa.exporter.json_export import JsonExporter
     from pybossa.exporter.task_json_export import TaskJsonExporter
+    from pybossa.exporter.project_csv_export import ProjectCsvExporter
     csv_exporter = CsvExporter()
     task_csv_exporter = TaskCsvExporter()
     json_exporter = JsonExporter()
     task_json_exporter = TaskJsonExporter()
+    project_csv_exporter = ProjectCsvExporter()
 
 
 def setup_markdown(app):
