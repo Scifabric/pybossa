@@ -1818,4 +1818,4 @@ def reset_secret_key(short_name):
     cached_projects.delete_project(short_name)
     msg = gettext('New secret key generated')
     flash(msg, 'success')
-    return redirect(url_for('.update', short_name=short_name))
+    return redirect_content_type(url_for('.update', short_name=short_name))
