@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, desc
 from sqlalchemy import and_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
@@ -131,17 +131,17 @@ def sched_variants():
             ('depth_first', 'Depth First')]
 
 
-def _set_orderby_desc(query, orderby, desc):
+def _set_orderby_desc(query, orderby, descending):
     """Set order by to query."""
     if orderby == 'fav_user_ids':
         n_favs = func.coalesce(func.array_length(Task.fav_user_ids, 1), 0).label('n_favs')
         query = query.add_column(n_favs)
-        if desc:
-            query = query.order_by("n_favs").desc()
+        if descending:
+            query = query.order_by(desc("n_favs"))
         else:
             query = query.order_by("n_favs")
     else:
-        if desc:
+        if descending:
             query = query.order_by(getattr(Task, orderby).desc())
         else:
             query = query.order_by(getattr(Task, orderby))
