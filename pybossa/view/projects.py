@@ -76,6 +76,7 @@ blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
+DEFAULT_TASK_TIMEOUT = 60
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
@@ -1580,6 +1581,54 @@ def task_priority(short_name):
     else:
         flash(gettext('Please correct the errors'), 'error')
         return respond()
+
+
+@blueprint.route('/<short_name>/tasks/timeout', methods=['GET', 'POST'])
+@login_required
+def task_timeout(short_name):
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
+    title = project_title(project, gettext('Timeout'))
+    form = TaskTimeoutForm()
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    pro = pro_features()
+    if request.method == 'GET':
+        timeout = project.info.get('timeout')
+        if timeout is not None:
+            form.timeout.data = timeout
+        return render_template('/projects/task_timeout.html',
+                               title=title,
+                               form=form,
+                               project=project,
+                               owner=owner,
+                               pro_features=pro)
+    elif request.method == 'POST' and form.validate():
+        project = project_repo.get_by_shortname(short_name=project.short_name)
+        if project.info.get('timeout'):
+            old_timeout = project.info['timeout']
+        else:
+            old_timeout = DEFAULT_TASK_TIMEOUT
+        if form.timeout.data:
+            project.info['timeout'] = form.timeout.data
+        project_repo.save(project)
+        # Log it
+        if old_timeout != project.info['timeout']:
+            auditlogger.log_event(project, current_user, 'update', 'timeout',
+                                  old_timeout, project.info['timeout'])
+        msg = gettext("Project Task Timeout updated!")
+        flash(msg, 'success')
+
+        return redirect(url_for('.tasks', short_name=project.short_name))
+    else:
+        flash(gettext('Please correct the errors'), 'error')
+        return render_template('/projects/task_timeout.html',
+                               title=title,
+                               form=form,
+                               project=project,
+                               owner=owner,
+                               pro_features=pro)
 
 
 @blueprint.route('/<short_name>/blog')

@@ -23,6 +23,7 @@ from forms import (
     TaskPresenterForm,
     TaskRedundancyForm,
     TaskPriorityForm,
+    TaskTimeoutForm,
     TaskSchedulerForm,
     BlogpostForm,
     PasswordForm,

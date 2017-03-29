@@ -102,6 +102,15 @@ class TaskPriorityForm(Form):
                                                        value between 0.0 and 1.0'))])
 
 
+class TaskTimeoutForm(Form):
+    timeout = IntegerField(lazy_gettext('Timeout in minutes (default 60)'),
+                             [validators.Required(),
+                              validators.NumberRange(
+                                  min=5, max=120,
+                                  message=lazy_gettext('Timeout should be a \
+                                                       value between 5 and 120'))])
+
+
 class TaskSchedulerForm(Form):
     _translate_names = lambda variant: (variant[0], lazy_gettext(variant[1]))
     _choices = map(_translate_names, sched_variants())

@@ -26,9 +26,10 @@ class ContributionsGuard(object):
     STAMP_TTL = 60 * 60
     OTP_TTL = 60 * 5
 
-    def __init__(self, redis_conn):
+    def __init__(self, redis_conn, timeout=None):
         self.conn = redis_conn
-
+        if timeout:
+            self.STAMP_TTL = timeout
 
     # Task requested guards
 
