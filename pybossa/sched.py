@@ -190,6 +190,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
 
     skipped = 0
     for task_id, taskcount, n_answers, timeout in rows:
+        timeout = timeout or TIMEOUT
         remaining = n_answers - taskcount
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
             if skipped == offset:
@@ -230,7 +231,7 @@ def get_project_scheduler_and_timeout(project_id):
     scheduler = project.info.get('sched', 'default')
     timeout = project.info.get('timeout', TIMEOUT)
     if scheduler == 'default':
-        return DEFAULT_SCHEDULER
+        scheduler = DEFAULT_SCHEDULER
     return scheduler, timeout
 
 
