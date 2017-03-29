@@ -63,7 +63,6 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                    .group_by(Task.id).order_by('taskcount')
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
-    #data = [task[0] for task in data]
     return _handle_tuples(data)
 
 
@@ -108,27 +107,20 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                            external_uid=None, limit=1, offset=0,
                            orderby='priority_0', desc=True):
     """Get all available tasks for a given project and user."""
-    rows = None
     data = None
     if user_id and not user_ip and not external_uid:
         subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, user_id=user_id)
-        query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
-                                                Task.project_id == project_id,
-                                                Task.state != 'completed'))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
         if user_ip and not external_uid:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, user_ip=user_ip)
-            query = session.query(Task).filter(and_(not_(Task.id.in_(subquery.subquery())),
-                                                    Task.project_id == project_id,
-                                                    Task.state != 'completed'))
         else:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, external_uid=external_uid)
-            query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
-                                                    Task.project_id == project_id,
-                                                    Task.state != 'completed'))
 
+    query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
+                                            Task.project_id == project_id,
+                                            Task.state != 'completed'))
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
     return _handle_tuples(data)
