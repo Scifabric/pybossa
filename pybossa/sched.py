@@ -161,7 +161,8 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
 
 
 def get_locked_task(project_id, user_id=None, user_ip=None,
-                    external_uid=None, offset=0):
+                    external_uid=None, limit=1, offset=0,
+                    orderby='priority_0', desc=True):
     """ Select a new task to be returned to the contributor.
 
     For each incomplete task, check if the number of users working on the task

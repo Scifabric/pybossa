@@ -76,7 +76,7 @@ blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
-DEFAULT_TASK_TIMEOUT = 60
+DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
@@ -827,7 +827,8 @@ def task_presenter(short_name, task_id):
     if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
 
-    guard = ContributionsGuard(sentinel.master)
+    guard = ContributionsGuard(sentinel.master,
+                               timeout=project.info.get('timeout'))
     guard.stamp(task, get_user_id_or_ip())
 
     if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
@@ -1600,7 +1601,7 @@ def task_timeout(short_name):
     if request.method == 'GET':
         timeout = project.info.get('timeout')
         if timeout is not None:
-            form.timeout.data = timeout
+            form.timeout.data = timeout / 60
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
@@ -1614,10 +1615,10 @@ def task_timeout(short_name):
         else:
             old_timeout = DEFAULT_TASK_TIMEOUT
         if form.timeout.data:
-            project.info['timeout'] = form.timeout.data
+            project.info['timeout'] = form.timeout.data * 60
         project_repo.save(project)
         # Log it
-        if old_timeout != project.info['timeout']:
+        if old_timeout != project.info.get('timeout'):
             auditlogger.log_event(project, current_user, 'update', 'timeout',
                                   old_timeout, project.info['timeout'])
         msg = gettext("Project Task Timeout updated!")

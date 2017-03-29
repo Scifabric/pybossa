@@ -126,14 +126,14 @@ def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        tasks = _retrieve_new_task(project_id)
+        tasks, timeout = _retrieve_new_task_with_timeout(project_id)
 
         if type(tasks) is Response:
             return tasks
 
         # If there is a task for the user, return it
         if tasks is not None:
-            guard = ContributionsGuard(sentinel.master)
+            guard = ContributionsGuard(sentinel.master, timeout=timeout)
             for task in tasks:
                 guard.stamp(task, get_user_id_or_ip())
                 if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
@@ -153,7 +153,7 @@ def new_task(project_id):
         return error.format_exception(e, target='project', action='GET')
 
 
-def _retrieve_new_task(project_id):
+def _retrieve_new_task_with_timeout(project_id):
 
     project = project_repo.get(project_id)
 
@@ -206,7 +206,7 @@ def _retrieve_new_task(project_id):
                           limit,
                           orderby=orderby,
                           desc=desc)
-    return task
+    return task, project.info.get('timeout')
 
 
 @jsonpify
