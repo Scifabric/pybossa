@@ -48,26 +48,27 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 
 
 def can_post(project_id, task_id, user_id):
-    scheduler = get_project_scheduler(project_id)
+    scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == 'locked_scheduler':
-        return has_lock(project_id, task_id, user_id)
+        return has_lock(project_id, task_id, user_id, timeout)
     else:
         return True
 
 
 def can_read_task(task, user):
     project_id = task.project_id
-    scheduler = get_project_scheduler(project_id)
+    scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == 'locked_scheduler':
-        return has_read_access(user) or has_lock(project_id, task.id, user.id)
+        return has_read_access(user) or has_lock(project_id, task.id, user.id,
+                                                 timeout)
     else:
         return True
 
 
 def after_save(project_id, task_id, user_id):
-    scheduler = get_project_scheduler(project_id)
+    scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == 'locked_scheduler':
-        release_lock(project_id, task_id, user_id)
+        release_lock(project_id, task_id, user_id, timeout)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -173,7 +174,10 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     if offset > 2:
         raise BadRequest()
     sql = text('''
-           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+              (SELECT info->'timeout'
+               FROM project
+               WHERE id=:project_id) as timeout
            FROM task
            LEFT JOIN task_run ON (task.id = task_run.task_id)
            WHERE NOT EXISTS
@@ -185,9 +189,9 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     rows = session.execute(sql, dict(project_id=project_id, user_id=user_id))
 
     skipped = 0
-    for task_id, taskcount, n_answers in rows:
+    for task_id, taskcount, n_answers, timeout in rows:
         remaining = n_answers - taskcount
-        if acquire_lock(project_id, task_id, user_id, remaining):
+        if acquire_lock(project_id, task_id, user_id, remaining, timeout):
             if skipped == offset:
                 return [session.query(Task).get(task_id)]
             else:
@@ -199,20 +203,20 @@ KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
 TIMEOUT = ContributionsGuard.STAMP_TTL
 
 
-def has_lock(project_id, task_id, user_id):
-    lock_manager = LockManager(sentinel.master, TIMEOUT)
+def has_lock(project_id, task_id, user_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
     key = get_key(project_id, task_id)
     return lock_manager.has_lock(key, user_id)
 
 
-def acquire_lock(project_id, task_id, user_id, limit):
-    lock_manager = LockManager(sentinel.master, TIMEOUT)
+def acquire_lock(project_id, task_id, user_id, limit, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
     key = get_key(project_id, task_id)
     return lock_manager.acquire_lock(key, user_id, limit)
 
 
-def release_lock(project_id, task_id, user_id):
-    lock_manager = LockManager(sentinel.master, TIMEOUT)
+def release_lock(project_id, task_id, user_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
     key = get_key(project_id, task_id)
     lock_manager.release_lock(key, user_id)
 
@@ -221,12 +225,13 @@ def get_key(project_id, task_id):
     return KEY_PREFIX.format(project_id, task_id)
 
 
-def get_project_scheduler(project_id):
+def get_project_scheduler_and_timeout(project_id):
     project = project_repo.get(project_id)
     scheduler = project.info.get('sched', 'default')
+    timeout = project.info.get('timeout', TIMEOUT)
     if scheduler == 'default':
         return DEFAULT_SCHEDULER
-    return scheduler
+    return scheduler, timeout
 
 
 def has_read_access(user):
