@@ -1616,8 +1616,8 @@ class TestWeb(web.Helper):
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
-    def test_upload_thumbnail_json(self):
-        """Test WEB JSON upload thumbnail."""
+    def test_upload_thumbnail(self):
+        """Test WEB Project upload thumbnail."""
         import io
         owner = UserFactory.create()
         project = ProjectFactory.create(owner=owner)
