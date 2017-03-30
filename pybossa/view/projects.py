@@ -639,7 +639,7 @@ def import_task(short_name):
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
-        raise abort(404)
+        return abort(404)
     form = GenericBulkTaskImportForm()(importer_type, request.body)
     template_args['form'] = form
 
