@@ -39,5 +39,7 @@ class UserFactory(BaseFactory):
     pro = False
     subscribed = True
     privacy_mode = True
-    api_key =  factory.Sequence(lambda n: u'api-key%d' % n)
-    info = dict(foo='bar')
+    api_key = factory.Sequence(lambda n: u'api-key%d' % n)
+    info = dict(foo='bar', container='container',
+                avatar='img.png',
+                avatar_url='http://cdn.com/container/img.png')
