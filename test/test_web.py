@@ -1616,6 +1616,27 @@ class TestWeb(web.Helper):
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
+    def test_upload_thumbnail_json(self):
+        """Test WEB JSON upload thumbnail."""
+        import io
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/update?api_key=%s' % (project.short_name,
+                                                 owner.api_key)
+        avatar = (io.BytesIO(b'test'), 'test_file.jpg')
+        payload = dict(btn='Upload', avatar=avatar,
+                       id=project.id, x1=0, y1=0,
+                       x2=100, y2=100)
+        res = self.app.post(url, follow_redirects=True,
+                            content_type="multipart/form-data", data=payload)
+        assert res.status_code == 200
+        p = project_repo.get(project.id)
+        assert p.info['thumbnail'] is not None
+        assert p.info['container'] is not None
+        thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
+        assert p.info['thumbnail_url'] == thumbnail_url
+
+
     @with_context
     def test_05d_get_nonexistant_project_update_json(self):
         """Test WEB JSON get non existant project update should return 404"""
