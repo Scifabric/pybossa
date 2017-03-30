@@ -44,7 +44,8 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
-                          handle_content_type, redirect_content_type)
+                          handle_content_type, redirect_content_type,
+                          get_avatar_url)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -512,6 +513,10 @@ def update(short_name):
                     uploader.delete_file(project.info['thumbnail'], container)
                 project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                thumbnail_url = get_avatar_url(uploader, upload_method,
+                                               _file.filename, container)
+                project.info['thumbnail_url'] = thumbnail_url
                 project_repo.save(project)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
