@@ -265,6 +265,7 @@ class TaskRepository(Repository):
 
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+        cached_projects.delete_browse_tasks(project.id)
 
     def find_duplicate(self, project_id, info):
         """
