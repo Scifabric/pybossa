@@ -514,7 +514,7 @@ def update(short_name):
                 project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
                 upload_method = current_app.config.get('UPLOAD_METHOD')
-                thumbnail_url = get_avatar_url(uploader, upload_method,
+                thumbnail_url = get_avatar_url(upload_method,
                                                _file.filename, container)
                 project.info['thumbnail_url'] = thumbnail_url
                 project_repo.save(project)

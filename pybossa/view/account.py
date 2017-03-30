@@ -478,7 +478,7 @@ def _handle_avatar_update(user, avatar_form):
         if user.info.get('avatar'):
             uploader.delete_file(user.info['avatar'], container)
         upload_method = current_app.config.get('UPLOAD_METHOD')
-        avatar_url = get_avatar_url(uploader, upload_method,
+        avatar_url = get_avatar_url(upload_method,
                                     _file.filename, container)
         user.info = {'avatar': _file.filename,
                      'container': container,
