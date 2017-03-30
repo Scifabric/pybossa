@@ -462,7 +462,7 @@ def fuzzyboolean(value):
     raise ValueError("Invalid literal for boolean(): {}".format(value))
 
 
-def get_avatar_url(uploader, upload_method, avatar, container):
+def get_avatar_url(upload_method, avatar, container):
     """Return absolute URL for avatar."""
     if upload_method.lower() == 'rackspace':
         return url_for('rackspace',

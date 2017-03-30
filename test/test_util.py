@@ -746,6 +746,15 @@ class TestRankProjects(object):
         assert ranked[3]['name'] == 'fourth', ranked[3]['name']
         assert ranked[4]['name'] == 'last', ranked[4]['name']
 
+    @patch('pybossa.util.url_for')
+    def test_get_avatar_url(self, mock_url_for):
+        """Test get_avatar_url works."""
+        util.get_avatar_url('rackspace', '1.png', '1')
+        mock_url_for.assert_called_with('rackspace', container='1', filename='1.png')
+
+        util.get_avatar_url('local', '1.png', '1')
+        mock_url_for.assert_called_with('uploads.uploaded_file', filename='1/1.png')
+
 
 class TestJSONEncoder(object):
 
