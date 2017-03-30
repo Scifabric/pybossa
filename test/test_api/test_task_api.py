@@ -423,6 +423,20 @@ class TestTaskAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    def test_task_put_with_fav_user_ids_fields_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        data = {'fav_user_ids': [1,2,3]}
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
+
     @with_context
     def test_task_update(self):
         """Test API task update"""
@@ -591,7 +605,6 @@ class TestTaskAPI(TestAPI):
                     call('1_project1_task_run_json.zip', 'user_1'),
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
-
 
     @with_context
     def test_delete_task_cascade(self):
