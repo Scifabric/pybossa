@@ -501,7 +501,6 @@ def update(short_name):
                 _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
-                print coordinates
                 prefix = time.time()
                 _file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
