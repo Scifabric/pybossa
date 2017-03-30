@@ -22,7 +22,7 @@ from flask_wtf import Form
 import csv
 import codecs
 import cStringIO
-from flask import abort, request, make_response, current_app
+from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
@@ -460,3 +460,14 @@ def fuzzyboolean(value):
     if value in ('true', 'yes', 'on', 'y', '1',):
         return True
     raise ValueError("Invalid literal for boolean(): {}".format(value))
+
+
+def get_avatar_url(uploader, upload_method, avatar, container):
+    """Return absolute URL for avatar."""
+    if upload_method.lower() == 'rackspace':
+        return url_for('rackspace',
+                       filename=avatar,
+                       container=container)
+    else:
+        filename = container + '/' + avatar
+        return url_for('uploads.uploaded_file', filename=filename)
