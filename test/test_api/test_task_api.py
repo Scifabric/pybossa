@@ -394,6 +394,20 @@ class TestTaskAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    def test_task_post_with_reserved_fav_user_ids(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = {'fav_user_ids': [1, 2, 3],
+                'project_id': project.id}
+
+        res = self.app.post('/api/task?api_key=' + user.api_key,
+                            data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
+
     def test_task_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
