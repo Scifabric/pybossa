@@ -82,7 +82,7 @@ class TestWeb(web.Helper):
         projects = data.get('categories_projects').get(project.category.short_name)
         for cat in data.get('categories_projects').keys():
             for p in data.get('categories_projects')[cat]:
-                assert p['info'].keys() == Project().public_info_keys()
+                assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
         for p in data.get('top_projects'):
             assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
 
