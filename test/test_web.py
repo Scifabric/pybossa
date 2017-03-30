@@ -1616,7 +1616,7 @@ class TestWeb(web.Helper):
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
-    def test_upload_thumbnail(self):
+    def test_project_upload_thumbnail(self):
         """Test WEB Project upload thumbnail."""
         import io
         owner = UserFactory.create()
@@ -1636,6 +1636,24 @@ class TestWeb(web.Helper):
         thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
         assert p.info['thumbnail_url'] == thumbnail_url
 
+    def test_account_upload_avatar(self):
+        """Test WEB Account upload avatar."""
+        import io
+        owner = UserFactory.create()
+        url = '/account/%s/update?api_key=%s' % (owner.name,
+                                                 owner.api_key)
+        avatar = (io.BytesIO(b'test'), 'test_file.jpg')
+        payload = dict(btn='Upload', avatar=avatar,
+                       id=owner.id, x1=0, y1=0,
+                       x2=100, y2=100)
+        res = self.app.post(url, follow_redirects=True,
+                            content_type="multipart/form-data", data=payload)
+        assert res.status_code == 200
+        u = user_repo.get(owner.id)
+        assert u.info['avatar'] is not None
+        assert u.info['container'] is not None
+        avatar_url = '/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
+        assert u.info['avatar_url'] == avatar_url
 
     @with_context
     def test_05d_get_nonexistant_project_update_json(self):
