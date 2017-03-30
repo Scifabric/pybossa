@@ -34,7 +34,7 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
-    reserved_keys = set(['id', 'created', 'state'])
+    reserved_keys = set(['id', 'created', 'state', 'fav_user_ids'])
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
