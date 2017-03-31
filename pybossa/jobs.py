@@ -31,7 +31,7 @@ from pbsonesignal import PybossaOneSignal
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
-TASK_DELETE_TIMEOUT =  (10 * MINUTE)
+TASK_DELETE_TIMEOUT =  (60 * MINUTE)
 
 
 def schedule_job(function, scheduler):
