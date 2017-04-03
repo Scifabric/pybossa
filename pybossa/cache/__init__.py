@@ -123,6 +123,39 @@ def memoize(timeout=300):
     return decorator
 
 
+def memoize_essentials(timeout=300, essentials=[]):
+    """
+    Decorator for caching functions using its arguments as part of the key.
+
+    Essential arguments aren't hashed to make it possible to remove a group of cache entries
+
+    Returns the cached value, or the function if the cache is disabled
+
+    """
+    if timeout is None:
+        timeout = 300
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
+            essential_args = [args[i] for i in essentials]
+            key += get_key_to_hash(*essential_args) + ":"
+            key_to_hash = get_key_to_hash(*args, **kwargs)
+            key = get_hash_key(key, key_to_hash)
+            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+                output = sentinel.slave.get(key)
+                if output:
+                    return pickle.loads(output)
+                output = f(*args, **kwargs)
+                sentinel.master.setex(key, timeout, pickle.dumps(output))
+                return output
+            output = f(*args, **kwargs)
+            sentinel.master.setex(key, timeout, pickle.dumps(output))
+            return output
+        return wrapper
+    return decorator
+
+
 def delete_cached(key):
     """
     Delete a cached value from the cache.
@@ -149,6 +182,24 @@ def delete_memoized(function, *args, **kwargs):
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
             return bool(sentinel.master.delete(key))
+        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
+        if not keys_to_delete:
+            return False
+        return bool(sentinel.master.delete(*keys_to_delete))
+    return True
+
+
+def delete_memoized_essential(function, *args, **kwargs):
+    """
+    Use the essential arguments list to delete all matching memoized values from the cache.
+
+    Returns True if success or no cache is enabled
+
+    """
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+        key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
+        if args or kwargs:
+            key += get_key_to_hash(*args, **kwargs)
         keys_to_delete = sentinel.slave.keys(pattern=key + '*')
         if not keys_to_delete:
             return False

@@ -21,7 +21,7 @@ from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
 from pybossa.util import pretty_date, static_vars, convertUtcToEst, convertEstToUtc
-from pybossa.cache import memoize, cache, delete_memoized, delete_cached
+from pybossa.cache import memoize, cache, delete_memoized, delete_cached, memoize_essentials, delete_memoized_essential
 from datetime import datetime
 
 
@@ -59,7 +59,8 @@ def get_top(n=4):
         top_projects.append(Project().to_public_json(project))
     return top_projects
 
-@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+
+@memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0])
 @static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
@@ -523,7 +524,7 @@ def delete_project(short_name):
 
 def delete_browse_tasks(project_id):
     """Reset browse_tasks value in cache"""
-    delete_memoized(browse_tasks, project_id)
+    delete_memoized_essential(browse_tasks, project_id)
 
 
 def delete_n_tasks(project_id):
