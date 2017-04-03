@@ -12,6 +12,7 @@ intelligence (e.g. image classification, transcription, information location
 etc).
 
 Actividad subvencionada por el Ministerio de Educación, Cultura y Deporte
+
 ![Ministerio de Educación, Cultura y Deporte](http://i.imgur.com/4ShmIt1.jpg)
 
 PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
