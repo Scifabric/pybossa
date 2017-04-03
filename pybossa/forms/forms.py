@@ -530,7 +530,7 @@ class GenericUserImportForm(object):
 class MetadataForm(Form):
     """Form for admins to add metadata for users."""
     languages = SelectMultipleField(lazy_gettext('Language(s)'), choices=util.languages())
-    location = SelectField(lazy_gettext('Location'), choices=util.countries())
+    location = SelectMultipleField(lazy_gettext('Location'), choices=util.countries())
     start_time = TimeField(lazy_gettext('Start Time'),
         [TimeFieldsValidator(["end_time", "timezone"],
         message="Start time, End time, and Timezone must be filled out for submission")])

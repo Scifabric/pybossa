@@ -389,6 +389,7 @@ def _update_user_with_valid_email(user, email_addr):
 
 
 @blueprint.route('/profile', methods=['GET'])
+@login_required
 def redirect_profile():
     """Redirect method for profile."""
     if current_user.is_anonymous():  # pragma: no cover
@@ -825,6 +826,7 @@ def reset_api_key(name):
     else:
         csrf = dict(form=dict(csrf=generate_csrf()))
         return jsonify(csrf)
+
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
 @login_required

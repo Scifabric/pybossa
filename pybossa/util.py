@@ -822,7 +822,7 @@ def languages():
 
 
 def countries():
-    cts = [("", "")]
+    cts = []
     for ct in pycountry.countries:
         name = ct.name
         cts.append((name, name))
