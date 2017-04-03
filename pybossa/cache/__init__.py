@@ -123,7 +123,7 @@ def memoize(timeout=300):
     return decorator
 
 
-def memoize_essentials(timeout=300, essentials=[]):
+def memoize_essentials(timeout=300, essentials=None):
     """
     Decorator for caching functions using its arguments as part of the key.
 
@@ -134,6 +134,8 @@ def memoize_essentials(timeout=300, essentials=[]):
     """
     if timeout is None:
         timeout = 300
+    if essentials is None:
+        essentials = []
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
