@@ -44,7 +44,8 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
-                          handle_content_type, redirect_content_type)
+                          handle_content_type, redirect_content_type,
+                          get_avatar_url)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -500,7 +501,6 @@ def update(short_name):
                 _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
-                print coordinates
                 prefix = time.time()
                 _file.filename = "project_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
@@ -512,6 +512,10 @@ def update(short_name):
                     uploader.delete_file(project.info['thumbnail'], container)
                 project.info['thumbnail'] = _file.filename
                 project.info['container'] = container
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                thumbnail_url = get_avatar_url(upload_method,
+                                               _file.filename, container)
+                project.info['thumbnail_url'] = thumbnail_url
                 project_repo.save(project)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
@@ -634,7 +638,7 @@ def import_task(short_name):
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
-        raise abort(404)
+        return abort(404)
     form = GenericBulkTaskImportForm()(importer_type, request.body)
     template_args['form'] = form
 

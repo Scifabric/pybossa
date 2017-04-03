@@ -308,7 +308,8 @@ class TestUserAPI(Test):
         # Add user with fullname 'Private user', privacy mode enabled
         user_with_privacy_enabled = UserFactory(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
-                                    info=dict(container=1, avatar='png', extra='badge1.png'),
+                                    info=dict(container=1, avatar='png',
+                                             avatar_url='1png',extra='badge1.png'),
                                     privacy_mode=True)
 
         # When querying with private fields

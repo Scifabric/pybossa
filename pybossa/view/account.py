@@ -44,6 +44,7 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type
 from pybossa.util import get_user_signup_method
 from pybossa.util import redirect_content_type
+from pybossa.util import get_avatar_url
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -476,8 +477,12 @@ def _handle_avatar_update(user, avatar_form):
         # Delete previous avatar from storage
         if user.info.get('avatar'):
             uploader.delete_file(user.info['avatar'], container)
+        upload_method = current_app.config.get('UPLOAD_METHOD')
+        avatar_url = get_avatar_url(upload_method,
+                                    _file.filename, container)
         user.info = {'avatar': _file.filename,
-                     'container': container}
+                     'container': container,
+                     'avatar_url': avatar_url}
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your avatar has been updated! It may \

@@ -82,7 +82,7 @@ class TestWeb(web.Helper):
         projects = data.get('categories_projects').get(project.category.short_name)
         for cat in data.get('categories_projects').keys():
             for p in data.get('categories_projects')[cat]:
-                assert p['info'].keys() == Project().public_info_keys()
+                assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
         for p in data.get('top_projects'):
             assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
 
@@ -1615,6 +1615,45 @@ class TestWeb(web.Helper):
         # POST
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
+
+    def test_project_upload_thumbnail(self):
+        """Test WEB Project upload thumbnail."""
+        import io
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/update?api_key=%s' % (project.short_name,
+                                                 owner.api_key)
+        avatar = (io.BytesIO(b'test'), 'test_file.jpg')
+        payload = dict(btn='Upload', avatar=avatar,
+                       id=project.id, x1=0, y1=0,
+                       x2=100, y2=100)
+        res = self.app.post(url, follow_redirects=True,
+                            content_type="multipart/form-data", data=payload)
+        assert res.status_code == 200
+        p = project_repo.get(project.id)
+        assert p.info['thumbnail'] is not None
+        assert p.info['container'] is not None
+        thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
+        assert p.info['thumbnail_url'] == thumbnail_url
+
+    def test_account_upload_avatar(self):
+        """Test WEB Account upload avatar."""
+        import io
+        owner = UserFactory.create()
+        url = '/account/%s/update?api_key=%s' % (owner.name,
+                                                 owner.api_key)
+        avatar = (io.BytesIO(b'test'), 'test_file.jpg')
+        payload = dict(btn='Upload', avatar=avatar,
+                       id=owner.id, x1=0, y1=0,
+                       x2=100, y2=100)
+        res = self.app.post(url, follow_redirects=True,
+                            content_type="multipart/form-data", data=payload)
+        assert res.status_code == 200
+        u = user_repo.get(owner.id)
+        assert u.info['avatar'] is not None
+        assert u.info['container'] is not None
+        avatar_url = '/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
+        assert u.info['avatar_url'] == avatar_url
 
     @with_context
     def test_05d_get_nonexistant_project_update_json(self):

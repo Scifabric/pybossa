@@ -125,4 +125,4 @@ class Project(db.Model, DomainObject):
     @classmethod
     def public_info_keys(self):
         """Return a list of public info keys."""
-        return ['container', 'thumbnail']
+        return ['container', 'thumbnail', 'thumbnail_url']
