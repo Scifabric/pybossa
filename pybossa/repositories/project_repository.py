@@ -61,6 +61,7 @@ class ProjectRepository(Repository):
             self.db.session.add(project)
             self.db.session.commit()
             cached_projects.delete_project(project.short_name)
+            cached_projects.reset()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -72,6 +73,7 @@ class ProjectRepository(Repository):
             self.db.session.merge(project)
             self.db.session.commit()
             cached_projects.delete_project(project.short_name)
+            cached_projects.reset()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
@@ -83,6 +85,7 @@ class ProjectRepository(Repository):
         self.db.session.commit()
         cached_projects.delete_project(project.short_name)
         cached_projects.clean(project.id)
+        cached_projects.reset()
         self._delete_zip_files_from_store(project)
 
 
