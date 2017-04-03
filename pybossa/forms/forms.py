@@ -103,12 +103,16 @@ class TaskPriorityForm(Form):
 
 
 class TaskTimeoutForm(Form):
-    timeout = IntegerField(lazy_gettext('Timeout in minutes (default 60)'),
-                             [validators.Required(),
+    minimum = 5
+    maximum = 120
+    msg = 'Timeout should be a value between {} and {}'.format(minimum,
+                                                               maximum)
+    timeout = IntegerField(lazy_gettext('Timeout in minutes, from {} to {} (default 60)'
+                                        .format(minimum, maximum)),
+                              [validators.Required(),
                               validators.NumberRange(
-                                  min=5, max=120,
-                                  message=lazy_gettext('Timeout should be a \
-                                                       value between 5 and 120'))])
+                                  min=minimum, max=maximum,
+                                  message=lazy_gettext(msg))])
 
 
 class TaskSchedulerForm(Form):
