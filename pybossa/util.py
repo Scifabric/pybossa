@@ -478,7 +478,7 @@ def get_avatar_url(upload_method, avatar, container):
         return url_for('uploads.uploaded_file', filename=filename)
 
 
-def get_disqus_sso(user):
+def get_disqus_sso(user): # pragma: no cover
     # create a JSON packet of our data attributes
     # return a script tag to insert the sso message."""
     message, timestamp, sig, pub_key = get_disqus_sso_payload(user)

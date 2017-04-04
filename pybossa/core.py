@@ -596,7 +596,7 @@ def setup_jinja2_filters(app):
         return humanize.intword(obj)
 
     @app.template_filter('disqus_sso')
-    def _disqus_sso(obj):
+    def _disqus_sso(obj): # pragma: no cover
         return get_disqus_sso(obj)
 
 
