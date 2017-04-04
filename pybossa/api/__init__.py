@@ -35,6 +35,7 @@ from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
+from pybossa.util import get_disqus_sso_payload
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -56,6 +57,7 @@ from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
+from werkzeug.exceptions import MethodNotAllowed
 
 blueprint = Blueprint('api', __name__)
 
@@ -248,3 +250,25 @@ def auth_jwt_project(short_name):
             return abort(404)
     else:
         return abort(403)
+
+
+@jsonpify
+@blueprint.route('/disqus/sso')
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def get_disqus_sso_api():
+    """Return remote_auth_s3 and api_key for disqus SSO."""
+    try:
+        if current_user.is_authenticated():
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
+        else:
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
+
+        if message and timestamp and sig and pub_key:
+            remote_auth_s3 = "%s %s %s" % (message, sig, timestamp)
+            tmp = dict(remote_auth_s3=remote_auth_s3, api_key=pub_key)
+            return Response(json.dumps(tmp), mimetype='application/json')
+        else:
+            raise MethodNotAllowed
+    except MethodNotAllowed as e:
+        e.message = "Disqus keys are missing"
+        return error.format_exception(e, target='DISQUS_SSO', action='GET')

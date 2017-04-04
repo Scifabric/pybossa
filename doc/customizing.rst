@@ -909,3 +909,25 @@ Will return the page, but with the default configuration it will return a 404 if
     GET /about/
 
 To disable this behavior, just use the STRICT_SLASHES option and set it to False. That option willensure that both endpoints works with and without the trailing slash.
+
+.. _disqus:
+
+Disqus Single Sign On (SSO)
+===========================
+
+PYBOSSA supports Disqus SSO, however it is disabled by default. You need to register a Disqus application (see their `documentation`_) and then update your settings_local.py file with the following two keys::
+
+    DISQUS_SECRET_KEY
+    DISQUS_PUBLIC_KEY
+
+Then, this will enable you to use a new Jinja2 filter for authenticating PYBOSSA users directly in their Disqus server. The filter is *disqus_sso*. You can use it like this::
+
+    {% if current_user.is_authenticated() %}
+    {{ current_user | disqus_sso | safe }}
+    {% else %}
+    {{ None | disqus_sso | safe }}
+    {% endif %}
+
+Also, if you are building a Single Page Application, you can use our API endpoint: *api/disqus/sso* to get the credentials and authenticate the users within your javascript. Check the endpoint information :ref:`disqus-api`.
+
+.. _`documentation`: https://help.disqus.com/customer/portal/articles/236206
