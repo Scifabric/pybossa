@@ -576,7 +576,21 @@ this::
 
 As simple as that!
 
-User api endpint
+.. _disqus-api:
+
+Disqus Single Sign On (SSO)
+---------------------------
+
+If the PYBOSSA server is configured with Disqus SSO keys (see :ref:`disqus`), then you can
+get the authentication parameters in this endpoint: *api/disqus/sso*
+
+The endpoint will return a JSON object with two keys: *api_key* and *remote_auth_s3*. Use those values to authenticate the user in Disqus. Check their official documentation_.
+
+.. `Disqus SSO`: customizing.html#disqus-single-sign-on-sso
+.. _documentation:  https://help.disqus.com/customer/portal/articles/236206
+
+
+User api endpoint
 ----------------
 
 While all the other endpoints behave the same, this one is a bit special as we deal with private information
