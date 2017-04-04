@@ -57,6 +57,7 @@ from result import ResultAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
+from werkzeug.exceptions import MethodNotAllowed
 
 blueprint = Blueprint('api', __name__)
 
@@ -256,11 +257,18 @@ def auth_jwt_project(short_name):
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def get_disqus_sso_api():
     """Return remote_auth_s3 and api_key for disqus SSO."""
-    if current_user.is_authenticated():
-        message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
-    else:
-        message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
+    try:
+        if current_user.is_authenticated():
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
+        else:
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
 
-    remote_auth_s3 = "%s %s %s" % (message, sig, timestamp)
-    tmp = dict(remote_auth_s3=remote_auth_s3, api_key=pub_key)
-    return Response(json.dumps(tmp), mimetype='application/json')
+        if message and timestamp and sig and pub_key:
+            remote_auth_s3 = "%s %s %s" % (message, sig, timestamp)
+            tmp = dict(remote_auth_s3=remote_auth_s3, api_key=pub_key)
+            return Response(json.dumps(tmp), mimetype='application/json')
+        else:
+            raise MethodNotAllowed
+    except MethodNotAllowed as e:
+        e.message = "Disqus keys are missing"
+        return error.format_exception(e, target='DISQUS_SSO', action='GET')
