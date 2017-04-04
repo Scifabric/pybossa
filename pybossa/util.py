@@ -29,6 +29,11 @@ from functools import wraps
 from flask.ext.login import current_user
 from math import ceil
 import json
+import base64
+import hashlib
+import hmac
+import simplejson
+import time
 
 
 def last_flashed_message():
@@ -471,3 +476,36 @@ def get_avatar_url(upload_method, avatar, container):
     else:
         filename = container + '/' + avatar
         return url_for('uploads.uploaded_file', filename=filename)
+
+
+def get_disqus_sso(user):
+    # create a JSON packet of our data attributes
+    DISQUS_PUBLIC_KEY = current_app.config.get('DISQUS_PUBLIC_KEY')
+    DISQUS_SECRET_KEY = current_app.config.get('DISQUS_SECRET_KEY')
+    if user:
+        data = simplejson.dumps({
+            'id': user.id,
+            'username': user.name,
+            'email': user.email_addr,
+        })
+    else:
+        data = simplejson.dumps({})
+    # encode the data to base64
+    message = base64.b64encode(data)
+    # generate a timestamp for signing the message
+    timestamp = int(time.time())
+    # generate our hmac signature
+    sig = hmac.HMAC(DISQUS_SECRET_KEY, '%s %s' % (message, timestamp),
+                    hashlib.sha1).hexdigest()
+    # return a script tag to insert the sso message."""
+    return """<script type="text/javascript">
+    var disqus_config = function() {
+        this.page.remote_auth_s3 = "%(message)s %(sig)s %(timestamp)s";
+        this.page.api_key = "%(pub_key)s";
+    }
+    </script>""" % dict(
+        message=message,
+        timestamp=timestamp,
+        sig=sig,
+        pub_key=DISQUS_PUBLIC_KEY,
+    )
