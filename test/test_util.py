@@ -18,15 +18,17 @@
 import pybossa.util as util
 from mock import MagicMock
 from mock import patch
-from default import with_context
+from default import with_context, db, Test
 from datetime import datetime, timedelta
 from flask_wtf import Form
+from factories import UserFactory
 import calendar
 import time
 import csv
 import tempfile
 import os
 import json
+import hashlib
 
 
 def myjsonify(data):
@@ -37,9 +39,20 @@ def myrender(template, **data):
     return template, data
 
 
-class TestPybossaUtil(object):
+class TestPybossaUtil(Test):
 
-    # TODO: test these 2 decorators in a more unitary way. The following tests have
+    def setUp(self):
+        super(TestPybossaUtil, self).setUp()
+        with self.flask_app.app_context():
+            db.create_all()
+            self.redis_flushall()
+
+    def tearDown(self):
+        with self.flask_app.app_context():
+            db.drop_all()
+            self.redis_flushall()
+
+    # TODO: test this decorator in a more unitary way. The following tests have
     # been moved to test_api_common.py
     # def test_jsonpify(self):
     #     """Test jsonpify decorator works."""
@@ -49,18 +62,79 @@ class TestPybossaUtil(object):
     #     err_msg = "Status code should be 200"
     #     assert res.status_code == 200, err_msg
 
-    # def test_cors(self):
-    #     """Test CORS decorator works."""
-    #     res = self.app.get('/api/app/1')
-    #     err_msg = "CORS should be enabled"
-    #     print res.headers
-    #     assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
-    #     methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
-    #     for m in methods:
-    #         assert m in res.headers['Access-Control-Allow-Methods'], err_msg
-    #     assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
-    #     headers = 'CONTENT-TYPE, AUTHORIZATION'
-    #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_auth_user(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO payload auth works."""
+        user = UserFactory.create()
+
+        DISQUS_PUBLIC_KEY = 'public'
+        DISQUS_SECRET_KEY = 'secret'
+        patch_dict = {'DISQUS_PUBLIC_KEY': DISQUS_PUBLIC_KEY,
+                      'DISQUS_SECRET_KEY': DISQUS_SECRET_KEY}
+        data = json.dumps({'id': user.id,
+                           'username': user.name,
+                           'email': user.email_addr})
+
+        mock_b64encode.return_value = data
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            message, timestamp, sig, pub_key = util.get_disqus_sso_payload(user)
+            mock_b64encode.assert_called_with(data)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+                                         hashlib.sha1)
+            assert timestamp
+            assert sig
+            assert pub_key == DISQUS_PUBLIC_KEY
+
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_auth_user_no_keys(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO without keys works."""
+        user = UserFactory.create()
+        message, timestamp, sig, pub_key = util.get_disqus_sso_payload(user)
+        assert message is None
+        assert timestamp is None
+        assert sig is None
+        assert pub_key is None
+
+
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_anon_user(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO payload anon works."""
+
+        DISQUS_PUBLIC_KEY = 'public'
+        DISQUS_SECRET_KEY = 'secret'
+        patch_dict = {'DISQUS_PUBLIC_KEY': DISQUS_PUBLIC_KEY,
+                      'DISQUS_SECRET_KEY': DISQUS_SECRET_KEY}
+
+        data = json.dumps({})
+
+        mock_b64encode.return_value = data
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            message, timestamp, sig, pub_key = util.get_disqus_sso_payload(None)
+            mock_b64encode.assert_called_with(data)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+                                         hashlib.sha1)
+            assert timestamp
+            assert sig
+            assert pub_key == DISQUS_PUBLIC_KEY
+
+
+    @with_context
+    def test_disqus_sso_payload_anon_user_no_keys(self):
+        """Test Disqus SSO without keys anon works."""
+        message, timestamp, sig, pub_key = util.get_disqus_sso_payload(None)
+        assert message is None
+        assert timestamp is None
+        assert sig is None
+        assert pub_key is None
+
 
     @patch('pybossa.util.get_flashed_messages')
     def test_last_flashed_messages(self, mockflash):
