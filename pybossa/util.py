@@ -480,6 +480,23 @@ def get_avatar_url(upload_method, avatar, container):
 
 def get_disqus_sso(user):
     # create a JSON packet of our data attributes
+    # return a script tag to insert the sso message."""
+    message, timestamp, sig, pub_key = get_disqus_sso_payload(user)
+    return """<script type="text/javascript">
+    var disqus_config = function() {
+        this.page.remote_auth_s3 = "%(message)s %(sig)s %(timestamp)s";
+        this.page.api_key = "%(pub_key)s";
+    }
+    </script>""" % dict(
+        message=message,
+        timestamp=timestamp,
+        sig=sig,
+        pub_key=pub_key,
+    )
+
+
+def get_disqus_sso_payload(user):
+    """Return remote_auth_s3 and api_key for user."""
     DISQUS_PUBLIC_KEY = current_app.config.get('DISQUS_PUBLIC_KEY')
     DISQUS_SECRET_KEY = current_app.config.get('DISQUS_SECRET_KEY')
     if user:
@@ -497,15 +514,5 @@ def get_disqus_sso(user):
     # generate our hmac signature
     sig = hmac.HMAC(DISQUS_SECRET_KEY, '%s %s' % (message, timestamp),
                     hashlib.sha1).hexdigest()
-    # return a script tag to insert the sso message."""
-    return """<script type="text/javascript">
-    var disqus_config = function() {
-        this.page.remote_auth_s3 = "%(message)s %(sig)s %(timestamp)s";
-        this.page.api_key = "%(pub_key)s";
-    }
-    </script>""" % dict(
-        message=message,
-        timestamp=timestamp,
-        sig=sig,
-        pub_key=DISQUS_PUBLIC_KEY,
-    )
+
+    return message, timestamp, sig, DISQUS_PUBLIC_KEY
