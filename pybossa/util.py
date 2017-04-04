@@ -826,4 +826,4 @@ def countries():
     for ct in pycountry.countries:
         name = ct.name
         cts.append((name, name))
-    return cts
+    return sorted(cts)
