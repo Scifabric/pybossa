@@ -51,6 +51,7 @@ from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
 from pybossa.jobs import send_mail
 from pybossa.core import userimporter
+from pybossa.importers import BulkImportException
 
 blueprint = Blueprint('admin', __name__)
 
@@ -638,7 +639,7 @@ def userimport():
             try:
                 return _import_users(**form.get_import_data())
             except BulkImportException as err_msg:
-                flash(err_msg, 'error')
+                flash(gettext(str(err_msg)), 'error')
             except Exception as e:  # pragma: no cover
                 current_app.logger.error(e)
                 msg = 'Oops! Looks like there was an error!'

@@ -62,6 +62,16 @@ class BulkUserImport(object):
     def import_metadata(self):
         return None        
   
+    def _check_valid_headers(self, headers):
+        valid_headers = ["name", "fullname", "email_addr", "password", "project_slugs"]
+        res = [h in valid_headers for h in headers]
+        if False in res:
+            invalid_headers = []
+            [invalid_headers.append(headers[i]) for i, r in enumerate(res) if r == False]
+            msg = 'The file you uploaded has incorrect header(s): {0}'.format(','.join(invalid_headers))
+            raise BulkImportException(msg)
+
+            
     def _import_csv_users(self, csvreader):
         """Import users from CSV."""
         headers = []
@@ -72,6 +82,8 @@ class BulkUserImport(object):
                 headers = row
                 self._check_no_duplicated_headers(headers)
                 self._check_no_empty_headers(headers)
+                self._check_valid_headers(headers)
+
                 field_headers = set(headers)
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
