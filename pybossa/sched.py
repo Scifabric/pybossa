@@ -184,7 +184,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id AND task.state !='completed'
-           group by task.id ORDER BY priority_0 DESC, id ASC LIMIT 10;
+           group by task.id ORDER BY priority_0 DESC, id ASC LIMIT 100;
            ''')
     rows = session.execute(sql, dict(project_id=project_id, user_id=user_id))
 
