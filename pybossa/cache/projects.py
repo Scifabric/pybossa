@@ -417,7 +417,7 @@ def n_count(category):
                WHERE
                category.short_name=:category
                AND project.published=true
-               AND (project.info->>'passwd_hash') IS NULL
+               AND coalesce(project.hidden, false)=false
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
                ''')
