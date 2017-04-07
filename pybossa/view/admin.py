@@ -162,8 +162,8 @@ def users(user_id=None):
 @admin_required
 def export_users():
     """Export Users list in the given format, only for admins."""
-    exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin')
+    exportable_attributes = ('fullname', 'id', 'name', 'email_addr',
+                             'created', 'locale', 'admin', 'subadmin')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
@@ -199,11 +199,11 @@ def export_users():
         yield out.getvalue()
 
     def write_user(writer, user):
-        values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
+        values = [getattr(user, attr) for attr in exportable_attributes]
         writer.writerow(values)
 
     def add_headers(writer):
-        writer.writerow(sorted(exportable_attributes))
+        writer.writerow(exportable_attributes)
 
     export_formats = ["json", "csv"]
 
