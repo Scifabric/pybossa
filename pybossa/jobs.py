@@ -504,7 +504,11 @@ def delete_bulk_tasks(data):
     project_id = data['project_id']
     project_name = data['project_name']
     curr_user = data['curr_user']
+    coowners = data['coowners']
     force_reset = data['force_reset']
+    recipients=[curr_user]
+    for user in coowners:
+        recipients.append(user.email_addr)
 
     sql = text('''ALTER TABLE result DISABLE TRIGGER USER; ALTER TABLE task_run DISABLE TRIGGER USER; ALTER TABLE task DISABLE TRIGGER USER;''')
     db.session.execute(sql)
@@ -538,7 +542,7 @@ def delete_bulk_tasks(data):
     subject = 'Tasks deletion from %s' % project_name
     body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\
         % current_app.config.get('BRAND')
-    mail_dict = dict(recipients=[curr_user],
+    mail_dict = dict(recipients=recipients,
                      subject=subject, body=body)
     send_mail(mail_dict)
 
@@ -550,6 +554,9 @@ def import_tasks(project_id, from_auto=False, **form_data):
     project = project_repo.get(project_id)
     report = importer.create_tasks(task_repo, project, **form_data)
     cached_projects.delete_browse_tasks(project_id)
+    recipients = [project.owner.email_addr]
+    for user in project.coowners:
+        recipients.append(user.email_addr)
     if from_auto:
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)
@@ -558,7 +565,7 @@ def import_tasks(project_id, from_auto=False, **form_data):
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
-    mail_dict = dict(recipients=[project.owner.email_addr],
+    mail_dict = dict(recipients=recipients,
                      subject=subject, body=body)
     send_mail(mail_dict)
     # cleanup import file

@@ -1155,7 +1155,7 @@ def delete_tasks(short_name):
             flash(msg, 'success')
         else:
             data = {'project_id': project.id, 'project_name': project.name,
-                    'curr_user': current_user.email_addr, 'force_reset': force_reset}
+                    'curr_user': current_user.email_addr, 'force_reset': force_reset, 'coowners': project.coowners}
             task_queue.enqueue(delete_bulk_tasks, data)
             flash(gettext("You&#39;re trying to delete a large amount of tasks, so please be patient.\
                     You will receive an email when the tasks deletion is complete."))
