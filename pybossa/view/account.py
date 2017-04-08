@@ -170,6 +170,9 @@ def signin():
         password = form.password.data
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
+        if user and user.enabled == False:
+            flash(gettext("Your account is disabled"), 'error')
+            return redirect(url_for("home.home"))
         if user and user.check_password(password):
             if twofactor_auth == False:
                 msg_1 = gettext("Welcome back") + " " + user.fullname

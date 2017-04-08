@@ -704,6 +704,33 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
     return msg
 
 
+def generate_manage_user_email(user, operation):
+    if not user or not operation:
+        return None
+
+    server_url = current_app.config.get('SERVER_URL')
+    if (operation == "enable"):
+        msgtext = 'GIGwork Account Status Update\n\n'\
+                        'Your account {0} with GIGwork at {1} has been enabled.\n'\
+                        'You can now login with your account credentials.\n'\
+                        .format(user.email_addr, server_url)
+
+    elif (operation == "disable"):
+        msgtext = 'GIGwork Account Status Update\n\n'\
+                        'Your account {0} with GIGwork at {1} has been disabled.\n'\
+                        'To enable your account, please contact {2} at {3}.\n'\
+                        .format(user.email_addr, server_url,
+                                current_user.fullname, current_user.email_addr)
+    else:
+        return None
+
+    msg = dict(subject='Account update on GIGwork',
+               recipients=[user.email_addr],
+               bcc=[current_user.email_addr])
+    msg['html'] = msgtext
+    return msg
+
+
 class AttrDict(OrderedDict):
     def __getattr__(self, name):
         if not name.startswith('_'):

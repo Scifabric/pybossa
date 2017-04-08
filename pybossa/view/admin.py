@@ -37,6 +37,7 @@ from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.util import generate_invitation_email_for_admins_subadmins
+from pybossa.util import generate_manage_user_email
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
@@ -648,3 +649,74 @@ def userimport():
         else:
             flash(gettext('Please correct the errors'), 'error')
     return render_template('/admin/userimport.html', form=form)
+
+
+@blueprint.route('/manageusers', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manageusers(user_id=None):
+    """Enable/disable users of PyBossa."""
+    form = SearchForm(request.form)
+    users = [user for user in user_repo.filter_by(enabled=True)
+             if user.id != current_user.id]
+
+    if request.method == 'POST' and form.user.data:
+        query = form.user.data
+        found = [user for user in user_repo.search_by_name(query)
+                 if user.id != current_user.id]
+        [ensure_authorized_to('update', found_user) for found_user in found]
+        if not found:
+            flash("<strong>Ooops!</strong> We didn't find a user "
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+        return render_template('/admin/manageusers.html', found=found, users=users,
+                               title=gettext("Enable/Disable Users"),
+                               form=form)
+
+    return render_template('/admin/manageusers.html', found=[], users=users,
+                           title=gettext("Enable/Disable Users"), form=form)
+
+
+@blueprint.route('/users/enable_user/<int:user_id>')
+@login_required
+@admin_required
+def enable_user(user_id=None):
+    """Set enabled flag to True for user_id."""
+    try:
+        if user_id:
+            user = user_repo.get(user_id)
+            if user:
+                ensure_authorized_to('update', user)
+                user.enabled = True
+                user_repo.update(user)
+                msg = generate_manage_user_email(user, "enable")
+                if msg:
+                    mail_queue.enqueue(send_mail, msg)
+                return redirect(url_for(".manageusers"))
+        msg = "User not found"
+        return format_error(msg, 404)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)
+
+
+@blueprint.route('/users/disable_user/<int:user_id>')
+@login_required
+@admin_required
+def disable_user(user_id=None):
+    """Set enabled flag to False for user_id."""
+    try:
+        if user_id:
+            user = user_repo.get(user_id)
+            if user:
+                ensure_authorized_to('update', user)
+                user.enabled = False
+                user_repo.update(user)
+                msg = generate_manage_user_email(user, "disable")
+                if msg:
+                    mail_queue.enqueue(send_mail, msg)
+                return redirect(url_for('.manageusers'))
+        msg = "User not found"
+        return format_error(msg, 404)
+    except Exception as e:  # pragma: no cover
+        current_app.logger.error(e)
+        return abort(500)
