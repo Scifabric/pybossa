@@ -1019,10 +1019,6 @@ def tasks_browse(short_name, page=1, records_per_page=10):
             args["pcomplete_from"] = args["pcomplete_from"]*100
         if args.get("pcomplete_to"):
             args["pcomplete_to"] = args["pcomplete_to"]*100
-        if args.get("priority_from"):
-            args["priority_from"] = args["priority_from"]*100
-        if args.get("priority_to"):
-            args["priority_to"] = args["priority_to"]*100
         args["order_by"] = args.pop("order_by_dict", dict())
         args.pop("records_per_page", None)
         args.pop("offset", None)
@@ -1087,9 +1083,9 @@ def get_tasks_browse_args(args):
         else:
             raise ValueError('ftime_to date format error, value: %s'%args.get('ftime_to'))
     if args.get('priority_from'):
-        parsed_args["priority_from"] = float(args.get('priority_from')) / 100
+        parsed_args["priority_from"] = float(args.get('priority_from'))
     if args.get('priority_to'):
-        parsed_args["priority_to"] = float(args.get('priority_to')) / 100
+        parsed_args["priority_to"] = float(args.get('priority_to'))
     if args.get('display_columns'):
         parsed_args["display_columns"] = json.loads(args.get('display_columns'))
     if not isinstance(parsed_args.get("display_columns"), list):

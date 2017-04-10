@@ -82,8 +82,8 @@ def browse_tasks(project_id, args):
     total_count = 0
     for row in results:
         # TODO: use Jinja filters to format date
-        finish_time = convertUtcToEst(row.ft).strftime('%y-%m-%d %H:%M') if row.ft is not None else None
-        created = convertUtcToEst(row.created).strftime('%y-%m-%d %H:%M') if row.created is not None else None
+        finish_time = convertUtcToEst(row.ft).strftime('%m-%d-%y %H:%M') if row.ft is not None else None
+        created = convertUtcToEst(row.created).strftime('%m-%d-%y %H:%M') if row.created is not None else None
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time,
                     created=created)
