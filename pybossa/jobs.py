@@ -420,6 +420,9 @@ def warm_cache():  # pragma: no cover
 
     # Categories
     categories = cached_cat.get_used()
+    # rdiscrowd-489: commented following code as it caused db spikes
+    # during warm up cache loading password protected projects when in
+    # majority
     # for c in categories:
     #    projects = rank(cached_projects.get_all(c['short_name']))[:to_cache]
     #    for p in projects:
