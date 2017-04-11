@@ -117,7 +117,7 @@ class Exporter(object):
         filename = self.download_name(project, ty)
         if uploader.file_exists(filename, self._container(project)):
             uploader.delete_file(filename, self._container(project))
-            
+
     def get_zip(self, project, ty):
         """Delete existing ZIP file directly from uploads directory,
         generate one on the fly and upload it."""
@@ -131,7 +131,8 @@ class Exporter(object):
                             as_attachment=True,
                             attachment_filename=filename)
             # fail safe mode for more encoded filenames.
-            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # It seems Flask and Werkzeug do not support RFC 5987
+            # http://greenbytes.de/tech/tc2231/#encoding-2231-char
             # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
             return res
         else:

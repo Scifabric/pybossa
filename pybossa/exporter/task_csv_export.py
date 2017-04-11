@@ -116,31 +116,62 @@ class TaskCsvExporter(CsvExporter):
 
         return obj_dict
 
-    def _format_csv_row(self, row, ty):
-        keys = sorted(self.get_keys(row, ty))
-        values = [self.get_value(row, *k.split('__')[1:])  for k in keys]
-        return values
+    def _format_csv_row(self, row, ty, headers):
+        return [self.get_value(row, *header.split('__')[1:])
+                for header in headers]
 
-    def _handle_row(self, writer, t, ty):
+    def _handle_row(self, writer, t, ty, headers):
         normal_ty = filter(lambda char: char.isalpha(), ty)
-        writer.writerow(self._format_csv_row(self.merge_objects(t), ty=normal_ty))
+        writer.writerow(self._format_csv_row(self.merge_objects(t),
+                                             ty=normal_ty,
+                                             headers=headers))
 
     def _get_csv(self, out, writer, table, id):
         if table == 'task':
             filter_table =  task_repo.filter_tasks_by
-        # If table is task_run, user filter with additional data
+        # If table is task_run, use filter with additional data
         elif table == 'task_run':
             filter_table =  task_repo.filter_task_runs_with_task_and_user
         else:
             return
 
-        for tr in filter_table(project_id=id, yielded=True):
-            self._handle_row(writer, tr, table)
+        objs = filter_table(project_id=id, yielded=True)
+
+        # Get all headers to guarantee that all headers
+        # and column values line up appropriately
+        headers = self._get_all_headers(objs)
+        writer.writerow(headers)
+
+        # After headers are written, write all rows
+        for obj in objs:
+            self._handle_row(writer, obj, table, headers=headers)
         out.seek(0)
         yield out.read()
 
-    def _format_headers(self, t, ty):
-        obj_dict = self.merge_objects(t)
-        obj_name = t.__class__.__name__.lower()
+    def _get_all_headers(self, objs):
+        """Construct headers to **guarantee** that all headers
+        for all tasks are included, regardless of whether
+        or not all tasks were imported with the same headers.
+        """
+        obj_name = objs[0].__class__.__name__.lower()
+        headers = set()
+        for obj in objs:
+            headers = set(self._get_headers_from_row(obj, obj_name) + list(headers))
+        headers = sorted(list(headers))
+        return headers
+
+    def _get_headers_from_row(self, obj, obj_name):
+        obj_dict = self.merge_objects(obj)
         headers = self.get_keys(obj_dict, obj_name)
-        return sorted(headers)
+        return headers
+
+    def _respond_csv(self, ty, id):
+        out = tempfile.TemporaryFile()
+        writer = UnicodeWriter(out)
+
+        try:
+            return self._get_csv(out, writer, ty, id)
+        except:
+            def empty_csv(out):
+                yield out.read()
+            return empty_csv(out)
