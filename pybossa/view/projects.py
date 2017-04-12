@@ -75,7 +75,7 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
+MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 500
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
@@ -678,7 +678,7 @@ def _import_tasks(project, **form_data):
         if report.total > 0:
             cached_projects.delete_browse_tasks(project.id)
     else:
-        importer_queue.enqueue(import_tasks, project.id, **form_data)
+        importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You&#39;re trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
     return redirect_content_type(url_for('.tasks',
@@ -1155,7 +1155,8 @@ def delete_tasks(short_name):
             flash(msg, 'success')
         else:
             data = {'project_id': project.id, 'project_name': project.name,
-                    'curr_user': current_user.email_addr, 'force_reset': force_reset, 'coowners': project.coowners}
+                    'curr_user': current_user.email_addr, 'force_reset': force_reset,
+                    'coowners': project.coowners, 'current_user': current_user.fullname}
             task_queue.enqueue(delete_bulk_tasks, data)
             flash(gettext("You&#39;re trying to delete a large amount of tasks, so please be patient.\
                     You will receive an email when the tasks deletion is complete."))

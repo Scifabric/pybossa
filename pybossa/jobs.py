@@ -29,6 +29,7 @@ import pybossa.leaderboard.jobs as leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
 
+
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 TASK_DELETE_TIMEOUT =  (60 * MINUTE)
@@ -505,8 +506,9 @@ def delete_bulk_tasks(data):
     project_name = data['project_name']
     curr_user = data['curr_user']
     coowners = data['coowners']
+    current_user = data['current_user']
     force_reset = data['force_reset']
-    recipients=[curr_user]
+    recipients = [curr_user]
     for user in coowners:
         recipients.append(user.email_addr)
 
@@ -523,7 +525,7 @@ def delete_bulk_tasks(data):
         sql = text('''DELETE FROM task WHERE id IN (SELECT id FROM task WHERE project_id=:project_id);''')
         db.session.execute(sql, dict(project_id=project_id))
         db.session.commit()
-        msg = "All tasks, taskruns and results associated have been deleted from project {0}".format(project_name)
+        msg = "All tasks, taskruns and results associated have been deleted from project {0}".format(project_name) + " by " + current_user
     else:
         sql = text('''
                     DELETE FROM task WHERE task.project_id=:project_id
@@ -533,7 +535,7 @@ def delete_bulk_tasks(data):
                     ''')
         db.session.execute(sql, dict(project_id=project_id))
         db.session.commit()
-        msg = "Tasks and taskruns with no associated results have been deleted from project {0}".format(project_name)
+        msg = "Tasks and taskruns with no associated results have been deleted from project {0}".format(project_name) + " by " + current_user
 
     sql = text('''ALTER TABLE result ENABLE TRIGGER USER; ALTER TABLE task_run ENABLE TRIGGER USER; ALTER TABLE task ENABLE TRIGGER USER;''')
     db.session.execute(sql)
@@ -547,7 +549,7 @@ def delete_bulk_tasks(data):
     send_mail(mail_dict)
 
 
-def import_tasks(project_id, from_auto=False, **form_data):
+def import_tasks(project_id, current_user, from_auto=False, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
@@ -561,7 +563,7 @@ def import_tasks(project_id, from_auto=False, **form_data):
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)
         project_repo.save(project)
-    msg = report.message + ' to your project %s!' % project.name
+    msg = report.message + ' to your project %s' % project.name + " by " + current_user
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
