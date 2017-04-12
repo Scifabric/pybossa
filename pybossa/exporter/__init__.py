@@ -21,6 +21,8 @@ Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
 import os
+import datetime
+import uuid
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
 import tempfile
@@ -107,6 +109,23 @@ class Exporter(object):
         # TODO: Check if ty is valid
         name = self._project_name_latin_encoded(project)
         filename = '%s_%s_%s_%s.zip' % (str(project.id), name, ty, _format)  # Example: 123_feynman_tasks_json.zip
+        filename = secure_filename(filename)
+        return filename
+
+    def download_name_randomized(self, project, ty, _format):
+        """Generate a filename with identifying data in it, but
+        a randomly generated string appended to the end for obfuscation,
+        preventing anyone from guessing the filename.
+        """
+        name = self._project_name_latin_encoded(project)
+        fileuuid = uuid.uuid4().hex
+        filedate = datetime.date.strftime(datetime.date.today(), '%Y%M%d')
+        filename = '{0}_{1}_{2}_{3}_{4}_{5}.zip'.format(str(project.id),
+                                                        name,
+                                                        ty,
+                                                        _format,
+                                                        filedate,
+                                                        fileuuid)
         filename = secure_filename(filename)
         return filename
 

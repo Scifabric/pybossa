@@ -17,7 +17,8 @@ allowed_mime_types = ['application/pdf',
                       'text/plain',
                       'application/oda',
                       'text/html',
-                      'application/xml']
+                      'application/xml',
+                      'application/zip']
 
 
 def check_type(filename):
@@ -54,7 +55,7 @@ def s3_upload_from_string(string, filename, headers=None, directory=""):
     return s3_upload_tmp_file(tmp_file, filename, headers, directory)
 
 
-def s3_upload_file_storage(source_file, directory=""):
+def s3_upload_file_storage(source_file, directory="", public=False):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -62,16 +63,16 @@ def s3_upload_file_storage(source_file, directory=""):
     headers = {"Content-Type": source_file.content_type}
     tmp_file = NamedTemporaryFile(delete=False)
     source_file.save(tmp_file.name)
-    return s3_upload_tmp_file(tmp_file, filename, headers, directory)
+    return s3_upload_tmp_file(tmp_file, filename, headers, directory, public)
 
 
-def s3_upload_tmp_file(tmp_file, filename, headers, directory=""):
+def s3_upload_tmp_file(tmp_file, filename, headers, directory="", public=False):
     """
     Upload the content of a temporary file to s3 and delete the file
     """
     try:
         check_type(tmp_file.name)
-        url = s3_upload_file(tmp_file.name, filename, headers, directory)
+        url = s3_upload_file(tmp_file.name, filename, headers, directory, public)
     finally:
         os.unlink(tmp_file.name)
     return url
@@ -84,13 +85,14 @@ def form_upload_directory(directory, filename):
     return "/".join(part for part in parts if part)
 
 
-def s3_upload_file(source_file_name, target_file_name, headers, directory=""):
+def s3_upload_file(source_file_name, target_file_name, headers, directory="", public=False):
     """
-    Upload a file-type object to s3
+    Upload a file-type object to S3
     :param source_file_name: name in local file system of the file to upload
     :param target_file_name: file name as should appear in S3
     :param headers: a dictionary of headers to set on the S3 object
-    :param directory: path in s3 where the object needs to be stored
+    :param directory: path in S3 where the object needs to be stored
+    :param public: should the S3 object be publicly accessible
     """
     if "S3_BUCKET" not in app.config:
         raise InternalServerError("S3 bucket not configured")
@@ -105,5 +107,8 @@ def s3_upload_file(source_file_name, target_file_name, headers, directory=""):
     key.set_contents_from_filename(
         source_file_name, headers=headers,
         policy="bucket-owner-full-control")
+
+    if public:
+        key.make_public()
 
     return key.generate_url(0).split('?', 1)[0]

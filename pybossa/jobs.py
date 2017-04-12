@@ -33,6 +33,7 @@ import os
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
 TASK_DELETE_TIMEOUT =  (60 * MINUTE)
+EXPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
 def schedule_job(function, scheduler):
@@ -591,6 +592,55 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
             pass
 
     return msg
+
+
+def export_tasks(current_user_email_addr, short_name, ty, filetype):
+    """Export tasks/taskruns from a project."""
+    from pybossa.core import task_csv_exporter, task_json_exporter
+    from pybossa.cache import projects as cached_projects
+
+    url = None
+    project = cached_projects.get_project(short_name)
+
+    # Export data and upload to S3
+    if filetype == 'json':
+        try:
+            url = task_json_exporter.export_zip_to_s3(project, ty)
+        except:
+            pass
+    elif filetype == 'csv':
+        try:
+            url = task_csv_exporter.export_zip_to_s3(project, ty)
+        except:
+            pass
+
+    # Send an email to the user with the S3 URL or an error message
+    if url is not None:
+        msg = "Your data has been exported to S3. " + \
+                 "You can download it here: {0}"
+        msg = msg.format(url)
+        job_response = "{0} {1} file was successfully " + \
+                       "exported to S3 for: {2}"
+        job_response = job_response.format(ty.capitalize(),
+                                           filetype.upper(),
+                                           project.name)
+    else:
+        msg = "There was an issue with your export. " + \
+              "Please try again or report this issue " + \
+              "to a {0} administrator."
+        msg = msg.format(current_app.config.get('BRAND'))
+        job_response = "There was an error while trying to export" + \
+                       "{0} {1} file to S3 for: {2}"
+        job_response = job_response.format(ty.capitalize(),
+                                           filetype.upper(),
+                                           project.name)
+
+    subject = 'Tasks exported from your project: {0}'.format(project.name)
+    body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'.format(current_app.config.get('BRAND'))
+    mail_dict = dict(recipients=[current_user_email_addr], subject=subject, body=body)
+    send_mail(mail_dict)
+
+    return job_response
 
 
 def webhook(url, payload=None, oid=None):

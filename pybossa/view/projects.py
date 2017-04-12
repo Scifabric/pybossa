@@ -61,7 +61,10 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook, delete_bulk_tasks, TASK_DELETE_TIMEOUT
+from pybossa.jobs import (webhook,
+                          import_tasks, IMPORT_TASKS_TIMEOUT,
+                          delete_bulk_tasks, TASK_DELETE_TIMEOUT,
+                          export_tasks, EXPORT_TASKS_TIMEOUT)
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -89,6 +92,9 @@ webhook_queue = Queue('high', connection=sentinel.master)
 task_queue = Queue('medium',
                    connection=sentinel.master,
                    default_timeout=TASK_DELETE_TIMEOUT)
+export_queue = Queue('low',
+                     connection=sentinel.master,
+                     default_timeout=EXPORT_TASKS_TIMEOUT)
 
 
 def sanitize_project_owner(project, owner, current_user, ps=None):
@@ -1147,28 +1153,46 @@ def export_to(short_name):
     def respond_json(ty, expanded):
         if ty not in ('task', 'task_run'):
             return abort(404)
+
         try:
-            return task_json_exporter.response_zip(project, ty, expanded)
+            export_queue.enqueue(export_tasks,
+                                 current_user.email_addr,
+                                 short_name,
+                                 ty,
+                                 expanded,
+                                 'json')
+            flash(gettext('You will be emailed when your export has been completed.'),
+                  'success')
         except Exception as e:
             current_app.logger.exception(
                     'JSON Export Failed - Project: {0}, Type: {1} - Error: {2}'
                     .format(project.short_name, ty, e))
             flash(gettext('There was an error while exporting your data.'),
                   'error')
-            return respond()
+
+        return respond()
 
     def respond_csv(ty, expanded):
         if ty not in ('task', 'task_run'):
             return abort(404)
+
         try:
-            return task_csv_exporter.response_zip(project, ty, expanded)
+            export_queue.enqueue(export_tasks,
+                                 current_user.email_addr,
+                                 short_name,
+                                 ty,
+                                 expanded,
+                                 'csv')
+            flash(gettext('You will be emailed when your export has been completed.'),
+                  'success')
         except Exception as e:
             current_app.logger.exception(
                     'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
                     .format(project.short_name, ty, e))
             flash(gettext('There was an error while exporting your data.'),
                   'error')
-            return respond()
+
+        return respond()
 
     def create_ckan_datastore(ckan, table, package_id, records):
         new_resource = ckan.resource_create(name=table,
