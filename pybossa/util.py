@@ -709,25 +709,34 @@ def generate_manage_user_email(user, operation):
         return None
 
     server_url = current_app.config.get('SERVER_URL')
+
+    msgHeader = None
+    msgText = None
     if (operation == "enable"):
-        msgtext = 'GIGwork Account Status Update\n\n'\
-                        'Your account {0} with GIGwork at {1} has been enabled.\n'\
-                        'You can now login with your account credentials.\n'\
-                        .format(user.email_addr, server_url)
+        msgHeader = 'GIGwork Account Enabled'
+        msgText = 'Your account {0} with GIGwork at {1} has been enabled.'\
+                      'You can now login with your account credentials.'\
+                      .format(user.email_addr, server_url)
 
     elif (operation == "disable"):
-        msgtext = 'GIGwork Account Status Update\n\n'\
-                        'Your account {0} with GIGwork at {1} has been disabled.\n'\
-                        'To enable your account, please contact {2} at {3}.\n'\
-                        .format(user.email_addr, server_url,
-                                current_user.fullname, current_user.email_addr)
+        msgHeader = 'GIGwork Account Disabled'
+        msgText = 'Your account {0} with GIGwork at {1} has been disabled.'\
+                       'To enable your account, please contact {2} at {3}.'\
+                       .format(user.email_addr, server_url,
+                               current_user.fullname, current_user.email_addr)
     else:
         return None
+
+    if server_url == "https://qa.gigwork.net":
+        msgHeader = msgHeader + ' (QA Version)'
 
     msg = dict(subject='Account update on GIGwork',
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
-    msg['html'] = msgtext
+    msg['html'] = render_template('/account/email/manageuser.html',
+                                  username=user.fullname,
+                                  msgHeader=msgHeader,
+                                  msgText=msgText)
     return msg
 
 
