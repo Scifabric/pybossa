@@ -154,26 +154,17 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
         retry = 0
         csv_file = None
-        while retry < 5:
+        while retry < 10:
             try:
                 csv_file = FileStorage(open(csv_filename, 'r'))
                 break
             except IOError, e:
-                time.sleep(1)
+                time.sleep(2)
                 retry += 1
-                
-        if csv_file is None:
-           if (('text/plain' not in request.headers['content-type']) and
-                   ('text/csv' not in request.headers['content-type']) and
-                   ('multipart/form-data' not in request.headers['content-type'])):
-               msg = gettext("Oops! That file doesn't look like the right file.")
-               raise BulkImportException(msg, 'error')
 
-           request.encoding = 'utf-8'
-           csv_file = request.files['file']
-           if csv_file is None or csv_file.stream is None:
-               msg = ("Not a valid csv file for import")
-               raise BulkImportException(gettext(msg), 'error')
+        if csv_file is None or csv_file.stream is None:
+            msg = ("Unable to load csv file for import, file {0}".format(csv_filename))
+            raise BulkImportException(gettext(msg), 'error')
 
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))

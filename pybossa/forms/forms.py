@@ -34,6 +34,11 @@ from flask import request
 from werkzeug.utils import secure_filename
 from pybossa.core import uploader
 from pybossa.cache import projects as cached_projects
+from pybossa.uploader import local
+from flask import safe_join
+from flask.ext.login import current_user
+import os
+from flask import current_app
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -185,6 +190,20 @@ class BulkTaskLocalCSVImportForm(Form):
         return '.' in filename and \
             filename.rsplit('.', 1)[1] in self._allowed_extensions
 
+    def _container(self):
+        return "user_%d" % current_user.id
+
+    def _upload_path(self):
+        container = self._container()
+        if isinstance(uploader, local.LocalUploader):
+            filepath = safe_join(uploader.upload_folder, container)
+            if not os.path.isdir(filepath):
+                os.mkdirs(filepath)
+            return filepath
+
+        current_app.logger.error('Failed to generate upload path {0}'.format(filepath))
+        raise IOError('Local Upload folder is missing: {0}'.format(filepath))
+
     def get_import_data(self):
         if request.method == 'POST':
             if 'file' not in request.files:
@@ -196,9 +215,11 @@ class BulkTaskLocalCSVImportForm(Form):
                 return {'type': 'localcsv', 'csv_filename': None}
             if csv_file and self._allowed_file(csv_file.filename):
                 filename = secure_filename(csv_file.filename)
-                tmpfile = '{0}/{1}'.format(uploader.upload_folder, filename)
+                filepath = self._upload_path()
+                tmpfile = safe_join(filepath, filename)
                 with open(tmpfile, 'w') as fp:
                   fp.write(csv_file.stream.read())
+
                 return {'type': 'localcsv', 'csv_filename': tmpfile}
         return {'type': 'localcsv', 'csv_filename': None}
 
