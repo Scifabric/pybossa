@@ -75,7 +75,7 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 blueprint = Blueprint('project', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 500
+MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
