@@ -829,6 +829,7 @@ def reset_api_key(name):
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
+@admin_required
 @login_required
 def add_metadata(name):
     """
