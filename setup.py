@@ -59,6 +59,7 @@ requirements = [
     "readability-lxml>=0.6.2, <1.0"
 ]
 
+
 setup(
     name = 'pybossa',
     version = '2.3.6',
