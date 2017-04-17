@@ -721,9 +721,8 @@ def generate_manage_user_email(user, operation):
     elif (operation == "disable"):
         msgHeader = 'GIGwork Account Disabled'
         msgText = 'Your account {0} with GIGwork at {1} has been disabled.'\
-                       'To enable your account, please contact {2} at {3}.'\
-                       .format(user.email_addr, server_url,
-                               current_user.fullname, current_user.email_addr)
+                       'Please contact your GIGwork administrator about reinstating your account.'\
+                       .format(user.email_addr, server_url)
     else:
         return None
 
