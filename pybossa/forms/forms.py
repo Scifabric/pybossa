@@ -198,7 +198,7 @@ class BulkTaskLocalCSVImportForm(Form):
         if isinstance(uploader, local.LocalUploader):
             filepath = safe_join(uploader.upload_folder, container)
             if not os.path.isdir(filepath):
-                os.mkdirs(filepath)
+                os.makedirs(filepath)
             return filepath
 
         current_app.logger.error('Failed to generate upload path {0}'.format(filepath))
