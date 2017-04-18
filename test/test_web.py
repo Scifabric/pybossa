@@ -2491,6 +2491,44 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, res.status_code
 
     @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_18_task_status_wip_json(self, mock):
+        """Test WEB Task Status on going works"""
+        self.register()
+        self.new_project()
+
+        project = db.session.query(Project).first()
+        project.published = True
+        task = Task(project_id=project.id, n_answers=10)
+        db.session.add(task)
+        db.session.commit()
+        self.signout()
+
+        project = db.session.query(Project).first()
+
+        res = self.app_get_json('project/%s/tasks/browse' % (project.short_name))
+        data = json.loads(res.data)
+        err_msg = 'key missing'
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pagination' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'tasks' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+
+        assert "Sample Project" in data['title'], data
+        assert data['tasks'][0]['n_answers'] == 10, data
+
+        # For a non existing page
+        res = self.app_get_json('project/%s/tasks/browse/5000' % (project.short_name))
+        assert res.status_code == 404, res.status_code
+
+    @with_context
     def test_19_app_index_categories(self):
         """Test WEB Project Index categories works"""
         self.register()
