@@ -27,7 +27,7 @@ from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
 import pybossa.leaderboard.jobs as leaderboard
 from pbsonesignal import PybossaOneSignal
-
+import os
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
@@ -561,6 +561,12 @@ def import_tasks(project_id, from_auto=False, **form_data):
     mail_dict = dict(recipients=[project.owner.email_addr],
                      subject=subject, body=body)
     send_mail(mail_dict)
+    # cleanup import file
+    if 'csv_filename' in form_data:
+        try:
+            os.remove(form_data['csv_filename'])
+        except:
+            pass
     return msg
 
 
