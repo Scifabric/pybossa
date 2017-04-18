@@ -905,8 +905,12 @@ def tutorial(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    return render_template('/projects/tutorial.html', title=title,
-                           project=project, owner=owner)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+
+    response = dict(template='/projects/tutorial.html', title=title,
+                    project=project_sanitized, owner=owner_sanitized)
+
+    return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
