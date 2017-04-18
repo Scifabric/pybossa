@@ -2896,7 +2896,6 @@ class TestWeb(web.Helper):
         err_msg = 'project tutorial missing'
         assert 'My New Project' in data['title'], err_msg
 
-
     @with_context
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
@@ -2916,6 +2915,32 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/test-app/tutorial', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
         assert "some help" in res.data, err_msg
+
+    @with_context
+    def test_27_tutorial_anonymous_user_json(self):
+        """Test WEB tutorials work as an anonymous user"""
+        self.create()
+        project = db.session.query(Project).get(1)
+        project.info = dict(tutorial="some help", task_presenter="presenter")
+        db.session.commit()
+        # First time accessing the project should redirect me to the tutorial
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
+
+        # Check if the tutorial can be accessed directly
+        res = self.app_get_json('/project/test-app/tutorial')
+        data = json.loads(res.data)
+        err_msg = 'key missing'
+        assert 'owner' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'project tutorial missing'
+        assert 'My New Project' in data['title'], err_msg
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
