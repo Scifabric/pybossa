@@ -3886,3 +3886,60 @@ It returns a JSON object with the following information:
       "next": "/project/<short_name>/tasks/",
       "status": "success"
     }
+
+Project tutorial
+~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tutorial**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **owner**: owner information
+* **project**: project information
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "1410769844.15_avatar.png",
+          "avatar_url": null,
+          "container": "user_3927",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 43565,
+        "name": "jdoe",
+        "rank": 3,
+        "registered_ago": "3 years ago",
+        "score": 43565
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1377,
+        "info": {
+          "container": "user_3927",
+          "thumbnail": "app_1377_thumbnail_1410772569.58.png",
+          "thumbnail_url": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "myproject",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "johndoeproject",
+        "updated": "2017-03-02T21:00:33.965587"
+      },
+      "template": "/projects/tutorial.html",
+      "title": "Project: myproject"
+    }
