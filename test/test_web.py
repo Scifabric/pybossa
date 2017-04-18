@@ -1552,6 +1552,8 @@ class TestWeb(web.Helper):
         """Test WEB get non existant project tutorial should return 404"""
         res = self.app.get('/project/noapp/tutorial', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
+        res = self.app_get_json('/project/noapp/tutorial')
+        assert res.status == '404 NOT FOUND', res.status
 
     @with_context
     def test_05d_get_nonexistant_app_delete(self):
@@ -2866,6 +2868,34 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/test-app/tutorial', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
         assert "some help" in res.data, err_msg
+
+    @with_context
+    def test_26_tutorial_signed_user_json(self):
+        """Test WEB tutorials work as signed in user"""
+        self.create()
+        project1 = db.session.query(Project).get(1)
+        project1.info = dict(tutorial="some help", task_presenter="presenter")
+        db.session.commit()
+        self.register()
+        # First time accessing the project should redirect me to the tutorial
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
+
+        # Check if the tutorial can be accessed directly
+        res = self.app_get_json('/project/test-app/tutorial')
+        data = json.loads(res.data)
+        err_msg = 'key missing'
+        assert 'owner' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'template' in data, err_msg
+        assert 'title' in data, err_msg
+        err_msg = 'project tutorial missing'
+        assert 'My New Project' in data['title'], err_msg
+
 
     @with_context
     def test_27_tutorial_anonymous_user(self):
