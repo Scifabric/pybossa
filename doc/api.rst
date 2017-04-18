@@ -3377,7 +3377,7 @@ when the project has an empty template, otherwise it will load the template for 
       "status": "info",
       "template": "projects/task_presenter_options.html",
       "title": "Project: asdf1324 &middot; Task Presenter Editor"
-    }   
+    }
 
 If you want to preload the template from one of the available prenters, you have to pass the following
 argument: **?template=basic** for the basic or **?template=iamge** for the image template.
@@ -3561,7 +3561,7 @@ the following header: "X-CSRFToken".
     }
 
 
-Project update 
+Project update
 ~~~~~~~~~~~~~~
 **Endpoint: /project/<short_name>/update**
 
@@ -3671,7 +3671,7 @@ It returns a JSON object with the following information:
         "y2": 0
       }
     }
-    
+
 **POST**
 
 To send a valid POST request you need to pass the *csrf token* in the headers. Use
@@ -3759,6 +3759,83 @@ the following header: "X-CSRFToken" retrieved from the GET endpont **/project/<s
       "status": "success"
     }
 
+Project tasks browse
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/browse/**
+**Endpoint: /project/<short_name>/tasks/browse/<int:page>**
+
+*Allowed methods*: **GET**
+
+* **n_completed_tasks**: number of completed tasks
+* **n_tasks**: number of tasks
+* **n_volunteers**: number of volunteers
+* **overall_progress**: overall progress
+* **owner**: project owner
+* **pagination**: pagination information
+* **pro_features**: pro features enabled or not
+* **project**: project information
+* **tasks**: tasks, paginated
+* **template**: the Jinja2 template that should be rendered in case of text/html.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+    {
+      "n_completed_tasks": 0,
+      "n_tasks": 1,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2017-04-17T23:56:22.892222",
+        "fullname": "John Doe",
+        "info": {},
+        "locale": null,
+        "n_answers": 0,
+        "name": "johndoe",
+        "rank": null,
+        "registered_ago": "3 hours ago",
+        "score": null
+      },
+      "pagination": {
+        "next": false,
+        "page": 1,
+        "per_page": 10,
+        "prev": false,
+        "total": 1
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2017-04-17T23:56:23.416754",
+        "description": "Description",
+        "featured": false,
+        "id": 1,
+        "info": {},
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Sample Project",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "sampleapp",
+        "updated": "2017-04-17T23:56:23.589652"
+      },
+      "tasks": [
+        {
+          "id": 1,
+          "n_answers": 10,
+          "n_task_runs": 0,
+          "pct_status": 0.0
+        }
+      ],
+      "template": "/projects/tasks_browse.html",
+      "title": "Project: Sample Project &middot; Tasks"
+    }
 
 Project tasks import
 ~~~~~~~~~~~~~~~~~~~~
@@ -3837,7 +3914,7 @@ It returns a JSON object with the following information:
         "info": {
           "container": "user",
           "passwd_hash": null,
-          "task_presenter": "HTML+CSS+JS" 
+          "task_presenter": "HTML+CSS+JS"
           "thumbnail": "avatar.png"
         },
         "long_description": "algo",
