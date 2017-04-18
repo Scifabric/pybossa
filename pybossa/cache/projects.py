@@ -170,7 +170,7 @@ def n_completed_tasks(project_id):
     for row in results:
         n_completed_tasks = row.n_completed_tasks
     return n_completed_tasks
-    
+
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_results(project_id):
@@ -417,7 +417,7 @@ def n_count(category):
                WHERE
                category.short_name=:category
                AND project.published=true
-               AND project.info->>'passwd_hash' IS NULL
+               AND (project.info->>'passwd_hash') IS NULL
                AND coalesce(project.hidden, false)=false
                GROUP BY project.id)
                SELECT COUNT(*) FROM uniq
@@ -444,7 +444,7 @@ def get_all(category):
            category.short_name=:category
            AND "user".id=project.owner_id
            AND project.published=true
-           AND project.info->>'passwd_hash' IS NULL
+           AND (project.info->>'passwd_hash') IS NULL
            AND coalesce(project.hidden, false)=false
            GROUP BY project.id, "user".id ORDER BY project.name;''')
 

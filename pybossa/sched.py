@@ -185,30 +185,21 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id AND task.state !='completed'
            group by task.id ORDER BY priority_0 DESC, id ASC
-           offset :offset limit :limit;
+           LIMIT 15;
            ''')
 
     skipped = 0
-    offset = 0
-    limit = 10
-    while True:
-        rows = session.execute(sql, dict(project_id=project_id,
-                                         user_id=user_id,
-                                         offset=offset,
-                                         limit=limit))
-        if not rows.returns_rows:
-            return None
+    rows = session.execute(sql, dict(project_id=project_id,
+                                     user_id=user_id))
 
-        for task_id, taskcount, n_answers, timeout in rows:
-            timeout = timeout or TIMEOUT
-            remaining = n_answers - taskcount
-            if acquire_lock(project_id, task_id, user_id, remaining, timeout):
-                if skipped == offset:
-                    rows.close()
-                    return session.query(Task).get(task_id)
-                else:
-                    skipped += 1
-        offset += limit
+    for task_id, taskcount, n_answers, timeout in rows:
+        timeout = timeout or TIMEOUT
+        remaining = n_answers - taskcount
+        if acquire_lock(project_id, task_id, user_id, remaining, timeout):
+            if skipped == offset:
+                return session.query(Task).get(task_id)
+            else:
+                skipped += 1
 
 
 KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
