@@ -171,7 +171,7 @@ def signin():
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
         if user and user.enabled == False:
-            flash(gettext("Your account is disabled"), 'error')
+            flash(gettext("Your account is disabled. Please contact your GIGwork administrator."), 'error')
             return redirect(url_for("home.home"))
         if user and user.check_password(password):
             if twofactor_auth == False:

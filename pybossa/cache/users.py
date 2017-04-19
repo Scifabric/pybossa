@@ -245,7 +245,7 @@ def draft_projects_cached(user_id):
        key_prefix="site_total_users")
 def get_total_users():
     """Return total number of users in the server."""
-    count = User.query.count()
+    count = User.query.filter(User.enabled == True).count()
     return count
 
 
@@ -257,7 +257,7 @@ def get_users_page(page, per_page=24):
                "user".fullname, "user".email_addr,
                "user".created, "user".info, COUNT(task_run.id) AS task_runs
                FROM task_run, "user"
-               WHERE "user".id=task_run.user_id GROUP BY "user".id
+               WHERE "user".enabled=True AND "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = session.execute(sql, dict(limit=per_page, offset=offset))
     accounts = []

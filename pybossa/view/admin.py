@@ -659,6 +659,8 @@ def manageusers(user_id=None):
     form = SearchForm(request.form)
     users = [user for user in user_repo.filter_by(enabled=True)
              if user.id != current_user.id]
+    disabledusers = [user for user in user_repo.filter_by(enabled=False)
+             if user.id != current_user.id]
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
@@ -669,11 +671,11 @@ def manageusers(user_id=None):
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
         return render_template('/admin/manageusers.html', found=found, users=users,
-                               title=gettext("Enable/Disable Users"),
+                               disabledusers=disabledusers, title=gettext("Enable/Disable Users"),
                                form=form)
 
     return render_template('/admin/manageusers.html', found=[], users=users,
-                           title=gettext("Enable/Disable Users"), form=form)
+                           disabledusers=disabledusers, title=gettext("Enable/Disable Users"), form=form)
 
 
 @blueprint.route('/users/enable_user/<int:user_id>')
