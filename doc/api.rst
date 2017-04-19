@@ -734,6 +734,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "form": {
         "confirm": null,
@@ -760,6 +761,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
         "next":"/about"
     }
@@ -913,6 +915,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "form": {
         "csrf": "token,"
@@ -934,6 +937,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": [
         "We don't have this email in our records. You may have signed up with a different email or used Twitter, Facebook, or Google to sign-in"
@@ -1074,6 +1078,7 @@ If you are not logged in you will get this output:
 **Example output**
 
 .. code-block:: python
+
     {
       "next": "/account/signin",
       "status": "not_signed_in"
@@ -1156,6 +1161,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": null,
       "form": {
@@ -1216,6 +1222,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "Your profile has been updated!",
       "next": "/account/pruebaadfadfa/update",
@@ -1226,6 +1233,7 @@ It returns a JSON object with the following information:
 If there's an error in the form fields, you will get them in the **form.errors** key:
 
 .. code-block:: python
+
     {
       "flash": "Please correct the errors",
       "form": {
@@ -1550,6 +1558,7 @@ public available information for the owner and the project itself.
 for logged in user JohnDoe:
 
 .. code-block:: python
+
     {
       "last_activity": "2015-01-21T12:01:41.209270",
       "n_completed_tasks": 0,
@@ -1613,6 +1622,7 @@ for logged in user JohnDoe:
 Anonymous and other user output:
 
 .. code-block:: python
+
     {
       "last_activity": "2015-01-21T12:01:41.209270",
       "n_completed_tasks": 0,
@@ -1717,6 +1727,7 @@ owner information and project information.
 for anonymous user or when you are not the project owner:
 
 .. code-block:: python
+
     {
       "last_activity": "2015-01-21T12:01:41.209270",
       "n_completed_tasks": 0,
@@ -1797,6 +1808,7 @@ public available information for the owner and the project itself.
 Statistics are existing in this output:
 
 .. code-block:: python
+
     {
       "avg_contrib_time": 0,
       "n_completed_tasks": 2,
@@ -1892,6 +1904,7 @@ public available information for the owner and the project itself.
 for another project where you are not the owner:
 
 .. code-block:: python
+
     {
       "autoimporter_enabled": true,
       "last_activity": "2017-03-02T21:00:33.627277",
@@ -1966,6 +1979,7 @@ public available information for the owner and the project itself.
 for another project where you are not the owner:
 
 .. code-block:: python
+
     {
       "owner": {
         "created": "2014-08-11T08:59:32.079599",
@@ -2026,6 +2040,7 @@ not visible on the top public leaderboard.
 for logged in user JohnDoe (normally not visible in public leaderboard):
 
 .. code-block:: python
+
     {
         "template": "/stats/index.html",
         "title": "Community Leaderboard",
@@ -2738,6 +2753,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 On Success it will give you the project information
 
 .. code-block:: python
+
     {
       "info": {
         "task_presenter": "...",
@@ -2764,6 +2780,7 @@ On Success it will give you the project information
 If a project is already featured:
 
 .. code-block:: python
+
     {
       "code": 400,
       "description": "CSRF token missing or incorrect.",
@@ -2782,6 +2799,7 @@ To send a valid DELETE request you need to pass the *csrf token* in the headers.
 On Success it will give you the project information
 
 .. code-block:: python
+
     {
       "info": {
         "task_presenter": "...",
@@ -2808,6 +2826,7 @@ On Success it will give you the project information
 If a project is already unfeatured:
 
 .. code-block:: python
+
     {
       "status_code": 415,
       "error": "Project.id 1069 is not featured"
@@ -2830,6 +2849,7 @@ Gives you the API help for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "project_id": 1104,
       "template": "help/privacy.html",
@@ -2853,6 +2873,7 @@ Gives you the privacy policy for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>privacy policy here</p></body></html>"
       "template": "help/privacy.html",
@@ -2876,6 +2897,7 @@ Gives you the cookie policy for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>cookie policy here</p></body></html>"
       "template": "help/cookies_policy.html",
@@ -2899,6 +2921,7 @@ Gives you the terms of use for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>Terms of use text</p></body></html>"
       "template": "help/tos.html",
@@ -2929,6 +2952,7 @@ Gives you the global stats of the PYBOSSA server.
 **Example output**
 
 .. code-block:: python
+
     {
       "locs": "[]",
       "projects": {
@@ -3026,6 +3050,7 @@ Gives you the list of featured projects.
 **Example output**
 
 .. code-block:: python
+
     {
       "active_cat": {
         "created": null,
@@ -3108,6 +3133,7 @@ Gives you the list of featured projects.
 **Example output**
 
 .. code-block:: python
+
     {
       "active_cat": {
         "created": null,
@@ -3189,6 +3215,7 @@ Gives you the list of required fields in the form to create a project.
 **Example output**
 
 .. code-block:: python
+
     {
       "errors": false,
       "form": {
@@ -3222,6 +3249,7 @@ The project and owner fields will have more information if the onwer of the proj
 **Example public output**
 
 .. code-block:: python
+
     {
       "blogposts": [
         {
@@ -3307,6 +3335,7 @@ when the project has an empty template, otherwise it will load the template for 
 **Example output**
 
 .. code-block:: python
+
      {
       "flash": "<strong>Note</strong> You will need to upload the tasks using the<a href=\"/project/asdf123/tasks/import\"> CSV importer</a> or download the project bundle and run the <strong>createTasks.py</strong> script in your computer",
       "last_activity": null,
@@ -3385,6 +3414,7 @@ argument: **?template=basic** for the basic or **?template=iamge** for the image
 **Example output**
 
 .. code-block:: python
+
      {
       "errors": false,
       "flash": "Your code will be <em>automagically</em> rendered in                       the <strong>preview section</strong>. Click in the                       preview button!",
@@ -3471,6 +3501,7 @@ If the post is successfull, you will get the following output:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "<i class=\"icon-ok\"></i> Task presenter added!",
       "next": "/project/asdf123/tasks/",
@@ -3491,6 +3522,7 @@ as the csrf token. As this endpoint does not have any form, the csrf token is no
 **Example output**
 
 .. code-block:: python
+
     {
       "csrf": "token",
       "last_activity": null,
@@ -3695,6 +3727,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "Your profile has been updated!",
       "next": "/account/pruebaadfadfa/update",
@@ -3753,6 +3786,7 @@ the following header: "X-CSRFToken" retrieved from the GET endpont **/project/<s
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "New secret key generated",
       "next": "/project/flickrproject2/update",
@@ -3781,6 +3815,7 @@ Project tasks browse
 **Example output**
 
 .. code-block:: python
+
     {
       "n_completed_tasks": 0,
       "n_tasks": 1,
@@ -3854,6 +3889,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "available_importers": [
         "projects/tasks/epicollect.html",
@@ -3958,6 +3994,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "Tasks imported",
       "next": "/project/<short_name>/tasks/",
@@ -3980,6 +4017,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "owner": {
         "created": "2014-02-13T15:28:08.420187",
