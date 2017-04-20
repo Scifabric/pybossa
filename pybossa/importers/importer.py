@@ -185,7 +185,7 @@ class UserImporter(object):
         importer = self._create_importer_for(**form_data)
         for user_data in importer.users():
             try:
-                found = user_repo.get_by(email_addr=user_data['email_addr'])
+                found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
                 if not found:
                     project_slugs = user_data['project_slugs'].split()
                     create_account(user_data, project_slugs=project_slugs)

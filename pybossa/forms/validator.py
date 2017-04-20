@@ -35,16 +35,16 @@ class Unique(object):
         self.message = message
 
     def __call__(self, form, form_field):
-        filters = {self.field_name: form_field.data}
+        filters = {self.field_name: form_field.data.lower()}
         check = self.query_function(**filters)
         if 'id' in form:
             if check:
-                id = type(check.id)((form.id.data))
+                id = type(check.id)(form.id.data)
             else:
                 id = int(form.id.data)
         else:
             id = None
-        if check and (id is None or id != check.id):
+        if check and (id is None or id.lower() != check.id.lower()):
             raise ValidationError(self.message)
 
 

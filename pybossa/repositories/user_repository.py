@@ -84,3 +84,6 @@ class UserRepository(Repository):
             name = user.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def search_by_email(self, email_addr):
+        return self.db.session.query(User).filter(func.lower(User.email_addr) == email_addr).first()
