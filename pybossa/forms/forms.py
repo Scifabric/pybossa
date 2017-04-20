@@ -218,9 +218,7 @@ class BulkTaskLocalCSVImportForm(Form):
                 filename = secure_filename(csv_file.filename)
                 filepath = self._upload_path()
                 tmpfile = safe_join(filepath, filename)
-                with open(tmpfile, 'w') as fp:
-                  fp.write(csv_file.stream.read())
-
+                csv_file.save(tmpfile)
                 return {'type': 'localcsv', 'csv_filename': tmpfile}
         return {'type': 'localcsv', 'csv_filename': None}
 
