@@ -171,7 +171,7 @@ class UserImporter(object):
         params.update(form_data)
         del params['type']
         return self._importers[importer_id](**params)
-        
+
     def get_all_importer_names(self):
         """Get all importer names."""
         return self._importers.keys()
@@ -181,7 +181,6 @@ class UserImporter(object):
         avoiding the creation of repeated users"""
 
         from pybossa.view.account import create_account
-        empty = True
         n = 0
         importer = self._create_importer_for(**form_data)
         for user_data in importer.users():
@@ -191,9 +190,9 @@ class UserImporter(object):
                     project_slugs = user_data['project_slugs'].split()
                     create_account(user_data, project_slugs=project_slugs)
                     n += 1
-            except Exception as e:
-                traceback.print_exc()
-                
+            except Exception:
+                current_app.logger.exception('Error in create_user')
+
         if n > 0:
             msg = str(n) + " " + gettext('new users were imported successfully')
         else:

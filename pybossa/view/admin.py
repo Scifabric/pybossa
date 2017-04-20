@@ -641,8 +641,8 @@ def userimport():
                 return _import_users(**form.get_import_data())
             except BulkImportException as err_msg:
                 flash(gettext(str(err_msg)), 'error')
-            except Exception as e:  # pragma: no cover
-                current_app.logger.error(e)
+            except Exception:  # pragma: no cover
+                current_app.logger.exception('Error in userimport')
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
                 return abort(500)
