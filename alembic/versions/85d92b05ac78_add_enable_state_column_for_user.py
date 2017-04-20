@@ -15,7 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('user', sa.Column('enabled', sa.Boolean, default=True))
+    op.add_column('user', sa.Column('enabled', sa.Boolean,
+                                    server_default=sa.true()))
 
 
 def downgrade():
