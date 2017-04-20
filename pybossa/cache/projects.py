@@ -61,23 +61,36 @@ def get_top(n=4):
 
 
 @memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0])
-@static_vars(allowed_fields={ 'task_id': 'id', 'priority': 'priority_0', 'finish_time': 'ft', 'pcomplete': '(coalesce(ct, 0)/task.n_answers)', 'created': 'task.created' })
+@static_vars(allowed_fields={'task_id': 'id', 'priority': 'priority_0',
+                             'finish_time': 'ft',
+                             'pcomplete': '(coalesce(ct, 0)/task.n_answers)',
+                             'created': 'task.created',
+                             'filter_by_field': 'filter_by_field'})
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
-    filters = get_task_filters(args)
+    filters, filter_params = get_task_filters(args)
     sql = text('''
-               SELECT COUNT(*) OVER() as total_count, task.id, coalesce(ct, 0) as n_task_runs, task.n_answers, ft, priority_0, task.created
+               SELECT COUNT(*) OVER() as total_count, task.id,
+               coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+               priority_0, task.created
                FROM task LEFT OUTER JOIN
-               (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct, MAX(finish_time) as ft FROM task_run
+               (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+               MAX(finish_time) as ft FROM task_run
                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id''' + filters +
                " ORDER BY %s" % (args.get('order_by') or 'id ASC') +
-               " LIMIT %d OFFSET %d" % (args.get("records_per_page") or 10, args.get("offset") or 0)
+               " LIMIT :limit OFFSET :offset"
                )
+
+    limit = args.get('records_per_page') or 10
+    offset = args.get('offset') or 0
+
     results = session.execute(sql, dict(project_id=project_id,
-      filters=filters
-      ))
+                                        limit=limit,
+                                        offset=offset,
+                                        **filter_params))
+
     tasks = []
     total_count = 0
     for row in results:
@@ -85,45 +98,64 @@ def browse_tasks(project_id, args):
         finish_time = convertUtcToEst(row.ft).strftime('%m-%d-%y %H:%M') if row.ft is not None else None
         created = convertUtcToEst(row.created).strftime('%m-%d-%y %H:%M') if row.created is not None else None
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                    n_answers=row.n_answers, priority_0=row.priority_0, finish_time=finish_time,
-                    created=created)
+                    n_answers=row.n_answers, priority_0=row.priority_0,
+                    finish_time=finish_time, created=created)
         if total_count == 0:
-          total_count = row.total_count
+            total_count = row.total_count
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
-    return (total_count, tasks)
+    return total_count, tasks
 
 
 def get_task_filters(args):
     filters = ''
+    params = {}
+
     if args.get('task_id'):
-        filters += ' AND id=%d'%args['task_id']
+        params['task_id'] = args['task_id']
+        filters += ' AND id = :task_id'
     if args.get('hide_completed') and args.get('hide_completed') is True:
-        filters += " AND task.state='%s'"% 'ongoing'
+        filters += " AND task.state='ongoing'"
     if args.get('pcomplete_from') is not None:
-        filters += " AND (coalesce(ct, 0)/task.n_answers) >= %f" % args.get('pcomplete_from')
+        params['pcomplete_from'] = args['pcomplete_from']
+        filters += " AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from"
     if args.get('pcomplete_to') is not None:
-        filters += " AND (coalesce(ct, 0)/task.n_answers) <= %f" % args.get('pcomplete_to')
+        params['pcomplete_to'] = args['pcomplete_to']
+        filters += " AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to"
     if args.get('priority_from') is not None:
-        filters += " AND priority_0 >= %f" % args.get('priority_from')
+        params['priority_from'] = args['priority_from']
+        filters += " AND priority_0 >= :priority_from"
     if args.get('priority_to') is not None:
-        filters += " AND priority_0 <= %f" % args.get('priority_to')
+        params['priority_to'] = args['priority_to']
+        filters += " AND priority_0 <= :priority_to"
     if args.get('created_from'):
-        datestring = convertEstToUtc(args.get('created_from')).isoformat()
-        filters += " AND task.created >= '%s'" % datestring
+        datestring = convertEstToUtc(args['created_from']).isoformat()
+        params['created_from'] = datestring
+        filters += " AND task.created >= :created_from"
     if args.get('created_to'):
-        datestring = convertEstToUtc(args.get('created_to')).isoformat()
-        filters += " AND task.created <= '%s'" % datestring
+        datestring = convertEstToUtc(args['created_to']).isoformat()
+        params['created_to'] = datestring
+        filters += " AND task.created <= :created_to"
     if args.get('ftime_from'):
-        datestring = convertEstToUtc(args.get('ftime_from')).isoformat()
-        filters += " AND ft >= '%s'" % datestring
+        datestring = convertEstToUtc(args['ftime_from']).isoformat()
+        params['ftime_from'] = datestring
+        filters += " AND ft >= :ftime_from"
     if args.get('ftime_to'):
-        datestring = convertEstToUtc(args.get('ftime_to')).isoformat()
-        filters += " AND ft <= '%s'" % datestring
+        datestring = convertEstToUtc(args['ftime_to']).isoformat()
+        params['ftime_to'] = datestring
+        filters += " AND ft <= :ftime_to"
     if args.get('order_by'):
         args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
+    if args.get('filter_by_field'):
+        for ix, field_filter in enumerate(args['filter_by_field']):
+            field_name, field_value = field_filter
+            param_name = 'filter_by_field_{}'.format(ix)
+            params[param_name] = field_value
+            filters += " AND COALESCE(task.info->>'{}', '') = :{}".format(
+                field_name,
+                param_name)
 
-    return filters
+    return filters, params
 
 
 def _pct_status(n_task_runs, n_answers):

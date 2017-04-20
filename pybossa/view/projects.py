@@ -992,11 +992,12 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
+    columns = get_searchable_columns(project.id)
 
     try:
         args = get_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
-        current_app.logger.error(err)
+        current_app.logger.exception(err)
         flash(gettext('Invalid filtering criteria'), 'error')
         abort(404)
 
@@ -1005,11 +1006,11 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         offset = (page - 1) * per_page
         args["records_per_page"] = per_page
         args["offset"] = offset
-        import time
         start_time = time.time()
         (count, page_tasks) = cached_projects.browse_tasks(project.get('id'), args)
-        current_app.logger.debug("Browse Tasks data loading took %s seconds"%(time.time()-start_time))
-        first_task_id = cached_projects.first_task_id(project.get('id'));
+        current_app.logger.debug("Browse Tasks data loading took %s seconds"
+                                 % (time.time()-start_time))
+        first_task_id = cached_projects.first_task_id(project.get('id'))
 
         pagination = Pagination(page, per_page, count)
 
@@ -1039,7 +1040,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     pro_features=pro,
                     records_per_page=records_per_page,
                     filter_data=args,
-                    first_task_id=first_task_id)
+                    first_task_id=first_task_id,
+                    filter_columns=columns)
 
         return handle_content_type(data)
 
@@ -1052,64 +1054,103 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
+
+def is_valid_searchable_column(column_name):
+    valid_str = r'[\w\-]{1,40}$'
+    is_valid = re.match(valid_str, column_name)
+    if not is_valid:
+        current_app.logger.error("Invalid field name {}, user {}"
+                                 .format(column_name, current_user.id))
+    return is_valid
+
+
+def get_searchable_columns(project_id):
+    tasks = task_repo.filter_tasks_by(project_id=project_id,
+                                      limit=1,
+                                      desc=True)
+    if not tasks:
+        return []
+
+    info = tasks[0].info
+    if not isinstance(info, dict):
+        return []
+
+    return [key for key in info if is_valid_searchable_column(key)]
+
+
 def get_tasks_browse_args(args):
     parsed_args = dict()
 
     if args.get('task_id'):
-        parsed_args["task_id"] = int(args.get('task_id'))
+        parsed_args["task_id"] = int(args['task_id'])
     if args.get('pcomplete_from'):
-        parsed_args["pcomplete_from"] = float(args.get('pcomplete_from')) / 100
+        parsed_args["pcomplete_from"] = float(args['pcomplete_from']) / 100
     if args.get('pcomplete_to'):
-        parsed_args["pcomplete_to"] = float(args.get('pcomplete_to')) / 100
+        parsed_args["pcomplete_to"] = float(args['pcomplete_to']) / 100
     if args.get('hide_completed'):
-        parsed_args["hide_completed"] = args.get('hide_completed').lower() == 'true'
+        parsed_args["hide_completed"] = args['hide_completed'].lower() == 'true'
 
-    isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$'
+    iso_string_format = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$'
     if args.get('created_from'):
-        if re.match(isoStringFormat, args.get('created_from')):
-            parsed_args["created_from"] = args.get('created_from')
+        if re.match(iso_string_format, args['created_from']):
+            parsed_args["created_from"] = args['created_from']
         else:
-            raise ValueError('created_from date format error, value: %s'%args.get('created_from'))
+            raise ValueError('created_from date format error, value: {}'
+                             .format(args['created_from']))
     if args.get('created_to'):
-        if re.match(isoStringFormat, args.get('created_to')):
-            parsed_args["created_to"] = args.get('created_to')
+        if re.match(iso_string_format, args['created_to']):
+            parsed_args["created_to"] = args['created_to']
         else:
-            raise ValueError('created_to date format error, value: %s'%args.get('created_to'))
+            raise ValueError('created_to date format error, value: {}'
+                             .format(args['created_to']))
     if args.get('ftime_from'):
-        if re.match(isoStringFormat, args.get('ftime_from')):
-            parsed_args["ftime_from"] = args.get('ftime_from')
+        if re.match(iso_string_format, args['ftime_from']):
+            parsed_args["ftime_from"] = args['ftime_from']
         else:
-            raise ValueError('ftime_from date format error, value: %s'%args.get('ftime_from'))
+            raise ValueError('ftime_from date format error, value: %s'
+                             .format(args['ftime_from']))
     if args.get('ftime_to'):
-        if re.match(isoStringFormat, args.get('ftime_to')):
-            parsed_args["ftime_to"] = args.get('ftime_to')
+        if re.match(iso_string_format, args['ftime_to']):
+            parsed_args["ftime_to"] = args['ftime_to']
         else:
-            raise ValueError('ftime_to date format error, value: %s'%args.get('ftime_to'))
+            raise ValueError('ftime_to date format error, value: %s'
+                             .format(args['ftime_to']))
     if args.get('priority_from'):
-        parsed_args["priority_from"] = float(args.get('priority_from'))
+        parsed_args["priority_from"] = float(args['priority_from'])
     if args.get('priority_to'):
-        parsed_args["priority_to"] = float(args.get('priority_to'))
+        parsed_args["priority_to"] = float(args['priority_to'])
     if args.get('display_columns'):
-        parsed_args["display_columns"] = json.loads(args.get('display_columns'))
+        parsed_args["display_columns"] = json.loads(args['display_columns'])
     if not isinstance(parsed_args.get("display_columns"), list):
-        parsed_args["display_columns"] = [ 'task_id', 'priority', 'pcomplete', 'created', 'actions' ]
+        parsed_args["display_columns"] = ['task_id', 'priority', 'pcomplete',
+                                          'created', 'actions']
 
     parsed_args["order_by_dict"] = dict()
     if args.get('order_by'):
         allowed_columns = cached_projects.browse_tasks.allowed_fields
-        parsed_args["order_by"] = args.get('order_by').strip().lower()
+        parsed_args["order_by"] = args['order_by'].strip().lower()
         for clause in parsed_args["order_by"].split(','):
             order_by_field = clause.split(' ')
             if len(order_by_field) != 2 or order_by_field[0] not in allowed_columns:
-                raise ValueError('order_by value sent by the user is invalid: %s' % args.get('order_by'))
+                raise ValueError('order_by value sent by the user is invalid: %s'.format(args['order_by']))
             if order_by_field[0] in parsed_args["order_by_dict"]:
-                raise ValueError('order_by field is duplicated: %s' % args.get('order_by'))
+                raise ValueError('order_by field is duplicated: %s'
+                                 .format(args['order_by']))
             parsed_args["order_by_dict"][order_by_field[0]] = order_by_field[1]
 
         for key, value in allowed_columns.iteritems():
             parsed_args["order_by"] = parsed_args["order_by"].replace(key, value)
 
+    if args.get('filter_by_field'):
+        parsed_args['filter_by_field'] = get_field_filters(args['filter_by_field'])
+
     return parsed_args
+
+
+def get_field_filters(filter_string):
+    filters = json.loads(filter_string)
+    return [(name, value) for name, value in filters
+            if is_valid_searchable_column(name)]
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
