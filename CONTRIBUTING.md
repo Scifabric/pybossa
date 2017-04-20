@@ -7,7 +7,7 @@ Anyone wishing to contribute to the **[Scifabric/pybossa](https://github.com/Sci
 
 The Scifabric team is legally prevented from accepting any pull requests from users who have not signed the CAA first.
 
-If you have any doubts about the CAA, please, contact us at <info AT scifabric DOT com>.
+If you have any doubts about the CAA, please, contact us at *info AT scifabric DOT com*.
 
 ## Instructions
 
