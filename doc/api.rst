@@ -1073,10 +1073,6 @@ If logged in you will get the same information as on /account/<name> (see above)
 
 **Example output**
 
-If you are not logged in you will get this output:
-
-**Example output**
-
 .. code-block:: python
 
     {
@@ -1464,69 +1460,69 @@ It returns a JSON object with the following information:
 
 .. code-block:: python
 
-{
-  "categories": [
     {
-      "created": null,
-      "description": null,
-      "id": null,
-      "name": "Featured",
-      "short_name": "featured"
-    },
-    {
-      "description": "Economic projects",
-      "id": 6,
-      "name": "Economics",
-      "short_name": "economics"
-    },
-  ],
-  "categories_projects": {
-    "economics": [
-      {
-        "description": "Description",
-        "info": {
-          "container": "user",
-          "thumbnail": "415602833.png"
+      "categories": [
+        {
+          "created": null,
+          "description": null,
+          "id": null,
+          "name": "Featured",
+          "short_name": "featured"
         },
-        "n_tasks": 18,
-        "n_volunteers": 26,
-        "name": "Man made objects identity",
-        "overall_progress": 0,
-        "short_name": "manmadeobjectsidentity"
+        {
+          "description": "Economic projects",
+          "id": 6,
+          "name": "Economics",
+          "short_name": "economics"
+        },
+      ],
+      "categories_projects": {
+        "economics": [
+          {
+            "description": "Description",
+            "info": {
+              "container": "user",
+              "thumbnail": "415602833.png"
+            },
+            "n_tasks": 18,
+            "n_volunteers": 26,
+            "name": "Man made objects identity",
+            "overall_progress": 0,
+            "short_name": "manmadeobjectsidentity"
+          },
+        ],
       },
-    ],
-  },
-  "template": "/home/index.html",
-  "top_projects": [
-    {
-      "description": "Image pattern recognition",
-      "info": {
-        "container": "user",
-        "thumbnail": "772569.58.png"
-      },
-      "n_tasks": null,
-      "n_volunteers": 17499,
-      "name": "Name",
-      "overall_progress": null,
-      "short_name": "name"
-    },
-  ],
-  "top_users": [
-    {
-      "created": "2014-08-17T18:28:56.738119",
-      "fullname": "John Doe",
-      "info": {
-        "avatar": "1410771tar.png",
-        "container": "05"
-      },
-      "n_answers": null,
-      "name": "johndoe",
-      "rank": 1,
-      "registered_ago": null,
-      "score": 54247
-    },
-  ]
-}
+      "template": "/home/index.html",
+      "top_projects": [
+        {
+          "description": "Image pattern recognition",
+          "info": {
+            "container": "user",
+            "thumbnail": "772569.58.png"
+          },
+          "n_tasks": null,
+          "n_volunteers": 17499,
+          "name": "Name",
+          "overall_progress": null,
+          "short_name": "name"
+        },
+      ],
+      "top_users": [
+        {
+          "created": "2014-08-17T18:28:56.738119",
+          "fullname": "John Doe",
+          "info": {
+            "avatar": "1410771tar.png",
+            "container": "05"
+          },
+          "n_answers": null,
+          "name": "johndoe",
+          "rank": 1,
+          "registered_ago": null,
+          "score": 54247
+        },
+      ]
+    }
 
 Project shortname
 ~~~~~~~~~~~~~~~~~
