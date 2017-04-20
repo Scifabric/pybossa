@@ -1,13 +1,13 @@
-# Contributing to PyBossa
+# Contributing to PYBOSSA
 
 ## Before You Start
 
-Anyone wishing to contribute to the **[PyBossa/pybossa](https://github.com/PyBossa/pybossa)** project 
+Anyone wishing to contribute to the **[Scifabric/pybossa](https://github.com/Scifabric/pybossa)** project 
 **MUST read & sign a Contributor Assignment Agreement (CAA)**. 
 
-The PyBossa team is legally prevented from accepting any pull requests from users who have not signed the CAA first.
+The Scifabric team is legally prevented from accepting any pull requests from users who have not signed the CAA first.
 
-If you have any doubts about the CAA, please, contact us at <info AT pybossa DOT com>.
+If you have any doubts about the CAA, please, contact us at <info AT scifabric DOT com>.
 
 ## Instructions
 
@@ -24,9 +24,10 @@ You will be prompted to provide identifying information and to show your consent
 
 Once we have received your consent, we will send you back the agreement via e-mail, and from that moment you will be able to start contributing to the project normally. Welcome to the community!
 
-If you have any doubts, do not hesitate and contact us here: *info AT pybossa.com*. We will be happy to answer all your questions.
+If you have any doubts, do not hesitate and contact us here: *info AT scifabric.com*. We will be happy to answer all your questions.
 
-If You do not own the Copyright in the entire work of authorship
+## If You do not own the Copyright in the entire work of authorship
+
 If this is your case, you will need to contact all the other authors, and get their signed permission in order to contribute to the project.
 
 ## Download Instructions
