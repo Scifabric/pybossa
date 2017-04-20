@@ -55,7 +55,9 @@ class TaskRunAPI(APIBase):
         project_id = data['project_id']
         user_id = current_user.id
         self.check_can_post(project_id, task_id, user_id)
-        info = data['info']
+        info = data.get('info')
+        if info is None:
+            return
         path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
         _upload_files_from_json(info, path)
         _upload_files_from_request(info, request.files, path)
