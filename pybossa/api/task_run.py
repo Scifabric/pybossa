@@ -32,7 +32,6 @@ from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel
 from pybossa.uploader.s3_uploader import s3_upload_from_string
-from pybossa.gig_utils import json_traverse
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -142,17 +141,17 @@ class TaskRunAPI(APIBase):
 
 
 def _upload_files_from_json(task_run_info, upload_path):
-    def func(obj, key, value):
+    if not isinstance(task_run_info, dict):
+        return
+    for key, value in task_run_info.iteritems():
         if key.endswith('__upload_url'):
             filename = value.get('filename')
             content = value.get('content')
             if filename is None or content is None:
-                return True
+                continue
             out_url = s3_upload_from_string(content, filename,
                                             directory=upload_path)
-            obj[key] = out_url
-            return False
-    json_traverse(task_run_info, func)
+            task_run_info[key] = out_url
 
 
 def _upload_files_from_request(task_run_info, files, upload_path):
