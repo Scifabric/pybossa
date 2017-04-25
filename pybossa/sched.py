@@ -185,7 +185,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id AND task.state !='completed'
            group by task.id ORDER BY priority_0 DESC, id ASC
-           LIMIT 15;
+           LIMIT 50;
            ''')
 
     skipped = 0
