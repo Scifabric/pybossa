@@ -615,27 +615,30 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
             pass
 
     # Send an email to the user with the S3 URL or an error message
+    # Success email
     if url is not None:
-        msg = "Your data has been exported to S3. " + \
-                 "You can download it here: {0}"
+        subject = 'Data exported from your project: {0}'.format(project.name)
+        msg = 'Your data has been exported to S3. ' + \
+              'You can download it here: {0}'
         msg = msg.format(url)
-        job_response = "{0} {1} file was successfully " + \
-                       "exported to S3 for: {2}"
+        job_response = '{0} {1} file was successfully ' + \
+                       'exported to S3 for: {2}'
         job_response = job_response.format(ty.capitalize(),
                                            filetype.upper(),
                                            project.name)
+    # Failure email
     else:
-        msg = "There was an issue with your export. " + \
-              "Please try again or report this issue " + \
-              "to a {0} administrator."
+        subject = 'Data export failed for your project: {0}'.format(project.name)
+        msg = 'There was an issue with your export. ' + \
+              'Please try again or report this issue ' + \
+              'to a {0} administrator.'
         msg = msg.format(current_app.config.get('BRAND'))
-        job_response = "There was an error while trying to export" + \
-                       "{0} {1} file to S3 for: {2}"
+        job_response = 'There was an error while trying to export' + \
+                       '{0} {1} file to S3 for: {2}'
         job_response = job_response.format(ty.capitalize(),
                                            filetype.upper(),
                                            project.name)
 
-    subject = 'Tasks exported from your project: {0}'.format(project.name)
     body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'.format(current_app.config.get('BRAND'))
     mail_dict = dict(recipients=[current_user_email_addr], subject=subject, body=body)
     send_mail(mail_dict)
