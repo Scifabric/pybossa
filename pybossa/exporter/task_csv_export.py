@@ -29,6 +29,8 @@ from flask import url_for, safe_join, send_file, redirect
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
 
 class TaskCsvExporter(CsvExporter):
@@ -212,46 +214,9 @@ class TaskCsvExporter(CsvExporter):
         self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 
-    def export_zip_to_s3(self, project, ty, expanded=False):
-        """Create a zip file and export it to S3.
-
-        Returns the URL where the file was saved.
-        """
-        name = self._project_name_latin_encoded(project)
-        csv_task_generator = self._respond_csv(ty, project.id, expanded)
-        if csv_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in csv_task_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                csv_task_generator.close()
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    filedate = datetime.date.strftime(datetime.date.today(), '%Y%m%d')
-                    fileuuid = uuid.uuid4().hex
-                    _zip = self._zip_factory(zipped_datafile.name)
-                    _zip.write(datafile.name,
-                               secure_filename('{0}_{1}_{2}_{3}.csv'.format(name,
-                                                                            ty,
-                                                                            filedate,
-                                                                            fileuuid)))
-                    _zip.close()
-
-                    zip_file = FileStorage(filename=self.download_name_randomized(project, ty),
-                                           stream=zipped_datafile)
-                    url = s3_upload_file_storage(source_file=zip_file,
-                                                 directory='',
-                                                 public=True)
-                finally:
-                    zipped_datafile.close()
-            finally:
-                datafile.close()
-
-        try:
-            return url
-        except:
-            return
-
     def download_name_randomized(self, project, ty):
         return super(TaskCsvExporter, self).download_name_randomized(project, ty, 'csv')
+
+    def export_to_s3(self, project, ty):
+        _task_generator = self._respond_csv(ty, project.id)
+        return super(TaskCsvExporter, self).export_to_s3(project, ty, _task_generator, 'csv')

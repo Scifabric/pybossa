@@ -23,10 +23,12 @@ Exporter module for exporting tasks and tasks results out of PYBOSSA
 import os
 import datetime
 import uuid
+import tempfile
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
 import tempfile
 from pybossa.uploader import local
+from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from unidecode import unidecode
 from flask import url_for, safe_join, send_file, redirect
 from flask import current_app as app
@@ -204,3 +206,60 @@ class Exporter(object):
                     container = 'user_{}'.format(project.owner_id)
                     uploader.upload_file(_file, container=container)
 
+    def export_to_s3(self, project, ty, _task_generator=None, _format=None):
+        """Create a zip file and export it to S3.
+
+        :param project: a project object
+        :param ty: string form of domain object to be exported
+        :param _task_generator: a generator object containing the data to
+            be written to file
+        :param _format: the file format for the data to be written to
+
+        :return: the URL where the file was saved in S3
+        """
+        error_log_string = 'Export failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
+        name = self._project_name_latin_encoded(project)
+        if _task_generator is not None:
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in _task_generator:
+                    datafile.write(str(line))
+                _task_generator.close()
+                datafile.flush()
+                _task_generator.close()
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    filedate = datetime.date.strftime(datetime.date.today(), '%Y%m%d')
+                    fileuuid = uuid.uuid4().hex
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(datafile.name,
+                               secure_filename('{0}_{1}_{2}_{3}.{4}'.format(name,
+                                                                            ty,
+                                                                            filedate,
+                                                                            fileuuid,
+                                                                            _format)))
+                    _zip.content_type = 'application/zip'
+                    _zip.close()
+
+                    zip_file = FileStorage(filename=self.download_name_randomized(project, ty),
+                                           stream=zipped_datafile)
+                    url = s3_upload_file_storage(source_file=zip_file,
+                                                 directory='',
+                                                 public=True)
+                except Exception as e:
+                    current_app.logger.error(error_log_string
+                                             .format(project.short_name, ty, _format, e))
+                finally:
+                    zipped_datafile.close()
+            except Exception as e:
+                current_app.logger.error(error_log_string
+                                         .format(project.short_name, ty, _format, e))
+            finally:
+                datafile.close()
+
+        try:
+            return url
+        except Exception as e:
+            current_app.logger.error(error_log_string
+                                     .format(project.short_name, ty, _format, e))
+            return

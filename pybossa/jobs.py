@@ -605,12 +605,12 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
     # Export data and upload to S3
     if filetype == 'json':
         try:
-            url = task_json_exporter.export_zip_to_s3(project, ty)
+            url = task_json_exporter.export_to_s3(project, ty)
         except:
             pass
     elif filetype == 'csv':
         try:
-            url = task_csv_exporter.export_zip_to_s3(project, ty)
+            url = task_csv_exporter.export_to_s3(project, ty)
         except:
             pass
 
