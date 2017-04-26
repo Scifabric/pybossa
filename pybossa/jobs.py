@@ -553,12 +553,25 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     """Import tasks for a project."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
+
     project = project_repo.get(project_id)
-    report = importer.create_tasks(task_repo, project, **form_data)
-    cached_projects.delete_browse_tasks(project_id)
     recipients = [project.owner.email_addr]
     for user in project.coowners:
         recipients.append(user.email_addr)
+
+    try:
+        report = importer.create_tasks(task_repo, project, **form_data)
+    except:
+        msg = 'Import tasks to your project {0} by {1} failed'.format(project.name, current_user_fullname)
+        subject = 'Tasks Import to your project %s' % project.name
+        body = 'Hello,\n\n' + msg + '\n\nPlease contact GIGwork administrator,\nThe %s team.'\
+            % current_app.config.get('BRAND')
+        mail_dict = dict(recipients=recipients,
+                         subject=subject, body=body)
+        send_mail(mail_dict)
+        return msg
+
+    cached_projects.delete_browse_tasks(project_id)
     if from_auto:
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)
@@ -576,6 +589,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
             os.remove(form_data['csv_filename'])
         except:
             pass
+
     return msg
 
 
