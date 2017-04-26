@@ -21,7 +21,7 @@ from wtforms.validators import ValidationError
 import re
 import requests
 
-from pybossa.util import is_reserved_name
+from pybossa.util import is_reserved_name, check_password_strength
 
 
 class Unique(object):
@@ -118,16 +118,9 @@ class ReservedName(object):
 
 class CheckPasswordStrength(object):
     """ apply strong password policy """
-    
-    pwd_min_len = 8
-    pwd_max_len = 15
-    
-    # password must contain following characters;
-    # at least one character from each category
-    required_chars = [r'[A-Z]', r'[a-z]', r'[0-9]', r'[!@$%^&*#]']
 
     def __init__(self, message=None):
-        
+
         self.default_message = lazy_gettext(u'Password must contain atleast one uppercase alpha, '\
 					'lowercase alpha, numeric and special character !@$%%^&*#')
 
@@ -137,21 +130,10 @@ class CheckPasswordStrength(object):
             self.message = message
 
     def __call__(self, form, field):
-        if not self._check_password_strength(form, field):
-            raise ValidationError(self.message)
-
-    def _check_password_strength(self, form, field):
         pwd = field.data
-        pwdlen = len(pwd)
-        if pwdlen < self.pwd_min_len or pwdlen > self.pwd_max_len:
-            self.message = lazy_gettext(u'Password must be between {0} and {1} characters'\
-					.format(self.pwd_min_len, self.pwd_max_len))
-            return False
-
-        is_pwd_valid = all(re.search(ch, pwd) for ch in self.required_chars)
-        if not is_pwd_valid:
-            self.message = self.default_message
-        return is_pwd_valid
+        is_password_valid, message = check_password_strength(pwd)
+        if not is_password_valid:
+            raise ValidationError(message)
 
 
 class TimeFieldsValidator(object):

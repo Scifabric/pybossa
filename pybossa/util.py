@@ -40,7 +40,8 @@ import hmac
 import simplejson
 import time
 import pycountry
-
+from flask.ext.babel import lazy_gettext
+import re
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -827,3 +828,25 @@ def countries():
         name = ct.name
         cts.append((name, name))
     return sorted(cts)
+
+
+def check_password_strength(password):
+    # password must contain following characters;
+    # at least one character from each category
+    required_chars = [r'[A-Z]', r'[a-z]', r'[0-9]', r'[!@$%^&*#]']
+    pwd_min_len = 8
+    pwd_max_len = 15
+    default_message = lazy_gettext(u'Password must contain atleast one uppercase alpha, '\
+				            'lowercase alpha, numeric and special character !@$%%^&*#')
+
+    pwdlen = len(password)
+    if pwdlen < pwd_min_len or pwdlen > pwd_max_len:
+        message = lazy_gettext(u'Password must be between {0} and {1} characters'\
+                    .format(pwd_min_len, pwd_max_len))
+        return False, message
+
+    is_pwd_valid = all(re.search(ch, password) for ch in required_chars)
+    if not is_pwd_valid:
+        return False, default_message
+    else:
+        return True, None

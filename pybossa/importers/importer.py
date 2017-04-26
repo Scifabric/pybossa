@@ -27,7 +27,8 @@ from .epicollect import BulkTaskEpiCollectPlusImport
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
-
+from flask import current_app
+from pybossa.util import check_password_strength
 
 class Importer(object):
 
@@ -182,19 +183,29 @@ class UserImporter(object):
 
         from pybossa.view.account import create_account
         n = 0
+        failcount = 0
         importer = self._create_importer_for(**form_data)
+        failed_user_imports =[]
         for user_data in importer.users():
             try:
                 found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
                 if not found:
-                    project_slugs = user_data['project_slugs'].split()
-                    create_account(user_data, project_slugs=project_slugs)
-                    n += 1
+                    password = user_data['password']
+                    is_password_valid, message = check_password_strength(password)
+                    if not is_password_valid:
+                        failed_user_imports.append(user_data['fullname'])
+                        failcount += 1
+                    else:
+                        project_slugs = user_data['project_slugs'].split()
+                        create_account(user_data, project_slugs=project_slugs)
+                        n += 1
             except Exception:
                 current_app.logger.exception('Error in create_user')
-
         if n > 0:
-            msg = str(n) + " " + gettext('new users were imported successfully')
+            msg = str(n) + " " + gettext('new users were imported successfully.')
         else:
-            msg = gettext('It looks like there were no new users created')
+            msg = gettext('It looks like there were no new users created.')
+        if failcount > 0:
+            msg += str(failcount) + gettext(' user(s) could not be imported due to weak password.')
+            current_app.logger.error('Failed to import users due to password mismatch: {0}'.format(",".join(failed_user_imports)))
         return msg
