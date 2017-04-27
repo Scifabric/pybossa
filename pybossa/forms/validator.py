@@ -35,7 +35,7 @@ class Unique(object):
         self.message = message
 
     def __call__(self, form, form_field):
-        filters = {self.field_name: form_field.data.lower()}
+        filters = {self.field_name: form_field.data}
         check = self.query_function(**filters)
         if 'id' in form:
             if check:
@@ -44,8 +44,21 @@ class Unique(object):
                 id = int(form.id.data)
         else:
             id = None
-        if check and (id is None or id.lower() != check.id.lower()):
+        if check and (id is None or id != check.id):
             raise ValidationError(self.message)
+
+
+class UniqueCaseInsensitive(Unique):
+
+    def __init__(self, query_function, field_name, message=None):
+        super(UniqueCaseInsensitive, self).__init__(
+            query_function=query_function,
+            field_name=field_name,
+            message=message)
+
+    def __call__(self, form, form_field):
+        form_field.data = form_field.data.lower()
+        super(UniqueCaseInsensitive, self).__call__(form, form_field)
 
 
 class NotAllowedChars(object):
@@ -71,7 +84,8 @@ class CommaSeparatedIntegers(object):
 
     def __init__(self, message=None):
         if not message:
-            self.message = lazy_gettext(u'Only comma separated values are allowed, no spaces')
+            self.message = lazy_gettext(
+                u'Only comma separated values are allowed, no spaces')
 
         else:  # pragma: no cover
             self.message = message
@@ -116,13 +130,15 @@ class ReservedName(object):
         if is_reserved_name(self.blueprint, field.data):
             raise ValidationError(self.message)
 
+
 class CheckPasswordStrength(object):
     """ apply strong password policy """
 
     def __init__(self, message=None):
 
-        self.default_message = lazy_gettext(u'Password must contain atleast one uppercase alpha, '\
-					'lowercase alpha, numeric and special character !@$%%^&*#')
+        self.default_message = lazy_gettext(
+            u'Password must contain atleast one uppercase alpha, ' \
+            'lowercase alpha, numeric and special character !@$%%^&*#')
 
         if not message:
             self.message = self.default_message
@@ -147,4 +163,4 @@ class TimeFieldsValidator(object):
         values = [form.data[fld] for fld in self.fields]
         values.append(field.data)
         if any(values) and not all(values):
-                raise ValidationError(self.message)
+            raise ValidationError(self.message)

@@ -357,7 +357,10 @@ class RegisterForm(Form):
                                               max=EMAIL_MAX_LENGTH,
                                               message=err_msg),
                             validators.Email(),
-                            pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
+                            pb_validator.UniqueCaseInsensitive(
+                                user_repo.search_by_email,
+                                'email_addr',
+                                err_msg_2)])
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
