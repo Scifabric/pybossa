@@ -1061,7 +1061,7 @@ def get_tasks_browse_args(args):
     if args.get('hide_completed'):
         parsed_args["hide_completed"] = args.get('hide_completed').lower() == 'true'
 
-    isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$';
+    isoStringFormat = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$'
     if args.get('created_from'):
         if re.match(isoStringFormat, args.get('created_from')):
             parsed_args["created_from"] = args.get('created_from')
