@@ -19,14 +19,14 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
-from pybossa.cache import cache, memoize, delete_memoized
+from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
 from pybossa.model.project import Project
 from pybossa.leaderboard.data import get_leaderboard as gl
 from pybossa.leaderboard.jobs import leaderboard as lb
-
+import json
 
 session = db.slave_session
 
@@ -283,12 +283,46 @@ def delete_user_summary(name):
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_metadata(name):
     sql = text("""
-    SELECT info->'metadata' FROM public.user WHERE name=:name;
+    SELECT info->'metadata', user_pref FROM public.user WHERE name=:name;
     """)
 
     cursor = session.execute(sql, dict(name=name))
     row = cursor.fetchone()
-    return row[0] or {}
+    metadata = row[0] or {}
+    metadata.update(row[1] or {})
+    return metadata
 
 def delete_user_metadata(name):
     delete_memoized(get_metadata, name)
+
+
+@memoize(timeout=ONE_DAY)
+def get_user_preferences(user_id=None):
+    if user_id is None or user_id <= 0:
+        return None
+
+    user_pref = User.query.get(user_id).user_pref
+
+    if user_pref is None or not user_pref:
+           return None
+
+    # expand user preferences as per sql format for jsonb datatype
+    user_prefs = []
+    # single user preference and single value
+    if (len(user_pref) == 1 and len(user_pref.values()[0]) ==1):
+        return "'{0}'".format(json.dumps(user_pref).lower())
+
+    # single user preference with multiple value or
+    # multiple user preferences with single/multiple values
+    for k, v in user_pref.iteritems():
+        if isinstance(v, list):
+            for item in v:
+                user_prefs.append({k: [item]})
+
+    if not user_prefs:
+        return None
+
+    sql_user_prefs = "'{0}'".format(json.dumps(user_prefs[0]).lower())
+    for item in user_prefs[1:]:
+        sql_user_prefs += " OR task.user_pref @> '{0}'".format(json.dumps(item).lower())
+    return sql_user_prefs

@@ -19,7 +19,7 @@
 from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.dialects.postgresql import JSON, ARRAY
+from sqlalchemy.dialects.postgresql import JSON, ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableList
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
@@ -54,6 +54,8 @@ class Task(db.Model, DomainObject):
     fav_user_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
     #: completed task can be marked as exported=True after its exported
     exported = Column(Boolean, default=False)
+    #: Task.user_pref field in JSONB with user preference data for the task.
+    user_pref = Column(JSONB)
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 

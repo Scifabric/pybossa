@@ -17,9 +17,9 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
-from sqlalchemy.schema import Column
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
 from flask import current_app
@@ -65,7 +65,7 @@ class User(db.Model, DomainObject, UserMixin):
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     subadmin = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
-    meta_data= Column(MutableDict.as_mutable(JSON), default=dict())
+    user_pref = Column(JSONB)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')

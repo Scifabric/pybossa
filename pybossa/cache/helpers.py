@@ -20,9 +20,10 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
-from pybossa.cache.projects import n_results
+from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
-
+from pybossa.cache import users as cached_users
+from flask import current_app
 
 session = db.slave_session
 
@@ -153,3 +154,43 @@ def _has_no_tasks(project_id):
     for row in result:
         n_tasks = row.n_tasks
     return n_tasks == 0
+
+
+def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
+    """Return the number of tasks for a given project a user can contribute to.
+    based on the completion of the project tasks, previous task_runs
+    submitted by the user and user preference set under user profile.
+    """
+    n_tasks = 0
+    if user_id is None or user_id <= 0:
+        return n_tasks
+    user_pref_list = cached_users.get_user_preferences(user_id)
+    if user_pref_list is None:
+        sql = " \
+               SELECT COUNT(id) AS n_tasks FROM task \
+               WHERE NOT EXISTS \
+               (SELECT task_id FROM task_run WHERE project_id={0} AND \
+               user_id={1} AND task_id=task.id) \
+               AND project_id={0} \
+               AND user_pref IS NULL OR user_pref = '{2}' \
+               AND state !='completed'; \
+               ".format(project_id, user_id, '{}')
+    else:
+        sql = " \
+               SELECT COUNT(id) AS n_tasks FROM task \
+               WHERE NOT EXISTS \
+               (SELECT task_id FROM task_run WHERE project_id={0} AND \
+               user_id={1} AND task_id=task.id) \
+               AND project_id={0} AND user_pref @> {2} \
+               AND state !='completed' ; \
+               ".format(project_id, user_id, user_pref_list)
+    sqltext = text(sql)
+    try:
+        result = session.execute(sqltext)
+    except Exception as e:
+        current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
+        return None
+
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks

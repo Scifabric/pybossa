@@ -26,13 +26,12 @@ from redis_lock import LockManager
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest
 import random
-
+from pybossa.cache import users as cached_users
+from flask import current_app
 
 session = db.slave_session
 
-
 DEFAULT_SCHEDULER = 'locked_scheduler'
-
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0', desc=True):
@@ -42,14 +41,15 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
         'locked_scheduler': get_locked_task,
-        'incremental': get_incremental_task}
+        'incremental': get_incremental_task,
+        'user_pref_scheduler': get_user_pref_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
 
 
 def can_post(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler':
+    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
         return has_lock(project_id, task_id, user_id, timeout)
     else:
         return True
@@ -58,7 +58,7 @@ def can_post(project_id, task_id, user_id):
 def can_read_task(task, user):
     project_id = task.project_id
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler':
+    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
         return has_read_access(user) or has_lock(project_id, task.id, user.id,
                                                  timeout)
     else:
@@ -67,7 +67,7 @@ def can_read_task(task, user):
 
 def after_save(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler':
+    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
         release_lock(project_id, task_id, user_id, timeout)
 
 
@@ -202,6 +202,71 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
                 skipped += 1
 
 
+def get_user_pref_task(project_id, user_id=None, user_ip=None,
+                    external_uid=None, offset=0):
+    """ Select a new task based on user preference set under user profile.
+
+    For each incomplete task, check if the number of users working on the task
+    is smaller than the number of answers still needed. In that case, acquire
+    a lock on the task that matches user preference(if any) with users profile
+    and return the task to the user. If offset is nonzero, skip that amount of
+    available tasks before returning to the user.
+    """
+    if offset > 2:
+        raise BadRequest()
+    user_pref_list = cached_users.get_user_preferences(user_id)
+    if user_pref_list is None:
+        sql = " \
+               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, \
+                  (SELECT info->'timeout' \
+                   FROM project \
+                   WHERE id={0}) as timeout \
+               FROM task \
+               LEFT JOIN task_run ON (task.id = task_run.task_id) \
+               WHERE NOT EXISTS \
+               (SELECT 1 FROM task_run WHERE project_id={0} AND \
+               user_id={1} AND task_id=task.id) \
+               AND task.project_id={0} \
+               AND task.user_pref IS NULL OR task.user_pref = '{2}' \
+               AND task.state !='completed' \
+               group by task.id ORDER BY priority_0 DESC, id ASC \
+               LIMIT 15; \
+               ".format(project_id, user_id, '{}')
+    else:
+        sql = " \
+               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, \
+                  (SELECT info->'timeout' \
+                   FROM project \
+                   WHERE id={0}) as timeout \
+               FROM task \
+               LEFT JOIN task_run ON (task.id = task_run.task_id) \
+               WHERE NOT EXISTS \
+               (SELECT 1 FROM task_run WHERE project_id={0} AND \
+               user_id={1} AND task_id=task.id) \
+               AND task.project_id={0} \
+               AND task.user_pref @> {2} \
+               AND task.state !='completed' \
+               group by task.id ORDER BY priority_0 DESC, id ASC \
+               LIMIT 15; \
+               ".format(project_id, user_id, user_pref_list)
+    sqltext = text(sql)
+    try:
+        rows = session.execute(sqltext)
+    except Exception as e:
+        current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
+        return None
+    skipped = 0
+
+    for task_id, taskcount, n_answers, timeout in rows:
+        timeout = timeout or TIMEOUT
+        remaining = n_answers - taskcount
+        if acquire_lock(project_id, task_id, user_id, remaining, timeout):
+            if skipped == offset:
+                return session.query(Task).get(task_id)
+            else:
+                skipped += 1
+
+
 KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
 TIMEOUT = ContributionsGuard.STAMP_TTL
 
@@ -244,7 +309,8 @@ def has_read_access(user):
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
-            ('locked_scheduler', 'Locked')]
+            ('locked_scheduler', 'Locked'),
+            ('user_pref_scheduler', 'User Preference Scheduler')]
 
 
 def _set_orderby_desc(query, orderby, descending):

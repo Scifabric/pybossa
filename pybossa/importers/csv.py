@@ -26,6 +26,7 @@ from flask import request
 from werkzeug.datastructures import FileStorage
 import io
 import time
+import json
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -51,7 +52,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         """Import CSV tasks."""
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                      'n_answers'])
+                      'n_answers', 'user_pref'])
         field_header_index = []
         row_number = 0
         for row in csvreader:
@@ -68,7 +69,13 @@ class BulkTaskCSVImport(BulkTaskImport):
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
-                        task_data[headers[idx]] = cell
+                        if headers[idx] == 'user_pref':
+                            if len(cell) > 0:
+                                task_data[headers[idx]] = json.loads(cell)
+                            else:
+                                task_data[headers[idx]] = {}
+                        else:
+                            task_data[headers[idx]] = cell
                     else:
                         task_data["info"][headers[idx]] = cell
                 yield task_data

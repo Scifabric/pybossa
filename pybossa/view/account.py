@@ -440,7 +440,6 @@ def _show_public_profile(user):
 
     return handle_content_type(response)
 
-
 def _show_own_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
     rank_and_score = cached_users.rank_and_score(user.id)
@@ -840,30 +839,38 @@ def add_metadata(name):
     """
     user = user_repo.get_by_name(name=name)
     form = MetadataForm(request.form)
-    md = cached_users.get_metadata(user.name)
     if not any(value for value in form.data.values()):
         user.info['metadata'] = {}
     elif form.validate():
         metadata = dict(admin=current_user.name, time_stamp=time.ctime(),
-                        languages=form.languages.data, user_type=form.user_type.data,
-                        start_time=form.start_time.data, end_time=form.end_time.data,
-                        location=form.location.data, review=form.review.data,
+                        user_type=form.user_type.data, start_time=form.start_time.data,
+                        end_time=form.end_time.data, review=form.review.data,
                         timezone=form.timezone.data, profile_name=user.name)
         user.info['metadata'] = metadata
+        user_pref = {}
+        if len(form.languages.data):
+            user_pref["languages"] = form.languages.data
+        if len(form.locations.data):
+            user_pref["locations"] = form.locations.data
+
+        if bool(user_pref):
+            user.user_pref = user_pref
     else:
         projects_contributed = cached_users.projects_contributed_cached(user.id)
         projects_created = cached_users.published_projects_cached(user.id)
+        metadata = cached_users.get_metadata(user.name)
         if current_user.is_authenticated() and current_user.admin:
             draft_projects = cached_users.draft_projects(user.id)
             projects_created.extend(draft_projects)
         title = "%s &middot; User Profile" % user.name
         flash("Please fix the errors", 'message')
         return render_template('/account/public_profile.html',
-                               title=title, user=user, metadata=md,
+                               title=title, user=user, metadata=metadata,
                                projects=projects_contributed, form=form,
                                projects_created=projects_created,
                                input_form=True)
     user_repo.update(user)
     cached_users.delete_user_metadata(user.name)
+    delete_memoized(get_user_preferences, user.id)
     flash("Input saved successfully", "info")
     return redirect(url_for('account.profile', name=name))
