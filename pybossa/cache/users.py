@@ -303,7 +303,7 @@ def get_user_preferences(user_id=None):
 
     user_pref = User.query.get(user_id).user_pref
 
-    if user_pref is None or not user_pref:
+    if not user_pref:
            return None
 
     # expand user preferences as per sql format for jsonb datatype

@@ -214,44 +214,43 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     """
     if offset > 2:
         raise BadRequest()
+
     user_pref_list = cached_users.get_user_preferences(user_id)
     if user_pref_list is None:
-        sql = " \
-               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, \
-                  (SELECT info->'timeout' \
-                   FROM project \
-                   WHERE id={0}) as timeout \
-               FROM task \
-               LEFT JOIN task_run ON (task.id = task_run.task_id) \
-               WHERE NOT EXISTS \
-               (SELECT 1 FROM task_run WHERE project_id={0} AND \
-               user_id={1} AND task_id=task.id) \
-               AND task.project_id={0} \
-               AND task.user_pref IS NULL OR task.user_pref = '{2}' \
-               AND task.state !='completed' \
-               group by task.id ORDER BY priority_0 DESC, id ASC \
-               LIMIT 15; \
-               ".format(project_id, user_id, '{}')
+        sql = '''
+               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+                  (SELECT info->'timeout'
+                   FROM project
+                   WHERE id=:project_id) as timeout
+               FROM task
+               LEFT JOIN task_run ON (task.id = task_run.task_id)
+               WHERE NOT EXISTS
+               (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+               user_id=:user_id AND task_id=task.id)
+               AND task.project_id=:project_id
+               AND task.user_pref IS NULL OR task.user_pref = '{0}'
+               AND task.state !='completed'
+               group by task.id ORDER BY priority_0 DESC, id ASC
+               LIMIT 15; '''.format('{}')
     else:
-        sql = " \
-               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, \
-                  (SELECT info->'timeout' \
-                   FROM project \
-                   WHERE id={0}) as timeout \
-               FROM task \
-               LEFT JOIN task_run ON (task.id = task_run.task_id) \
-               WHERE NOT EXISTS \
-               (SELECT 1 FROM task_run WHERE project_id={0} AND \
-               user_id={1} AND task_id=task.id) \
-               AND task.project_id={0} \
-               AND task.user_pref @> {2} \
-               AND task.state !='completed' \
-               group by task.id ORDER BY priority_0 DESC, id ASC \
-               LIMIT 15; \
-               ".format(project_id, user_id, user_pref_list)
+        sql = '''
+               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+                  (SELECT info->'timeout'
+                   FROM project
+                   WHERE id=:project_id) as timeout
+               FROM task
+               LEFT JOIN task_run ON (task.id = task_run.task_id)
+               WHERE NOT EXISTS
+               (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+               user_id=:user_id AND task_id=task.id)
+               AND task.project_id=:project_id
+               AND task.user_pref @> {0}
+               AND task.state !='completed'
+               group by task.id ORDER BY priority_0 DESC, id ASC
+               LIMIT 15; '''.format(user_pref_list)
     sqltext = text(sql)
     try:
-        rows = session.execute(sqltext)
+        rows = session.execute(sqltext, dict(project_id=project_id, user_id=user_id))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None

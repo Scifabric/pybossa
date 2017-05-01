@@ -71,7 +71,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                     if idx in field_header_index:
                         if headers[idx] == 'user_pref':
                             if len(cell) > 0:
-                                task_data[headers[idx]] = json.loads(cell)
+                                task_data[headers[idx]] = json.loads(cell.lower())
                             else:
                                 task_data[headers[idx]] = {}
                         else:

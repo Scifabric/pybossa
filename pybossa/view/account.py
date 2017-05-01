@@ -44,7 +44,7 @@ from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
-from pybossa.cache import users as cached_users
+from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
@@ -57,8 +57,9 @@ from otpauth import OtpAuth
 from pybossa.contributions_guard import ContributionsGuard
 import os
 import base64
-
 import time
+from pybossa.cache.users import get_user_preferences
+
 
 blueprint = Blueprint('account', __name__)
 
@@ -841,6 +842,7 @@ def add_metadata(name):
     form = MetadataForm(request.form)
     if not any(value for value in form.data.values()):
         user.info['metadata'] = {}
+        user.user_pref = {}
     elif form.validate():
         metadata = dict(admin=current_user.name, time_stamp=time.ctime(),
                         user_type=form.user_type.data, start_time=form.start_time.data,
@@ -848,13 +850,15 @@ def add_metadata(name):
                         timezone=form.timezone.data, profile_name=user.name)
         user.info['metadata'] = metadata
         user_pref = {}
-        if len(form.languages.data):
+        if form.languages.data:
             user_pref["languages"] = form.languages.data
-        if len(form.locations.data):
+        if form.locations.data:
             user_pref["locations"] = form.locations.data
 
         if bool(user_pref):
             user.user_pref = user_pref
+        else:
+            user.user_pref = {}
     else:
         projects_contributed = cached_users.projects_contributed_cached(user.id)
         projects_created = cached_users.published_projects_cached(user.id)

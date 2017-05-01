@@ -166,27 +166,25 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
         return n_tasks
     user_pref_list = cached_users.get_user_preferences(user_id)
     if user_pref_list is None:
-        sql = " \
-               SELECT COUNT(id) AS n_tasks FROM task \
-               WHERE NOT EXISTS \
-               (SELECT task_id FROM task_run WHERE project_id={0} AND \
-               user_id={1} AND task_id=task.id) \
-               AND project_id={0} \
-               AND user_pref IS NULL OR user_pref = '{2}' \
-               AND state !='completed'; \
-               ".format(project_id, user_id, '{}')
+        sql = '''
+               SELECT COUNT(id) AS n_tasks FROM task
+               WHERE NOT EXISTS
+               (SELECT task_id FROM task_run WHERE project_id=:project_id AND
+               user_id=:user_id AND task_id=task.id)
+               AND project_id=:project_id
+               AND user_pref IS NULL OR user_pref = '{0}'
+               AND state !='completed'; '''.format('{}')
     else:
-        sql = " \
-               SELECT COUNT(id) AS n_tasks FROM task \
-               WHERE NOT EXISTS \
-               (SELECT task_id FROM task_run WHERE project_id={0} AND \
-               user_id={1} AND task_id=task.id) \
-               AND project_id={0} AND user_pref @> {2} \
-               AND state !='completed' ; \
-               ".format(project_id, user_id, user_pref_list)
+        sql = '''
+               SELECT COUNT(id) AS n_tasks FROM task
+               WHERE NOT EXISTS
+               (SELECT task_id FROM task_run WHERE project_id=:project_id AND
+               user_id=:user_id AND task_id=task.id)
+               AND project_id=:project_id AND user_pref @> {0}
+               AND state !='completed' ; '''.format(user_pref_list)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext)
+        result = session.execute(sqltext, dict(project_id=project_id, user_id=user_id))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None
