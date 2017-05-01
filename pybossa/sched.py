@@ -22,9 +22,10 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo
-from redis_lock import LockManager
+from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest
+from flask import current_app
 import random
 from pybossa.cache import users as cached_users
 from flask import current_app
@@ -173,6 +174,11 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     """
     if offset > 2:
         raise BadRequest()
+    if offset == 1:
+        return None
+    user_count = get_active_user_count(project_id, sentinel.slave)
+
+    current_app.logger.info("Number of current users: {}".format(user_count))
     sql = text('''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -185,22 +191,22 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id AND task.state !='completed'
            group by task.id ORDER BY priority_0 DESC, id ASC
-           LIMIT 50;
+           LIMIT :limit;
            ''')
 
-    skipped = 0
     rows = session.execute(sql, dict(project_id=project_id,
-                                     user_id=user_id))
+                                     user_id=user_id,
+                                     limit=user_count + 5))
 
     for task_id, taskcount, n_answers, timeout in rows:
         timeout = timeout or TIMEOUT
         remaining = n_answers - taskcount
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
-            if skipped == offset:
-                return session.query(Task).get(task_id)
-            else:
-                skipped += 1
+            rows.close()
+            register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
+            return session.query(Task).get(task_id)
 
+    return None
 
 def get_user_pref_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, offset=0):

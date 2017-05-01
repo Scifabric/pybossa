@@ -2,6 +2,30 @@ from time import time
 from datetime import timedelta
 
 
+ACTIVE_USER_KEY = 'gigwork:active_users_in_project:{}'
+
+
+def get_active_user_key(project_id):
+    return ACTIVE_USER_KEY.format(project_id)
+
+
+def get_active_user_count(project_id, conn):
+    now = time()
+    key = get_active_user_key(project_id)
+    to_delete = [user for user, expiration in conn.hgetall(key).iteritems()
+                 if float(expiration) < now]
+    if to_delete:
+        conn.hdel(key, *to_delete)
+    return conn.hlen(key)
+
+
+def register_active_user(project_id, user_id, conn, ttl=2*60*60):
+    now = time()
+    key = get_active_user_key(project_id)
+    conn.hset(key, user_id, now + ttl)
+    conn.expire(key, ttl)
+
+
 class LockManager(object):
     """
     Class to manage resource locks
@@ -26,7 +50,7 @@ class LockManager(object):
         self._release_expired_locks(resource_id, timestamp)
         if self._cache.hexists(resource_id, client_id):
             return True
-        num_acquired = len(self._cache.hkeys(resource_id))
+        num_acquired = self._cache.hlen(resource_id)
         if num_acquired < limit:
             self._cache.hset(resource_id, client_id, timestamp)
             self._cache.expire(resource_id, self._duration)
