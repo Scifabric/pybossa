@@ -855,10 +855,7 @@ def add_metadata(name):
         if form.locations.data:
             user_pref["locations"] = form.locations.data
 
-        if bool(user_pref):
-            user.user_pref = user_pref
-        else:
-            user.user_pref = {}
+        user.user_pref = user_pref
     else:
         projects_contributed = cached_users.projects_contributed_cached(user.id)
         projects_created = cached_users.published_projects_cached(user.id)
