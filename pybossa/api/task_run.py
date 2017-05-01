@@ -24,6 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 import json
 from flask import request, Response
+from flask import current_app as app
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
@@ -149,7 +150,9 @@ def _upload_files_from_json(task_run_info, upload_path):
             content = value.get('content')
             if filename is None or content is None:
                 continue
-            out_url = s3_upload_from_string(content, filename,
+            out_url = s3_upload_from_string(app.config.get("S3_BUCKET"),
+                                            content,
+                                            filename,
                                             directory=upload_path)
             task_run_info[key] = out_url
 
@@ -159,5 +162,9 @@ def _upload_files_from_request(task_run_info, files, upload_path):
         if not key.endswith('__upload_url'):
             raise BadRequest("File upload field should end in __upload_url")
         file_obj = request.files[key]
-        s3_url = s3_upload_file_storage(file_obj, directory=upload_path)
+        s3_url = s3_upload_file_storage(app.config.get("S3_KEY"),
+                                        app.config.get("S3_SECRET"),
+                                        app.config.get("S3_UPLOAD_BUCKET"),
+                                        file_obj,
+                                        directory=upload_path)
         task_run_info[key] = s3_url

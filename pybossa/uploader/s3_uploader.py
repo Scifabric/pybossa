@@ -47,15 +47,24 @@ def tmp_file_from_string(string):
     return tmp_file
 
 
-def s3_upload_from_string(string, filename, headers=None, directory=""):
+def s3_upload_from_string(s3_key, s3_secret, s3_bucket, string,
+                          filename, headers=None, directory=""):
     """
     Upload a string to s3
     """
     tmp_file = tmp_file_from_string(string)
-    return s3_upload_tmp_file(tmp_file, filename, headers, directory)
+    return s3_upload_tmp_file(
+            s3_key,
+            s3_secret,
+            s3_bucket,
+            tmp_file,
+            filename,
+            headers,
+            directory)
 
 
-def s3_upload_file_storage(source_file, directory="", public=False):
+def s3_upload_file_storage(s3_key, s3_secret, s3_bucket, source_file,
+                           directory="", public=False):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -63,16 +72,32 @@ def s3_upload_file_storage(source_file, directory="", public=False):
     headers = {"Content-Type": source_file.content_type}
     tmp_file = NamedTemporaryFile(delete=False)
     source_file.save(tmp_file.name)
-    return s3_upload_tmp_file(tmp_file, filename, headers, directory, public)
+    return s3_upload_tmp_file(
+            s3_key,
+            s3_secret,
+            s3_bucket,
+            tmp_file,
+            filename,
+            headers,
+            directory,
+            public)
 
 
-def s3_upload_tmp_file(tmp_file, filename, headers, directory="", public=False):
+def s3_upload_tmp_file(s3_key, s3_secret, s3_bucket, tmp_file,
+                       filename, headers, directory="", public=False):
     """
     Upload the content of a temporary file to s3 and delete the file
     """
     try:
         check_type(tmp_file.name)
-        url = s3_upload_file(tmp_file.name, filename, headers, directory, public)
+        url = s3_upload_file(s3_key,
+                             s3_secret,
+                             s3_bucket,
+                             tmp_file.name,
+                             filename,
+                             headers,
+                             directory,
+                             public)
     finally:
         os.unlink(tmp_file.name)
     return url
@@ -85,23 +110,23 @@ def form_upload_directory(directory, filename):
     return "/".join(part for part in parts if part)
 
 
-def s3_upload_file(source_file_name, target_file_name, headers, directory="", public=False):
+def s3_upload_file(s3_key, s3_secret, s3_bucket, source_file_name,
+                   target_file_name, headers, directory="", public=False):
     """
     Upload a file-type object to S3
+    :param s3_key: AWS access key ID
+    :param s3_secret: AWS secret access key
+    :param s3_bucket: AWS S3 bucket name
     :param source_file_name: name in local file system of the file to upload
     :param target_file_name: file name as should appear in S3
     :param headers: a dictionary of headers to set on the S3 object
     :param directory: path in S3 where the object needs to be stored
     :param public: should the S3 object be publicly accessible
     """
-    if "S3_BUCKET" not in app.config:
-        raise InternalServerError("S3 bucket not configured")
-
     filename = secure_filename(target_file_name)
     upload_key = form_upload_directory(directory, filename)
-    conn = boto.connect_s3(app.config.get("S3_KEY"),
-                           app.config.get("S3_SECRET"))
-    bucket = conn.get_bucket(app.config["S3_BUCKET"])
+    conn = boto.connect_s3(s3_key, s3_secret)
+    bucket = conn.get_bucket(s3_bucket)
 
     key = bucket.new_key(upload_key)
     key.set_contents_from_filename(
