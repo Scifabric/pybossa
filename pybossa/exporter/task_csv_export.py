@@ -19,6 +19,7 @@
 
 import tempfile
 from pybossa.exporter import Exporter
+from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
 from pybossa.model.task import Task
@@ -26,6 +27,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from flask import url_for, safe_join, send_file, redirect
 
 
 class TaskCsvExporter(CsvExporter):
@@ -126,52 +128,107 @@ class TaskCsvExporter(CsvExporter):
                                              ty=normal_ty,
                                              headers=headers))
 
-    def _get_csv(self, out, writer, table, id):
+    def _get_csv(self, out, writer, table, id, expanded=False):
         if table == 'task':
-            filter_table =  task_repo.filter_tasks_by
-        # If table is task_run, use filter with additional data
+            query_filter = task_repo.filter_tasks_by
         elif table == 'task_run':
-            filter_table =  task_repo.filter_task_runs_with_task_and_user
+            query_filter = task_repo.filter_task_runs_by
         else:
             return
 
-        objs = filter_table(project_id=id, yielded=True)
+        objs = query_filter(project_id=id, yielded=True)
 
         # Get all headers to guarantee that all headers
         # and column values line up appropriately
-        headers = self._get_all_headers(objs)
+        headers = self._get_all_headers(objs, expanded)
         writer.writerow(headers)
 
         # After headers are written, write all rows
         for obj in objs:
-            self._handle_row(writer, obj, table, headers=headers)
+            self._handle_row(writer, obj, table, headers)
         out.seek(0)
         yield out.read()
 
-    def _get_all_headers(self, objs):
+    def _get_all_headers(self, objs, expanded):
         """Construct headers to **guarantee** that all headers
         for all tasks are included, regardless of whether
         or not all tasks were imported with the same headers.
         """
         obj_name = objs[0].__class__.__name__.lower()
         headers = set()
+
         for obj in objs:
-            headers = set(self._get_headers_from_row(obj, obj_name) + list(headers))
+            headers = set(self._get_headers_from_row(obj, obj_name, expanded) + list(headers))
+
         headers = sorted(list(headers))
         return headers
 
-    def _get_headers_from_row(self, obj, obj_name):
-        obj_dict = self.merge_objects(obj)
+    def _get_headers_from_row(self, obj, obj_name, expanded):
+        if expanded:
+            obj_dict = self.merge_objects(obj)
+        else:
+            obj_dict = obj.dictize()
+
         headers = self.get_keys(obj_dict, obj_name)
         return headers
 
-    def _respond_csv(self, ty, id):
+    def _respond_csv(self, ty, id, expanded=False):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
 
         try:
-            return self._get_csv(out, writer, ty, id)
+            return self._get_csv(out, writer, ty, id, expanded)
         except:
             def empty_csv(out):
                 yield out.read()
             return empty_csv(out)
+
+    def response_zip(self, project, ty, expanded=False):
+        return self.get_zip(project, ty, expanded)
+
+    def get_zip(self, project, ty, expanded=False):
+        """Delete existing ZIP file directly from uploads directory,
+        generate one on the fly and upload it."""
+        filename = self.download_name(project, ty)
+        self.delete_existing_zip(project, ty)
+        self._make_zip(project, ty, expanded)
+        if isinstance(uploader, local.LocalUploader):
+            filepath = self._download_path(project)
+            res = send_file(filename_or_fp=safe_join(filepath, filename),
+                            mimetype='application/octet-stream',
+                            as_attachment=True,
+                            attachment_filename=filename)
+            # fail safe mode for more encoded filenames.
+            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
+            return res
+        else:
+            return redirect(url_for('rackspace', filename=filename,
+                                    container=self._container(project),
+                                    _external=True))
+
+    def _make_zip(self, project, ty, expanded=False):
+        name = self._project_name_latin_encoded(project)
+        csv_task_generator = self._respond_csv(ty, project.id, expanded)
+        if csv_task_generator is not None:
+            # TODO: use temp file from csv generation directly
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in csv_task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                csv_task_generator.close()  # delete temp csv file
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(
+                        datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
+                    _zip.close()
+                    container = "user_%d" % project.owner_id
+                    _file = FileStorage(
+                        filename=self.download_name(project, ty), stream=zipped_datafile)
+                    uploader.upload_file(_file, container=container)
+                finally:
+                    zipped_datafile.close()
+            finally:
+                datafile.close()

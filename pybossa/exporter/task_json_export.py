@@ -20,10 +20,12 @@
 import json
 import tempfile
 from pybossa.exporter import Exporter
+from pybossa.uploader import local
 from pybossa.exporter.json_export import JsonExporter
 from pybossa.core import uploader, task_repo
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from flask import url_for, safe_join, send_file, redirect
 
 
 class TaskJsonExporter(JsonExporter):
@@ -58,22 +60,78 @@ class TaskJsonExporter(JsonExporter):
 
         return obj_dict
 
-    def gen_json(self, table, id):
+    def gen_json(self, table, id, expanded=False):
         if table == 'task':
-            filter_table =  task_repo.filter_tasks_by
-        # If table is task_run, user filter with additional data
+            query_filter = task_repo.filter_tasks_by
         elif table == 'task_run':
-            filter_table =  task_repo.filter_task_runs_with_task_and_user
+            query_filter = task_repo.filter_task_runs_by
         else:
             return
 
         n = getattr(task_repo, 'count_%ss_with' % table)(project_id=id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(filter_table(project_id=id, yielded=True), 1):
-            item = self.merge_objects(tr)
+
+        for i, tr in enumerate(query_filter(project_id=id, yielded=True), 1):
+            if expanded:
+                item = self.merge_objects(tr)
+            else:
+                item = tr.dictize()
+
             item = json.dumps(item)
+
             if (i == n):
                 sep = ""
             yield item + sep
         yield "]"
+
+    def _respond_json(self, ty, id, expanded=False):
+        return self.gen_json(ty, id, expanded)
+
+    def response_zip(self, project, ty, expanded=False):
+        return self.get_zip(project, ty, expanded)
+
+    def get_zip(self, project, ty, expanded=False):
+        """Delete existing ZIP file directly from uploads directory,
+        generate one on the fly and upload it."""
+        filename = self.download_name(project, ty)
+        self.delete_existing_zip(project, ty)
+        self._make_zip(project, ty, expanded)
+        if isinstance(uploader, local.LocalUploader):
+            filepath = self._download_path(project)
+            res = send_file(filename_or_fp=safe_join(filepath, filename),
+                            mimetype='application/octet-stream',
+                            as_attachment=True,
+                            attachment_filename=filename)
+            # fail safe mode for more encoded filenames.
+            # It seems Flask and Werkzeug do not support RFC 5987
+            # http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
+            return res
+        else:
+            return redirect(url_for('rackspace', filename=filename,
+                                    container=self._container(project),
+                                    _external=True))
+
+    def _make_zip(self, project, ty, expanded=False):
+        name = self._project_name_latin_encoded(project)
+        json_task_generator = self._respond_json(ty, project.id, expanded)
+        if json_task_generator is not None:
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in json_task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
+                    _zip.close()
+                    container = "user_%d" % project.owner_id
+                    _file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
+                    uploader.upload_file(_file, container=container)
+                finally:
+                    zipped_datafile.close()
+            finally:
+                datafile.close()
+
