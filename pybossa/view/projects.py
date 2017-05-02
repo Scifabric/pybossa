@@ -1234,16 +1234,16 @@ def export_to(short_name):
                                overall_progress=ps.overall_progress,
                                pro_features=pro)
 
-    def respond_json(ty):
-        if ty not in supported_tables:
+    def respond_json(ty, expanded):
+        if ty not in ['task', 'task_run']:
             return abort(404)
-        res = task_json_exporter.response_zip(project, ty)
+        res = task_json_exporter.response_zip(project, ty, expanded)
         return res
 
-    def respond_csv(ty):
-        if ty not in supported_tables:
+    def respond_csv(ty, expanded):
+        if ty not in ('task', 'task_run'):
             return abort(404)
-        res = task_csv_exporter.response_zip(project, ty)
+        res = task_csv_exporter.response_zip(project, ty, expanded)
         return res
 
     def create_ckan_datastore(ckan, table, package_id, records):
@@ -1318,6 +1318,15 @@ def export_to(short_name):
 
     ty = request.args.get('type')
     fmt = request.args.get('format')
+    expanded = request.args.get('expanded')
+
+    if expanded == 'True':
+        expanded = True
+    elif expanded == 'False':
+        expanded = False
+    else:
+        expanded = None
+
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
@@ -1336,8 +1345,9 @@ def export_to(short_name):
         if task_run:
             ensure_authorized_to('read', task_run)
 
-    return {"json": respond_json, "csv": respond_csv,
-            'ckan': respond_ckan}[fmt](ty)
+    return {"json": respond_json,
+            "csv": respond_csv,
+            'ckan': respond_ckan}[fmt](ty, expanded)
 
 
 @blueprint.route('/export')
