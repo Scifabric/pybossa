@@ -172,7 +172,7 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
                AND project_id=:project_id
-               AND user_pref IS NULL OR user_pref = '{0}'
+               AND (user_pref IS NULL OR user_pref = '{0}')
                AND state !='completed'; '''.format('{}')
     else:
         sql = '''
@@ -180,7 +180,7 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
                WHERE NOT EXISTS
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
-               AND project_id=:project_id AND user_pref @> {0}
+               AND project_id=:project_id AND (user_pref @> {0})
                AND state !='completed' ; '''.format(user_pref_list)
     sqltext = text(sql)
     try:

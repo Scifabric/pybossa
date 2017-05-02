@@ -214,6 +214,8 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     """
     if offset > 2:
         raise BadRequest()
+    if offset == 1:
+        return None
 
     user_pref_list = cached_users.get_user_preferences(user_id)
     if user_pref_list is None:
@@ -228,7 +230,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
                (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
                AND task.project_id=:project_id
-               AND task.user_pref IS NULL OR task.user_pref = '{0}'
+               AND (task.user_pref IS NULL OR task.user_pref = '{0}')
                AND task.state !='completed'
                group by task.id ORDER BY priority_0 DESC, id ASC
                LIMIT 15; '''.format('{}')
@@ -244,7 +246,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
                (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
                AND task.project_id=:project_id
-               AND task.user_pref @> {0}
+               AND (task.user_pref @> {0})
                AND task.state !='completed'
                group by task.id ORDER BY priority_0 DESC, id ASC
                LIMIT 15; '''.format(user_pref_list)
@@ -261,9 +263,11 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
         remaining = n_answers - taskcount
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
             if skipped == offset:
+                rows.close()
                 return session.query(Task).get(task_id)
             else:
                 skipped += 1
+    return None
 
 
 KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
