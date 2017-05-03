@@ -1255,7 +1255,7 @@ def export_to(short_name):
                               records=records,
                               resource_id=new_resource['result']['id'])
 
-    def respond_ckan(ty):
+    def respond_ckan(ty, expanded):
         # First check if there is a package (dataset) in CKAN
         msg_1 = gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
@@ -1265,7 +1265,7 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=project.short_name)
-            records = task_json_exporter.gen_json(ty, project.id)
+            records = task_json_exporter.gen_json(ty, project.id, expanded)
             if e:
                 raise e
             if package:
