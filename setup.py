@@ -56,12 +56,13 @@ requirements = [
     "flask_json_multidict",
     "flask-cors>=3.0.2, <3.0.3",
     "webassets>=0.12.1, <0.12.2",
-    "readability-lxml>=0.6.2, <1.0"
+    "readability-lxml>=0.6.2, <1.0",
+    "pybossa-onesignal",
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.3.6',
+    version = '2.3.7',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
