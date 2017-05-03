@@ -139,3 +139,7 @@ FAILED_JOBS_MAILS = 7
 FULLTEXTSEARCH_LANGUAGE = 'english'
 
 STRICT_SLASHES = True
+
+# Background jobs default time outs
+MINUTE = 60
+TIMEOUT = 10 * MINUTE

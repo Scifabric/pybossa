@@ -931,3 +931,15 @@ Then, this will enable you to use a new Jinja2 filter for authenticating PYBOSSA
 Also, if you are building a Single Page Application, you can use our API endpoint: *api/disqus/sso* to get the credentials and authenticate the users within your javascript. Check the endpoint information :ref:`disqus-api`.
 
 .. _`documentation`: https://help.disqus.com/customer/portal/articles/236206
+
+Background jobs timeout
+=======================
+
+By default PYBOSSA timeout for every job is 10 minutes. In principle it should be fine,
+but each project and server is unique, so if you start seeing to many jobs failing because
+the job timed out, then, increase the value using this config variables::
+
+    MINUTE = 60
+    TIMEOUT = 20 * 60
+
+
