@@ -137,13 +137,9 @@ class TaskCsvExporter(CsvExporter):
             return
 
         objs = query_filter(project_id=id, yielded=True)
-
-        # Get all headers to guarantee that all headers
-        # and column values line up appropriately
         headers = self._get_all_headers(objs, expanded)
         writer.writerow(headers)
 
-        # After headers are written, write all rows
         for obj in objs:
             self._handle_row(writer, obj, table, headers)
         out.seek(0)
@@ -158,7 +154,7 @@ class TaskCsvExporter(CsvExporter):
         headers = set()
 
         for obj in objs:
-            headers = set(self._get_headers_from_row(obj, obj_name, expanded) + list(headers))
+            headers.update(self._get_headers_from_row(obj, obj_name, expanded))
 
         headers = sorted(list(headers))
         return headers
