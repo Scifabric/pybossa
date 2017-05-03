@@ -750,5 +750,6 @@ def create_onesignal_app(project_id):
     
     if res[0] == 200:
         project.info['onesignal'] = res[2]
+        project.info['onesignal_app_id'] = res[2]['id']
         project_repo.update(project)
     return res

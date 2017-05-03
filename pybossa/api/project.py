@@ -73,7 +73,7 @@ class ProjectAPI(APIBase):
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
 
-    def _select_attributes(self, data):
+    def _filter_private_data(self, data):
         for key in data.keys():
             if key not in Project().public_attributes():
                 del data[key]
@@ -81,3 +81,12 @@ class ProjectAPI(APIBase):
             if key not in Project().public_info_keys():
                 del data['info'][key]
         return data
+
+    def _select_attributes(self, data):
+        if current_user.is_anonymous():
+            data = self._filter_private_data(data)
+            return data
+        if current_user.is_authenticated and current_user.id == data['owner_id']:
+            return data
+        if current_user.is_authenticated and current_user.admin:
+            return data
