@@ -21,7 +21,7 @@ from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs,\
     get_quarterly_date, get_periodic_jobs
 from mock import patch
 from nose.tools import assert_raises
-from default import with_context
+from default import with_context, Test
 
 def jobs():
     """Generator."""
@@ -35,19 +35,34 @@ def jobs():
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='quaterly')
 
 
-class TestJobs(object):
+class TestJobs(Test):
 
 
+    @with_context
     def test_create_dict_jobs(self):
         """Test JOB create_dict_jobs works."""
         data = [{'id': 1, 'short_name': 'app'}]
-        jobs_gen = create_dict_jobs(data, 'function')
+        timeout = self.flask_app.config.get('TIMEOUT')
+        jobs_gen = create_dict_jobs(data, 'function', timeout)
         jobs = []
         for j in jobs_gen:
             jobs.append(j)
         assert len(jobs) == 1
-        assert jobs[0]['name'] == 'function'
+        assert jobs[0]['name'] == 'function', jobs[0]
+        assert jobs[0]['timeout'] == timeout, jobs[0]
 
+    @with_context
+    def test_get_default_jobs(self):
+        """Test JOB get_default_jobs works."""
+        from pybossa.jobs import warm_up_stats, warn_old_project_owners
+        from pybossa.jobs import warm_cache, news, get_default_jobs
+        timeout = self.flask_app.config.get('TIMEOUT')
+        job_names = [warm_up_stats, warn_old_project_owners, warm_cache, news]
+        for job in get_default_jobs():
+            assert job['timeout'] == timeout, job
+            assert job['name'] in job_names, job
+
+    @with_context
     @patch('pybossa.jobs.get_periodic_jobs')
     def test_enqueue_periodic_jobs(self, get_periodic_jobs):
         """Test JOB enqueue_periodic_jobs works."""
@@ -58,6 +73,7 @@ class TestJobs(object):
         msg = "%s jobs in %s have been enqueued" % (len(expected_jobs), queue_name)
         assert res == msg, res
 
+    @with_context
     @patch('pybossa.jobs.get_periodic_jobs')
     def test_enqueue_periodic_jobs_bad_queue_name(self, mock_get_periodic_jobs):
         """Test JOB enqueue_periodic_jobs diff queue name works."""
@@ -86,6 +102,7 @@ class TestJobs(object):
         assert inactive.called == False
         assert project.called == False
 
+    @with_context
     @patch('pybossa.jobs.get_export_task_jobs')
     @patch('pybossa.jobs.get_project_jobs')
     @patch('pybossa.jobs.get_autoimport_jobs')
@@ -104,6 +121,7 @@ class TestJobs(object):
         assert project.called == False
         assert autoimport.called == False
 
+    @with_context
     @patch('pybossa.jobs.get_export_task_jobs')
     @patch('pybossa.jobs.get_project_jobs')
     @patch('pybossa.jobs.get_autoimport_jobs')
@@ -122,6 +140,7 @@ class TestJobs(object):
         assert export.called == False
         assert autoimport.called == False
 
+    @with_context
     @patch('pybossa.jobs.get_export_task_jobs')
     @patch('pybossa.jobs.get_project_jobs')
     @patch('pybossa.jobs.get_autoimport_jobs')
@@ -140,6 +159,7 @@ class TestJobs(object):
         assert export.called == False
         assert project.called == False
 
+    @with_context
     def test_get_quarterly_date_1st_quarter_returns_31_march(self):
         january_1st = datetime(2015, 1, 1)
         february_2nd = datetime(2015, 2, 2)
@@ -149,6 +169,7 @@ class TestJobs(object):
         assert get_quarterly_date(february_2nd) == datetime(2015, 3, 31)
         assert get_quarterly_date(march_31st) == datetime(2015, 3, 31)
 
+    @with_context
     def test_get_quarterly_date_2nd_quarter_returns_30_june(self):
         april_1st = datetime(2015, 4, 1)
         may_5th = datetime(2015, 5, 5)
@@ -158,6 +179,7 @@ class TestJobs(object):
         assert get_quarterly_date(may_5th) == datetime(2015, 6, 30)
         assert get_quarterly_date(june_30th) == datetime(2015, 6, 30)
 
+    @with_context
     def test_get_quarterly_date_3rd_quarter_returns_30_september(self):
         july_1st = datetime(2015, 7, 1)
         august_6th = datetime(2015, 8, 6)
@@ -167,6 +189,7 @@ class TestJobs(object):
         assert get_quarterly_date(august_6th) == datetime(2015, 9, 30)
         assert get_quarterly_date(september_30th) == datetime(2015, 9, 30)
 
+    @with_context
     def test_get_quarterly_date_4th_quarter_returns_31_december(self):
         october_1st = datetime(2015, 10, 1)
         november_24th = datetime(2015, 11,24)
@@ -176,6 +199,7 @@ class TestJobs(object):
         assert get_quarterly_date(november_24th) == datetime(2015, 12, 31)
         assert get_quarterly_date(december_31st) == datetime(2015, 12, 31)
 
+    @with_context
     def test_get_quarterly_date_returns_same_time_as_passed(self):
         now = datetime.utcnow()
 
@@ -183,5 +207,6 @@ class TestJobs(object):
 
         assert now.time() == returned_date.time()
 
+    @with_context
     def test_get_quarterly_date_raises_TypeError_on_wrong_args(self):
         assert_raises(TypeError, get_quarterly_date, 'wrong_arg')

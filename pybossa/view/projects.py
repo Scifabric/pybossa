@@ -56,7 +56,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks, IMPORT_TASKS_TIMEOUT, webhook
+from pybossa.jobs import import_tasks, webhook
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -65,6 +65,7 @@ from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
                           result_repo, webhook_repo, auditlog_repo)
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
+from pybossa.default_settings import TIMEOUT
 
 blueprint = Blueprint('project', __name__)
 
@@ -72,7 +73,7 @@ MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium',
                        connection=sentinel.master,
-                       default_timeout=IMPORT_TASKS_TIMEOUT)
+                       default_timeout=TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
 
 

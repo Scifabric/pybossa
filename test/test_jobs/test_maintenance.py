@@ -31,6 +31,7 @@ class TestMaintenance(Test):
         self.connection = StrictRedis()
         self.connection.flushall()
 
+    @with_context
     def test_get_maintenance_jobs(self):
         """Test get maintenance jobs works."""
         res = get_maintenance_jobs().next()

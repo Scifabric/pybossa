@@ -52,3 +52,4 @@ YOUTUBE_API_SERVER_KEY = 'apikey'
 LIMIT = 25
 PER = 15 * 60
 SSE = True
+TIMEOUT = 5 * 60
