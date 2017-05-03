@@ -992,7 +992,11 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
-    columns = get_searchable_columns(project.id)
+    try:
+        columns = get_searchable_columns(project.id)
+    except:
+        current_app.logger.exception('Error getting columns')
+        columns = []
 
     try:
         args = get_tasks_browse_args(request.args)
@@ -1057,10 +1061,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
 def is_valid_searchable_column(column_name):
     valid_str = r'[\w\-]{1,40}$'
-    is_valid = re.match(valid_str, column_name)
-    if not is_valid:
-        current_app.logger.error("Invalid field name {}, user {}"
-                                 .format(column_name, current_user.id))
+    is_valid = re.match(valid_str, column_name, re.UNICODE)
     return is_valid
 
 
@@ -1075,7 +1076,8 @@ def get_searchable_columns(project_id):
     if not isinstance(info, dict):
         return []
 
-    return [key for key in info if is_valid_searchable_column(key)]
+    columns = [key for key in info if is_valid_searchable_column(key)]
+    return sorted(columns)
 
 
 def get_tasks_browse_args(args):
