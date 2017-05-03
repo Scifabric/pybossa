@@ -1237,16 +1237,24 @@ def export_to(short_name):
                                pro_features=pro)
 
     def respond_json(ty, expanded):
-        if ty not in ['task', 'task_run']:
+        if ty not in ('task', 'task_run'):
             return abort(404)
-        res = task_json_exporter.response_zip(project, ty, expanded)
-        return res
+        try:
+            return task_json_exporter.response_zip(project, ty, expanded)
+        except:
+            flash(gettext('There was an error while exporting your data.'),
+                  'error')
+            return respond()
 
     def respond_csv(ty, expanded):
         if ty not in ('task', 'task_run'):
             return abort(404)
-        res = task_csv_exporter.response_zip(project, ty, expanded)
-        return res
+        try:
+            return task_csv_exporter.response_zip(project, ty, expanded)
+        except:
+            flash(gettext('There was an error while exporting your data.'),
+                  'error')
+            return respond()
 
     def create_ckan_datastore(ckan, table, package_id, records):
         new_resource = ckan.resource_create(name=table,
@@ -1320,14 +1328,9 @@ def export_to(short_name):
 
     ty = request.args.get('type')
     fmt = request.args.get('format')
-    expanded = request.args.get('expanded')
-
-    if expanded == 'True':
+    expanded = False
+    if request.args.get('expanded') == 'True':
         expanded = True
-    elif expanded == 'False':
-        expanded = False
-    else:
-        expanded = None
 
     if not (fmt and ty):
         if len(request.args) >= 1:
