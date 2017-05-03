@@ -28,6 +28,7 @@ from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from flask import url_for, safe_join, send_file, redirect
+from flask import current_app as app
 
 
 class TaskCsvExporter(CsvExporter):
@@ -204,6 +205,7 @@ class TaskCsvExporter(CsvExporter):
                                     _external=True))
 
     def _make_zip(self, project, ty, expanded=False):
+        error_log_string = 'Export failed = Project: {0}, Type: {1}, Format: CSV - Error: {2}'
         name = self._project_name_latin_encoded(project)
         csv_task_generator = self._respond_csv(ty, project.id, expanded)
         if csv_task_generator is not None:
@@ -224,7 +226,11 @@ class TaskCsvExporter(CsvExporter):
                     _file = FileStorage(
                         filename=self.download_name(project, ty), stream=zipped_datafile)
                     uploader.upload_file(_file, container=container)
+                except Exception as e:
+                    app.logger.error(error_log_string.format(project.short_name, ty, e))
                 finally:
                     zipped_datafile.close()
+            except Exception as e:
+                app.logger.error(error_log_string.format(project.short_name, ty, e))
             finally:
                 datafile.close()
