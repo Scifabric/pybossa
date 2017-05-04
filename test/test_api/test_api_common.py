@@ -102,6 +102,35 @@ class TestApiCommon(TestAPI):
             if endpoint == 'project':
                 assert len(data) == 1, data
                 project = data[0]
+                assert 'total' not in project['info'].keys(), data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'task':
+                assert len(data) == 1, data
+                task = data[0]
+                assert task['info']['url'] == 'my url', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'taskrun':
+                assert len(data) == 1, data
+                taskrun = data[0]
+                assert taskrun['info']['answer'] == 'annakarenina', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'user':
+                assert len(data) == 3, data
+                user = data[0]
+                assert user['name'] == 'user1', data
+                assert res.mimetype == 'application/json', res
+
+        for endpoint in self.endpoints:
+            url = '/api/' + endpoint + '?api_key=' + users[0].api_key + '&all=1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            if endpoint == 'project':
+                assert len(data) == 1, data
+                project = data[0]
                 assert project['info']['total'] == 150, data
                 assert res.mimetype == 'application/json', res
 
@@ -122,6 +151,7 @@ class TestApiCommon(TestAPI):
                 user = data[0]
                 assert user['name'] == 'user1', data
                 assert res.mimetype == 'application/json', res
+
 
     @with_context
     def test_get_query_with_api_key_context(self):
