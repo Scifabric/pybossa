@@ -23,11 +23,15 @@ Exporter module for exporting tasks and tasks results out of PYBOSSA
 import os
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
+import tempfile
 from pybossa.uploader import local
 from unidecode import unidecode
 from flask import url_for, safe_join, send_file, redirect
+from flask import current_app as app
 from werkzeug.utils import secure_filename
 from flatten_json import flatten
+from werkzeug.datastructures import FileStorage
+
 
 class Exporter(object):
 
@@ -146,3 +150,47 @@ class Exporter(object):
     def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
+
+    def _make_zipfile(self, project, ty, _format, _task_generator, expanded=False):
+        """Generate a ZIP of a certain type and upload it"""
+        name = self._project_name_latin_encoded(project)
+        if _task_generator is not None:
+
+           # Write data to file
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in _task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                _task_generator.close()
+            except Exception as e:
+                app.logger.exception(
+                        'File Writing Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
+                        .format(project.short_name, ty, _format, e))
+
+            # Create .zip archive
+            zipped_datafile = tempfile.NamedTemporaryFile()
+            try:
+                _zip = self._zip_factory(zipped_datafile.name)
+                _zip.write(
+                    datafile.name,
+                    secure_filename('{0}_{1}.{2}'.format(name, ty, _format)))
+                _zip.close()
+                container = "user_%d" % project.owner_id
+                _file = FileStorage(
+                    filename=self.download_name(project, ty), stream=zipped_datafile)
+            except Exception as e:
+                app.logger.exception(
+                        '.zip Creation Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
+                        .format(project.short_name, ty, _format, e))
+
+            # Upload data
+            try:
+                uploader.upload_file(_file, container=container)
+            except Exception as e:
+                app.logger.exception(
+                        'File Upload Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
+                        .format(project.short_name, ty, _format, e))
+            finally:
+                zipped_datafile.close()
+                datafile.close()

@@ -18,17 +18,11 @@
 # Cache global variables for timeouts
 
 import tempfile
-from pybossa.exporter import Exporter
 from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 from pybossa.util import UnicodeWriter
-from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
 from flask import url_for, safe_join, send_file, redirect
-from flask import current_app as app
 
 
 class TaskCsvExporter(CsvExporter):
@@ -196,7 +190,8 @@ class TaskCsvExporter(CsvExporter):
                             as_attachment=True,
                             attachment_filename=filename)
             # fail safe mode for more encoded filenames.
-            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # It seems Flask and Werkzeug do not support RFC 5987
+            # http://greenbytes.de/tech/tc2231/#encoding-2231-char
             # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
             return res
         else:
@@ -205,32 +200,7 @@ class TaskCsvExporter(CsvExporter):
                                     _external=True))
 
     def _make_zip(self, project, ty, expanded=False):
-        error_log_string = 'Export failed = Project: {0}, Type: {1}, Format: CSV - Error: {2}'
-        name = self._project_name_latin_encoded(project)
-        csv_task_generator = self._respond_csv(ty, project.id, expanded)
-        if csv_task_generator is not None:
-            # TODO: use temp file from csv generation directly
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in csv_task_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                csv_task_generator.close()  # delete temp csv file
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    _zip = self._zip_factory(zipped_datafile.name)
-                    _zip.write(
-                        datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
-                    _zip.close()
-                    container = "user_%d" % project.owner_id
-                    _file = FileStorage(
-                        filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
-                except Exception as e:
-                    app.logger.error(error_log_string.format(project.short_name, ty, e))
-                finally:
-                    zipped_datafile.close()
-            except Exception as e:
-                app.logger.error(error_log_string.format(project.short_name, ty, e))
-            finally:
-                datafile.close()
+        _format = 'csv'
+        _task_generator = self._respond_csv(ty, project.id, expanded)
+        return super(TaskCsvExporter, self)._make_zipfile(
+                project, ty, _format, _task_generator, expanded)

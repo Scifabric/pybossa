@@ -18,15 +18,10 @@
 # Cache global variables for timeouts
 
 import json
-import tempfile
-from pybossa.exporter import Exporter
 from pybossa.uploader import local
 from pybossa.exporter.json_export import JsonExporter
 from pybossa.core import uploader, task_repo
-from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
 from flask import url_for, safe_join, send_file, redirect
-from flask import current_app as app
 
 
 class TaskJsonExporter(JsonExporter):
@@ -115,29 +110,7 @@ class TaskJsonExporter(JsonExporter):
                                     _external=True))
 
     def _make_zip(self, project, ty, expanded=False):
-        error_log_string = 'Export failed = Project: {0}, Type: {1}, Format: JSON - Error: {2}'
-        name = self._project_name_latin_encoded(project)
-        json_task_generator = self._respond_json(ty, project.id, expanded)
-        if json_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in json_task_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    _zip = self._zip_factory(zipped_datafile.name)
-                    _zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
-                    _zip.close()
-                    container = "user_%d" % project.owner_id
-                    _file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
-                except Exception as e:
-                    app.logger.error(error_log_string.format(project.short_name, ty, e))
-                finally:
-                    zipped_datafile.close()
-            except Exception as e:
-                app.logger.error(error_log_string.format(project.short_name, ty, e))
-            finally:
-                datafile.close()
-
+        _format = 'json'
+        _task_generator = self._respond_json(ty, project.id, expanded)
+        return super(TaskJsonExporter, self)._make_zipfile(
+                project, ty, _format, _task_generator, expanded)
