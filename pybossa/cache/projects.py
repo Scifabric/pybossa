@@ -151,7 +151,7 @@ def get_task_filters(args):
             field_name, field_value = field_filter
             param_name = 'filter_by_field_{}'.format(ix)
             params[param_name] = field_value
-            filters += " AND COALESCE(task.info->>'{}', '') = :{}".format(
+            filters += " AND lower(COALESCE(task.info->>'{}', '')) = lower(:{})".format(
                 field_name,
                 param_name)
 

@@ -1152,7 +1152,7 @@ def get_tasks_browse_args(args):
 def get_field_filters(filter_string):
     filters = json.loads(filter_string)
     return [(name, value) for name, value in filters
-            if is_valid_searchable_column(name)]
+            if value and is_valid_searchable_column(name)]
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
