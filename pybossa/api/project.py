@@ -76,8 +76,11 @@ class ProjectAPI(APIBase):
 
     def _filter_private_data(self, data):
         tmp = copy.deepcopy(data)
+        public = Project().public_attributes()
+        public.append('link')
+        public.append('links')
         for key in tmp.keys():
-            if key not in Project().public_attributes():
+            if key not in public:
                 del tmp[key]
         for key in tmp['info'].keys():
             if key not in Project().public_info_keys():
