@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * projects,
 
 """
+import copy
 from werkzeug.exceptions import BadRequest, Forbidden
 from flask.ext.login import current_user
 from api_base import APIBase
@@ -84,9 +85,16 @@ class ProjectAPI(APIBase):
 
     def _select_attributes(self, data):
         if current_user.is_anonymous():
+            print "anon"
+            data = self._filter_private_data(data)
+            return data
+        if current_user.is_authenticated() and current_user.id != data['owner_id']:
+            print "auth but not owner"
             data = self._filter_private_data(data)
             return data
         if current_user.is_authenticated and current_user.id == data['owner_id']:
+            print "auth and owner"
             return data
         if current_user.is_authenticated and current_user.admin:
+            print "auth and admin"
             return data
