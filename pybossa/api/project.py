@@ -75,13 +75,14 @@ class ProjectAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _filter_private_data(self, data):
-        for key in data.keys():
+        tmp = copy.deepcopy(data)
+        for key in tmp.keys():
             if key not in Project().public_attributes():
-                del data[key]
-        for key in data['info'].keys():
+                del tmp[key]
+        for key in tmp['info'].keys():
             if key not in Project().public_info_keys():
-                del data['info'][key]
-        return data
+                del tmp['info'][key]
+        return tmp
 
     def _select_attributes(self, data):
         if current_user.is_anonymous():

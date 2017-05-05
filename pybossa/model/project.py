@@ -120,7 +120,8 @@ class Project(db.Model, DomainObject):
         return ['id', 'description', 'info', 'n_tasks', 'n_volunteers', 'name',
                 'overall_progress', 'short_name', 'created', 'description',
                 'last_activity', 'last_activity_raw', 'overall_progress',
-                'n_tasks', 'n_volunteers', 'owner', 'updated', 'featured']
+                'n_tasks', 'n_volunteers', 'owner', 'updated', 'featured',
+                'owner_id']
 
     @classmethod
     def public_info_keys(self):

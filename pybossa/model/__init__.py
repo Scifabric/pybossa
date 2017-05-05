@@ -18,7 +18,6 @@
 
 import datetime
 import uuid
-import copy
 
 from sqlalchemy.orm import class_mapper
 
@@ -34,7 +33,7 @@ class DomainObject(object):
         out = {}
         for col in self.__table__.c:
             out[col.name] = getattr(self, col.name)
-        return copy.deepcopy(out)
+        return out
 
     def info_public_keys(self, data=None):
         """Return a dictionary of info field with public keys."""

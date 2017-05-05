@@ -61,10 +61,10 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
-        projects = ProjectFactory.create_batch(8, info={'total': 150})
+        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
 
-        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
+        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
         projects.insert(0, project1)
         projects.append(project2)
         res = self.app.get('/api/project')
@@ -72,7 +72,8 @@ class TestProjectAPI(TestAPI):
         dataNoDesc = data
         assert len(data) == 10, data
         project = data[0]
-        assert project['info']['total'] == 150, data
+        assert project['info']['task_presenter'] == 'foo', data
+        assert 'total' not in project['info'].keys(), data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -145,8 +146,6 @@ class TestProjectAPI(TestAPI):
         projects_by_id = sorted(projects, key=lambda x: x.id, reverse=True)
         for i in range(len(projects_by_id)):
             assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
-
-
 
     @with_context
     def test_project_query_with_context(self):
