@@ -2056,7 +2056,6 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], res.data
         assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
-        assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
