@@ -256,14 +256,12 @@ class TestPrivacyWebPublic(web_helper.Helper):
         # non public projects data
         # err_msg = 'id should not be public'
         # assert 'id' not in project, err_msg
-        err_msg = 'owner_id should not be public'
-        assert 'owner_id' not in project, err_msg
+        err_msg = 'secret_key should not be public'
+        assert 'secret_key' not in project, err_msg
         err_msg = 'results should not be public'
         assert 'results' not in project['info'], err_msg
-        err_msg = 'task_presenter should not be public'
-        assert 'task_presenter' not in project['info'], err_msg
-        err_msg = 'tutorial should not be public'
-        assert 'tutorial' not in project['info'], err_msg
+        err_msg = 'onesignal should not be public'
+        assert 'onesignal' not in project['info'], err_msg
 
     @with_context
     def test_08_user_public_profile_json(self):
