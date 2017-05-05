@@ -20,6 +20,7 @@ import json
 
 from default import Test
 from pybossa.hateoas import Hateoas
+from factories import ProjectFactory, TaskRunFactory, TaskFactory
 
 
 class TestHateoas(Test):
@@ -28,8 +29,9 @@ class TestHateoas(Test):
 
     def setUp(self):
         super(TestHateoas, self).setUp()
-        with self.flask_app.app_context():
-            self.create()
+        project = ProjectFactory.create(published=True, id=1)
+        task = TaskFactory.create(id=1, project=project)
+        TaskRunFactory.create(project=project, task=task)
 
     # Tests
     def test_00_link_object(self):
