@@ -971,8 +971,6 @@ Also, PYBOSSA creates the **manifest.json** file required by OneSignal for you. 
 
     https://yourserver/<short_name>/manifest.json
 
-Use that URL for configuring the OneSignal's SDK. For more info, check their `documenation`_.
-
-.. _`documentation`: https://documentation.onesignal.com/docs/web-push-setup
+Use that URL for configuring the OneSignal's SDK. For more info, check their `documentation. <https://documentation.onesignal.com/docs/web-push-setup>`_
 
 
