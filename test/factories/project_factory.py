@@ -45,5 +45,7 @@ class ProjectFactory(BaseFactory):
     info = {'task_presenter': '<div>utf8=✓</div>',
             'thumbnail': 'img.png',
             'container': 'container',
-            'thumbnail_url': 'http://cdn.com/container/img.png'
+            'thumbnail_url': 'http://cdn.com/container/img.png',
+            'onesignal': {'data': 'private'},
+            'onesignal_app_id': 1
             }
