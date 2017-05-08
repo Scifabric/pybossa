@@ -25,6 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
+from pbsonesignal import PybossaOneSignal
 
 
 def schedule_job(function, scheduler):
@@ -736,7 +737,6 @@ def check_failed():
 def create_onesignal_app(project_id):
     """Create onesignal app."""
     from flask import url_for
-    from pbsonesignal import PybossaOneSignal
     from pybossa.core import project_repo
     auth_key = current_app.config.get('ONESIGNAL_AUTH_KEY')
     if auth_key:
