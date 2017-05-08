@@ -942,4 +942,20 @@ the job timed out, then, increase the value using this config variables::
     MINUTE = 60
     TIMEOUT = 20 * 60
 
+Web Push notifications
+======================
 
+PYBOSSA can send web push notifications to Google Chrome, Mozilla Firefox and Safari browsers. 
+
+For supporting this feature, PYBOSSA uses the Onesignal.com service, and when you have your API KEY
+in the settings.py file, PYBOSSA will automatically create a Onesignal app, and you will be able to 
+use its Javascript snippet to load the subscription button. Then, you will be able to send push notifications
+to users (anonymous and registered ones per project).
+
+To enable this feature, just create a Onesignal account, and get your API KEY. Then write it down in the
+settings_local.py file::
+
+    ONESIGNAL_AUTH_KEY = 'your-key'
+
+Restart the server, and add one background worker for the *webpush* queue. This queue will handle the 
+creation of the apps, as well as sending the push notifications.
