@@ -402,9 +402,10 @@ class TestProjectAPI(TestAPI):
 
         # test update
         data = {'name': 'My New Title', 'links': 'hateoas'}
+        data = dict(name='My New Title', links='hateoas', info=dict(onesignal='new', onesignal_app_id=1))
         datajson = json.dumps(data)
         ## anonymous
-        res = self.app.put('/api/project/%s' % id_, data=data)
+        res = self.app.put('/api/project/%s' % id_, data=datajson)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
@@ -433,6 +434,8 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
+        assert out.get('info')['onesignal_app_id'] == 1, error
+        assert out.get('info')['onesignal'] == 'new', error
 
         # without hateoas links
         del data['links']
@@ -501,7 +504,7 @@ class TestProjectAPI(TestAPI):
         assert err['exception_cls'] == 'DBIntegrityError', err
 
         # With not JSON data
-        datajson = data
+        datajson = {'foo': 'bar'}
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
