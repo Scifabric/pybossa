@@ -109,8 +109,8 @@ class TaskJsonExporter(JsonExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def _make_zip(self, project, ty, expanded=False):
-        _format = 'json'
-        _task_generator = self._respond_json(ty, project.id, expanded)
-        return super(TaskJsonExporter, self)._make_zipfile(
-                project, ty, _format, _task_generator, expanded)
+    def _make_zip(self, project, obj, expanded=False):
+        file_format = 'json'
+        obj_generator = self._respond_json(obj, project.id, expanded)
+        self._make_zipfile(
+                project, obj, file_format, obj_generator, expanded)

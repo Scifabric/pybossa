@@ -179,7 +179,8 @@ class TaskCsvExporter(CsvExporter):
 
     def get_zip(self, project, ty, expanded=False):
         """Delete existing ZIP file directly from uploads directory,
-        generate one on the fly and upload it."""
+        generate one on the fly and upload it.
+        """
         filename = self.download_name(project, ty)
         self.delete_existing_zip(project, ty)
         self._make_zip(project, ty, expanded)
@@ -199,8 +200,8 @@ class TaskCsvExporter(CsvExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def _make_zip(self, project, ty, expanded=False):
-        _format = 'csv'
-        _task_generator = self._respond_csv(ty, project.id, expanded)
-        return super(TaskCsvExporter, self)._make_zipfile(
-                project, ty, _format, _task_generator, expanded)
+    def _make_zip(self, project, obj, expanded=False):
+        file_format = 'csv'
+        obj_generator = self._respond_csv(obj, project.id, expanded)
+        self._make_zipfile(
+                project, obj, file_format, obj_generator, expanded)

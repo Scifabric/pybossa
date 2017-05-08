@@ -151,46 +151,37 @@ class Exporter(object):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
 
-    def _make_zipfile(self, project, ty, _format, _task_generator, expanded=False):
-        """Generate a ZIP of a certain type and upload it"""
-        name = self._project_name_latin_encoded(project)
-        if _task_generator is not None:
+    def _make_zipfile(self, project, obj, file_format, obj_generator, expanded=False):
+        """Generate a ZIP of a certain type and upload it.
 
-           # Write data to file
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in _task_generator:
+        :param project: A project object
+        :param obj: The domain object to be exported
+        :param file_format: The file format of the export
+        :param obj_generator: A generator object containing
+            the data to be written to file
+        :param expanded: Boolean indicating whether or not
+            relevant object metadata should be included
+            in the export
+        """
+        name = self._project_name_latin_encoded(project)
+        if obj_generator is not None:
+            with tempfile.NamedTemporaryFile() as datafile:
+                for line in obj_generator:
                     datafile.write(str(line))
                 datafile.flush()
-                _task_generator.close()
-            except Exception as e:
-                app.logger.exception(
-                        'File Writing Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
-                        .format(project.short_name, ty, _format, e))
+                obj_generator.close()
 
-            # Create .zip archive
-            zipped_datafile = tempfile.NamedTemporaryFile()
-            try:
-                _zip = self._zip_factory(zipped_datafile.name)
-                _zip.write(
-                    datafile.name,
-                    secure_filename('{0}_{1}.{2}'.format(name, ty, _format)))
-                _zip.close()
-                container = "user_%d" % project.owner_id
-                _file = FileStorage(
-                    filename=self.download_name(project, ty), stream=zipped_datafile)
-            except Exception as e:
-                app.logger.exception(
-                        '.zip Creation Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
-                        .format(project.short_name, ty, _format, e))
+                with tempfile.NamedTemporaryFile() as zipped_datafile:
+                    with self._zip_factory(zipped_datafile.name) as _zip:
+                        _zip.write(
+                            datafile.name,
+                            secure_filename('{0}_{1}.{2}'
+                                            .format(name, obj, file_format)))
 
-            # Upload data
-            try:
-                uploader.upload_file(_file, container=container)
-            except Exception as e:
-                app.logger.exception(
-                        'File Upload Failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
-                        .format(project.short_name, ty, _format, e))
-            finally:
-                zipped_datafile.close()
-                datafile.close()
+                    _file = FileStorage(
+                        filename=self.download_name(project, obj),
+                        stream=zipped_datafile)
+
+                    container = 'user_{}'.format(project.owner_id)
+                    uploader.upload_file(_file, container=container)
+

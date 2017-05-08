@@ -1241,7 +1241,10 @@ def export_to(short_name):
             return abort(404)
         try:
             return task_json_exporter.response_zip(project, ty, expanded)
-        except:
+        except Exception as e:
+            current_app.logger.exception(
+                    'JSON Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    .format(project.short_name, ty, e))
             flash(gettext('There was an error while exporting your data.'),
                   'error')
             return respond()
@@ -1251,7 +1254,10 @@ def export_to(short_name):
             return abort(404)
         try:
             return task_csv_exporter.response_zip(project, ty, expanded)
-        except:
+        except Exception as e:
+            current_app.logger.exception(
+                    'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    .format(project.short_name, ty, e))
             flash(gettext('There was an error while exporting your data.'),
                   'error')
             return respond()
