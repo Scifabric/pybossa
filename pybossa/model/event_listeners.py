@@ -78,10 +78,6 @@ def add_project_event(mapper, conn, target):
 @event.listens_for(Project, 'after_insert')
 def add_onesignal_app(mapper, conn, target):
     """Update PYBOSSA project with onesignal app."""
-    tmp = dict(id=target.id,
-               name=target.name,
-               short_name=target.short_name,
-               info=target.info)
     webpush_queue.enqueue(create_onesignal_app, target.id)
 
 
