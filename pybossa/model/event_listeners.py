@@ -20,6 +20,8 @@ from datetime import datetime
 from rq import Queue
 from sqlalchemy import event
 
+from flask import url_for
+
 from pybossa.feed import update_feed
 from pybossa.model import update_project_timestamp, update_target_timestamp
 from pybossa.model import make_timestamp
@@ -31,7 +33,8 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.core import result_repo
-from pybossa.jobs import webhook, notify_blog_users, create_onesignal_app
+from pybossa.jobs import webhook, notify_blog_users
+from pybossa.jobs import create_onesignal_app, push_notification
 
 from pybossa.core import sentinel
 
@@ -60,6 +63,21 @@ def add_blog_event(mapper, conn, target):
     mail_queue.enqueue(notify_blog_users,
                        blog_id=target.id,
                        project_id=target.project_id)
+    contents = {"en": "New update!"}
+    headings = {"en": target.title}
+    launch_url = url_for('project.show_blogpost',
+                         short_name=tmp['short_name'],
+                         id=target.id)
+    web_buttons = [{"id": "read-more-button",
+                    "text": "Read more",
+                    "icon": "http://i.imgur.com/MIxJp1L.png",
+                    "url": launch_url }]
+    webpush_queue.enqueue(push_notification,
+                          project_id=target.project_id,
+                          contents=contents,
+                          headings=headings,
+                          web_buttons=web_buttons,
+                          launch_url=launch_url)
 
 
 @event.listens_for(Project, 'after_insert')
