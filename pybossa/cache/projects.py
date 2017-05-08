@@ -20,7 +20,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
-from pybossa.util import pretty_date, static_vars, convertUtcToEst, convertEstToUtc
+from pybossa.util import pretty_date, static_vars, convert_utc_to_est, convert_est_to_utc
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached, memoize_essentials, delete_memoized_essential
 from datetime import datetime
 
@@ -95,8 +95,8 @@ def browse_tasks(project_id, args):
     total_count = 0
     for row in results:
         # TODO: use Jinja filters to format date
-        finish_time = convertUtcToEst(row.ft).strftime('%m-%d-%y %H:%M') if row.ft is not None else None
-        created = convertUtcToEst(row.created).strftime('%m-%d-%y %H:%M') if row.created is not None else None
+        finish_time = convert_utc_to_est(row.ft).strftime('%m-%d-%y %H:%M') if row.ft is not None else None
+        created = convert_utc_to_est(row.created).strftime('%m-%d-%y %H:%M') if row.created is not None else None
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0,
                     finish_time=finish_time, created=created)
@@ -129,33 +129,49 @@ def get_task_filters(args):
         params['priority_to'] = args['priority_to']
         filters += " AND priority_0 <= :priority_to"
     if args.get('created_from'):
-        datestring = convertEstToUtc(args['created_from']).isoformat()
+        datestring = convert_est_to_utc(args['created_from']).isoformat()
         params['created_from'] = datestring
         filters += " AND task.created >= :created_from"
     if args.get('created_to'):
-        datestring = convertEstToUtc(args['created_to']).isoformat()
+        datestring = convert_est_to_utc(args['created_to']).isoformat()
         params['created_to'] = datestring
         filters += " AND task.created <= :created_to"
     if args.get('ftime_from'):
-        datestring = convertEstToUtc(args['ftime_from']).isoformat()
+        datestring = convert_est_to_utc(args['ftime_from']).isoformat()
         params['ftime_from'] = datestring
         filters += " AND ft >= :ftime_from"
     if args.get('ftime_to'):
-        datestring = convertEstToUtc(args['ftime_to']).isoformat()
+        datestring = convert_est_to_utc(args['ftime_to']).isoformat()
         params['ftime_to'] = datestring
         filters += " AND ft <= :ftime_to"
     if args.get('order_by'):
         args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
     if args.get('filter_by_field'):
         for ix, field_filter in enumerate(args['filter_by_field']):
-            field_name, field_value = field_filter
+            field_name, operator, field_value = field_filter
+            if operator not in op_to_query:
+                raise ValueError('Invalid operator')
+
+            op = op_to_query[operator]
             param_name = 'filter_by_field_{}'.format(ix)
-            params[param_name] = field_value
-            filters += " AND lower(COALESCE(task.info->>'{}', '')) = lower(:{})".format(
-                field_name,
-                param_name)
+            params[param_name] = op['value'].format(field_value.lower())
+
+            filters += op['query'].format(field_name, param_name)
 
     return filters, params
+
+
+op_to_query = {
+    'starts with': dict(
+        query=" AND lower(COALESCE(task.info->>'{}', '')) like :{}",
+        value="{}%"),
+    'contains': dict(
+        query=" AND lower(COALESCE(task.info->>'{}', '')) like :{}",
+        value="%{}%"),
+    'equals': dict(
+        query=" AND lower(COALESCE(task.info->>'{}', '')) = :{}",
+        value="{}")
+}
 
 
 def _pct_status(n_task_runs, n_answers):

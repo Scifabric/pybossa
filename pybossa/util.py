@@ -28,6 +28,8 @@ import dateutil.tz
 from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
+import dateutil.parser
+from flask import abort, request, make_response, current_app
 from functools import wraps
 from flask.ext.login import current_user
 from sqlalchemy import text
@@ -212,40 +214,38 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
-def parseDateString(source):
-    import dateutil.parser
 
+def parse_date_string(source):
     if not isinstance(source, (date, datetime)):
         try:
             return dateutil.parser.parse(str(source))
-        except Exception, e:
+        except:
             return source
 
     return source
 
-def convertEstToUtc(source):
-    import dateutil.tz
 
-    source = parseDateString(source)
+def convert_est_to_utc(source):
+    source = parse_date_string(source)
 
     utc = dateutil.tz.gettz('UTC')
     est = dateutil.tz.gettz('America/New_York')
 
-    #naive to EST to UTC
+    # naive to EST to UTC
     return source.replace(tzinfo=est).astimezone(utc)
 
-def convertUtcToEst(source):
-    import dateutil.tz
 
-    source = parseDateString(source)
+def convert_utc_to_est(source):
+    source = parse_date_string(source)
 
     utc = dateutil.tz.gettz('UTC')
     est = dateutil.tz.gettz('America/New_York')
 
-    #naive to UTC to EST
+    # naive to UTC to EST
     return source.replace(tzinfo=utc).astimezone(est)
 
-# Fromhttp://stackoverflow.com/q/1551382
+
+# From http://stackoverflow.com/q/1551382
 def pretty_date(time=False):
     """Return a pretty date.
 
@@ -253,7 +253,6 @@ def pretty_date(time=False):
     pretty string like 'an hour ago', 'Yesterday', '3 months ago',
     'just now', etc.
     """
-    import dateutil.parser
     now = datetime.now()
     if type(time) is str or type(time) is unicode:
         time = dateutil.parser.parse(time)
@@ -298,6 +297,7 @@ def pretty_date(time=False):
         return ' '.join([str(day_diff / 365), "year ago"])
     return ' '.join([str(day_diff / 365), "years ago"])
 
+
 def datetime_filter(source, fmt):
 
     if not isinstance(source, (date, datetime)):
@@ -309,7 +309,7 @@ def datetime_filter(source, fmt):
     utc = dateutil.tz.gettz('UTC')
     est = dateutil.tz.gettz('America/New_York')
 
-    #naive to UTC to local
+    # naive to UTC to local
     source = source.replace(tzinfo=utc).astimezone(est)
     return source.strftime(fmt)
 
@@ -445,7 +445,6 @@ def get_user_signup_method(user):
         msg += " <strong>It seems that you created an account locally.</strong>"
         msg += " <br/>You can reset your password if you don't remember it."
         return (msg, 'local')
-
 
 
 def get_port():
@@ -712,32 +711,30 @@ def generate_manage_user_email(user, operation):
 
     server_url = current_app.config.get('SERVER_URL')
 
-    msgHeader = None
-    msgText = None
-    if (operation == "enable"):
-        msgHeader = 'GIGwork Account Enabled'
-        msgText = 'Your account {0} with GIGwork at {1} has been enabled.'\
+    if operation == "enable":
+        msg_header = 'GIGwork Account Enabled'
+        msg_text = 'Your account {0} with GIGwork at {1} has been enabled.'\
                       'You can now login with your account credentials.'\
                       .format(user.email_addr, server_url)
 
-    elif (operation == "disable"):
-        msgHeader = 'GIGwork Account Disabled'
-        msgText = 'Your account {0} with GIGwork at {1} has been disabled.'\
+    elif operation == "disable":
+        msg_header = 'GIGwork Account Disabled'
+        msg_text = 'Your account {0} with GIGwork at {1} has been disabled.'\
                        'Please contact your GIGwork administrator about reinstating your account.'\
                        .format(user.email_addr, server_url)
     else:
         return None
 
     if server_url == "https://qa.gigwork.net":
-        msgHeader = msgHeader + ' (QA Version)'
+        msg_header = msg_header + ' (QA Version)'
 
     msg = dict(subject='Account update on GIGwork',
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/manageuser.html',
                                   username=user.fullname,
-                                  msgHeader=msgHeader,
-                                  msgText=msgText)
+                                  msgHeader=msg_header,
+                                  msgText=msg_text)
     return msg
 
 
