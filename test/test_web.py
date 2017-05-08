@@ -1908,10 +1908,12 @@ class TestWeb(web.Helper):
         assert 'Featured Projects' in res.data, res.data
 
     @with_context
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_10_get_application(self, Mock, mock2):
+    def test_10_get_application(self, Mock, mock2, mock_onesignal):
         """Test WEB project URL/<short_name> works"""
+        from pybossa.jobs import create_onesignal_app
         # Sign in and create a project
         html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
                                     status_code=200,
@@ -1921,6 +1923,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_project()
         project = db.session.query(Project).first()
+        mock_onesignal.assert_called_with(create_onesignal_app, project.id)
         project.published = True
         db.session.commit()
         TaskFactory.create(project=project)
