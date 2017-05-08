@@ -56,7 +56,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks, webhook, create_onesignal_app
+from pybossa.jobs import import_tasks, webhook
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -75,8 +75,6 @@ importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
-
-webpush_queue = Queue('webpush', connection=sentinel.master)
 
 
 def sanitize_project_owner(project, owner, current_user):
@@ -288,8 +286,6 @@ def new():
                       category_id=category_by_default.id)
 
     project_repo.save(project)
-
-    webpush_queue.enqueue(create_onesignal_app, project.id)
 
     msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')

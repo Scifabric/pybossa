@@ -31,11 +31,13 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.core import result_repo
-from pybossa.jobs import webhook, notify_blog_users
+from pybossa.jobs import webhook, notify_blog_users, create_onesignal_app
+
 from pybossa.core import sentinel
 
 webhook_queue = Queue('high', connection=sentinel.master)
 mail_queue = Queue('email', connection=sentinel.master)
+webpush_queue = Queue('webpush', connection=sentinel.master)
 
 
 @event.listens_for(Blogpost, 'after_insert')
@@ -71,6 +73,16 @@ def add_project_event(mapper, conn, target):
     tmp = Project().to_public_json(tmp)
     obj.update(tmp)
     update_feed(obj)
+
+
+@event.listens_for(Project, 'after_insert')
+def add_onesignal_app(mapper, conn, target):
+    """Update PYBOSSA project with onesignal app."""
+    tmp = dict(id=target.id,
+               name=target.name,
+               short_name=target.short_name,
+               info=target.info)
+    webpush_queue.enqueue(create_onesignal_app, target.id)
 
 
 @event.listens_for(Task, 'after_insert')

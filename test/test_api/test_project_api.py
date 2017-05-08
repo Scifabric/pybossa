@@ -449,6 +449,21 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
+        assert 'task_presenter' not in out.get('info').keys(), error
+
+        data['info']['task_presenter'] = 'htmlpresenter'
+        newdata = json.dumps(data)
+        res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
+                           data=newdata)
+
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = project_repo.get(id_)
+        assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+        assert out.get('info')['onesignal_app_id'] == 1, error
+        assert out.get('info')['onesignal'] == 'new', error
 
         # With wrong id
         res = self.app.put('/api/project/5000?api_key=%s' % users[1].api_key,
