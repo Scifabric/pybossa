@@ -754,3 +754,18 @@ def create_onesignal_app(project_id):
             project.info['onesignal_app_id'] = res[2]['id']
             project_repo.update(project)
         return res
+
+
+def push_notification(project_id, **kwargs):
+    """Send push notification."""
+    from flask import url_for
+    from pybossa.core import project_repo
+    project = project_repo.get(project_id)
+    if project.info.get('onesignal'):
+        app_id = project.info.get('onesignal').get('id')
+        api_key = project.info.get('onesignal').get('basic_auth_key')
+        client = PybossaOneSignal(app_id=app_id, api_key=api_key)
+        return client.push_msg(contents=kwargs['contents'],
+                               headings=kwargs['headings'],
+                               launch_url=kwargs['launch_url'],
+                               web_buttons=kwargs['web_buttons'])
