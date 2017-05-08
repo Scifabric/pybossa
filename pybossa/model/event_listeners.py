@@ -67,7 +67,8 @@ def add_blog_event(mapper, conn, target):
     headings = {"en": target.title}
     launch_url = url_for('project.show_blogpost',
                          short_name=tmp['short_name'],
-                         id=target.id)
+                         id=target.id,
+                         _external=True)
     web_buttons = [{"id": "read-more-button",
                     "text": "Read more",
                     "icon": "http://i.imgur.com/MIxJp1L.png",

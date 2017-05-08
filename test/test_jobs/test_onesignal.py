@@ -17,11 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from pybossa.jobs import create_onesignal_app
+from pybossa.jobs import create_onesignal_app, push_notification
 from default import Test, with_context 
 from mock import patch, MagicMock, call
 from factories import ProjectFactory, UserFactory, CategoryFactory
 from pybossa.core import project_repo
+from flask import url_for
 
 
 class TestOnesignal(Test):
@@ -45,6 +46,24 @@ class TestOnesignal(Test):
         create_onesignal_app(project.id)
 
         assert client.called is False
+
+    @with_context
+    @patch('pybossa.jobs.PybossaOneSignal')
+    def test_push_notification_onesignal_no_config(self, mock_onesignal):
+        """Test push_notification with no config works."""
+
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=user)
+
+        blog = dict(title="hello", body="world", project_id=project.id)
+
+        url = '/api/blogpost?api_key=%s' % user.api_key
+
+        res = self.app.post(url, data=json.dumps(blog))
+       
+        assert res.status_code == 200, res.data
+        assert mock_onesignal.called is False
 
     @with_context
     @patch('pybossa.jobs.PybossaOneSignal')
@@ -81,3 +100,41 @@ class TestOnesignal(Test):
 
             assert new.info['onesignal'] == osdata, new.info
             assert new.info['onesignal_app_id'] == 1, new.info
+
+    @with_context
+    @patch('pybossa.jobs.PybossaOneSignal')
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
+    def test_push_notification(self, mock_queue, mock_onesignal):
+        """Test push_notification with config works."""
+
+        user = UserFactory.create()
+
+        project = ProjectFactory.create(owner=user)
+
+        blog = dict(title="hello", body="world", project_id=project.id)
+
+        url = '/api/blogpost?api_key=%s' % user.api_key
+
+        res = self.app.post(url, data=json.dumps(blog))
+
+        blogdata = json.loads(res.data)
+       
+        assert res.status_code == 200, res.data
+
+        contents = {"en": "New update!"}
+        headings = {"en": blog['title']}
+        launch_url = url_for('project.show_blogpost',
+                             short_name=project.short_name,
+                             id=blogdata['id'],
+                             _external=True)
+        web_buttons = [{"id": "read-more-button",
+                        "text": "Read more",
+                        "icon": "http://i.imgur.com/MIxJp1L.png",
+                        "url": launch_url }]
+
+        mock_queue.assert_called_with(push_notification,
+                                      project_id=project.id,
+                                      contents=contents,
+                                      headings=headings,
+                                      web_buttons=web_buttons,
+                                      launch_url=launch_url)
