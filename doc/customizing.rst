@@ -945,6 +945,12 @@ the job timed out, then, increase the value using this config variables::
 Web Push notifications
 ======================
 
+.. note::
+
+    You need to have HTTPS enabled for your site, otherwise you will need to use a subdomain from
+    onesignal.com in order to support this feature. If you cannot use HTTPS we recommend to not enable
+    it.
+
 PYBOSSA can send web push notifications to Google Chrome, Mozilla Firefox and Safari browsers. 
 
 For supporting this feature, PYBOSSA uses the Onesignal.com service, and when you have your API KEY
@@ -955,7 +961,18 @@ to users (anonymous and registered ones per project).
 To enable this feature, just create a Onesignal account, and get your API KEY. Then write it down in the
 settings_local.py file::
 
+
     ONESIGNAL_AUTH_KEY = 'your-key'
 
 Restart the server, and add one background worker for the *webpush* queue. This queue will handle the 
 creation of the apps, as well as sending the push notifications.
+
+Also, PYBOSSA creates the **manifest.json** file required by OneSignal for you. The manifest URL will be::
+
+    https://yourserver/<short_name>/manifest.json
+
+Use that URL for configuring the OneSignal's SDK. For more info, check their `documenation`_.
+
+.. _`documentation`: https://documentation.onesignal.com/docs/web-push-setup
+
+
