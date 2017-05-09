@@ -758,7 +758,6 @@ def create_onesignal_app(project_id):
 
 def push_notification(project_id, **kwargs):
     """Send push notification."""
-    from flask import url_for
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     if project.info.get('onesignal'):
