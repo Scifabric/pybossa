@@ -31,7 +31,7 @@ from pybossa.jobs import notify_blog_users
 class TestModelEventListeners(Test):
 
     @with_context
-    @patch('pybossa.model.event_listeners.webpush_queue')
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
     @patch('pybossa.model.event_listeners.update_feed')
     @patch('pybossa.model.event_listeners.mail_queue')
     def test_add_blog_event(self, mock_queue, mock_update_feed, mock_webpush):
