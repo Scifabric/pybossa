@@ -244,6 +244,59 @@ The same can be done for Javascript using the filter minjs:
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
+Using Webpack
+~~~~~~~~~~~~~
+
+PYBOSSA also supports `Webpack`_ thanks to Flask-Webpack. When writing your
+Webpack configuration script you'll need to use a plugin such as `webpack-manifest-plugin`_
+to generate a manifest file, which can then be loaded by adding the following variable
+to your **settings_local.py** file:
+
+* **WEBPACK_MANIFEST_PATH** = './dist/js/manifest.json'
+
+An example manifest might look something like this:
+
+.. code-block:: json
+
+    {  
+       "assets":{  
+          "images/dog/no-idea.jpg":"images/dog/no-idea.b9252d5fd8f39ce3523d303144338d7b.jpg",
+          "app_js.js":"app_js.8b7c0de88caa3f366b53.js",
+          "app_css.css":"app_css.d5cbf1ea13fccdf706e2.css"
+       },
+       "publicPath":"http://localhost:2992/assets/"
+    }
+
+You can then load these assets into your templates using the following global tags:
+
+* asset_url_for(asset_relative_path): to resolve an asset name
+* javascript_tag(asset_relative_paths): to write out 1 or more script tags
+* stylesheet_tag(asset_relative_paths): to write out 1 or more stylesheet tags
+
+
+Below is an example template using these global template tags:
+
+.. code-block:: html
+
+    <!doctype html>
+    <html lang="">
+    <head>
+      <title>Test application</title>
+      {{ stylesheet_tag('app_css') | safe }}
+    </head>
+    <body>
+    <p id="hello">Hello (without javascript)</p>
+    <img src="{{ asset_url_for('images/dog/no-idea.jpg') }}"
+         width="600" height="434" alt="No idea">
+    {{ javascript_tag('app_js') | safe }}
+    </body>
+    </html>
+
+
+.. _`Webpack`: https://webpack.js.org/
+.. _`webpack-manifest-plugin`: https://www.npmjs.com/package/webpack-manifest-plugin
+
+
 Results page
 =============
 
