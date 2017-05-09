@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import ProjectFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
@@ -31,6 +31,7 @@ class TestProjectRepositoryForProjects(Test):
         self.project_repo = ProjectRepository(db)
 
 
+    @with_context
     def test_get_return_none_if_no_project(self):
         """Test get method returns None if there is no project with the
         specified id"""
@@ -40,6 +41,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project is None, project
 
 
+    @with_context
     def test_get_returns_project(self):
         """Test get method returns a project if exists"""
 
@@ -50,6 +52,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project == retrieved_project, retrieved_project
 
 
+    @with_context
     def test_get_by_shortname_return_none_if_no_project(self):
         """Test get_by_shortname returns None when a project with the specified
         short_name does not exist"""
@@ -59,6 +62,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project is None, project
 
 
+    @with_context
     def test_get_by_shortname_returns_the_project(self):
         """Test get_by_shortname returns a project if exists"""
 
@@ -69,6 +73,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project == retrieved_project, retrieved_project
 
 
+    @with_context
     def test_get_by(self):
         """Test get_by returns a project with the specified attribute"""
 
@@ -79,6 +84,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project == retrieved_project, retrieved_project
 
 
+    @with_context
     def test_get_by_returns_none_if_no_project(self):
         """Test get_by returns None if no project matches the query"""
 
@@ -89,6 +95,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project is None, project
 
 
+    @with_context
     def get_all_returns_list_of_all_projects(self):
         """Test get_all returns a list of all the existing projects"""
 
@@ -102,6 +109,7 @@ class TestProjectRepositoryForProjects(Test):
             assert project in projects, project
 
 
+    @with_context
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no projects match the query"""
 
@@ -113,6 +121,7 @@ class TestProjectRepositoryForProjects(Test):
         assert len(retrieved_projects) == 0, retrieved_projects
 
 
+    @with_context
     def test_filter_by_one_condition(self):
         """Test filter_by returns a list of projects that meet the filtering
         condition"""
@@ -126,6 +135,7 @@ class TestProjectRepositoryForProjects(Test):
         assert should_be_missing not in retrieved_projects, retrieved_projects
 
 
+    @with_context
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
@@ -140,6 +150,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project in retrieved_projects, retrieved_projects
 
 
+    @with_context
     def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
@@ -155,6 +166,7 @@ class TestProjectRepositoryForProjects(Test):
         assert last_two == all_projects[2:]
 
 
+    @with_context
     def test_save(self):
         """Test save persist the project"""
 
@@ -166,6 +178,7 @@ class TestProjectRepositoryForProjects(Test):
         assert self.project_repo.get(project.id) == project, "Project not saved"
 
 
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
@@ -175,6 +188,7 @@ class TestProjectRepositoryForProjects(Test):
         assert_raises(DBIntegrityError, self.project_repo.save, project)
 
 
+    @with_context
     def test_save_only_saves_projects(self):
         """Test save raises a WrongObjectError when an object which is not
         a Project instance is saved"""
@@ -184,6 +198,7 @@ class TestProjectRepositoryForProjects(Test):
         assert_raises(WrongObjectError, self.project_repo.save, bad_object)
 
 
+    @with_context
     def test_update(self):
         """Test update persists the changes made to the project"""
 
@@ -196,6 +211,7 @@ class TestProjectRepositoryForProjects(Test):
         assert updated_project.description == 'the description has changed', updated_project
 
 
+    @with_context
     def test_update_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -206,6 +222,7 @@ class TestProjectRepositoryForProjects(Test):
         assert_raises(DBIntegrityError, self.project_repo.update, project)
 
 
+    @with_context
     def test_update_only_updates_projects(self):
         """Test update raises a WrongObjectError when an object which is not
         a Project instance is updated"""
@@ -215,6 +232,7 @@ class TestProjectRepositoryForProjects(Test):
         assert_raises(WrongObjectError, self.project_repo.update, bad_object)
 
 
+    @with_context
     def test_delete(self):
         """Test delete removes the project instance"""
 
@@ -226,6 +244,7 @@ class TestProjectRepositoryForProjects(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_also_removes_dependant_resources(self):
         """Test delete removes project tasks and taskruns too"""
         from factories import TaskFactory, TaskRunFactory, BlogpostFactory
@@ -245,6 +264,7 @@ class TestProjectRepositoryForProjects(Test):
         assert deleted_taskrun is None, deleted_taskrun
 
 
+    @with_context
     def test_delete_only_deletes_projects(self):
         """Test delete raises a WrongObjectError if is requested to delete other
         than a project"""
@@ -262,6 +282,7 @@ class TestProjectRepositoryForCategories(Test):
         self.project_repo = ProjectRepository(db)
 
 
+    @with_context
     def test_get_category_return_none_if_no_category(self):
         """Test get_category method returns None if there is no category with
         the specified id"""
@@ -271,6 +292,7 @@ class TestProjectRepositoryForCategories(Test):
         assert category is None, category
 
 
+    @with_context
     def test_get_category_returns_category(self):
         """Test get_category method returns a category if exists"""
 
@@ -281,6 +303,7 @@ class TestProjectRepositoryForCategories(Test):
         assert category == retrieved_category, retrieved_category
 
 
+    @with_context
     def test_get_category_by(self):
         """Test get_category returns a category with the specified attribute"""
 
@@ -291,6 +314,7 @@ class TestProjectRepositoryForCategories(Test):
         assert category == retrieved_category, retrieved_category
 
 
+    @with_context
     def test_get_category_by_returns_none_if_no_category(self):
         """Test get_category returns None if no category matches the query"""
 
@@ -301,6 +325,7 @@ class TestProjectRepositoryForCategories(Test):
         assert category is None, category
 
 
+    @with_context
     def get_all_returns_list_of_all_categories(self):
         """Test get_all_categories returns a list of all the existing categories"""
 
@@ -314,6 +339,7 @@ class TestProjectRepositoryForCategories(Test):
             assert category in categories, category
 
 
+    @with_context
     def test_filter_categories_by_no_matches(self):
         """Test filter_categories_by returns an empty list if no categories
         match the query"""
@@ -325,6 +351,7 @@ class TestProjectRepositoryForCategories(Test):
         assert isinstance(retrieved_categories, list)
         assert len(retrieved_categories) == 0, retrieved_categories
 
+    @with_context
     def test_filter_categories_by_ownerid(self):
         """Test filter_categories_by removes ownerid from query."""
 
@@ -336,6 +363,7 @@ class TestProjectRepositoryForCategories(Test):
         assert isinstance(retrieved_categories, list)
         assert len(retrieved_categories) == 1, retrieved_categories
 
+    @with_context
     def test_filter_categories_by_one_condition(self):
         """Test filter_categories_by returns a list of categories that meet
         the filtering condition"""
@@ -350,6 +378,7 @@ class TestProjectRepositoryForCategories(Test):
         assert should_be_missing not in retrieved_categories, retrieved_categories
 
 
+    @with_context
     def test_filter_categories_by_limit_offset(self):
         """Test that filter_categories_by supports limit and offset options"""
 
@@ -365,6 +394,7 @@ class TestProjectRepositoryForCategories(Test):
         assert last_two == all_categories[2:]
 
 
+    @with_context
     def test_save_category(self):
         """Test save_category persist the category"""
 
@@ -376,6 +406,7 @@ class TestProjectRepositoryForCategories(Test):
         assert self.project_repo.get_category(category.id) == category, "Category not saved"
 
 
+    @with_context
     def test_save_category_fails_if_integrity_error(self):
         """Test save_category raises a DBIntegrityError if the instance to be
        saved lacks a required value"""
@@ -385,6 +416,7 @@ class TestProjectRepositoryForCategories(Test):
         assert_raises(DBIntegrityError, self.project_repo.save_category, category)
 
 
+    @with_context
     def test_save_category_only_saves_categories(self):
         """Test save_category raises a WrongObjectError when an object which is
         not a Category instance is saved"""
@@ -394,6 +426,7 @@ class TestProjectRepositoryForCategories(Test):
         assert_raises(WrongObjectError, self.project_repo.save_category, bad_object)
 
 
+    @with_context
     def test_update_category(self):
         """Test update_category persists the changes made to the category"""
 
@@ -406,6 +439,7 @@ class TestProjectRepositoryForCategories(Test):
         assert updated_category.description == 'the description has changed', updated_category
 
 
+    @with_context
     def test_update_category_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -416,6 +450,7 @@ class TestProjectRepositoryForCategories(Test):
         assert_raises(DBIntegrityError, self.project_repo.update_category, category)
 
 
+    @with_context
     def test_update_category_only_updates_categories(self):
         """Test update_category raises a WrongObjectError when an object which is
         not a Category instance is updated"""
@@ -425,6 +460,7 @@ class TestProjectRepositoryForCategories(Test):
         assert_raises(WrongObjectError, self.project_repo.update_category, bad_object)
 
 
+    @with_context
     def test_delete_category(self):
         """Test delete_category removes the category instance"""
 
@@ -436,6 +472,7 @@ class TestProjectRepositoryForCategories(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_category_only_deletes_categories(self):
         """Test delete_category raises a WrongObjectError if is requested to
         delete other than a category"""

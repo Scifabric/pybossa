@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import BlogpostFactory
 from pybossa.repositories import BlogRepository
@@ -31,7 +31,7 @@ class TestBlogRepository(Test):
         super(TestBlogRepository, self).setUp()
         self.blog_repo = BlogRepository(db)
 
-
+    @with_context
     def test_get_return_none_if_no_blogpost(self):
         """Test get method returns None if there is no blogpost with the
         specified id"""
@@ -41,6 +41,7 @@ class TestBlogRepository(Test):
         assert blogpost is None, blogpost
 
 
+    @with_context
     def test_get_returns_blogpost(self):
         """Test get method returns a blogpost if exists"""
 
@@ -51,6 +52,7 @@ class TestBlogRepository(Test):
         assert blogpost == retrieved_blogpost, retrieved_blogpost
 
 
+    @with_context
     def test_get_by(self):
         """Test get_by returns a blogpost with the specified attribute"""
 
@@ -61,6 +63,7 @@ class TestBlogRepository(Test):
         assert blogpost == retrieved_blogpost, retrieved_blogpost
 
 
+    @with_context
     def test_get_by_returns_none_if_no_blogpost(self):
         """Test get_by returns None if no blogpost matches the query"""
 
@@ -71,6 +74,7 @@ class TestBlogRepository(Test):
         assert blogpost is None, blogpost
 
 
+    @with_context
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no blogposts match the query"""
 
@@ -82,6 +86,7 @@ class TestBlogRepository(Test):
         assert len(retrieved_blogposts) == 0, retrieved_blogposts
 
 
+    @with_context
     def test_filter_by_one_condition(self):
         """Test filter_by returns a list of blogposts that meet the filtering
         condition"""
@@ -95,6 +100,7 @@ class TestBlogRepository(Test):
         assert should_be_missing not in retrieved_blogposts, retrieved_blogposts
 
 
+    @with_context
     def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
@@ -110,6 +116,7 @@ class TestBlogRepository(Test):
         assert last_two == all_blogposts[2:]
 
 
+    @with_context
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
@@ -123,6 +130,7 @@ class TestBlogRepository(Test):
         assert blogpost in retrieved_blogposts, retrieved_blogposts
 
 
+    @with_context
     def test_save(self):
         """Test save persist the blogpost"""
 
@@ -134,6 +142,7 @@ class TestBlogRepository(Test):
         assert self.blog_repo.get(blogpost.id) == blogpost, "Blogpost not saved"
 
 
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
@@ -143,6 +152,7 @@ class TestBlogRepository(Test):
         assert_raises(DBIntegrityError, self.blog_repo.save, blogpost)
 
 
+    @with_context
     def test_save_only_saves_blogposts(self):
         """Test save raises a WrongObjectError when an object which is not
         a Blogpost instance is saved"""
@@ -152,6 +162,7 @@ class TestBlogRepository(Test):
         assert_raises(WrongObjectError, self.blog_repo.save, bad_object)
 
 
+    @with_context
     def test_update(self):
         """Test update persists the changes made to the blogpost"""
 
@@ -164,6 +175,7 @@ class TestBlogRepository(Test):
         assert updated_blogpost.body == 'new content', updated_blogpost
 
 
+    @with_context
     def test_update_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -174,6 +186,7 @@ class TestBlogRepository(Test):
         assert_raises(DBIntegrityError, self.blog_repo.update, blogpost)
 
 
+    @with_context
     def test_update_only_updates_blogposts(self):
         """Test update raises a WrongObjectError when an object which is not
         a Blogpost instance is updated"""
@@ -183,6 +196,7 @@ class TestBlogRepository(Test):
         assert_raises(WrongObjectError, self.blog_repo.update, bad_object)
 
 
+    @with_context
     def test_delete(self):
         """Test delete removes the blogpost instance"""
 
@@ -194,6 +208,7 @@ class TestBlogRepository(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_only_deletes_blogposts(self):
         """Test delete raises a WrongObjectError if is requested to delete other
         than a blogpost"""
