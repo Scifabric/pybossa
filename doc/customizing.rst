@@ -942,4 +942,41 @@ the job timed out, then, increase the value using this config variables::
     MINUTE = 60
     TIMEOUT = 20 * 60
 
+Web Push notifications
+======================
+
+.. note::
+
+    You need to have HTTPS enabled for your site, otherwise you will need to use a subdomain from
+    onesignal.com in order to support this feature. If you cannot use HTTPS we recommend to not enable
+    it.
+
+PYBOSSA can send web push notifications to Google Chrome, Mozilla Firefox and Safari browsers. 
+
+For supporting this feature, PYBOSSA uses the Onesignal.com service, and when you have your API KEY
+in the settings.py file, PYBOSSA will automatically create a Onesignal app, and you will be able to 
+use its Javascript snippet to load the subscription button. Then, you will be able to send push notifications
+to users (anonymous and registered ones per project).
+
+To enable this feature, just create a Onesignal account, and get your API KEY. Then write it down in the
+settings_local.py file::
+
+
+    ONESIGNAL_AUTH_KEY = 'your-key'
+
+Restart the server, and add one background worker for the *webpush* queue. This queue will handle the 
+creation of the apps, as well as sending the push notifications.
+
+Also, PYBOSSA creates the **manifest.json** file required by OneSignal for you. The manifest URL will be::
+
+    https://yourserver/<short_name>/manifest.json
+
+Use that URL for configuring the OneSignal's SDK. For more info, check their `documentation. <https://documentation.onesignal.com/docs/web-push-setup>`_
+
+.. note:: 
+
+    You will need to get the onesignal_app_id variable for each project. You can do that in your theme by extending the OneSignal 
+    script config with an Ajax call to retrieve the project information in JSON. You can achieve it by getting the two following 
+    endpoints: (i) /api/project?short_name=<short_name> or (ii) /project/<short_name>/ with application/json content type. 
+
 

@@ -32,6 +32,7 @@ user_repo = UserRepository(db)
 
 class TestBlogpostView(web.Helper):
 
+    @with_context
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
@@ -54,6 +55,7 @@ class TestBlogpostView(web.Helper):
         assert 'titleone' in res.data
         assert 'titletwo' in res.data
 
+    @with_context
     def test_json_blogposts_get_all(self):
         """Test JSON blogpost GET all blogposts"""
         user = self.create_users()[1]
@@ -107,6 +109,7 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_get_all_errors(self):
         """test blogpost get all raises error if the project does not exist"""
         url = "/project/non-existing-project/blog"
@@ -115,6 +118,7 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     def test_json_blogpost_get_all_errors(self):
         """Test JSON blogpost GET all raises error if the project does not exist"""
         url = "/project/non-existing-project/blog"
@@ -126,6 +130,7 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
@@ -145,6 +150,7 @@ class TestBlogpostView(web.Helper):
         assert 'title' in res.data
 
 
+    @with_context
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
@@ -170,6 +176,7 @@ class TestBlogpostView(web.Helper):
 
     from pybossa.view.projects import redirect
 
+    @with_context
     @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, project owners can create"""
@@ -193,6 +200,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost.user_id == user.id, blogpost.user_id
 
 
+    @with_context
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
         project = ProjectFactory.create()
@@ -212,6 +220,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost == None, blogpost
 
 
+    @with_context
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the project is forbidden"""
         self.register()
@@ -230,6 +239,7 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_blogpost_create_errors(self):
         """Test blogposts create for non existing projects raises errors"""
         self.register()
@@ -243,6 +253,7 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_update_by_owner(self, mock_redirect):
         """Test blogposts, project owners can update"""
@@ -269,6 +280,7 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
         project = ProjectFactory.create()
@@ -315,6 +327,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'title', blogpost.title
 
 
+    @with_context
     def test_blogpost_update_errors(self):
         """Test blogposts update for non existing projects raises errors"""
         self.register()
@@ -342,6 +355,7 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_delete_by_owner(self, mock_redirect):
         """Test blogposts, project owner can delete"""
@@ -361,6 +375,7 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
         project = ProjectFactory.create()
@@ -394,6 +409,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost is not None
 
 
+    @with_context
     def test_blogpost_delete_errors(self):
         """Test blogposts delete for non existing projects raises errors"""
         self.register()

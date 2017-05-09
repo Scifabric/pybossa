@@ -1834,3 +1834,22 @@ def reset_secret_key(short_name):
     msg = gettext('New secret key generated')
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))
+
+
+@blueprint.route('/<short_name>/manifest.json')
+def manifest(short_name):
+    """
+    Return the JSON manifest for web push notifications for Google Chrome.
+    """
+
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
+
+    data = dict(name=project.short_name,
+                short_name=project.short_name,
+                start_url=url_for('project.details',
+                                  short_name=project.short_name),
+                display="standalone",
+                gcm_sender_id=current_app.config.get('GCM_SENDER_ID'))
+    return Response(json.dumps(data), mimetype='application/json')

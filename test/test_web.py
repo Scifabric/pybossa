@@ -1908,10 +1908,28 @@ class TestWeb(web.Helper):
         assert 'Featured Projects' in res.data, res.data
 
     @with_context
+    def test_project_manifest(self):
+        """Test WEB project manifest.json works."""
+        project = ProjectFactory.create()
+        url = '/project/%s/manifest.json' % project.short_name
+        res = self.app.get(url)
+
+        data = json.loads(res.data)
+
+        assert 'gcm_sender_id' in data.keys(), data
+        assert 'start_url' in data.keys(), data
+        assert 'name' in data.keys(), data
+        assert 'short_name' in data.keys(), data
+        assert 'display' in data.keys(), data
+
+
+    @with_context
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_10_get_application(self, Mock, mock2):
+    def test_10_get_application(self, Mock, mock2, mock_onesignal):
         """Test WEB project URL/<short_name> works"""
+        from pybossa.jobs import create_onesignal_app
         # Sign in and create a project
         html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
                                     status_code=200,
@@ -1921,6 +1939,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_project()
         project = db.session.query(Project).first()
+        mock_onesignal.assert_called_with(create_onesignal_app, project.id)
         project.published = True
         db.session.commit()
         TaskFactory.create(project=project)
@@ -2033,7 +2052,6 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], res.data
         assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
-        assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '302 FOUND', res.status
@@ -2057,7 +2075,6 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], res.data
         assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
-        assert 'owner_id' not in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status

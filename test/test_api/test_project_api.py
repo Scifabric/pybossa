@@ -28,6 +28,7 @@ from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.model.project import Project
+from pybossa.jobs import create_onesignal_app
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 result_repo = ResultRepository(db)
@@ -61,10 +62,10 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
-        projects = ProjectFactory.create_batch(8, info={'total': 150})
+        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
 
-        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
+        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
         projects.insert(0, project1)
         projects.append(project2)
         res = self.app.get('/api/project')
@@ -72,7 +73,8 @@ class TestProjectAPI(TestAPI):
         dataNoDesc = data
         assert len(data) == 10, data
         project = data[0]
-        assert project['info']['total'] == 150, data
+        assert project['info']['task_presenter'] == 'foo', data
+        assert 'total' not in project['info'].keys(), data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -145,8 +147,6 @@ class TestProjectAPI(TestAPI):
         projects_by_id = sorted(projects, key=lambda x: x.id, reverse=True)
         for i in range(len(projects_by_id)):
             assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
-
-
 
     @with_context
     def test_project_query_with_context(self):
@@ -327,7 +327,8 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_project_post(self):
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
+    def test_project_post(self, mock_onesignal):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         CategoryFactory.create()
@@ -370,6 +371,8 @@ class TestProjectAPI(TestAPI):
         ## Test that a default category is assigned to the project
         assert out.category_id, "No category assigned to project"
         id_ = out.id
+        ## Test that onesignal is called
+        mock_onesignal.assert_called_with(create_onesignal_app, out.id)
 
         # test re-create should fail
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
@@ -403,9 +406,10 @@ class TestProjectAPI(TestAPI):
 
         # test update
         data = {'name': 'My New Title', 'links': 'hateoas'}
+        data = dict(name='My New Title', links='hateoas', info=dict(onesignal='new', onesignal_app_id=1))
         datajson = json.dumps(data)
         ## anonymous
-        res = self.app.put('/api/project/%s' % id_, data=data)
+        res = self.app.put('/api/project/%s' % id_, data=datajson)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
@@ -434,6 +438,8 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
+        assert out.get('info')['onesignal_app_id'] == 1, error
+        assert out.get('info')['onesignal'] == 'new', error
 
         # without hateoas links
         del data['links']
@@ -447,6 +453,21 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
+        assert 'task_presenter' not in out.get('info').keys(), error
+
+        data['info']['task_presenter'] = 'htmlpresenter'
+        newdata = json.dumps(data)
+        res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
+                           data=newdata)
+
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = project_repo.get(id_)
+        assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+        assert out.get('info')['onesignal_app_id'] == 1, error
+        assert out.get('info')['onesignal'] == 'new', error
 
         # With wrong id
         res = self.app.put('/api/project/5000?api_key=%s' % users[1].api_key,
@@ -502,7 +523,7 @@ class TestProjectAPI(TestAPI):
         assert err['exception_cls'] == 'DBIntegrityError', err
 
         # With not JSON data
-        datajson = data
+        datajson = {'foo': 'bar'}
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)

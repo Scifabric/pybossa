@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -34,7 +34,7 @@ class TestBlogpostAuthorization(Test):
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_given_blogpost(self):
         """Test anonymous users cannot create a given blogpost"""
@@ -44,7 +44,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_blogposts_for_given_project(self):
         """Test anonymous users cannot create blogposts for a given project"""
@@ -53,14 +53,14 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_blogposts(self):
         """Test anonymous users cannot create any blogposts"""
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', Blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_non_owner_authenticated_user_create_given_blogpost(self):
         """Test authenticated user cannot create a given blogpost if is not the
@@ -73,7 +73,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_admin.id != project.owner_id
         assert_raises(Forbidden, ensure_authorized_to, 'create', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_non_owner_authenticated_user_create_blogpost_for_given_project(self):
         """Test authenticated user cannot create blogposts for a given project
@@ -85,7 +85,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_admin.id != project.owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_create_given_blogpost(self):
         """Test authenticated user can create a given blogpost if is project owner"""
@@ -97,7 +97,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'create', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_create_blogpost_for_given_project(self):
         """Test authenticated user can create blogposts for a given project
@@ -109,7 +109,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_create_blogpost_as_other_user(self):
         """Test authenticated user cannot create blogpost if is project owner but
@@ -123,7 +123,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner_id
         assert_raises(Forbidden, ensure_authorized_to, 'create', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read_given_blogpost(self):
         """Test anonymous users can read a given blogpost"""
@@ -133,7 +133,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read_blogposts_for_given_project(self):
         """Test anonymous users can read blogposts of a given project"""
@@ -141,7 +141,7 @@ class TestBlogpostAuthorization(Test):
         project = ProjectFactory.create(published=True)
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read_given_blogpost_draft_project(self):
         """Test anonymous users cannot read a given blogpost of a draft project"""
@@ -151,7 +151,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read_blogposts_for_given_draft_project(self):
         """Test anonymous users cannot read blogposts of a given project if is a draft"""
@@ -160,7 +160,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_given_blogpost(self):
         """Test authenticated user can read a given blogpost if is not the project owner"""
@@ -172,7 +172,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_blogposts_for_given_project(self):
         """Test authenticated user can read blogposts of a given project if
@@ -184,7 +184,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_given_blogpost_draft_project(self):
         """Test authenticated user cannot read a given blogpost of a draft project
@@ -197,7 +197,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id != project.owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_blogposts_for_given_draft_project(self):
         """Test authenticated user cannot read blogposts of a given project if is
@@ -209,7 +209,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id != project.owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_read_given_blogpost(self):
         """Test authenticated user can read a given blogpost if is the project owner"""
@@ -221,7 +221,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_read_blogposts_for_given_project(self):
         """Test authenticated user can read blogposts of a given project if is the
@@ -233,7 +233,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_read_given_blogpost_draft_project(self):
         """Test authenticated user can read a given blogpost of a draft project if
@@ -246,7 +246,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_read_blogposts_for_given_draft_project(self):
         """Test authenticated user can read blogposts of a given draft project if
@@ -258,7 +258,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_read_given_blogpost_draft_project(self):
         """Test admin can read a given blogpost of a draft project"""
@@ -270,7 +270,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_admin.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_read_blogposts_for_given_draft_project(self):
         """Test admin can read blogposts of a given draft project"""
@@ -281,7 +281,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_admin.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_update_blogpost(self):
         """Test anonymous users cannot update blogposts"""
@@ -290,7 +290,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'update', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_non_owner_authenticated_user_update_blogpost(self):
         """Test authenticated user cannot update a blogpost if is not the post
@@ -303,7 +303,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_admin.id != blogpost.owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'update', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_update_blogpost(self):
         """Test authenticated user can update blogpost if is the post owner"""
@@ -315,7 +315,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == blogpost.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'update', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_delete_blogpost(self):
         """Test anonymous users cannot delete blogposts"""
@@ -324,7 +324,7 @@ class TestBlogpostAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_delete_blogpost(self):
         """Test authenticated user cannot delete a blogpost if is not the post
@@ -336,7 +336,7 @@ class TestBlogpostAuthorization(Test):
         assert not self.mock_authenticated.admin
         assert_raises(Forbidden, ensure_authorized_to, 'delete', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_delete_blogpost(self):
         """Test authenticated user can delete a blogpost if is the post owner"""
@@ -348,7 +348,7 @@ class TestBlogpostAuthorization(Test):
         assert self.mock_authenticated.id == blogpost.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'delete', blogpost)
 
-
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_authenticated_user_delete_blogpost(self):
         """Test authenticated user can delete any blogpost if is admin"""

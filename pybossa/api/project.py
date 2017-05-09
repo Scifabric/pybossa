@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * projects,
 
 """
+import copy
 from werkzeug.exceptions import BadRequest, Forbidden
 from flask.ext.login import current_user
 from api_base import APIBase
@@ -73,8 +74,27 @@ class ProjectAPI(APIBase):
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
 
+    def _filter_private_data(self, data):
+        tmp = copy.deepcopy(data)
+        public = Project().public_attributes()
+        public.append('link')
+        public.append('links')
+        for key in tmp.keys():
+            if key not in public:
+                del tmp[key]
+        for key in tmp['info'].keys():
+            if key not in Project().public_info_keys():
+                del tmp['info'][key]
+        return tmp
+
     def _select_attributes(self, data):
-        for key in self.private_keys:
-            if data.get(key):
-                del data[key]
-        return data
+        if current_user.is_anonymous():
+            data = self._filter_private_data(data)
+            return data
+        if (current_user.is_authenticated and
+                (current_user.id == data['owner_id'] or current_user.admin)):
+            return data
+        else:
+            data = self._filter_private_data(data)
+            return data
+

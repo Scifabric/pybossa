@@ -184,8 +184,9 @@ class TestUsersCache(Test):
 
         # check privacy
         err_msg = 'private information is in public record'
-        assert 'owner_id' not in projects_contributed[0], err_msg
-        assert 'task_presenter' not in projects_contributed[0]['info']
+        assert 'secret_key' not in projects_contributed[0], err_msg
+        assert 'onesignal' not in projects_contributed[0]['info']
+        assert 'passwd_hash' not in projects_contributed[0]['info']
 
     def test_public_projects_contributed_contributions_cached(self):
         """Test CACHE USERS public cached projects_contributed returns a list of projects that has
@@ -203,8 +204,9 @@ class TestUsersCache(Test):
 
         # check privacy
         err_msg = 'private information is in public record'
-        assert 'owner_id' not in projects_contributed[0], err_msg
-        assert 'task_presenter' not in projects_contributed[0]['info']
+        assert 'secret_key' not in projects_contributed[0], err_msg
+        assert 'onesignal' not in projects_contributed[0]['info']
+        assert 'passwd_hash' not in projects_contributed[0]['info']
 
     def test_projects_contributed_returns_fields(self):
         """Test CACHE USERS projects_contributed returns the info of the projects with

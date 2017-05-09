@@ -25,6 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
+from pbsonesignal import PybossaOneSignal
 
 
 def schedule_job(function, scheduler):
@@ -731,3 +732,39 @@ def check_failed():
         return "JOBS: %s You have failed the system." % job_ids
     else:
         return "You have not failed the system"
+
+
+def create_onesignal_app(project_id):
+    """Create onesignal app."""
+    from flask import url_for
+    from pybossa.core import project_repo
+    auth_key = current_app.config.get('ONESIGNAL_AUTH_KEY')
+    if auth_key:
+        project = project_repo.get(project_id)
+        chrome_web_origin = url_for('project.details',
+                                    short_name=project.short_name)
+        chrome_web_default_notification_icon = project.info.get('thumbnail_url')
+        client = PybossaOneSignal(auth_key=auth_key)
+        res = client.create_app(project.short_name,
+                                chrome_web_origin,
+                                chrome_web_default_notification_icon)
+        
+        if res[0] == 200:
+            project.info['onesignal'] = res[2]
+            project.info['onesignal_app_id'] = res[2]['id']
+            project_repo.update(project)
+        return res
+
+
+def push_notification(project_id, **kwargs):
+    """Send push notification."""
+    from pybossa.core import project_repo
+    project = project_repo.get(project_id)
+    if project.info.get('onesignal'):
+        app_id = project.info.get('onesignal').get('id')
+        api_key = project.info.get('onesignal').get('basic_auth_key')
+        client = PybossaOneSignal(app_id=app_id, api_key=api_key)
+        return client.push_msg(contents=kwargs['contents'],
+                               headings=kwargs['headings'],
+                               launch_url=kwargs['launch_url'],
+                               web_buttons=kwargs['web_buttons'])
