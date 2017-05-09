@@ -74,7 +74,8 @@ def create_app(run_as_server=True):
     setup_cors(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
-    webpack.init_app(app)
+    if app.config.get('WEBPACK_MANIFEST_PATH'):  # pragma: no cover
+        webpack.init_app(app)
     import pybossa.model.event_listeners
     return app
 
