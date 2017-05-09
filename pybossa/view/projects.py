@@ -56,7 +56,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks, webhook
+from pybossa.jobs import import_tasks, webhook, create_onesignal_app
 from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
@@ -1853,3 +1853,16 @@ def manifest(short_name):
                 display="standalone",
                 gcm_sender_id=current_app.config.get('GCM_SENDER_ID'))
     return Response(json.dumps(data), mimetype='application/json')
+
+
+@blueprint.route('/<short_name>/webpush')
+@login_required
+def enable_webpush(short_name):
+    """Enable webpush notifications for this project."""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress,
+     last_activity, n_results) = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    res = create_onesignal_app(project.id)
+    return Response(json.dumps(res[2]), mimetype='application/json')
