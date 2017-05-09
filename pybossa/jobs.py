@@ -742,7 +742,8 @@ def create_onesignal_app(project_id):
     if auth_key:
         project = project_repo.get(project_id)
         chrome_web_origin = url_for('project.details',
-                                    short_name=project.short_name)
+                                    short_name=project.short_name,
+                                    _external=True)
         chrome_web_default_notification_icon = project.info.get('thumbnail_url')
         client = PybossaOneSignal(auth_key=auth_key)
         res = client.create_app(project.short_name,
