@@ -973,4 +973,10 @@ Also, PYBOSSA creates the **manifest.json** file required by OneSignal for you. 
 
 Use that URL for configuring the OneSignal's SDK. For more info, check their `documentation. <https://documentation.onesignal.com/docs/web-push-setup>`_
 
+.. note:: 
+
+    You will need to get the onesignal_app_id variable for each project. You can do that in your theme by extending the OneSignal 
+    script config with an Ajax call to retrieve the project information in JSON. You can achieve it by getting the two following 
+    endpoints: (i) /api/project?short_name=<short_name> or (ii) /project/<short_name>/ with application/json content type. 
+
 
