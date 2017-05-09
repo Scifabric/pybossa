@@ -55,6 +55,8 @@ from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
+from pybossa.cache.task_browse_helpers import (get_searchable_columns,
+                                               parse_tasks_browse_args)
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
@@ -1001,7 +1003,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         columns = []
 
     try:
-        args = get_tasks_browse_args(request.args)
+        args = parse_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
         current_app.logger.exception(err)
         flash(gettext('Invalid filtering criteria'), 'error')
@@ -1059,103 +1061,6 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         ensure_authorized_to('read', project)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
-
-
-def is_valid_searchable_column(column_name):
-    valid_str = r'[\w\-]{1,40}$'
-    is_valid = re.match(valid_str, column_name, re.UNICODE)
-    return is_valid
-
-
-def get_searchable_columns(project_id):
-    tasks = task_repo.filter_tasks_by(project_id=project_id,
-                                      limit=1,
-                                      desc=True)
-    if not tasks:
-        return []
-
-    info = tasks[0].info
-    if not isinstance(info, dict):
-        return []
-
-    columns = [key for key in info if is_valid_searchable_column(key)]
-    return sorted(columns)
-
-
-def get_tasks_browse_args(args):
-    parsed_args = dict()
-
-    if args.get('task_id'):
-        parsed_args["task_id"] = int(args['task_id'])
-    if args.get('pcomplete_from'):
-        parsed_args["pcomplete_from"] = float(args['pcomplete_from']) / 100
-    if args.get('pcomplete_to'):
-        parsed_args["pcomplete_to"] = float(args['pcomplete_to']) / 100
-    if args.get('hide_completed'):
-        parsed_args["hide_completed"] = args['hide_completed'].lower() == 'true'
-
-    iso_string_format = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$'
-    if args.get('created_from'):
-        if re.match(iso_string_format, args['created_from']):
-            parsed_args["created_from"] = args['created_from']
-        else:
-            raise ValueError('created_from date format error, value: {}'
-                             .format(args['created_from']))
-    if args.get('created_to'):
-        if re.match(iso_string_format, args['created_to']):
-            parsed_args["created_to"] = args['created_to']
-        else:
-            raise ValueError('created_to date format error, value: {}'
-                             .format(args['created_to']))
-    if args.get('ftime_from'):
-        if re.match(iso_string_format, args['ftime_from']):
-            parsed_args["ftime_from"] = args['ftime_from']
-        else:
-            raise ValueError('ftime_from date format error, value: %s'
-                             .format(args['ftime_from']))
-    if args.get('ftime_to'):
-        if re.match(iso_string_format, args['ftime_to']):
-            parsed_args["ftime_to"] = args['ftime_to']
-        else:
-            raise ValueError('ftime_to date format error, value: %s'
-                             .format(args['ftime_to']))
-    if args.get('priority_from'):
-        parsed_args["priority_from"] = float(args['priority_from'])
-    if args.get('priority_to'):
-        parsed_args["priority_to"] = float(args['priority_to'])
-    if args.get('display_columns'):
-        parsed_args["display_columns"] = json.loads(args['display_columns'])
-    if not isinstance(parsed_args.get("display_columns"), list):
-        parsed_args["display_columns"] = ['task_id', 'priority', 'pcomplete',
-                                          'created', 'actions']
-
-    parsed_args["order_by_dict"] = dict()
-    if args.get('order_by'):
-        allowed_columns = cached_projects.browse_tasks.allowed_fields
-        parsed_args["order_by"] = args['order_by'].strip().lower()
-        for clause in parsed_args["order_by"].split(','):
-            order_by_field = clause.split(' ')
-            if len(order_by_field) != 2 or order_by_field[0] not in allowed_columns:
-                raise ValueError('order_by value sent by the user is invalid: %s'.format(args['order_by']))
-            if order_by_field[0] in parsed_args["order_by_dict"]:
-                raise ValueError('order_by field is duplicated: %s'
-                                 .format(args['order_by']))
-            parsed_args["order_by_dict"][order_by_field[0]] = order_by_field[1]
-
-        for key, value in allowed_columns.iteritems():
-            parsed_args["order_by"] = parsed_args["order_by"].replace(key, value)
-
-    if args.get('filter_by_field'):
-        parsed_args['filter_by_field'] = get_field_filters(args['filter_by_field'])
-
-    return parsed_args
-
-
-def get_field_filters(filter_string):
-    filters = json.loads(filter_string)
-    return [(name, operator, value)
-            for name, operator, value in filters
-            if value and is_valid_searchable_column(name)]
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])

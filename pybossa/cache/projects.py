@@ -16,13 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for projects."""
-from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
-from pybossa.util import pretty_date, static_vars, convert_utc_to_est, convert_est_to_utc
+from pybossa.util import pretty_date, static_vars, convert_utc_to_est
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached, memoize_essentials, delete_memoized_essential
-from datetime import datetime
+from pybossa.cache.task_browse_helpers import get_task_filters
 
 
 session = db.slave_session
@@ -95,8 +94,11 @@ def browse_tasks(project_id, args):
     total_count = 0
     for row in results:
         # TODO: use Jinja filters to format date
-        finish_time = convert_utc_to_est(row.ft).strftime('%m-%d-%y %H:%M') if row.ft is not None else None
-        created = convert_utc_to_est(row.created).strftime('%m-%d-%y %H:%M') if row.created is not None else None
+        def format_date(date):
+            if date is not None:
+                return convert_utc_to_est(date).strftime('%m-%d-%y %H:%M')
+        finish_time = format_date(row.ft)
+        created = format_date(row.created)
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0,
                     finish_time=finish_time, created=created)
@@ -105,73 +107,6 @@ def browse_tasks(project_id, args):
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return total_count, tasks
-
-
-def get_task_filters(args):
-    filters = ''
-    params = {}
-
-    if args.get('task_id'):
-        params['task_id'] = args['task_id']
-        filters += ' AND id = :task_id'
-    if args.get('hide_completed') and args.get('hide_completed') is True:
-        filters += " AND task.state='ongoing'"
-    if args.get('pcomplete_from') is not None:
-        params['pcomplete_from'] = args['pcomplete_from']
-        filters += " AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from"
-    if args.get('pcomplete_to') is not None:
-        params['pcomplete_to'] = args['pcomplete_to']
-        filters += " AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to"
-    if args.get('priority_from') is not None:
-        params['priority_from'] = args['priority_from']
-        filters += " AND priority_0 >= :priority_from"
-    if args.get('priority_to') is not None:
-        params['priority_to'] = args['priority_to']
-        filters += " AND priority_0 <= :priority_to"
-    if args.get('created_from'):
-        datestring = convert_est_to_utc(args['created_from']).isoformat()
-        params['created_from'] = datestring
-        filters += " AND task.created >= :created_from"
-    if args.get('created_to'):
-        datestring = convert_est_to_utc(args['created_to']).isoformat()
-        params['created_to'] = datestring
-        filters += " AND task.created <= :created_to"
-    if args.get('ftime_from'):
-        datestring = convert_est_to_utc(args['ftime_from']).isoformat()
-        params['ftime_from'] = datestring
-        filters += " AND ft >= :ftime_from"
-    if args.get('ftime_to'):
-        datestring = convert_est_to_utc(args['ftime_to']).isoformat()
-        params['ftime_to'] = datestring
-        filters += " AND ft <= :ftime_to"
-    if args.get('order_by'):
-        args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
-    if args.get('filter_by_field'):
-        for ix, field_filter in enumerate(args['filter_by_field']):
-            field_name, operator, field_value = field_filter
-            if operator not in op_to_query:
-                raise ValueError('Invalid operator')
-
-            op = op_to_query[operator]
-            param_name = 'filter_by_field_{}'.format(ix)
-            params[param_name] = op['value'].format(field_value.lower())
-
-            filters += op['query'].format(field_name, param_name)
-
-    return filters, params
-
-
-op_to_query = {
-    'starts with': dict(
-        query=" AND lower(COALESCE(task.info->>'{}', '')) like :{}",
-        value="{}%"),
-    'contains': dict(
-        query=" AND lower(COALESCE(task.info->>'{}', '')) like :{}",
-        value="%{}%"),
-    'equals': dict(
-        query=" AND lower(COALESCE(task.info->>'{}', '')) = :{}",
-        value="{}")
-}
 
 
 def _pct_status(n_task_runs, n_answers):
