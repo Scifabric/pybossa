@@ -11,12 +11,14 @@ revision = '920578f0de9c'
 down_revision = '9a83475c60c3'
 
 from alembic import op
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table('task_task_run_counts',
+    op.create_table('counter',
                     sa.Column('id', sa.Integer, primary_key=True),
+                    sa.Column('created', TIMESTAMP),
                     sa.Column('project_id', sa.Integer, 
                               sa.ForeignKey('project.id',
                                             ondelete='CASCADE'),
@@ -31,4 +33,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('task_task_run_counts')
+    op.drop_table('counter')

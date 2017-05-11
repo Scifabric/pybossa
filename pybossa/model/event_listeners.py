@@ -32,7 +32,8 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
-from pybossa.core import result_repo
+from pybossa.model.counter import Counter
+from pybossa.core import result_repo, db
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.jobs import create_onesignal_app, push_notification
 
@@ -259,3 +260,24 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
+
+@event.listens_for(Task, 'after_insert')
+def create_zero_counter(mapper, conn, target):
+    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, 0)"
+                 % (make_timestamp(), target.project_id, target.id))
+    conn.execute(sql_query)
+
+@event.listens_for(TaskRun, 'after_insert')
+def increase_task_counter(mapper, conn, target):
+    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, 1)"
+                 % (make_timestamp(), target.project_id, target.task_id))
+    conn.execute(sql_query)
+
+@event.listens_for(TaskRun, 'after_delete')
+def decrease_task_counter(mapper, conn, target):
+    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, -1)"
+                 % (make_timestamp(), target.project_id, target.task_id))
+    conn.execute(sql_query)
