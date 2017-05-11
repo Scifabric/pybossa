@@ -75,9 +75,13 @@ class LockManager(object):
 
     def release_lock(self, resource_id, client_id):
         """
+        Release a lock. Note that the lock is not release immediately, rather
+        its expiration is set after a short interval from the current time.
+        This is done so that concurrent requests will still see the lock and
+        avoid race conditions due to possibly stale data already retrieved from
+        the database.
         :param resource_id: resource on which lock is being held
         :param client_id: id of client holding the lock
-        :return: None
         """
         self._cache.hset(resource_id, client_id, time() + 5)
 
