@@ -45,6 +45,7 @@ from pybossa.util import get_user_signup_method, generate_invitation_email_for_n
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
 from pybossa.cache import users as cached_users, delete_memoized
+from pybossa.cache.projects import get_all_projects
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
@@ -279,6 +280,14 @@ def confirm_email():
     return redirect_content_type(url_for('.profile', name=current_user.name))
 
 
+def get_project_choices():
+    choices = [(project['short_name'], project['name'])
+               for project in get_all_projects()]
+    choices.sort(key=lambda x: x[1])
+    choices.insert(0, ('', ''))
+    return choices
+
+
 @blueprint.route('/register', methods=['GET', 'POST'])
 @admin_required
 def register():
@@ -289,6 +298,7 @@ def register():
 
     """
     form = RegisterForm(request.body)
+    form.project_slug.choices = get_project_choices()
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,

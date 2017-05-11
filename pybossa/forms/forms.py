@@ -32,7 +32,6 @@ import validator as pb_validator
 from pybossa import util
 from pybossa.core import project_repo, user_repo
 from pybossa.core import uploader
-from pybossa.cache import projects as cached_projects
 from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
@@ -370,11 +369,7 @@ class RegisterForm(Form):
                               pb_validator.CheckPasswordStrength()])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
-    projects = cached_projects.get_all_projects()
-    project_choices = [(proj['short_name'], proj['name']) for proj in projects ]
-    project_choices.sort(key=lambda tup: tup[0])
-    project_choices.insert(0, ('', ''))
-    project_slug = SelectMultipleField(lazy_gettext('Project'), choices=project_choices)
+    project_slug = SelectMultipleField(lazy_gettext('Project'), choices=[])
 
 
 class UpdateProfileForm(Form):
