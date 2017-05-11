@@ -263,21 +263,21 @@ def make_admin(mapper, conn, target):
 
 @event.listens_for(Task, 'after_insert')
 def create_zero_counter(mapper, conn, target):
-    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
                  VALUES (TIMESTAMP '%s', %s, %s, 0)"
                  % (make_timestamp(), target.project_id, target.id))
     conn.execute(sql_query)
 
 @event.listens_for(TaskRun, 'after_insert')
 def increase_task_counter(mapper, conn, target):
-    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
                  VALUES (TIMESTAMP '%s', %s, %s, 1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
 
 @event.listens_for(TaskRun, 'after_delete')
 def decrease_task_counter(mapper, conn, target):
-    sql_query = ("insert into Counter(created, project_id, task_id, n_task_runs) \
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
                  VALUES (TIMESTAMP '%s', %s, %s, -1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
