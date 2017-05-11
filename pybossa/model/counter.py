@@ -25,7 +25,8 @@ from pybossa.model import DomainObject, make_timestamp
 
 class Counter(db.Model, DomainObject):
     '''A Counter lists the number of task runs for a given Task.'''
-    __tablename__ = 'task_task_run_counts'
+
+    __tablename__ = 'counter'
 
     #: Counter.ID
     id = Column(Integer, primary_key=True)
