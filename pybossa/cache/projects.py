@@ -21,7 +21,7 @@ from pybossa.core import db, timeouts
 from pybossa.model.project import Project
 from pybossa.util import pretty_date, static_vars, convert_utc_to_est
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached, memoize_essentials, delete_memoized_essential
-from pybossa.cache.task_browse_helpers import get_task_filters
+from pybossa.cache.task_browse_helpers import get_task_filters, allowed_fields
 
 
 session = db.slave_session
@@ -60,11 +60,7 @@ def get_top(n=4):
 
 
 @memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0])
-@static_vars(allowed_fields={'task_id': 'id', 'priority': 'priority_0',
-                             'finish_time': 'ft',
-                             'pcomplete': '(coalesce(ct, 0)/task.n_answers)',
-                             'created': 'task.created',
-                             'filter_by_field': 'filter_by_field'})
+@static_vars(allowed_fields=allowed_fields)
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
     filters, filter_params = get_task_filters(args)

@@ -1,7 +1,6 @@
 from werkzeug.exceptions import BadRequest
 from collections import defaultdict
 from pybossa.util import convert_est_to_utc
-from .projects import browse_tasks
 import re
 import json
 
@@ -138,6 +137,16 @@ def get_searchable_columns(project_id):
     return sorted(columns)
 
 
+allowed_fields = {
+    'task_id': 'id',
+    'priority': 'priority_0',
+    'finish_time': 'ft',
+    'pcomplete': '(coalesce(ct, 0)/task.n_answers)',
+    'created': 'task.created',
+    'filter_by_field': 'filter_by_field'
+}
+
+
 def parse_tasks_browse_args(args):
     """
     Parse querystring arguments
@@ -193,18 +202,17 @@ def parse_tasks_browse_args(args):
 
     parsed_args["order_by_dict"] = dict()
     if args.get('order_by'):
-        allowed_columns = browse_tasks.allowed_fields
         parsed_args["order_by"] = args['order_by'].strip().lower()
         for clause in parsed_args["order_by"].split(','):
             order_by_field = clause.split(' ')
-            if len(order_by_field) != 2 or order_by_field[0] not in allowed_columns:
+            if len(order_by_field) != 2 or order_by_field[0] not in allowed_fields:
                 raise ValueError('order_by value sent by the user is invalid: %s'.format(args['order_by']))
             if order_by_field[0] in parsed_args["order_by_dict"]:
                 raise ValueError('order_by field is duplicated: %s'
                                  .format(args['order_by']))
             parsed_args["order_by_dict"][order_by_field[0]] = order_by_field[1]
 
-        for key, value in allowed_columns.iteritems():
+        for key, value in allowed_fields.iteritems():
             parsed_args["order_by"] = parsed_args["order_by"].replace(key, value)
 
     if args.get('filter_by_field'):
