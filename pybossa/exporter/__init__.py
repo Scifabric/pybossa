@@ -243,15 +243,27 @@ class Exporter(object):
 
                     zip_file = FileStorage(filename=self.download_name_randomized(project, ty),
                                            stream=zipped_datafile)
-                    url = s3_upload_file_storage(app.config.get("S3_KEY"),
-                                                 app.config.get("S3_SECRET"),
-                                                 app.config.get("S3_EXPORT_BUCKET"),
-                                                 source_file=zip_file,
-                                                 directory='',
-                                                 public=True)
+
+                    # *** EMAIL ***
+                    from pybossa.core import uploader
+                    from pybossa.uploader import local
+                    filename = secure_filename(zip_file.filename)
+                    container = 'user_{}'.format(project.owner_id)
+                    try:
+                        path = os.path.join(uploader.upload_folder, container, filename)
+                    except:
+                        path = None
+
+                    uploader.upload_file(zip_file, container=container)
+                    #url = s3_upload_file_storage(app.config.get("S3_KEY"),
+                    #                             app.config.get("S3_SECRET"),
+                    #                             app.config.get("S3_EXPORT_BUCKET"),
+                    #                             source_file=zip_file,
+                    #                             directory='',
+                    #                             public=True)
                 except Exception as e:
-                    current_app.logger.error(error_log_string
-                                             .format(project.short_name, ty, _format, e))
+                    current_app.logger.exception(error_log_string
+                                                 .format(project.short_name, ty, _format, e))
                 finally:
                     zipped_datafile.close()
             except Exception as e:
@@ -261,7 +273,7 @@ class Exporter(object):
                 datafile.close()
 
         try:
-            return url
+            return path
         except Exception as e:
             current_app.logger.error(error_log_string
                                      .format(project.short_name, ty, _format, e))

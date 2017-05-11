@@ -605,18 +605,17 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
     # Export data and upload to S3
     if filetype == 'json':
         try:
-            url = task_json_exporter.export_to_s3(project, ty)
+            path = task_json_exporter.export_to_s3(project, ty)
         except:
             pass
     elif filetype == 'csv':
         try:
-            url = task_csv_exporter.export_to_s3(project, ty)
+            path = task_csv_exporter.export_to_s3(project, ty)
         except:
             pass
 
-    # Send an email to the user with the S3 URL or an error message
     # Success email
-    if url is not None:
+    if path is not None:
         subject = 'Data exported from your project: {0}'.format(project.name)
         msg = 'Your data has been exported to S3. ' + \
               'You can download it here: {0}'
@@ -626,6 +625,13 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
         job_response = job_response.format(ty.capitalize(),
                                            filetype.upper(),
                                            project.name)
+        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'.format(current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr], subject=subject, body=body)
+        message = Message(**mail_dict)
+
+        with current_app.open_resource(path) as fp:
+            message.attach("export.zip", "application/zip", fp.read())
+
     # Failure email
     else:
         subject = 'Data export failed for your project: {0}'.format(project.name)
@@ -638,10 +644,11 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
         job_response = job_response.format(ty.capitalize(),
                                            filetype.upper(),
                                            project.name)
+        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'.format(current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr], subject=subject, body=body)
+        message = Message(**mail_dict)
 
-    body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'.format(current_app.config.get('BRAND'))
-    mail_dict = dict(recipients=[current_user_email_addr], subject=subject, body=body)
-    send_mail(mail_dict)
+    mail.send(message)
 
     return job_response
 
