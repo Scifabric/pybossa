@@ -638,19 +638,6 @@ def update_counters():
         db.session.commit()
 
 
-
-
-    #for project in projects:
-    #    print "Working on project: %s" % project.id
-    #    print "This project has %s tasks" % len(project.tasks)
-    #    for task in project.tasks:
-    #        counter = Counter(project_id=task.project.id,
-    #                          task_id=task.id,
-    #                          n_task_runs=len(task.task_runs))
-    #        db.session.add(counter)
-    #        db.session.commit()
-
-
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
