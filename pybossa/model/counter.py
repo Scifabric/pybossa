@@ -37,7 +37,7 @@ class Counter(db.Model, DomainObject):
                                             ondelete='CASCADE'),
                         nullable=False)
     #: Task.ID that this counter is associated with.
-    task_id = Column(Integer, ForeignKey('project.id',
+    task_id = Column(Integer, ForeignKey('task.id',
                                          ondelete='CASCADE'),
                      nullable=False)
     #: Number of task_runs for this task.
