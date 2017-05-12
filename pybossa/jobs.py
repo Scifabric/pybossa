@@ -594,7 +594,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     return msg
 
 
-def export_tasks(current_user_email_addr, short_name, ty, filetype):
+def export_tasks(current_user_email_addr, short_name, ty, expanded, filetype):
     """Export tasks/taskruns from a project."""
     from pybossa.core import task_csv_exporter, task_json_exporter
     from pybossa.cache import projects as cached_projects
@@ -605,12 +605,12 @@ def export_tasks(current_user_email_addr, short_name, ty, filetype):
     # Export data and upload to S3
     if filetype == 'json':
         try:
-            path = task_json_exporter.export_to_s3(project, ty)
+            path = task_json_exporter.export_to_s3(project, ty, expanded)
         except:
             pass
     elif filetype == 'csv':
         try:
-            path = task_csv_exporter.export_to_s3(project, ty)
+            path = task_csv_exporter.export_to_s3(project, ty, expanded)
         except:
             pass
 

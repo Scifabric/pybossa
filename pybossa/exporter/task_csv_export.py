@@ -217,6 +217,7 @@ class TaskCsvExporter(CsvExporter):
     def download_name_randomized(self, project, ty):
         return super(TaskCsvExporter, self).download_name_randomized(project, ty, 'csv')
 
-    def export_to_s3(self, project, ty):
-        _task_generator = self._respond_csv(ty, project.id)
-        return super(TaskCsvExporter, self).export_to_s3(project, ty, _task_generator, 'csv')
+    def export_to_s3(self, project, ty, expanded):
+        _task_generator = self._respond_csv(ty, project.id, expanded)
+        return super(TaskCsvExporter, self).export_to_s3(
+                project, ty, expanded, _task_generator, 'csv')

@@ -206,11 +206,12 @@ class Exporter(object):
                     container = 'user_{}'.format(project.owner_id)
                     uploader.upload_file(_file, container=container)
 
-    def export_to_s3(self, project, ty, _task_generator=None, _format=None):
+    def export_to_s3(self, project, ty, expanded, _task_generator=None, _format=None):
         """Create a zip file and export it to S3.
 
         :param project: a project object
         :param ty: string form of domain object to be exported
+        :param expanded: Should the data contain Task/TaskRun metadata
         :param _task_generator: a generator object containing the data to
             be written to file
         :param _format: the file format for the data to be written to
