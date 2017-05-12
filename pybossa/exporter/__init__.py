@@ -30,7 +30,7 @@ import tempfile
 from pybossa.uploader import local
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from unidecode import unidecode
-from flask import url_for, safe_join, send_file, redirect, current_app
+from flask import url_for, safe_join, send_file, redirect
 from flask import current_app as app
 from werkzeug.utils import secure_filename
 from flatten_json import flatten

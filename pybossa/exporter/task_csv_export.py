@@ -18,19 +18,11 @@
 # Cache global variables for timeouts
 
 import tempfile
-import uuid
-import datetime
 from pybossa.uploader import local
-from pybossa.exporter import Exporter
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
 from pybossa.util import UnicodeWriter
 from flask import url_for, safe_join, send_file, redirect
-from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
-from pybossa.uploader.s3_uploader import s3_upload_file_storage
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 
 
 class TaskCsvExporter(CsvExporter):
@@ -215,12 +207,12 @@ class TaskCsvExporter(CsvExporter):
                 project, obj, file_format, obj_generator, expanded)
 
     def _make_zip(self, project, obj, expanded=False):
-        make_zip(self, project, obj, expanded)
+        self.make_zip(self, project, obj, expanded)
 
     def download_name_randomized(self, project, ty):
         return super(TaskCsvExporter, self).download_name_randomized(project, ty, 'csv')
 
     def export_to_s3(self, project, ty, expanded):
-        _task_generator = self._respond_csv(ty, project.id, expanded)
+        obj_generator = self._respond_csv(ty, project.id, expanded)
         return super(TaskCsvExporter, self).export_to_s3(
-                project, ty, expanded, _task_generator, 'csv')
+                project, ty, expanded, obj_generator, 'csv')

@@ -18,14 +18,10 @@
 # Cache global variables for timeouts
 
 import json
-import tempfile
-import uuid
-import datetime
-from flask import url_for, safe_join, send_file, redirect
 from pybossa.uploader import local
-from pybossa.exporter import Exporter
 from pybossa.exporter.json_export import JsonExporter
 from pybossa.core import uploader, task_repo
+from flask import url_for, safe_join, send_file, redirect
 
 
 class TaskJsonExporter(JsonExporter):
@@ -113,16 +109,19 @@ class TaskJsonExporter(JsonExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def _make_zip(self, project, obj, expanded=False):
+    def make_zip(self, project, obj, expanded=False):
         file_format = 'json'
         obj_generator = self._respond_json(obj, project.id, expanded)
-        self._make_zipfile(
+        return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
+
+    def _make_zip(self, project, obj, expanded=False):
+        self.make_zip(self, project, obj, expanded)
 
     def download_name_randomized(self, project, ty):
         return super(TaskJsonExporter, self).download_name_randomized(project, ty, 'json')
 
     def export_to_s3(self, project, ty, expanded):
-        _task_generator = self._respond_json(ty, project.id, expanded)
+        obj_generator = self._respond_json(ty, project.id, expanded)
         return super(TaskJsonExporter, self).export_to_s3(
-                project, ty, expanded, _task_generator, 'json')
+                project, ty, expanded, obj_generator, 'json')
