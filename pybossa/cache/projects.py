@@ -58,18 +58,18 @@ def get_top(n=4):
     return top_projects
 
 
-@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
-def browse_tasks(project_id):
+#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+def browse_tasks(project_id, limit, offset):
     """Cache browse tasks view for a project."""
     sql = text('''
-               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers
-               FROM task LEFT OUTER JOIN
-               (SELECT task_id, COUNT(id) AS ct FROM task_run
-               WHERE project_id=:project_id GROUP BY task_id) AS log_counts
-               ON task.id=log_counts.task_id
-               WHERE task.project_id=:project_id ORDER BY id ASC
+               SELECT task.id, task.n_answers, counter.n_task_runs 
+               FROM task, counter
+               WHERE task.id=counter.task_id and task.project_id=:project_id
+               ORDER BY task.id ASC LIMIT :limit OFFSET :offset
                ''')
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, dict(project_id=project_id,
+                                        limit=limit,
+                                        offset=offset))
     tasks = []
     for row in results:
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
