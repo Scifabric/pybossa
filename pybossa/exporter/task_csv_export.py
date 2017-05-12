@@ -208,11 +208,14 @@ class TaskCsvExporter(CsvExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def _make_zip(self, project, obj, expanded=False):
+    def make_zip(self, project, obj, expanded=False):
         file_format = 'csv'
         obj_generator = self._respond_csv(obj, project.id, expanded)
-        self._make_zipfile(
+        return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
+
+    def _make_zip(self, project, obj, expanded=False):
+        make_zip(self, project, obj, expanded)
 
     def download_name_randomized(self, project, ty):
         return super(TaskCsvExporter, self).download_name_randomized(project, ty, 'csv')

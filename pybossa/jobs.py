@@ -599,18 +599,18 @@ def export_tasks(current_user_email_addr, short_name, ty, expanded, filetype):
     from pybossa.core import task_csv_exporter, task_json_exporter
     from pybossa.cache import projects as cached_projects
 
-    url = None
+    path = None
     project = cached_projects.get_project(short_name)
 
     # Export data and upload to S3
     if filetype == 'json':
         try:
-            path = task_json_exporter.export_to_s3(project, ty, expanded)
+            path = task_json_exporter.make_zip(project, ty, expanded)
         except:
             pass
     elif filetype == 'csv':
         try:
-            path = task_csv_exporter.export_to_s3(project, ty, expanded)
+            path = task_csv_exporter.make_zip(project, ty, expanded)
         except:
             pass
 
@@ -619,7 +619,7 @@ def export_tasks(current_user_email_addr, short_name, ty, expanded, filetype):
         subject = 'Data exported from your project: {0}'.format(project.name)
         msg = 'Your data has been exported to S3. ' + \
               'You can download it here: {0}'
-        msg = msg.format(url)
+        msg = msg.format(path)
         job_response = '{0} {1} file was successfully ' + \
                        'exported to S3 for: {2}'
         job_response = job_response.format(ty.capitalize(),
@@ -630,7 +630,7 @@ def export_tasks(current_user_email_addr, short_name, ty, expanded, filetype):
         message = Message(**mail_dict)
 
         with current_app.open_resource(path) as fp:
-            message.attach("export.zip", "application/zip", fp.read())
+           message.attach("export.zip", "application/zip", fp.read())
 
     # Failure email
     else:

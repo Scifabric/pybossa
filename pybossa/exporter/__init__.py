@@ -183,6 +183,8 @@ class Exporter(object):
         :param expanded: Boolean indicating whether or not
             relevant object metadata should be included
             in the export
+
+        :return: The path where the .zip file is saved
         """
         name = self._project_name_latin_encoded(project)
         if obj_generator is not None:
@@ -194,88 +196,58 @@ class Exporter(object):
 
                 with tempfile.NamedTemporaryFile() as zipped_datafile:
                     with self._zip_factory(zipped_datafile.name) as _zip:
-                        _zip.write(
-                            datafile.name,
-                            secure_filename('{0}_{1}.{2}'
-                                            .format(name, obj, file_format)))
+                        _zip.write(datafile.name,
+                                   secure_filename('{0}_{1}.{2}'
+                                                   .format(name, obj, file_format)))
+                        _zip.content_type = 'application/zip'
 
-                    _file = FileStorage(
-                        filename=self.download_name(project, obj),
-                        stream=zipped_datafile)
+                    filename=self.download_name(project, obj)
+                    zip_file = FileStorage(filename=filename,
+                                           stream=zipped_datafile)
 
                     container = 'user_{}'.format(project.owner_id)
-                    uploader.upload_file(_file, container=container)
+                    uploader.upload_file(zip_file, container=container)
+                    path = os.path.join(uploader.upload_folder, container, filename)
+                    return path
 
-    def export_to_s3(self, project, ty, expanded, _task_generator=None, _format=None):
-        """Create a zip file and export it to S3.
+    def export_to_s3(self, project, ty, expanded, obj_generator=None, file_format=None):
+        """Create a zip file and export it to S3. Filenames
+        will contain a unique string to obscure the URL.
 
         :param project: a project object
         :param ty: string form of domain object to be exported
         :param expanded: Should the data contain Task/TaskRun metadata
-        :param _task_generator: a generator object containing the data to
+        :param obj_generator: a generator object containing the data to
             be written to file
-        :param _format: the file format for the data to be written to
+        :param file_format: the file format for the data to be written to
 
         :return: the URL where the file was saved in S3
         """
-        error_log_string = 'Export failed - Project: {0}, Type: {1}, Format: {2} - Error: {3}'
         name = self._project_name_latin_encoded(project)
-        if _task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in _task_generator:
+        if obj_generator is not None:
+            with tempfile.NamedTemporaryFile() as datafile:
+                for line in obj_generator:
                     datafile.write(str(line))
-                _task_generator.close()
                 datafile.flush()
-                _task_generator.close()
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    filedate = datetime.date.strftime(datetime.date.today(), '%Y%m%d')
-                    fileuuid = uuid.uuid4().hex
-                    _zip = self._zip_factory(zipped_datafile.name)
-                    _zip.write(datafile.name,
-                               secure_filename('{0}_{1}_{2}_{3}.{4}'.format(name,
-                                                                            ty,
-                                                                            filedate,
-                                                                            fileuuid,
-                                                                            _format)))
-                    _zip.content_type = 'application/zip'
-                    _zip.close()
+                obj_generator.close()
+
+                with tempfile.NamedTemporaryFile() as zipped_datafile:
+                    with self._zip_factory(zipped_datafile.name) as _zip:
+                        filedate = datetime.date.strftime(datetime.date.today(), '%Y%m%d')
+                        fileuuid = uuid.uuid4().hex
+                        _zip.write(datafile.name,
+                                   secure_filename('{0}_{1}_{2}_{3}.{4}'
+                                                   .format(name, ty, filedate, fileuuid, file_format)))
+                        _zip.content_type = 'application/zip'
 
                     zip_file = FileStorage(filename=self.download_name_randomized(project, ty),
                                            stream=zipped_datafile)
 
-                    # *** EMAIL ***
-                    from pybossa.core import uploader
-                    from pybossa.uploader import local
-                    filename = secure_filename(zip_file.filename)
-                    container = 'user_{}'.format(project.owner_id)
-                    try:
-                        path = os.path.join(uploader.upload_folder, container, filename)
-                    except:
-                        path = None
+                    url = s3_upload_file_storage(app.config.get("S3_KEY"),
+                                                 app.config.get("S3_SECRET"),
+                                                 app.config.get("S3_EXPORT_BUCKET"),
+                                                 source_file=zip_file,
+                                                 directory='',
+                                                 public=True)
 
-                    uploader.upload_file(zip_file, container=container)
-                    #url = s3_upload_file_storage(app.config.get("S3_KEY"),
-                    #                             app.config.get("S3_SECRET"),
-                    #                             app.config.get("S3_EXPORT_BUCKET"),
-                    #                             source_file=zip_file,
-                    #                             directory='',
-                    #                             public=True)
-                except Exception as e:
-                    current_app.logger.exception(error_log_string
-                                                 .format(project.short_name, ty, _format, e))
-                finally:
-                    zipped_datafile.close()
-            except Exception as e:
-                current_app.logger.error(error_log_string
-                                         .format(project.short_name, ty, _format, e))
-            finally:
-                datafile.close()
-
-        try:
-            return path
-        except Exception as e:
-            current_app.logger.error(error_log_string
-                                     .format(project.short_name, ty, _format, e))
-            return
+                    return url
