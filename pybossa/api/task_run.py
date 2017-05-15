@@ -164,7 +164,7 @@ def _upload_files_from_request(task_run_info, files, upload_path):
         file_obj = request.files[key]
         s3_url = s3_upload_file_storage(app.config.get("S3_KEY"),
                                         app.config.get("S3_SECRET"),
-                                        app.config.get("S3_UPLOAD_BUCKET"),
+                                        app.config.get("S3_BUCKET"),
                                         file_obj,
                                         directory=upload_path)
         task_run_info[key] = s3_url
