@@ -186,5 +186,10 @@ class Exporter(object):
 
                     container = 'user_{}'.format(project.owner_id)
                     uploader.upload_file(zip_file, container=container)
-                    path = os.path.join(uploader.upload_folder, container, filename)
+
+                    if isinstance(uploader, local.LocalUploader):
+                        path = uploader.get_file_path(container, filename)
+                    else:
+                        path = None
+
                     return path

@@ -57,26 +57,37 @@ class LocalUploader(Uploader):
         """Upload a file into a container/folder."""
         try:
             filename = secure_filename(file.filename)
-            if not os.path.isdir(os.path.join(self.upload_folder, container)):
-                os.makedirs(os.path.join(self.upload_folder, container))
-            file.save(os.path.join(self.upload_folder, container, filename))
+            if not os.path.isdir(self.get_container_path(container)):
+                os.makedirs(self.get_container_path(container))
+            file.save(self.get_file_path(container, filename))
             return True
         except Exception:
             return False
 
-    def delete_file(self, name, container):
+    def delete_file(self, filename, container):
         """Delete file from filesystem."""
         try:
-            path = os.path.join(self.upload_folder, container, name)
+            path = self.get_file_path(container, filename)
             os.remove(path)
             return True
         except Exception:
             return False
 
-    def file_exists(self, name, container):
+    def file_exists(self, filename, container):
         """Check if a file exists in a container"""
         try:
-            path = os.path.join(self.upload_folder, container, name)
+            path = self.get_file_path(container, filename)
             return os.path.isfile(path)
         except Exception:
             return False
+
+    def get_container_path(self, container):
+        """Returns the path of a container."""
+        return os.path.join(
+                self.upload_folder, container)
+
+    def get_file_path(self, container, filename):
+        """Returns the path of a file."""
+        return os.path.join(
+                self.get_container_path(container), filename)
+
