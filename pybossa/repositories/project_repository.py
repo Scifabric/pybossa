@@ -27,6 +27,7 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 from pybossa.util import AttrDict
+from pybossa.cache.helpers import n_available_tasks
 
 
 class ProjectRepository(Repository):
@@ -205,13 +206,6 @@ class ProjectRepository(Repository):
                  project.created,
                  u.name as owner_name,
                  u.email_addr as owner_email,
-                 (
-                    SELECT
-                       string_agg(concat('(', co.name, ';', co.email_addr, ')'), '|') 
-                    FROM project INNER JOIN project_coowner on project.id = project_coowner.project_id 
-                       INNER JOIN public.user as co ON project_coowner.coowner_id = co.id 
-                 )
-                 as coowners,
                  category.name as category_name,
                  project.allow_anonymous_contributors,
                  (
@@ -220,7 +214,6 @@ class ProjectRepository(Repository):
                  as password_protected,
                  project.webhook,
                  COALESCE(project.info::json ->> 'sched', 'default') as scheduler,
-                 completed_tasks.value IS NOT NULL as has_completed,
                  completed_tasks.ft,
                  CASE
                     WHEN
@@ -245,7 +238,7 @@ class ProjectRepository(Repository):
                  as n_answers,
                  (
                     SELECT
-                       string_agg(concat('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|') 
+                       string_agg(concat('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|')
                     FROM
                        workers 
                     WHERE
@@ -274,6 +267,16 @@ class ProjectRepository(Repository):
         projects = []
 
         for row in results:
+            coowners = self.get_by_shortname(row.short_name).coowners
+            num_available_tasks = n_available_tasks(row.id)
+            has_completed = "False"
+            coowner_names = "None"
+            if coowners:
+                coowner_names = ""
+                for co in coowners:
+                    coowner_names += co.name + ";" + co.email_addr + "| "
+            if num_available_tasks == 0:
+                has_completed = "True"
             project = AttrDict([('id', row.id),
               ('name', row.name),
               ('short_name', row.short_name),
@@ -283,13 +286,13 @@ class ProjectRepository(Repository):
               ('created', row.created),
               ('owner_name', row.owner_name),
               ('owner_email', row.owner_email),
-              ('coowners', row.coowners),
+              ('coowners', coowner_names),
               ('category_name', row.category_name),
               ('allow_anonymous_contributors', row.allow_anonymous_contributors),
               ('password_protected', row.password_protected),
               ('webhook', row.webhook),
               ('scheduler', row.scheduler),
-              ('has_completed', row.has_completed),
+              ('has_completed', has_completed),
               ('finish_time', row.ft),
               ('percent_complete', row.percent_complete),
               ('n_tasks', row.n_tasks),
