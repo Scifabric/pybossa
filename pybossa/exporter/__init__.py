@@ -21,17 +21,13 @@ Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
 import os
-import datetime
-import uuid
 import tempfile
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
 import tempfile
 from pybossa.uploader import local
-from pybossa.uploader.s3_uploader import s3_upload_file_storage
 from unidecode import unidecode
 from flask import url_for, safe_join, send_file, redirect
-from flask import current_app as app
 from werkzeug.utils import secure_filename
 from flatten_json import flatten
 from werkzeug.datastructures import FileStorage
@@ -114,23 +110,6 @@ class Exporter(object):
         filename = secure_filename(filename)
         return filename
 
-    def download_name_randomized(self, project, ty, _format):
-        """Generate a filename with identifying data in it, but
-        a randomly generated string appended to the end for obfuscation,
-        preventing anyone from guessing the filename.
-        """
-        name = self._project_name_latin_encoded(project)
-        fileuuid = uuid.uuid4().hex
-        filedate = datetime.date.strftime(datetime.date.today(), '%Y%M%d')
-        filename = '{0}_{1}_{2}_{3}_{4}_{5}.zip'.format(str(project.id),
-                                                        name,
-                                                        ty,
-                                                        _format,
-                                                        filedate,
-                                                        fileuuid)
-        filename = secure_filename(filename)
-        return filename
-
     def zip_existing(self, project, ty):
         """Check if exported ZIP is existing"""
         # TODO: Check ty
@@ -209,45 +188,3 @@ class Exporter(object):
                     uploader.upload_file(zip_file, container=container)
                     path = os.path.join(uploader.upload_folder, container, filename)
                     return path
-
-    def export_to_s3(self, project, ty, expanded, obj_generator=None, file_format=None):
-        """Create a zip file and export it to S3. Filenames
-        will contain a unique string to obscure the URL.
-
-        :param project: a project object
-        :param ty: string form of domain object to be exported
-        :param expanded: Should the data contain Task/TaskRun metadata
-        :param obj_generator: a generator object containing the data to
-            be written to file
-        :param file_format: the file format for the data to be written to
-
-        :return: the URL where the file was saved in S3
-        """
-        name = self._project_name_latin_encoded(project)
-        if obj_generator is not None:
-            with tempfile.NamedTemporaryFile() as datafile:
-                for line in obj_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                obj_generator.close()
-
-                with tempfile.NamedTemporaryFile() as zipped_datafile:
-                    with self._zip_factory(zipped_datafile.name) as _zip:
-                        filedate = datetime.date.strftime(datetime.date.today(), '%Y%m%d')
-                        fileuuid = uuid.uuid4().hex
-                        _zip.write(datafile.name,
-                                   secure_filename('{0}_{1}_{2}_{3}.{4}'
-                                                   .format(name, ty, filedate, fileuuid, file_format)))
-                        _zip.content_type = 'application/zip'
-
-                    zip_file = FileStorage(filename=self.download_name_randomized(project, ty),
-                                           stream=zipped_datafile)
-
-                    url = s3_upload_file_storage(app.config.get("S3_KEY"),
-                                                 app.config.get("S3_SECRET"),
-                                                 app.config.get("S3_EXPORT_BUCKET"),
-                                                 source_file=zip_file,
-                                                 directory='',
-                                                 public=True)
-
-                    return url

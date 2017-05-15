@@ -117,11 +117,3 @@ class TaskJsonExporter(JsonExporter):
 
     def _make_zip(self, project, obj, expanded=False):
         self.make_zip(self, project, obj, expanded)
-
-    def download_name_randomized(self, project, ty):
-        return super(TaskJsonExporter, self).download_name_randomized(project, ty, 'json')
-
-    def export_to_s3(self, project, ty, expanded):
-        obj_generator = self._respond_json(ty, project.id, expanded)
-        return super(TaskJsonExporter, self).export_to_s3(
-                project, ty, expanded, obj_generator, 'json')
