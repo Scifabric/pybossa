@@ -194,7 +194,7 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
     return n_tasks
 
 
-def lastest_submission_task_date(project_id):
+def latest_submission_task_date(project_id):
     """Return date of the last completed task."""
     sql = text('''SELECT MAX(finish_time) FROM task_run
                 WHERE project_id=:project_id;''')
