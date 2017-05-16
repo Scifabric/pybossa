@@ -25,7 +25,6 @@ from pybossa.core import db, sentinel, project_repo
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest
-from flask import current_app
 import random
 from pybossa.cache import users as cached_users
 from flask import current_app

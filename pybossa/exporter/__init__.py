@@ -21,7 +21,6 @@ Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
 import os
-import tempfile
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
 import tempfile
