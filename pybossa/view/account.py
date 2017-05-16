@@ -98,7 +98,7 @@ def _email_two_factor_auth(user, invalid_token=False):
     # send email to user that has details on
     # how to apply TOTP to login to pybossa
     if user and user.email_addr:
-        msg = dict(subject='One time password generation details for %s'+ current_app.config.get('BRAND'),
+        msg = dict(subject='One time password generation details for {}'.format(current_app.config.get('BRAND')),
                    recipients=[user.email_addr])
         msg['body'] = render_template(
             '/account/email/otp.md',

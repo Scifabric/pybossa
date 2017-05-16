@@ -23,6 +23,7 @@ from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from readability.readability import Document
+from flask.ext.login import login_required
 
 blueprint = Blueprint('help', __name__)
 
@@ -77,6 +78,7 @@ def cookies_policy():
 
 
 @blueprint.route('/privacy')
+@login_required
 def privacy():
     """Render help/privacy policy page."""
     # use readability to remove styling and headers
