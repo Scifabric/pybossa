@@ -601,44 +601,58 @@ def export_tasks(current_user_email_addr, short_name, ty, expanded, filetype):
 
     project = cached_projects.get_project(short_name)
 
-    # Export data and upload .zip file locally
-    if filetype == 'json':
-        path = task_json_exporter.make_zip(project, ty, expanded)
-    elif filetype == 'csv':
-        path = task_csv_exporter.make_zip(project, ty, expanded)
-    else:
-        path = None
+    try:
+        # Export data and upload .zip file locally
+        if filetype == 'json':
+            path = task_json_exporter.make_zip(project, ty, expanded)
+        elif filetype == 'csv':
+            path = task_csv_exporter.make_zip(project, ty, expanded)
+        else:
+            path = None
 
-    if path is not None:
-        # Success email
-        subject = 'Data exported from your project: {0}'.format(project.name)
-        msg = 'Your exported data is attached.'
+        # Construct message
+        if path is not None:
+            # Success email
+            subject = 'Data exported for your project: {0}'.format(project.name)
+            msg = 'Your exported data is attached.'
+        else:
+            # Failure email
+            subject = 'Data export failed for your project: {0}'.format(project.name)
+            msg = 'There was an issue with your export. ' + \
+                  'Please try again or report this issue ' + \
+                  'to a {0} administrator.'
+            msg = msg.format(current_app.config.get('BRAND'))
+
+        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        body = body.format(current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr],
+                         subject=subject,
+                         body=body)
+        message = Message(**mail_dict)
+
+        # Attach export file to message
+        if path is not None:
+            with current_app.open_resource(path) as fp:
+                message.attach(path.split('/')[-1], "application/zip", fp.read())
+
+        mail.send(message)
         job_response = '{0} {1} file was successfully exported for: {2}'
-    else:
-        # Failure email
-        subject = 'Data export failed for your project: {0}'.format(project.name)
-        msg = 'There was an issue with your export. ' + \
-              'Please try again or report this issue ' + \
-              'to a {0} administrator.'
-        msg = msg.format(current_app.config.get('BRAND'))
-        job_response = 'There was an error while trying ' + \
-                       'to export your {0} {1} file for: {2}'
-
-    body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'
-    body = body.format(current_app.config.get('BRAND'))
-    mail_dict = dict(recipients=[current_user_email_addr],
-                     subject=subject,
-                     body=body)
-    message = Message(**mail_dict)
-
-    if path is not None:
-        with current_app.open_resource(path) as fp:
-            message.attach(path.split('/')[-1], "application/zip", fp.read())
-
-    mail.send(message)
-
-    return job_response.format(
-            ty.capitalize(), filetype.upper(), project.name)
+        return job_response.format(
+                ty.capitalize(), filetype.upper(), project.name)
+    except:
+        current_app.logger.exception(
+                'Export email failed - Project: {0}'
+                .format(project.name))
+        subject = 'Email delivery failed for your project: {0}'.format(project.name)
+        msg = 'There was an error when attempting to deliver your data export via email.'
+        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        body = body.format(current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr],
+                         subject=subject,
+                         body=body)
+        message = Message(**mail_dict)
+        mail.send(message)
+        raise
 
 
 def webhook(url, payload=None, oid=None):
