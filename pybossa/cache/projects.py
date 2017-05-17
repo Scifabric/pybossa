@@ -59,12 +59,13 @@ def get_top(n=4):
 
 
 #@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
-def browse_tasks(project_id, limit, offset):
+def browse_tasks(project_id, limit=10, offset=0):
     """Cache browse tasks view for a project."""
     sql = text('''
-               SELECT task.id, task.n_answers, counter.n_task_runs 
+               SELECT task.id, task.n_answers, sum(counter.n_task_runs) as n_task_runs
                FROM task, counter
                WHERE task.id=counter.task_id and task.project_id=:project_id
+               GROUP BY task.id
                ORDER BY task.id ASC LIMIT :limit OFFSET :offset
                ''')
     results = session.execute(sql, dict(project_id=project_id,
