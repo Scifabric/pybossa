@@ -84,7 +84,7 @@ class TaskCsvExporter(CsvExporter):
                     return self.get_value(row[arg], *args)
                 except:
                     return None
-        return str(row)
+        return row
 
     @staticmethod
     def merge_objects(t):

@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test, with_context, flask_app
-from factories import ProjectFactory, UserFactory
-from pybossa.jobs import get_export_task_jobs, project_export
-from mock import patch
+from factories import ProjectFactory, UserFactory, TaskFactory, TaskRunFactory
+from pybossa.jobs import get_export_task_jobs, project_export, export_tasks
+from mock import patch, MagicMock
+
 
 class TestExport(Test):
 
@@ -81,27 +82,39 @@ class TestExport(Test):
 
     @with_context
     @patch('pybossa.core.json_exporter')
-    @patch('pybossa.core.task_json_exporter')
     @patch('pybossa.core.csv_exporter')
-    @patch('pybossa.core.task_csv_exporter')
-    def test_project_export(self, csv_exporter, task_csv_exporter, json_exporter, task_json_exporter):
+    def test_project_export(self, csv_exporter, json_exporter):
         """Test JOB project_export works."""
         project = ProjectFactory.create()
         project_export(project.id)
         csv_exporter.pregenerate_zip_files.assert_called_once_with(project)
-        task_csv_exporter.pregenerate_zip_files.assert_called_once_with(project)
         json_exporter.pregenerate_zip_files.assert_called_once_with(project)
-        task_json_exporter.pregenerate_zip_files.assert_called_once_with(project)
 
     @with_context
     @patch('pybossa.core.json_exporter')
-    @patch('pybossa.core.task_json_exporter')
     @patch('pybossa.core.csv_exporter')
-    @patch('pybossa.core.task_csv_exporter')
-    def test_project_export_none(self, csv_exporter, task_csv_exporter, json_exporter, task_json_exporter):
+    def test_project_export_none(self, csv_exporter, json_exporter):
         """Test JOB project_export without project works."""
         project_export(0)
         assert not csv_exporter.pregenerate_zip_files.called
-        assert not task_csv_exporter.pregenerate_zip_files.called
         assert not json_exporter.pregenerate_zip_files.called
-        assert not task_json_exporter.pregenerate_zip_files.called
+
+    @with_context
+    @patch('pybossa.core.mail')
+    @patch('pybossa.core.task_csv_exporter')
+    @patch('pybossa.core.task_json_exporter')
+    def test_export_tasks(self, task_json_exporter, task_csv_exporter, mail):
+        """Test JOB export_tasks works."""
+        user = UserFactory.create(admin=True)
+        project = ProjectFactory.create(name='test_project')
+        task = TaskFactory.create(project=project)
+        task_run = TaskRunFactory.create(project=project, task=task)
+
+        task_csv_exporter.make_zip.return_value = None
+        task_json_exporter.make_zip.return_value = None
+
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'csv')
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'json')
+
+        task_csv_exporter.make_zip.assert_called_once_with(project, 'task', False)
+        task_json_exporter.make_zip.assert_called_once_with(project, 'task', False)
