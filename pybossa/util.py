@@ -520,7 +520,7 @@ def rank(projects):
             points += 200
         points += _points_by_interval(project['n_tasks'], weight=1)
         points += _points_by_interval(project['n_volunteers'], weight=2)
-        points += _last_activity_points(project)
+        points += _last_activity_points(project) * 10
         return points
 
     projects.sort(key=earned_points, reverse=True)
@@ -547,6 +547,8 @@ def _last_activity_points(project):
         return 10
     if days_since_modified < 4:
         return 5
+    if days_since_modified > 15:
+        return -200
     return 0
 
 
