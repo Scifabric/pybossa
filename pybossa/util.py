@@ -513,11 +513,6 @@ def rank(projects):
         points = 0
         if project['overall_progress'] != 100L:
             points += 1000
-        if not ('test' in project['name'].lower()
-                or 'test' in project['short_name'].lower()):
-            points += 500
-        if project['info'].get('thumbnail'):
-            points += 200
         points += _points_by_interval(project['n_tasks'], weight=1)
         points += _points_by_interval(project['n_volunteers'], weight=2)
         points += _last_activity_points(project) * 10

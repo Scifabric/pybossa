@@ -15,16 +15,16 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_index('task_run_user_id_fkey', 'task_run', ['user_id'])
-    op.create_index('task_run_project_id_fkey', 'task_run', ['project_id'])
-    op.create_index('project_owner_id_fkey', 'project', ['owner_id'])
-    op.create_index('result_project_id_fkey', 'result', ['project_id'])
-    op.create_index('result_task_id_fkey', 'result', ['task_id'])
+    op.create_index('task_run_user_id_idx', 'task_run', ['user_id'])
+    op.create_index('task_run_project_id_idx', 'task_run', ['project_id'])
+    op.create_index('project_owner_id_idx', 'project', ['owner_id'])
+    op.create_index('result_project_id_idx', 'result', ['project_id'])
+    op.create_index('result_task_id_idx', 'result', ['task_id'])
 
 
 def downgrade():
-    op.drop_index('task_run_user_id_fkey')
-    op.drop_index('task_run_project_id_fkey')
-    op.drop_index('project_owner_id_fkey')
-    op.drop_index('result_project_id_fkey')
-    op.drop_index('result_task_id_fkey')
+    op.drop_index('task_run_user_id_idx')
+    op.drop_index('task_run_project_id_idx')
+    op.drop_index('project_owner_id_idx')
+    op.drop_index('result_project_id_idx')
+    op.drop_index('result_task_id_idx')

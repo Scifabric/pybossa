@@ -15,10 +15,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_index('task_run_task_id_index', 'task_run', ['task_id'])
-    op.create_index('task_project_id_fkey', 'task', ['project_id'])
+    op.create_index('task_run_task_id_idx', 'task_run', ['task_id'])
+    op.create_index('task_project_id_idx', 'task', ['project_id'])
 
 
 def downgrade():
-    op.drop_index('task_project_id_fkey')
-    op.drop_index('task_run_task_id_index')
+    op.drop_index('task_project_id_idx')
+    op.drop_index('task_run_task_id_idx')
