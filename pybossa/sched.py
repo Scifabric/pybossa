@@ -35,7 +35,8 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'default': get_depth_first_task,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
-        'incremental': get_incremental_task}
+        'incremental': get_incremental_task,
+        'shuffle': get_shuffle_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
 
@@ -103,6 +104,15 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
     return [task]
 
 
+def get_shuffle_task(project_id, user_id=None, user_ip=None, external_uid=None, offset=0, limit=1,
+                     orderby='random()', desc=False):
+    """Get a new task for a given project."""
+    tasks = get_depth_first_task(project_id, user_id=user_id, user_ip=user_ip,
+                                 external_uid=external_uid, offset=offset,
+                                 limit=limit, orderby='random()', desc=False)
+    return tasks
+
+
 def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                            external_uid=None, limit=1, offset=0,
                            orderby='priority_0', desc=True):
@@ -128,7 +138,7 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
 
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
-            ('depth_first', 'Depth First')]
+            ('depth_first', 'Depth First'), ('shuffle', 'Shuffle')]
 
 
 def _set_orderby_desc(query, orderby, descending):
@@ -140,13 +150,16 @@ def _set_orderby_desc(query, orderby, descending):
             query = query.order_by(desc("n_favs"))
         else:
             query = query.order_by("n_favs")
-    else:
+    elif hasattr(Task, orderby):
         if descending:
             query = query.order_by(getattr(Task, orderby).desc())
         else:
             query = query.order_by(getattr(Task, orderby))
+    else:  # sorting by proc or constant
+        query = query.order_by(orderby)
     query = query.order_by(Task.id.asc())
     return query
+
 
 def _handle_tuples(data):
     """Handle tuples when query returns several columns."""

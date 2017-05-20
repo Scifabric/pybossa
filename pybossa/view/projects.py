@@ -1370,7 +1370,6 @@ def task_scheduler(short_name):
     form = TaskSchedulerForm(request.body)
     pro = pro_features()
 
-
     def respond():
         project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                     owner,
