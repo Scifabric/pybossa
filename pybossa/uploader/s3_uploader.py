@@ -18,13 +18,18 @@ allowed_mime_types = ['application/pdf',
                       'application/oda',
                       'text/html',
                       'application/xml',
-                      'application/zip']
+                      'application/zip',
+                      'image/jpeg',
+                      'image/png',
+                      'image/bmp',
+                      'image/x-ms-bmp',
+                      'image/gif']
 
 
 def check_type(filename):
     mime_type = magic.from_file(filename, mime=True)
     if mime_type not in allowed_mime_types:
-        raise BadRequest("File Type Not Supported")
+        raise BadRequest("File Type Not Supported: {}".format(mime_type))
 
 
 def validate_directory(directory_name):
