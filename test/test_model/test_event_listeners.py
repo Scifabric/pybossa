@@ -19,9 +19,11 @@
 from default import Test, with_context
 from factories import TaskFactory, TaskRunFactory
 from mock import patch, MagicMock
-from pybossa.core import task_repo, result_repo
+from pybossa.core import db, task_repo, result_repo
+from pybossa.model.counter import Counter
 from pybossa.model.event_listeners import *
 from pybossa.jobs import notify_blog_users
+from sqlalchemy import func
 
 
 """Tests for model event listeners."""
@@ -194,3 +196,87 @@ class TestModelEventListeners(Test):
         result = result[0]
         err_msg = "The result should ID should be the same"
         assert result_id == result.id, err_msg
+
+    @with_context
+    def test_counter_works_default(self):
+        """Test event listener when adding a task adds a counter."""
+
+        task = TaskFactory.create()
+
+        counter = db.session.query(Counter).filter_by(project_id=task.project.id,
+                                                      task_id=task.id).all()
+
+        assert len(counter) == 1, counter
+        counter = counter[0]
+        assert counter.n_task_runs == 0, counter
+        assert counter.task_id == task.id, counter
+        assert counter.project_id == task.project.id, counter
+        
+    @with_context
+    def test_counter_works_add_counter(self):
+        """Test event listener when adding a task run adds a counter."""
+
+        task_run = TaskRunFactory.create()
+
+        counters = db.session.query(Counter).filter_by(project_id=task_run.project.id,
+                                                       task_id=task_run.task.id)\
+                     .order_by(Counter.id).all()
+
+        assert len(counters) == 2, counters
+        for c in counters:
+            assert c.task_id == task_run.task.id, c
+            assert c.project_id == task_run.project.id, c
+
+        counters = db.session.query(Counter.project_id, Counter.task_id, func.sum(Counter.n_task_runs))\
+                     .filter_by(project_id=task_run.project.id,
+                                task_id=task_run.task.id)\
+                     .group_by(Counter.project_id, Counter.task_id).all()
+
+        assert len(counters) == 1, counters
+        counter = counters[0]
+        assert counter[1] == 1, counter
+
+    @with_context
+    def test_delete_taskrun_adds_counter(self):
+        """Delete event for task run adds a counter."""
+        task_run = TaskRunFactory.create()
+
+        counters = db.session.query(Counter).filter_by(project_id=task_run.project.id,
+                                                       task_id=task_run.task.id)\
+                     .order_by(Counter.id).all()
+
+        assert len(counters) == 2, counters
+        for c in counters:
+            assert c.task_id == task_run.task.id, c
+            assert c.project_id == task_run.project.id, c
+
+        counters = db.session.query(Counter.project_id, Counter.task_id, func.sum(Counter.n_task_runs))\
+                     .filter_by(project_id=task_run.project.id,
+                                task_id=task_run.task.id)\
+                     .group_by(Counter.project_id, Counter.task_id).all()
+
+        assert len(counters) == 1, counters
+        counter = counters[0]
+        assert counter[2] == 1, counter
+
+        db.session.delete(task_run)
+        db.session.commit()
+
+        counters = db.session.query(Counter).filter_by(project_id=task_run.project.id,
+                                                       task_id=task_run.task.id)\
+                     .order_by(Counter.id).all()
+
+        assert len(counters) == 3, counters
+        for c in counters:
+            assert c.task_id == task_run.task.id, c
+            assert c.project_id == task_run.project.id, c
+
+
+        counters = db.session.query(Counter.project_id, Counter.task_id, func.sum(Counter.n_task_runs))\
+                     .filter_by(project_id=task_run.project.id,
+                                task_id=task_run.task.id)\
+                     .group_by(Counter.project_id, Counter.task_id).all()
+
+        assert len(counters) == 1, counters
+        counter = counters[0]
+        assert counter[2] == 0, counter

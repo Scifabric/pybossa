@@ -994,8 +994,7 @@ def tasks_browse(short_name, page=1):
         per_page = 10
         offset = (page - 1) * per_page
         count = n_tasks
-        project_tasks = cached_projects.browse_tasks(project.get('id'))
-        page_tasks = project_tasks[offset:offset+per_page]
+        page_tasks = cached_projects.browse_tasks(project.get('id'), per_page, offset)
         if not page_tasks and page != 1:
             abort(404)
 

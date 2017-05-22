@@ -21,6 +21,7 @@ from sqlalchemy import and_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.model.counter import Counter
 from pybossa.core import db
 import random
 
@@ -43,6 +44,8 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                            external_uid=None, offset=0, limit=1, orderby='id', desc=False):
     """Get a new task which have the least number of task runs."""
+    project_query = session.query(Task.id).filter(Task.project_id==project_id,
+                                                  Task.state!='completed')
     if user_id and not user_ip and not external_uid:
         subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
                                                             user_id=user_id)
@@ -55,12 +58,14 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
         else:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
                                                                 external_uid=external_uid)
-    query = session.query(Task, func.count(TaskRun.task_id).label('taskcount'))\
-                   .outerjoin(TaskRun, TaskRun.task_id==Task.id)\
-                   .filter(~Task.id.in_(subquery.subquery()),
-                           Task.project_id==project_id,
-                           Task.state != 'completed')\
-                   .group_by(Task.id).order_by('taskcount')
+
+    tmp = project_query.except_(subquery)
+    query = session.query(Task, func.sum(Counter.n_task_runs).label('n_task_runs'))\
+                   .filter(Task.id==Counter.task_id)\
+                   .filter(Counter.task_id.in_(tmp))\
+                   .group_by(Task.id)\
+                   .order_by('n_task_runs ASC')\
+
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
     return _handle_tuples(data)
@@ -144,8 +149,8 @@ def _set_orderby_desc(query, orderby, descending):
         if descending:
             query = query.order_by(getattr(Task, orderby).desc())
         else:
-            query = query.order_by(getattr(Task, orderby))
-    query = query.order_by(Task.id.asc())
+            query = query.order_by(getattr(Task, orderby).asc())
+    #query = query.order_by(Task.id.asc())
     return query
 
 def _handle_tuples(data):

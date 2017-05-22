@@ -610,6 +610,34 @@ def create_results():
         db.session.commit()
         print "Project %s completed!" % project.short_name
 
+
+def update_counters():
+    """Populates the counters table."""
+    from pybossa.core import db
+    from pybossa.core import project_repo, task_repo, result_repo
+    from pybossa.model.task import Task
+    from pybossa.model.task_run import TaskRun
+    from pybossa.model.counter import Counter
+
+    projects = project_repo.get_all()
+
+    print len(projects)
+
+    db.session.query(Counter).delete()
+    db.session.commit()
+
+
+    for project in projects:
+        print "Working on project: %s" % project.id
+        sql = text('''select task.project_id as project_id, task.id as task_id, count(task_run.task_id) as n_task_runs from task left outer join task_run on (task_run.task_id=task.id) where task.project_id=:project_id group by task.project_id, task.id, task_run.task_id''')
+        results = db.engine.execute(sql, project_id=project.id)
+        for result in results:
+            db.session.add(Counter(project_id=result.project_id,
+                                   task_id=result.task_id,
+                                   n_task_runs=result.n_task_runs))
+        db.session.commit()
+
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
