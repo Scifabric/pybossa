@@ -1110,7 +1110,7 @@ def bulk_priority_update(short_name):
             })
 
         auditlogger.log_event(project, current_user, 'bulk update priority',
-                              'task,priority_0', 'N/A', new_value)
+                              'task.priority_0', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
         return ErrorStatus().format_exception(e)
