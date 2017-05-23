@@ -1009,8 +1009,6 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         columns = []
 
     try:
-        for key, val in request.args.iteritems():
-            current_app.logger.info('{}: {}'.format(key, val))
         args = parse_tasks_browse_args(request.args)
     except (ValueError, TypeError) as err:
         current_app.logger.exception(err)
@@ -1071,14 +1069,13 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     return respond()
 
 
-from pybossa.util import crossdomain, jsonpify
+from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
 cors_headers = ['Content-Type', 'Authorization']
 
 
-@jsonpify
 @crossdomain(origin='*', headers=cors_headers)
-@blueprint.route('/<short_name>/tasks/priorityupdate', methods=['GET', 'POST'])  # TODO:: choose a good url
+@blueprint.route('/<short_name>/tasks/priorityupdate', methods=['POST'])  # TODO:: choose a good url
 @login_required
 @admin_or_subadmin_required
 def bulk_priority_update(short_name):
@@ -1089,15 +1086,38 @@ def bulk_priority_update(short_name):
         ensure_authorized_to('read', project)
         ensure_authorized_to('update', project)
         req_data = request.json
-        priority = req_data.get('priority_0', 0)
-        args = parse_tasks_browse_args(request.json.get('filters'))
-        task_repo.update_priority(project.id, priority, args)
+        priority_0 = req_data.get('priority_0', 0)
+        task_ids = req_data.get('taskIds')
+        if task_ids:
+            current_app.logger.info(task_ids)
+            for task_id in task_ids:
+                if task_id != '':
+                    t = task_repo.get_task_by(project_id=project.id,
+                                              id=int(task_id))
+                    if t:
+                        t.priority_0 = priority_0
+                        task_repo.update(t)
+            new_value = json.dumps({
+                'task_ids': task_ids,
+                'priority_0': priority_0
+            })
+        else:
+            args = parse_tasks_browse_args(request.json.get('filters'))
+            task_repo.update_priority(project.id, priority_0, args)
+            new_value = json.dumps({
+                'filters': args,
+                'priority_0': priority_0
+            })
+
+        auditlogger.log_event(project, current_user, 'bulk update priority',
+                              'task,priority_0', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
         return ErrorStatus().format_exception(e)
 
 
-@blueprint.route('/<short_name>/tasks/redundancyupdate', methods=['GET', 'POST'])  # TODO:: choose a good url
+@crossdomain(origin='*', headers=cors_headers)
+@blueprint.route('/<short_name>/tasks/redundancyupdate', methods=['POST'])  # TODO:: choose a good url
 @login_required
 @admin_or_subadmin_required
 def bulk_redundancy_update(short_name):
