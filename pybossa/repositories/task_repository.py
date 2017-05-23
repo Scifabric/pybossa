@@ -28,6 +28,7 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 from sqlalchemy import text
+from pybossa.cache.task_browse_helpers import get_task_filters
 import json
 
 
@@ -172,7 +173,6 @@ class TaskRepository(Repository):
         self._delete_zip_files_from_store(project)
 
     def delete_valid_from_project(self, project, force_reset=False):
-        sql = None
         if not force_reset:
             """Delete only tasks that have no results associated."""
             sql = text('''
@@ -254,9 +254,35 @@ class TaskRepository(Repository):
         sql = text('''DELETE FROM result WHERE result.task_id IN (SELECT id FROM incomplete_tasks);''')
         self.db.session.execute(sql)
 
-
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+
+    def update_priority(self, project_id, priority, filter_args):
+        priority = min(1.0, priority)
+        priority = max(0.0, priority)
+        filters, params = get_task_filters(filter_args)
+        sql = text('''
+                   WITH to_update AS (
+                        SELECT task.id as id,
+                        coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                        priority_0, task.created
+                        FROM task LEFT OUTER JOIN
+                        (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                        MAX(finish_time) as ft FROM task_run
+                        WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                        ON task.id=log_counts.task_id
+                        WHERE task.project_id=:project_id {}
+                   )
+                   UPDATE task
+                   SET priority_0=:priority
+                   WHERE project_id=:project_id AND task.id in (
+                        SELECT id FROM to_update);
+                   '''.format(filters))
+        self.db.session.execute(sql, dict(priority=priority,
+                                          project_id=project_id,
+                                          **params))
+        self.db.session.commit()
+        cached_projects.clean_project(project_id)
 
     def find_duplicate(self, project_id, info):
         """
