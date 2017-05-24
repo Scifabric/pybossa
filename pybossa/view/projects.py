@@ -1114,7 +1114,7 @@ def bulk_priority_update(short_name):
                               'task.priority_0', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
-        return ErrorStatus().format_exception(e, "", "")
+        return ErrorStatus().format_exception(e, 'priorityupdate', 'POST')
 
 
 @crossdomain(origin='*', headers=cors_headers)
@@ -1149,7 +1149,7 @@ def bulk_redundancy_update(short_name):
                               'task.priority_0', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
-        return ErrorStatus().format_exception(e, "", "")
+        return ErrorStatus().format_exception(e, 'redundancyupdate', 'POST')
 
 
 def _update_task_redundancy(project_id, task_ids, n_answers):
@@ -1165,6 +1165,39 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
                 t.state = 'ongoing'
                 task_repo.update(t)
     task_repo.update_task_state(project_id, n_answers)
+
+
+@crossdomain(origin='*', headers=cors_headers)
+@blueprint.route('/<short_name>/tasks/deleteselected', methods=['POST'])
+@login_required
+@admin_or_subadmin_required
+def delete_selected_tasks(short_name):
+    try:
+        (project, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity,
+         n_results) = project_by_shortname(short_name)
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
+        req_data = request.json
+        task_ids = req_data.get('taskIds')
+        if task_ids:
+            for task_id in task_ids:
+                task_repo.delete_task_by_id(project.id, task_id)
+            new_value = json.dumps({
+                'task_ids': task_ids,
+            })
+            enqueued = False
+        else:
+            enqueued = True
+            args = parse_tasks_browse_args(request.json.get('filters'))
+            pass
+
+        auditlogger.log_event(project, current_user, 'delete tasks',
+                              'task', 'N/A', new_value)
+        return Response(json.dumps(dict(enqueued=enqueued)), 200,
+                        mimetype='application/json')
+    except Exception as e:
+        return ErrorStatus().format_exception(e, 'deleteselected', 'POST')
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])

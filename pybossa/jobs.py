@@ -510,7 +510,11 @@ def delete_bulk_tasks(data):
     for user in coowners:
         recipients.append(user.email_addr)
 
-    sql = text('''ALTER TABLE result DISABLE TRIGGER USER; ALTER TABLE task_run DISABLE TRIGGER USER; ALTER TABLE task DISABLE TRIGGER USER;''')
+    sql = text('''
+               ALTER TABLE result DISABLE TRIGGER USER;
+               ALTER TABLE task_run DISABLE TRIGGER USER;
+               ALTER TABLE task DISABLE TRIGGER USER;
+               ''')
     db.session.execute(sql)
     db.session.commit()
     if force_reset:
@@ -520,7 +524,9 @@ def delete_bulk_tasks(data):
         sql = text('''DELETE FROM task_run WHERE project_id=:project_id;''')
         db.session.execute(sql, dict(project_id=project_id))
         db.session.commit()
-        sql = text('''DELETE FROM task WHERE id IN (SELECT id FROM task WHERE project_id=:project_id);''')
+        sql = text('''DELETE FROM task
+                   WHERE id IN (SELECT id
+                                FROM task WHERE project_id=:project_id);''')
         db.session.execute(sql, dict(project_id=project_id))
         db.session.commit()
         msg = "All tasks, taskruns and results associated have been deleted from project {0} by {1}".format(project_name, current_user_fullname)
@@ -535,7 +541,11 @@ def delete_bulk_tasks(data):
         db.session.commit()
         msg = "Tasks and taskruns with no associated results have been deleted from project {0} by {1}".format(project_name, current_user_fullname)
 
-    sql = text('''ALTER TABLE result ENABLE TRIGGER USER; ALTER TABLE task_run ENABLE TRIGGER USER; ALTER TABLE task ENABLE TRIGGER USER;''')
+    sql = text('''
+               ALTER TABLE result ENABLE TRIGGER USER;
+               ALTER TABLE task_run ENABLE TRIGGER USER;
+               ALTER TABLE task ENABLE TRIGGER USER;
+               ''')
     db.session.execute(sql)
     db.session.commit()
     cached_projects.clean_project(project_id)
