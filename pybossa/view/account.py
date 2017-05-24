@@ -803,8 +803,7 @@ def forgot_password():
         else:
             flash(gettext("We don&#39;t have this email in our records. "
                           "You may have signed up with a different "
-                          "email or used Twitter, Facebook, or "
-                          "Google to sign-in"), 'error')
+                          "email"), 'error')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Something went wrong, please correct the errors on the '
               'form'), 'error')
