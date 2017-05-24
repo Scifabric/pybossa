@@ -77,6 +77,12 @@ from pybossa.default_settings import TIMEOUT
 from pybossa.forms.admin_view_forms import *
 from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_completed_tasks_by_user
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
+from pybossa.util import crossdomain
+from pybossa.error import ErrorStatus
+
+
+cors_headers = ['Content-Type', 'Authorization']
+
 
 blueprint = Blueprint('project', __name__)
 
@@ -1067,11 +1073,6 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         ensure_authorized_to('read', project)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
-
-
-from pybossa.util import crossdomain
-from pybossa.error import ErrorStatus
-cors_headers = ['Content-Type', 'Authorization']
 
 
 @crossdomain(origin='*', headers=cors_headers)
