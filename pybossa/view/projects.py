@@ -1075,7 +1075,7 @@ cors_headers = ['Content-Type', 'Authorization']
 
 
 @crossdomain(origin='*', headers=cors_headers)
-@blueprint.route('/<short_name>/tasks/priorityupdate', methods=['POST'])  # TODO:: choose a good url
+@blueprint.route('/<short_name>/tasks/priorityupdate', methods=['POST'])
 @login_required
 @admin_or_subadmin_required
 def bulk_priority_update(short_name):
@@ -1113,22 +1113,57 @@ def bulk_priority_update(short_name):
                               'task.priority_0', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
-        return ErrorStatus().format_exception(e)
+        return ErrorStatus().format_exception(e, "", "")
 
 
 @crossdomain(origin='*', headers=cors_headers)
-@blueprint.route('/<short_name>/tasks/redundancyupdate', methods=['POST'])  # TODO:: choose a good url
+@blueprint.route('/<short_name>/tasks/redundancyupdate', methods=['POST'])
 @login_required
 @admin_or_subadmin_required
 def bulk_redundancy_update(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
-    ensure_authorized_to('read', project)
-    ensure_authorized_to('update', project)
-    args = request.data
-    current_app.logger.info(args)
-    return ''
+    try:
+        (project, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity,
+         n_results) = project_by_shortname(short_name)
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
+        req_data = request.json
+        n_answers = req_data.get('n_answers', 1)
+        task_ids = req_data.get('taskIds')
+        if task_ids:
+            _update_task_redundancy(project.id, task_ids, n_answers)
+            new_value = json.dumps({
+                'task_ids': task_ids,
+                'n_answers': n_answers
+            })
+        else:
+            args = parse_tasks_browse_args(request.json.get('filters'))
+            task_repo.update_tasks_redundancy(project, n_answers, args)
+            new_value = json.dumps({
+                'filters': args,
+                'n_answers': n_answers
+            })
+
+        auditlogger.log_event(project, current_user, 'bulk update priority',
+                              'task.priority_0', 'N/A', new_value)
+        return Response('{}', 200, mimetype='application/json')
+    except Exception as e:
+        return ErrorStatus().format_exception(e, "", "")
+
+
+def _update_task_redundancy(project_id, task_ids, n_answers):
+    """
+    Update the redundancy for a list of tasks in a given project
+    """
+    for task_id in task_ids:
+        if task_id:
+            t = task_repo.get_task_by(project_id=project_id,
+                                      id=int(task_id))
+            if t:
+                t.n_answers = n_answers
+                t.state = 'ongoing'
+                task_repo.update(t)
+    task_repo.update_task_state(project_id, n_answers)
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
