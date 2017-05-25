@@ -1008,6 +1008,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
+
     try:
         columns = get_searchable_columns(project.id)
     except:
@@ -1020,6 +1021,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         current_app.logger.exception(err)
         flash(gettext('Invalid filtering criteria'), 'error')
         abort(404)
+
 
     def respond():
         per_page = records_per_page
@@ -1040,9 +1042,9 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                                                                     ps)
         args["changed"] = False
         if args.get("pcomplete_from"):
-            args["pcomplete_from"] = args["pcomplete_from"]*100
+            args["pcomplete_from"] = args["pcomplete_from"] * 100
         if args.get("pcomplete_to"):
-            args["pcomplete_to"] = args["pcomplete_to"]*100
+            args["pcomplete_to"] = args["pcomplete_to"] * 100
         args["order_by"] = args.pop("order_by_dict", dict())
         args.pop("records_per_page", None)
         args.pop("offset", None)
@@ -1065,14 +1067,58 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
         return handle_content_type(data)
 
+    def respond_export(download_type, args):
+        try:
+            download_specs = download_type.split('_')
+            download_obj = download_specs[0]
+            download_format = download_specs[1]
+
+            try:
+                metadata = bool(download_specs[2])
+            except:
+                metadata = False
+
+            assert download_obj in ('tasks', 'taskruns')
+            assert download_format in ('csv', 'json')
+        except:
+            current_app.logger.exception('Invalid download type {0} for project {1}.'
+                                         .format(download_type, project.short_name))
+            flash(gettext('Invalid download type. Please try again.'), 'error')
+
+        try:
+            export_queue.enqueue(export_tasks,
+                                 current_user.email_addr,
+                                 short_name,
+                                 ty=download_obj,
+                                 expanded=metadata,
+                                 filetype=download_format,
+                                 **args)
+            flash(gettext('You will be emailed when your export has been completed.'),
+                  'success')
+        except:
+            current_app.logger.exception(
+                    '{0} Export Failed - Project: {1}, Type: {2}'
+                    .format(download_type.upper(), project.short_name, ty))
+            flash(gettext('There was an error while exporting your data.'),
+                  'error')
+
+        return respond()
+
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    return respond()
+
+    download_type = request.args.get('download_type')
+
+    if download_type:
+        return respond_export(download_type, args)
+    else:
+        return respond()
 
 
 @crossdomain(origin='*', headers=cors_headers)
