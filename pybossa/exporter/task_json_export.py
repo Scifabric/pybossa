@@ -18,10 +18,11 @@
 # Cache global variables for timeouts
 
 import json
-from pybossa.uploader import local
-from pybossa.exporter.json_export import JsonExporter
-from pybossa.core import uploader, task_repo
 from flask import url_for, safe_join, send_file, redirect
+from pybossa.core import uploader, task_repo
+from pybossa.uploader import local
+from pybossa.cache.projects import browse_tasks_export
+from pybossa.exporter.json_export import JsonExporter
 
 
 class TaskJsonExporter(JsonExporter):
@@ -56,19 +57,19 @@ class TaskJsonExporter(JsonExporter):
 
         return obj_dict
 
-    def gen_json(self, table, id, expanded=False):
-        if table == 'task':
+    def gen_json(self, obj, project_id, expanded=False):
+        if obj == 'task':
             query_filter = task_repo.filter_tasks_by
-        elif table == 'task_run':
+        elif obj == 'task_run':
             query_filter = task_repo.filter_task_runs_by
         else:
             return
 
-        n = getattr(task_repo, 'count_%ss_with' % table)(project_id=id)
+        n = getattr(task_repo, 'count_%ss_with' % obj)(project_id=project_id)
         sep = ", "
         yield "["
 
-        for i, tr in enumerate(query_filter(project_id=id, yielded=True), 1):
+        for i, tr in enumerate(query_filter(project_id=project_id, yielded=True), 1):
             if expanded:
                 item = self.merge_objects(tr)
             else:
@@ -81,8 +82,30 @@ class TaskJsonExporter(JsonExporter):
             yield item + sep
         yield "]"
 
-    def _respond_json(self, ty, id, expanded=False):
-        return self.gen_json(ty, id, expanded)
+    def gen_json_with_filters(self, obj, project_id, expanded=False, **filters):
+        objs = browse_tasks_export(obj, project_id, expanded, **filters)
+        n = len(objs)
+
+        sep = ", "
+        yield "["
+
+        count = 0
+        for obj in objs:
+            item = json.dumps(dict(obj))
+            count += 1
+
+            if (count == n):
+                sep = ""
+            yield item + sep
+        yield "]"
+
+
+    def _respond_json(self, ty, project_id, expanded=False, **filters):
+        if filters:
+            return self.gen_json_with_filters(
+                    ty, project_id, expanded, **filters)
+        else:
+            return self.gen_json(ty, project_id, expanded)
 
     def response_zip(self, project, ty, expanded=False):
         return self.get_zip(project, ty, expanded)
@@ -109,9 +132,9 @@ class TaskJsonExporter(JsonExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False):
+    def make_zip(self, project, obj, expanded=False, **filters):
         file_format = 'json'
-        obj_generator = self._respond_json(obj, project.id, expanded)
+        obj_generator = self._respond_json(obj, project.id, expanded, **filters)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 

@@ -18,11 +18,12 @@
 # Cache global variables for timeouts
 
 import tempfile
+from flask import url_for, safe_join, send_file, redirect
 from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
 from pybossa.util import UnicodeWriter
-from flask import url_for, safe_join, send_file, redirect
+from pybossa.cache.projects import browse_tasks_export
 
 
 class TaskCsvExporter(CsvExporter):
@@ -123,7 +124,7 @@ class TaskCsvExporter(CsvExporter):
                                              ty=normal_ty,
                                              headers=headers))
 
-    def _get_csv(self, out, writer, table, id, expanded=False):
+    def _get_csv(self, out, writer, table, project_id, expanded=False):
         if table == 'task':
             query_filter = task_repo.filter_tasks_by
         elif table == 'task_run':
@@ -131,12 +132,23 @@ class TaskCsvExporter(CsvExporter):
         else:
             return
 
-        objs = query_filter(project_id=id, yielded=True)
+        objs = query_filter(project_id=project_id, yielded=True)
         headers = self._get_all_headers(objs, expanded)
         writer.writerow(headers)
 
         for obj in objs:
             self._handle_row(writer, obj, table, headers)
+        out.seek(0)
+        yield out.read()
+
+    def _get_csv_with_filters(self, out, writer, table, project_id, expanded=False, **filters):
+        objs = browse_tasks_export(table, project_id, expanded, **filters)
+
+        headers = objs[0].keys()
+        writer.writerow(headers)
+
+        for obj in objs:
+            writer.writerow(obj)
         out.seek(0)
         yield out.read()
 
@@ -163,12 +175,17 @@ class TaskCsvExporter(CsvExporter):
         headers = self.get_keys(obj_dict, obj_name)
         return headers
 
-    def _respond_csv(self, ty, id, expanded=False):
+    def _respond_csv(self, ty, project_id, expanded=False, **filters):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
 
         try:
-            return self._get_csv(out, writer, ty, id, expanded)
+            if filters:
+                return self._get_csv_with_filters(
+                        out, writer, ty, project_id, expanded, **filters)
+            else:
+                return self._get_csv(
+                        out, writer, ty, project_id, expanded)
         except:
             def empty_csv(out):
                 yield out.read()
@@ -200,11 +217,11 @@ class TaskCsvExporter(CsvExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False):
+    def make_zip(self, project, obj, expanded=False, **filters):
         file_format = 'csv'
-        obj_generator = self._respond_csv(obj, project.id, expanded)
+        obj_generator = self._respond_csv(obj, project.id, expanded, **filters)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 
-    def _make_zip(self, project, obj, expanded=False):
-        self.make_zip(self, project, obj, expanded)
+    def _make_zip(self, project, obj, expanded=False, **filters):
+        self.make_zip(self, project, obj, expanded, **filters)
