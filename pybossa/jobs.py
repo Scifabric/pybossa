@@ -499,6 +499,7 @@ def delete_bulk_tasks(data):
     from sqlalchemy.sql import text
     from pybossa.core import db
     import pybossa.cache.projects as cached_projects
+    from pybossa.cache.task_browse_helpers import get_task_filters
 
     project_id = data['project_id']
     project_name = data['project_name']
@@ -518,28 +519,45 @@ def delete_bulk_tasks(data):
     db.session.execute(sql)
     db.session.commit()
     if force_reset:
-        sql = text('''DELETE FROM result WHERE project_id=:project_id;''')
+        args = data.get('filters', {})
+        conditions, params = get_task_filters(args)
+        sql = text('''
+           CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
+                SELECT task.id as id,
+                coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                priority_0, task.created
+                FROM task LEFT OUTER JOIN
+                (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                MAX(finish_time) as ft FROM task_run
+                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                ON task.id=log_counts.task_id
+                WHERE task.project_id=:project_id {} );
+           '''.format(conditions))
+        db.session.execute(sql, dict(project_id=project_id, **params))
+        sql = text('''DELETE FROM result
+                      WHERE task_id IN (select id from to_delete);''')
         db.session.execute(sql, dict(project_id=project_id))
-        db.session.commit()
-        sql = text('''DELETE FROM task_run WHERE project_id=:project_id;''')
+        sql = text('''DELETE FROM task_run
+                      WHERE task_id IN (select id from to_delete);''')
         db.session.execute(sql, dict(project_id=project_id))
-        db.session.commit()
         sql = text('''DELETE FROM task
-                   WHERE id IN (SELECT id
-                                FROM task WHERE project_id=:project_id);''')
+                      WHERE id IN (select id from to_delete);''')
         db.session.execute(sql, dict(project_id=project_id))
-        db.session.commit()
-        msg = "All tasks, taskruns and results associated have been deleted from project {0} by {1}".format(project_name, current_user_fullname)
+        msg = ("Tasks, taskruns and results associated have been "
+               "deleted from project {0} as requested by {1}"
+               .format(project_name, current_user_fullname))
     else:
         sql = text('''
                     DELETE FROM task WHERE task.project_id=:project_id
                     AND task.id NOT IN
                     (SELECT task_id FROM result
-                    WHERE result.project_id=:project_id GROUP BY result.task_id);
+                    WHERE result.project_id=:project_id
+                    GROUP BY result.task_id);
                     ''')
         db.session.execute(sql, dict(project_id=project_id))
-        db.session.commit()
-        msg = "Tasks and taskruns with no associated results have been deleted from project {0} by {1}".format(project_name, current_user_fullname)
+        msg = ("Tasks and taskruns with no associated results have been "
+               "deleted from project {0} by {1}"
+               .format(project_name, current_user_fullname))
 
     sql = text('''
                ALTER TABLE result ENABLE TRIGGER USER;
@@ -552,8 +570,7 @@ def delete_bulk_tasks(data):
     subject = 'Tasks deletion from %s' % project_name
     body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\
         % current_app.config.get('BRAND')
-    mail_dict = dict(recipients=recipients,
-                     subject=subject, body=body)
+    mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
 
 
@@ -570,12 +587,12 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     try:
         report = importer.create_tasks(task_repo, project, **form_data)
     except:
-        msg = 'Import tasks to your project {0} by {1} failed'.format(project.name, current_user_fullname)
+        msg = ('Import tasks to your project {0} by {1} failed'
+               .format(project.name, current_user_fullname))
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n' + msg + '\n\nPlease contact GIGwork administrator,\nThe %s team.'\
-            % current_app.config.get('BRAND')
-        mail_dict = dict(recipients=recipients,
-                         subject=subject, body=body)
+        body = ('Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
+                .format(msg, current_app.config.get('BRAND')))
+        mail_dict = dict(recipients=recipients, subject=subject, body=body)
         send_mail(mail_dict)
         return msg
 
@@ -588,8 +605,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
-    mail_dict = dict(recipients=recipients,
-                     subject=subject, body=body)
+    mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
     # cleanup import file
     if 'csv_filename' in form_data:

@@ -1186,15 +1186,28 @@ def delete_selected_tasks(short_name):
             new_value = json.dumps({
                 'task_ids': task_ids,
             })
-            enqueued = False
+            async = False
         else:
-            enqueued = True
             args = parse_tasks_browse_args(request.json.get('filters'))
-            pass
+            count = cached_projects.task_count(project.id, args)
+            async = count > MAX_NUM_SYNCHRONOUS_TASKS_DELETE
+            if async:
+                data = {
+                    'project_id': project.id, 'project_name': project.name,
+                    'curr_user': current_user.email_addr, 'force_reset': True,
+                    'coowners': project.coowners, 'filters': args,
+                    'current_user_fullname': current_user.fullname}
+                task_queue.enqueue(delete_bulk_tasks, data)
+            else:
+                task_repo.delete_valid_from_project(project, True, args)
+
+            new_value = json.dumps({
+                'filters': args
+            })
 
         auditlogger.log_event(project, current_user, 'delete tasks',
                               'task', 'N/A', new_value)
-        return Response(json.dumps(dict(enqueued=enqueued)), 200,
+        return Response(json.dumps(dict(enqueued=async)), 200,
                         mimetype='application/json')
     except Exception as e:
         return ErrorStatus().format_exception(e, 'deleteselected', 'POST')

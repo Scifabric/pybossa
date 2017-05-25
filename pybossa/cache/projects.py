@@ -105,6 +105,28 @@ def browse_tasks(project_id, args):
     return total_count, tasks
 
 
+def task_count(project_id, filters):
+    """Return the count of tasks in a project matching the given filters."""
+    conditions, filter_params = get_task_filters(filters)
+    sql = text('''
+               SELECT COUNT(*) OVER() as total_count, task.id,
+               coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+               priority_0, task.created
+               FROM task LEFT OUTER JOIN
+               (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+               MAX(finish_time) as ft FROM task_run
+               WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+               ON task.id=log_counts.task_id
+               WHERE task.project_id=:project_id {} LIMIT 1'''
+               .format(conditions))
+
+    results = session.execute(sql, dict(project_id=project_id,
+                                        **filter_params))
+
+    row = results.first()
+    return row.total_count if row else 0
+
+
 def _pct_status(n_task_runs, n_answers):
     """Return percentage status."""
     if n_answers != 0 and n_answers is not None:

@@ -186,7 +186,7 @@ class TaskRepository(Repository):
         self.db.session.commit()
         cached_projects.clean(project_id)
 
-    def delete_valid_from_project(self, project, force_reset=False):
+    def delete_valid_from_project(self, project, force_reset=False, filters=None):
         if not force_reset:
             """Delete only tasks that have no results associated."""
             sql = text('''
@@ -197,16 +197,31 @@ class TaskRepository(Repository):
                 ''')
         else:
             """force reset, remove all results."""
+            filters = filters or {}
+            conditions, params = get_task_filters(filters)
             sql = text('''
                 BEGIN;
-
-                DELETE FROM result WHERE project_id=:project_id;
-                DELETE FROM task_run WHERE project_id=:project_id;                
-                DELETE FROM task WHERE task.project_id=:project_id;
+                CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
+                    SELECT task.id as id,
+                    coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                    priority_0, task.created
+                    FROM task LEFT OUTER JOIN
+                    (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                    MAX(finish_time) as ft FROM task_run
+                    WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                    ON task.id=log_counts.task_id
+                    WHERE task.project_id=:project_id {}
+                );
+                DELETE FROM result WHERE project_id=:project_id
+                       AND task_id in (SELECT id FROM to_delete);
+                DELETE FROM task_run WHERE project_id=:project_id                
+                       AND task_id in (SELECT id FROM to_delete);
+                DELETE FROM task WHERE task.project_id=:project_id
+                       AND id in (SELECT id FROM to_delete);
 
                 COMMIT;
-                ''')
-        self.db.session.execute(sql, dict(project_id=project.id))
+                '''.format(conditions))
+        self.db.session.execute(sql, dict(project_id=project.id, **params))
         self.db.session.commit()
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
@@ -220,13 +235,13 @@ class TaskRepository(Repository):
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
 
-    def update_tasks_redundancy(self, project, n_answers, args=None):
+    def update_tasks_redundancy(self, project, n_answers, filters=None):
         """update the n_answer of every task from a project and their state.
         Use raw SQL for performance"""
-        args = args or {}
-        filters, params = get_task_filters(args)
-        if n_answers < 1 or n_answers > 1000:
-            raise ValueError("Invalid value")
+        filters = filters or {}
+        conditions, params = get_task_filters(filters)
+        if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
+            raise ValueError("Invalid redundancy value: {}".format(n_answers))
 
         sql = text('''
                    WITH to_update AS (
@@ -243,7 +258,7 @@ class TaskRepository(Repository):
                    UPDATE task SET n_answers=:n_answers,
                    state='ongoing' WHERE project_id=:project_id
                    AND task.id in (SELECT id from to_update);'''
-                   .format(filters))
+                   .format(conditions))
         self.db.session.execute(sql, dict(n_answers=n_answers,
                                           project_id=project.id,
                                           **params))
@@ -301,10 +316,10 @@ class TaskRepository(Repository):
         self.db.session.commit()
         cached_projects.clean_project(project_id)
 
-    def update_priority(self, project_id, priority, filter_args):
+    def update_priority(self, project_id, priority, filters):
         priority = min(1.0, priority)
         priority = max(0.0, priority)
-        filters, params = get_task_filters(filter_args)
+        conditions, params = get_task_filters(filters)
         sql = text('''
                    WITH to_update AS (
                         SELECT task.id as id,
@@ -321,7 +336,7 @@ class TaskRepository(Repository):
                    SET priority_0=:priority
                    WHERE project_id=:project_id AND task.id in (
                         SELECT id FROM to_update);
-                   '''.format(filters))
+                   '''.format(conditions))
         self.db.session.execute(sql, dict(priority=priority,
                                           project_id=project_id,
                                           **params))
