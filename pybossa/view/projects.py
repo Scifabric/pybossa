@@ -1095,7 +1095,7 @@ def bulk_priority_update(short_name):
                 if task_id != '':
                     t = task_repo.get_task_by(project_id=project.id,
                                               id=int(task_id))
-                    if t:
+                    if t and t.priority_0 != priority_0:
                         t.priority_0 = priority_0
                         task_repo.update(t)
             new_value = json.dumps({
@@ -1160,7 +1160,7 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
         if task_id:
             t = task_repo.get_task_by(project_id=project_id,
                                       id=int(task_id))
-            if t:
+            if t and t.n_answers != n_answers:
                 t.n_answers = n_answers
                 t.state = 'ongoing'
                 task_repo.update(t)
