@@ -37,7 +37,7 @@ The objects are:
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
-           'task_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
+           'task_repo', 'announcement_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
            'plugin_manager', 'assets', 'JSONEncoder', 'cors']
 
@@ -53,6 +53,7 @@ db.slave_session = db.session
 # Repositories
 user_repo = None
 project_repo = None
+announcement_repo = None
 blog_repo = None
 task_repo = None
 auditlog_repo = None

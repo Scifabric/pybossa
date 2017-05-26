@@ -180,6 +180,7 @@ def setup_repositories(app):
     """Setup repositories."""
     from pybossa.repositories import UserRepository
     from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import AnnouncementRepository
     from pybossa.repositories import BlogRepository
     from pybossa.repositories import TaskRepository
     from pybossa.repositories import AuditlogRepository
@@ -187,6 +188,7 @@ def setup_repositories(app):
     from pybossa.repositories import ResultRepository
     global user_repo
     global project_repo
+    global announcement_repo
     global blog_repo
     global task_repo
     global auditlog_repo
@@ -195,6 +197,7 @@ def setup_repositories(app):
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
+    announcement_repo = AnnouncementRepository(db)
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db, language)
     auditlog_repo = AuditlogRepository(db)

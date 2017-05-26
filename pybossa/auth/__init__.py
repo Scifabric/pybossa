@@ -32,6 +32,7 @@ import taskrun
 import category
 import user
 import token
+import announcement
 import blogpost
 import auditlog
 import webhook
@@ -43,6 +44,7 @@ assert taskrun
 assert category
 assert user
 assert token
+assert announcement
 assert blogpost
 assert auditlog
 assert webhook
@@ -52,6 +54,7 @@ assert result
 _actions = ['create', 'read', 'update', 'delete']
 _auth_classes = {'project': project.ProjectAuth,
                  'auditlog': auditlog.AuditlogAuth,
+                 'announcement': announcement.AnnouncementAuth,
                  'blogpost': blogpost.BlogpostAuth,
                  'category': category.CategoryAuth,
                  'task': task.TaskAuth,
@@ -88,7 +91,7 @@ def _authorizer_for(resource_name):
     kwargs = {}
     if resource_name in ('project', 'taskrun'):
         kwargs.update({'task_repo': task_repo})
-    if resource_name in ('auditlog', 'blogpost', 'task',
+    if resource_name in ('auditlog', 'announcement', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result'):
         kwargs.update({'project_repo': project_repo})
     if resource_name in ('project', 'task', 'taskrun'):
