@@ -69,6 +69,8 @@ def handle_content_type(data):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
+            if (item == 'announcements'):
+                data[item] = [announcement.to_public_json() for announcement in data[item]]
             if (item == 'blogposts'):
                 data[item] = [blog.to_public_json() for blog in data[item]]
             if (item == 'categories'):
