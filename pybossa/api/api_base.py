@@ -40,27 +40,28 @@ from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo, announcement_repo, blog_repo
 from pybossa.model import DomainObject
 
-repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
-                     'get': 'get_task', 'save': 'save', 'update': 'update',
-                     'delete': 'delete'},
-        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by',
+repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
+                  'get': 'get_task', 'save': 'save', 'update': 'update',
+                  'delete': 'delete'},
+         'TaskRun': {'repo': task_repo, 'filter': 'filter_task_runs_by',
                      'get': 'get_task_run',  'save': 'save', 'update': 'update',
                      'delete': 'delete'},
-        'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update'},
-        'Project' : {'repo': project_repo, 'filter': 'filter_by',
-                      'context': 'filter_owner_by', 'get': 'get',
-                      'save': 'save', 'update': 'update', 'delete': 'delete'},
-        'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
-                     'get': 'get_category', 'save': 'save_category',
-                     'update': 'update_category', 'delete': 'delete_category'},
-        'Result':   {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
-                     'update': 'update'},
-        'Announcement': {'repo': announcement_repo, 'filter': 'filter_by', 'get': 'get',
-                     'update': 'update', 'save': 'save', 'delete': 'delete'},
-        'Blogpost': {'repo': blog_repo, 'filter': 'filter_by', 'get': 'get',
-                     'update': 'update', 'save': 'save', 'delete': 'delete'}
-        }
+         'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
+                  'save': 'save', 'update': 'update'},
+         'Project': {'repo': project_repo, 'filter': 'filter_by',
+                     'context': 'filter_owner_by', 'get': 'get',
+                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
+                      'get': 'get_category', 'save': 'save_category',
+                      'update': 'update_category', 'delete': 'delete_category'},
+         'Result':   {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
+                      'update': 'update'},
+         'Announcement': {'repo': announcement_repo, 'filter': 'filter_by', 'get': 'get',
+                          'get_all_announcements': 'get_all_announcements',
+                          'update': 'update', 'save': 'save', 'delete': 'delete'},
+         'Blogpost': {'repo': blog_repo, 'filter': 'filter_by', 'get': 'get',
+                      'update': 'update', 'save': 'save', 'delete': 'delete'}
+         }
 
 
 error = ErrorStatus()
