@@ -31,6 +31,9 @@ class AnnouncementRepository(Repository):
     def get(self, id):
         return self.db.session.query(Announcement).get(id)
 
+    def get_all_announcements(self):
+        return self.db.session.query(Announcement).all()
+
     def get_by(self, **attributes):
         return self.db.session.query(Announcement).filter_by(**attributes).first()
 
