@@ -38,7 +38,7 @@ from pybossa.util import redirect_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import project_repo, user_repo, sentinel
+from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
@@ -374,6 +374,15 @@ def update_category(id):
         current_app.logger.error(e)
         return abort(500)
 
+@blueprint.route('/announcement', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def announcement():
+    """Manage anncounements."""
+    announcement = announcement_repo.get_all_announcements()
+    response = dict(template='/admin/announcement.html',
+                    title=gettext("Manage global Announcements"))
+    return handle_content_type(response)
 
 @blueprint.route('/dashboard/')
 @login_required
