@@ -54,6 +54,7 @@ from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
+from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -98,10 +99,13 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
 register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
+register_api(HelpingMaterialAPI, 'api_helpingmaterial',
+             '/helpingmaterial', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
-register_api(FavoritesAPI, 'api_favorites', '/favorites', pk='oid', pk_type='int')
+register_api(FavoritesAPI, 'api_favorites', '/favorites',
+             pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
