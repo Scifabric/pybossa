@@ -31,7 +31,7 @@ def upgrade():
                               nullable=False),
                     sa.Column('created', TIMESTAMP,
                               default=make_timestamp),
-                    sa.Column('info', JSON))
+                    sa.Column('info', JSON, nullable=False))
 
 
 def downgrade():
