@@ -22,7 +22,7 @@ def make_timestamp():
 
 
 def upgrade():
-    op.create_table('helpingmaterials',
+    op.create_table('helpingmaterial',
                     sa.Column('id', sa.Integer,
                               primary_key=True),
                     sa.Column('project_id', sa.Integer,
@@ -35,4 +35,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('helpingmaterials')
+    op.drop_table('helpingmaterial')

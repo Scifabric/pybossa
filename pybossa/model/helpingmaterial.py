@@ -24,10 +24,10 @@ from pybossa.model import DomainObject, make_timestamp
 from sqlalchemy.ext.mutable import MutableDict
 
 
-class HelpingMaterials(db.Model, DomainObject):
+class HelpingMaterial(db.Model, DomainObject):
     '''A Helping Materials objects to give support/tutorials to users.'''
 
-    __tablename__ = 'helpingmaterials'
+    __tablename__ = 'helpingmaterial'
 
     #: Counter.ID
     id = Column(Integer, primary_key=True)
