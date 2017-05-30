@@ -30,7 +30,7 @@ from wtforms.widgets import HiddenInput
 
 import validator as pb_validator
 from pybossa import util
-from pybossa.core import project_repo, user_repo
+from pybossa.core import project_repo, user_repo, task_repo
 from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
@@ -90,9 +90,14 @@ class TaskRedundancyForm(Form):
     n_answers = IntegerField(lazy_gettext('Redundancy'),
                              [validators.Required(),
                               validators.NumberRange(
-                                  min=1, max=1000,
-                                  message=lazy_gettext('Number of answers should be a \
-                                                       value between 1 and 1,000'))])
+                                  min=task_repo.MIN_REDUNDANCY,
+                                  max=task_repo.MAX_REDUNDANCY,
+                                  message=lazy_gettext(
+                                      'Number of answers should be a \
+                                       value between {} and {}'.format(
+                                          task_repo.MIN_REDUNDANCY,
+                                          task_repo.MAX_REDUNDANCY
+                                      )))])
 
 
 class TaskPriorityForm(Form):

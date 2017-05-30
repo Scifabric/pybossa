@@ -33,6 +33,8 @@ import json
 
 
 class TaskRepository(Repository):
+    MIN_REDUNDANCY = 1
+    MAX_REDUNDANCY = 1000
 
     # Methods for queries on Task objects
     def get_task(self, id):
