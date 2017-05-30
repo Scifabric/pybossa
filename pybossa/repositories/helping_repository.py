@@ -23,20 +23,20 @@ from pybossa.model.helpingmaterial import HelpingMaterial
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
-class BlogRepository(Repository):
+class HelpingMaterialRepository(Repository):
 
     def __init__(self, db):
         self.db = db
 
     def get(self, id):
-        return self.db.session.query(Blogpost).get(id)
+        return self.db.session.query(HelpingMaterial).get(id)
 
     def get_by(self, **attributes):
-        return self.db.session.query(Blogpost).filter_by(**attributes).first()
+        return self.db.session.query(HelpingMaterial).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   **filters):
-        return self._filter_by(Blogpost, limit, offset, yielded, 
+        return self._filter_by(HelpingMaterial, limit, offset, yielded, 
                                last_id, **filters)
 
     def save(self, blogpost):
@@ -59,12 +59,12 @@ class BlogRepository(Repository):
 
     def delete(self, blogpost):
         self._validate_can_be('deleted', blogpost)
-        blog = self.db.session.query(Blogpost).filter(Blogpost.id==blogpost.id).first()
+        blog = self.db.session.query(HelpingMaterial).filter(HelpingMaterial.id==blogpost.id).first()
         self.db.session.delete(blog)
         self.db.session.commit()
 
     def _validate_can_be(self, action, blogpost):
-        if not isinstance(blogpost, Blogpost):
+        if not isinstance(blogpost, HelpingMaterial):
             name = blogpost.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
