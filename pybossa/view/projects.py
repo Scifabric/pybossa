@@ -1069,7 +1069,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
     def respond_export(download_type, args):
         try:
-            download_specs = download_type.split('_')
+            download_specs = download_type.split('-')
             download_obj = download_specs[0]
             download_format = download_specs[1]
 
