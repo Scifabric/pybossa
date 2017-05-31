@@ -344,37 +344,45 @@ class TestHelpingMaterialAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete',
                       helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_authenticated)
-    #def test_non_owner_authenticated_user_delete_helpingmaterial(self):
-    #    """Test authenticated user cannot delete a helpingmaterial if is not the post
-    #    owner and is not admin"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_delete_helpingmaterial(self):
+        """Test authenticated user cannot delete a helpingmaterial if is not the post
+        owner and is not admin"""
 
-    #    helpingmaterial = HelpingMaterialFactory.create()
+        owner = UserFactory.create(id=5)
+        project = ProjectFactory.create(owner=owner, published=True)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    assert self.mock_authenticated.id != helpingmaterial.owner.id
-    #    assert not self.mock_authenticated.admin
-    #    assert_raises(Forbidden, ensure_authorized_to, 'delete', helpingmaterial)
+        assert self.mock_authenticated.id != owner.id
+        assert not self.mock_authenticated.admin
+        assert_raises(Forbidden, ensure_authorized_to, 'delete',
+                      helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_authenticated)
-    #def test_owner_delete_helpingmaterial(self):
-    #    """Test authenticated user can delete a helpingmaterial if is the post owner"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_owner_delete_helpingmaterial(self):
+        """Test authenticated user can delete a helpingmaterial if is the post
+        owner"""
 
-    #    owner = UserFactory.create_batch(2)[1]
-    #    project = ProjectFactory.create()
-    #    helpingmaterial = HelpingMaterialFactory.create(project=project, owner=owner)
+        owner = UserFactory.create(id=2)
+        project = ProjectFactory.create(owner=owner)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    assert self.mock_authenticated.id == helpingmaterial.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'delete', helpingmaterial)
+        assert self.mock_authenticated.id == owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'delete',
+                          helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_admin)
-    #def test_admin_authenticated_user_delete_helpingmaterial(self):
-    #    """Test authenticated user can delete any helpingmaterial if is admin"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_authenticated_user_delete_helpingmaterial(self):
+        """Test authenticated user can delete any helpingmaterial if
+        it's admin"""
 
-    #    admin = UserFactory.create()
-    #    helpingmaterial = HelpingMaterialFactory.create()
+        owner = UserFactory.create(id=5)
+        project = ProjectFactory.create(owner=owner)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    assert self.mock_admin.id != helpingmaterial.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'delete', helpingmaterial)
+        assert self.mock_admin.id != owner.id
+        assert_not_raises(Exception, ensure_authorized_to, 'delete',
+                          helpingmaterial)
