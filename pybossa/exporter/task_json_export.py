@@ -21,8 +21,8 @@ import json
 from flask import url_for, safe_join, send_file, redirect
 from pybossa.core import uploader, task_repo
 from pybossa.uploader import local
-from pybossa.cache.projects import browse_tasks_export
 from pybossa.exporter.json_export import JsonExporter
+from export_helpers import browse_tasks_export
 
 
 class TaskJsonExporter(JsonExporter):
@@ -84,7 +84,7 @@ class TaskJsonExporter(JsonExporter):
 
     def gen_json_with_filters(self, obj, project_id, expanded=False, **filters):
         objs = browse_tasks_export(obj, project_id, expanded, **filters)
-        n = len(objs)
+        n = objs.rowcount
 
         sep = ", "
         yield "["

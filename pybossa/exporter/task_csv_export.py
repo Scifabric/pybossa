@@ -23,7 +23,7 @@ from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
 from pybossa.util import UnicodeWriter
-from pybossa.cache.projects import browse_tasks_export
+from export_helpers import browse_tasks_export
 
 
 class TaskCsvExporter(CsvExporter):
@@ -144,7 +144,7 @@ class TaskCsvExporter(CsvExporter):
     def _get_csv_with_filters(self, out, writer, table, project_id, expanded=False, **filters):
         objs = browse_tasks_export(table, project_id, expanded, **filters)
 
-        headers = objs[0].keys()
+        headers = objs.keys()
         writer.writerow(headers)
 
         for obj in objs:
