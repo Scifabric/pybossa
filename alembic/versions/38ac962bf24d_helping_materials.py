@@ -31,7 +31,9 @@ def upgrade():
                               nullable=False),
                     sa.Column('created', TIMESTAMP,
                               default=make_timestamp),
-                    sa.Column('info', JSON, nullable=False))
+                    sa.Column('info', JSON, nullable=False),
+                    sa.Column('media_url', sa.Text),
+                    )
 
 
 def downgrade():

@@ -51,11 +51,13 @@ class HelpingMaterialAuth(object):
             return True
 
     def _update(self, user, helpingmaterial, project_id=None):
+        project = self._get_project(helpingmaterial, project_id)
         if user.is_anonymous():
             return False
         return self._is_admin_or_owner(user, project)
 
     def _delete(self, user, helpingmaterial, project_id=None):
+        project = self._get_project(helpingmaterial, project_id)
         if user.is_anonymous():
             return False
         return self._is_admin_or_owner(user, project)
