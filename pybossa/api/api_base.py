@@ -85,7 +85,7 @@ class APIBase(MethodView):
         return ''
 
     @jsonpify
-    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    #@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
         """Get an object.
 
@@ -103,6 +103,7 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            raise
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -259,7 +260,9 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            data = json.loads(request.data)
+            data = self._file_upload(request)
+            if data is None:
+                data = json.loads(request.data)
             self._forbidden_attributes(data)
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
@@ -407,4 +410,9 @@ class APIBase(MethodView):
     def _forbidden_attributes(self, data):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
+        pass
+
+    def _file_upload(self, data):
+        """Method that must be overriden by the class to allow file uploads for
+        only a few classes."""
         pass

@@ -24,9 +24,12 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from api_base import APIBase
 from pybossa.model.helpingmaterial import HelpingMaterial
-from pybossa.core import user_repo, project_repo
+from pybossa.core import user_repo, project_repo, uploader
+from pybossa.util import get_avatar_url
 from flask.ext.login import current_user
+from flask import current_app
 from werkzeug.exceptions import BadRequest, NotFound
+import json
 
 
 class HelpingMaterialAPI(APIBase):
@@ -36,6 +39,24 @@ class HelpingMaterialAPI(APIBase):
     reserved_keys = set(['id', 'created'])
 
     __class__ = HelpingMaterial
+
+    def _file_upload(self, request):
+        if ('multipart/form-data' in request.headers.get('Content-Type')):
+            tmp = dict(media_url=None,
+                       project_id=request.form['project_id'],
+                       info={})
+            upload_method = current_app.config.get('UPLOAD_METHOD')
+            _file = request.files['file']
+            container = "user_%s" % current_user.id
+            uploader.upload_file(_file,
+                                 container=container)
+            file_url = get_avatar_url(upload_method,
+                                      _file.filename, container)
+            tmp['media_url'] = file_url
+            return tmp
+        else:
+            return None
+
 
     def _forbidden_attributes(self, data):
         for key in data.keys():

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer 
+from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON
 from pybossa.core import db
@@ -39,3 +39,4 @@ class HelpingMaterial(db.Model, DomainObject):
                         nullable=False)
     #: Info field where it can be stored anything related to it
     info = Column(MutableDict.as_mutable(JSON), default=dict())
+    media_url = Column(Text)
