@@ -32,7 +32,7 @@ class TaskCsvExporter(CsvExporter):
     """
 
     @classmethod
-    def get_keys(self, row, ty, parent_key=''):
+    def get_keys(self, row, ty='', parent_key=''):
         """Recursively get keys from a dictionary.
         Nested keys are prefixed with their parents key.
         Ex:
@@ -52,12 +52,15 @@ class TaskCsvExporter(CsvExporter):
              'taskrun__c__nested_y__double_nested',
              'taskrun__c__nested_z']
         """
-        _prefix = '{}__{}'.format(ty, parent_key)
-        keys = []
+        if ty == '' and parent_key == '':
+            _prefix = ''
+        else:
+            _prefix = '{}__{}'.format(ty, parent_key)
 
+        keys = []
         for key in row.keys():
             keys = keys + [_prefix + key]
-            try: 
+            try:
                 keys = keys + self.get_keys(row[key], _prefix + key)
             except: pass
 
@@ -114,14 +117,64 @@ class TaskCsvExporter(CsvExporter):
 
         return obj_dict
 
-    def _format_csv_row(self, row, ty, headers):
+    @staticmethod
+    def process_filtered_row(row):
+        """Normalizes a row returned from a SQL query to
+        the same format as that of merging joined domain
+        objects.
+        """
+        def set_nested_value(row, keys, value):
+            for key in keys[:-1]:
+                row = row.setdefault(key, {})
+            row[keys[-1]] = value
+
+        def get_nested_keys(keys):
+            nested_keys = [k.split('__')[0]
+                    for k in keys
+                    if len(k.split('__')) > 1]
+            if len(keys) == len(nested_keys):
+                return nested_keys
+            else:
+                return get_nested_keys(nested_keys)
+
+        def nest(row):
+            nested = get_nested_keys(row.keys())
+            not_nested = [k.split('__')[0]
+                          for k in row.keys()
+                          if len(k.split('__')) <= 1]
+
+            nested = list(set(nested))
+            keys = nested + not_nested
+            new_row = {k: {} for k in keys}
+
+            for k, v in row.iteritems():
+                key_split = k.split('__')
+                if len(key_split) > 1:
+                    set_nested_value(new_row, key_split, v)
+                else:
+                    new_row[k] = v
+            return new_row
+
+        def unnest(row):
+            new_row = row
+            for k in row.keys():
+                if isinstance(row[k], dict):
+                    for k2 in row[k].keys():
+                        new_key = '__'.join([k, k2])
+                        if not row.get(new_key):
+                            new_row[new_key] = row[k][k2]
+            return new_row
+
+        row = unnest(row)
+        row = nest(row)
+        return row
+
+    def _format_csv_row(self, row, headers):
         return [self.get_value(row, *header.split('__')[1:])
                 for header in headers]
 
-    def _handle_row(self, writer, t, ty, headers):
-        normal_ty = filter(lambda char: char.isalpha(), ty)
+    def _handle_row(self, writer, t, headers):
         writer.writerow(self._format_csv_row(self.merge_objects(t),
-                                             ty=normal_ty,
                                              headers=headers))
 
     def _get_csv(self, out, writer, table, project_id, expanded=False):
@@ -137,31 +190,52 @@ class TaskCsvExporter(CsvExporter):
         writer.writerow(headers)
 
         for obj in objs:
-            self._handle_row(writer, obj, table, headers)
+            self._handle_row(writer, obj, headers)
         out.seek(0)
         yield out.read()
 
-    def _get_csv_with_filters(self, out, writer, table, project_id, expanded=False, **filters):
+    def _get_csv_with_filters(self, out, writer, table, project_id,
+                              expanded=False, **filters):
         objs = browse_tasks_export(table, project_id, expanded, **filters)
+        rows = [obj for obj in objs]
 
-        headers = objs.keys()
+        headers = self._get_all_headers(objs=rows,
+                                        expanded=expanded,
+                                        table=table,
+                                        from_obj=False)
         writer.writerow(headers)
 
-        for obj in objs:
-            writer.writerow(obj)
+        for row in rows:
+            row = self.process_filtered_row(dict(row))
+            writer.writerow(self._format_csv_row(row, headers))
+
         out.seek(0)
         yield out.read()
 
-    def _get_all_headers(self, objs, expanded):
+
+    def _get_all_headers(self, objs, expanded, table=None, from_obj=True):
         """Construct headers to **guarantee** that all headers
         for all tasks are included, regardless of whether
         or not all tasks were imported with the same headers.
+
+        :param objs: an iterable of objects or dicts to 
+            extract keys from
+        :param expanded: determines if joined objects should
+            be merged
+        :param table: the table that the objects belong to
+        :param from_obj: does ``objs`` iterable contain
+            domain objects. If it does then different methods
+            can be used.
         """
-        obj_name = objs[0].__class__.__name__.lower()
         headers = set()
 
-        for obj in objs:
-            headers.update(self._get_headers_from_row(obj, obj_name, expanded))
+        if from_obj:
+            obj_name = objs[0].__class__.__name__.lower()
+            for obj in objs:
+                headers.update(self._get_headers_from_row(obj, obj_name, expanded))
+        else:
+            for obj in objs:
+                headers.update(self.get_keys(obj, table))
 
         headers = sorted(list(headers))
         return headers

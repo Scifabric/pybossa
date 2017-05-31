@@ -57,6 +57,47 @@ class TaskJsonExporter(JsonExporter):
 
         return obj_dict
 
+    @staticmethod
+    def process_filtered_row(row):
+        """Normalizes a row returned from a SQL query to
+        the same format as that of merging joined domain
+        objects.
+        """
+        def set_nested_value(row, keys, value):
+            for key in keys[:-1]:
+                row = row.setdefault(key, {})
+            row[keys[-1]] = value
+
+        def get_nested_keys(keys):
+            nested_keys = [k.split('__')[0]
+                    for k in keys
+                    if len(k.split('__')) > 1]
+            if len(keys) == len(nested_keys):
+                return nested_keys
+            else:
+                return get_nested_keys(nested_keys)
+
+        def nest(row):
+            nested = get_nested_keys(row.keys())
+            not_nested = [k.split('__')[0]
+                          for k in row.keys()
+                          if len(k.split('__')) <= 1]
+
+            nested = list(set(nested))
+            keys = nested + not_nested
+            new_row = {k: {} for k in keys}
+
+            for k, v in row.iteritems():
+                key_split = k.split('__')
+                if len(key_split) > 1:
+                    set_nested_value(new_row, key_split, v)
+                else:
+                    new_row[k] = v
+            return new_row
+
+        row = nest(row)
+        return row
+
     def gen_json(self, obj, project_id, expanded=False):
         if obj == 'task':
             query_filter = task_repo.filter_tasks_by
@@ -91,7 +132,7 @@ class TaskJsonExporter(JsonExporter):
 
         count = 0
         for obj in objs:
-            item = json.dumps(dict(obj))
+            item = json.dumps(self.process_filtered_row(dict(obj)))
             count += 1
 
             if (count == n):
