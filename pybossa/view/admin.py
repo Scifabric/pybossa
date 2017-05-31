@@ -33,6 +33,7 @@ from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
 
 from pybossa.model.category import Category
+from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.cache import projects as cached_projects
@@ -383,6 +384,41 @@ def announcement():
     response = dict(template='/admin/announcement.html',
                     title=gettext("Manage global Announcements"))
     return handle_content_type(response)
+
+@blueprint.route('/announcement/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_announcement():
+
+    def respond():
+        response = dict(template='admin/new_announcement.html',
+                        title=gettext("Write a new post"),
+                        form=form)
+        return handle_content_type(response)
+
+    form = AnnouncementForm(request.form)
+    del form.id
+
+    # project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+
+    if request.method != 'POST':
+        # ensure_authorized_to('create', Announcement) # TODO: uncoment?
+        return respond()
+
+    if not form.validate():
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
+
+    announcement = Announcement(title=form.title.data,
+                                body=form.body.data)
+    # ensure_authorized_to('create', announcement) # TODO: uncoment?
+    announcement_repo.save(announcement)
+
+    msg_1 = gettext('Annnouncement created!')
+    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+
+    return redirect(url_for('.show_announcements', short_name=short_name))
+
 
 @blueprint.route('/dashboard/')
 @login_required

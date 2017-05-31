@@ -20,8 +20,8 @@
 class AnnouncementAuth(object):
     _specific_actions = []
 
-    def __init__(self, project_repo):
-        self.project_repo = project_repo
+    def __init__(self):
+        pass
 
     @property
     def specific_actions(self):
@@ -29,24 +29,17 @@ class AnnouncementAuth(object):
 
     def can(self, user, action, announcement=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, announcement, project_id)
+        return getattr(self, action)(user, announcement)
 
     def _create(self, user, announcement=None):
-        if user.is_anonymous() or (announcement is None and project_id is None):
+        if user.is_anonymous() or (announcement is None):
             return False
-        project = self._get_project(announcement)
-        if announcement is None:
-            return project.owner_id == user.id
-        return announcement.user_id == project.owner_id == user.id
+        return announcement.user_id == user.id
 
     def _read(self, user, announcement=None):
-        if announcement or project_id:
-            project = self._get_project(announcement, project_id)
-            if project:
-                return (project.published or self._is_admin_or_owner(user, project))
+        if announcement:
             if user.is_anonymous() or (announcement is None):
                 return False
-            return self._is_admin_or_owner(user, project)
         else:
             return True
 
