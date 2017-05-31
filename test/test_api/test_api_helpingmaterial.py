@@ -183,70 +183,58 @@ class TestHelpingMaterialAPI(TestAPI):
         assert res.status_code == 400, data
         assert data['exception_msg'] == 'Reserved keys in payload', data
 
-    #@with_context
-    #def test_update_helpingmaterial(self):
-    #    """Test API HelpingMaterialpost update post (PUT)."""
-    #    user = UserFactory.create()
-    #    owner = UserFactory.create()
-    #    project = ProjectFactory.create(owner=owner)
-    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
+    @with_context
+    def test_update_helpingmaterial(self):
+        """Test API HelpingMaterialpost update post (PUT)."""
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    # As anon
-    #    helpingmaterial.title = 'new'
-    #    helpingmaterial.body = 'new body'
-    #    url = '/api/helpingmaterial/%s' % helpingmaterial.id
-    #    res = self.app.put(url, data=json.dumps(helpingmaterial.dictize()))
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 401, res.status_code
+        # As anon
+        helpingmaterial.media_url = 'new'
+        url = '/api/helpingmaterial/%s' % helpingmaterial.id
+        res = self.app.put(url, data=json.dumps(helpingmaterial.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
 
-    #    # As user
-    #    helpingmaterial.title = 'new'
-    #    helpingmaterial.body = 'new body'
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, user.api_key)
-    #    res = self.app.put(url, data=json.dumps(helpingmaterial.dictize()))
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 403, res.status_code
+        # As user
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, user.api_key)
+        res = self.app.put(url, data=json.dumps(helpingmaterial.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 403, res.status_code
 
-    #    # As owner
-    #    helpingmaterial.title = 'new'
-    #    helpingmaterial.body = 'new body'
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
-    #    payload = helpingmaterial.dictize()
-    #    del payload['user_id']
-    #    del payload['created']
-    #    del payload['id']
-    #    res = self.app.put(url, data=json.dumps(payload))
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 200, res.status_code
-    #    assert data['title'] == 'new', data
-    #    assert data['body'] == 'new body', data
+        # As owner
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
+        payload = helpingmaterial.dictize()
+        del payload['created']
+        del payload['id']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert data['media_url'] == 'new', data
 
-    #    # as owner with reserved key
-    #    helpingmaterial.title = 'new'
-    #    helpingmaterial.body = 'new body'
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
-    #    payload = helpingmaterial.dictize()
-    #    del payload['user_id']
-    #    del payload['created']
-    #    res = self.app.put(url, data=json.dumps(payload))
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 400, res.status_code
-    #    assert data['exception_msg'] == 'Reserved keys in payload',  data
+        # as owner with reserved key
+        helpingmaterial.media_url = 'new'
+        helpingmaterial.created = 'today'
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
+        payload = helpingmaterial.dictize()
+        del payload['id']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 400, res.status_code
+        assert data['exception_msg'] == 'Reserved keys in payload',  data
 
-
-    #    # as owner with wrong key
-    #    helpingmaterial.title = 'new'
-    #    helpingmaterial.body = 'new body'
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
-    #    payload = helpingmaterial.dictize()
-    #    del payload['user_id']
-    #    del payload['created']
-    #    del payload['id']
-    #    payload['foo'] = 'bar'
-    #    res = self.app.put(url, data=json.dumps(payload))
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 415, res.status_code
-    #    assert 'foo' in data['exception_msg'], data
+        # as owner with wrong key
+        helpingmaterial.media_url = 'new admin'
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
+        payload = helpingmaterial.dictize()
+        del payload['created']
+        del payload['id']
+        payload['foo'] = 'bar'
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert 'foo' in data['exception_msg'], data
 
     #@with_context
     #def test_delete_helpingmaterial(self):
