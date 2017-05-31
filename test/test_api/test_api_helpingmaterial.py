@@ -236,33 +236,30 @@ class TestHelpingMaterialAPI(TestAPI):
         assert res.status_code == 415, res.status_code
         assert 'foo' in data['exception_msg'], data
 
-    #@with_context
-    #def test_delete_helpingmaterial(self):
-    #    """Test API HelpingMaterialpost delete post (DEL)."""
-    #    admin = UserFactory.create()
-    #    owner = UserFactory.create()
-    #    user = UserFactory.create()
-    #    project = ProjectFactory.create(owner=owner)
-    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
-    #    helpingmaterial2 = HelpingMaterialFactory.create(project=project)
+    @with_context
+    def test_delete_helpingmaterial(self):
+        """Test API HelpingMaterialpost delete post (DEL)."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
+        helpingmaterial2 = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    # As anon
-    #    url = '/api/helpingmaterial/%s' % helpingmaterial.id
-    #    res = self.app.delete(url)
-    #    data = json.loads(res.data)
-    #    assert res.status_code == 401, res.status_code
+        # As anon
+        url = '/api/helpingmaterial/%s' % helpingmaterial.id
+        res = self.app.delete(url)
+        assert res.status_code == 401, res.status_code
 
-    #    # As user
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, user.api_key)
-    #    res = self.app.delete(url)
-    #    assert res.status_code == 403, res.status_code
+        # As user
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, user.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 403, res.status_code
 
-    #    # As owner
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
-    #    res = self.app.delete(url)
-    #    assert res.status_code == 204, res.status_code
+        # As owner
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
 
-    #    # As admin
-    #    url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial2.id, admin.api_key)
-    #    res = self.app.delete(url)
-    #    assert res.status_code == 204, res.status_code
+        # As admin
+        url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial2.id, admin.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
