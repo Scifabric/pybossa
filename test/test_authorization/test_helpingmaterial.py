@@ -180,17 +180,17 @@ class TestHelpingMaterialAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to,
                           'read', helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_authenticated)
-    #def test_non_owner_authenticated_user_read_helpingmaterials_for_given_project(self):
-    #    """Test authenticated user can read helpingmaterials of a given project if
-    #    is not the project owner"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_helpingmaterials_for_given_project(self):
+        """Test authenticated user can read helpingmaterials of a given project if
+        is not the project owner"""
 
-    #    project = ProjectFactory.create(published=True)
-    #    user = UserFactory.create()
+        project = ProjectFactory.create(published=True)
 
-    #    assert self.mock_authenticated.id != project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
+        assert self.mock_authenticated.id != project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
