@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.model.helpingmaterial import HelpingMaterial
-from . import BaseFactory, factory, helping_repo
+from . import BaseFactory, factory, helping_repo, ProjectFactory
 
 
 class HelpingMaterialFactory(BaseFactory):
@@ -27,6 +27,9 @@ class HelpingMaterialFactory(BaseFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         helpingmaterial = model_class(*args, **kwargs)
+        if kwargs.get('project_id') is None:
+            project = ProjectFactory.create()
+            helpingmaterial.project_id = project.id
         helping_repo.save(helpingmaterial)
         return helpingmaterial
 
