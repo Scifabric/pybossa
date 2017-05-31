@@ -73,17 +73,18 @@ class TestHelpingMaterialAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to,
                       'create', helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_admin)
-    #def test_non_owner_authenticated_user_create_helpingmaterial_for_given_project(self):
-    #    """Test authenticated user cannot create helpingmaterials for a given project
-    #    if is not the project owner, even if is admin"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_create_helpingmaterial_for_given_project(self):
+        """Test authenticated user cannot create helpingmaterials for a given project
+        if is not the project owner"""
 
-    #    owner = UserFactory.create_batch(2)[1]
-    #    project = ProjectFactory.create(owner=owner)
+        owner = UserFactory.create(id=3)
+        project = ProjectFactory.create(owner=owner)
 
-    #    assert self.mock_admin.id != project.owner.id
-    #    assert_raises(Forbidden, ensure_authorized_to, 'create', HelpingMaterial, project_id=project.id)
+        assert self.mock_authenticated.id != project.owner.id
+        assert_raises(Forbidden, ensure_authorized_to, 'create',
+                      HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
