@@ -70,8 +70,8 @@ class HelpingMaterialAPI(APIBase):
 
     def _file_delete(self, request, obj):
         """Delete file from obj."""
-        content_type = 'multipart/form-data'
-        if content_type in request.headers.get('Content-Type'):
+        keys = obj.info.keys()
+        if 'file_name' in keys and 'container' in keys:
             ensure_authorized_to('delete', obj)
             uploader.delete_file(obj.info['file_name'],
                                  obj.info['container'])
