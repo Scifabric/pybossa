@@ -156,26 +156,29 @@ class TestHelpingMaterialAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to,
                       'read', helpingmaterial)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_anonymous)
-    #def test_anonymous_user_read_helpingmaterials_for_given_draft_project(self):
-    #    """Test anonymous users cannot read helpingmaterials of a given project if is a draft"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_helpingmaterials_for_given_draft_project(self):
+        """Test anonymous users cannot read helpingmaterials of a
+        given project if is a draft"""
 
-    #    project = ProjectFactory.create(published=False)
+        project = ProjectFactory.create(published=False)
 
-    #    assert_raises(Unauthorized, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read',
+                      HelpingMaterial, project_id=project.id)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_authenticated)
-    #def test_non_owner_authenticated_user_read_given_helpingmaterial(self):
-    #    """Test authenticated user can read a given helpingmaterial if is not the project owner"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_given_helpingmaterial(self):
+        """Test authenticated user can read a given helpingmaterial
+        if is not the project owner"""
 
-    #    project = ProjectFactory.create(published=True)
-    #    user = UserFactory.create()
-    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
+        project = ProjectFactory.create(published=True)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    assert self.mock_authenticated.id != project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
+        assert self.mock_authenticated.id != project.owner.id
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'read', helpingmaterial)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
