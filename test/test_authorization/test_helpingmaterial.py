@@ -124,15 +124,16 @@ class TestHelpingMaterialAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'create',
                           HelpingMaterial, project_id=project.id)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_anonymous)
-    #def test_anonymous_user_read_given_helpingmaterial(self):
-    #    """Test anonymous users can read a given helpingmaterial"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_given_helpingmaterial(self):
+        """Test anonymous users can read a given helpingmaterial"""
 
-    #    project = ProjectFactory.create(published=True)
-    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
+        project = ProjectFactory.create(published=True)
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
 
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'read', helpingmaterial)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_anonymous)
