@@ -59,7 +59,7 @@ def stats_users(project_id, period=None):
                task_run.user_ip IS NULL AND
                task_run.project_id=:project_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
-               LIMIT 5;''')\
+               LIMIT 10;''')\
         .execution_options(stream=True)
     if period:
         sql = text('''SELECT task_run.user_id AS user_id,
@@ -70,7 +70,7 @@ def stats_users(project_id, period=None):
                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                    >= NOW() - :period ::INTERVAL
                    GROUP BY task_run.user_id ORDER BY n_tasks DESC
-                   LIMIT 5;''')\
+                   LIMIT 10;''')\
             .execution_options(stream=True)
         params['period'] = period
 
@@ -477,7 +477,7 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON."""
     userStats = dict(label="User Statistics", values=[])
     userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
-    userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
+    userAuthStats = dict(label="Authenticated Users", values=[], top10=[])
 
     userStats['values'].append(dict(label="Anonymous",
                                     value=[0, users['n_anon']]))
@@ -492,7 +492,7 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
 
     # Get location for Anonymous users
     top5_anon = []
-    top5_auth = []
+    top10_auth = []
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
@@ -531,11 +531,11 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
         for row in results:
             fullname = row.fullname
             name = row.name
-        top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
+        top10_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
     userAnonStats['top5'] = top5_anon[0:5]
     userAnonStats['locs'] = loc_anon
-    userAuthStats['top5'] = top5_auth
+    userAuthStats['top10'] = top10_auth
 
     return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
                 n_anon=users['n_anon'], n_auth=users['n_auth'])

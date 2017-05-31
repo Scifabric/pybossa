@@ -113,7 +113,7 @@ class TaskRunAPI(APIBase):
         after_save(instance.project_id, instance.task_id, instance.user_id)
 
     def _add_timestamps(self, taskrun, task, guard):
-        finish_time = datetime.now().isoformat()
+        finish_time = datetime.utcnow().isoformat()
 
         # /cachePresentedTime API only caches when there is a user_id
         # otherwise it returns an arbitrary valid timestamp so that answer can be submitted

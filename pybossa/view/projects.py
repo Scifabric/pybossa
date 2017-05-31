@@ -1561,7 +1561,7 @@ def show_stats(short_name):
             users=users_stats['n_auth'],
             taskruns=users_stats['n_auth'],
             pct_taskruns=auth_pct_taskruns,
-            top5=users_stats['auth']['top5']))
+            top10=users_stats['auth']['top10']))
 
     projectStats = dict(
         userStats=users_stats['users'],
@@ -1572,7 +1572,7 @@ def show_stats(short_name):
 
     project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip(),
                                                 ps=ps)
-    formatted_contrib_time = round(ps.average_time, 2)
+    formatted_contrib_time = round(ps.average_time/60, 2)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
