@@ -29,6 +29,7 @@ from pybossa.util import get_avatar_url
 from flask.ext.login import current_user
 from flask import current_app
 from werkzeug.exceptions import BadRequest, NotFound
+from pybossa.auth import ensure_authorized_to
 import json
 
 
@@ -41,11 +42,17 @@ class HelpingMaterialAPI(APIBase):
     __class__ = HelpingMaterial
 
     def _file_upload(self, request):
-        if ('multipart/form-data' in request.headers.get('Content-Type')):
-            tmp = dict(media_url=None,
-                       project_id=request.form['project_id'],
-                       info={})
+        content_type = 'multipart/form-data'
+        if content_type in request.headers.get('Content-Type'):
+            tmp = dict()
+            for key in request.form.keys():
+                tmp[key] = request.form[key]
+
+            ensure_authorized_to('create', HelpingMaterial,
+                                 project_id=tmp['project_id'])
             upload_method = current_app.config.get('UPLOAD_METHOD')
+            if request.files.get('file') is None:
+                raise AttributeError
             _file = request.files['file']
             container = "user_%s" % current_user.id
             uploader.upload_file(_file,

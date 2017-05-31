@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+import io
 from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
@@ -23,7 +24,9 @@ from test_api import TestAPI
 from factories import UserFactory, HelpingMaterialFactory, ProjectFactory
 
 from pybossa.repositories import HelpingMaterialRepository
-blog_repo = HelpingMaterialRepository(db)
+helping_repo = HelpingMaterialRepository(db)
+
+
 
 class TestHelpingMaterialAPI(TestAPI):
 
@@ -263,3 +266,103 @@ class TestHelpingMaterialAPI(TestAPI):
         url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial2.id, admin.api_key)
         res = self.app.delete(url)
         assert res.status_code == 204, res.status_code
+
+    @with_context
+    def test_helpingmaterial_post_file(self):
+        """Test API HelpingMaterialpost file upload creation."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
+
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        # As anon
+        url = '/api/helpingmaterial'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % user.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
+
+        # As owner
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % project.owner.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['info'] == {}, data
+        assert 'test_file.jpg' in data['media_url'], data
+
+        # As owner wrong 404 project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % owner.api_key
+        payload['project_id'] = -1
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using wrong project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+
+        # As owner using wrong attribute
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       wrong=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % owner.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using reserved key 
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/helpingmaterial?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        payload['id'] = 3
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert data['exception_msg'] == 'Reserved keys in payload', data
