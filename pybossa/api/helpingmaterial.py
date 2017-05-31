@@ -60,9 +60,21 @@ class HelpingMaterialAPI(APIBase):
             file_url = get_avatar_url(upload_method,
                                       _file.filename, container)
             tmp['media_url'] = file_url
+            if tmp.get('info') is None:
+                tmp['info'] = dict()
+            tmp['info']['container'] = container
+            tmp['info']['file_name'] = _file.filename
             return tmp
         else:
             return None
+
+    def _file_delete(self, request, obj):
+        """Delete file from obj."""
+        content_type = 'multipart/form-data'
+        if content_type in request.headers.get('Content-Type'):
+            ensure_authorized_to('delete', obj)
+            uploader.delete_file(obj.info['file_name'],
+                                 obj.info['container'])
 
 
     def _forbidden_attributes(self, data):

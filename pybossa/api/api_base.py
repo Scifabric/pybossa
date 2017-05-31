@@ -284,7 +284,7 @@ class APIBase(MethodView):
         return inst
 
     @jsonpify
-    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+    #@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, oid):
         """Delete a single item from the DB.
 
@@ -301,6 +301,7 @@ class APIBase(MethodView):
             self._delete_instance(oid)
             return '', 204
         except Exception as e:
+            raise
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -313,6 +314,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         ensure_authorized_to('delete', inst)
+        self._file_delete(request, inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -415,3 +417,8 @@ class APIBase(MethodView):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
         pass
+
+    def _file_delete(self, data):
+       """Method that must be overriden by the class to delete file uploads for
+       only a few classes."""
+       pass
