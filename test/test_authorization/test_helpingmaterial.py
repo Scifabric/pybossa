@@ -53,12 +53,12 @@ class TestHelpingMaterialAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', HelpingMaterial, project_id=project.id)
 
-    #@with_context
-    #@patch('pybossa.auth.current_user', new=mock_anonymous)
-    #def test_anonymous_user_create_helpingmaterials(self):
-    #    """Test anonymous users cannot create any helpingmaterials"""
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_create_helpingmaterials(self):
+        """Test anonymous users cannot create any helpingmaterials"""
 
-    #    assert_raises(Unauthorized, ensure_authorized_to, 'create', Blogpost)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', HelpingMaterial)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_admin)
@@ -68,7 +68,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    admin = UserFactory.create()
     #    project = ProjectFactory.create()
-    #    helpingmaterial = BlogpostFactory.build(project=project, owner=admin)
+    #    helpingmaterial = HelpingMaterialFactory.build(project=project, owner=admin)
 
     #    assert self.mock_admin.id != project.owner_id
     #    assert_raises(Forbidden, ensure_authorized_to, 'create', helpingmaterial)
@@ -83,7 +83,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    project = ProjectFactory.create(owner=owner)
 
     #    assert self.mock_admin.id != project.owner.id
-    #    assert_raises(Forbidden, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
+    #    assert_raises(Forbidden, ensure_authorized_to, 'create', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -92,7 +92,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    owner = UserFactory.create_batch(2)[1]
     #    project = ProjectFactory.create(owner=owner)
-    #    helpingmaterial = BlogpostFactory.build(project=project, owner=owner)
+    #    helpingmaterial = HelpingMaterialFactory.build(project=project, owner=owner)
 
     #    assert self.mock_authenticated.id == project.owner_id
     #    assert_not_raises(Exception, ensure_authorized_to, 'create', helpingmaterial)
@@ -107,7 +107,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    project = ProjectFactory.create(owner=owner)
 
     #    assert self.mock_authenticated.id == project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'create', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -117,7 +117,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    another_user = UserFactory.create()
     #    project = ProjectFactory.create()
-    #    helpingmaterial = BlogpostFactory.build(project_id=project.id,
+    #    helpingmaterial = HelpingMaterialFactory.build(project_id=project.id,
     #                                      owner=another_user)
 
     #    assert self.mock_authenticated.id == project.owner_id
@@ -129,7 +129,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    """Test anonymous users can read a given helpingmaterial"""
 
     #    project = ProjectFactory.create(published=True)
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
 
@@ -139,7 +139,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    """Test anonymous users can read helpingmaterials of a given project"""
 
     #    project = ProjectFactory.create(published=True)
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -147,7 +147,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    """Test anonymous users cannot read a given helpingmaterial of a draft project"""
 
     #    project = ProjectFactory.create(published=False)
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert_raises(Unauthorized, ensure_authorized_to, 'read', helpingmaterial)
 
@@ -158,7 +158,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    project = ProjectFactory.create(published=False)
 
-    #    assert_raises(Unauthorized, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_raises(Unauthorized, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -167,7 +167,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    project = ProjectFactory.create(published=True)
     #    user = UserFactory.create()
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_authenticated.id != project.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
@@ -182,7 +182,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    user = UserFactory.create()
 
     #    assert self.mock_authenticated.id != project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -192,7 +192,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    project = ProjectFactory.create(published=False)
     #    user = UserFactory.create()
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_authenticated.id != project.owner.id
     #    assert_raises(Forbidden, ensure_authorized_to, 'read', helpingmaterial)
@@ -207,7 +207,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    user = UserFactory.create()
 
     #    assert self.mock_authenticated.id != project.owner.id
-    #    assert_raises(Forbidden, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_raises(Forbidden, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -216,7 +216,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    owner = UserFactory.create_batch(2)[1]
     #    project = ProjectFactory.create(owner=owner, published=True)
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_authenticated.id == project.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
@@ -231,7 +231,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    project = ProjectFactory.create(owner=owner, published=True)
 
     #    assert self.mock_authenticated.id == project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -241,7 +241,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    owner = UserFactory.create_batch(2)[1]
     #    project = ProjectFactory.create(owner=owner, published=False)
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_authenticated.id == project.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
@@ -256,7 +256,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    project = ProjectFactory.create(owner=owner, published=False)
 
     #    assert self.mock_authenticated.id == project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_admin)
@@ -265,7 +265,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    admin = UserFactory.create()
     #    project = ProjectFactory.create(published=False)
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_admin.id != project.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'read', helpingmaterial)
@@ -279,14 +279,14 @@ class TestHelpingMaterialAuthorization(Test):
     #    project = ProjectFactory.create(published=False)
 
     #    assert self.mock_admin.id != project.owner.id
-    #    assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
+    #    assert_not_raises(Exception, ensure_authorized_to, 'read', HelpingMaterial, project_id=project.id)
 
     #@with_context
     #@patch('pybossa.auth.current_user', new=mock_anonymous)
     #def test_anonymous_user_update_helpingmaterial(self):
     #    """Test anonymous users cannot update helpingmaterials"""
 
-    #    helpingmaterial = BlogpostFactory.create()
+    #    helpingmaterial = HelpingMaterialFactory.create()
 
     #    assert_raises(Unauthorized, ensure_authorized_to, 'update', helpingmaterial)
 
@@ -298,7 +298,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    admin = UserFactory.create()
     #    project = ProjectFactory.create()
-    #    helpingmaterial = BlogpostFactory.create(project=project)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project)
 
     #    assert self.mock_admin.id != helpingmaterial.owner.id
     #    assert_raises(Forbidden, ensure_authorized_to, 'update', helpingmaterial)
@@ -310,7 +310,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    owner = UserFactory.create_batch(2)[1]
     #    project = ProjectFactory.create()
-    #    helpingmaterial = BlogpostFactory.create(project=project, owner=owner)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project, owner=owner)
 
     #    assert self.mock_authenticated.id == helpingmaterial.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'update', helpingmaterial)
@@ -320,7 +320,7 @@ class TestHelpingMaterialAuthorization(Test):
     #def test_anonymous_user_delete_helpingmaterial(self):
     #    """Test anonymous users cannot delete helpingmaterials"""
 
-    #    helpingmaterial = BlogpostFactory.create()
+    #    helpingmaterial = HelpingMaterialFactory.create()
 
     #    assert_raises(Unauthorized, ensure_authorized_to, 'delete', helpingmaterial)
 
@@ -330,7 +330,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    """Test authenticated user cannot delete a helpingmaterial if is not the post
     #    owner and is not admin"""
 
-    #    helpingmaterial = BlogpostFactory.create()
+    #    helpingmaterial = HelpingMaterialFactory.create()
 
     #    assert self.mock_authenticated.id != helpingmaterial.owner.id
     #    assert not self.mock_authenticated.admin
@@ -343,7 +343,7 @@ class TestHelpingMaterialAuthorization(Test):
 
     #    owner = UserFactory.create_batch(2)[1]
     #    project = ProjectFactory.create()
-    #    helpingmaterial = BlogpostFactory.create(project=project, owner=owner)
+    #    helpingmaterial = HelpingMaterialFactory.create(project=project, owner=owner)
 
     #    assert self.mock_authenticated.id == helpingmaterial.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'delete', helpingmaterial)
@@ -354,7 +354,7 @@ class TestHelpingMaterialAuthorization(Test):
     #    """Test authenticated user can delete any helpingmaterial if is admin"""
 
     #    admin = UserFactory.create()
-    #    helpingmaterial = BlogpostFactory.create()
+    #    helpingmaterial = HelpingMaterialFactory.create()
 
     #    assert self.mock_admin.id != helpingmaterial.owner.id
     #    assert_not_raises(Exception, ensure_authorized_to, 'delete', helpingmaterial)
