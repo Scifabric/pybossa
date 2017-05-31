@@ -40,3 +40,13 @@ class HelpingMaterial(db.Model, DomainObject):
     #: Info field where it can be stored anything related to it
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     media_url = Column(Text)
+
+    @classmethod
+    def public_attributes(self):
+        """Return a list of public attributes."""
+        return ['created', 'id', 'info', 'media_url']
+
+    @classmethod
+    def public_info_keys(self):
+        """Return a list of public info keys."""
+        pass
