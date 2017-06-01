@@ -26,6 +26,7 @@ from pybossa.model.user import User
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
+from pybossa.repositories import AnnouncementRepository
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -1282,3 +1283,35 @@ class TestAdmin(web.Helper):
         for key in keys:
             assert key in data.keys(), data
 
+    @with_context
+    def test_announcement_json(self):
+        """Test ADMIN JSON announcement"""
+        url = '/admin/announcement'
+        self.register()
+        res = self.app_get_json(url)
+        print res.data
+        err_msg = "It should return 200"
+        data = json.loads(res.data)
+        assert res.status_code == 200, err_msg
+        assert "announcements" in data.keys(), data
+        assert "csrf" in data.keys(), data
+        assert "template" in data.keys(), data
+        assert "title" in data.keys(), data
+
+    @with_context
+    def test_announcement_create(self):
+        """Test announcement creation"""
+        self.register()
+        url = "/admin/announcement/new"
+
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+
+        res = self.app_post_json(url,
+                            data={'title':'announcement title', 'body':'body'})
+        assert res.status_code == 200, res.status_code
+
+        announcement = announcement_repo.get_by(title='announcement title')
+        assert announcement.title == 'announcement title', announcement.title
+        assert announcement.project_id == project.id, announcement.project.id
+        assert announcement.user_id == user.id, announcement.user_id
