@@ -403,9 +403,9 @@ def get(category, page=1, per_page=5):
 
 # TODO: find a convenient cache timeout and cache, if needed
 def get_from_pro_user():
-    """Return the list of projects belonging to 'pro' users."""
+    """Return the list of published projects belonging to 'pro' users."""
     sql = text('''SELECT project.id, project.short_name FROM project, "user"
-               WHERE project.owner_id="user".id AND "user".pro=True;''')
+               WHERE project.owner_id="user".id AND "user".pro=True and project.published=True;''')
     results = db.slave_session.execute(sql)
     projects = []
     for row in results:
