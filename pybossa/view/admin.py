@@ -1,7 +1,7 @@
 # -* -coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -375,23 +375,27 @@ def update_category(id):
         current_app.logger.error(e)
         return abort(500)
 
-@blueprint.route('/announcement', methods=['GET', 'POST'])
+
+@blueprint.route('/announcement', methods=['GET'])
 @login_required
 @admin_required
 def announcement():
     """Manage anncounements."""
-    announcement = announcement_repo.get_all_announcements()
-    response = dict(template='/admin/announcement.html',
-                    title=gettext("Manage global Announcements"))
+    announcements = announcement_repo.get_all_announcements()
+    response = dict(template='', # template='admin/announcement.html',
+                    title=gettext("Manage global Announcements"),
+                    announcements=announcements,
+                    csrf=generate_csrf())
     return handle_content_type(response)
+
 
 @blueprint.route('/announcement/new', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def new_announcement():
-
+    """Create new announcement."""
     def respond():
-        response = dict(template='admin/new_announcement.html',
+        response = dict(template='', # template='admin/new_announcement.html',
                         title=gettext("Write a new post"),
                         form=form)
         return handle_content_type(response)
@@ -410,14 +414,67 @@ def new_announcement():
         return respond()
 
     announcement = Announcement(title=form.title.data,
-                                body=form.body.data)
+                                body=form.body.data,
+                                user_id=current_user.id)
     # ensure_authorized_to('create', announcement) # TODO: uncoment?
     announcement_repo.save(announcement)
 
     msg_1 = gettext('Annnouncement created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
 
-    return redirect(url_for('.show_announcements', short_name=short_name))
+    return redirect(url_for('admin.announcement'))
+
+
+@blueprint.route('/announcement/<int:id>/update', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def update_announcement(id):
+    announcement = announcement_repo.get_by(id=id)
+    if announcement is None:
+        raise abort(404)
+
+    def respond():
+        response = dict(template='',  # template='admin/update_announcement.html',
+                        title=gettext("Edit a post"),
+                        form=form)
+        return handle_content_type(response)
+
+    form = AnnouncementForm()
+
+    if request.method != 'POST':
+        # ensure_authorized_to('update', announcement)
+        form = AnnouncementForm(obj=announcement)
+        return respond()
+
+    if not form.validate():
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
+
+    # ensure_authorized_to('update', announcement)
+    announcement = Announcement(id=form.id.data,
+                                title=form.title.data,
+                                body=form.body.data,
+                                user_id=current_user.id)
+    announcement_repo.update(announcement)
+
+    msg_1 = gettext('Announcement updated!')
+    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+
+    return redirect(url_for('admin.announcement'))
+
+
+@blueprint.route('/announcement/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_announcement(id):
+    announcement = announcement_repo.get_by(id=id)
+    if announcement is None:
+        raise abort(404)
+
+    # ensure_authorized_to('delete', announcement)
+    announcement_repo.delete(announcement)
+    flash('<i class="icon-ok"></i> ' + 'Announcement deleted!', 'success')
+    return redirect(url_for('admin.announcement'))
 
 
 @blueprint.route('/dashboard/')
