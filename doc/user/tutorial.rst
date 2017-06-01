@@ -831,6 +831,48 @@ endpoint::
   http://server/project/tutorial
 
 
+Adding an advance tutorial
+==========================
+
+While the previous solution works for most of the projects, your project might
+need something special: visual clues so users can easily identify sounds, patterns,
+etc. easily. The default tutorial does not allow you to curate/create a list of
+helping materials that could be used directly in the presenter to explain how for example
+you can identify cancer cells, or specific species of animals.
+
+For this reason PYBOSSA now suppports an API endpoint for helping materials: api/helpingmaterial
+
+This endpoint allows you to add JSON and media files (images, videos or sounds) that you can
+use with your project to build an interactive tutorial.
+
+As with any *api* PYBOSSA endpoint it follows the same rules. However, you can use it
+for uploading images via the endpoint using the multipart/form-data Content-Type.
+
+For example, imagine that you want to add a photo of an animal and it's description, so
+users can easily identify it (or use it as pre-loaded answer for classifying pictures of
+animals). In this case, you can do the following (using the popular Python requests library, but you can use any other programming language):
+
+
+.. code-block:: python
+
+    import requests
+    url = 'https://server/api/helpingpoint?api_key=YOURKEY'
+    # Upload a picture
+    files = {'file': open('test.jpg', 'rb')}
+    data = {'project_id': YOURPROJECT_ID}
+    r = requests.post(url, data=data, files=files)
+    # Get the created helping material
+    hp = r.json()
+    # Add the meta-data of the picture
+    url = 'https://server/api/helpingpoint/%s?api_key=YOURKEY' % hp['id']
+    info = {'popular_name': 'elephant', 'scientific_name': 'loxodonta'}
+    r = requests.put(url, json={'info': info})
+
+
+You can add as many files as you want. Then, from any place you can query the
+helping material endpoint to retrieve the example/tutorial materials for helping
+your users.
+
 Providing some I18n support
 ===========================
 
