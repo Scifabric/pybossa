@@ -141,28 +141,6 @@ def pro_features(owner=None):
     return pro
 
 
-@blueprint.route('/', defaults={'page': 1})
-@blueprint.route('/page/<int:page>/', defaults={'page': 1})
-def redirect_old_featured(page):
-    """DEPRECATED only to redirect old links"""
-    return redirect(url_for('.index', page=page), 301)
-
-
-@blueprint.route('/published/', defaults={'page': 1})
-@blueprint.route('/published/<int:page>/', defaults={'page': 1})
-def redirect_old_published(page):  # pragma: no cover
-    """DEPRECATED only to redirect old links"""
-    category = project_repo.get_category()
-    return redirect(url_for('.project_cat_index', category=category.short_name, page=page), 301)
-
-
-@blueprint.route('/draft/', defaults={'page': 1})
-@blueprint.route('/draft/<int:page>/', defaults={'page': 1})
-def redirect_old_draft(page):
-    """DEPRECATED only to redirect old links"""
-    return redirect(url_for('.draft', page=page), 301)
-
-
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
