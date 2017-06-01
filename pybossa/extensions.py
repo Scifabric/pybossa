@@ -32,6 +32,7 @@ The objects are:
     * csrf: for CSRF protection
     * newsletter: for subscribing users to Mailchimp newsletter
     * assets: for assets management (SASS, etc.)
+    * webpack: for assets management using webpack
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
@@ -39,7 +40,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
-           'plugin_manager', 'assets', 'JSONEncoder', 'cors']
+           'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'webpack']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -126,6 +127,9 @@ plugin_manager = PluginManager()
 
 from flask.ext.assets import Environment
 assets = Environment()
+
+from flask.ext.webpack import Webpack
+webpack = Webpack()
 
 from flask.json import JSONEncoder as BaseEncoder
 from speaklater import _LazyString
