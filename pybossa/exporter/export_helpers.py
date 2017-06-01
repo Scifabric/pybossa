@@ -76,7 +76,7 @@ def browse_tasks_export(obj, project_id, expanded, **args):
     in the UI.
     """
     filters, filter_params = get_task_filters(args)
-    if obj == 'tasks':
+    if obj == 'task':
         sql = text('''
                    SELECT {0}
                      FROM task
@@ -94,7 +94,7 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                    '''.format(_field_mapreducer(TASK_FIELDS, ''),
                               filters)
                   )
-    elif obj == 'taskruns':
+    elif obj == 'task_run':
         if expanded:
            sql = text('''
                       SELECT {0}

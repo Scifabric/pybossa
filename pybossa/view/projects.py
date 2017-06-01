@@ -1078,7 +1078,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
             except:
                 metadata = False
 
-            assert download_obj in ('tasks', 'taskruns')
+            assert download_obj in ('task', 'task_run')
             assert download_format in ('csv', 'json')
         except:
             current_app.logger.exception('Invalid download type {0} for project {1}.'
