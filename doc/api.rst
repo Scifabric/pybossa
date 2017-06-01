@@ -16,9 +16,6 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.UserAPI
    :members:
 
-.. autoclass:: pybossa.api.AppAPI
-   :members:
-
 .. autoclass:: pybossa.api.ProjectAPI
    :members:
 
@@ -41,6 +38,9 @@ It expects and returns JSON.
    :members:
 
 .. autoclass:: pybossa.api.FavoritesAPI
+   :members:
+
+.. autoclass:: pybossa.api.HelpingMaterial
    :members:
 
 

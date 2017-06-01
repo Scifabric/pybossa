@@ -129,9 +129,5 @@ As well as the FAQs and all the available documentation to help you create and
 develop your PYBOSSA project, we will be happy to answer your questions related 
 to the running of PYBOSSA in general. 
 
-To receive support for your project specifics, you will have to either purchase 
-a support plan or adhere to Scifabric’s hourly support rate. 
-Do contact Mar on `mar@scifabric.com`_ to discuss all queries related to your 
-specific project support and she will be more than happy to help you.
-
-.. _`mar@scifabric.com`: mailto:mar@scifabric.com
+Scifabric offers different options for support. Check them and use the one that fits
+your needs: http://pybossa.com/support/
