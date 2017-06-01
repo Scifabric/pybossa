@@ -417,7 +417,7 @@ class APIBase(MethodView):
         only a few classes."""
         pass
 
-    def _file_delete(self, data):
+    def _file_delete(self, request, data):
        """Method that must be overriden by the class to delete file uploads for
        only a few classes."""
        pass
