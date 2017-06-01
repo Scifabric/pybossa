@@ -263,6 +263,8 @@ class TestHelpingMaterialAPI(TestAPI):
         url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial.id, owner.api_key)
         res = self.app.delete(url)
         assert res.status_code == 204, res.status_code
+        mock_delete.assert_called_with(file_info['file_name'],
+                                       file_info['container'])
 
         # As admin
         url = '/api/helpingmaterial/%s?api_key=%s' % (helpingmaterial2.id, admin.api_key)
