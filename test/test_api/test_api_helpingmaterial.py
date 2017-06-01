@@ -18,14 +18,12 @@
 import json
 import io
 from default import db, with_context
-from nose.tools import assert_equal
 from test_api import TestAPI
-
 from factories import UserFactory, HelpingMaterialFactory, ProjectFactory
-
 from pybossa.repositories import HelpingMaterialRepository
-helping_repo = HelpingMaterialRepository(db)
+from mock import patch
 
+helping_repo = HelpingMaterialRepository(db)
 
 
 class TestHelpingMaterialAPI(TestAPI):
@@ -240,11 +238,15 @@ class TestHelpingMaterialAPI(TestAPI):
         assert 'foo' in data['exception_msg'], data
 
     @with_context
-    def test_delete_helpingmaterial(self):
+    @patch('pybossa.api.helpingmaterial.uploader.delete_file')
+    def test_delete_helpingmaterial(self, mock_delete):
         """Test API HelpingMaterialpost delete post (DEL)."""
+        mock_delete.return_value = True
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
-        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id)
+        file_info = {'file_name': 'name.jpg', 'container': 'user_3'}
+        helpingmaterial = HelpingMaterialFactory.create(project_id=project.id,
+                                                        info=file_info)
         helpingmaterial2 = HelpingMaterialFactory.create(project_id=project.id)
 
         # As anon
