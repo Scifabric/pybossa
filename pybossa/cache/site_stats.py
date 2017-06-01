@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for site statistics."""
+from functools import wraps
 import pygeoip
 from sqlalchemy.sql import text
 from flask import current_app
 
 from pybossa.core import db
-from pybossa.cache import cache, ONE_DAY
+from pybossa.cache import cache, memoize, ONE_DAY
 
 session = db.slave_session
 
@@ -157,3 +158,259 @@ def get_locs():
                 loc['longitude'] = 0
             locs.append(dict(loc=loc))
     return locs
+
+
+def allow_all_time(func):
+    @wraps(func)
+    def wrapper(days=30):
+        if days == 'all':
+            days = 999999
+        return func(days=days)
+    return wrapper
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def number_of_created_jobs(days=30):
+    """Number of created jobs"""
+    sql = text('''
+        SELECT COUNT(id) FROM project
+        WHERE
+        clock_timestamp() - to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            < interval ':days days';
+    ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def number_of_active_jobs(days=30):
+    """Number of jobs with submissions"""
+    sql = text('''
+        WITH activity AS (SELECT project.id as id,
+               MAX(task_run.finish_time) as last_activity
+            FROM project LEFT JOIN task_run
+            ON project.id = task_run.project_id
+            GROUP BY project.id)
+        SELECT COUNT(id) FROM activity
+        WHERE clock_timestamp() -
+              to_timestamp(last_activity, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            < interval ':days days';
+        ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def number_of_created_tasks(days=30):
+    """Number of created tasks"""
+    sql = text('''
+        SELECT count(id) FROM task
+        WHERE
+        clock_timestamp() - to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            < interval ':days days';
+        ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def number_of_completed_tasks(days=30):
+    """Number of completed tasks"""
+    sql = text('''
+        WITH completed AS (SELECT task.id FROM task JOIN task_run
+            ON task.id = task_run.task_id
+            WHERE task.state = 'completed'
+            GROUP BY task.id
+            HAVING clock_timestamp() -
+                   to_timestamp(MAX(finish_time), 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                   < interval ':days days')
+        SELECT count(id) FROM completed;
+        ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def number_of_active_users(days=30):
+    """Number of active users"""
+    sql = text('''
+        WITH active_users AS (SELECT DISTINCT(user_id) as id FROM task_run
+            WHERE clock_timestamp() -
+                  to_timestamp(task_run.finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                  < interval ':days days')
+        SELECT COUNT(id) FROM active_users;
+    ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def categories_with_new_projects(days=30):
+    """Categories with new projects"""
+    sql = text('''
+        WITH active_categories AS(
+            SELECT category.id as id FROM category JOIN project
+            ON category.id = project.category_id
+            WHERE clock_timestamp() -
+                  to_timestamp(project.created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                  < interval ':days days'
+            GROUP BY category.id)
+        SELECT COUNT(id) from active_categories;
+    ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def avg_time_to_complete_task(days=30):
+    """Average time to complete a task"""
+    sql = text('''SELECT
+        to_char(
+            AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')),
+            'MI"m" SS"s"'
+        )
+        AS average_time
+        FROM task_run WHERE clock_timestamp() -
+            to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US')
+            < interval ':days days';''')
+    return session.execute(sql, dict(days=days)).scalar() or 'N/A'
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def avg_task_per_job(days=30):
+    """Average number of tasks per job"""
+    sql = text('''
+        SELECT AVG(ct) FROM (SELECT
+            project.id, count(task.id) AS ct
+            FROM project LEFT OUTER JOIN task
+            ON project.id = task.project_id
+            WHERE to_timestamp(task.created, 'YYYY-MM-DD"T"HH24-MI-SS.US') <
+                clock_timestamp() - interval ':days days'
+            GROUP BY project.id) as t;
+        ''')
+    return session.execute(sql, dict(days=days)).scalar()
+
+
+@memoize(7*ONE_DAY)
+@allow_all_time
+def tasks_per_category(days=30):
+    """Average number of tasks per category"""
+    sql = text('''
+        SELECT AVG(ct) FROM (SELECT
+            category.id, count(task.id) AS ct
+            FROM category LEFT OUTER JOIN project
+            ON project.category_id = category.id
+            LEFT OUTER JOIN task
+            ON task.project_id = project.id
+            WHERE to_timestamp(task.created, 'YYYY-MM-DD"T"HH24-MI-SS.US') <
+                  clock_timestamp() - interval ':days days'
+            GROUP BY category.id) as t;
+    ''')
+    return session.execute(sql, dict(days=days)).scalar() or 'N/A'
+
+
+@memoize(7*ONE_DAY)
+def project_chart():
+    sql = text('''
+        WITH dates AS (
+            SELECT * FROM
+            generate_series(
+                date_trunc('month', clock_timestamp()) - interval '24 month',
+                clock_timestamp(),
+                '1 month') as date
+        )
+        SELECT date, count(project.id) as num_created FROM
+        dates LEFT JOIN project ON
+            to_timestamp(project.created, 'YYYY-MM-DD"T"HH24:MI:SS.US') < dates.date
+        GROUP BY date ORDER  BY date ASC;
+        ''')
+    rows = session.execute(sql).fetchall()
+    labels = [date.strftime('%b %Y') for date, _ in rows]
+    series = [count for _, count in rows]
+    return dict(labels=labels, series=[series])
+
+
+@memoize(7*ONE_DAY)
+def category_chart():
+    sql = text('''
+        WITH dates AS (
+            SELECT * FROM
+            generate_series(
+                date_trunc('month', clock_timestamp()) - interval '24 month',
+                clock_timestamp(),
+                '1 month') as date
+        )
+        SELECT date, count(category.id) as num_created FROM
+        dates LEFT JOIN category ON
+            to_timestamp(category.created, 'YYYY-MM-DD"T"HH24:MI:SS.US') < dates.date
+        GROUP BY date ORDER  BY date ASC;
+        ''')
+    rows = session.execute(sql).fetchall()
+    labels = [date.strftime('%b %Y') for date, _ in rows]
+    series = [count for _, count in rows]
+    return dict(labels=labels, series=[series])
+
+
+@memoize(7*ONE_DAY)
+def task_chart():
+    sql = text('''
+        WITH dates AS (
+            SELECT * FROM
+            generate_series(
+                date_trunc('month', clock_timestamp()) - interval '24 month',
+                clock_timestamp(),
+                '1 month') as date
+        ),
+        task_date AS (
+            SELECT id,
+                to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    AS created
+            FROM task
+            WHERE to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US') >
+                clock_timestamp() - interval '26 month'
+        )
+        SELECT date, count(task_date.id) as num_tasks FROM
+        dates LEFT JOIN task_date ON
+            task_date.created < dates.date
+            AND
+            task_date.created >= dates.date - interval '1 month'
+        GROUP BY date ORDER  BY date ASC;
+        ''')
+    rows = session.execute(sql).fetchall()
+    labels = [date.strftime('%b %Y') for date, _ in rows]
+    series = [count for _, count in rows]
+    return dict(labels=labels, series=[series])
+
+
+@memoize(7*ONE_DAY)
+def submission_chart():
+    sql = text('''
+        WITH dates AS (
+            SELECT * FROM
+            generate_series(
+                date_trunc('month', clock_timestamp()) - interval '24 month',
+                clock_timestamp(),
+                '1 month') as date
+        ),
+        task_run_date AS (
+            SELECT id,
+                to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    AS finish_time
+            FROM task_run
+            WHERE to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US') >
+                clock_timestamp() - interval '26 month'
+        )
+        SELECT date, count(task_run_date.id) as num_submissions FROM
+        dates LEFT JOIN task_run_date ON
+            task_run_date.finish_time < dates.date
+            AND
+            task_run_date.finish_time >= dates.date - interval '1 month'
+        GROUP BY date ORDER  BY date ASC;
+        ''')
+    rows = session.execute(sql).fetchall()
+    labels = [date.strftime('%b %Y') for date, _ in rows]
+    series = [count for _, count in rows]
+    return dict(labels=labels, series=[series])

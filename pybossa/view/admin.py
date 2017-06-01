@@ -40,6 +40,7 @@ from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.util import generate_manage_user_email
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
+from pybossa.cache import site_stats
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
@@ -54,6 +55,8 @@ from pybossa.jobs import send_mail
 from pybossa.core import userimporter
 from pybossa.importers import BulkImportException
 from pybossa.cache.users import get_users_for_report
+from collections import OrderedDict
+
 
 blueprint = Blueprint('admin', __name__)
 
@@ -541,6 +544,50 @@ def dashboard():
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+
+@blueprint.route('/management_dashboard/')
+@login_required
+@admin_required
+def management_dashboard():
+
+    project_chart = site_stats.project_chart()
+    category_chart = site_stats.category_chart()
+    task_chart = site_stats.task_chart()
+    submission_chart = site_stats.submission_chart()
+    current_app.logger.info(task_chart)
+
+    timed_stats_funcs = [
+        site_stats.number_of_active_jobs,
+        site_stats.number_of_created_jobs,
+        site_stats.number_of_created_tasks,
+        site_stats.number_of_completed_tasks,
+        site_stats.avg_time_to_complete_task,
+        site_stats.number_of_active_users,
+        site_stats.categories_with_new_projects
+    ]
+
+    current_stats_funcs = [
+        site_stats.avg_task_per_job,
+        site_stats.tasks_per_category
+    ]
+
+    timed_stats = OrderedDict()
+    for func in timed_stats_funcs:
+        timed_stats[func.__doc__] = OrderedDict()
+        for days in [30, 60, 90, 350, 'all']:
+            timed_stats[func.__doc__][days] = func(days)
+
+    current_stats = OrderedDict((func.__doc__, func())
+                                for func in current_stats_funcs)
+
+    return render_template('admin/management_dashboard.html',
+                           timed_stats=timed_stats,
+                           current_stats=current_stats,
+                           project_chart=project_chart,
+                           category_chart=category_chart,
+                           task_chart=task_chart,
+                           submission_chart=submission_chart)
 
 
 @blueprint.route('/subadminusers', methods=['GET', 'POST'])
