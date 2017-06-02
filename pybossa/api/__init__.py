@@ -46,6 +46,7 @@ from global_stats import GlobalStatsAPI
 from task import TaskAPI
 from task_run import TaskRunAPI
 from project import ProjectAPI
+from announcement import AnnouncementAPI
 from blogpost import BlogpostAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
@@ -96,6 +97,7 @@ register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
+register_api(AnnouncementAPI, 'api_announcement', '/announcement', pk='oid', pk_type='int')
 register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(HelpingMaterialAPI, 'api_helpingmaterial',
              '/helpingmaterial', pk='oid', pk_type='int')

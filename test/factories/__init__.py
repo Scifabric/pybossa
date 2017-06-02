@@ -22,6 +22,7 @@ import factory
 
 from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
+from pybossa.repositories import AnnouncementRepository
 from pybossa.repositories import BlogRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import AuditlogRepository
@@ -30,6 +31,7 @@ from pybossa.repositories import HelpingMaterialRepository
 
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
+announcement_repo = AnnouncementRepository(db)
 blog_repo = BlogRepository(db)
 task_repo = TaskRepository(db)
 auditlog_repo = AuditlogRepository(db)
@@ -39,6 +41,7 @@ helping_repo = HelpingMaterialRepository(db)
 
 def reset_all_pk_sequences():
     ProjectFactory.reset_sequence()
+    AnnouncementFactory.reset_sequence()
     BlogpostFactory.reset_sequence()
     CategoryFactory.reset_sequence()
     TaskFactory.reset_sequence()
@@ -63,6 +66,7 @@ class BaseFactory(factory.Factory):
 
 # Import the factories
 from project_factory import ProjectFactory
+from announcement_factory import AnnouncementFactory
 from blogpost_factory import BlogpostFactory
 from category_factory import CategoryFactory
 from task_factory import TaskFactory

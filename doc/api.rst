@@ -2015,6 +2015,7 @@ for another project where you are not the owner:
       "title": "Project: flickr678 &middot; Contribute"
     }
 
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
@@ -2069,6 +2070,232 @@ for logged in user JohnDoe (normally not visible in public leaderboard):
                 "score": 56
             }
         ]
+    }
+
+
+Announcements
+~~~~~~~~~~~~~
+**Endpoint: /announcements/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows you PYBOSSA wide announcements
+
+* **announcements**: Announcements
+* **template**: the rendered Announcements tamplate (currently empty)
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "announcements": [
+            {
+                "body": "test123",
+                "created": "2017-05-31T15:23:44.858735",
+                "id": 5,
+                "title": "title123",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-05-31T15:23:28.477516",
+                "id": 4,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:42:45.042010",
+                "id": 7,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:45:11.612801",
+                "id": 8,
+                "title": "blogpost title",
+                "user_id": 4953
+            }
+        ],
+        "template": ""
+    }
+
+
+Admin announcement
+~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement**
+
+**GET**
+
+Shows you PYBOSSA wide announcements
+
+* **announcements**: Announcements
+* **csrf**: csrf token
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "announcements": [
+            {
+                "body": "test123",
+                "created": "2017-05-31T15:23:44.858735",
+                "id": 5,
+                "title": "title123",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-05-31T15:23:28.477516",
+                "id": 4,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:42:45.042010",
+                "id": 7,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:45:11.612801",
+                "id": 8,
+                "title": "blogpost title",
+                "user_id": 4953
+            }
+        ],
+      "csrf": "1496394861.12##1bfcbb386bae5d1625c023a23b08865b4176579d",
+      "template": "",
+      "title": "Manage global Announcements"
+    }
+
+
+Admin announcement new
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/new**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Creates a new PYBOSSA wide announcement
+
+* **form**: form input
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "body": null,
+        "csrf": "1496394903.81##bb5fb0c527955073ec9ad694ed9097e7c868272a",
+        "errors": {},
+        "title": null
+      },
+      "template": "",
+      "title": "Write a new post"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Annnouncement created!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement update
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Updates a PYBOSSA announcement
+
+* **form**: form input
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "body": "test6",
+        "csrf": "1496328993.27##aa51e026938129afdfb0e6a5eab8c6b9427f81f6",
+        "errors": {},
+        "id": 4,
+        "title": "test6"
+      },
+      "template": "",
+      "title": "Edit a post"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement updated!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement delete
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/delete**
+
+*Allowed methods*: **POST**
+
+Deletes a PYBOSSA announcement
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken". You can get the token from /admin/announcement
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement deleted!",
+      "next": "/admin/announcement",
+      "status": "success"
     }
 
 

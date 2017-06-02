@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2017 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,9 +15,21 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+"""Announcements view for PYBOSSA."""
+from flask import Blueprint, current_app
+from flask import render_template
+from flask.ext.login import current_user
+from pybossa.cache import users as cached_users
+from pybossa.util import handle_content_type
+from pybossa.core import announcement_repo
 
 
-from forms import (
-    AnnouncementForm,
-    SearchForm,
-    CategoryForm)
+blueprint = Blueprint('announcements', __name__)
+
+@blueprint.route('/')
+def show_announcements():
+    """Show all announcements"""
+    announcements = announcement_repo.get_all_announcements()
+    response = dict(template="",
+                    announcements=announcements)
+    return handle_content_type(response)

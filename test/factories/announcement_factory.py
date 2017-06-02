@@ -16,8 +16,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from pybossa.model.announcement import Announcement
+from . import BaseFactory, factory, announcement_repo
 
-from forms import (
-    AnnouncementForm,
-    SearchForm,
-    CategoryForm)
+
+class AnnouncementFactory(BaseFactory):
+    class Meta:
+        model = Announcement
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        announcement = model_class(*args, **kwargs)
+        announcement_repo.save(announcement)
+        return announcement
+
+    id = factory.Sequence(lambda n: n)
+    title = u'Announcement title'
+    body = u'Announcement body text'
+    user_id = None

@@ -26,6 +26,11 @@ from pybossa.model.user import User
 from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
+from pybossa.repositories import AnnouncementRepository
+from pybossa.repositories import UserRepository
+from factories import AnnouncementFactory
+announcement_repo = AnnouncementRepository(db)
+user_repo = UserRepository(db)
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -1282,3 +1287,134 @@ class TestAdmin(web.Helper):
         for key in keys:
             assert key in data.keys(), data
 
+    @with_context
+    def test_announcement_json(self):
+        """Test ADMIN JSON announcement"""
+        url = '/admin/announcement'
+        self.register()
+        res = self.app_get_json(url)
+        print res.data
+        err_msg = "It should return 200"
+        data = json.loads(res.data)
+        assert res.status_code == 200, err_msg
+        assert "announcements" in data.keys(), data
+        assert "csrf" in data.keys(), data
+        assert "template" in data.keys(), data
+        assert "title" in data.keys(), data
+        # create an announcement in DB
+        announcement = AnnouncementFactory.create()
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        announcement0 = data['announcements'][0]
+        assert announcement0['body'] == 'Announcement body text'
+        assert announcement0['title'] == 'Announcement title'
+        assert announcement0['id'] == 1
+
+
+    @with_context
+    def test_announcement_create_json(self):
+        """Test announcement creation"""
+        self.register()
+        user = user_repo.get(1)
+        url = "/admin/announcement/new"
+
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+
+        csrf = self.get_csrf(url)
+        headers = {'X-CSRFToken': csrf}
+        res = self.app_post_json(url,
+                                 data={'title':'announcement title', 'body':'body text'},
+                                 headers=headers, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'created' in data['flash'], data
+        assert data['next'] == '/admin/announcement', data
+        assert data['status'] == 'success', data
+
+        announcement = announcement_repo.get_by(title='announcement title')
+        assert announcement.title == 'announcement title', announcement.title
+        assert announcement.body == 'body text', announcement.body
+        assert announcement.user_id == user.id, announcement.user_id
+
+    @with_context
+    def test_announcement_create_non_admin_json(self):
+        self.register()
+        self.signout()
+        url = "/admin/announcement/new"
+
+        res = self.app_get_json(url)
+        assert res.status_code == 302, res.status_code
+
+        res = self.app_post_json(url, data={'title':'blogpost title', 'body':'body'})
+        assert res.status_code == 302, res.status_code
+
+    @with_context
+    def test_announcement_update_json(self):
+        """Test announcement update"""
+        self.register()
+        user = user_repo.get(1)
+        announcement = AnnouncementFactory.create()
+        url = "/admin/announcement/1/update"
+
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+
+        res = self.app_get_json('/admin/announcement/2/update')
+        assert res.status_code == 404, res.status_code
+
+        csrf = self.get_csrf(url)
+        headers = {'X-CSRFToken': csrf}
+        res = self.app_post_json(url,
+                                 data={'id': announcement.id,
+                                       'title': 'updated title', 'body': 'updated body'},
+                                 headers=headers, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'updated' in data['flash'], data
+        assert data['next'] == '/admin/announcement', data
+        assert data['status'] == 'success', data
+        check_announcement = announcement_repo.get_by(id=announcement.id)
+        assert check_announcement.title == 'updated title', announcement.title
+        assert check_announcement.body == 'updated body', announcement.body
+        assert check_announcement.user_id == user.id, announcement.user_id
+
+    @with_context
+    def test_announcement_update_json_error(self):
+        """Test announcement update error"""
+        self.register()
+        user = user_repo.get(1)
+        announcement = AnnouncementFactory.create()
+        url = "/admin/announcement/1/update"
+
+        res = self.app_get_json(url)
+        assert res.status_code == 200, res.status_code
+
+        res = self.app_get_json('/admin/announcement/2/update')
+        assert res.status_code == 404, res.status_code
+
+        csrf = self.get_csrf(url)
+        headers = {'X-CSRFToken': csrf}
+        res = self.app_post_json('/admin/announcement/2/update',
+                                 data={'id': 2,
+                                       'title': 'updated title', 'body': 'updated body'},
+                                 headers=headers, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+    @with_context
+    def test_announcement_delete_json(self):
+        """Test announcement delete"""
+        self.register()
+        user = user_repo.get(1)
+        print user.admin
+        announcement = AnnouncementFactory.create()
+        url = "/admin/announcement/1/delete"
+
+        res = self.app_post_json(url)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert 'deleted' in data['flash'], data
+        assert data['next'] == '/admin/announcement'
+        assert data['status'] == 'success'
+        announcements = announcement_repo.get_all_announcements()
+        assert len(announcements) == 0, announcements
