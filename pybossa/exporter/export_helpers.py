@@ -63,11 +63,7 @@ session = db.slave_session
 
 
 def _field_mapreducer(fields, prefix=''):
-    def mapper(field, prefix):
-        return field.format(prefix)
-    def reducer(acc, field):
-        return acc + ',\n' + field
-    return reduce(reducer, map(lambda x: mapper(x, prefix), fields))
+    return ',\n'.join(field.format(prefix) for field in fields)
 
 
 def browse_tasks_export(obj, project_id, expanded, **args):
@@ -88,7 +84,7 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                            WHERE project_id=:project_id
                            GROUP BY task_id
                        ) AS log_counts
-                       ON task.id=log_counts.task_id
+                       ON task.id = log_counts.task_id
                      WHERE project_id = :project_id
                      {1}
                    '''.format(_field_mapreducer(TASK_FIELDS, ''),
@@ -101,11 +97,7 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                            , {1}
                            , {2}
                         FROM task_run
-                        LEFT OUTER JOIN (
-                          SELECT {3}
-                            FROM task
-                            WHERE project_id = :project_id
-                          ) AS task
+                        LEFT JOIN task
                           ON task_run.task_id = task.id
                         LEFT OUTER JOIN (
                           SELECT task_id
@@ -115,8 +107,8 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                               WHERE project_id = :project_id
                               GROUP BY task_id
                           ) AS log_counts
-                          ON task.id=log_counts.task_id
-                        LEFT OUTER JOIN "user"
+                          ON task.id = log_counts.task_id
+                        LEFT JOIN "user"
                           ON task_run.user_id = "user".id
                         WHERE task_run.project_id = :project_id
                         {4}
@@ -130,25 +122,18 @@ def browse_tasks_export(obj, project_id, expanded, **args):
            sql = text('''
                       SELECT {0}
                         FROM task_run
-                        LEFT JOIN (
-                          SELECT {1}
-                            FROM task
-                            WHERE project_id = :project_id
-                          ) AS task
-                        ON task_run.task_id = task.id
                         LEFT OUTER JOIN (
                           SELECT task_id
                                , CAST(COUNT(id) AS FLOAT) AS ct
                                , MAX(finish_time) as ft
                             FROM task_run
-                              WHERE project_id=:project_id
+                              WHERE project_id = :project_id
                               GROUP BY task_id
                           ) AS log_counts
-                          ON task.id = log_counts.task_id
+                          ON task_run.task_id = log_counts.task_id
                         WHERE task_run.project_id = :project_id
-                        {2}
+                        {1}
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
-                                 _field_mapreducer(TASK_FIELDS, ''),
                                  filters)
                      )
     else:
