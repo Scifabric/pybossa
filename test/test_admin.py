@@ -1301,6 +1301,15 @@ class TestAdmin(web.Helper):
         assert "csrf" in data.keys(), data
         assert "template" in data.keys(), data
         assert "title" in data.keys(), data
+        # create an announcement in DB
+        announcement = AnnouncementFactory.create()
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        announcement0 = data['announcements'][0]
+        assert announcement0['body'] == 'Announcement body text'
+        assert announcement0['title'] == 'Announcement title'
+        assert announcement0['id'] == 1
+
 
     @with_context
     def test_announcement_create_json(self):
@@ -1315,8 +1324,8 @@ class TestAdmin(web.Helper):
         csrf = self.get_csrf(url)
         headers = {'X-CSRFToken': csrf}
         res = self.app_post_json(url,
-                            data={'title':'announcement title', 'body':'body text'},
-                            headers=headers, follow_redirects=True)
+                                 data={'title':'announcement title', 'body':'body text'},
+                                 headers=headers, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
         assert 'created' in data['flash'], data
@@ -1365,7 +1374,7 @@ class TestAdmin(web.Helper):
         assert 'updated' in data['flash'], data
         assert data['next'] == '/admin/announcement', data
         assert data['status'] == 'success', data
-
+        assert announcement0[body] == 'Announcement body text'
         check_announcement = announcement_repo.get_by(id=announcement.id)
         assert check_announcement.title == 'updated title', announcement.title
         assert check_announcement.body == 'updated body', announcement.body
