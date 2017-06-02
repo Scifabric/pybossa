@@ -400,7 +400,7 @@ def new_announcement():
                         form=form)
         return handle_content_type(response)
 
-    form = AnnouncementForm(request.form)
+    form = AnnouncementForm()
     del form.id
 
     # project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
@@ -422,7 +422,7 @@ def new_announcement():
     msg_1 = gettext('Annnouncement created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
 
-    return redirect(url_for('admin.announcement'))
+    return redirect_content_type(url_for('admin.announcement'))
 
 
 @blueprint.route('/announcement/<int:id>/update', methods=['GET', 'POST'])
@@ -460,7 +460,7 @@ def update_announcement(id):
     msg_1 = gettext('Announcement updated!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
 
-    return redirect(url_for('admin.announcement'))
+    return redirect_content_type(url_for('admin.announcement'))
 
 
 @blueprint.route('/announcement/<int:id>/delete', methods=['POST'])
@@ -474,7 +474,7 @@ def delete_announcement(id):
     # ensure_authorized_to('delete', announcement)
     announcement_repo.delete(announcement)
     flash('<i class="icon-ok"></i> ' + 'Announcement deleted!', 'success')
-    return redirect(url_for('admin.announcement'))
+    return redirect_content_type(url_for('admin.announcement'))
 
 
 @blueprint.route('/dashboard/')
