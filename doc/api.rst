@@ -2015,6 +2015,58 @@ for another project where you are not the owner:
       "title": "Project: flickr678 &middot; Contribute"
     }
 
+Announcements
+~~~~~~~~~~~~~
+**Endpoint: /announcements/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows you PYBOSSA wide announcements
+
+* **announcements**: Announcements
+* **template**: the rendered Announcements tamplate (currently empty)
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "announcements": [
+            {
+                "body": "test6",
+                "created": "2017-05-31T15:23:44.858735",
+                "id": 5,
+                "title": "test6",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-05-31T15:23:28.477516",
+                "id": 4,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:42:45.042010",
+                "id": 7,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:45:11.612801",
+                "id": 8,
+                "title": "blogpost title",
+                "user_id": 4953
+            }
+        ],
+        "template": ""
+    }
+
+
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
