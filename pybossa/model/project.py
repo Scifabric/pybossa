@@ -127,5 +127,4 @@ class Project(db.Model, DomainObject):
     def public_info_keys(self):
         """Return a list of public info keys."""
         return ['container', 'thumbnail', 'thumbnail_url',
-                'task_presenter', 'tutorial', 'sched', 
-                'onesignal_app_id']
+                'task_presenter', 'tutorial', 'sched']
