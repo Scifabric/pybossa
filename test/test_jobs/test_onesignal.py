@@ -143,7 +143,7 @@ class TestOnesignal(Test):
     @patch('pybossa.jobs.PybossaOneSignal.push_msg')
     def test_push_notification_method(self, mock_onesignal):
         """Test push_notification method alone.""" 
-        project = ProjectFactory.create(info=dict(onesignal=dict(id=1, basic_auth_key='key')))
+        project = ProjectFactory.create()
         mock_onesignal.return_value = "msg"
 
         contents = {"en": "New update!"}
@@ -152,13 +152,15 @@ class TestOnesignal(Test):
         web_buttons = [{"id": "read-more-button",
                         "text": "Read more",
                         "icon": "http://i.imgur.com/MIxJp1L.png",
-                        "url": launch_url }]
+                        "url": launch_url}]
 
-        res = push_notification(project.id,
-                                contents=contents,
-                                headings=headings,
-                                web_buttons=web_buttons,
-                                launch_url=launch_url)
+        with patch.dict(self.flask_app.config, {'ONESIGNAL_APP_ID': 'id',
+                                                'ONESIGNAL_API_KEY': 'key'}):
+            res = push_notification(project.id,
+                                    contents=contents,
+                                    headings=headings,
+                                    web_buttons=web_buttons,
+                                    launch_url=launch_url)
 
-        assert mock_onesignal.called
-        assert res == "msg", res
+            assert mock_onesignal.called
+            assert res == "msg", res

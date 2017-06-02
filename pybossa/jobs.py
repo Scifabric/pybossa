@@ -762,10 +762,12 @@ def push_notification(project_id, **kwargs):
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     if project.info.get('onesignal'):
-        app_id = project.info.get('onesignal').get('id')
-        api_key = project.info.get('onesignal').get('basic_auth_key')
+        app_id = current_app.config.get('ONESIGNAL_APP_ID') 
+        api_key = current_app.config.get('ONESIGNAL_API_KEY')
         client = PybossaOneSignal(app_id=app_id, api_key=api_key)
+        filters = [{"field": "tag", "key": project_id, "relation": "exists"}]
         return client.push_msg(contents=kwargs['contents'],
                                headings=kwargs['headings'],
                                launch_url=kwargs['launch_url'],
-                               web_buttons=kwargs['web_buttons'])
+                               web_buttons=kwargs['web_buttons'],
+                               filters=filters)
