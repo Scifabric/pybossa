@@ -38,7 +38,7 @@ from pybossa.messages import *
 from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
-from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 from nose.tools import assert_raises
@@ -181,6 +181,25 @@ class TestWeb(web.Helper):
         err_msg = 'privacy leak in user information'
         assert 'id' not in first_user, err_msg
         assert 'api_key' not in first_user, err_msg
+
+    @with_context
+    def test_announcement_json(self):
+        """Test public announcements"""
+        url = '/announcements/'
+        err_msg = "It should return 200"
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert res.status_code == 200, err_msg
+        assert "announcements" in data.keys(), data
+        assert "template" in data.keys(), data
+        # create an announcement in DB
+        announcement = AnnouncementFactory.create()
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        announcement0 = data['announcements'][0]
+        assert announcement0['body'] == 'Announcement body text'
+        assert announcement0['title'] == 'Announcement title'
+        assert announcement0['id'] == 1
 
     @with_context
     @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
