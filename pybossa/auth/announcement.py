@@ -32,23 +32,28 @@ class AnnouncementAuth(object):
         return getattr(self, action)(user, announcement)
 
     def _create(self, user, announcement=None):
-        if not user.admin or (announcement is None):
+        if user.is_anonymous() or (announcement is None):
             return False
-        return True
+        if not user.is_anonymous() and user.admin:
+            return True
+        return False
 
     def _read(self, user, announcement=None):
-        if announcement:
-            if announcement is None:
-                return False
+        if announcement is None:
+            return False
         else:
             return True
 
     def _update(self, user, announcement):
-        if not user.admin:
+        if user.is_anonymous() or (announcement is None):
             return False
-        return True
+        if not user.is_anonymous() and user.admin:
+            return True
+        return False
 
     def _delete(self, user, announcement):
-        if not user.admin:
+        if user.is_anonymous() or (announcement is None):
             return False
-        return True
+        if not user.is_anonymous() and user.admin:
+            return True
+        return False
