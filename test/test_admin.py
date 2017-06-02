@@ -1374,7 +1374,6 @@ class TestAdmin(web.Helper):
         assert 'updated' in data['flash'], data
         assert data['next'] == '/admin/announcement', data
         assert data['status'] == 'success', data
-        assert announcement0[body] == 'Announcement body text'
         check_announcement = announcement_repo.get_by(id=announcement.id)
         assert check_announcement.title == 'updated title', announcement.title
         assert check_announcement.body == 'updated body', announcement.body
