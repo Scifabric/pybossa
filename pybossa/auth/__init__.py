@@ -19,7 +19,7 @@
 import inspect
 from flask import abort
 from flask.ext.login import current_user
-from pybossa.core import task_repo, project_repo, result_repo
+from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
 from pybossa.auth.errcodes import *
 
 import jwt
@@ -93,10 +93,12 @@ def _authorizer_for(resource_name):
     kwargs = {}
     if resource_name in ('project', 'taskrun'):
         kwargs.update({'task_repo': task_repo})
-    if resource_name in ('auditlog', 'announcement', 'blogpost', 'task',
+    if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result',
                          'helpingmaterial'):
         kwargs.update({'project_repo': project_repo})
+    # if resource_name in ('announcement'):
+    #     kwargs.update({'announcement_repo': announcement_repo})
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})
     return _auth_classes[resource_name](**kwargs)

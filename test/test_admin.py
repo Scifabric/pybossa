@@ -1406,6 +1406,7 @@ class TestAdmin(web.Helper):
         """Test announcement delete"""
         self.register()
         user = user_repo.get(1)
+        print user.admin
         announcement = AnnouncementFactory.create()
         url = "/admin/announcement/1/delete"
 

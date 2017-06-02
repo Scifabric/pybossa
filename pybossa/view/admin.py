@@ -406,7 +406,7 @@ def new_announcement():
     # project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
     if request.method != 'POST':
-        # ensure_authorized_to('create', Announcement) # TODO: uncoment?
+        ensure_authorized_to('create', Announcement())
         return respond()
 
     if not form.validate():
@@ -416,7 +416,7 @@ def new_announcement():
     announcement = Announcement(title=form.title.data,
                                 body=form.body.data,
                                 user_id=current_user.id)
-    # ensure_authorized_to('create', announcement) # TODO: uncoment?
+    ensure_authorized_to('create', announcement)
     announcement_repo.save(announcement)
 
     msg_1 = gettext('Annnouncement created!')
@@ -442,7 +442,7 @@ def update_announcement(id):
     form = AnnouncementForm()
 
     if request.method != 'POST':
-        # ensure_authorized_to('update', announcement)
+        ensure_authorized_to('update', announcement)
         form = AnnouncementForm(obj=announcement)
         return respond()
 
@@ -450,7 +450,7 @@ def update_announcement(id):
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
-    # ensure_authorized_to('update', announcement)
+    ensure_authorized_to('update', announcement)
     announcement = Announcement(id=form.id.data,
                                 title=form.title.data,
                                 body=form.body.data,
@@ -471,7 +471,7 @@ def delete_announcement(id):
     if announcement is None:
         raise abort(404)
 
-    # ensure_authorized_to('delete', announcement)
+    ensure_authorized_to('delete', announcement)
     announcement_repo.delete(announcement)
     flash('<i class="icon-ok"></i> ' + 'Announcement deleted!', 'success')
     return redirect_content_type(url_for('admin.announcement'))

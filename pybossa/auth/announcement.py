@@ -32,31 +32,23 @@ class AnnouncementAuth(object):
         return getattr(self, action)(user, announcement)
 
     def _create(self, user, announcement=None):
-        if user.is_anonymous() or (announcement is None):
+        if not user.admin or (announcement is None):
             return False
-        return announcement.user_id == user.id
+        return True
 
     def _read(self, user, announcement=None):
         if announcement:
-            if user.is_anonymous() or (announcement is None):
+            if announcement is None:
                 return False
         else:
             return True
 
     def _update(self, user, announcement):
-        if user.is_anonymous():
+        if not user.admin:
             return False
-        return announcement.user_id == user.id
+        return True
 
     def _delete(self, user, announcement):
-        if user.is_anonymous():
+        if not user.admin:
             return False
-        return user.admin or announcement.user_id == user.id
-
-    # def _get_project(self, announcement, project_id):
-    #     if announcement is not None:
-    #         return self.project_repo.get(announcement.project_id)
-    #     return self.project_repo.get(project_id)
-
-    def _is_admin_or_owner(self, user):
-        return (not user.is_anonymous() and user.admin)
+        return True
