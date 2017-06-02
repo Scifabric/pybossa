@@ -186,6 +186,7 @@ def setup_repositories(app):
     from pybossa.repositories import AuditlogRepository
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
+    from pybossa.repositories import HelpingMaterialRepository
     global user_repo
     global project_repo
     global announcement_repo
@@ -194,6 +195,7 @@ def setup_repositories(app):
     global auditlog_repo
     global webhook_repo
     global result_repo
+    global helping_repo
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
@@ -203,6 +205,7 @@ def setup_repositories(app):
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
+    helping_repo = HelpingMaterialRepository(db)
 
 
 def setup_error_email(app):

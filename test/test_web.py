@@ -1854,7 +1854,7 @@ class TestWeb(web.Helper):
         """Test WEB projects index without projects works"""
         # Check first without apps
         self.create_categories()
-        res = self.app.get('/project', follow_redirects=True)
+        res = self.app.get('/project/category/featured', follow_redirects=True)
         assert "Projects" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
 
@@ -1863,7 +1863,7 @@ class TestWeb(web.Helper):
         """Test WEB projects index with projects"""
         self.create()
 
-        res = self.app.get('/project', follow_redirects=True)
+        res = self.app.get('/project/category/featured', follow_redirects=True)
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
         assert Fixtures.project_short_name in res.data, res.data
@@ -1909,7 +1909,7 @@ class TestWeb(web.Helper):
         db.session.add(project)
         db.session.commit()
 
-        res = self.app.get('/project', follow_redirects=True)
+        res = self.app.get('/project/category/featured', follow_redirects=True)
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
         assert '/project/test-app' in res.data, res.data
@@ -2612,7 +2612,7 @@ class TestWeb(web.Helper):
         self.create()
         self.signout()
 
-        res = self.app.get('project', follow_redirects=True)
+        res = self.app.get('project/category/featured', follow_redirects=True)
         assert "Projects" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
 
@@ -2657,7 +2657,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         self.signout()
 
-        res = self.app.get('project', follow_redirects=True)
+        res = self.app.get('project/category/featured', follow_redirects=True)
         assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
         assert "draft" not in res.data, res.data
         assert "Sample Project" in res.data, res.data

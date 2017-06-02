@@ -10,23 +10,36 @@ Overview
 
 PYBOSSA has 5 main domain objects:
 
-  * Project: the overall Project (formerly named Application) to which Tasks are associated.
+  * **Project**: the overall Project to which Tasks are associated.
 
-    * HasMany: Tasks
     * HasA: Category
+    * HasMany: Tasks
 
-  * Task: an individual Task which can be performed by a user. A Task is associated to a project.
+  * **Task**: an individual Task which can be performed by a user. A Task is associated to a project.
 
     * HasA: Project
+    * HasA: Result
     * HasMany: TaskRuns
 
-  * TaskRun: the results of a specific User performing a specific task
+  * **TaskRun**: the answers of a specific User performing a specific task
 
     * HasA: Task
     * HasA: User
 
-  * User: a user account
-  * Category: a project category
+  * **Result**: the statistical result of analyzing the task runs for a given task in a project
+
+    * HasA: Task
+    * HasMany: TaskRuns
+
+  * **HelpingMaterial**: media files for building advance tutorials
+
+    * HasA: Project
+
+  * **User**: a user account
+
+  * **Category**: a project category
+
+    * HasMany: Projects
 
 There are some attributes common across most of the domain objects notably:
 
@@ -39,8 +52,9 @@ documentation of main model attributes.
 Project
 -------
 
-.. autoclass:: pybossa.model.project.Project
+.. autoclass:: pybossa.api.Project
    :members:
+
 
 Category
 --------
@@ -64,4 +78,18 @@ User
 ----
 
 .. autoclass:: pybossa.model.user.User
-    :members:
+   :members:
+
+Blogpost
+--------
+
+.. autoclass:: pybossa.model.blogpost.Blogpost
+   :members:
+
+
+HelpingMaterial
+---------------
+
+.. autoclass:: pybossa.model.helpingmaterial.HelpingMaterial
+   :members:
+

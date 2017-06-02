@@ -37,15 +37,16 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-from pybossa.core import project_repo, user_repo, task_repo, result_repo, announcement_repo, blog_repo
+from pybossa.core import project_repo, user_repo, task_repo, result_repo
+from pybossa.core import announcement_repo, blog_repo, helping_repo
 from pybossa.model import DomainObject
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
                   'delete': 'delete'},
          'TaskRun': {'repo': task_repo, 'filter': 'filter_task_runs_by',
-                     'get': 'get_task_run',  'save': 'save', 'update': 'update',
-                     'delete': 'delete'},
+                     'get': 'get_task_run',  'save': 'save',
+                     'update': 'update', 'delete': 'delete'},
          'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                   'save': 'save', 'update': 'update'},
          'Project': {'repo': project_repo, 'filter': 'filter_by',
@@ -53,15 +54,18 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'save': 'save', 'update': 'update', 'delete': 'delete'},
          'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                       'get': 'get_category', 'save': 'save_category',
-                      'update': 'update_category', 'delete': 'delete_category'},
-         'Result':   {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
-                      'update': 'update'},
+                      'update': 'update_category',
+                      'delete': 'delete_category'},
+         'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
+                    'update': 'update'},
          'Announcement': {'repo': announcement_repo, 'filter': 'filter_by', 'get': 'get',
                           'get_all_announcements': 'get_all_announcements',
                           'update': 'update', 'save': 'save', 'delete': 'delete'},
          'Blogpost': {'repo': blog_repo, 'filter': 'filter_by', 'get': 'get',
-                      'update': 'update', 'save': 'save', 'delete': 'delete'}
-         }
+                      'update': 'update', 'save': 'save', 'delete': 'delete'},
+         'HelpingMaterial': {'repo': helping_repo, 'filter': 'filter_by',
+                             'get': 'get', 'update': 'update',
+                             'save': 'save', 'delete': 'delete'}}
 
 
 error = ErrorStatus()
@@ -258,7 +262,9 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            data = json.loads(request.data)
+            data = self._file_upload(request)
+            if data is None:
+                data = json.loads(request.data)
             self._forbidden_attributes(data)
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
@@ -310,6 +316,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         ensure_authorized_to('delete', inst)
+        self._file_delete(request, inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -407,3 +414,13 @@ class APIBase(MethodView):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
         pass
+
+    def _file_upload(self, data):
+        """Method that must be overriden by the class to allow file uploads for
+        only a few classes."""
+        pass
+
+    def _file_delete(self, request, data):
+       """Method that must be overriden by the class to delete file uploads for
+       only a few classes."""
+       pass

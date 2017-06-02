@@ -150,10 +150,10 @@ def get_export_task_jobs(queue):
         if queue == 'high':
             projects = cached_projects.get_from_pro_user()
         else:
-            projects = (p.dictize() for p in project_repo.get_all()
+            projects = (p.dictize() for p in project_repo.filter_by(published=True)
                         if p.owner.pro is False)
     else:
-        projects = (p.dictize() for p in project_repo.get_all())
+        projects = (p.dictize() for p in project_repo.filter_by(published=True))
     for project in projects:
         project_id = project.get('id')
         job = dict(name=project_export,

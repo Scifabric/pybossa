@@ -532,12 +532,6 @@ class TestIsReservedName(object):
             assert reserved is True, reserved
             reserved = util.is_reserved_name('project', 'category')
             assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'page')
-            assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'draft')
-            assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'published')
-            assert reserved is True, reserved
 
     def test_returns_false_for_valid_name_for_app_blueprint(self):
         with self.app.app_context():
