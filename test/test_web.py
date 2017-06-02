@@ -1908,22 +1908,6 @@ class TestWeb(web.Helper):
         assert 'Featured Projects' in res.data, res.data
 
     @with_context
-    def test_project_manifest(self):
-        """Test WEB project manifest.json works."""
-        project = ProjectFactory.create()
-        url = '/project/%s/manifest.json' % project.short_name
-        res = self.app.get(url)
-
-        data = json.loads(res.data)
-
-        assert 'gcm_sender_id' in data.keys(), data
-        assert 'start_url' in data.keys(), data
-        assert 'name' in data.keys(), data
-        assert 'short_name' in data.keys(), data
-        assert 'display' in data.keys(), data
-
-
-    @with_context
     @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
