@@ -1,5 +1,5 @@
 [![Scifabric](https://img.shields.io/badge/made%20by-scifabric-blue.svg)](https://scifabric.com/)
-[![Build Status](https://travis-ci.org/Scifabric/pybossa.svg?branch=master)](https://travis-ci.org/Scifabric/pybossa)[![Code Health](https://landscape.io/github/Scifabric/pybossa/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/pybossa/master) 
+[![Build Status](https://travis-ci.org/Scifabric/pybossa.svg?branch=master)](https://travis-ci.org/Scifabric/pybossa) [![Code Health](https://landscape.io/github/Scifabric/pybossa/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/pybossa/master) 
  [![Coverage
 Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveralls.io/r/Scifabric/pybossa?branch=master)
 [![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Slack](http://slackin.crowdcrafting.org/badge.svg)](http://slackin.crowdcrafting.org) 
