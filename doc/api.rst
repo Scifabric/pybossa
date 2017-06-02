@@ -2183,11 +2183,11 @@ Admin announcement new
 ~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /admin/announcement/new**
 
-*Allowed methods*: **GET**
+*Allowed methods*: **GET/POST**
 
 **GET**
 
-Shows you PYBOSSA wide announcements
+Creates a new PYBOSSA wide announcement
 
 * **form**: form input
 * **template**: the rendered Announcements tamplate (currently empty)
@@ -2221,6 +2221,79 @@ On success you will get a 200 http code and following output:
 
     {
       "flash": "<i class=\"icon-ok\"></i> Annnouncement created!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement update
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Updates a PYBOSSA announcement
+
+* **form**: form input
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "body": "test6",
+        "csrf": "1496328993.27##aa51e026938129afdfb0e6a5eab8c6b9427f81f6",
+        "errors": {},
+        "id": 4,
+        "title": "test6"
+      },
+      "template": "",
+      "title": "Edit a post"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement updated!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement delete
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/delete**
+
+*Allowed methods*: **POST**
+
+Deletes a PYBOSSA announcement
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken". You can get the token from /admin/announcement
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement deleted!",
       "next": "/admin/announcement",
       "status": "success"
     }
