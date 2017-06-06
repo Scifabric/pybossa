@@ -25,6 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
+import pybossa.leaderboard.jobs as leaderboard 
 from pbsonesignal import PybossaOneSignal
 
 
@@ -112,6 +113,7 @@ def get_periodic_jobs(queue):
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    leaderboard_jobs = get_leaderboard_jobs() if queue == 'super' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
@@ -256,6 +258,13 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
     yield dict(name=dashboard.new_users_week, args=[], kwargs={},
                timeout=timeout, queue=queue)
     yield dict(name=dashboard.returning_users_week, args=[], kwargs={},
+               timeout=timeout, queue=queue)
+
+
+def get_leaderboard_jobs(queue='super'):  # pragma: no cover
+    """Return leaderboard jobs."""
+    timeout = current_app.config.get('TIMEOUT')
+    yield dict(name=leaderboard.leaderboard, args=[], kwargs={},
                timeout=timeout, queue=queue)
 
 
