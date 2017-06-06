@@ -27,6 +27,7 @@ from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
+from sqlalchemy import text
 from math import ceil
 import json
 import base64
@@ -521,3 +522,19 @@ def get_disqus_sso_payload(user):
         return message, timestamp, sig, DISQUS_PUBLIC_KEY
     else:
         return None, None, None, None
+
+
+def exists_materialized_view(db, view):
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname = :view);''')
+    results = db.slave_session.execute(sql, dict(view=view))
+    for result in results:
+        return result.exists
+    return False
+
+
+def refresh_materialized_view(db, view):
+    sql = text('REFRESH MATERIALIZED VIEW %s' % view)
+    db.session.execute(sql)
+    db.session.commit()
+    return "Materialized view refreshed"
