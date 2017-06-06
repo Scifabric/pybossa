@@ -35,6 +35,10 @@ def index():
         user_id = None
     if request.args.get('window'):
         window = int(request.args.get('window'))
+
+    if window >= 10:
+        window = 10
+
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id, 
                                              window=window)
