@@ -30,9 +30,9 @@ from pybossa.leaderboard.jobs import leaderboard as lb
 session = db.slave_session
 
 
-def get_leaderboard(n, user_id=None):
+def get_leaderboard(n, user_id=None, window=0):
     """Return the top n users with their rank."""
-    return gl(top_users=n, user_id=user_id, window=0)
+    return gl(top_users=n, user_id=user_id, window=window)
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))

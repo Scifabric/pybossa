@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Leaderboard view for PYBOSSA."""
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, request
 from flask import render_template
 from flask.ext.login import current_user
 from pybossa.cache import users as cached_users
@@ -28,12 +28,16 @@ blueprint = Blueprint('leaderboard', __name__)
 @blueprint.route('/')
 def index():
     """Get the last activity from users and projects."""
+    window = 0
     if current_user.is_authenticated():
         user_id = current_user.id
     else:
         user_id = None
+    if request.args.get('window'):
+        window = int(request.args.get('window'))
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
-                                             user_id=user_id)
+                                             user_id=user_id, 
+                                             window=window)
 
     response = dict(template='/stats/index.html', title="Community Leaderboard",
                     top_users=top_users)

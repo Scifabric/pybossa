@@ -37,7 +37,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
             user = format_user(row)
         if user:
             sql = text('''SELECT * from users_rank
-                       WHERE rank < :top AND rank > :low;''')
+                       WHERE rank < :low AND rank > :top;''')
             top = user['rank'] - window
             low = user['rank'] + window
             results = db.session.execute(sql, dict(user_id=user_id,
