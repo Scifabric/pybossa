@@ -40,6 +40,7 @@ def index(window=0):
                                              user_id=user_id, 
                                              window=window)
 
-    response = dict(template='/stats/index.html', title="Community Leaderboard",
+    response = dict(template='/stats/index.html',
+                    title="Community Leaderboard",
                     top_users=top_users)
     return handle_content_type(response)
