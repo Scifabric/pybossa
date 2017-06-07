@@ -31,7 +31,7 @@ def leaderboard():
                         SELECT "user".*, COUNT(task_run.user_id) AS score
                         FROM "user" LEFT JOIN task_run
                         ON task_run.user_id="user".id GROUP BY "user".id
-                    ) SELECT *, rank() OVER (ORDER BY score DESC) FROM scores;
+                    ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
                    ''')
         db.session.execute(sql)
         db.session.commit()

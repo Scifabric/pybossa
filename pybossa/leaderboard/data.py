@@ -20,13 +20,16 @@ from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db
 from pybossa.model.user import User
+from pybossa.leaderboard.jobs import leaderboard as gl
 
 u = User()
 
 
 def get_leaderboard(top_users=20, user_id=None, window=0):
     """Return a list of top_users and if user_id return its position."""
-    sql = text('''SELECT * from users_rank WHERE rank <= :top_users;''')
+    gl()
+    sql = text('''SELECT * from users_rank WHERE rank <= :top_users 
+               ORDER BY rank;''')
     results = db.session.execute(sql, dict(top_users=top_users))
     top_users = [format_user(user) for user in results]
 
@@ -38,9 +41,10 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
             user = format_user(row)
         if user and window != 0:
             sql = text('''SELECT * from users_rank
-                       WHERE rank < :low AND rank > :top;''')
-            top = user['rank'] - window
-            low = user['rank'] + window
+                       WHERE rank >= :low AND rank <= :top order by rank;
+                       ''')
+            low = user['rank'] - window
+            top = user['rank'] + window
             results = db.session.execute(sql, dict(user_id=user_id,
                                          top=top,
                                          low=low))

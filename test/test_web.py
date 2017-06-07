@@ -160,6 +160,7 @@ class TestWeb(web.Helper):
         """Test leaderboard json works"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
         update_leaderboard()
         res = self.app_get_json('/leaderboard/')
         data = json.loads(res.data)
@@ -175,7 +176,7 @@ class TestWeb(web.Helper):
         assert first_user['fullname'] == 'User 1', err_msg
         assert first_user['name'] == 'user1', err_msg
         assert first_user['rank'] == 1, err_msg
-        assert first_user['score'] == 1, err_msg
+        assert first_user['score'] == 2, err_msg
         assert 'registered_ago' in first_user, err_msg
         assert 'n_answers' in first_user, err_msg
         assert 'info' in first_user, err_msg
@@ -184,6 +185,32 @@ class TestWeb(web.Helper):
         err_msg = 'privacy leak in user information'
         assert 'id' not in first_user, err_msg
         assert 'api_key' not in first_user, err_msg
+
+        users = UserFactory.create_batch(40)
+        for u in users[0:22]:
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+
+        for u in users[22:28]:
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+
+        update_leaderboard()
+
+        res = self.app_get_json('/leaderboard/window/3?api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        for u in leaders:
+            print u['rank'], u['name'], u['score']
+        assert len(leaders) == (20+3+1+3), len(leaders)
+        assert leaders[23]['name'] == user.name
+
 
     @with_context
     def test_announcement_json(self):
