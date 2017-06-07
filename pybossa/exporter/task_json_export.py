@@ -22,7 +22,7 @@ from flask import url_for, safe_join, send_file, redirect
 from pybossa.core import uploader, task_repo
 from pybossa.uploader import local
 from pybossa.exporter.json_export import JsonExporter
-from export_helpers import browse_tasks_export
+from export_helpers import browse_tasks_export, browse_tasks_export_count
 
 
 class TaskJsonExporter(JsonExporter):
@@ -68,35 +68,16 @@ class TaskJsonExporter(JsonExporter):
                 row = row.setdefault(key, {})
             row[keys[-1]] = value
 
-        def get_nested_keys(keys):
-            nested_keys = [k.split('__')[0]
-                    for k in keys
-                    if len(k.split('__')) > 1]
-            if len(keys) == len(nested_keys):
-                return nested_keys
+        new_row = {}
+        for k, v in row.iteritems():
+            key_split = k.split('__')
+            if len(key_split) > 1 and key_split[0] in ('task', 'user'):
+                nested_keys = [key_split[0], '__'.join(key_split[1:])]
+                set_nested_value(new_row, nested_keys, v)
             else:
-                return get_nested_keys(nested_keys)
+                new_row[k] = v
 
-        def nest(row):
-            nested = get_nested_keys(row.keys())
-            not_nested = [k.split('__')[0]
-                          for k in row.keys()
-                          if len(k.split('__')) <= 1]
-
-            nested = list(set(nested))
-            keys = nested + not_nested
-            new_row = {k: {} for k in keys}
-
-            for k, v in row.iteritems():
-                key_split = k.split('__')
-                if len(key_split) > 1:
-                    set_nested_value(new_row, key_split, v)
-                else:
-                    new_row[k] = v
-            return new_row
-
-        row = nest(row)
-        return row
+        return new_row
 
     def gen_json(self, obj, project_id, expanded=False):
         if obj == 'task':
@@ -125,7 +106,7 @@ class TaskJsonExporter(JsonExporter):
 
     def gen_json_with_filters(self, obj, project_id, expanded=False, **filters):
         objs = browse_tasks_export(obj, project_id, expanded, **filters)
-        n = objs.rowcount
+        n = browse_tasks_export_count(obj, project_id, expanded, **filters).fetchone()[0]
 
         sep = ", "
         yield "["

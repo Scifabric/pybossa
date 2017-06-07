@@ -128,46 +128,16 @@ class TaskCsvExporter(CsvExporter):
                 row = row.setdefault(key, {})
             row[keys[-1]] = value
 
-        def get_nested_keys(keys):
-            nested_keys = [k.split('__')[0]
-                    for k in keys
-                    if len(k.split('__')) > 1]
-            if len(keys) == len(nested_keys):
-                return nested_keys
-            else:
-                return get_nested_keys(nested_keys)
+        new_row = {}
+        for k, v in row.iteritems():
+            key_split = k.split('__')
+            if len(key_split) > 1 and key_split[0] in ('task', 'user'):
+                nested_keys = [key_split[0], '__'.join(key_split[1:])]
+                set_nested_value(new_row, nested_keys, v)
+            new_row[k] = v
 
-        def nest(row):
-            nested = get_nested_keys(row.keys())
-            not_nested = [k.split('__')[0]
-                          for k in row.keys()
-                          if len(k.split('__')) <= 1]
+        return new_row
 
-            nested = list(set(nested))
-            keys = nested + not_nested
-            new_row = {k: {} for k in keys}
-
-            for k, v in row.iteritems():
-                key_split = k.split('__')
-                if len(key_split) > 1:
-                    set_nested_value(new_row, key_split, v)
-                else:
-                    new_row[k] = v
-            return new_row
-
-        def unnest(row):
-            new_row = row
-            for k in row.keys():
-                if isinstance(row[k], dict):
-                    for k2 in row[k].keys():
-                        new_key = '__'.join([k, k2])
-                        if not row.get(new_key):
-                            new_row[new_key] = row[k][k2]
-            return new_row
-
-        row = unnest(row)
-        row = nest(row)
-        return row
 
     def _format_csv_row(self, row, headers):
         return [self.get_value(row, *header.split('__')[1:])

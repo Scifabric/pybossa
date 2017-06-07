@@ -66,12 +66,12 @@ def _field_mapreducer(fields, prefix=''):
     return ',\n'.join(field.format(prefix) for field in fields)
 
 
-def browse_tasks_export(obj, project_id, expanded, **args):
+def browse_tasks_export(obj, project_id, expanded, **kwargs):
     """Export tasks from the browse tasks view for a project
     using the same filters that are selected by the user
     in the UI.
     """
-    filters, filter_params = get_task_filters(args)
+    filters, filter_params = get_task_filters(kwargs)
     if obj == 'task':
         sql = text('''
                    SELECT {0}
@@ -81,7 +81,7 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                             , CAST(COUNT(id) AS FLOAT) AS ct
                             , MAX(finish_time) as ft
                          FROM task_run
-                           WHERE project_id=:project_id
+                           WHERE project_id = :project_id
                            GROUP BY task_id
                        ) AS log_counts
                        ON task.id = log_counts.task_id
@@ -111,17 +111,18 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                         LEFT JOIN "user"
                           ON task_run.user_id = "user".id
                         WHERE task_run.project_id = :project_id
-                        {4}
+                        {3}
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
                                  _field_mapreducer(TASK_FIELDS, 'task__'),
                                  _field_mapreducer(USER_FIELDS, 'user__'),
-                                 _field_mapreducer(TASK_FIELDS, ''),
                                  filters)
                      )
         else:
            sql = text('''
                       SELECT {0}
                         FROM task_run
+                        LEFT JOIN task
+                          ON task_run.task_id = task.id
                         LEFT OUTER JOIN (
                           SELECT task_id
                                , CAST(COUNT(id) AS FLOAT) AS ct
@@ -136,6 +137,54 @@ def browse_tasks_export(obj, project_id, expanded, **args):
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
                                  filters)
                      )
+    else:
+        return
+
+    return session.execute(sql, dict(project_id=project_id, **filter_params))
+
+
+def browse_tasks_export_count(obj, project_id, expanded, **kwargs):
+    """Returns the count of the tasks from the browse tasks view
+    for a project using the same filters that are selected by
+    the user in the UI.
+    """
+    filters, filter_params = get_task_filters(kwargs)
+    if obj == 'task':
+        sql = text('''
+                   SELECT COUNT(task.id)
+                     FROM task
+                     LEFT OUTER JOIN (
+                       SELECT task_id
+                            , CAST(COUNT(id) AS FLOAT) AS ct
+                            , MAX(finish_time) as ft
+                         FROM task_run
+                           WHERE project_id = :project_id
+                           GROUP BY task_id
+                       ) AS log_counts
+                       ON task.id = log_counts.task_id
+                     WHERE project_id = :project_id
+                     {0}
+                   '''.format(filters)
+                  )
+    elif obj == 'task_run':
+       sql = text('''
+                  SELECT COUNT(task_run.id)
+                    FROM task_run
+                    LEFT JOIN task
+                      ON task_run.task_id = task.id
+                    LEFT OUTER JOIN (
+                      SELECT task_id
+                           , CAST(COUNT(id) AS FLOAT) AS ct
+                           , MAX(finish_time) as ft
+                        FROM task_run
+                          WHERE project_id = :project_id
+                          GROUP BY task_id
+                      ) AS log_counts
+                      ON task.id = log_counts.task_id
+                    WHERE task_run.project_id = :project_id
+                    {0}
+                  '''.format(filters)
+                 )
     else:
         return
 
