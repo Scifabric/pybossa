@@ -19,6 +19,7 @@
 from default import Test
 from pybossa.cache import users as cached_users
 from pybossa.model.user import User
+from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
@@ -402,6 +403,7 @@ class TestUsersCache(Test):
             TaskRunFactory.create_batch(i, user=user, task=tasks[i - 1])
             i -= 1
 
+        update_leaderboard()
         leaderboard = cached_users.get_leaderboard(3)
 
         assert leaderboard[0]['name'] == leader.name
@@ -420,9 +422,11 @@ class TestUsersCache(Test):
             i -= 1
         user_out_of_top = UserFactory.create()
 
+        update_leaderboard()
+
         leaderboard = cached_users.get_leaderboard(3, user_id=user_out_of_top.id)
 
-        assert len(leaderboard) is 4
+        assert len(leaderboard) is 4, len(leaderboard)
         assert leaderboard[-1]['name'] == user_out_of_top.name
 
     def test_get_leaderboard_returns_fields(self):
@@ -431,6 +435,7 @@ class TestUsersCache(Test):
         TaskRunFactory.create(user=user)
         fields = User.public_attributes()
 
+        update_leaderboard()
         leaderboard = cached_users.get_leaderboard(1)
 
         for field in fields:
