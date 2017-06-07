@@ -27,15 +27,11 @@ def leaderboard():
         return refresh_materialized_view(db, 'users_rank')
     else:
         sql = text('''
-                   CREATE MATERIALIZED VIEW users_rank AS WITH global_rank AS (
-                        WITH scores AS (
-                            SELECT user_id, COUNT(*) AS score FROM task_run
-                            WHERE user_id IS NOT NULL GROUP BY user_id)
-                        SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                        FROM scores)
-                   SELECT rank, id, name, fullname, email_addr, info, created,
-                   score FROM global_rank
-                   JOIN public."user" on (user_id=public."user".id) ORDER BY rank;
+                   CREATE MATERIALIZED VIEW users_rank AS WITH scores AS (
+                        SELECT "user".*, COUNT(task_run.user_id) AS score
+                        FROM "user" LEFT JOIN task_run
+                        ON task_run.user_id="user".id GROUP BY "user".id
+                    ) SELECT *, rank() OVER (ORDER BY score DESC) FROM scores;
                    ''')
         db.session.execute(sql)
         db.session.commit()

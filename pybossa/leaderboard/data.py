@@ -36,7 +36,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
         user = None
         for row in results:
             user = format_user(row)
-        if user:
+        if user and window != 0:
             sql = text('''SELECT * from users_rank
                        WHERE rank < :low AND rank > :top;''')
             top = user['rank'] - window
@@ -46,6 +46,9 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
                                          low=low))
             for row in results:
                 top_users.append(format_user(row))
+        else:
+            if user:
+                top_users.append(user)
         return top_users
     return top_users
 
