@@ -25,6 +25,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.leaderboard.jobs import leaderboard
 import pybossa.model as model
 from functools import wraps
 from factories import reset_all_pk_sequences
@@ -77,6 +78,7 @@ class Test(object):
         with self.flask_app.app_context():
             rebuild_db()
             reset_all_pk_sequences()
+            leaderboard()
 
     def app_get_json(self, url, follow_redirects=False, headers=None):
         return self.app.get(url, follow_redirects=follow_redirects,
