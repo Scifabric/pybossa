@@ -26,21 +26,7 @@ from pybossa.core import db
 from factories import UserFactory
 
 
-
 class TestUserAPI(Test):
-
-    def setUp(self):
-        super(TestUserAPI, self).setUp()
-        with self.flask_app.app_context():
-            db.create_all()
-            self.redis_flushall()
-
-    def tearDown(self):
-        with self.flask_app.app_context():
-            db.drop_all()
-            db.session.remove()
-            self.redis_flushall()
-            #reset_all_pk_sequences()
 
     @with_context
     def test_user_get(self):
