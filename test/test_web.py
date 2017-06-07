@@ -35,6 +35,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.messages import *
+from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
@@ -148,6 +149,7 @@ class TestWeb(web.Helper):
         """Test WEB leaderboard works"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
+        update_leaderboard()
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert user.name in res.data, res.data
@@ -158,6 +160,7 @@ class TestWeb(web.Helper):
         """Test leaderboard json works"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
+        update_leaderboard()
         res = self.app_get_json('/leaderboard/')
         data = json.loads(res.data)
         err_msg = 'Template wrong'
