@@ -33,6 +33,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
     if user_id:
         sql = text('''SELECT * from users_rank where id=:user_id;''')
         results = db.session.execute(sql, dict(user_id=user_id))
+        user = None
         for row in results:
             user = format_user(row)
         if user:
