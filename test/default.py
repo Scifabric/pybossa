@@ -52,14 +52,14 @@ def delete_materialized_views():
                FROM pg_class WHERE relname LIKE '%dashboard%';''')
     results = db.session.execute(sql)
     for row in results:
-        sql = 'drop materialized view if exists %s' % row.relname
+        sql = 'drop materialized view if exists %s cascade' % row.relname
         db.session.execute(sql)
         db.session.commit()
     sql = text('''SELECT relname
                FROM pg_class WHERE relname LIKE '%users_rank%';''')
     results = db.session.execute(sql)
     for row in results:
-        sql = 'drop materialized view if exists %s' % row.relname
+        sql = 'drop materialized view if exists %s cascade' % row.relname
         db.session.execute(sql)
         db.session.commit()
 
