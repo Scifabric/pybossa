@@ -2019,6 +2019,7 @@ for another project where you are not the owner:
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
+**Endpoint: /leaderboard/window/<int:window>**
 
 *Allowed methods*: **GET**
 
@@ -2027,6 +2028,11 @@ Leaderboard
 Shows you the top 20 contributors rank in a sorted leaderboard.
 If you are logged in you will also get the rank of yourself even when you are
 not visible on the top public leaderboard.
+
+By default the window is zero, adding the authenticated user to the bottom of the
+top 20, so the user can know the rank. If you want, you can use a window to show
+the previous and next users taking into account authenticated user rank. For example,
+you can get the previous 3 and next 3 accessing this URL: /leaderboard/window/3.
 
 * **template**: Jinja2 template.
 * **title**: the title for the endpoint.
