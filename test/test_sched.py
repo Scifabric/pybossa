@@ -36,20 +36,8 @@ import pybossa
 
 
 class TestSched(sched.Helper):
-    def setUp(self):
-        super(TestSched, self).setUp()
-        self.endpoints = ['project', 'task', 'taskrun']
-        with self.flask_app.app_context():
-            db.create_all()
-            self.redis_flushall()
 
-
-    def tearDown(self):
-        with self.flask_app.app_context():
-            db.drop_all()
-            self.redis_flushall()
-            #reset_all_pk_sequences()
-
+    endpoints = ['project', 'task', 'taskrun']
 
     def get_headers_jwt(self, project):
         """Return headesr JWT token."""
@@ -1154,17 +1142,6 @@ class TestSched(sched.Helper):
 
 
 class TestGetBreadthFirst(Test):
-    def setUp(self):
-        super(TestGetBreadthFirst, self).setUp()
-        with self.flask_app.app_context():
-            self.redis_flushall()
-            db.drop_all()
-            db.create_all()
-
-    def tearDown(self):
-        with self.flask_app.app_context():
-            db.session.remove()
-
 
     def del_task_runs(self, project_id=1):
         """Deletes all TaskRuns for a given project_id"""

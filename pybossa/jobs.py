@@ -25,6 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
+import pybossa.leaderboard.jobs as leaderboard 
 from pbsonesignal import PybossaOneSignal
 
 
@@ -112,6 +113,7 @@ def get_periodic_jobs(queue):
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    leaderboard_jobs = get_leaderboard_jobs() if queue == 'super' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
@@ -256,6 +258,13 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
     yield dict(name=dashboard.new_users_week, args=[], kwargs={},
                timeout=timeout, queue=queue)
     yield dict(name=dashboard.returning_users_week, args=[], kwargs={},
+               timeout=timeout, queue=queue)
+
+
+def get_leaderboard_jobs(queue='super'):  # pragma: no cover
+    """Return leaderboard jobs."""
+    timeout = current_app.config.get('TIMEOUT')
+    yield dict(name=leaderboard.leaderboard, args=[], kwargs={},
                timeout=timeout, queue=queue)
 
 
@@ -732,29 +741,6 @@ def check_failed():
         return "JOBS: %s You have failed the system." % job_ids
     else:
         return "You have not failed the system"
-
-
-def create_onesignal_app(project_id):
-    """Create onesignal app."""
-    from flask import url_for
-    from pybossa.core import project_repo
-    auth_key = current_app.config.get('ONESIGNAL_AUTH_KEY')
-    if auth_key:
-        project = project_repo.get(project_id)
-        chrome_web_origin = url_for('project.details',
-                                    short_name=project.short_name,
-                                    _external=True)
-        chrome_web_default_notification_icon = project.info.get('thumbnail_url')
-        client = PybossaOneSignal(auth_key=auth_key)
-        res = client.create_app(project.short_name,
-                                chrome_web_origin,
-                                chrome_web_default_notification_icon)
-        
-        if res[0] == 200:
-            project.info['onesignal'] = res[2]
-            project.info['onesignal_app_id'] = res[2]['id']
-            project_repo.update(project)
-        return res
 
 
 def push_notification(project_id, **kwargs):

@@ -35,6 +35,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.messages import *
+from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
@@ -148,6 +149,7 @@ class TestWeb(web.Helper):
         """Test WEB leaderboard works"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
+        update_leaderboard()
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert user.name in res.data, res.data
@@ -158,6 +160,8 @@ class TestWeb(web.Helper):
         """Test leaderboard json works"""
         user = UserFactory.create()
         TaskRunFactory.create(user=user)
+        TaskRunFactory.create(user=user)
+        update_leaderboard()
         res = self.app_get_json('/leaderboard/')
         data = json.loads(res.data)
         err_msg = 'Template wrong'
@@ -172,7 +176,7 @@ class TestWeb(web.Helper):
         assert first_user['fullname'] == 'User 1', err_msg
         assert first_user['name'] == 'user1', err_msg
         assert first_user['rank'] == 1, err_msg
-        assert first_user['score'] == 1, err_msg
+        assert first_user['score'] == 2, err_msg
         assert 'registered_ago' in first_user, err_msg
         assert 'n_answers' in first_user, err_msg
         assert 'info' in first_user, err_msg
@@ -181,6 +185,44 @@ class TestWeb(web.Helper):
         err_msg = 'privacy leak in user information'
         assert 'id' not in first_user, err_msg
         assert 'api_key' not in first_user, err_msg
+
+        users = UserFactory.create_batch(40)
+        for u in users[0:22]:
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+
+        for u in users[22:28]:
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+            TaskRunFactory.create(user=u)
+
+        update_leaderboard()
+
+        res = self.app_get_json('/leaderboard/window/3?api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        for u in leaders:
+            print u['rank'], u['name'], u['score']
+        assert len(leaders) == (20+3+1+3), len(leaders)
+        assert leaders[23]['name'] == user.name
+
+        res = self.app_get_json('/leaderboard/window/11?api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        for u in leaders:
+            print u['rank'], u['name'], u['score']
+        assert len(leaders) == (20+10+1+10), len(leaders)
+        assert leaders[30]['name'] == user.name
+
+
 
     @with_context
     def test_announcement_json(self):
@@ -1927,12 +1969,10 @@ class TestWeb(web.Helper):
         assert 'Featured Projects' in res.data, res.data
 
     @with_context
-    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_10_get_application(self, Mock, mock2, mock_onesignal):
+    def test_10_get_application(self, Mock, mock2):
         """Test WEB project URL/<short_name> works"""
-        from pybossa.jobs import create_onesignal_app
         # Sign in and create a project
         html_request = FakeResponse(text=json.dumps(self.pkg_json_not_found),
                                     status_code=200,
@@ -1942,7 +1982,6 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_project()
         project = db.session.query(Project).first()
-        mock_onesignal.assert_called_with(create_onesignal_app, project.id)
         project.published = True
         db.session.commit()
         TaskFactory.create(project=project)
