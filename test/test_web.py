@@ -211,6 +211,18 @@ class TestWeb(web.Helper):
         assert len(leaders) == (20+3+1+3), len(leaders)
         assert leaders[23]['name'] == user.name
 
+        res = self.app_get_json('/leaderboard/window/11?api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        for u in leaders:
+            print u['rank'], u['name'], u['score']
+        assert len(leaders) == (20+10+1+10), len(leaders)
+        assert leaders[30]['name'] == user.name
+
+
 
     @with_context
     def test_announcement_json(self):
