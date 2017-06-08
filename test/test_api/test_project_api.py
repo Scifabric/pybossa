@@ -402,7 +402,7 @@ class TestProjectAPI(TestAPI):
 
         # test update
         data = {'name': 'My New Title', 'links': 'hateoas'}
-        data = dict(name='My New Title', links='hateoas')
+        data = dict(name='My New Title', links='hateoas', info={})
         datajson = json.dumps(data)
         ## anonymous
         res = self.app.put('/api/project/%s' % id_, data=datajson)
