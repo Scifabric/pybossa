@@ -35,7 +35,7 @@ from pybossa.model.result import Result
 from pybossa.model.counter import Counter
 from pybossa.core import result_repo, db
 from pybossa.jobs import webhook, notify_blog_users
-from pybossa.jobs import create_onesignal_app, push_notification
+from pybossa.jobs import push_notification
 
 from pybossa.core import sentinel
 
@@ -95,12 +95,6 @@ def add_project_event(mapper, conn, target):
     update_feed(obj)
 
 
-@event.listens_for(Project, 'after_insert')
-def add_onesignal_app(mapper, conn, target):
-    """Update PYBOSSA project with onesignal app."""
-    webpush_queue.enqueue(create_onesignal_app, target.id)
-
-
 @event.listens_for(Task, 'after_insert')
 def add_task_event(mapper, conn, target):
     """Update PYBOSSA feed with new task."""
@@ -123,7 +117,7 @@ def add_task_event(mapper, conn, target):
 def add_user_event(mapper, conn, target):
     """Update PYBOSSA feed with new user."""
     obj = target.to_public_json()
-    obj['action_updated']='User'
+    obj['action_updated'] = 'User'
     update_feed(obj)
 
 
