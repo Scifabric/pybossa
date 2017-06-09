@@ -28,6 +28,7 @@ from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
 from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from math import ceil
 import json
 import base64
@@ -534,7 +535,14 @@ def exists_materialized_view(db, view):
 
 
 def refresh_materialized_view(db, view):
-    sql = text('REFRESH MATERIALIZED VIEW %s' % view)
-    db.session.execute(sql)
-    db.session.commit()
-    return "Materialized view refreshed"
+    try:
+        sql = text('REFRESH MATERIALIZED VIEW CONCURRENTLY %s' % view)
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view refreshed"
+    except ProgrammingError:
+        sql = text('REFRESH MATERIALIZED VIEW %s' % view)
+        db.session.rollback()
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view refreshed"
