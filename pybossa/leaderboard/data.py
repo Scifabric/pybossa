@@ -17,17 +17,14 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Leaderboard queries in leaderboard view."""
 from sqlalchemy import text
-from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db
 from pybossa.model.user import User
-from pybossa.leaderboard.jobs import leaderboard as gl
 
 u = User()
 
 
 def get_leaderboard(top_users=20, user_id=None, window=0):
     """Return a list of top_users and if user_id return its position."""
-    gl()
     sql = text('''SELECT * from users_rank WHERE rank <= :top_users 
                ORDER BY rank;''')
     results = db.session.execute(sql, dict(top_users=top_users))
