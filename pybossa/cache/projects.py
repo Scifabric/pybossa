@@ -503,6 +503,29 @@ def get_all_projects():
         projects.append(project)
     return projects
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_report_projectdata(project_id):
+    """Return data to build project report
+    """
+    sql = text(
+            '''
+            SELECT id, name, short_name,
+            (SELECT COUNT(id) FROM task WHERE project_id = p.id) AS total_tasks,
+            (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id) AS first_task_submission,
+            (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id) AS last_task_submission,
+            (SELECT MAX(n_answers) FROM task WHERE project_id = p.id) AS redundancy,
+            (SELECT AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') - to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')) FROM task_run WHERE project_id=p.id) AS average_time
+            FROM project p
+            WHERE p.id=:project_id;
+            ''')
+    results = session.execute(sql, dict(project_id=project_id))
+    project_data = []
+    for row in results:
+        project_data.extend((str(project_id), row.name, row.short_name, str(row.total_tasks),
+            str(row.first_task_submission), str(row.last_task_submission),
+            str(round(row.average_time.total_seconds()/60,2)), str(row.redundancy)))
+    return project_data
+
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_total_tasks():

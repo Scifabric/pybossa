@@ -34,9 +34,9 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, sentinel, db, is_coowner,
+                          csv_exporter, importer, db, is_coowner,
                           task_json_exporter, task_csv_exporter,
-                          project_csv_exporter)
+                          project_csv_exporter, project_report_csv_exporter)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -1293,7 +1293,6 @@ def export_to(short_name):
                                n_completed_tasks=ps.n_completed_tasks,
                                overall_progress=ps.overall_progress,
                                pro_features=pro)
-
     def respond_json(ty, expanded):
         if ty not in ('task', 'task_run'):
             return abort(404)
@@ -2220,3 +2219,48 @@ def del_coowner(short_name, user_id=None):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+@blueprint.route('/<short_name>/tasks/projectreport/export')
+@login_required
+@admin_or_subadmin_required
+def export_project_report(short_name):
+    """Export individual project information in the given format"""
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
+
+    def respond_csv(ty):
+        if ty not in ('project'):
+            return abort(404)
+
+        try:
+            res = project_report_csv_exporter.response_zip(project, ty)
+            return res
+        except Exception as e:
+            current_app.logger.exception(
+                    'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    .format(project.short_name, ty, e))
+            flash(gettext('There was an error while exporting your data.'),
+                  'error')
+        return abort(500)
+
+
+    export_formats = ["csv"]
+    ty = request.args.get('type')
+    fmt = request.args.get('format')
+
+    if not (fmt and ty):
+        if len(request.args) >= 1:
+            abort(404)
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        return respond()
+
+    if fmt not in export_formats:
+        abort(415)
+
+    if ty == 'project':
+        project = project_repo.get(project.id)
+        if project:
+            ensure_authorized_to('read', project)
+
+    return {"csv": respond_csv}[fmt](ty)

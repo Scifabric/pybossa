@@ -378,3 +378,35 @@ def get_users_for_report():
                     completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()))
                     for row in results]
     return users_report
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_report_userdata(project_id):
+    """Return users details who contributed to a particular project."""
+    if project_id is None or project_id <= 0:
+        return None
+
+    total_tasks = n_tasks(project_id)
+    sql = text(
+            '''
+            SELECT id as u_id, name, fullname, email_addr, admin, subadmin,
+            user_pref->'languages' AS languages, user_pref->'locations' AS locations,
+            info->'metadata'->'start_time' AS start_time, info->'metadata'->'end_time' AS end_time,
+            info->'metadata'->'timezone' AS timezone, info->'metadata'->'user_type' AS type_of_user,
+            info->'metadata'->'review' AS additional_comments,
+            (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS completed_tasks,
+            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id) * 100 / :total_tasks) AS percent_completed_tasks
+            FROM public.user u WHERE id IN
+            (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
+            ''')
+    results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
+    users_report = []
+    for row in results:
+        user_data = []
+        user_data.extend((str(row.u_id), row.name, row.fullname, row.email_addr,
+                     str(row.admin), str(row.subadmin), str(row.languages),
+                     str(row.locations), str(row.start_time), str(row.end_time),
+                     str(row.timezone), row.type_of_user, row.additional_comments,
+                     str(row.completed_tasks), str(row.percent_completed_tasks)))
+        users_report.append(user_data)
+    return users_report
