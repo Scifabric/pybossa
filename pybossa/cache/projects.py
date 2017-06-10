@@ -504,6 +504,20 @@ def get_all_projects():
     return projects
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def n_total_tasks():
+    """Return number of tasks from published project."""
+    sql = text('''SELECT COUNT(task.id) AS n_total_tasks
+                FROM task JOIN project
+                ON task.project_id = project.id
+                WHERE project.published=true;''')
+    results = session.execute(sql)
+    n_total_tasks = 0
+    for row in results:
+        n_total_tasks = row.n_total_tasks
+    return n_total_tasks
+
+
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")

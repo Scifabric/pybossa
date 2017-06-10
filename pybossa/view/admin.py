@@ -53,6 +53,7 @@ from pybossa.news import NOTIFY_ADMIN
 from pybossa.jobs import send_mail
 from pybossa.core import userimporter
 from pybossa.importers import BulkImportException
+from pybossa.cache.users import get_users_for_report
 
 blueprint = Blueprint('admin', __name__)
 
@@ -162,8 +163,12 @@ def users(user_id=None):
 @admin_required
 def export_users():
     """Export Users list in the given format, only for admins."""
-    exportable_attributes = ('fullname', 'id', 'name', 'email_addr',
-                             'created', 'locale', 'admin', 'subadmin')
+    exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
+                             'created', 'admin', 'subadmin', 'languages',
+                             'locations', 'start_time', 'end_time',
+                             'timezone', 'type_of_user', 'additional_comments',
+                             'first_submission_date', 'last_submission_date',
+                             'completed_tasks', 'avg_time_per_task')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
@@ -172,16 +177,14 @@ def export_users():
         return res
 
     def gen_json():
-        users = user_repo.get_all()
-        json_users = []
-        for user in users:
-            json_users.append(dictize_with_exportable_attributes(user))
-        return json.dumps(json_users)
+        users = get_users_for_report()
+        jdata = json.dumps(users)
+        return jdata
 
     def dictize_with_exportable_attributes(user):
         dict_user = {}
         for attr in exportable_attributes:
-            dict_user[attr] = getattr(user, attr)
+            dict_user[attr] = user[attr]
         return dict_user
 
     def respond_csv():
@@ -194,12 +197,13 @@ def export_users():
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)
-        for user in user_repo.get_all():
+        users = get_users_for_report()
+        for user in users:
             write_user(writer, user)
         yield out.getvalue()
 
     def write_user(writer, user):
-        values = [getattr(user, attr) for attr in exportable_attributes]
+        values = [user[attr] for attr in exportable_attributes]
         writer.writerow(values)
 
     def add_headers(writer):

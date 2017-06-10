@@ -45,7 +45,7 @@ from pybossa.util import get_user_signup_method, generate_invitation_email_for_n
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
 from pybossa.cache import users as cached_users, delete_memoized
-from pybossa.cache.projects import get_all_projects
+from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
@@ -433,8 +433,10 @@ def _show_public_profile(user):
     user_dict = cached_users.public_get_user_summary(user.name)
     md = cached_users.get_metadata(user.name)
     form = MetadataForm(**md)
-    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
-    projects_created = cached_users.public_published_projects_cached(user.id)
+    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_created = cached_users.published_projects_cached(user.id)
+    total_projects_contributed = str(cached_users.n_projects_contributed(user.id)) + '/' + str(n_published())
+    percentage_tasks_completed = user_dict['total_tasks_submitted'] * 100 / n_total_tasks()
 
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
@@ -447,9 +449,12 @@ def _show_public_profile(user):
                     projects=projects_contributed,
                     form=form,
                     projects_created=projects_created,
-                    metadata=md)
+                    metadata=md,
+                    total_projects_contributed=total_projects_contributed,
+                    percentage_tasks_completed=percentage_tasks_completed)
 
     return handle_content_type(response)
+
 
 def _show_own_profile(user):
     user_dict = cached_users.get_user_summary(user.name)

@@ -42,6 +42,23 @@ def get_leaderboard(n, user_id=None, window=0):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def n_projects_contributed(user_id):
+    """Return number of projects user has contributed to."""
+    sql = text('''
+                WITH projects_contributed AS
+                    (SELECT DISTINCT project_id FROM task_run
+                    WHERE user_id =:user_id)
+                SELECT COUNT(*) AS total_projects_contributed
+                FROM projects_contributed;
+                ''')
+    results = session.execute(sql, dict(user_id=user_id))
+    total_projects_contributed = 0
+    for row in results:
+        total_projects_contributed = row.total_projects_contributed
+    return total_projects_contributed
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_user_summary(name):
     """Return user summary."""
     sql = text('''
@@ -49,7 +66,9 @@ def get_user_summary(name):
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
                "user".google_user_id, "user".info,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
-               "user".valid_email, "user".confirmation_email_sent
+               "user".valid_email, "user".confirmation_email_sent,
+               max(task_run.finish_time) AS last_task_submission_on,
+               count(task_run.id) AS total_tasks_submitted
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
@@ -67,7 +86,9 @@ def get_user_summary(name):
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
-                    registered_ago=pretty_date(row.created))
+                    registered_ago=pretty_date(row.created),
+                    last_task_submission_on=row.last_task_submission_on,
+                    total_tasks_submitted=row.total_tasks_submitted)
     if user:
         rank_score = rank_and_score(user['id'])
         user['rank'] = rank_score['rank']
@@ -326,3 +347,36 @@ def get_user_preferences(user_id=None):
     for item in user_prefs[1:]:
         sql_user_prefs += " OR task.user_pref @> '{0}'".format(json.dumps(item).lower())
     return sql_user_prefs
+
+
+#@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def get_users_for_report():
+    """Return information for all users to generate report."""
+    sql = text("""
+                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin,
+                subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
+                u.info->'metadata'->'start_time' AS start_time, u.info->'metadata'->'end_time' AS end_time,
+                u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
+                u.info->'metadata'->'review' AS additional_comments,
+                MIN(finish_time) AS first_submission_date,
+                MAX(finish_time) AS last_submission_date,
+                (SELECT COUNT(id) FROM task_run WHERE user_id = u.id)AS completed_tasks,
+                (SELECT AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US'))
+                FROM task_run WHERE user_id = u.id) AS avg_time_per_task
+                FROM task_run t JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
+               """)
+    results = session.execute(sql)
+    users_report = []
+    for row in results:
+        user = dict(id=row.u_id, name=row.name, fullname=row.fullname,
+                    email_addr=row.email_addr, created=str(row.created),
+                    admin=row.admin, subadmin=row.subadmin, languages=row.languages,
+                    locations=row.locations, start_time=str(row.start_time),
+                    end_time=str(row.end_time), timezone=row.timezone,
+                    additional_comments=row.additional_comments,
+                    type_of_user=row.type_of_user, first_submission_date=str(row.first_submission_date),
+                    last_submission_date=str(row.last_submission_date),
+                    completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()))
+        users_report.append(user)
+    return users_report
