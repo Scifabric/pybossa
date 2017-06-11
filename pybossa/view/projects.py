@@ -2245,7 +2245,7 @@ def export_project_report(short_name):
         return abort(500)
 
 
-    export_formats = ["csv"]
+    export_formats = ['csv']
     ty = request.args.get('type')
     fmt = request.args.get('format')
 
@@ -2263,4 +2263,4 @@ def export_project_report(short_name):
         if project:
             ensure_authorized_to('read', project)
 
-    return {"csv": respond_csv}[fmt](ty)
+    return {'csv': respond_csv}[fmt](ty)

@@ -383,7 +383,7 @@ def get_users_for_report():
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_project_report_userdata(project_id):
     """Return users details who contributed to a particular project."""
-    if project_id is None or project_id <= 0:
+    if project_id is None:
         return None
 
     total_tasks = n_tasks(project_id)
@@ -400,13 +400,11 @@ def get_project_report_userdata(project_id):
             (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
             ''')
     results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
-    users_report = []
-    for row in results:
-        user_data = []
-        user_data.extend((str(row.u_id), row.name, row.fullname, row.email_addr,
-                     str(row.admin), str(row.subadmin), str(row.languages),
-                     str(row.locations), str(row.start_time), str(row.end_time),
-                     str(row.timezone), row.type_of_user, row.additional_comments,
-                     str(row.completed_tasks), str(row.percent_completed_tasks)))
-        users_report.append(user_data)
+    users_report = [
+        [str(row.u_id), row.name, row.fullname, row.email_addr,
+         str(row.admin), str(row.subadmin), str(row.languages),
+         str(row.locations), str(row.start_time), str(row.end_time),
+         str(row.timezone), row.type_of_user, row.additional_comments,
+         str(row.completed_tasks), str(row.percent_completed_tasks)]
+         for row in results]
     return users_report

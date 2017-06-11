@@ -16,13 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
-
 import tempfile
-from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
-from pybossa.core import uploader, project_repo
+from pybossa.core import project_repo
 from pybossa.util import UnicodeWriter
-from flask import url_for, safe_join, send_file, redirect
 from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
@@ -57,7 +54,8 @@ class ProjectReportCsvExporter(CsvExporter):
         p = project_repo.get(id)
         if p is not None:
             project_section = ['Project Statistics']
-            project_header = ['Id', 'Name', 'Short Name', 'Total Tasks', 'First Task Submission', 'Last Task Submission', 'Average Time Spend Per Task', 'Task Redundancy']
+            project_header = ['Id', 'Name', 'Short Name', 'Total Tasks', 'First Task Submission',
+                              'Last Task Submission', 'Average Time Spend Per Task', 'Task Redundancy']
             writer.writerow(project_section)
             writer.writerow(project_header)
             project_data = get_project_report_projectdata(id)
@@ -65,10 +63,16 @@ class ProjectReportCsvExporter(CsvExporter):
 
             writer.writerow(empty_row)
             user_section = ['User Statistics']
-            user_header = ['Id', 'Name', 'Fullname', 'Email', 'Admin', 'Subadmin', 'Languages', 'Locations', 'Start Time', 'End Time', 'Timezone', 'Type of User', 'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed']
+            user_header = ['Id', 'Name', 'Fullname', 'Email', 'Admin', 'Subadmin', 'Languages',
+                           'Locations', 'Start Time', 'End Time', 'Timezone', 'Type of User',
+                           'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed']
             writer.writerow(user_section)
             writer.writerow(user_header)
-            users_project_data = get_project_report_userdata(id)
+            try:
+                users_project_data = get_project_report_userdata(id)
+            except Exception:
+                current_app.logger.exception('Error in get_project_report_userdata. project_id: {}'.format(id))
+                raise BadRequest("Failed to obtain user Statistics")
             for user_data in users_project_data:
                 writer.writerow(user_data)
 
