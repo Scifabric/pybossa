@@ -62,6 +62,8 @@ class ProjectForm(Form):
                                      [validators.Required()])
     description = TextAreaField(lazy_gettext('Description'),
                                 [validators.Length(max=255)])
+    password = TextField(lazy_gettext('Password'), [validators.Required(), pb_validator.CheckPasswordStrength(
+                                                                                min_length=5, require_special=False)])
 
 
 class ProjectUpdateForm(ProjectForm):
@@ -74,9 +76,9 @@ class ProjectUpdateForm(ProjectForm):
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    protect = BooleanField(lazy_gettext('Protect with a password?'))
     hidden = BooleanField(lazy_gettext('Hide?'))
-    password = TextField(lazy_gettext('Password'))
+    password = TextField(lazy_gettext('Password'), [validators.Optional(), pb_validator.CheckPasswordStrength(
+                                                                                min_length=5, require_special=False)])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
 

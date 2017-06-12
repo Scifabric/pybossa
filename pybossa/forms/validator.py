@@ -131,14 +131,34 @@ class ReservedName(object):
             raise ValidationError(self.message)
 
 
+def _get_message(require_uppercase=True, require_lowercase=True,
+                 require_numeric=True, require_special=True):
+    message_parts = []
+    if require_uppercase:
+        message_parts.append('at least one uppercase')
+    if require_lowercase:
+        message_parts.append('at least one lowercase')
+    if require_numeric:
+        message_parts.append('at least one numeric ')
+    if require_special:
+        message_parts.append('at least one special !@$%%^&*#')
+
+    return 'The password must contain {} character.'.format(', '.join(message_parts))
+
+
 class CheckPasswordStrength(object):
     """ apply strong password policy """
+    def __init__(self, message=None, min_length=8, max_length=15,
+                 require_uppercase=True, require_lowercase=True,
+                 require_numeric=True, require_special=True):
 
-    def __init__(self, message=None):
-
-        self.default_message = lazy_gettext(
-            u'Password must contain atleast one uppercase alpha, ' \
-            'lowercase alpha, numeric and special character !@$%%^&*#')
+        self.default_message = _get_message(require_uppercase, require_lowercase, require_numeric, require_special)
+        self.min_length=min_length
+        self.max_length=max_length
+        self.require_uppercase=require_uppercase
+        self.require_lowercase=require_lowercase
+        self.require_numeric=require_numeric
+        self.require_special=require_special
 
         if not message:
             self.message = self.default_message
@@ -147,7 +167,9 @@ class CheckPasswordStrength(object):
 
     def __call__(self, form, field):
         pwd = field.data
-        is_password_valid, message = check_password_strength(pwd)
+        is_password_valid, message = check_password_strength(pwd, self.min_length, self.max_length,
+                                                             self.require_uppercase, self.require_lowercase,
+                                                             self.require_numeric, self.require_special, self.message)
         if not is_password_valid:
             raise ValidationError(message)
 

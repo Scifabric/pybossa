@@ -823,15 +823,20 @@ def countries():
         cts.append((name, name))
     return sorted(cts)
 
-
-def check_password_strength(password):
+def check_password_strength(password, min_length=8, max_length=15, upper=True, lower=True, num=True, special=True, message=""):
     # password must contain following characters;
     # at least one character from each category
-    required_chars = [r'[A-Z]', r'[a-z]', r'[0-9]', r'[!@$%^&*#]']
-    pwd_min_len = 8
-    pwd_max_len = 15
-    default_message = lazy_gettext(u'Password must contain atleast one uppercase alpha, '\
-				            'lowercase alpha, numeric and special character !@$%%^&*#')
+    required_chars = []
+    if upper:
+        required_chars.append(r'[A-Z]')
+    if lower:
+        required_chars.append(r'[a-z]')
+    if num:
+        required_chars.append(r'[0-9]')
+    if special:
+        required_chars.append(r'[!@$%^&*#]')
+    pwd_min_len = min_length
+    pwd_max_len = max_length
 
     pwdlen = len(password)
     if pwdlen < pwd_min_len or pwdlen > pwd_max_len:
@@ -841,7 +846,7 @@ def check_password_strength(password):
 
     is_pwd_valid = all(re.search(ch, password) for ch in required_chars)
     if not is_pwd_valid:
-        return False, default_message
+        return False, message
     else:
         return True, None
 
