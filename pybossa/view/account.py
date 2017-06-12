@@ -435,7 +435,7 @@ def _show_public_profile(user):
     form = MetadataForm(**md)
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_created = cached_users.published_projects_cached(user.id)
-    total_projects_contributed = str(cached_users.n_projects_contributed(user.id)) + '/' + str(n_published())
+    total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
     percentage_tasks_completed = user_dict['total_tasks_submitted'] * 100 / n_total_tasks()
 
     if current_user.is_authenticated() and current_user.admin:

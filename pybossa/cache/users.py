@@ -349,7 +349,7 @@ def get_user_preferences(user_id=None):
     return sql_user_prefs
 
 
-#@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_users_for_report():
     """Return information for all users to generate report."""
     sql = text("""
@@ -367,16 +367,14 @@ def get_users_for_report():
                 FROM task_run t JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
                """)
     results = session.execute(sql)
-    users_report = []
-    for row in results:
-        user = dict(id=row.u_id, name=row.name, fullname=row.fullname,
-                    email_addr=row.email_addr, created=str(row.created),
+    users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
+                    email_addr=row.email_addr, created=row.created,
                     admin=row.admin, subadmin=row.subadmin, languages=row.languages,
-                    locations=row.locations, start_time=str(row.start_time),
-                    end_time=str(row.end_time), timezone=row.timezone,
+                    locations=row.locations, start_time=row.start_time,
+                    end_time=row.end_time, timezone=row.timezone,
                     additional_comments=row.additional_comments,
-                    type_of_user=row.type_of_user, first_submission_date=str(row.first_submission_date),
-                    last_submission_date=str(row.last_submission_date),
+                    type_of_user=row.type_of_user, first_submission_date=row.first_submission_date,
+                    last_submission_date=row.last_submission_date,
                     completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()))
-        users_report.append(user)
+                    for row in results]
     return users_report
