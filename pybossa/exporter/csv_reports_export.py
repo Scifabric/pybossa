@@ -83,5 +83,4 @@ class ProjectReportCsvExporter(CsvExporter):
             return empty_csv(out)
 
     def pregenerate_zip_files(self, project):
-        print "%d (csv)" % project.id
         self._make_zip(project, "project")
