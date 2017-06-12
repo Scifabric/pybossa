@@ -130,10 +130,9 @@ class TaskCsvExporter(CsvExporter):
 
         new_row = {}
         for k, v in row.iteritems():
-            key_split = k.split('__')
+            key_split = k.split('__', 1)
             if len(key_split) > 1 and key_split[0] in ('task', 'user'):
-                nested_keys = [key_split[0], '__'.join(key_split[1:])]
-                set_nested_value(new_row, nested_keys, v)
+                set_nested_value(new_row, key_split, v)
             new_row[k] = v
 
         return new_row

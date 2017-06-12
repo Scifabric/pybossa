@@ -188,4 +188,5 @@ def browse_tasks_export_count(obj, project_id, expanded, **kwargs):
     else:
         return
 
-    return session.execute(sql, dict(project_id=project_id, **filter_params))
+    return session.execute(
+            sql, dict(project_id=project_id, **filter_params)).scalar()

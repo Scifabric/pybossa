@@ -70,10 +70,9 @@ class TaskJsonExporter(JsonExporter):
 
         new_row = {}
         for k, v in row.iteritems():
-            key_split = k.split('__')
+            key_split = k.split('__', 1)
             if len(key_split) > 1 and key_split[0] in ('task', 'user'):
-                nested_keys = [key_split[0], '__'.join(key_split[1:])]
-                set_nested_value(new_row, nested_keys, v)
+                set_nested_value(new_row, key_split, v)
             else:
                 new_row[k] = v
 
@@ -106,7 +105,7 @@ class TaskJsonExporter(JsonExporter):
 
     def gen_json_with_filters(self, obj, project_id, expanded=False, **filters):
         objs = browse_tasks_export(obj, project_id, expanded, **filters)
-        n = browse_tasks_export_count(obj, project_id, expanded, **filters).fetchone()[0]
+        n = browse_tasks_export_count(obj, project_id, expanded, **filters)
 
         sep = ", "
         yield "["
