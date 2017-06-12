@@ -28,7 +28,7 @@ from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
 from flask import current_app
-from pybossa.util import check_password_strength
+from pybossa.util import check_password_strength, valid_or_no_s3_bucket
 
 class Importer(object):
 
@@ -92,21 +92,30 @@ class Importer(object):
                 current_app.logger.error(msg)
                 return ImportReport(message=msg, metadata=None, total=0)
 
+        s3_bucket_failures = 0
         for task_data in tasks:
             task = Task(project_id=project.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.get_task_by(project_id=project.id, info=task.info)
             if found is None:
-                task_repo.save(task)
-                n += 1
-                empty = False
+                if valid_or_no_s3_bucket(task.info):
+                    task_repo.save(task)
+                    n += 1
+                    empty = False
+                else:
+                    s3_bucket_failures += 1
+                    current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(project.id, task.info))
         if empty:
             msg = gettext('It looks like there were no new records to import')
+            if s3_bucket_failures:
+                msg += '. {} task import failed due to invalid S3 bucket.'.format(s3_bucket_failures)
             return ImportReport(message=msg, metadata=None, total=n)
         metadata = importer.import_metadata()
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
+        if s3_bucket_failures:
+            msg += '. {} task import failed due to invalid S3 bucket.'.format(s3_bucket_failures)
         report = ImportReport(message=msg, metadata=metadata, total=n)
         return report
 
