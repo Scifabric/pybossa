@@ -381,6 +381,7 @@ class TestWeb(web.Helper):
             assert data['userStats']['geo'] == True, err_msg
 
 
+    @with_context
     def test_contribution_time_shown_for_admins_for_every_project(self):
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
@@ -396,6 +397,7 @@ class TestWeb(web.Helper):
         assert 'Average contribution time' in res.data
 
 
+    @with_context
     def test_contribution_time_shown_for_admins_for_every_project_json(self):
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
@@ -426,6 +428,7 @@ class TestWeb(web.Helper):
         assert 'secret_key' not in data['project'], err_msg
 
 
+    @with_context
     def test_contribution_time_shown_in_pro_owned_projects(self):
         pro_owner = UserFactory.create(pro=True)
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
@@ -436,6 +439,7 @@ class TestWeb(web.Helper):
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' in res.data
 
+    @with_context
     def test_contribution_time_shown_in_pro_owned_projects_json(self):
         pro_owner = UserFactory.create(pro=True)
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
@@ -461,6 +465,7 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], err_msg
         assert 'secret_key' not in data['project'], err_msg
 
+    @with_context
     def test_contribution_time_not_shown_in_regular_user_owned_projects(self):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -470,6 +475,7 @@ class TestWeb(web.Helper):
         assert_raises(ValueError, json.loads, res.data)
         assert 'Average contribution time' not in res.data
 
+    @with_context
     def test_contribution_time_not_shown_in_regular_user_owned_projects_json(self):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -1003,18 +1009,21 @@ class TestWeb(web.Helper):
         print dir(mockredirect)
         mockredirect.assert_called_with('/')
 
+    @with_context
     def test_register_confirmation_fails_without_key(self):
         """Test WEB register confirmation returns 403 if no 'key' param is present"""
         res = self.app.get('/account/register/confirmation')
 
         assert res.status_code == 403, res.status
 
+    @with_context
     def test_register_confirmation_fails_with_invalid_key(self):
         """Test WEB register confirmation returns 403 if an invalid key is given"""
         res = self.app.get('/account/register/confirmation?key=invalid')
 
         assert res.status_code == 403, res.status
 
+    @with_context
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_gets_account_data_from_key(self, fake_signer):
         """Test WEB register confirmation gets the account data from the key"""
@@ -1025,6 +1034,7 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.assert_called_with('valid-key', max_age=exp_time, salt='account-validation')
 
+    @with_context
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_validates_email(self, fake_signer):
         """Test WEB validates email"""
@@ -1046,6 +1056,7 @@ class TestWeb(web.Helper):
         msg = "Confirmation email flag has not been restored"
         assert user.confirmation_email_sent is False, msg
 
+    @with_context
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_validates_n_updates_email(self, fake_signer):
         """Test WEB validates and updates email"""
@@ -1069,6 +1080,7 @@ class TestWeb(web.Helper):
         msg = 'Email should be updated after validation.'
         assert user.email_addr == 'new@email.com', msg
 
+    @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     @patch('pybossa.view.account.url_for')
     @patch('pybossa.view.account.signer')
@@ -1090,6 +1102,7 @@ class TestWeb(web.Helper):
         self.app.get('/account/register/confirmation?key=valid-key')
         url_for.assert_called_with('home.home')
 
+    @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     @patch('pybossa.view.account.url_for')
     @patch('pybossa.view.account.signer')
@@ -1112,6 +1125,7 @@ class TestWeb(web.Helper):
         assert data.get('status') == SUCCESS, data
 
 
+    @with_context
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_creates_new_account(self, fake_signer):
         """Test WEB register confirmation creates the new account"""
@@ -1679,6 +1693,7 @@ class TestWeb(web.Helper):
         res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
+    @with_context
     def test_project_upload_thumbnail(self):
         """Test WEB Project upload thumbnail."""
         import io
@@ -1699,6 +1714,7 @@ class TestWeb(web.Helper):
         thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
         assert p.info['thumbnail_url'] == thumbnail_url
 
+    @with_context
     def test_account_upload_avatar(self):
         """Test WEB Account upload avatar."""
         import io
@@ -2243,6 +2259,7 @@ class TestWeb(web.Helper):
         assert "Name is already taken" in res.data, err_msg
         assert "Short Name is already taken" in res.data, err_msg
 
+    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
@@ -2441,6 +2458,7 @@ class TestWeb(web.Helper):
         res = self.delete_project(short_name=Fixtures.project_short_name)
         assert res.status_code == 403, res.status_code
 
+    @with_context
     @patch('pybossa.repositories.project_repository.uploader')
     def test_delete_project_deletes_task_zip_files_too(self, uploader):
         """Test WEB delete project also deletes zip files for task and taskruns"""
@@ -2476,6 +2494,7 @@ class TestWeb(web.Helper):
         user = db.session.query(User).get(1)
         assert msg in res.data, res.data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
@@ -2533,6 +2552,7 @@ class TestWeb(web.Helper):
         err_msg = "Download Full results button should be shown"
         assert dom.find(id='fulldownload') is not None, err_msg
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
@@ -2859,6 +2879,7 @@ class TestWeb(web.Helper):
         assert 'flash' not in data, err_msg
         assert 'status' not in data, err_msg
 
+    @with_context
     @patch('pybossa.view.projects.ContributionsGuard')
     def test_get_specific_ongoing_task_marks_task_as_requested(self, guard):
         fake_guard_instance = mock_contributions_guard()
@@ -2872,6 +2893,7 @@ class TestWeb(web.Helper):
 
         assert fake_guard_instance.stamp.called
 
+    @with_context
     @patch('pybossa.view.projects.ContributionsGuard')
     def test_get_specific_ongoing_task_marks_task_as_requested_json(self, guard):
         fake_guard_instance = mock_contributions_guard()
@@ -3070,6 +3092,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         assert "the real presenter" in res.data, err_msg
 
+    @with_context
     def test_message_is_flashed_contributing_to_project_without_presenter(self):
         project = ProjectFactory.create(info={})
         task = TaskFactory.create(project=project)
@@ -3795,6 +3818,7 @@ class TestWeb(web.Helper):
         msg = "Something went wrong, please correct the errors"
         assert msg in res.data, res.data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
@@ -3805,6 +3829,7 @@ class TestWeb(web.Helper):
             "Task Presenter Editor should be an option"
         assert_raises(ValueError, json.loads, res.data)
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_46_tasks_exists_json(self, mock):
         """Test WEB tasks json works."""
@@ -3828,6 +3853,7 @@ class TestWeb(web.Helper):
         assert 'api_key' in data['owner'], err_msg
         assert 'secret_key' in data['project'], err_msg
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_46_tasks_exists_json_other_user(self, mock):
         """Test WEB tasks json works."""
@@ -3898,6 +3924,7 @@ class TestWeb(web.Helper):
                       "projects/presenters/pdf.html"]
         assert data['presenters'] == presenters, err_msg
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
@@ -3925,6 +3952,7 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert "Some HTML code" in res.data, res.data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works_json(self, mock):
         """Test WEB task presenter editor works JSON"""
@@ -3952,6 +3980,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data['form']['editor'] == 'Some HTML code!', data
 
+    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
@@ -4093,6 +4122,7 @@ class TestWeb(web.Helper):
         content_disposition = 'attachment; filename=%d_test-app_task_json.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
+    @with_context
     def test_export_task_json_support_non_latin1_project_names(self):
         project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         self.clear_temp_container(project.owner_id)
@@ -4101,6 +4131,7 @@ class TestWeb(web.Helper):
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
+    @with_context
     def test_export_taskrun_json_support_non_latin1_project_names(self):
         project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % project.short_name,
@@ -4108,6 +4139,7 @@ class TestWeb(web.Helper):
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
+    @with_context
     def test_export_task_csv_support_non_latin1_project_names(self):
         project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         TaskFactory.create(project=project)
@@ -4116,6 +4148,7 @@ class TestWeb(web.Helper):
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
+    @with_context
     def test_export_taskrun_csv_support_non_latin1_project_names(self):
         project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         task = TaskFactory.create(project=project)
@@ -4597,6 +4630,7 @@ class TestWeb(web.Helper):
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates(self, mock):
         """Test WEB import tasks displays the different importers and template
@@ -4636,6 +4670,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    @with_context
     @patch('pybossa.view.projects.importer.create_tasks')
     @patch('pybossa.view.projects.importer.count_tasks_to_import', return_value=1)
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -4739,6 +4774,7 @@ class TestWeb(web.Helper):
                 assert data['flash'] == "SUCCESS", data
 
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates_json_admin(self, mock):
         """Test WEB import tasks JSON returns tasks's templates """
@@ -4761,6 +4797,7 @@ class TestWeb(web.Helper):
         assert data['available_importers'] == importers, data
 
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates_json_user(self, mock):
         """Test WEB import tasks JSON returns tasks's templates """
@@ -4772,6 +4809,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data['code'] == 403, data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_get_import_tasks_no_params_shows_options_and_templates_json_anon(self, mock):
         """Test WEB import tasks JSON returns tasks's templates """
@@ -4783,6 +4821,7 @@ class TestWeb(web.Helper):
         assert 'signin' in res.data, res.data
 
 
+    @with_context
     def test_get_import_tasks_with_specific_variant_argument(self):
         """Test task importer with specific importer variant argument
         shows the form for it, for each of the variants"""
@@ -4852,6 +4891,7 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 404, res.status_code
 
+    @with_context
     @patch('pybossa.core.importer.get_all_importer_names')
     def test_get_importer_doesnt_show_unavailable_importers(self, names):
         names.return_value = ['csv', 'gdocs', 'epicollect', 's3']
@@ -4866,6 +4906,7 @@ class TestWeb(web.Helper):
         assert "type=dropbox" not in res.data
         assert "type=twitter" not in res.data
 
+    @with_context
     @patch('pybossa.view.projects.redirect_content_type', wraps=redirect)
     @patch('pybossa.importers.csv.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
@@ -4885,6 +4926,7 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
         redirect.assert_called_with('/project/%s/tasks/' % project.short_name)
 
+    @with_context
     @patch('pybossa.view.projects.importer.count_tasks_to_import')
     @patch('pybossa.view.projects.importer.create_tasks')
     def test_import_few_tasks_is_done_synchronously(self, create, count):
@@ -4901,6 +4943,7 @@ class TestWeb(web.Helper):
 
         assert "1 new task was imported successfully" in res.data
 
+    @with_context
     @patch('pybossa.view.projects.importer_queue', autospec=True)
     @patch('pybossa.view.projects.importer.count_tasks_to_import')
     def test_import_tasks_as_background_job(self, count_tasks, queue):
@@ -4923,6 +4966,7 @@ class TestWeb(web.Helper):
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.csv.requests.get')
     def test_bulk_csv_import_works(self, Mock, mock):
@@ -4962,6 +5006,7 @@ class TestWeb(web.Helper):
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.csv.requests.get')
     def test_bulk_gdocs_import_works(self, Mock, mock):
@@ -5016,6 +5061,7 @@ class TestWeb(web.Helper):
             n += 1
         assert "no new records" in res.data, res.data
 
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.epicollect.requests.get')
     def test_bulk_epicollect_import_works(self, Mock, mock):
@@ -5059,6 +5105,7 @@ class TestWeb(web.Helper):
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
 
+    @with_context
     @patch('pybossa.importers.flickr.requests.get')
     def test_bulk_flickr_import_works(self, request):
         """Test WEB bulk Flickr import works"""
@@ -5104,6 +5151,7 @@ class TestWeb(web.Helper):
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
+    @with_context
     def test_flickr_importer_page_shows_option_to_log_into_flickr(self):
         self.register()
         owner = db.session.query(User).first()
@@ -5115,6 +5163,7 @@ class TestWeb(web.Helper):
 
         assert login_url in res.data
 
+    @with_context
     def test_bulk_dropbox_import_works(self):
         """Test WEB bulk Dropbox import works"""
         dropbox_file_data = (u'{"bytes":286,'
@@ -5138,6 +5187,7 @@ class TestWeb(web.Helper):
             u'filename': u'test.txt'}
         assert tasks[0].info == expected_info, tasks[0].info
 
+    @with_context
     @patch('pybossa.importers.twitterapi.Twitter')
     @patch('pybossa.importers.twitterapi.oauth2_dance')
     def test_bulk_twitter_import_works(self, oauth, client):
@@ -5185,6 +5235,7 @@ class TestWeb(web.Helper):
         }
         assert tasks[0].info == expected_info, tasks[0].info
 
+    @with_context
     def test_bulk_s3_import_works(self):
         """Test WEB bulk S3 import works"""
         self.register()
@@ -5325,6 +5376,7 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, err_msg
 
 
+    @with_context
     @patch('pybossa.repositories.task_repository.uploader')
     def test_delete_tasks_removes_existing_zip_files(self, uploader):
         """Test WEB delete tasks also deletes zip files for task and taskruns"""
@@ -5466,6 +5518,7 @@ class TestWeb(web.Helper):
         assert "API Help" in res.data, err_msg
         assert_raises(ValueError, json.loads, res.data)
 
+    @with_context
     def test_59_help_api_json(self):
         """Test WEB help api json exists"""
         Fixtures.create()
