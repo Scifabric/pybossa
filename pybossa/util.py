@@ -864,7 +864,7 @@ def valid_or_no_s3_bucket(task_data):
     if allowed_s3_buckets is None:
         return True
 
-    for k, v in task_data.iteritems():
+    for v in task_data.itervalues():
         bucket = get_s3_bucket_name(v)
         if bucket is not None and bucket not in allowed_s3_buckets:
             return False
