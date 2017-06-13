@@ -100,6 +100,14 @@ def configure_app(app):
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
 
 
+def setup_public_info_fields(app):
+    """Add config info to user and project info attributes."""
+    global PROJECT_INFO_PUBLIC_FIELDS
+    global USER_INFO_PUBLIC_FIELDS
+    PROJECT_INFO_PUBLIC_FIELDS = app.config.get('PROJECT_INFO_PUBLIC_FIELDS')
+    USER_INFO_PUBLIC_FIELDS = app.config.get('USER_INFO_PUBLIC_FIELDS')
+
+
 def setup_json_serializer(app):
     app.json_encoder = JSONEncoder
 

@@ -22,9 +22,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
-from flask import current_app
 
-from pybossa.core import db, signer
+from pybossa.core import db, signer, USER_INFO_PUBLIC_FIELDS as extra
 from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.project import Project
 from pybossa.model.task_run import TaskRun
@@ -94,7 +93,6 @@ class User(db.Model, DomainObject, UserMixin):
     def public_info_keys(self):
         """Return a list of public info keys."""
         default = ['avatar', 'container', 'extra', 'avatar_url']
-        extra = current_app.config.get('USER_INFO_PUBLIC_FIELDS')
         if extra:
             return list(set(default).union(set(extra)))
         else:
