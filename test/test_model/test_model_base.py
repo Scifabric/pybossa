@@ -23,6 +23,7 @@ from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 from pybossa.model.task_run import TaskRun
+from mock import patch
 
 
 """Tests for inter-model relations and base classes and helper functions
@@ -88,6 +89,35 @@ class TestModelBase(Test):
         assert json['info']['avatar'] == 'img.png', err_msg
         err_msg = "This key should be missing"
         assert json['info'].get('token') is None, err_msg
+
+    @with_context
+    def test_info_public_keys_extension(self):
+        """Test DomainObject to_public_json method works with extra fields."""
+        project = Project()
+        project.name = 'test'
+        project.short_name = 'test'
+        project.description = 'Desc'
+        project.info = dict(container='3',
+                            thumbnail='img.png',
+                            token='secret',
+                            tutorial='help',
+                            sched='default',
+                            task_presenter='something',
+                            super_secret='hidden',
+                            public_field='so true')
+        project_dict = project.dictize()
+        json = project.to_public_json()
+        err_msg = "Wrong value"
+        assert json['name'] == project.name, err_msg
+        err_msg = "Missing fields"
+        assert json.keys().sort() == project.public_attributes().sort(), err_msg
+        err_msg = "There should be info keys"
+        assert json['info'].keys().sort() == Project().public_info_keys().sort(), err_msg
+        with patch.dict(self.flask_app.config, {'PROJECT_INFO_PUBLIC_FIELDS': ['public_field']}):
+            json = project.to_public_json()
+            assert json['info'].keys().sort() == Project().public_info_keys().sort(), err_msg
+            assert 'public_field' in json['info'].keys()
+            assert 'secret_key' not in json['info'].keys()
 
     @with_context
     def test_all(self):
