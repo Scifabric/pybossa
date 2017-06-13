@@ -23,6 +23,7 @@ from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
+from pybossa.cache.projects import n_total_tasks
 from pybossa.model.project import Project
 from pybossa.leaderboard.data import get_leaderboard as gl
 from pybossa.leaderboard.jobs import leaderboard as lb
@@ -375,7 +376,9 @@ def get_users_for_report():
                     additional_comments=row.additional_comments,
                     type_of_user=row.type_of_user, first_submission_date=row.first_submission_date,
                     last_submission_date=row.last_submission_date,
-                    completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()))
+                    completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()),
+                    total_projects_contributed=n_projects_contributed(row.u_id),
+                    percentage_tasks_completed=row.completed_tasks * 100 / n_total_tasks())
                     for row in results]
     return users_report
 
