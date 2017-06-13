@@ -880,6 +880,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.get(url)
         assert res.data == '{}', res.data
 
+    @with_context
     @patch('pybossa.repositories.project_repository.uploader')
     def test_project_delete_deletes_zip_files(self, uploader):
         """Test API project delete deletes also zip files of tasks and taskruns"""
@@ -894,6 +895,7 @@ class TestProjectAPI(TestAPI):
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
 
+    @with_context
     def test_project_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         CategoryFactory.create()
@@ -916,6 +918,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_project_put_with_reserved_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -929,6 +932,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_project_post_with_published_attribute_is_forbidden(self):
         user = UserFactory.create()
         data = dict(
@@ -947,6 +951,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
 
+    @with_context
     def test_project_update_with_published_attribute_is_forbidden(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -960,6 +965,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
 
+    @with_context
     def test_project_delete_with_results(self):
         """Test API delete project with results cannot be deleted."""
         result = self.create_result()
@@ -970,6 +976,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
 
+    @with_context
     def test_project_delete_with_results_var(self):
         """Test API delete project with results cannot be deleted by admin."""
         root = UserFactory.create(admin=True)

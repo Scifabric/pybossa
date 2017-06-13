@@ -322,6 +322,7 @@ class TestResultAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
     def test_result_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -335,6 +336,7 @@ class TestResultAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_result_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         result = self.create_result(owner=user)

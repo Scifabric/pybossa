@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+from default import with_context
 from test_api import TestAPI
 from factories import ProjectFactory
 
@@ -23,6 +24,7 @@ from factories import ProjectFactory
 
 class TestGlobalStatsAPI(TestAPI):
 
+    @with_context
     def test_global_stats(self):
         """Test Global Stats works."""
         ProjectFactory()
@@ -35,6 +37,7 @@ class TestGlobalStatsAPI(TestAPI):
             err_msg = "%s should be in stats JSON object" % k
             assert k in stats.keys(), err_msg
 
+    @with_context
     def test_post_global_stats(self):
         """Test Global Stats Post works."""
         res = self.app.post('api/globalstats')
