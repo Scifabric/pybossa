@@ -21,8 +21,9 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
+from flask import current_app
 
-from pybossa.core import db, signer, PROJECT_INFO_PUBLIC_FIELDS as extra
+from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -128,6 +129,7 @@ class Project(db.Model, DomainObject):
         """Return a list of public info keys."""
         default = ['container', 'thumbnail', 'thumbnail_url',
                    'task_presenter', 'tutorial', 'sched']
+        extra = current_app.config.get('PROJECT_INFO_PUBLIC_FIELDS')
         if extra:
             return list(set(default).union(set(extra)))
         else:

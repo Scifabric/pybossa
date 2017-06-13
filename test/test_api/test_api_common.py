@@ -292,7 +292,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
 
-
+    @with_context
     def test_jsonpify(self):
         """Test API jsonpify decorator works."""
         project = ProjectFactory.create()
