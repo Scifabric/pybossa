@@ -66,7 +66,11 @@ class TestModelBase(Test):
         """Test DomainObject to_public_json method works."""
         user = User()
         user.name = 'daniel'
-        user.info = dict(container='3', avatar='img.png', token='secret')
+        user.info = dict(container='3', avatar='img.png',
+                         token='secret',
+                         badges=['awesome.png',
+                                 'incredible.png'],
+                         hidden=True)
         user_dict = user.dictize()
         json = user.to_public_json()
         err_msg = "Wrong value"
@@ -89,6 +93,13 @@ class TestModelBase(Test):
         assert json['info']['avatar'] == 'img.png', err_msg
         err_msg = "This key should be missing"
         assert json['info'].get('token') is None, err_msg
+
+        with patch.dict(self.flask_app.config, {'USER_INFO_PUBLIC_FIELDS': ['badges']}):
+            json = user.to_public_json()
+            assert json['info'].keys().sort() == User().public_info_keys().sort(), err_msg
+            assert 'badges' in json['info'].keys()
+            assert 'hidden' not in json['info'].keys()
+
 
     @with_context
     def test_info_public_keys_extension(self):
