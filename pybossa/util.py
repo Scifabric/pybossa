@@ -847,7 +847,7 @@ def check_password_strength(password):
 
 def get_s3_bucket_name(url):
     # for 'http://bucket.s3.amazonaws.com/
-    found = re.search('^https?://([^.]+).s3.amazonaws.com(.*?)$', url)
+    found = re.search('^https?://([^.]+).s3.amazonaws.com', url)
     if found:
         return found.group(1)
     # for 'http://s3.amazonaws.com/bucket'
@@ -858,8 +858,14 @@ def get_s3_bucket_name(url):
 
 def valid_or_no_s3_bucket(task_data):
     """ Returns False when task has s3 url and s3 bucket is not cf-s3uploads"""
+    allowed_s3_buckets = current_app.config.get('ALLOWED_S3_BUCKETS')
+
+    # with no bucket configured, do not performing bucket check (default)
+    if allowed_s3_buckets is None:
+        return True
+
     for k, v in task_data.iteritems():
         bucket = get_s3_bucket_name(v)
-        if bucket is not None and bucket not in 'cf-s3uploads':
+        if bucket is not None and bucket not in allowed_s3_buckets:
             return False
     return True

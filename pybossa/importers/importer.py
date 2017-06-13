@@ -105,17 +105,18 @@ class Importer(object):
                 else:
                     s3_bucket_failures += 1
                     current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(project.id, task.info))
+
+        additional_msg = ' {} task import failed due to invalid S3 bucket.'\
+                            .format(s3_bucket_failures) if s3_bucket_failures else ''
         if empty:
-            msg = gettext('It looks like there were no new records to import')
-            if s3_bucket_failures:
-                msg += '. {} task import failed due to invalid S3 bucket.'.format(s3_bucket_failures)
+            msg = gettext('It looks like there were no new records to import.')
+            msg += additional_msg
             return ImportReport(message=msg, metadata=None, total=n)
         metadata = importer.import_metadata()
-        msg = str(n) + " " + gettext('new tasks were imported successfully')
+        msg = str(n) + " " + gettext('new tasks were imported successfully.')
         if n == 1:
-            msg = str(n) + " " + gettext('new task was imported successfully')
-        if s3_bucket_failures:
-            msg += '. {} task import failed due to invalid S3 bucket.'.format(s3_bucket_failures)
+            msg = str(n) + " " + gettext('new task was imported successfully.')
+        msg += additional_msg
         report = ImportReport(message=msg, metadata=metadata, total=n)
         return report
 
