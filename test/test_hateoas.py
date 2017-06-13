@@ -18,7 +18,7 @@
 
 import json
 
-from default import Test
+from default import Test, with_context
 from pybossa.hateoas import Hateoas
 from factories import ProjectFactory, TaskRunFactory, TaskFactory
 
@@ -27,6 +27,7 @@ class TestHateoas(Test):
 
     hateoas = Hateoas()
 
+    @with_context
     def setUp(self):
         super(TestHateoas, self).setUp()
         project = ProjectFactory.create(published=True, id=1)
@@ -34,6 +35,7 @@ class TestHateoas(Test):
         TaskRunFactory.create(project=project, task=task)
 
     # Tests
+    @with_context
     def test_00_link_object(self):
         """Test HATEOAS object link is created"""
         # For project
@@ -123,6 +125,7 @@ class TestHateoas(Test):
         # assert output.get('links') == None, err_msg
 
 
+    @with_context
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For project

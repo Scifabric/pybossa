@@ -24,7 +24,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
 from flask import current_app
 
-from pybossa.core import db
+from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.project import Project
 from pybossa.model.task_run import TaskRun

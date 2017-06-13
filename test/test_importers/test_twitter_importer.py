@@ -22,6 +22,7 @@ from nose.tools import assert_raises
 from twitter import TwitterHTTPError
 from pybossa.importers import BulkImportException
 from pybossa.importers.twitterapi import BulkTaskTwitterImport
+from default import with_context
 
 
 def create_importer_with_form_data(**form_data):
@@ -35,6 +36,7 @@ def create_importer_with_form_data(**form_data):
 
 class TestBulkTaskTwitterImportSearch(object):
 
+    @with_context
     def create_status(_id):
         return {
             u'created_at': 'created',
@@ -61,6 +63,7 @@ class TestBulkTaskTwitterImportSearch(object):
         u'statuses': [create_status(i+1) for i in range(5)]
     }
 
+    @with_context
     def test_count_tasks_returns_number_of_tweets_requested(self):
         max_tweets = 10
         form_data = {'source': '#match', 'max_tweets': max_tweets}
@@ -71,6 +74,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert number_of_tasks == number_of_tasks, number_of_tasks
 
+    @with_context
     def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '#match', 'max_tweets': 1}
         importer = create_importer_with_form_data(**form_data)
@@ -90,6 +94,7 @@ class TestBulkTaskTwitterImportSearch(object):
         assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
+    @with_context
     def test_tasks_can_return_more_than_returned_by_single_api_call(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         def multiple_responses(*args, **kwargs):
@@ -108,6 +113,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(tasks) == 6, len(tasks)
 
+    @with_context
     def test_tasks_does_not_return_more_than_requested_even_if_api_do(self):
         max_tweets = 2
         form_data = {'source': '#match', 'max_tweets': max_tweets}
@@ -118,6 +124,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(tasks) == max_tweets, len(tasks)
 
+    @with_context
     def test_api_calls_with_max_id_pagination(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         calls = []
@@ -143,6 +150,7 @@ class TestBulkTaskTwitterImportSearch(object):
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
 
+    @with_context
     def test_max_tweets_gets_a_default_value_of_200(self):
         calls = []
         def response(*args, **kwargs):
@@ -157,6 +165,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert calls[0]['kwargs']['count'] == 200, calls[0]['kwargs']['count']
 
+    @with_context
     @patch('pybossa.importers.twitterapi.OAuth')
     @patch('pybossa.importers.twitterapi.OAuth2')
     def test_user_credentials_are_used_when_provided(self, oauth2, oauth):
@@ -171,6 +180,7 @@ class TestBulkTaskTwitterImportSearch(object):
         oauth.assert_called_with('token', 'secret', 'consumer_key', 'consumer_secret')
         oauth2.assert_not_called()
 
+    @with_context
     @patch('pybossa.importers.twitterapi.OAuth')
     @patch('pybossa.importers.twitterapi.OAuth2')
     def test_app_credentials_are_used_when_no_user_ones_provided(self, oauth2, oauth):
@@ -181,6 +191,7 @@ class TestBulkTaskTwitterImportSearch(object):
         oauth.assert_not_called()
         assert oauth2.called
 
+    @with_context
     def test_only_one_api_call_is_made_when_using_app_credentials(self):
         responses = [self.no_results, self.five_statuses]
         api_calls = []
@@ -197,6 +208,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert len(api_calls) == 1, api_calls
 
+    @with_context
     def test_tasks_raises_exception_on_twitter_client_error(self):
         def response(*args, **kwargs):
             class HTTPError(object):
@@ -213,6 +225,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert_raises(BulkImportException, importer.tasks)
 
+    @with_context
     def test_tasks_raises_exception_on_rate_limit_error(self):
         def response(*args, **kwargs):
             class HTTPError(object):
@@ -234,6 +247,7 @@ class TestBulkTaskTwitterImportSearch(object):
         except BulkImportException as e:
             assert e.message == "Rate limit for Twitter API reached. Please, try again in 15 minutes.", e.message
 
+    @with_context
     def test_metadata_is_used_for_twitter_api_call_if_present(self):
         form_data = {
             'source': '#hashtag',
@@ -251,6 +265,7 @@ class TestBulkTaskTwitterImportSearch(object):
             q='#hashtag-filter:retweets',
             since_id=3)
 
+    @with_context
     def test_import_metadata_returns_None_before_fetching_tasks(self):
         responses = [self.no_results, self.five_statuses]
         def multiple_responses(*args, **kwargs):
@@ -267,6 +282,7 @@ class TestBulkTaskTwitterImportSearch(object):
 
         assert importer.import_metadata() == None, importer.import_metadata()
 
+    @with_context
     def test_import_metadata_returns_greatest_id_of_imported_tweets(self):
         responses = [self.no_results, self.five_statuses]
         def multiple_responses(*args, **kwargs):
@@ -366,6 +382,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
     five_statuses = [create_status(i+1) for i in range(5)]
 
+    @with_context
     def test_count_tasks_returns_number_of_tweets_requested(self):
         max_tweets = 10
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
@@ -376,6 +393,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
         assert number_of_tasks == number_of_tasks, number_of_tasks
 
+    @with_context
     def test_tasks_return_task_dict_with_info_from_query_result(self):
         form_data = {'source': '@pybossa', 'max_tweets': 1}
         importer = create_importer_with_form_data(**form_data)
@@ -395,6 +413,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
         assert info['user'] == expected_task_data['user']
         assert info['text'] == expected_task_data['text']
 
+    @with_context
     def test_task_can_return_more_than_returned_by_single_api_call(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         def multiple_responses(*args, **kwargs):
@@ -413,6 +432,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
         assert len(tasks) == 6, len(tasks)
 
+    @with_context
     def test_task_does_not_return_more_than_requested_even_if_api_do(self):
         max_tweets = 2
         form_data = {'source': '@pybossa', 'max_tweets': max_tweets}
@@ -423,6 +443,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
         assert len(tasks) == max_tweets, len(tasks)
 
+    @with_context
     def test_api_calls_with_max_id_pagination(self):
         responses = [self.no_results, self.one_status, self.five_statuses]
         calls = []
@@ -449,6 +470,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
         assert calls[2]['kwargs']['count'] == 0, calls[2]['kwargs']
         assert calls[2]['kwargs']['max_id'] == -1, calls[2]['kwargs']
 
+    @with_context
     def test_tasks_raises_exception_on_twitter_client_error(self):
         def response(*args, **kwargs):
             class HTTPError(object):
@@ -465,6 +487,7 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
         assert_raises(BulkImportException, importer.tasks)
 
+    @with_context
     def test_if_last_import_meta_is_None_since_id_is_not_passed_to_twitter_client(self):
         responses = [self.no_results, self.five_statuses]
         calls = []

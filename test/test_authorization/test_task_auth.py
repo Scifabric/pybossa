@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -35,6 +35,7 @@ class TestTaskAuthorization(Test):
 
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud(self):
         """Test anonymous users cannot crud tasks"""
@@ -49,6 +50,7 @@ class TestTaskAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', task)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_project_owner_can_crud(self):
         """Test project owner can crud tasks"""
@@ -65,6 +67,7 @@ class TestTaskAuthorization(Test):
         assert_not_raises(Forbidden, ensure_authorized_to, 'delete', task)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_not_project_owner_cannot_crud(self):
         """Test non owner user cannot crud tasks"""
@@ -81,6 +84,7 @@ class TestTaskAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', task)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_crud(self):
         """Test admin user can crud tasks"""

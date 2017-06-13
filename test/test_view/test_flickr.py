@@ -18,10 +18,11 @@
 from mock import patch, MagicMock
 import json
 from flask import Response, session
-from default import flask_app
+from default import flask_app, with_context
 
 class TestFlickrOauth(object):
 
+    @with_context
     @patch('pybossa.view.flickr.flickr.oauth')
     def test_flickr_login_specifies_callback_and_read_permissions(self, oauth):
         oauth.authorize.return_value = Response(302)
@@ -30,6 +31,7 @@ class TestFlickrOauth(object):
             callback='/flickr/oauth-authorized', perms='read')
 
 
+    @with_context
     def test_logout_removes_token_and_user_from_session(self):
         with flask_app.test_client() as c:
             with c.session_transaction() as sess:
@@ -45,6 +47,7 @@ class TestFlickrOauth(object):
             assert 'flickr_user' not in session
 
 
+    @with_context
     @patch('pybossa.view.flickr.redirect')
     def test_logout_redirects_to_url_specified_by_next_param(self, redirect):
         redirect.return_value = Response(302)
@@ -53,6 +56,7 @@ class TestFlickrOauth(object):
         redirect.assert_called_with('http://mynext_url')
 
 
+    @with_context
     @patch('pybossa.view.flickr.flickr.oauth')
     def test_oauth_authorized_saves_token_and_user_to_session(self, oauth):
         fake_resp = {'oauth_token_secret': u'secret',
@@ -74,6 +78,7 @@ class TestFlickrOauth(object):
             assert session['flickr_user'] == expected_user, session['flickr_user']
 
 
+    @with_context
     @patch('pybossa.view.flickr.flickr')
     @patch('pybossa.view.flickr.redirect')
     def test_oauth_authorized_redirects_to_url_next_param_on_authorization(
@@ -90,6 +95,7 @@ class TestFlickrOauth(object):
         redirect.assert_called_with('http://next')
 
 
+    @with_context
     @patch('pybossa.view.flickr.flickr')
     @patch('pybossa.view.flickr.redirect')
     def test_oauth_authorized_redirects_to_url_next_param_on_user_no_authorizing(
@@ -103,6 +109,7 @@ class TestFlickrOauth(object):
 
 class TestFlickrAPI(object):
 
+    @with_context
     @patch('pybossa.view.flickr.FlickrClient')
     def test_albums_endpoint_returns_user_albums_in_JSON_format(self, client):
         client_instance = MagicMock()

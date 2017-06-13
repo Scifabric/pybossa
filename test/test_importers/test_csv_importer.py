@@ -20,7 +20,7 @@ from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from pybossa.importers.csv import BulkTaskCSVImport
-from default import FakeResponse
+from default import FakeResponse, with_context
 
 
 @patch('pybossa.importers.csv.requests.get')
@@ -31,6 +31,7 @@ class TestBulkTaskCSVImport(object):
         self.importer = BulkTaskCSVImport(csv_url=url)
 
 
+    @with_context
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = FakeResponse(text='CSV,with,no,content\n', status_code=200,
                                   headers={'content-type': 'text/plain'},

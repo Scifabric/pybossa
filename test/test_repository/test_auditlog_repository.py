@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import ProjectFactory
 from factories import AuditlogFactory, UserFactory
@@ -32,6 +32,7 @@ class TestAuditlogRepositoryForProjects(Test):
         self.auditlog_repo = AuditlogRepository(db)
 
 
+    @with_context
     def test_get_return_none_if_no_log(self):
         """Test get method returns None if there is no log with the
         specified id"""
@@ -41,6 +42,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert log is None, log
 
 
+    @with_context
     def test_get_returns_log(self):
         """Test get method returns a log if exists"""
 
@@ -55,6 +57,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert log == retrieved_log, retrieved_log
 
 
+    @with_context
     def test_get_by(self):
         """Test get_by returns a log with the specified attribute"""
 
@@ -70,6 +73,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert log == retrieved_log, retrieved_log
 
 
+    @with_context
     def test_get_by_returns_none_if_no_log(self):
         """Test get_by returns None if no log matches the query"""
 
@@ -84,6 +88,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert retrieved_log is None, retrieved_log
 
 
+    @with_context
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no log matches the query"""
 
@@ -99,6 +104,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert len(retrieved_logs) == 0, retrieved_logs
 
 
+    @with_context
     def test_filter_by_one_condition(self):
         """Test filter_by returns a list of logs that meet the filtering
         condition"""
@@ -122,6 +128,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert should_be_missing not in retrieved_logs, retrieved_logs
 
 
+    @with_context
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
@@ -144,6 +151,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert log in retrieved_logs, retrieved_logs
 
 
+    @with_context
     def test_save(self):
         """Test save persist the log"""
 
@@ -160,6 +168,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert self.auditlog_repo.get(log.id) == log, "Log not saved"
 
 
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
@@ -169,6 +178,7 @@ class TestAuditlogRepositoryForProjects(Test):
         assert_raises(DBIntegrityError, self.auditlog_repo.save, log)
 
 
+    @with_context
     def test_save_only_saves_projects(self):
         """Test save raises a WrongObjectError when an object which is not
         a Log instance is saved"""

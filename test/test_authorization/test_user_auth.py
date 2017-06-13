@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -34,42 +34,49 @@ class TestUserAuthorization(Test):
 
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_create(self):
         """Test anonymous users cannot create users"""
         assert_raises(Unauthorized, ensure_authorized_to, 'create', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_create(self):
         """Test authenticated users cannot create users"""
         assert_raises(Forbidden, ensure_authorized_to, 'create', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_create(self):
         """Test admins users can create users"""
         assert_not_raises(Exception, ensure_authorized_to, 'create', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read(self):
         """Test anonymous users can read users"""
         assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read(self):
         """Test authenticated users can read users"""
         assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_read(self):
         """Test admins users can read users"""
         assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_given_user(self):
         """Test anonymous users can read a given user"""
@@ -77,6 +84,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read_given_user(self):
         """Test authenticated users can read a given user"""
@@ -84,6 +92,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_read_given_user(self):
         """Test admins users can read a given user"""
@@ -91,6 +100,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_update_given_user(self):
         """Test anonymous users cannot update a given user"""
@@ -98,6 +108,7 @@ class TestUserAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'update', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_update_another_user(self):
         """Test authenticated users cannot update another user than themselves"""
@@ -107,6 +118,7 @@ class TestUserAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'update', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_update_themselves(self):
         """Test authenticated users can update themselves"""
@@ -116,6 +128,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'update', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_update_any_user(self):
         """Test admins users can update any given user"""
@@ -127,6 +140,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'update', other_user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_delete_given_user(self):
         """Test anonymous users cannot delete a given user"""
@@ -134,6 +148,7 @@ class TestUserAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_delete_another_user(self):
         """Test authenticated users cannot delete another user than themselves"""
@@ -143,6 +158,7 @@ class TestUserAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_delete_themselves(self):
         """Test authenticated users can delete themselves"""
@@ -152,6 +168,7 @@ class TestUserAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'delete', user)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_delete_any_user(self):
         """Test admins users can delete any given user"""

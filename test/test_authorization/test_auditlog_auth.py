@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -35,6 +35,7 @@ class TestAuditlogAuthorization(Test):
 
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_auditlog(self):
         """Test anonymous users cannot read an auditlog"""
@@ -44,6 +45,7 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'read', log)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_project_auditlogs(self):
         """Test anonymous users cannot read auditlogs of a specific project"""
@@ -53,6 +55,7 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_auditlog(self):
         """Test owner users can read an auditlog"""
@@ -66,6 +69,7 @@ class TestAuditlogAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_project_auditlogs(self):
         """Test owner users can read auditlogs of a specific project"""
@@ -76,6 +80,7 @@ class TestAuditlogAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_can_read_auditlog(self):
         """Test admin users can read an auditlog"""
@@ -88,6 +93,7 @@ class TestAuditlogAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_can_read_project_auditlogs(self):
         """Test admin users can read auditlogs from a project"""
@@ -99,6 +105,7 @@ class TestAuditlogAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud_auditlog(self):
         """Test anonymous users cannot crud auditlogs"""
@@ -110,6 +117,7 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', log)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_crud_auditlog(self):
         """Test authenticated users cannot crud auditlogs"""
@@ -121,6 +129,7 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', log)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_auditlog(self):
         """Test admin users cannot crud auditlogs"""

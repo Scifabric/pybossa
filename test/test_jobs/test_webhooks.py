@@ -37,6 +37,7 @@ result_repo = ResultRepository(db)
 
 class TestWebHooks(Test):
 
+    @with_context
     def setUp(self):
         super(TestWebHooks, self).setUp()
         self.connection = StrictRedis()

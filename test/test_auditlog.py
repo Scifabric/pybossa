@@ -155,6 +155,7 @@ class TestAuditlogAPI(Test):
 
         assert len(logs) == 0, logs
 
+    @with_context
     def test_project_update_task_presenter(self):
         """Test Auditlog API project update info task_presenter works."""
         project = ProjectFactory.create()
@@ -177,6 +178,7 @@ class TestAuditlogAPI(Test):
             msg = "%s != %s" % (data['info']['task_presenter'], log.new_value)
             assert data['info']['task_presenter'] == log.new_value, msg
 
+    @with_context
     def test_project_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
         project = ProjectFactory.create()
@@ -199,6 +201,7 @@ class TestAuditlogAPI(Test):
             msg = "%s != %s" % (data['info']['sched'], log.new_value)
             assert data['info']['sched'] == log.new_value, msg
 
+    @with_context
     def test_project_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
         project = ProjectFactory.create()
@@ -647,6 +650,7 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+    @with_context
     def test_project_auditlog_autoimporter_create(self):
         self.register()
         self.new_project()
@@ -675,6 +679,7 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+    @with_context
     def test_project_auditlog_autoimporter_delete(self):
         self.register()
         owner = user_repo.get(1)

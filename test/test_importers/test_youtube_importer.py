@@ -20,6 +20,7 @@ from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from pybossa.importers.youtubeapi import BulkTaskYoutubeImport
+from default import with_context
 
 @patch('pybossa.importers.youtubeapi.build')
 class TestBulkYoutubeImport(object):
@@ -176,6 +177,7 @@ class TestBulkYoutubeImport(object):
     }
 
 
+    @with_context
     def test_tasks_return_emtpy_list_if_no_video_to_import(self, build):
         form_data = {
             'playlist_url': '',
@@ -185,6 +187,7 @@ class TestBulkYoutubeImport(object):
 
         assert number_of_tasks == 0, number_of_tasks
 
+    @with_context
     def test_call_to_youtube_api_endpoint(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
@@ -193,6 +196,7 @@ class TestBulkYoutubeImport(object):
 
         build.assert_called_with('youtube', 'v3', developerKey=self.form_data['youtube_api_server_key'])
 
+    @with_context
     def test_call_to_youtube_api_short_playlist(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response
@@ -201,6 +205,7 @@ class TestBulkYoutubeImport(object):
 
         assert playlist == self.short_playlist_response, playlist
 
+    @with_context
     def test_call_to_youtube_api_long_playlist(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.side_effect = [self.long_playlist_response, self.long_playlist_response, self.short_playlist_response]
@@ -211,12 +216,14 @@ class TestBulkYoutubeImport(object):
 
         assert playlist == expected_playlist, playlist
 
+    @with_context
     def test_extract_video_info_one_item(self, build):
         importer = BulkTaskYoutubeImport(**self.form_data)
         info = importer._extract_video_info(self.short_playlist_response['items'][0])
 
         assert info['info']['video_url'] == 'https://www.youtube.com/watch?v=youtubeid2'
 
+    @with_context
     def test_parse_playlist_id(self, build):
         importer = BulkTaskYoutubeImport(**self.form_data)
         id = importer._get_playlist_id('https://www.youtube.com/playlist?list=goodplaylist')
@@ -228,6 +235,7 @@ class TestBulkYoutubeImport(object):
         # malformed url
         assert_raises(BulkImportException, importer._get_playlist_id, 'www.youtube.com/watch?v=youtubeid&list=anotherplaylist&option=2')
 
+    @with_context
     def test_non_youtube_url_raises_exception(self, build):
         importer = BulkTaskYoutubeImport(**self.form_data)
         id = importer._get_playlist_id('https://www.youtu.be/playlist?list=goodplaylist')
@@ -238,6 +246,7 @@ class TestBulkYoutubeImport(object):
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://api.youtube.com/playlist?list=goodplaylist')
         assert_raises(BulkImportException, importer._get_playlist_id, 'https://otherdomain.com/playlist?list=goodplaylist')
 
+    @with_context
     def test_all_coverage_tasks_extraction(self, build):
         build.return_value.playlistItems.return_value.list.\
             return_value.execute.return_value = self.short_playlist_response

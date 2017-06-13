@@ -18,12 +18,13 @@
 
 import json
 from mock import patch, MagicMock
-from default import flask_app
+from default import flask_app, with_context
 from pybossa.s3_client import NoSuchBucket, PrivateBucket
 
 
 class TestAmazonS3API(object):
 
+    @with_context
     @patch('pybossa.view.amazon.S3Client')
     def test_buckets_with_specific_bucket_lists_its_content(self, S3Client):
         objects = ['test.pdf', 'sunset.png']
@@ -37,6 +38,7 @@ class TestAmazonS3API(object):
         client_instance.objects.assert_called_with(bucket_name)
         assert resp.data == json.dumps(objects), resp.data
 
+    @with_context
     @patch('pybossa.view.amazon.S3Client')
     def test_buckets_with_non_existing_bucket_returns_error(self, S3Client):
         client_instance = MagicMock()
@@ -47,6 +49,7 @@ class TestAmazonS3API(object):
 
         assert resp.status_code == 404, resp
 
+    @with_context
     @patch('pybossa.view.amazon.S3Client')
     def test_buckets_with_private_bucket_returns_error(self, S3Client):
         client_instance = MagicMock()

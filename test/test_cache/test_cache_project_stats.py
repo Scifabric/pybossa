@@ -26,6 +26,7 @@ from datetime import date, datetime, timedelta
 
 class TestProjectsStatsCache(Test):
 
+    @with_context
     def test_convert_period_to_days(self):
         """Test CACHE PROJECT STATS convert period to days works."""
         period = '7 day'
@@ -47,6 +48,7 @@ class TestProjectsStatsCache(Test):
         res = convert_period_to_days(period)
         assert res == 0, res
 
+    @with_context
     def test_stats_users(self):
         """Test CACHE PROJECT STATS user stats works."""
         pr = ProjectFactory.create()
@@ -57,6 +59,7 @@ class TestProjectsStatsCache(Test):
         assert len(anon_users) == 1, len(anon_users)
         assert len(auth_users) == 1, len(auth_users)
 
+    @with_context
     def test_stats_users_with_period(self):
         """Test CACHE PROJECT STATS user stats with period works."""
         pr = ProjectFactory.create()
@@ -69,6 +72,7 @@ class TestProjectsStatsCache(Test):
         assert len(anon_users) == 0, len(anon_users)
         assert len(auth_users) == 1, len(auth_users)
 
+    @with_context
     def test_stats_dates(self):
         """Test CACHE PROJECT STATS date works."""
         pr = ProjectFactory.create()
@@ -85,6 +89,7 @@ class TestProjectsStatsCache(Test):
         assert dates_anon[today.strftime('%Y-%m-%d')] == 1
         assert dates_auth[today.strftime('%Y-%m-%d')] == 1
 
+    @with_context
     def test_stats_dates_with_period(self):
         """Test CACHE PROJECT STATS dates with period works."""
         pr = ProjectFactory.create()
@@ -101,6 +106,7 @@ class TestProjectsStatsCache(Test):
         assert dates_anon[d.strftime('%Y-%m-%d')] == 0
         assert dates_auth[d.strftime('%Y-%m-%d')] == 1
 
+    @with_context
     def test_stats_hours(self):
         """Test CACHE PROJECT STATS hours works."""
         pr = ProjectFactory.create()
@@ -120,6 +126,7 @@ class TestProjectsStatsCache(Test):
         assert max_hours_auth == 1
 
 
+    @with_context
     def test_stats_hours_with_period(self):
         """Test CACHE PROJECT STATS hours with period works."""
         pr = ProjectFactory.create()

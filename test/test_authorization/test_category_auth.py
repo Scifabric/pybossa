@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -34,6 +34,7 @@ class TestProjectAuthorization(Test):
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud(self):
         """Test anonymous users cannot crud categories"""
@@ -46,6 +47,7 @@ class TestProjectAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', category)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_crud(self):
         """Test authenticated users cannot crud categories"""
@@ -58,6 +60,7 @@ class TestProjectAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', category)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_crud(self):
         """Test admin user can crud categories"""

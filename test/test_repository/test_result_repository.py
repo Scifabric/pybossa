@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import ResultRepository
 from pybossa.core import task_repo, result_repo
@@ -31,6 +31,7 @@ class TestResultRepository(Test):
         super(TestResultRepository, self).setUp()
         self.result_repo = ResultRepository(db)
 
+    @with_context
     def create_result(self, n_answers=1, filter_by=False):
         task = TaskFactory.create(n_answers=n_answers)
         TaskRunFactory.create(task=task)
@@ -40,6 +41,7 @@ class TestResultRepository(Test):
             return self.result_repo.get_by(project_id=1)
 
 
+    @with_context
     def test_get_return_none_if_no_result(self):
         """Test get method returns None if there is no result with the
         specified id"""
@@ -49,6 +51,7 @@ class TestResultRepository(Test):
         assert result is None, result
 
 
+    @with_context
     def test_get_returns_result(self):
         """Test get method returns a result if exists"""
 
@@ -70,6 +73,7 @@ class TestResultRepository(Test):
         for tr_id in result.task_run_ids:
             assert tr_id == task_run.id, err_msg
 
+    @with_context
     def test_get_by_returns_result(self):
         """Test get_by method returns a result if exists"""
 
@@ -90,6 +94,7 @@ class TestResultRepository(Test):
             assert tr_id == task_run.id, err_msg
 
 
+    @with_context
     def test_get_returns_result_after_increasig_redundancy(self):
         """Test get method returns a result if after increasing redundancy"""
 
@@ -139,6 +144,7 @@ class TestResultRepository(Test):
             assert tr_id in [task_run.id, task_run_2.id], err_msg
 
 
+    @with_context
     def test_get_returns_no_result(self):
         """Test get method does not return a result if task not completed"""
 
@@ -152,6 +158,7 @@ class TestResultRepository(Test):
         err_msg = "There should not be a result"
         assert len(result) == 0, err_msg
 
+    @with_context
     def test_fulltext_search_result(self):
         """Test fulltext search in JSON info works."""
         result = self.create_result()
@@ -168,6 +175,7 @@ class TestResultRepository(Test):
         res = self.result_repo.filter_by(info=info)
         assert len(res) == 0, len(res)
 
+    @with_context
     def test_fulltext_search_result_01(self):
         """Test fulltext search in JSON info works."""
         result = self.create_result()
@@ -182,6 +190,7 @@ class TestResultRepository(Test):
         assert res[0][0].info['foo'] == text, res[0]
 
 
+    @with_context
     def test_info_json_search_result(self):
         """Test search in JSON info works."""
         result = self.create_result()
@@ -196,6 +205,7 @@ class TestResultRepository(Test):
         assert res[0].info['foo'] == text, res[0]
 
 
+    @with_context
     def test_update(self):
         """Test update persists the changes made to the result"""
 
@@ -208,6 +218,7 @@ class TestResultRepository(Test):
         assert updated_result.info['new'] == 'value', updated_result
 
 
+    @with_context
     def test_update_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -218,6 +229,7 @@ class TestResultRepository(Test):
         assert_raises(DBIntegrityError, self.result_repo.update, result)
 
 
+    @with_context
     def test_update_only_updates_results(self):
         """Test update raises a WrongObjectError when an object which is not
         a Result instance is updated"""
@@ -226,6 +238,7 @@ class TestResultRepository(Test):
 
         assert_raises(WrongObjectError, self.result_repo.update, bad_object)
 
+    @with_context
     def test_delete_results_from_project(self):
         """Test delte_results_from_project works."""
         project = ProjectFactory.create()

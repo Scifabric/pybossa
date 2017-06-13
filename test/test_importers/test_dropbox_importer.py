@@ -19,6 +19,7 @@
 import string
 from pybossa.importers import BulkImportException
 from pybossa.importers.dropbox import BulkTaskDropboxImport
+from default import with_context
 
 
 class TestBulkTaskDropboxImport(object):
@@ -28,30 +29,35 @@ class TestBulkTaskDropboxImport(object):
         u'"name":"test.txt",'
         u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
+    @with_context
     def test_count_tasks_returns_0_if_no_files_to_import(self):
         form_data = {'files': []}
         number_of_tasks = BulkTaskDropboxImport(**form_data).count_tasks()
 
         assert number_of_tasks == 0, number_of_tasks
 
+    @with_context
     def test_count_tasks_returns_1_if_1_file_to_import(self):
         form_data = {'files': [self.dropbox_file_data]}
         number_of_tasks = BulkTaskDropboxImport(**form_data).count_tasks()
 
         assert number_of_tasks == 1, number_of_tasks
 
+    @with_context
     def test_tasks_return_emtpy_list_if_no_files_to_import(self):
         form_data = {'files': []}
         tasks = BulkTaskDropboxImport(**form_data).tasks()
 
         assert tasks == [], tasks
 
+    @with_context
     def test_tasks_returns_list_with_1_file_data_if_1_file_to_import(self):
         form_data = {'files': [self.dropbox_file_data]}
         tasks = BulkTaskDropboxImport(**form_data).tasks()
 
         assert len(tasks) == 1, tasks
 
+    @with_context
     def test_tasks_returns_tasks_with_fields_for_generic_files(self):
         #For generic file extensions: link, filename, link_raw
         form_data = {'files': [self.dropbox_file_data]}
@@ -61,6 +67,7 @@ class TestBulkTaskDropboxImport(object):
         assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0"
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1"
 
+    @with_context
     def test_tasks_attributes_for_image_files(self):
         #For image file extensions: link, filename, link_raw, url_m, url_b, title
         image_ext = ['png', 'jpg', 'jpeg', 'gif']
@@ -81,6 +88,7 @@ class TestBulkTaskDropboxImport(object):
             assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
             assert tasks[0]['info']['title'] == "test.%s" % ext
 
+    @with_context
     def test_tasks_attributes_for_pdf_files(self):
         #For pdf file extension: link, filename, link_raw, pdf_url
         pdf_file_data = (u'{"bytes":286,'
@@ -96,6 +104,7 @@ class TestBulkTaskDropboxImport(object):
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
         assert tasks[0]['info']['pdf_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.pdf"
 
+    @with_context
     def test_tasks_attributes_for_video_files(self):
         #For video file extension: link, filename, link_raw, video_url
         video_ext = ['mp4', 'm4v', 'ogg', 'ogv', 'webm', 'avi']
@@ -114,6 +123,7 @@ class TestBulkTaskDropboxImport(object):
             assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
             assert tasks[0]['info']['video_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
 
+    @with_context
     def test_tasks_attributes_for_audio_files(self):
         #For audio file extension: link, filename, link_raw, audio_url
         audio_ext = ['mp4', 'm4a', 'mp3', 'ogg', 'oga', 'webm', 'wav']

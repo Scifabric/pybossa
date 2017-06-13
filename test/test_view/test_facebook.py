@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test
+from default import Test, with_context
 from pybossa.view.facebook import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
@@ -35,6 +35,7 @@ class TestFacebook(Test):
         }
         self.name = username_from_full_name(self.user_data['name'])
 
+    @with_context
     def test_manage_user_with_email_new_user(self):
         """Test FACEBOOK manage_user works for a new user."""
         token = 't'
@@ -45,6 +46,7 @@ class TestFacebook(Test):
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=token), user
 
+    @with_context
     def test_manage_user_with_email_facebook_account_user_registered(self):
         """Test FACEBOOK manage_user works for a user already registered with Facebook."""
         token = 't'
@@ -57,6 +59,7 @@ class TestFacebook(Test):
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=new_token), user
 
+    @with_context
     def test_manage_user_without_email_new_user(self):
         """Test FACEBOOK manage_user works for a new user without email in his
         FB account."""
@@ -69,6 +72,7 @@ class TestFacebook(Test):
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=token), user
 
+    @with_context
     def test_manage_user_without_email_facebook_account_user_registered(self):
         """Test FACEBOOK manage_user works for a user already registered with
         Facebook without email on his FB account."""
@@ -83,6 +87,7 @@ class TestFacebook(Test):
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=new_token), user
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_with_email_newsletter(self, newsletter):
         """Test FACEBOOK manage_user newsletter works."""
@@ -96,6 +101,7 @@ class TestFacebook(Test):
 
         newsletter.subscribe_user.assert_called_once_with(user)
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_without_email_newsletter(self, newsletter):
         """Test FACEBOOK manage_user without e-mail newsletter works."""
@@ -110,6 +116,7 @@ class TestFacebook(Test):
         err_msg = "It should not be called."
         assert newsletter.subscribe_user.called is False, err_msg
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -127,6 +134,7 @@ class TestFacebook(Test):
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.forgot_password')
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -144,6 +152,7 @@ class TestFacebook(Test):
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -160,6 +169,7 @@ class TestFacebook(Test):
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -176,6 +186,7 @@ class TestFacebook(Test):
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -195,6 +206,7 @@ class TestFacebook(Test):
         url_for.assert_called_once_with('account.update_profile',
                                         name=user.name)
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
@@ -214,6 +226,7 @@ class TestFacebook(Test):
         url_for.assert_called_once_with('account.newsletter_subscribe',
                                         next=next_url)
 
+    @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)

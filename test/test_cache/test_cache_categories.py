@@ -16,19 +16,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test
+from default import Test, with_context
 from pybossa.cache import categories as cached_categories
 from factories import CategoryFactory, ProjectFactory
 
 
 class TestCategoriesCache(Test):
 
+    @with_context 
     def test_get_all_returns_all_categories(self):
         categories = [CategoryFactory.create()]
 
         assert cached_categories.get_all() == categories
 
-
+    @with_context 
     def test_get_used_returns_only_categories_with_projects(self):
         used_category = CategoryFactory.create()
         ProjectFactory.create(category=used_category)
@@ -39,6 +40,7 @@ class TestCategoriesCache(Test):
         assert used_categories[0]['id'] == used_category.id, used_categories
 
 
+    @with_context 
     def test_get_used_returns_requiered_fields(self):
         used_category = CategoryFactory.create()
         ProjectFactory.create(category=used_category)

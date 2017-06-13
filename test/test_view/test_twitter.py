@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from flask import Response
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.view.twitter import manage_user, manage_user_login, \
     manage_user_no_login
 from pybossa.core import user_repo
@@ -26,6 +26,7 @@ from factories import UserFactory
 
 class TestTwitter(Test):
 
+    @with_context
     def test_manage_user_new_user(self):
         """Test TWITTER manage_user with a new user"""
         user_data = dict(user_id=1, screen_name='twitter')
@@ -37,6 +38,7 @@ class TestTwitter(Test):
         assert user.twitter_user_id == user_data['user_id'], user
         assert user.info['twitter_token'] == token, user
 
+    @with_context
     def test_manage_user_twitter_registered_user(self):
         """Test TWITTER manage_user with an existing user registered with Twitter"""
         user_data = dict(user_id=1, screen_name='twitter')
@@ -50,6 +52,7 @@ class TestTwitter(Test):
         assert user.twitter_user_id == user_data['user_id'], user
         assert user.info['twitter_token'] == updated_token, user
 
+    @with_context
     def test_manage_user_with_existing_non_twitter_account_user(self):
         """Test TWITTER manage_user user with a username that already exists
         and registered without Twitter"""
@@ -60,6 +63,7 @@ class TestTwitter(Test):
         assert user.twitter_user_id == 10, err_msg
         assert user.info['twitter_token'] == token, user
 
+    @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
@@ -80,6 +84,7 @@ class TestTwitter(Test):
         url_for.assert_called_once_with('account.newsletter_subscribe',
                                         next=next_url)
 
+    @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
@@ -102,6 +107,7 @@ class TestTwitter(Test):
         url_for.assert_called_once_with('account.update_profile',
                                         name=user.name)
 
+    @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
@@ -123,6 +129,7 @@ class TestTwitter(Test):
         assert login_user.called is False
         url_for.assert_called_once_with('account.forgot_password')
 
+    @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
@@ -144,6 +151,7 @@ class TestTwitter(Test):
         assert login_user.called is False
         url_for.assert_called_once_with('account.signin')
 
+    @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
@@ -164,6 +172,7 @@ class TestTwitter(Test):
         login_user.assert_called_once_with(user, remember=True)
         redirect.assert_called_once_with(next_url)
 
+    @with_context
     @patch('pybossa.view.twitter.twitter.oauth')
     def test_twitter_signin_with_no_login_param(self, oauth):
         oauth.authorize.return_value = Response(302)
@@ -172,6 +181,7 @@ class TestTwitter(Test):
         oauth.authorize.assert_called_once_with(
             callback='/twitter/oauth-authorized?no_login=1')
 
+    @with_context
     @patch('pybossa.view.twitter.manage_user_no_login')
     @patch('pybossa.view.twitter.twitter.oauth')
     def test_twitter_signin_oauth_callback_no_login_calls_manage_user_no_login(
@@ -187,6 +197,7 @@ class TestTwitter(Test):
             {'oauth_token_secret': 'secret', 'oauth_token': 'token'},
             '/')
 
+    @with_context
     @patch('pybossa.view.twitter.manage_user_no_login')
     @patch('pybossa.view.twitter.twitter.oauth')
     def test_twitter_signin_no_login_param_missing(
@@ -201,6 +212,7 @@ class TestTwitter(Test):
 
         assert_not_raises(Exception, self.app.get, '/twitter/oauth-authorized')
 
+    @with_context
     @patch('pybossa.view.twitter.current_user')
     def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
         self, current_user):

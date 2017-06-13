@@ -32,6 +32,7 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 class TestNewsletterClass(Test):
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_init_app(self, mailchimp):
         """Test Newsletter init_app method works."""
@@ -44,6 +45,7 @@ class TestNewsletterClass(Test):
             assert nw.client, nw.client
             assert nw.list_id == 1
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_is_user_subscribed_false(self, mailchimp):
         """Test is_user_subscribed returns False."""
@@ -57,6 +59,7 @@ class TestNewsletterClass(Test):
                                                            [{'email': email}])
             assert res is False
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_is_user_subscribed_true(self, mailchimp):
         """Test is_user_subscribed returns True."""
@@ -73,6 +76,7 @@ class TestNewsletterClass(Test):
                                                            [{'email': email}])
             assert res is True
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_is_user_subscribed_exception(self, mp):
         """Test is_user_subscribed exception works."""
@@ -84,6 +88,7 @@ class TestNewsletterClass(Test):
             nw.client.lists.member_info.side_effect = Error
             assert_raises(Error, nw.is_user_subscribed, email)
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_subscribe_user_exception(self, mp):
         """Test subscribe_user exception works."""
@@ -99,6 +104,7 @@ class TestNewsletterClass(Test):
             assert_raises(Error, nw.subscribe_user, user)
 
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_subscribe_user(self, mailchimp):
         """Test subscribe user works."""
@@ -115,6 +121,7 @@ class TestNewsletterClass(Test):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=False)
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_subscribe_user_update_existing(self, mailchimp):
         """Test subscribe user update existing works."""
@@ -138,6 +145,7 @@ class TestNewsletterClass(Test):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=True)
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_is_initialized_returns_false_before_calling_init_app(self, mailchimp):
         nw = Newsletter()
@@ -145,6 +153,7 @@ class TestNewsletterClass(Test):
 
         assert nw.is_initialized() is False
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_is_initialized_returns_true_after_calling_init_app(self, mailchimp):
         nw = Newsletter()
@@ -153,12 +162,14 @@ class TestNewsletterClass(Test):
 
         assert nw.is_initialized() is True
 
+    @with_context
     def test_ask_user_to_subscribe_returns_false_if_not_initialized(self):
         nw = Newsletter()
         user = UserFactory.build()
 
         assert nw.ask_user_to_subscribe(user) is False
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_ask_user_to_subscribe_returns_false_if_newsletter_prompted(self, mailchimp):
         nw = Newsletter()
@@ -168,6 +179,7 @@ class TestNewsletterClass(Test):
 
         assert nw.ask_user_to_subscribe(user) is False
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_ask_user_to_subscribe_returns_false_if_user_subscribed(self, mailchimp):
         user = UserFactory.build(newsletter_prompted=False)
@@ -181,6 +193,7 @@ class TestNewsletterClass(Test):
 
         assert nw.ask_user_to_subscribe(user) is False
 
+    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_ask_user_to_subscribe_returns_true_if_user_not_subscribed(self, mailchimp):
         user = UserFactory.build(newsletter_prompted=False)
