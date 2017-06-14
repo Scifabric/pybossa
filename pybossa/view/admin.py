@@ -167,9 +167,10 @@ def export_users():
                              'created', 'admin', 'subadmin', 'languages',
                              'locations', 'start_time', 'end_time',
                              'timezone', 'type_of_user', 'additional_comments',
-                             'first_submission_date', 'last_submission_date',
-                             'completed_tasks', 'avg_time_per_task',
-                             'total_projects_contributed', 'percentage_tasks_completed')
+                             'total_projects_contributed', 'completed_tasks',
+                             'percentage_tasks_completed', 'first_submission_date',
+                             'last_submission_date', 'avg_time_per_task'
+                             )
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
