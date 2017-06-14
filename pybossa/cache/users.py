@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for users."""
 from sqlalchemy.sql import text
+from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
@@ -32,7 +33,12 @@ session = db.slave_session
 
 def get_leaderboard(n, user_id=None, window=0):
     """Return the top n users with their rank."""
-    return gl(top_users=n, user_id=user_id, window=window)
+    try:
+        return gl(top_users=n, user_id=user_id, window=window)
+    except ProgrammingError:
+        db.session.rollback()
+        lb()
+        return gl(top_users=n, user_id=user_id, window=window)
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
