@@ -695,6 +695,39 @@ To:
     This feature is disabled by default.
 
 
+Making extra key/value pairs in info field public
+=================================================
+
+By default PYBOSSA protects all the information the info field except for those
+values that are public like the url of the image of the project, the container 
+where that picture is stored and a few extra. While this will be more than enough
+for most projects, sometimes, a server will need to expose more information publicly
+via the info field for the User and Project Domain Objects.
+
+Imagine that you want to give badges to users. You can store that information in the
+User domain object, within the info field in a field named *badges*. While this will
+work, the API will hide all that information except for the owner. Thus, it will be impossible
+to show user's badges to anonymous people.
+
+With projects it could be the same. You want to highlight some info to anyone, but hide everything else.
+
+As PYBOSSA hides everything by default, you can always turn on which other fields from the
+info field can be shown to anonymous users, making them public. 
+
+.. note::
+
+    WARNING: be very careful. This is your responsibility, and it's not enabled by default. If you
+    expose your own private data via this field, it's your own responsibility as this is not enabled
+    by default in PYBOSSA.
+
+If you want to make some key/values public, all you have to do is add to the settings_local.py file
+the following config variables::
+
+    PROJECT_INFO_PUBLIC_FIELDS = ['key1', 'key2']
+    USER_INFO_PUBLIC_FIELDS = ['badges', 'key2', ...]
+
+Add as many as you want, need. But please, be careful about which information you disclose.
+
 Adding your own templates
 =========================
 

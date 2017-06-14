@@ -582,6 +582,7 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
 
 
+    @with_context
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
@@ -607,6 +608,7 @@ class TestTaskrunAPI(TestAPI):
         success = self.app.post('/api/taskrun', data=datajson)
         assert success.status_code == 200, success.data
 
+    @with_context
     def test_taskrun_post_requires_newtask_first_external_uid(self):
         """Test API TaskRun post fails if task was not previously requested for
         external user"""
@@ -882,6 +884,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 
+    @with_context
     def test_taskrun_create_with_reserved_fields_returns_error(self):
         """Test API taskrun post with reserved fields raises an error"""
         project = ProjectFactory.create()
@@ -902,6 +905,7 @@ class TestTaskrunAPI(TestAPI):
         error = json.loads(resp.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_is_stored_if_project_is_not_published(self, guard):
         """Test API taskrun post stores the taskrun even if project is not published"""
@@ -923,6 +927,7 @@ class TestTaskrunAPI(TestAPI):
         assert len(task_runs) == 1, task_runs
         assert task_runs[0].info == 'my result', task_runs[0]
 
+    @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_created_with_time_it_was_requested_on_creation(self, guard):
         """Test API taskrun post adds the created timestamp of the moment the task

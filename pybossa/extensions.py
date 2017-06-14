@@ -32,6 +32,8 @@ The objects are:
     * csrf: for CSRF protection
     * newsletter: for subscribing users to Mailchimp newsletter
     * assets: for assets management (SASS, etc.)
+    * JSONEncoder: a custom JSON encoder to handle specific types
+    * cors: the Flask-Cors library object
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',

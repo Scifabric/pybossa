@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -32,6 +32,7 @@ class TestTokenAuthorization(Test):
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_delete(self):
         """Test anonymous user is not allowed to delete an oauth token"""
@@ -40,6 +41,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'delete', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_delete(self):
         """Test authenticated user is not allowed to delete an oauth token"""
@@ -48,6 +50,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'delete', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create(self):
         """Test anonymous user is not allowed to create an oauth token"""
@@ -56,6 +59,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'create', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create(self):
         """Test authenticated user is not allowed to create an oauth token"""
@@ -64,6 +68,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'create', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_update(self):
         """Test anonymous user is not allowed to update an oauth token"""
@@ -72,6 +77,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'update', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update(self):
         """Test authenticated user is not allowed to update an oauth token"""
@@ -80,6 +86,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'update', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
         """Test anonymous user is not allowed to read an oauth token"""
@@ -88,6 +95,7 @@ class TestTokenAuthorization(Test):
                       ensure_authorized_to, 'read', 'token', token=token)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_read(self):
         """Test authenticated user is allowed to read his own oauth tokens"""

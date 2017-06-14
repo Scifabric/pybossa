@@ -17,11 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
-from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import Column
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
+from flask import current_app
 
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, make_uuid
@@ -92,4 +93,9 @@ class User(db.Model, DomainObject, UserMixin):
     @classmethod
     def public_info_keys(self):
         """Return a list of public info keys."""
-        return ['avatar', 'container', 'extra', 'avatar_url']
+        default = ['avatar', 'container', 'extra', 'avatar_url']
+        extra = current_app.config.get('USER_INFO_PUBLIC_FIELDS')
+        if extra:
+            return list(set(default).union(set(extra)))
+        else:
+            return default

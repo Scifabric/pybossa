@@ -18,7 +18,7 @@
 from mock import patch, Mock
 from pybossa.importers import Importer
 
-from default import Test
+from default import Test, with_context
 from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
 from pybossa.core import db
@@ -29,6 +29,7 @@ task_repo = TaskRepository(db)
 class TestImporterPublicMethods(Test):
     importer = Importer()
 
+    @with_context
     def test_create_tasks_creates_them_correctly(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question',
@@ -47,6 +48,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.assert_called_with(**form_data)
         mock_importer.tasks.assert_called_with()
 
+    @with_context
     def test_create_tasks_creates_many_tasks(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question1'}},
@@ -61,6 +63,7 @@ class TestImporterPublicMethods(Test):
         assert result.message == '2 new tasks were imported successfully', result
         importer_factory.assert_called_with(**form_data)
 
+    @with_context
     def test_create_tasks_not_creates_duplicated_tasks(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
@@ -76,6 +79,7 @@ class TestImporterPublicMethods(Test):
         assert result.message == 'It looks like there were no new records to import', result
         importer_factory.assert_called_with(**form_data)
 
+    @with_context
     def test_create_tasks_returns_task_report(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
@@ -91,6 +95,7 @@ class TestImporterPublicMethods(Test):
         assert result.total == 1, result.total
         assert result.metadata == metadata, result.metadata
 
+    @with_context
     def test_count_tasks_to_import_returns_number_of_tasks_to_import(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
@@ -103,12 +108,14 @@ class TestImporterPublicMethods(Test):
         assert number_of_tasks == 2, number_of_tasks
         importer_factory.assert_called_with(**form_data)
 
+    @with_context
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
         expected_importers = ['csv', 'gdocs', 'epicollect', 's3']
 
         assert set(importers) == set(expected_importers)
 
+    @with_context
     def test_get_all_importers_returns_configured_importers(self, create):
         flickr_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
         twitter_params = {}
@@ -124,12 +131,14 @@ class TestImporterPublicMethods(Test):
         assert 'twitter' in importer.get_all_importer_names()
         assert 'youtube' in importer.get_all_importer_names()
 
+    @with_context
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
         importers = self.importer.get_autoimporter_names()
         expected_importers = ['csv', 'gdocs', 'epicollect']
 
         assert set(importers) == set(expected_importers)
 
+    @with_context
     def test_get_autoimporter_names_returns_configured_autoimporters(self, create):
         flickr_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
         twitter_params = {}

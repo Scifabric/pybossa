@@ -19,6 +19,7 @@
 import copy
 import json
 import string
+from default import with_context
 from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
@@ -59,12 +60,14 @@ class TestBulkTaskFlickrImport(object):
     importer = BulkTaskFlickrImport(api_key='fake-key', album_id='72157633923521788')
 
 
+    @with_context
     def make_response(self, text, status_code=200):
         fake_response = Mock()
         fake_response.text = text
         fake_response.status_code = status_code
         return fake_response
 
+    @with_context
     def test_call_to_flickr_api_endpoint(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
         self.importer._get_album_info()
@@ -76,6 +79,7 @@ class TestBulkTaskFlickrImport(object):
                    'nojsoncallback': '1'}
         requests.get.assert_called_with(url, params=payload)
 
+    @with_context
     def test_call_to_flickr_api_uses_no_credentials(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
         self.importer._get_album_info()
@@ -84,6 +88,7 @@ class TestBulkTaskFlickrImport(object):
         url_call_params = requests.get.call_args_list[0][1]['params'].keys()
         assert 'auth_token' not in url_call_params
 
+    @with_context
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
 
@@ -91,17 +96,20 @@ class TestBulkTaskFlickrImport(object):
 
         assert number_of_tasks is 3, number_of_tasks
 
+    @with_context
     def test_count_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
         importer = BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
         assert_raises(BulkImportException, importer.count_tasks)
 
+    @with_context
     def test_count_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.count_tasks)
 
+    @with_context
     def test_tasks_returns_list_of_all_photos(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
 
@@ -109,6 +117,7 @@ class TestBulkTaskFlickrImport(object):
 
         assert len(photos) == 3, len(photos)
 
+    @with_context
     def test_tasks_returns_tasks_with_title_and_url_info_fields(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.response))
         url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
@@ -124,17 +133,20 @@ class TestBulkTaskFlickrImport(object):
         assert photo['info'].get('url_b') == url_b, photo['info'].get('url_b')
         assert photo['info'].get('link') == link, photo['info'].get('link')
 
+    @with_context
     def test_tasks_raises_exception_if_invalid_album(self, requests):
         requests.get.return_value = self.make_response(json.dumps(self.invalid_response))
         importer = BulkTaskFlickrImport(api_key='fake-key', album_id='bad')
 
         assert_raises(BulkImportException, importer.tasks)
 
+    @with_context
     def test_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.tasks)
 
+    @with_context
     def test_tasks_returns_all_for_sets_with_more_than_500_photos(self, requests):
         # Deep-copy the object, as we will be modifying it and we don't want
         # these modifications to affect other tests
@@ -157,6 +169,7 @@ class TestBulkTaskFlickrImport(object):
 
         assert len(photos) == 600, len(photos)
 
+    @with_context
     def test_tasks_returns_all_for_sets_with_more_than_1000_photos(self, requests):
         # Deep-copy the object, as we will be modifying it and we don't want
         # these modifications to affect other tests

@@ -415,6 +415,7 @@ class TestSched(sched.Helper):
                 assert self.is_unique(tr.external_uid, t.task_runs), err_msg
 
 
+    @with_context
     def test_newtask_breadth_orderby(self):
         """Test SCHED breadth first works with orderby."""
         project = ProjectFactory.create(info=dict(sched="breadth_first"))
@@ -453,6 +454,7 @@ class TestSched(sched.Helper):
         assert data['fav_user_ids'] == task2.fav_user_ids, data
 
 
+    @with_context
     def test_newtask_default_orderby(self):
         """Test SCHED depth first works with orderby."""
         project = ProjectFactory.create(info=dict(sched="default"))
@@ -1290,6 +1292,7 @@ class TestGetBreadthFirst(Test):
         assert out.id == tasks[1].id, out
 
 
+    @with_context
     def _test_get_breadth_first_task_limit(self, user=None, external_uid=None):
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner, info=dict(sched='breadth_first'))
@@ -1377,6 +1380,7 @@ class TestGetBreadthFirst(Test):
         db.session.commit()
 
 class TestBreadthFirst(Test):
+
     def setUp(self):
         super(TestBreadthFirst, self).setUp()
         with self.flask_app.app_context():

@@ -380,6 +380,7 @@ class TestTaskAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
     def test_task_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -394,6 +395,7 @@ class TestTaskAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_task_post_with_reserved_fav_user_ids(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -408,6 +410,7 @@ class TestTaskAPI(TestAPI):
         assert error['exception_msg'] == "Reserved keys in payload", error
 
 
+    @with_context
     def test_task_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -423,6 +426,7 @@ class TestTaskAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_task_put_with_fav_user_ids_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -592,6 +596,7 @@ class TestTaskAPI(TestAPI):
         assert root_task not in tasks, tasks
 
 
+    @with_context
     @patch('pybossa.repositories.task_repository.uploader')
     def test_task_delete_deletes_zip_files(self, uploader):
         """Test API task delete deletes also zip files with tasks and taskruns"""

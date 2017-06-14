@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository, ProjectRepository
@@ -34,6 +34,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         self.task_repo = TaskRepository(db)
 
 
+    @with_context
     def test_orderby(self):
         """Test orderby."""
         project = ProjectFactory.create()
@@ -66,6 +67,7 @@ class TestTaskRepositoryForTaskQueries(Test):
                                               project_id=project.id)[0][0]
         assert task == task2, (task.fav_user_ids, task2.fav_user_ids)
 
+    @with_context
     def test_handle_info_json_plain_text(self):
         """Test handle info in JSON as plain text works."""
         TaskFactory.create(info='answer')
@@ -73,6 +75,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 1
         assert res[0].info == 'answer', res[0]
 
+    @with_context
     def test_handle_info_json(self):
         """Test handle info in JSON works."""
         TaskFactory.create(info={'foo': 'bar'})
@@ -81,6 +84,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 1
         assert res[0].info['foo'] == 'bar', res[0]
 
+    @with_context
     def test_handle_info_json_fulltextsearch(self):
         """Test handle info fulltextsearch in JSON works."""
         text = 'bar word agent something'
@@ -94,6 +98,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(res) == 0, len(res)
 
 
+    @with_context
     def test_handle_info_json_multiple_keys(self):
         """Test handle info in JSON with multiple keys works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
@@ -103,6 +108,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == 'foo', res[0]
 
+    @with_context
     def test_handle_info_json_multiple_keys_fulltextsearch(self):
         """Test handle info in JSON with multiple keys works."""
         text = "two three four five"
@@ -116,6 +122,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         res = self.task_repo.filter_tasks_by(info=info)
         assert len(res) == 0, len(res)
 
+    @with_context
     def test_handle_info_json_multiple_keys_and_fulltextsearch(self):
         """Test handle info in JSON with multiple keys and AND operator works."""
         text = "agent myself you bar"
@@ -128,6 +135,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0][0].info['bar'] == text, res[0]
 
 
+    @with_context
     def test_handle_info_json_multiple_keys_404(self):
         """Test handle info in JSON with multiple keys not found works."""
         TaskFactory.create(info={'foo': 'bar', 'daniel': 'foo'})
@@ -135,6 +143,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         res = self.task_repo.filter_tasks_by(info=info)
         assert len(res) == 0
 
+    @with_context
     def test_handle_info_json_multiple_keys_404_with_one_pipe(self):
         """Test handle info in JSON with multiple keys not found works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
@@ -144,6 +153,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0].info['foo'] == 'bar', res[0]
         assert res[0].info['bar'] == 'foo', res[0]
 
+    @with_context
     def test_handle_info_json_multiple_keys_404_fulltextsearch(self):
         """Test handle info in JSON with full text
         search with multiple keys not found works."""
@@ -155,6 +165,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0][0].info['bar'] == 'foo', res[0]
 
 
+    @with_context
     def test_handle_info_json_wrong_data(self):
         """Test handle info in JSON with wrong data works."""
         TaskFactory.create(info={'foo': 'bar', 'bar': 'foo'})
@@ -168,6 +179,7 @@ class TestTaskRepositoryForTaskQueries(Test):
             res = self.task_repo.filter_tasks_by(info=info, fulltextsearch='1')
             assert len(res) == 0
 
+    @with_context
     def test_get_task_return_none_if_no_task(self):
         """Test get_task method returns None if there is no task with the
         specified id"""
@@ -177,6 +189,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert task is None, task
 
 
+    @with_context
     def test_get_task_returns_task(self):
         """Test get_task method returns a task if exists"""
 
@@ -187,6 +200,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert task == retrieved_task, retrieved_task
 
 
+    @with_context
     def test_get_task_by(self):
         """Test get_task_by returns a task with the specified attribute"""
 
@@ -197,6 +211,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert task == retrieved_task, retrieved_task
 
 
+    @with_context
     def test_get_task_by_returns_none_if_no_task(self):
         """Test get_task_by returns None if no task matches the query"""
 
@@ -207,6 +222,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert task is None, task
 
 
+    @with_context
     def test_filter_tasks_by_no_matches(self):
         """Test filter_tasks_by returns an empty list if no tasks match the query"""
 
@@ -218,6 +234,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert len(retrieved_tasks) == 0, retrieved_tasks
 
 
+    @with_context
     def test_filter_tasks_by_one_condition(self):
         """Test filter_tasks_by returns a list of tasks that meet the filtering
         condition"""
@@ -231,6 +248,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert should_be_missing not in retrieved_tasks, retrieved_tasks
 
 
+    @with_context
     def test_filter_tasks_by_multiple_conditions(self):
         """Test filter_tasks_by supports multiple-condition queries"""
 
@@ -244,6 +262,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert task in retrieved_tasks, retrieved_tasks
 
 
+    @with_context
     def test_filter_tasks_support_yield_option(self):
         """Test that filter_tasks_by with the yielded=True option returns the
         results as a generator"""
@@ -258,6 +277,7 @@ class TestTaskRepositoryForTaskQueries(Test):
             assert task in tasks
 
 
+    @with_context
     def test_filter_tasks_limit_offset(self):
         """Test that filter_tasks_by supports limit and offset options"""
 
@@ -273,6 +293,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert last_two == all_tasks[2:]
 
 
+    @with_context
     def test_count_tasks_with_no_matches(self):
         """Test count_tasks_with returns 0 if no tasks match the query"""
 
@@ -283,6 +304,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert count == 0, count
 
 
+    @with_context
     def test_count_tasks_with_one_condition(self):
         """Test count_tasks_with returns the number of tasks that meet the
         filtering condition"""
@@ -295,6 +317,7 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert count == 3, count
 
 
+    @with_context
     def test_count_tasks_with_multiple_conditions(self):
         """Test count_tasks_with supports multiple-condition queries"""
 
@@ -314,6 +337,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         self.task_repo = TaskRepository(db)
 
 
+    @with_context
     def test_get_task_run_return_none_if_no_task_run(self):
         """Test get_task_run method returns None if there is no taskrun with the
         specified id"""
@@ -323,6 +347,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun is None, taskrun
 
 
+    @with_context
     def test_get_task_run_returns_task_run(self):
         """Test get_task_run method returns a taskrun if exists"""
 
@@ -333,6 +358,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun == retrieved_taskrun, retrieved_taskrun
 
 
+    @with_context
     def test_get_task_run_by(self):
         """Test get_task_run_by returns a taskrun with the specified attribute"""
 
@@ -342,6 +368,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
 
+    @with_context
     def test_get_task_run_by_info_json(self):
         """Test get_task_run_by with JSON returns a
         taskrun with the specified attribute"""
@@ -354,6 +381,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
         assert taskrun == retrieved_taskrun, retrieved_taskrun
 
+    @with_context
     def test_get_task_run_by_info_json_fulltext(self):
         """Test get_task_run_by with JSON and fulltext returns a
         taskrun with the specified attribute"""
@@ -369,6 +397,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
 
 
+    @with_context
     def test_get_task_run_by_returns_none_if_no_task_run(self):
         """Test get_task_run_by returns None if no taskrun matches the query"""
 
@@ -379,6 +408,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun is None, taskrun
 
 
+    @with_context
     def test_filter_task_runs_by_no_matches(self):
         """Test filter_task_runs_by returns an empty list if no taskruns match
         the query"""
@@ -391,6 +421,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert len(retrieved_taskruns) == 0, retrieved_taskruns
 
 
+    @with_context
     def test_filter_task_runs_by_one_condition(self):
         """Test filter_task_runs_by returns a list of taskruns that meet the
         filtering condition"""
@@ -404,6 +435,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert should_be_missing not in retrieved_taskruns, retrieved_taskruns
 
 
+    @with_context
     def test_filter_task_runs_by_multiple_conditions(self):
         """Test filter_task_runs_by supports multiple-condition queries"""
 
@@ -417,6 +449,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert taskrun in retrieved_taskruns, retrieved_taskruns
 
 
+    @with_context
     def test_filter_task_runs_by_multiple_conditions_fulltext(self):
         """Test filter_task_runs_by supports multiple-condition
         fulltext queries"""
@@ -438,6 +471,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
                                                                 user_ip='1.1.1.1')
         assert len(retrieved_taskruns) == 0, retrieved_taskruns
 
+    @with_context
     def test_filter_task_runs_support_yield_option(self):
         """Test that filter_task_runs_by with the yielded=True option returns
         the results as a generator"""
@@ -453,6 +487,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
             assert taskrun in task_runs
 
 
+    @with_context
     def test_filter_tasks_runs_limit_offset(self):
         """Test that filter_tasks_by supports limit and offset options"""
 
@@ -468,6 +503,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert last_two == all_task_runs[2:]
 
 
+    @with_context
     def test_count_task_runs_with_no_matches(self):
         """Test count_task_runs_with returns 0 if no taskruns match the query"""
 
@@ -478,6 +514,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert count == 0, count
 
 
+    @with_context
     def test_count_task_runs_with_one_condition(self):
         """Test count_task_runs_with returns the number of taskruns that meet the
         filtering condition"""
@@ -490,6 +527,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert count == 3, count
 
 
+    @with_context
     def test_count_task_runs_with_multiple_conditions(self):
         """Test count_task_runs_with supports multiple-condition queries"""
 
@@ -510,6 +548,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         self.task_repo = TaskRepository(db)
 
 
+    @with_context
     def test_save_saves_tasks(self):
         """Test save persists Task instances"""
 
@@ -521,6 +560,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert self.task_repo.get_task(task.id) == task, "Task not saved"
 
 
+    @with_context
     def test_save_saves_taskruns(self):
         """Test save persists TaskRun instances"""
 
@@ -532,6 +572,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert self.task_repo.get_task_run(taskrun.id) == taskrun, "TaskRun not saved"
 
 
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
@@ -541,6 +582,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(DBIntegrityError, self.task_repo.save, task)
 
 
+    @with_context
     def test_save_only_saves_tasks_and_taskruns(self):
         """Test save raises a WrongObjectError when an object which is neither
         a Task nor a Taskrun instance is saved"""
@@ -550,6 +592,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(WrongObjectError, self.task_repo.save, bad_object)
 
 
+    @with_context
     def test_update_task(self):
         """Test update persists the changes made to Task instances"""
 
@@ -562,6 +605,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert updated_task.state == 'done', updated_task
 
 
+    @with_context
     def test_update_taskrun(self):
         """Test update persists the changes made to TaskRun instances"""
 
@@ -574,6 +618,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert updated_taskrun.info == 'updated info!', updated_taskrun
 
 
+    @with_context
     def test_update_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -584,6 +629,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(DBIntegrityError, self.task_repo.update, task)
 
 
+    @with_context
     def test_update_only_updates_tasks_and_taskruns(self):
         """Test update raises a WrongObjectError when an object which is neither
         a Task nor a TaskRun instance is updated"""
@@ -593,6 +639,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(WrongObjectError, self.task_repo.update, bad_object)
 
 
+    @with_context
     def test_delete_task(self):
         """Test delete removes the Task instance"""
 
@@ -604,6 +651,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_task_deletes_dependent_taskruns(self):
         """Test delete removes the dependent TaskRun instances"""
 
@@ -616,6 +664,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_taskrun(self):
         """Test delete removes the TaskRun instance"""
 
@@ -627,6 +676,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_only_deletes_tasks(self):
         """Test delete raises a WrongObjectError if is requested to delete other
         than a task"""
@@ -636,6 +686,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert_raises(WrongObjectError, self.task_repo.delete, bad_object)
 
 
+    @with_context
     def test_delete_valid_from_project_deletes_many_tasks(self):
         """Test delete_valid_from_project deletes many tasks at once"""
 
@@ -650,6 +701,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert len(tasks) == 0, len(tasks)
 
 
+    @with_context
     def test_delete_valid_from_project_deletes_dependent(self):
         """Test delete_valid_from_project deletes dependent taskruns too"""
 
@@ -664,6 +716,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    @with_context
     def test_delete_valid_from_project_deletes_dependent_without_result(self):
         """Test delete_valid_from_project deletes dependent taskruns without result"""
 
@@ -687,6 +740,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert non_deleted[0].id == taskrun.id, err_msg
 
 
+    @with_context
     def test_delete_taskruns_from_project_deletes_taskruns(self):
         task = TaskFactory.create()
         project = project_repo.get(task.project_id)
@@ -698,6 +752,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert taskruns == [], taskruns
 
 
+    @with_context
     def test_update_tasks_redundancy_changes_all_project_tasks_redundancy(self):
         """Test update_tasks_redundancy updates the n_answers value for every
         task in the project"""
@@ -712,6 +767,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
             assert task.n_answers == 2, task.n_answers
 
 
+    @with_context
     def test_update_tasks_redundancy_updates_state_when_incrementing(self):
         """Test update_tasks_redundancy changes 'completed' tasks to 'ongoing'
         if n_answers is incremented enough"""
@@ -732,6 +788,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
             assert task.state == 'ongoing', task.state
 
 
+    @with_context
     def test_update_tasks_redundancy_updates_state_when_decrementing(self):
         """Test update_tasks_redundancy changes 'ongoing' tasks to 'completed'
         if n_answers is decremented enough"""

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -35,6 +35,7 @@ class TestTaskrunAuthorization(Test):
 
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_first_taskrun(self):
         """Test anonymous user can create a taskrun for a given task if he
@@ -44,6 +45,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_repeated_taskrun(self):
         """Test anonymous user cannot create two taskruns for the same task"""
@@ -53,6 +55,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun2)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_taskrun(self):
         """Test anonymous user can create a taskrun for a task even though
@@ -65,6 +68,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun2)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_create_taskrun_non_allow_anonymous_contrib(self):
         """Test anonymous user cannot create a taskrun for a project that does
@@ -75,6 +79,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_create_taskrun_for_draft_project(self):
         """Test anonymous users can create a taskrun for a project that
@@ -86,6 +91,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_first_taskrun(self):
         """Test authenticated user can create a taskrun for a given task if he
@@ -98,6 +104,7 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == taskrun.user_id, taskrun
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_repeated_taskrun(self):
         """Test authenticated user cannot create two taskruns for the same task"""
@@ -108,6 +115,7 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == taskrun1.user.id
         assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun2)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_taskrun(self):
         """Test authenticated user can create a taskrun for a task even though
@@ -122,6 +130,7 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == taskrun2.user_id
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun2)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_create_taskrun_non_allow_anonymous_contrib(self):
         """Test authenticated user can create a taskrun for a project that does
@@ -132,6 +141,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_create_taskrun_for_draft_project(self):
         """Test authenticated users can create a taskrun for a project that
@@ -142,6 +152,7 @@ class TestTaskrunAuthorization(Test):
 
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
         """Test anonymous user can read any taskrun"""
@@ -152,6 +163,7 @@ class TestTaskrunAuthorization(Test):
                           ensure_authorized_to, 'read', anonymous_taskrun)
         assert_not_raises(Exception, ensure_authorized_to, 'read', user_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_read(self):
         """Test authenticated user can read any taskrun"""
@@ -167,6 +179,7 @@ class TestTaskrunAuthorization(Test):
                           ensure_authorized_to, 'read', other_users_taskrun)
         assert_not_raises(Exception, ensure_authorized_to, 'read', own_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_update_anoymous_taskrun(self):
         """Test anonymous users cannot update an anonymously posted taskrun"""
@@ -175,6 +188,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized,
                       ensure_authorized_to, 'update', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update_anonymous_taskrun(self):
         """Test authenticated users cannot update an anonymously posted taskrun"""
@@ -183,6 +197,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Forbidden,
                       ensure_authorized_to, 'update', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_update_anonymous_taskrun(self):
         """Test admins cannot update anonymously posted taskruns"""
@@ -191,6 +206,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Forbidden,
                       ensure_authorized_to, 'update', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_update_user_taskrun(self):
         """Test anonymous user cannot update taskruns posted by authenticated users"""
@@ -199,6 +215,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized,
                       ensure_authorized_to, 'update', user_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update_other_users_taskrun(self):
         """Test authenticated user cannot update any user taskrun"""
@@ -211,6 +228,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Forbidden,
                       ensure_authorized_to, 'update', other_users_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_update_user_taskrun(self):
         """Test admins cannot update taskruns posted by authenticated users"""
@@ -219,6 +237,7 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_admin.id != user_taskrun.user.id
         assert_raises(Forbidden, ensure_authorized_to, 'update', user_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_delete_anonymous_taskrun(self):
         """Test anonymous users cannot delete an anonymously posted taskrun"""
@@ -227,6 +246,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized,
                       ensure_authorized_to, 'delete', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_delete_anonymous_taskrun(self):
         """Test authenticated users cannot delete an anonymously posted taskrun"""
@@ -235,6 +255,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Forbidden,
                       ensure_authorized_to, 'delete', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_delete_anonymous_taskrun(self):
         """Test admins can delete anonymously posted taskruns"""
@@ -243,6 +264,7 @@ class TestTaskrunAuthorization(Test):
         assert_not_raises(Exception,
                           ensure_authorized_to, 'delete', anonymous_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_delete_user_taskrun(self):
         """Test anonymous user cannot delete taskruns posted by authenticated users"""
@@ -251,6 +273,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Unauthorized,
                       ensure_authorized_to, 'delete', user_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_delete_other_users_taskrun(self):
         """Test authenticated user cannot delete a taskrun if it was created
@@ -265,6 +288,7 @@ class TestTaskrunAuthorization(Test):
         assert_raises(Forbidden,
                       ensure_authorized_to, 'delete', other_users_taskrun)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_delete_user_taskrun(self):
         """Test admins can delete taskruns posted by authenticated users"""

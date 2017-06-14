@@ -23,6 +23,7 @@ from factories import UserFactory
 
 class TestDisqusSSO(TestAPI):
 
+    @with_context
     def test_auth(self):
         """Test with user authenticated."""
         url = 'api/disqus/sso'
@@ -41,6 +42,7 @@ class TestDisqusSSO(TestAPI):
             assert data['remote_auth_s3'] is not None, data
             assert data['api_key'] is not None, data
 
+    @with_context
     def test_anon(self):
         """Test with user authenticated."""
         url = 'api/disqus/sso'
@@ -58,6 +60,7 @@ class TestDisqusSSO(TestAPI):
             assert data['remote_auth_s3'] is not None, data
             assert data['api_key'] is not None, data
 
+    @with_context
     def test_auth_no_keys(self):
         """Test with user authenticated."""
         url = 'api/disqus/sso'
@@ -70,6 +73,7 @@ class TestDisqusSSO(TestAPI):
         assert data['status'] == 'failed', data
         assert data['exception_msg'] == 'Disqus keys are missing'
 
+    @with_context
     def test_anon_no_keys(self):
         """Test with user authenticated."""
         url = 'api/disqus/sso'

@@ -27,6 +27,7 @@ from mock import patch, MagicMock
 
 class TestAuthentication(Test):
 
+    @with_context
     def test_api_authenticate(self):
         """Test AUTHENTICATION works"""
         self.create()
@@ -41,6 +42,7 @@ def handle_error(error):
 
 class TestJwtAuthorization(Test):
 
+    @with_context
     @patch('pybossa.auth.jsonify')
     def test_handle_error(self, mymock):
         """Test handle error method."""
@@ -54,6 +56,7 @@ class TestJwtAuthorization(Test):
         assert tmp.data == INVALID_HEADER_TOKEN, tmp.data
 
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_no_payload(self, mymock):
         """Test JWT no payload."""
@@ -62,6 +65,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, None)
         assert res == INVALID_HEADER_MISSING, res
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_no_bearer(self, mymock):
         """Test JWT no bearer."""
@@ -71,6 +75,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, bearer)
         assert res == INVALID_HEADER_BEARER, res
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_bearer_no_token(self, mymock):
         """Test JWT bearer and no token."""
@@ -80,6 +85,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, bearer)
         assert res == INVALID_HEADER_TOKEN, res
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_bearer_token(self, mymock):
         """Test JWT bearer token and something else."""
@@ -89,6 +95,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, bearer)
         assert res == INVALID_HEADER_BEARER_TOKEN, res
 
+    @with_context
     @patch('pybossa.auth.jwt.decode')
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_wrong_project(self, mymock, mydecode):
@@ -100,6 +107,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, bearer)
         assert res == WRONG_PROJECT_SIGNATURE, res
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize_project_decode_error(self, mymock):
         """Test JWT decode error."""
@@ -109,6 +117,7 @@ class TestJwtAuthorization(Test):
         res = jwt_authorize_project(project, bearer)
         assert res == DECODE_ERROR_SIGNATURE, res
 
+    @with_context
     @patch('pybossa.auth.handle_error')
     def test_jwt_authorize(self, mymock):
         """Test JWT decode works."""

@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import UserFactory
 from pybossa.repositories import UserRepository
@@ -32,6 +32,7 @@ class TestUserRepository(Test):
         self.user_repo = UserRepository(db)
 
 
+    @with_context
     def test_get_return_none_if_no_user(self):
         """Test get method returns None if there is no user with the
         specified id"""
@@ -41,6 +42,7 @@ class TestUserRepository(Test):
         assert user is None, user
 
 
+    @with_context
     def test_get_returns_user(self):
         """Test get method returns a user if exists"""
 
@@ -51,6 +53,7 @@ class TestUserRepository(Test):
         assert user == retrieved_user, retrieved_user
 
 
+    @with_context
     def test_get_by_name_return_none_if_no_user(self):
         """Test get_by_name returns None when a user with the specified
         name does not exist"""
@@ -60,6 +63,7 @@ class TestUserRepository(Test):
         assert user is None, user
 
 
+    @with_context
     def test_get_by_name_returns_the_user(self):
         """Test get_by_name returns a user if exists"""
 
@@ -70,6 +74,7 @@ class TestUserRepository(Test):
         assert user == retrieved_user, retrieved_user
 
 
+    @with_context
     def test_get_by(self):
         """Test get_by returns a user with the specified attribute"""
 
@@ -80,6 +85,7 @@ class TestUserRepository(Test):
         assert user == retrieved_user, retrieved_user
 
 
+    @with_context
     def test_get_by_returns_none_if_no_user(self):
         """Test get_by returns None if no user matches the query"""
 
@@ -90,6 +96,7 @@ class TestUserRepository(Test):
         assert user is None, user
 
 
+    @with_context
     def get_all_returns_list_of_all_users(self):
         """Test get_all returns a list of all the existing users"""
 
@@ -103,6 +110,7 @@ class TestUserRepository(Test):
             assert user in users, user
 
 
+    @with_context
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no users match the query"""
 
@@ -114,6 +122,7 @@ class TestUserRepository(Test):
         assert len(retrieved_users) == 0, retrieved_users
 
 
+    @with_context
     def test_filter_by_one_condition(self):
         """Test filter_by returns a list of users that meet the filtering
         condition"""
@@ -127,6 +136,7 @@ class TestUserRepository(Test):
         assert should_be_missing not in retrieved_users, retrieved_users
 
 
+    @with_context
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
@@ -140,6 +150,7 @@ class TestUserRepository(Test):
         assert user in retrieved_users, retrieved_users
 
 
+    @with_context
     def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
@@ -155,6 +166,7 @@ class TestUserRepository(Test):
         assert last_two == all_users[2:]
 
 
+    @with_context
     def test_search_by_name_returns_list(self):
         """Test search_by_name returns a list with search results"""
 
@@ -163,6 +175,7 @@ class TestUserRepository(Test):
         assert isinstance(search, list), search.__class__
 
 
+    @with_context
     def test_search_by_name(self):
         """Test search_by_name returns a list with the user if searching by
         either its name or fullname"""
@@ -176,6 +189,7 @@ class TestUserRepository(Test):
         assert user in search_by_fullname, search_by_fullname
 
 
+    @with_context
     def test_search_by_name_capital_lower_letters(self):
         """Test search_by_name works the same with capital or lower letters"""
 
@@ -189,6 +203,7 @@ class TestUserRepository(Test):
         assert user_lowers in search_capital, search_capital
 
 
+    @with_context
     def test_search_by_name_substrings(self):
         """Test search_by_name works when searching by a substring"""
 
@@ -199,6 +214,7 @@ class TestUserRepository(Test):
         assert user in search, search
 
 
+    @with_context
     def test_search_by_name_empty_string(self):
         """Test search_by_name returns an empty list when searching by '' """
 
@@ -209,6 +225,7 @@ class TestUserRepository(Test):
         assert len(search) == 0, search
 
 
+    @with_context
     def test_total_users_no_users(self):
         """Test total_users return 0 if there are no users"""
 
@@ -217,6 +234,7 @@ class TestUserRepository(Test):
         assert count == 0, count
 
 
+    @with_context
     def test_total_users_count(self):
         """Test total_users return 1 if there is one user"""
 
@@ -226,6 +244,7 @@ class TestUserRepository(Test):
         assert count == 1, count
 
 
+    @with_context
     def test_save(self):
         """Test save persist the user"""
 
@@ -237,6 +256,7 @@ class TestUserRepository(Test):
         assert self.user_repo.get(user.id) == user, "User not saved"
 
 
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
@@ -246,6 +266,7 @@ class TestUserRepository(Test):
         assert_raises(DBIntegrityError, self.user_repo.save, user)
 
 
+    @with_context
     def test_save_only_saves_users(self):
         """Test save raises a WrongObjectError when an object which is not
         a User instance is saved"""
@@ -255,6 +276,7 @@ class TestUserRepository(Test):
         assert_raises(WrongObjectError, self.user_repo.save, bad_object)
 
 
+    @with_context
     def test_update(self):
         """Test update persists the changes made to the user"""
 
@@ -267,6 +289,7 @@ class TestUserRepository(Test):
         assert updated_user.locale == 'it', updated_user
 
 
+    @with_context
     def test_update_fails_if_integrity_error(self):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
@@ -277,6 +300,7 @@ class TestUserRepository(Test):
         assert_raises(DBIntegrityError, self.user_repo.update, user)
 
 
+    @with_context
     def test_update_only_updates_users(self):
         """Test update raises a WrongObjectError when an object which is not
         a User instance is updated"""

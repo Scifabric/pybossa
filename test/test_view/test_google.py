@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test
+from default import Test, with_context
 from pybossa.view.google import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
@@ -23,6 +23,7 @@ from factories import UserFactory
 
 class TestGoogle(Test):
 
+    @with_context
     def test_manage_user_new_user(self):
         """Test GOOGLE manage_user with a new user"""
         user_data = dict(id='1', name='google', email='g@g.com')
@@ -34,6 +35,7 @@ class TestGoogle(Test):
         assert user.google_user_id == user_data['id'], user
         assert user.info['google_token'] == dict(oauth_token=token), user
 
+    @with_context
     def test_manage_user_twitter_registered_user(self):
         """Test GOOGLE manage_user with an existing user registered with Google"""
         user_data = dict(id='1', name='google', email='g@g.com')
@@ -47,6 +49,7 @@ class TestGoogle(Test):
         assert user.google_user_id == user_data['id'], user
         assert user.info['google_token'] == dict(oauth_token=new_token), user
 
+    @with_context
     def test_manage_user_with_existing_non_twitter_account_user(self):
         """Test GOOGLE manage_user user with a username that already exists
         and registered without Google"""
@@ -57,6 +60,7 @@ class TestGoogle(Test):
         assert user.google_user_id == '10', err_msg
         assert user.info['google_token'] == dict(oauth_token=token), user
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     def test_manage_user_with_newsletter(self, newsletter):
         """Test GOOGLE manage_user with newsletter works."""
@@ -72,6 +76,7 @@ class TestGoogle(Test):
         assert user.google_user_id == user_data['id'], user
         newsletter.subscribe_user.assert_called_once_with(user)
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     def test_manage_user_with_newsletter_only_once(self, newsletter):
         """Test GOOGLE manage_user with newsletter only once works."""
@@ -87,6 +92,7 @@ class TestGoogle(Test):
         assert r_user.google_user_id == user_data['id'], user
         assert newsletter.subscribe_user.called is False, newsletter.subscribe_user.called
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
@@ -107,6 +113,7 @@ class TestGoogle(Test):
         url_for.assert_called_with('account.newsletter_subscribe',
                                    next=next_url)
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
@@ -127,6 +134,7 @@ class TestGoogle(Test):
         assert user.newsletter_prompted is True
         assert url_for.called is False
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
@@ -144,6 +152,7 @@ class TestGoogle(Test):
         assert login_user.called is False
         url_for.assert_called_with('account.forgot_password')
 
+    @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
