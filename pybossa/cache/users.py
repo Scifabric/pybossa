@@ -378,7 +378,7 @@ def get_users_for_report():
                     last_submission_date=row.last_submission_date,
                     completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()),
                     total_projects_contributed=n_projects_contributed(row.u_id),
-                    percentage_tasks_completed=row.completed_tasks * 100 / n_total_tasks())
+                    percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2))
                     for row in results]
     return users_report
 
