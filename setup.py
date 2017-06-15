@@ -58,11 +58,13 @@ requirements = [
     "webassets>=0.12.1, <0.12.2",
     "readability-lxml>=0.6.2, <1.0",
     "pybossa-onesignal",
+    "pandas>=0.20.2, <0.20.3",
+    "flatten-json>=0.1.5, <0.1.6"
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.4.2',
+    version = '2.4.3',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

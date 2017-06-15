@@ -47,12 +47,12 @@ class CsvExporter(Exporter):
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
-        if csv_data is not None:
+        if dataframe is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
-                dataframe.to_csv(datafile)
+                dataframe.to_csv(datafile, index=False,
+                                 encoding='utf-8')
                 datafile.flush()
-                #csv_task_generator.close()  # delete temp csv file
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     _zip = self._zip_factory(zipped_datafile.name)
