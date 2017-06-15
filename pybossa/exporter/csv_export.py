@@ -38,11 +38,8 @@ class CsvExporter(Exporter):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         data = getattr(task_repo, 'filter_%ss_by' % ty)(project_id=id)
-        if data is not None:
-            flat_data = [flatten(datum.dictize()) for datum in data]
-            return pd.DataFrame(flat_data)
-        else:
-            return pd.DataFrame([])
+        flat_data = [flatten(datum.dictize()) for datum in data]
+        return pd.DataFrame(flat_data)
         
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
