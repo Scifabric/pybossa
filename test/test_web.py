@@ -43,6 +43,7 @@ from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, Task
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 from nose.tools import assert_raises
+from flatten_json import flatten
 
 
 class TestWeb(web.Helper):
@@ -4363,28 +4364,21 @@ class TestWeb(web.Helper):
         assert len(exported_task_runs) == len(project.task_runs), err_msg
 
         for t in project.tasks[0].task_runs:
-            for tk in t.dictize().keys():
-                expected_key = "task_run__%s" % tk
-                assert expected_key in keys, expected_key
-            for tk in t.info.keys():
-                expected_key = "task_runinfo__%s" % tk
+            for tk in flatten(t.dictize()).keys():
+                expected_key = "%s" % tk
                 assert expected_key in keys, expected_key
 
         for et in exported_task_runs:
-            task_run_id = et[keys.index('task_run__id')]
+            task_run_id = et[keys.index('id')]
             task_run = db.session.query(TaskRun).get(task_run_id)
-            task_run_dict = task_run.dictize()
+            task_run_dict = flatten(task_run.dictize())
             for k in task_run_dict:
-                slug = 'task_run__%s' % k
+                slug = '%s' % k
                 err_msg = "%s != %s" % (task_run_dict[k], et[keys.index(slug)])
-                if k != 'info':
+                if task_run_dict[k] is not None:
                     assert unicode(task_run_dict[k]) == et[keys.index(slug)], err_msg
                 else:
-                    assert json.dumps(task_run_dict[k]) == et[keys.index(slug)], err_msg
-            for k in task_run_dict['info'].keys():
-                slug = 'task_runinfo__%s' % k
-                err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
-                assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
+                    assert u'' == et[keys.index(slug)], err_msg
         # Task runs are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_task_run_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
