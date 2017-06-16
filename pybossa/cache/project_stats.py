@@ -20,6 +20,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY
+from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
 
 import pygeoip
@@ -539,9 +540,9 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-@memoize(timeout=ONE_DAY)
-def get_stats(project_id, geo=False, period='2 week'):
-    """Return the stats of a given project."""
+#@memoize(timeout=ONE_DAY)
+def update_stats(project_id, geo=False, period='2 week'):
+    """Update the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
     users, anon_users, auth_users = stats_users(project_id, period)
@@ -562,4 +563,21 @@ def get_stats(project_id, geo=False, period='2 week'):
     users_stats = stats_format_users(project_id, users, anon_users, auth_users,
                                      geo)
 
+    data = dict(dates_stats=dates_stats,
+                hours_stats=hours_stats,
+                users_stats=users_stats)
+    ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+    if ps is None:
+        ps = ProjectStats(project_id=project_id, info=data)
+        db.session.add(ps)
+    else:
+        ps.info = data
+    db.session.commit()
     return dates_stats, hours_stats, users_stats
+
+
+def get_stats(project_id, geo=False, period='2 week'):
+    """Get project's stats."""
+    ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+    update_stats(project_id, geo, period)
+    return ps.info['dates_stats'], ps.info['hours_stats'], ps.info['users_stats']
