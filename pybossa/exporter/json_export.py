@@ -29,10 +29,8 @@ from werkzeug.utils import secure_filename
 
 class JsonExporter(Exporter):
 
-    def gen_json(self, table, id):
-        data = getattr(task_repo, 'filter_%ss_by' % table)(project_id=id)
-        tmp = [row.dictize() for row in data]
-        return tmp
+    def gen_json(self, table, project_id):
+        return self._get_data(table, project_id)
 
     def _respond_json(self, ty, id):  # TODO: Refactor _respond_json out?
         # TODO: check ty here

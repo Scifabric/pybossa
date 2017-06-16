@@ -28,19 +28,16 @@ from pybossa.model.task_run import TaskRun
 from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from flatten_json import flatten
 import pandas as pd
 
 
 class CsvExporter(Exporter):
 
-    def _respond_csv(self, ty, id):
-        out = tempfile.TemporaryFile()
-        writer = UnicodeWriter(out)
-        data = getattr(task_repo, 'filter_%ss_by' % ty)(project_id=id)
-        flat_data = [flatten(datum.dictize()) for datum in data]
+    def _respond_csv(self, table, project_id):
+        flat_data = self._get_data(table, project_id,
+                                   flat=True)
         return pd.DataFrame(flat_data)
-        
+
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
