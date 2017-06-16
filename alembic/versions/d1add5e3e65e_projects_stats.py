@@ -27,6 +27,8 @@ def upgrade():
         sa.Column('n_tasks', sa.Integer, default=0),
         sa.Column('n_task_runs', sa.Integer, default=0),
         sa.Column('n_results', sa.Integer, default=0),
+        sa.Column('n_volunteers', sa.Integer, default=0),
+        sa.Column('n_completed_tasks', sa.Integer, default=0),
         sa.Column('overall_progress', sa.Integer, default=0),
         sa.Column('last_activity', sa.Text, default=make_timestamp),
         sa.Column('info', JSON, nullable=False)
