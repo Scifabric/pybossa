@@ -579,5 +579,5 @@ def update_stats(project_id, geo=False, period='2 week'):
 def get_stats(project_id, geo=False, period='2 week'):
     """Get project's stats."""
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
-    update_stats(project_id, geo, period)
+    #update_stats(project_id, geo, period)
     return ps.info['dates_stats'], ps.info['hours_stats'], ps.info['users_stats']
