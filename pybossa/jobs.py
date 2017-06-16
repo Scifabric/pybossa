@@ -594,7 +594,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
                 .format(msg, current_app.config.get('BRAND')))
         mail_dict = dict(recipients=recipients, subject=subject, body=body)
         send_mail(mail_dict)
-        return msg
+        raise
 
     cached_projects.delete_browse_tasks(project_id)
     if from_auto:
