@@ -4070,6 +4070,72 @@ class TestWeb(web.Helper):
         assert "Owner Message" not in res.data, error_msg
 
     @with_context
+    def test_export_result_json(self):
+        """Test WEB export Results to JSON works"""
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(5, project=project, n_answers=1)
+        for task in tasks:
+            TaskRunFactory.create(task=task, project=project)
+        results = result_repo.filter_by(project_id=project.id)
+        for result in results:
+            result.info = dict(key='value')
+            result_repo.update(result)
+
+        # First test for a non-existant project
+        uri = '/project/somethingnotexists/tasks/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the results in JSON format
+        uri = "/project/somethingnotexists/tasks/export?type=result&format=json"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real project
+        uri = '/project/%s/tasks/export' % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "Export All Tasks and Task Runs"
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now test that a 404 is raised when an arg is invalid
+        uri = "/project/%s/tasks/export?type=ask&format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/project/%s/tasks/export?format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/project/%s/tasks/export?type=result" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # And a 415 is raised if the requested format is not supported or invalid
+        uri = "/project/%s/tasks/export?type=result&format=gson" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
+
+        # Now get the tasks in JSON format
+        self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
+        uri = "/project/%s/tasks/export?type=result&format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        expected_filename = '%s_result.json' % unidecode(project.short_name)
+        assert extracted_filename == expected_filename, (zip.namelist()[0],
+                                                         expected_filename)
+
+        exported_results = json.loads(zip.read(extracted_filename))
+        assert len(exported_results) == len(results), (len(exported_results),
+                                                            len(project.tasks))
+        for er in exported_results:
+            er['info']['key'] == 'value'
+        # Results are exported as an attached file
+        content_disposition = 'attachment; filename=%d_%s_result_json.zip' % (project.id,
+                                                                              unidecode(project.short_name))
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+
+    @with_context
     def test_50_export_task_json(self):
         """Test WEB export Tasks to JSON works"""
         Fixtures.create()
