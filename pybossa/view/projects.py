@@ -34,13 +34,14 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, sentinel)
+                          csv_exporter, importer, sentinel, db)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.auditlog import Auditlog
+from pybossa.model.project_stats import ProjectStats
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
@@ -115,13 +116,22 @@ def project_by_shortname(short_name):
         # Get owner
         owner = user_repo.get(project.owner_id)
         # Populate CACHE with the data of the project
+        ps = db.session.query(ProjectStats)\
+               .filter_by(project_id=project.id).first()
+        #return (project,
+        #        owner,
+        #        cached_projects.n_tasks(project.id),
+        #        cached_projects.n_task_runs(project.id),
+        #        cached_projects.overall_progress(project.id),
+        #        cached_projects.last_activity(project.id),
+        #        cached_projects.n_results(project.id))
         return (project,
                 owner,
-                cached_projects.n_tasks(project.id),
-                cached_projects.n_task_runs(project.id),
-                cached_projects.overall_progress(project.id),
-                cached_projects.last_activity(project.id),
-                cached_projects.n_results(project.id))
+                ps.n_tasks,
+                ps.n_task_runs,
+                ps.overall_progress,
+                ps.last_activity,
+                ps.n_results)
     else:
         cached_projects.delete_project(short_name)
         return abort(404)
