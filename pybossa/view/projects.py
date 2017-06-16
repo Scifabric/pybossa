@@ -127,11 +127,7 @@ def project_by_shortname(short_name):
         #        cached_projects.n_results(project.id))
         return (project,
                 owner,
-                ps.n_tasks,
-                ps.n_task_runs,
-                ps.overall_progress,
-                ps.last_activity,
-                ps.n_results)
+                ps)
     else:
         cached_projects.delete_project(short_name)
         return abort(404)
@@ -1193,9 +1189,10 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns Project Stats"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    #(project, owner, n_tasks, n_task_runs,
+    # overall_progress, last_activity,
+    # n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     n_volunteers = cached_projects.n_volunteers(project.id)
     n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Statistics")
@@ -1210,16 +1207,16 @@ def show_stats(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
-    if not ((n_tasks > 0) and (n_task_runs > 0)):
+    if not ((ps.n_tasks > 0) and (ps.n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         response = dict(template='/projects/non_stats.html',
                         title=title,
                         project=project_sanitized,
                         owner=owner_sanitized,
-                        n_tasks=n_tasks,
-                        overall_progress=overall_progress,
-                        n_volunteers=n_volunteers,
-                        n_completed_tasks=n_completed_tasks,
+                        n_tasks=ps.n_tasks,
+                        overall_progress=ps.overall_progress,
+                        n_volunteers=ps.n_volunteers,
+                        n_completed_tasks=ps.n_completed_tasks,
                         pro_features=pro)
         return handle_content_type(response)
 
@@ -1273,10 +1270,10 @@ def show_stats(short_name):
                     userStats=userStats,
                     project=project_sanitized,
                     owner=owner_sanitized,
-                    n_tasks=n_tasks,
-                    overall_progress=overall_progress,
-                    n_volunteers=n_volunteers,
-                    n_completed_tasks=n_completed_tasks,
+                    n_tasks=ps.n_tasks,
+                    overall_progress=ps.overall_progress,
+                    n_volunteers=ps.n_volunteers,
+                    n_completed_tasks=ps.n_completed_tasks,
                     avg_contrib_time=formatted_contrib_time,
                     pro_features=pro)
 
