@@ -115,19 +115,9 @@ def project_by_shortname(short_name):
     if project:
         # Get owner
         owner = user_repo.get(project.owner_id)
-        # Populate CACHE with the data of the project
         ps = db.session.query(ProjectStats)\
                .filter_by(project_id=project.id).first()
-        #return (project,
-        #        owner,
-        #        cached_projects.n_tasks(project.id),
-        #        cached_projects.n_task_runs(project.id),
-        #        cached_projects.overall_progress(project.id),
-        #        cached_projects.last_activity(project.id),
-        #        cached_projects.n_results(project.id))
-        return (project,
-                owner,
-                ps)
+        return (project, owner, ps)
     else:
         cached_projects.delete_project(short_name)
         return abort(404)
@@ -290,9 +280,7 @@ def new():
 @login_required
 def task_presenter_editor(short_name):
     errors = False
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress,
-     last_activity, n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, "Task Presenter Editor")
     ensure_authorized_to('read', project)
@@ -345,13 +333,13 @@ def task_presenter_editor(short_name):
             response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
-                            owner=owner_sanitized,
-                            overall_progress=overall_progress,
-                            n_tasks=n_tasks,
-                            n_task_runs=n_task_runs,
-                            last_activity=last_activity,
-                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                            n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                            owner=ps.owner_sanitized,
+                            overall_progress=ps.overall_progress,
+                            n_tasks=ps.n_tasks,
+                            n_task_runs=ps.n_task_runs,
+                            last_activity=ps.last_activity,
+                            n_completed_tasks=ps.n_completed_tasks,
+                            n_volunteers=ps.n_volunteers,
                             presenters=pres_tmpls,
                             pro_features=pro)
             return handle_content_type(response)
@@ -375,12 +363,12 @@ def task_presenter_editor(short_name):
                     form=form,
                     project=dict_project,
                     owner=owner_sanitized,
-                    overall_progress=overall_progress,
-                    n_tasks=n_tasks,
-                    n_task_runs=n_task_runs,
-                    last_activity=last_activity,
-                    n_completed_tasks=cached_projects.n_completed_tasks(project.id),
-                    n_volunteers=cached_projects.n_volunteers(project.id),
+                    overall_progress=ps.overall_progress,
+                    n_tasks=ps.n_tasks,
+                    n_task_runs=ps.n_task_runs,
+                    last_activity=ps.last_activity,
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
                     errors=errors,
                     pro_features=pro)
     return handle_content_type(response)
@@ -389,9 +377,8 @@ def task_presenter_editor(short_name):
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    (project, owner, n_tasks,
-    n_task_runs, overall_progress, last_activity,
-    n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, "Delete")
     ensure_authorized_to('read', project)
     ensure_authorized_to('delete', project)
@@ -402,9 +389,9 @@ def delete(short_name):
                         title=title,
                         project=project_sanitized,
                         owner=owner_sanitized,
-                        n_tasks=n_tasks,
-                        overall_progress=overall_progress,
-                        last_activity=last_activity,
+                        n_tasks=ps.n_tasks,
+                        overall_progress=ps.overall_progress,
+                        last_activity=ps.last_activity,
                         pro_features=pro,
                         csrf=generate_csrf())
         return handle_content_type(response)
@@ -417,14 +404,10 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    (project, owner, n_tasks,
-     n_task_runs, overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     def handle_valid_form(form):
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
 
         new_project = project_repo.get_by_shortname(short_name)
         old_project = Project(**new_project.dictize())
@@ -516,12 +499,12 @@ def update(short_name):
                     upload_form=upload_form,
                     project=project_sanitized,
                     owner=owner_sanitized,
-                    n_tasks=n_tasks,
-                    overall_progress=overall_progress,
-                    n_task_runs=n_task_runs,
-                    last_activity=last_activity,
-                    n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                    n_tasks=ps.n_tasks,
+                    overall_progress=ps.overall_progress,
+                    n_task_runs=ps.n_task_runs,
+                    last_activity=ps.last_activity,
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
                     title=title,
                     pro_features=pro)
     return handle_content_type(response)
@@ -529,9 +512,7 @@ def update(short_name):
 
 @blueprint.route('/<short_name>/')
 def details(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -549,12 +530,12 @@ def details(short_name):
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner":  owner_sanitized,
-                     "n_tasks": n_tasks,
-                     "n_task_runs": n_task_runs,
-                     "overall_progress": overall_progress,
-                     "last_activity": last_activity,
-                     "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
-                     "n_volunteers": cached_projects.n_volunteers(project.get('id')),
+                     "n_tasks": ps.n_tasks,
+                     "n_task_runs": ps.n_task_runs,
+                     "overall_progress": ps.overall_progress,
+                     "last_activity": ps.last_activity,
+                     "n_completed_tasks": ps.n_completed_tasks,
+                     "n_volunteers": ps.n_volunteers,
                      "pro_features": pro}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
@@ -567,9 +548,7 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, "Settings")
     ensure_authorized_to('read', project)
@@ -580,14 +559,12 @@ def settings(short_name):
     response = dict(template='/projects/settings.html',
                     project=project,
                     owner=owner_serialized,
-                    n_tasks=n_tasks,
-                    overall_progress=overall_progress,
-                    n_task_runs=n_task_runs,
-                    last_activity=last_activity,
-                    n_completed_tasks=cached_projects.n_completed_tasks(
-                        project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(
-                        project.get('id')),
+                    n_tasks=ps.n_tasks,
+                    overall_progress=ps.overall_progress,
+                    n_task_runs=ps.n_task_runs,
+                    last_activity=ps.last_activity,
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
                     title=title,
                     pro_features=pro)
     return handle_content_type(response)
@@ -596,15 +573,11 @@ def settings(short_name):
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     pro = pro_features()
@@ -613,9 +586,9 @@ def import_task(short_name):
     template_args = dict(title=title, loading_text=loading_text,
                          project=project_sanitized,
                          owner=owner_sanitized,
-                         n_tasks=n_tasks,
-                         overall_progress=overall_progress,
-                         n_volunteers=n_volunteers,
+                         n_tasks=ps.n_tasks,
+                         overall_progress=ps.overall_progress,
+                         n_volunteers=ps.n_volunteers,
                          n_completed_tasks=n_completed_tasks,
                          target='project.import_task',
                          pro_features=pro)
@@ -677,16 +650,13 @@ def setup_autoimporter(short_name):
     if not pro['autoimporter_enabled']:
         raise abort(403)
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    project, owner, ps = project_by_shortname(short_name)
+
     dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     template_args = dict(project=dict_project,
                          owner=owner,
-                         n_tasks=n_tasks,
-                         overall_progress=overall_progress,
+                         n_tasks=ps.n_tasks,
+                         overall_progress=ps.overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
                          pro_features=pro,
@@ -747,9 +717,8 @@ def delete_autoimporter(short_name):
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
@@ -768,9 +737,8 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
@@ -837,9 +805,7 @@ def presenter(short_name):
         resp = make_response(render_template(tmpl, **template_args))
         return resp
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -878,9 +844,8 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, "Tutorial")
 
     if project.needs_password():
@@ -902,9 +867,7 @@ def tutorial(short_name):
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -925,9 +888,8 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, "Tasks")
 
     if project.needs_password():
@@ -951,10 +913,10 @@ def tasks(short_name):
                     project=project_sanitized,
                     owner=owner_sanitized,
                     autoimporter_enabled=autoimporter_enabled,
-                    n_tasks=n_tasks,
-                    n_task_runs=n_task_runs,
-                    overall_progress=overall_progress,
-                    last_activity=last_activity,
+                    n_tasks=ps.n_tasks,
+                    n_task_runs=ps.n_task_runs,
+                    overall_progress=ps.overall_progress,
+                    last_activity=ps.last_activity,
                     n_completed_tasks=cached_projects.n_completed_tasks(
                         project.get('id')),
                     n_volunteers=cached_projects.n_volunteers(
@@ -966,12 +928,9 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page=1):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, "Tasks")
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     pro = pro_features()
 
     def respond():
@@ -992,8 +951,8 @@ def tasks_browse(short_name, page=1):
                     tasks=page_tasks,
                     title=title,
                     pagination=pagination,
-                    n_tasks=n_tasks,
-                    overall_progress=overall_progress,
+                    n_tasks=ps.n_tasks,
+                    overall_progress=ps.overall_progress,
                     n_volunteers=n_volunteers,
                     n_completed_tasks=n_completed_tasks,
                     pro_features=pro)
@@ -1014,16 +973,13 @@ def tasks_browse(short_name, page=1):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
     if request.method == 'GET':
         title = project_title(project, "Delete")
-        n_volunteers = cached_projects.n_volunteers(project.id)
-        n_completed_tasks = cached_projects.n_completed_tasks(project.id)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         project_sanitized, owner_sanitized = sanitize_project_owner(project, 
                                                                     owner, 
@@ -1031,12 +987,12 @@ def delete_tasks(short_name):
         response = dict(template='projects/tasks/delete.html',
                         project=project_sanitized,
                         owner=owner_sanitized,
-                        n_tasks=n_tasks,
-                        n_task_runs=n_task_runs,
+                        n_tasks=ps.n_tasks,
+                        n_task_runs=ps.n_task_runs,
                         n_volunteers=n_volunteers,
                         n_completed_tasks=n_completed_tasks,
-                        overall_progress=overall_progress,
-                        last_activity=last_activity,
+                        overall_progress=ps.overall_progress,
+                        last_activity=ps.last_activity,
                         title=title,
                         pro_features=pro,
                         csrf=generate_csrf())
@@ -1051,11 +1007,8 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
     pro = pro_features()
@@ -1074,11 +1027,11 @@ def export_to(short_name):
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                project=project,
                                owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
+                               n_tasks=ps.n_tasks,
+                               n_task_runs=ps.n_task_runs,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress,
+                               overall_progress=ps.overall_progress,
                                pro_features=pro)
 
     def respond_json(ty):
@@ -1189,12 +1142,7 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns Project Stats"""
-    #(project, owner, n_tasks, n_task_runs,
-    # overall_progress, last_activity,
-    # n_results) = project_by_shortname(short_name)
     project, owner, ps = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Statistics")
     pro = pro_features(owner)
 
@@ -1284,11 +1232,8 @@ def show_stats(short_name):
 @login_required
 def task_settings(short_name):
     """Settings page for tasks of the project"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    project, owner, ps = project_by_shortname(short_name)
+
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -1296,8 +1241,8 @@ def task_settings(short_name):
     return render_template('projects/task_settings.html',
                            project=project,
                            owner=owner,
-                           n_tasks=n_tasks,
-                           overall_progress=overall_progress,
+                           n_tasks=ps.n_tasks,
+                           overall_progress=ps.overall_progress,
                            n_volunteers=n_volunteers,
                            n_completed_tasks=n_completed_tasks,
                            pro_features=pro)
@@ -1306,9 +1251,8 @@ def task_settings(short_name):
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
 def task_n_answers(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, gettext('Redundancy'))
     form = TaskRedundancyForm(request.body)
     ensure_authorized_to('read', project)
@@ -1347,9 +1291,8 @@ def task_n_answers(short_name):
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
 def task_scheduler(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, gettext('Task Scheduler'))
     form = TaskSchedulerForm(request.body)
     pro = pro_features()
@@ -1403,9 +1346,8 @@ def task_scheduler(short_name):
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
 def task_priority(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     title = project_title(project, gettext('Task Priority'))
     form = TaskPriorityForm(request.body)
     pro = pro_features()
@@ -1454,9 +1396,7 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     blogposts = blog_repo.filter_by(project_id=project.id)
     if project.needs_password():
@@ -1474,9 +1414,9 @@ def show_blogposts(short_name):
                     project=project_sanitized,
                     owner=owner_sanitized,
                     blogposts=blogposts,
-                    overall_progress=overall_progress,
-                    n_tasks=n_tasks,
-                    n_task_runs=n_task_runs,
+                    overall_progress=ps.overall_progress,
+                    n_tasks=ps.n_tasks,
+                    n_task_runs=ps.n_task_runs,
                     n_completed_tasks=cached_projects.n_completed_tasks(
                         project.get('id')),
                     n_volunteers=cached_projects.n_volunteers(
@@ -1487,9 +1427,8 @@ def show_blogposts(short_name):
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
@@ -1505,11 +1444,11 @@ def show_blogpost(short_name, id):
                            project=project,
                            owner=owner,
                            blogpost=blogpost,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                           overall_progress=ps.overall_progress,
+                           n_tasks=ps.n_tasks,
+                           n_task_runs=ps.n_task_runs,
+                           n_completed_tasks=ps.n_completed_tasks,
+                           n_volunteers=ps.n_volunteers,
                            pro_features=pro)
 
 
@@ -1525,17 +1464,15 @@ def new_blogpost(short_name):
                         form=form,
                         project=project_sanitized,
                         owner=owner_sanitized,
-                        overall_progress=overall_progress,
-                        n_tasks=n_tasks,
-                        n_task_runs=n_task_runs,
+                        overall_progress=ps.overall_progress,
+                        n_tasks=ps.n_tasks,
+                        n_task_runs=ps.n_task_runs,
                         n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
                         n_volunteers=cached_projects.n_volunteers(dict_project.get('id')),
                         pro_features=pro)
         return handle_content_type(response)
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
 
     form = BlogpostForm(request.form)
@@ -1568,9 +1505,8 @@ def new_blogpost(short_name):
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
 def update_blogpost(short_name, id):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+
+    project, owner, ps = project_by_shortname(short_name)
 
     pro = pro_features()
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
@@ -1582,8 +1518,8 @@ def update_blogpost(short_name, id):
                                title=gettext("Edit a post"),
                                form=form, project=project, owner=owner,
                                blogpost=blogpost,
-                               overall_progress=overall_progress,
-                               n_task_runs=n_task_runs,
+                               overall_progress=ps.overall_progress,
+                               n_task_runs=ps.n_task_runs,
                                n_completed_tasks=cached_projects.n_completed_tasks(project.id),
                                n_volunteers=cached_projects.n_volunteers(project.id),
                                pro_features=pro)
@@ -1644,29 +1580,27 @@ def auditlog(short_name):
     if not pro['auditlog_enabled']:
         raise abort(403)
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
 
     ensure_authorized_to('read', Auditlog, project_id=project.id)
     logs = auditlogger.get_project_logs(project.id)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                           overall_progress=ps.overall_progress,
+                           n_tasks=ps.n_tasks,
+                           n_task_runs=ps.n_task_runs,
+                           n_completed_tasks=ps.n_completed_tasks,
+                           n_volunteers=ps.n_volunteers,
                            pro_features=pro)
 
 
 @blueprint.route('/<short_name>/publish', methods=['GET', 'POST'])
 @login_required
 def publish(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+
+    project, owner, ps = project_by_shortname(short_name)
 
     pro = pro_features()
     ensure_authorized_to('publish', project)
@@ -1698,9 +1632,8 @@ def project_event_stream(short_name, channel_type):
 def project_stream_uri_private(short_name):
     """Returns stream."""
     if current_app.config.get('SSE'):
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
+
         if (current_user.id == project.owner_id or current_user.admin):
             return Response(project_event_stream(short_name, 'private'),
                             mimetype="text/event-stream",
@@ -1715,9 +1648,7 @@ def project_stream_uri_private(short_name):
 def project_stream_uri_public(short_name):
     """Returns stream."""
     if current_app.config.get('SSE'):
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
         return Response(project_event_stream(short_name, 'public'),
                         mimetype="text/event-stream")
     else:
@@ -1728,9 +1659,7 @@ def project_stream_uri_public(short_name):
 @blueprint.route('/<short_name>/webhook/<int:oid>', methods=['GET', 'POST'])
 @login_required
 def webhook_handler(short_name, oid=None):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     pro = pro_features()
     if not pro['webhooks_enabled']:
@@ -1753,20 +1682,19 @@ def webhook_handler(short_name, oid=None):
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/webhook.html', project=project,
                            owner=owner, responses=responses,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
+                           overall_progress=ps.overall_progress,
+                           n_tasks=ps.n_tasks,
+                           n_task_runs=ps.n_task_runs,
+                           n_completed_tasks=ps.n_completed_tasks,
+                           n_volunteers=ps.n_volunteers,
                            pro_features=pro)
 
 
 @blueprint.route('/<short_name>/results')
 def results(short_name):
     """Results page for the project."""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+
+    project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, "Results")
 
@@ -1786,8 +1714,8 @@ def results(short_name):
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
-                     "n_volunteers": cached_projects.n_volunteers(project.get('id')),
+                     "n_completed_tasks": ps.n_completed_tasks,
+                     "n_volunteers": ps.n_volunteers,
                      "pro_features": pro,
                      "n_results": n_results}
 
@@ -1804,9 +1732,8 @@ def reset_secret_key(short_name):
 
     """
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+
 
     title = project_title(project, "Results")
 

@@ -20,7 +20,8 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
-from pybossa.cache.projects import overall_progress, n_results
+from pybossa.cache.projects import n_results
+from pybossa.model.project_stats import ProjectStats
 
 
 session = db.slave_session
@@ -67,7 +68,9 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     project_id = project['id'] if type(project) == dict else project.id
     published = project['published'] if type(project) == dict else project.published
     states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
-    if overall_progress(project_id) >= 100:
+    ps = session.query(ProjectStats)\
+                .filter_by(project_id=project_id).first()
+    if ps.overall_progress >= 100:
         return states[0]
     if not published:
         if has_no_presenter(project) or _has_no_tasks(project_id):
@@ -88,11 +91,14 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
                  SELECT COUNT(id) as ct from blogpost
                  WHERE project_id=:project_id;
                  ''')
+    ps = session.query(ProjectStats)\
+                .filter_by(project_id=project['id']).first()
+
     results = session.execute(query, dict(project_id=project['id']))
     for row in results:
         project['n_blogposts'] = row.ct
 
-    project['n_results'] = n_results(project['id'])
+    project['n_results'] = ps.n_results
 
     return project
 
