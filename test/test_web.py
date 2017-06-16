@@ -4394,6 +4394,24 @@ class TestWeb(web.Helper):
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
+    def test_export_result_csv_no_tasks_returns_empty_file(self):
+        """Test WEB export Result to CSV returns empty file if no results in
+        project."""
+        project = ProjectFactory.create(short_name='no_tasks_here')
+        uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        extracted_filename = zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
+        csvreader = unicode_csv_reader(csv_content)
+        is_empty = True
+        for line in csvreader:
+            is_empty = False, line
+
+        assert is_empty
+
+    @with_context
     def test_export_task_csv_no_tasks_returns_empty_file(self):
         """Test WEB export Tasks to CSV returns empty file if no tasks in project"""
         project = ProjectFactory.create(short_name='no_tasks_here')
