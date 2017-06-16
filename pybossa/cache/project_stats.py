@@ -20,6 +20,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY
+import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
 
@@ -549,7 +550,6 @@ def update_stats(project_id, geo=False, period='2 week'):
     dates, dates_anon, dates_auth = stats_dates(project_id, period)
 
 
-    n_tasks(project_id)
     sum(dates.values())
 
     sorted(dates.iteritems(), key=operator.itemgetter(0))
@@ -567,11 +567,26 @@ def update_stats(project_id, geo=False, period='2 week'):
                 hours_stats=hours_stats,
                 users_stats=users_stats)
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+    n_tasks = cached_projects.n_tasks(project_id)
+    n_task_runs = cached_projects.n_task_runs(project_id)
+    n_results = cached_projects.n_results(project_id)
+    overall_progress = cached_projects.overall_progress(project_id)
+    last_activity = cached_projects.last_activity(project_id)
+
     if ps is None:
-        ps = ProjectStats(project_id=project_id, info=data)
+        ps = ProjectStats(project_id=project_id, info=data,
+                          n_tasks=n_tasks,
+                          n_task_runs=n_task_runs,
+                          n_results=n_results,
+                          overall_progress=overall_progress,
+                          last_activity=last_activity)
         db.session.add(ps)
     else:
         ps.info = data
+        ps.n_tasks = n_tasks
+        ps.n_task_runs = n_task_runs
+        ps.overall_progress = overall_progress
+        ps.last_activity = last_activity
     db.session.commit()
     return dates_stats, hours_stats, users_stats
 
