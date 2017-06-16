@@ -33,8 +33,8 @@ class Exporter(object):
 
     """Abstract generic exporter class."""
 
-    repositories = dict(task=[task_repo, 'filter_task_by'],
-                        task_run=[task_repo, 'filter_task_run_by'],
+    repositories = dict(task=[task_repo, 'filter_tasks_by'],
+                        task_run=[task_repo, 'filter_task_runs_by'],
                         result=[result_repo, 'filter_by'])
 
     def _get_data(self, table, project_id, flat=False):
