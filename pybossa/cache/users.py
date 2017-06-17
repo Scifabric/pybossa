@@ -362,8 +362,8 @@ def get_users_for_report():
                 MIN(finish_time) AS first_submission_date,
                 MAX(finish_time) AS last_submission_date,
                 (SELECT COUNT(id) FROM task_run WHERE user_id = u.id)AS completed_tasks,
-                (SELECT AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US'))
+                (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
                 FROM task_run WHERE user_id = u.id) AS avg_time_per_task
                 FROM task_run t JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
                """)
@@ -398,7 +398,12 @@ def get_project_report_userdata(project_id):
             info->'metadata'->'timezone' AS timezone, info->'metadata'->'user_type' AS type_of_user,
             info->'metadata'->'review' AS additional_comments,
             (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS completed_tasks,
-            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id) * 100 / :total_tasks) AS percent_completed_tasks
+            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id) * 100 / :total_tasks) AS percent_completed_tasks,
+            (SELECT min(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS first_submission_date,
+            (SELECT max(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS last_submission_date,
+            (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
+            FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS avg_time_per_task
             FROM public.user u WHERE id IN
             (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
             ''')
@@ -408,6 +413,8 @@ def get_project_report_userdata(project_id):
          str(row.admin), str(row.subadmin), str(row.languages),
          str(row.locations), str(row.start_time), str(row.end_time),
          str(row.timezone), row.type_of_user, row.additional_comments,
-         str(row.completed_tasks), str(row.percent_completed_tasks)]
+         str(row.completed_tasks), str(row.percent_completed_tasks),
+         row.first_submission_date, row.last_submission_date,
+         str(row.avg_time_per_task.total_seconds())]
          for row in results]
     return users_report

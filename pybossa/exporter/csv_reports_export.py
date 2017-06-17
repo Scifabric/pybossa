@@ -65,11 +65,15 @@ class ProjectReportCsvExporter(CsvExporter):
             user_section = ['User Statistics']
             user_header = ['Id', 'Name', 'Fullname', 'Email', 'Admin', 'Subadmin', 'Languages',
                            'Locations', 'Start Time', 'End Time', 'Timezone', 'Type of User',
-                           'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed']
+                           'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed',
+                           'First Task Submission', 'Last Task Submission', 'Average Time Per Task']
             writer.writerow(user_section)
-            writer.writerow(user_header)
             try:
                 users_project_data = get_project_report_userdata(id)
+                if users_project_data:
+                    writer.writerow(user_header)
+                else:
+                    writer.writerow(['No user data'])
             except Exception:
                 current_app.logger.exception('Error in get_project_report_userdata. project_id: {}'.format(id))
                 raise BadRequest("Failed to obtain user Statistics")

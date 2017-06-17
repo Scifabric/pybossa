@@ -514,7 +514,9 @@ def get_project_report_projectdata(project_id):
             (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id) AS first_task_submission,
             (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id) AS last_task_submission,
             (SELECT MAX(n_answers) FROM task WHERE project_id = p.id) AS redundancy,
-            (SELECT AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') - to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')) FROM task_run WHERE project_id=p.id) AS average_time
+            (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s') FROM task_run WHERE project_id=p.id) 
+            AS average_time
             FROM project p
             WHERE p.id=:project_id;
             ''')
