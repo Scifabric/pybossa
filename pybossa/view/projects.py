@@ -807,9 +807,7 @@ def presenter(short_name):
         resp = make_response(render_template(tmpl, **template_args))
         return resp
 
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -919,14 +917,12 @@ def tasks(short_name):
                     project=project_sanitized,
                     owner=owner_sanitized,
                     autoimporter_enabled=autoimporter_enabled,
-                    n_tasks=n_tasks,
-                    n_task_runs=n_task_runs,
-                    overall_progress=overall_progress,
-                    last_activity=last_activity,
-                    n_completed_tasks=cached_projects.n_completed_tasks(
-                        project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(
-                        project.get('id')),
+                    n_tasks=ps.n_tasks,
+                    n_task_runs=ps.n_task_runs,
+                    overall_progress=ps.overall_progress,
+                    last_activity=ps.last_activity,
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
                     pro_features=pro)
 
     return handle_content_type(response)
@@ -934,12 +930,8 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page=1):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
-    n_volunteers = cached_projects.n_volunteers(project.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     pro = pro_features()
 
     def respond():
@@ -960,10 +952,10 @@ def tasks_browse(short_name, page=1):
                     tasks=page_tasks,
                     title=title,
                     pagination=pagination,
-                    n_tasks=n_tasks,
-                    overall_progress=overall_progress,
-                    n_volunteers=n_volunteers,
-                    n_completed_tasks=n_completed_tasks,
+                    n_tasks=ps.n_tasks,
+                    overall_progress=ps.overall_progress,
+                    n_volunteers=ps.n_volunteers,
+                    n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro)
 
         return handle_content_type(data)
