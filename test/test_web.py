@@ -34,6 +34,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.model.result import Result
 from pybossa.messages import *
 from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 from pybossa.core import user_repo, project_repo, result_repo, signer
@@ -4069,6 +4070,72 @@ class TestWeb(web.Helper):
         assert "Owner Message" not in res.data, error_msg
 
     @with_context
+    def test_export_result_json(self):
+        """Test WEB export Results to JSON works"""
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(5, project=project, n_answers=1)
+        for task in tasks:
+            TaskRunFactory.create(task=task, project=project)
+        results = result_repo.filter_by(project_id=project.id)
+        for result in results:
+            result.info = dict(key='value')
+            result_repo.update(result)
+
+        # First test for a non-existant project
+        uri = '/project/somethingnotexists/tasks/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the results in JSON format
+        uri = "/project/somethingnotexists/tasks/export?type=result&format=json"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real project
+        uri = '/project/%s/tasks/export' % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "Export All Tasks and Task Runs"
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now test that a 404 is raised when an arg is invalid
+        uri = "/project/%s/tasks/export?type=ask&format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/project/%s/tasks/export?format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/project/%s/tasks/export?type=result" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # And a 415 is raised if the requested format is not supported or invalid
+        uri = "/project/%s/tasks/export?type=result&format=gson" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
+
+        # Now get the tasks in JSON format
+        self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
+        uri = "/project/%s/tasks/export?type=result&format=json" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        expected_filename = '%s_result.json' % unidecode(project.short_name)
+        assert extracted_filename == expected_filename, (zip.namelist()[0],
+                                                         expected_filename)
+
+        exported_results = json.loads(zip.read(extracted_filename))
+        assert len(exported_results) == len(results), (len(exported_results),
+                                                            len(project.tasks))
+        for er in exported_results:
+            er['info']['key'] == 'value'
+        # Results are exported as an attached file
+        content_disposition = 'attachment; filename=%d_%s_result_json.zip' % (project.id,
+                                                                              unidecode(project.short_name))
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+
+    @with_context
     def test_50_export_task_json(self):
         """Test WEB export Tasks to JSON works"""
         Fixtures.create()
@@ -4213,6 +4280,102 @@ class TestWeb(web.Helper):
         assert exported_task_runs == [], exported_task_runs
 
     @with_context
+    def test_export_result_csv(self):
+        """Test WEB export Results to CSV works"""
+        # First test for a non-existant project
+        uri = '/project/somethingnotexists/tasks/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in CSV format
+        uri = "/project/somethingnotexists/tasks/export?type=result&format=csv"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the wrong table name in CSV format
+        uri = "/project/%s/tasks/export?type=wrong&format=csv" % Fixtures.project_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real project
+        project = ProjectFactory.create()
+        self.clear_temp_container(project.owner_id)
+        tasks = TaskFactory.create_batch(5, project=project,
+                                         n_answers=1)
+        for task in tasks:
+            TaskRunFactory.create(project=project,
+                                  info={'question': task.id},
+                                  task=task)
+
+        # Get results and updat them
+        results = result_repo.filter_by(project_id=project.id)
+        for result in results:
+            result.info = dict(key='value')
+            result_repo.update(result)
+
+        uri = '/project/%s/tasks/export' % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "Export All Tasks and Task Runs"
+        data = res.data.decode('utf-8')
+        assert heading in data, "Export page should be available\n %s" % data
+        # Now get the tasks in CSV format
+        uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        assert extracted_filename == 'project1_result.csv', zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
+        csvreader = unicode_csv_reader(csv_content)
+        project = db.session.query(Project)\
+                    .filter_by(short_name=project.short_name)\
+                    .first()
+        exported_results = []
+        n = 0
+        for row in csvreader:
+            if n != 0:
+                exported_results.append(row)
+            else:
+                keys = row
+            n = n + 1
+        err_msg = "The number of exported results is different from Project Results"
+        assert len(exported_results) == len(project.tasks), err_msg
+        results = db.session.query(Result)\
+                    .filter_by(project_id=project.id).all()
+        for t in results:
+            err_msg = "All the result column names should be included"
+            for tk in flatten(t.dictize()).keys():
+                expected_key = "%s" % tk
+                assert expected_key in keys, err_msg
+            err_msg = "All the result.info column names should be included"
+            for tk in t.info.keys():
+                expected_key = "info_%s" % tk
+                assert expected_key in keys, err_msg
+
+        for et in exported_results:
+            result_id = et[keys.index('id')]
+            result = db.session.query(Result).get(result_id)
+            result_dict_flat = flatten(result.dictize())
+            result_dict = result.dictize()
+            for k in result_dict_flat.keys():
+                slug = '%s' % k
+                err_msg = "%s != %s" % (result_dict_flat[k],
+                                        et[keys.index(slug)])
+                if result_dict_flat[k] is not None:
+                    assert unicode(result_dict_flat[k]) == et[keys.index(slug)], err_msg
+                else:
+                    assert u'' == et[keys.index(slug)], err_msg
+            for k in result_dict['info'].keys():
+                slug = 'info_%s' % k
+                err_msg = "%s != %s" % (result_dict['info'][k], et[keys.index(slug)])
+                assert unicode(result_dict_flat[slug]) == et[keys.index(slug)], err_msg
+        # Tasks are exported as an attached file
+        content_disposition = 'attachment; filename=%d_project1_result_csv.zip' % project.id
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+    @with_context
     def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
         # Fixtures.create()
@@ -4295,6 +4458,24 @@ class TestWeb(web.Helper):
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+    @with_context
+    def test_export_result_csv_no_tasks_returns_empty_file(self):
+        """Test WEB export Result to CSV returns empty file if no results in
+        project."""
+        project = ProjectFactory.create(short_name='no_tasks_here')
+        uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        extracted_filename = zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
+        csvreader = unicode_csv_reader(csv_content)
+        is_empty = True
+        for line in csvreader:
+            is_empty = False, line
+
+        assert is_empty
 
     @with_context
     def test_export_task_csv_no_tasks_returns_empty_file(self):

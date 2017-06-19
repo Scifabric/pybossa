@@ -717,8 +717,9 @@ def delete_autoimporter(short_name):
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
@@ -726,7 +727,7 @@ def password_required(short_name):
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
         if passwd_mngr.validates(password, project):
             response = make_response(redirect(request.args.get('next')))
-            return passwd_mngr.update_response(response, project, get_user_id_or_ip(), ps=ps)
+            return passwd_mngr.update_response(response, project, get_user_id_or_ip())
         flash(gettext('Sorry, incorrect password'))
     return render_template('projects/password.html',
                             project=project,
@@ -737,8 +738,9 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
@@ -805,7 +807,9 @@ def presenter(short_name):
         resp = make_response(render_template(tmpl, **template_args))
         return resp
 
-    project, owner, ps = project_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -844,8 +848,9 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     title = project_title(project, "Tutorial")
 
     if project.needs_password():
@@ -867,7 +872,9 @@ def tutorial(short_name):
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
-    project, owner, ps = project_by_shortname(short_name)
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -888,8 +895,9 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
 
     if project.needs_password():
@@ -900,7 +908,7 @@ def tasks(short_name):
         ensure_authorized_to('read', project)
 
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     autoimporter_enabled = feature_handler.autoimporter_enabled_for(current_user)
 
@@ -913,10 +921,10 @@ def tasks(short_name):
                     project=project_sanitized,
                     owner=owner_sanitized,
                     autoimporter_enabled=autoimporter_enabled,
-                    n_tasks=ps.n_tasks,
-                    n_task_runs=ps.n_task_runs,
-                    overall_progress=ps.overall_progress,
-                    last_activity=ps.last_activity,
+                    n_tasks=n_tasks,
+                    n_task_runs=n_task_runs,
+                    overall_progress=overall_progress,
+                    last_activity=last_activity,
                     n_completed_tasks=cached_projects.n_completed_tasks(
                         project.get('id')),
                     n_volunteers=cached_projects.n_volunteers(
@@ -928,15 +936,18 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page=1):
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     pro = pro_features()
 
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
-        count = ps.n_tasks
+        count = n_tasks
         page_tasks = cached_projects.browse_tasks(project.get('id'), per_page, offset)
         if not page_tasks and page != 1:
             abort(404)
@@ -951,10 +962,10 @@ def tasks_browse(short_name, page=1):
                     tasks=page_tasks,
                     title=title,
                     pagination=pagination,
-                    n_tasks=ps.n_tasks,
-                    overall_progress=ps.overall_progress,
-                    n_volunteers=ps.n_volunteers,
-                    n_completed_tasks=ps.n_completed_tasks,
+                    n_tasks=n_tasks,
+                    overall_progress=overall_progress,
+                    n_volunteers=n_volunteers,
+                    n_completed_tasks=n_completed_tasks,
                     pro_features=pro)
 
         return handle_content_type(data)
@@ -965,7 +976,7 @@ def tasks_browse(short_name, page=1):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
 
@@ -973,14 +984,17 @@ def tasks_browse(short_name, page=1):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
-    project, owner, ps = project_by_shortname(short_name)
-
+    (project, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity,
+     n_results) = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
     if request.method == 'GET':
         title = project_title(project, "Delete")
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        n_volunteers = cached_projects.n_volunteers(project.id)
+        n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         project_sanitized, owner_sanitized = sanitize_project_owner(project, 
                                                                     owner, 
                                                                     current_user)
@@ -1035,13 +1049,13 @@ def export_to(short_name):
                                pro_features=pro)
 
     def respond_json(ty):
-        if ty not in ['task', 'task_run']:
+        if ty not in supported_tables:
             return abort(404)
         res = json_exporter.response_zip(project, ty)
         return res
 
     def respond_csv(ty):
-        if ty not in ('task', 'task_run'):
+        if ty not in supported_tables:
             return abort(404)
         res = csv_exporter.response_zip(project, ty)
         return res
