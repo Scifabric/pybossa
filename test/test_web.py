@@ -6510,6 +6510,8 @@ class TestWeb(web.Helper):
         result = result_repo.get_by(project_id=project.id)
         result.info = dict(foo='bar')
         result_repo.update(result)
+        from pybossa.cache.project_stats import update_stats
+        update_stats(project.id)
         res = self.app.get(url, follow_redirects=True)
         assert "The results" in res.data, res.data
 
