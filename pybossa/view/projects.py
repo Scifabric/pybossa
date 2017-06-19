@@ -589,7 +589,7 @@ def import_task(short_name):
                          n_tasks=ps.n_tasks,
                          overall_progress=ps.overall_progress,
                          n_volunteers=ps.n_volunteers,
-                         n_completed_tasks=n_completed_tasks,
+                         n_completed_tasks=ps.n_completed_tasks,
                          target='project.import_task',
                          pro_features=pro)
 
@@ -657,8 +657,8 @@ def setup_autoimporter(short_name):
                          owner=owner,
                          n_tasks=ps.n_tasks,
                          overall_progress=ps.overall_progress,
-                         n_volunteers=n_volunteers,
-                         n_completed_tasks=n_completed_tasks,
+                         n_volunteers=ps.n_volunteers,
+                         n_completed_tasks=ps.n_completed_tasks,
                          pro_features=pro,
                          target='project.setup_autoimporter')
     ensure_authorized_to('read', project)
@@ -936,7 +936,7 @@ def tasks_browse(short_name, page=1):
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
-        count = n_tasks
+        count = ps.n_tasks
         page_tasks = cached_projects.browse_tasks(project.get('id'), per_page, offset)
         if not page_tasks and page != 1:
             abort(404)
@@ -953,8 +953,8 @@ def tasks_browse(short_name, page=1):
                     pagination=pagination,
                     n_tasks=ps.n_tasks,
                     overall_progress=ps.overall_progress,
-                    n_volunteers=n_volunteers,
-                    n_completed_tasks=n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
+                    n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro)
 
         return handle_content_type(data)
@@ -989,8 +989,8 @@ def delete_tasks(short_name):
                         owner=owner_sanitized,
                         n_tasks=ps.n_tasks,
                         n_task_runs=ps.n_task_runs,
-                        n_volunteers=n_volunteers,
-                        n_completed_tasks=n_completed_tasks,
+                        n_volunteers=ps.n_volunteers,
+                        n_completed_tasks=ps.n_completed_tasks,
                         overall_progress=ps.overall_progress,
                         last_activity=ps.last_activity,
                         title=title,
@@ -1029,8 +1029,8 @@ def export_to(short_name):
                                owner=owner,
                                n_tasks=ps.n_tasks,
                                n_task_runs=ps.n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
+                               n_volunteers=ps.n_volunteers,
+                               n_completed_tasks=ps.n_completed_tasks,
                                overall_progress=ps.overall_progress,
                                pro_features=pro)
 
@@ -1250,8 +1250,8 @@ def task_settings(short_name):
                            owner=owner,
                            n_tasks=ps.n_tasks,
                            overall_progress=ps.overall_progress,
-                           n_volunteers=n_volunteers,
-                           n_completed_tasks=n_completed_tasks,
+                           n_volunteers=ps.n_volunteers,
+                           n_completed_tasks=ps.n_completed_tasks,
                            pro_features=pro)
 
 
@@ -1575,7 +1575,7 @@ def delete_blogpost(short_name, id):
 def _check_if_redirect_to_password(project):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(project, get_user_id_or_ip(), ps=ps):
+    if passwd_mngr.password_needed(project, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                 short_name=project.short_name, next=request.path))
 
@@ -1717,14 +1717,14 @@ def results(short_name):
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner": owner_sanitized,
-                     "n_tasks": n_tasks,
-                     "n_task_runs": n_task_runs,
-                     "overall_progress": overall_progress,
-                     "last_activity": last_activity,
+                     "n_tasks": ps.n_tasks,
+                     "n_task_runs": ps.n_task_runs,
+                     "overall_progress": ps.overall_progress,
+                     "last_activity": ps.last_activity,
                      "n_completed_tasks": ps.n_completed_tasks,
                      "n_volunteers": ps.n_volunteers,
                      "pro_features": pro,
-                     "n_results": n_results}
+                     "n_results": ps.n_results}
 
     response = dict(template = '/projects/results.html', **template_args)
 
