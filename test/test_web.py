@@ -339,11 +339,14 @@ class TestWeb(web.Helper):
             self.app_get_json('api/project/%s/newtask' % project.id)
 
         # With stats
+        from pybossa.cache.project_stats import update_stats
+        update_stats(project.id)
+
         url = '/project/%s/stats' % project.short_name
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
-        assert 'avg_contrib_time' in data, err_msg
+        assert 'avg_contrib_time' in data, (err_msg, data.keys())
         assert 'n_completed_tasks' in data, err_msg
         assert 'n_tasks' in data, err_msg
         assert 'n_volunteers' in data, err_msg
