@@ -49,6 +49,8 @@ class ProjectStats(db.Model, DomainObject):
     overall_progress = Column(Integer, default=0)
     #: Average time to complete a task
     average_time = Column(Float, default=0)
+    #: Number of blog posts
+    n_blogposts= Column(Integer, default=0)
     #: Last Activity
     last_activity = Column(Text, default=make_timestamp)
     #: Stats payload

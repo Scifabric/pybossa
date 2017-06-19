@@ -31,6 +31,7 @@ def upgrade():
         sa.Column('n_completed_tasks', sa.Integer, default=0),
         sa.Column('overall_progress', sa.Integer, default=0),
         sa.Column('average_time', sa.Float, default=0),
+        sa.Column('n_blogposts', sa.Integer, default=0),
         sa.Column('last_activity', sa.Text, default=make_timestamp),
         sa.Column('info', JSON, nullable=False)
     )
