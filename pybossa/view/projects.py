@@ -326,7 +326,7 @@ def task_presenter_editor(short_name):
             wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-            project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+            project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                         owner,
                                                                         current_user)
@@ -492,7 +492,7 @@ def update(short_name):
                       'error')
             return redirect_content_type(url_for('.update', short_name=short_name))
 
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
     response = dict(template='/projects/update.html',
                     form=form,
@@ -525,7 +525,7 @@ def details(short_name):
     pro = pro_features()
 
     title = project_title(project, None)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
     template_args = {"project": project_sanitized,
                      "title": title,
@@ -554,7 +554,7 @@ def settings(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     owner_serialized = cached_users.get_user_summary(owner.name)
     response = dict(template='/projects/settings.html',
                     project=project,
@@ -581,7 +581,7 @@ def import_task(short_name):
     title = project_title(project, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     pro = pro_features()
-    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     project_sanitized, owner_sanitized = sanitize_project_owner(dict_project, owner, current_user)
     template_args = dict(title=title, loading_text=loading_text,
                          project=project_sanitized,
@@ -652,7 +652,7 @@ def setup_autoimporter(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
 
-    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     template_args = dict(project=dict_project,
                          owner=owner,
                          n_tasks=ps.n_tasks,
@@ -726,7 +726,7 @@ def password_required(short_name):
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
         if passwd_mngr.validates(password, project):
             response = make_response(redirect(request.args.get('next')))
-            return passwd_mngr.update_response(response, project, get_user_id_or_ip())
+            return passwd_mngr.update_response(response, project, get_user_id_or_ip(), ps=ps)
         flash(gettext('Sorry, incorrect password'))
     return render_template('projects/password.html',
                             project=project,
@@ -900,7 +900,7 @@ def tasks(short_name):
         ensure_authorized_to('read', project)
 
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     autoimporter_enabled = feature_handler.autoimporter_enabled_for(current_user)
 
@@ -965,7 +965,7 @@ def tasks_browse(short_name, page=1):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     return respond()
 
 
@@ -980,7 +980,7 @@ def delete_tasks(short_name):
     pro = pro_features()
     if request.method == 'GET':
         title = project_title(project, "Delete")
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
         project_sanitized, owner_sanitized = sanitize_project_owner(project, 
                                                                     owner, 
                                                                     current_user)
@@ -1121,7 +1121,7 @@ def export_to(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
         return respond()
 
     if fmt not in export_formats:
@@ -1136,7 +1136,8 @@ def export_to(short_name):
         if task_run:
             ensure_authorized_to('read', task_run)
 
-    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
+    return {"json": respond_json, "csv": respond_csv,
+            'ckan': respond_ckan}[fmt](ty)
 
 
 @blueprint.route('/<short_name>/stats')
@@ -1243,7 +1244,7 @@ def task_settings(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     return render_template('projects/task_settings.html',
                            project=project,
                            owner=owner,
@@ -1412,7 +1413,7 @@ def show_blogposts(short_name):
     else:
         ensure_authorized_to('read', Blogpost, project_id=project.id)
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
@@ -1445,7 +1446,7 @@ def show_blogpost(short_name, id):
     else:
         ensure_authorized_to('read', blogpost)
     pro = pro_features()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     return render_template('projects/blog_post.html',
                            project=project,
                            owner=owner,
@@ -1464,7 +1465,7 @@ def new_blogpost(short_name):
     pro = pro_features()
 
     def respond():
-        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
         response = dict(template='projects/new_blogpost.html',
                         title=gettext("Write a new post"),
                         form=form,
@@ -1574,7 +1575,7 @@ def delete_blogpost(short_name, id):
 def _check_if_redirect_to_password(project):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(project, get_user_id_or_ip()):
+    if passwd_mngr.password_needed(project, get_user_id_or_ip(), ps=ps):
         return redirect(url_for('.password_required',
                                 short_name=project.short_name, next=request.path))
 
@@ -1591,7 +1592,7 @@ def auditlog(short_name):
 
     ensure_authorized_to('read', Auditlog, project_id=project.id)
     logs = auditlogger.get_project_logs(project.id)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
                            overall_progress=ps.overall_progress,
@@ -1685,7 +1686,7 @@ def webhook_handler(short_name, oid=None):
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
     return render_template('projects/webhook.html', project=project,
                            owner=owner, responses=responses,
                            overall_progress=ps.overall_progress,
@@ -1709,7 +1710,7 @@ def results(short_name):
     pro = pro_features()
 
     title = project_title(project, None)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
