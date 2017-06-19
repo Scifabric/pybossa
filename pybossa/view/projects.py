@@ -1208,8 +1208,7 @@ def show_stats(short_name):
 
     project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip(),
                                                 ps=ps)
-    contrib_time = ps.average_time
-    formatted_contrib_time = round(contrib_time, 2)
+    formatted_contrib_time = round(ps.average_time, 2)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user)
