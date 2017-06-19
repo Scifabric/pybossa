@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text
+from sqlalchemy import Integer, Text, Float
 from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
@@ -47,6 +47,8 @@ class ProjectStats(db.Model, DomainObject):
     n_completed_tasks = Column(Integer, default=0)
     #: Overall progress
     overall_progress = Column(Integer, default=0)
+    #: Average time to complete a task
+    average_time = Column(Float, default=0)
     #: Last Activity
     last_activity = Column(Text, default=make_timestamp)
     #: Stats payload
