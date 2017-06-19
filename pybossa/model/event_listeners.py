@@ -93,6 +93,13 @@ def add_project_event(mapper, conn, target):
     tmp = Project().to_public_json(tmp)
     obj.update(tmp)
     update_feed(obj)
+    # Create a clean projectstats object for it
+    sql_query = """INSERT INTO project_stats 
+                   (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
+                   n_completed_tasks, overall_progress, average_time,
+                   n_blogposts, last_activity, info)
+                   VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (target.id)
+    conn.execute(sql_query)
 
 
 @event.listens_for(Task, 'after_insert')
