@@ -30,9 +30,9 @@ class ProjectStats(db.Model, DomainObject):
 
     __tablename__ = 'project_stats'
 
-    #: Webook ID
+    #: ID
     id = Column(Integer, primary_key=True)
-    #: Webhook created (aka triggered)
+    #: Project ID
     project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'),
                         nullable=False)
     #: Number of tasks
