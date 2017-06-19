@@ -333,7 +333,7 @@ def task_presenter_editor(short_name):
             response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
-                            owner=ps.owner_sanitized,
+                            owner=owner_sanitized,
                             overall_progress=ps.overall_progress,
                             n_tasks=ps.n_tasks,
                             n_task_runs=ps.n_task_runs,
@@ -790,11 +790,11 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
 
-    def invite_new_volunteers(project):
+    def invite_new_volunteers(project, ps):
         user_id = None if current_user.is_anonymous() else current_user.id
         user_ip = request.remote_addr if current_user.is_anonymous() else None
         task = sched.new_task(project.id, project.info.get('sched'), user_id, user_ip, 0)
-        return task == [] and overall_progress < 100.0
+        return task == [] and ps.overall_progress < 100.0
 
     def respond(tmpl):
         if (current_user.is_anonymous()):
@@ -814,7 +814,7 @@ def presenter(short_name):
 
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
-                     "invite_new_volunteers": invite_new_volunteers(project)}
+                     "invite_new_volunteers": invite_new_volunteers(project, ps)}
 
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -929,7 +929,7 @@ def tasks_browse(short_name, page=1):
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
-        count = n_tasks
+        count = ps.n_tasks
         page_tasks = cached_projects.browse_tasks(project.get('id'), per_page, offset)
         if not page_tasks and page != 1:
             abort(404)
@@ -1002,6 +1002,7 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = project_by_shortname(short_name)
+    suppported_tables = ['task', 'task_run', 'result']
 
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
