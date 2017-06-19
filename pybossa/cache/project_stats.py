@@ -575,6 +575,7 @@ def update_stats(project_id, geo=False, period='2 week'):
     last_activity = cached_projects.last_activity(project_id)
     n_volunteers = cached_projects.n_volunteers(project_id)
     n_completed_tasks = cached_projects.n_completed_tasks(project_id)
+    average_time = cached_projects.average_contribution_time(project_id)
 
     if ps is None:
         ps = ProjectStats(project_id=project_id, info=data,
@@ -583,6 +584,7 @@ def update_stats(project_id, geo=False, period='2 week'):
                           n_results=n_results,
                           n_volunteers=n_volunteers,
                           n_completed_tasks=n_completed_tasks,
+                          average_time=average_time,
                           overall_progress=overall_progress,
                           last_activity=last_activity)
         db.session.add(ps)
@@ -595,6 +597,7 @@ def update_stats(project_id, geo=False, period='2 week'):
         ps.n_results = n_results
         ps.n_completed_tasks = n_completed_tasks
         ps.n_volunteers = n_volunteers
+        ps.average_time = average_time
     db.session.commit()
     return dates_stats, hours_stats, users_stats
 

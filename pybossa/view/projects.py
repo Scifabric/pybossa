@@ -1146,6 +1146,8 @@ def show_stats(short_name):
     title = project_title(project, "Statistics")
     pro = pro_features(owner)
 
+    stats.update_stats(project.id)
+
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
@@ -1201,8 +1203,8 @@ def show_stats(short_name):
         hourStats=hours_stats)
 
     project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip())
-    contrib_time = cached_projects.average_contribution_time(project.id)
-    formatted_contrib_time = round(contrib_time.total_seconds(), 2)
+    contrib_time = ps.average_time
+    formatted_contrib_time = round(contrib_time, 2)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
 
