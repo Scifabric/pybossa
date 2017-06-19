@@ -1146,8 +1146,6 @@ def show_stats(short_name):
     title = project_title(project, "Statistics")
     pro = pro_features(owner)
 
-    stats.update_stats(project.id)
-
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
@@ -1155,10 +1153,13 @@ def show_stats(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user)
 
     if not ((ps.n_tasks > 0) and (ps.n_task_runs > 0)):
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(),
+                                               ps=ps)
         response = dict(template='/projects/non_stats.html',
                         title=title,
                         project=project_sanitized,
@@ -1170,10 +1171,10 @@ def show_stats(short_name):
                         pro_features=pro)
         return handle_content_type(response)
 
-    dates_stats, hours_stats, users_stats = stats.get_stats(
-        project.id,
-        current_app.config['GEO'],
-        period='2 week')
+    dates_stats = ps.info['dates_stats']
+    hours_stats = ps.info['hours_stats']
+    users_stats = ps.info['users_stats']
+
     total_contribs = (users_stats['n_anon'] + users_stats['n_auth'])
     if total_contribs > 0:
         anon_pct_taskruns = int((users_stats['n_anon'] * 100) / total_contribs)
@@ -1202,13 +1203,16 @@ def show_stats(short_name):
         dayStats=dates_stats,
         hourStats=hours_stats)
 
-    project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip(),
+                                                ps=ps)
     contrib_time = ps.average_time
     formatted_contrib_time = round(contrib_time, 2)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user)
 
-    # Handle JSON project stats depending of output (needs to be escaped for HTML)
+    # Handle JSON project stats depending of output 
+    # (needs to be escaped for HTML)
     if request.headers.get('Content-Type') == 'application/json':
         handle_projectStats = projectStats
     else:   # HTML

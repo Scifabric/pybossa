@@ -59,7 +59,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     return n_tasks
 
 
-def check_contributing_state(project, user_id=None, user_ip=None):
+def check_contributing_state(project, user_id=None, user_ip=None, ps=None):
     """Return the state of a given project for a given user.
 
     Depending on whether the project is completed or not and the user can
@@ -68,8 +68,9 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     project_id = project['id'] if type(project) == dict else project.id
     published = project['published'] if type(project) == dict else project.published
     states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
-    ps = session.query(ProjectStats)\
-                .filter_by(project_id=project_id).first()
+    if ps is None:
+        ps = session.query(ProjectStats)\
+                    .filter_by(project_id=project_id).first()
     if ps.overall_progress >= 100:
         return states[0]
     if not published:
@@ -81,18 +82,20 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     return states[4]
 
 
-def add_custom_contrib_button_to(project, user_id_or_ip):
+def add_custom_contrib_button_to(project, user_id_or_ip, ps=None):
     """Add a customized contrib button for a project."""
     if type(project) != dict:
         project = project.dictize()
     project['contrib_button'] = check_contributing_state(project,
+                                                         ps=ps,
                                                          **user_id_or_ip)
     query = text('''
                  SELECT COUNT(id) as ct from blogpost
                  WHERE project_id=:project_id;
                  ''')
-    ps = session.query(ProjectStats)\
-                .filter_by(project_id=project['id']).first()
+    if ps is None:
+        ps = session.query(ProjectStats)\
+                    .filter_by(project_id=project['id']).first()
 
     results = session.execute(query, dict(project_id=project['id']))
     for row in results:
