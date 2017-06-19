@@ -59,7 +59,7 @@ requirements = [
     "readability-lxml>=0.6.2, <1.0",
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
-    "flatten-json>=0.1.5, <0.1.6"
+    "flatten-json"
 ]
 
 setup(
@@ -73,7 +73,8 @@ setup(
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
     dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
-                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard'],
+                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
+                        'git+https://github.com/amirziai/flatten.git@5bbe314d1dac1b1ae0e7c52690109077732a5431'],
 
     # metadata for upload to PyPI
     author = 'Scifabric LTD',
