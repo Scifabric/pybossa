@@ -69,3 +69,4 @@ class CsvExporter(Exporter):
         print "%d (csv)" % project.id
         self._make_zip(project, "task")
         self._make_zip(project, "task_run")
+        self._make_zip(project, "result")
