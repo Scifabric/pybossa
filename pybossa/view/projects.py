@@ -1048,6 +1048,7 @@ def export_to(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity,
      n_results) = project_by_shortname(short_name)
+    supported_tables = ['task', 'task_run', 'result']
     n_volunteers = cached_projects.n_volunteers(project.id)
     n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, gettext("Export"))
@@ -1076,13 +1077,13 @@ def export_to(short_name):
                                pro_features=pro)
 
     def respond_json(ty):
-        if ty not in ['task', 'task_run']:
+        if ty not in supported_tables:
             return abort(404)
         res = json_exporter.response_zip(project, ty)
         return res
 
     def respond_csv(ty):
-        if ty not in ('task', 'task_run'):
+        if ty not in supported_tables:
             return abort(404)
         res = csv_exporter.response_zip(project, ty)
         return res

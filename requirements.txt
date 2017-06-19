@@ -2,4 +2,5 @@
 
 -e git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login
 -e git+https://github.com/PyBossa/rq-dashboard.git#egg=rq-dashboard
+-e git+https://github.com/amirziai/flatten.git@5bbe314d1dac1b1ae0e7c52690109077732a5431#egg=flatten_json
 -e .
