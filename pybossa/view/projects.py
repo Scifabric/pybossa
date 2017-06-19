@@ -895,9 +895,7 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
 
     if project.needs_password():
@@ -984,9 +982,7 @@ def tasks_browse(short_name, page=1):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
