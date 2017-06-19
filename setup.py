@@ -74,7 +74,7 @@ setup(
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
     dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
                         'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
-                        'git+https://github.com/amirziai/flatten.git@5bbe314d1dac1b1ae0e7c52690109077732a5431'],
+                        'git+https://github.com/amirziai/flatten.git@5bbe314d1dac1b1ae0e7c52690109077732a5431#egg=flatten_json'],
 
     # metadata for upload to PyPI
     author = 'Scifabric LTD',
