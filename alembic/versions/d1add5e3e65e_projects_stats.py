@@ -23,7 +23,8 @@ def upgrade():
     op.create_table(
         'project_stats',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('project_id', sa.Integer, sa.ForeignKey('project.id')),
+        sa.Column('project_id', sa.Integer, sa.ForeignKey('project.id',
+                                                          ondelete='CASCADE')),
         sa.Column('n_tasks', sa.Integer, default=0),
         sa.Column('n_task_runs', sa.Integer, default=0),
         sa.Column('n_results', sa.Integer, default=0),
