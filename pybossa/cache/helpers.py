@@ -89,18 +89,11 @@ def add_custom_contrib_button_to(project, user_id_or_ip, ps=None):
     project['contrib_button'] = check_contributing_state(project,
                                                          ps=ps,
                                                          **user_id_or_ip)
-    query = text('''
-                 SELECT COUNT(id) as ct from blogpost
-                 WHERE project_id=:project_id;
-                 ''')
     if ps is None:
         ps = session.query(ProjectStats)\
                     .filter_by(project_id=project['id']).first()
 
-    results = session.execute(query, dict(project_id=project['id']))
-    for row in results:
-        project['n_blogposts'] = row.ct
-
+    project['n_blogposts'] = ps.n_blogposts
     project['n_results'] = ps.n_results
 
     return project
