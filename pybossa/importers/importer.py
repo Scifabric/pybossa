@@ -68,24 +68,26 @@ class Importer(object):
         empty = True
         n = 0
         importer = self._create_importer_for(**form_data)
-
         tasks = importer.tasks()
-        headers = importer.headers()
+        import_headers = importer.headers()
+        mismatch_headers = []
 
-        if headers:
+        if import_headers:
             msg = None
             if not project:
                 msg = gettext('Could not load project info')
             else:
-                project_headers = project.get_presenter_headers()
-                if project_headers:
-                    if len(headers) < len(project_headers):
-                        msg = gettext('Imported columns do not match task presenter code')
-                    else:
-                        for h in project_headers:
-                            if h not in headers:
-                                msg = gettext('Imported columns do not match task presenter code')
-                                break
+                task_presenter_headers = project.get_presenter_headers()
+                if task_presenter_headers:
+                    mismatch_headers = [header for header in task_presenter_headers
+                                        if header not in import_headers]
+
+            if mismatch_headers:
+                msg = 'Imported columns do not match task presenter code.'
+                additional_msg = 'Mismatched columns: {}'.format((', '.join(mismatch_headers))[:80])
+                current_app.logger.error(msg)
+                current_app.logger.error(', '.join(mismatch_headers))
+                msg += additional_msg
 
             if msg:
                 # Failed validation
