@@ -43,7 +43,7 @@ class ProjectStats(db.Model, DomainObject):
     n_results = Column(Integer, default=0)
     #: Number of volunteers
     n_volunteers = Column(Integer, default=0)
-    #: Number of completed tasks 
+    #: Number of completed tasks
     n_completed_tasks = Column(Integer, default=0)
     #: Overall progress
     overall_progress = Column(Integer, default=0)
