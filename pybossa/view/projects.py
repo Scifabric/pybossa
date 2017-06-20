@@ -1002,7 +1002,7 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = project_by_shortname(short_name)
-    suppported_tables = ['task', 'task_run', 'result']
+    supported_tables = ['task', 'task_run', 'result']
 
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
