@@ -40,6 +40,7 @@ from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
+from pybossa.cache.project_stats import update_stats
 from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -339,7 +340,6 @@ class TestWeb(web.Helper):
             self.app_get_json('api/project/%s/newtask' % project.id)
 
         # With stats
-        from pybossa.cache.project_stats import update_stats
         update_stats(project.id)
 
         url = '/project/%s/stats' % project.short_name
@@ -395,6 +395,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner)
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
+        update_stats(project.id)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
         res = self.app.get(url)
@@ -413,7 +414,7 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
-
+        update_stats(project.id)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
@@ -486,6 +487,8 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
+
+        update_stats(project.id)
 
         res = self.app_get_json(url)
         data = json.loads(res.data)
@@ -6513,7 +6516,6 @@ class TestWeb(web.Helper):
         result = result_repo.get_by(project_id=project.id)
         result.info = dict(foo='bar')
         result_repo.update(result)
-        from pybossa.cache.project_stats import update_stats
         update_stats(project.id)
         res = self.app.get(url, follow_redirects=True)
         assert "The results" in res.data, res.data
