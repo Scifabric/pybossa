@@ -20,6 +20,7 @@ from default import Test, db, with_context
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                       AnonymousTaskRunFactory, UserFactory)
 from pybossa.cache import helpers
+from pybossa.cache.project_stats import update_stats
 
 
 class TestHelpersCache(Test):
@@ -163,6 +164,7 @@ class TestHelpersCache(Test):
         user = UserFactory.create()
         TaskRunFactory.create_batch(1, task=task, user=user)
 
+        update_stats(project.id)
         contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
@@ -177,7 +179,7 @@ class TestHelpersCache(Test):
         task = TaskFactory.create(project=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=task)
         user = UserFactory.create()
-
+        update_stats(project.id)
         contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
