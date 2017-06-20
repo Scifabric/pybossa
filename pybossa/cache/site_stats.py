@@ -22,7 +22,7 @@ from sqlalchemy.sql import text
 from flask import current_app
 
 from pybossa.core import db
-from pybossa.cache import cache, memoize, ONE_DAY
+from pybossa.cache import cache, memoize, ONE_DAY, ONE_WEEK
 
 session = db.slave_session
 
@@ -169,7 +169,7 @@ def allow_all_time(func):
     return wrapper
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def number_of_created_jobs(days=30):
     """Number of created jobs"""
@@ -182,7 +182,7 @@ def number_of_created_jobs(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def number_of_active_jobs(days=30):
     """Number of jobs with submissions"""
@@ -200,7 +200,7 @@ def number_of_active_jobs(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def number_of_created_tasks(days=30):
     """Number of created tasks"""
@@ -213,7 +213,7 @@ def number_of_created_tasks(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_DAY)
 @allow_all_time
 def number_of_completed_tasks(days=30):
     """Number of completed tasks"""
@@ -230,7 +230,7 @@ def number_of_completed_tasks(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def number_of_active_users(days=30):
     """Number of active users"""
@@ -244,7 +244,7 @@ def number_of_active_users(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def categories_with_new_projects(days=30):
     """Categories with new projects"""
@@ -261,7 +261,7 @@ def categories_with_new_projects(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def avg_time_to_complete_task(days=30):
     """Average time to complete a task"""
@@ -278,7 +278,7 @@ def avg_time_to_complete_task(days=30):
     return session.execute(sql, dict(days=days)).scalar() or 'N/A'
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def avg_task_per_job(days=30):
     """Average number of tasks per job"""
@@ -294,7 +294,7 @@ def avg_task_per_job(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 @allow_all_time
 def tasks_per_category(days=30):
     """Average number of tasks per category"""
@@ -312,8 +312,11 @@ def tasks_per_category(days=30):
     return session.execute(sql, dict(days=days)).scalar() or 'N/A'
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 def project_chart():
+    """
+    Fetch data for a monthly chart of the number of projects
+    """
     sql = text('''
         WITH dates AS (
             SELECT * FROM
@@ -333,8 +336,11 @@ def project_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 def category_chart():
+    """
+    Fetch data for a monthly chart of the number of categories
+    """
     sql = text('''
         WITH dates AS (
             SELECT * FROM
@@ -354,8 +360,11 @@ def category_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 def task_chart():
+    """
+    Fetch data for a monthly chart of the number of tasks
+    """
     sql = text('''
         WITH dates AS (
             SELECT * FROM
@@ -374,9 +383,9 @@ def task_chart():
         )
         SELECT date, count(task_date.id) as num_tasks FROM
         dates LEFT JOIN task_date ON
-            task_date.created < dates.date
+            task_date.created < dates.date + interval '1 month'
             AND
-            task_date.created >= dates.date - interval '1 month'
+            task_date.created >= dates.date
         GROUP BY date ORDER  BY date ASC;
         ''')
     rows = session.execute(sql).fetchall()
@@ -385,8 +394,11 @@ def task_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(7*ONE_DAY)
+@memoize(ONE_WEEK)
 def submission_chart():
+    """
+    Fetch data for a monthly chart of the number of submissions
+    """
     sql = text('''
         WITH dates AS (
             SELECT * FROM
@@ -405,9 +417,9 @@ def submission_chart():
         )
         SELECT date, count(task_run_date.id) as num_submissions FROM
         dates LEFT JOIN task_run_date ON
-            task_run_date.finish_time < dates.date
+            task_run_date.finish_time < dates.date + interval '1 month'
             AND
-            task_run_date.finish_time >= dates.date - interval '1 month'
+            task_run_date.finish_time >= dates.date
         GROUP BY date ORDER  BY date ASC;
         ''')
     rows = session.execute(sql).fetchall()

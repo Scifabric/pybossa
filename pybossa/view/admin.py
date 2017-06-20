@@ -550,7 +550,6 @@ def dashboard():
 @login_required
 @admin_required
 def management_dashboard():
-
     project_chart = site_stats.project_chart()
     category_chart = site_stats.category_chart()
     task_chart = site_stats.task_chart()
