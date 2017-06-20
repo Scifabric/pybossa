@@ -37,14 +37,20 @@ class Exporter(object):
                         task_run=[task_repo, 'filter_task_runs_by'],
                         result=[result_repo, 'filter_by'])
 
-    def _get_data(self, table, project_id, flat=False):
+    def _get_data(self, table, project_id, flat=False, info_only=False):
         """Get the data for a given table."""
         repo, query = self.repositories[table]
         data = getattr(repo, query)(project_id=project_id)
-        if flat:
-            tmp = [flatten(row.dictize()) for row in data]
+        if info_only:
+            if flat:
+                tmp = [flatten(row.dictize()['info']) for row in data]
+            else:
+                tmp = [row.dictize()['info'] for row in data]
         else:
-            tmp = [row.dictize() for row in data]
+            if flat:
+                tmp = [flatten(row.dictize()) for row in data]
+            else:
+                tmp = [row.dictize() for row in data]
         return tmp
 
     def _project_name_latin_encoded(self, project):

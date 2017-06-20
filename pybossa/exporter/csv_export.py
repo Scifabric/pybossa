@@ -38,6 +38,11 @@ class CsvExporter(Exporter):
                                    flat=True)
         return pd.DataFrame(flat_data)
 
+    def _respond_csv_info_only(self, table, project_id):
+        flat_data = self._get_data(table, project_id,
+                                   flat=True, info_only=True)
+        return pd.DataFrame(flat_data)
+
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
