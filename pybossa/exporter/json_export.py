@@ -64,3 +64,4 @@ class JsonExporter(Exporter):
         print "%d (json)" % project.id
         self._make_zip(project, "task")
         self._make_zip(project, "task_run")
+        self._make_zip(project, "result")

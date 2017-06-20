@@ -24,6 +24,7 @@ from mock import patch
 import datetime
 from pybossa.core import result_repo
 from pybossa.model.project import Project
+from pybossa.cache.project_stats import update_stats
 
 
 class TestProjectsCache(Test):
@@ -613,7 +614,7 @@ class TestProjectsCache(Test):
         now = datetime.datetime.utcnow()
         TaskRunFactory.create(task=task, created=now, finish_time=now+first_task_time)
         TaskRunFactory.create(task=task, created=now, finish_time=now+second_task_time)
-
+        update_stats(project.id)
         average_time = cached_projects.average_contribution_time(project.id)
 
-        assert average_time == expected_average_time, average_time
+        assert average_time == expected_average_time.total_seconds(), average_time

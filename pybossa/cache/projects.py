@@ -219,7 +219,23 @@ def average_contribution_time(project_id):
     results = session.execute(sql, dict(project_id=project_id)).fetchall()
     for row in results:
         average_time = row.average_time
-    return average_time or 0
+    if average_time:
+        return average_time.total_seconds()
+    else:
+        return 0
+
+
+def n_blogposts(project_id):
+    """Return number of blogposts of a project."""
+    sql = text('''
+               SELECT COUNT(id) as ct from blogpost
+               WHERE project_id=:project_id;
+               ''')
+    results = session.execute(sql, dict(project_id=project_id))
+    n_blogposts = 0
+    for row in results:
+        n_blogposts = row.ct
+    return n_blogposts
 
 
 # This function does not change too much, so cache it for a longer time

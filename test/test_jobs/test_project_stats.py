@@ -55,7 +55,7 @@ class TestProjectsStats(Test):
         """Test JOB get project jobs works."""
         user = UserFactory.create(pro=True)
         project = ProjectFactory.create(owner=user)
-        jobs_generator = get_project_jobs()
+        jobs_generator = get_project_jobs('super')
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
@@ -74,14 +74,15 @@ class TestProjectsStats(Test):
     @with_context
     def test_get_project_jobs_for_non_pro_users(self):
         """Test JOB get project jobs works for non pro users."""
-        ProjectFactory.create()
-        jobs_generator = get_project_jobs()
+        owner = UserFactory.create(pro=False)
+        ProjectFactory.create(owner=owner)
+        jobs_generator = get_project_jobs('high')
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
 
-        err_msg = "There should be only 0 jobs"
-        assert len(jobs) == 0, err_msg
+        err_msg = "There should be only 1 jobs"
+        assert len(jobs) == 1, err_msg
 
     @with_context
     def test_warm_project(self):

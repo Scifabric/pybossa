@@ -40,6 +40,7 @@ from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
 from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
+from pybossa.cache.project_stats import update_stats
 from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -279,6 +280,7 @@ class TestWeb(web.Helper):
 
         # With stats
         url = '/project/%s/stats' % project.short_name
+        update_stats(project.id)
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
         assert "Distribution" in res.data, res.data
@@ -339,11 +341,13 @@ class TestWeb(web.Helper):
             self.app_get_json('api/project/%s/newtask' % project.id)
 
         # With stats
+        update_stats(project.id)
+
         url = '/project/%s/stats' % project.short_name
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
-        assert 'avg_contrib_time' in data, err_msg
+        assert 'avg_contrib_time' in data, (err_msg, data.keys())
         assert 'n_completed_tasks' in data, err_msg
         assert 'n_tasks' in data, err_msg
         assert 'n_volunteers' in data, err_msg
@@ -392,6 +396,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner)
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
+        update_stats(project.id)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
         res = self.app.get(url)
@@ -410,7 +415,7 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
         self.signin(email=admin.email_addr, password='1234')
-
+        update_stats(project.id)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
@@ -436,6 +441,7 @@ class TestWeb(web.Helper):
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
+        update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
         res = self.app.get(pro_url)
         assert_raises(ValueError, json.loads, res.data)
@@ -447,6 +453,7 @@ class TestWeb(web.Helper):
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
+        update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
 
         res = self.app_get_json(pro_url)
@@ -483,6 +490,8 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         url = '/project/%s/stats' % project.short_name
+
+        update_stats(project.id)
 
         res = self.app_get_json(url)
         data = json.loads(res.data)
@@ -6418,6 +6427,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project, n_answers=1)
         taskrun = TaskRunFactory.create(task=task, user=user)
+        update_stats(project.id)
         res = self.app.get('/project/%s/newtask' % project.short_name)
 
         assert task.state == 'completed', task.state
@@ -6510,6 +6520,7 @@ class TestWeb(web.Helper):
         result = result_repo.get_by(project_id=project.id)
         result.info = dict(foo='bar')
         result_repo.update(result)
+        update_stats(project.id)
         res = self.app.get(url, follow_redirects=True)
         assert "The results" in res.data, res.data
 

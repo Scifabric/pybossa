@@ -19,7 +19,9 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import memoize, ONE_DAY
+from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
+import pybossa.cache.projects as cached_projects
+from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
 
 import pygeoip
@@ -539,16 +541,14 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-@memoize(timeout=ONE_DAY)
-def get_stats(project_id, geo=False, period='2 week'):
-    """Return the stats of a given project."""
+def update_stats(project_id, geo=False, period='2 week'):
+    """Update the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
     users, anon_users, auth_users = stats_users(project_id, period)
     dates, dates_anon, dates_auth = stats_dates(project_id, period)
 
 
-    n_tasks(project_id)
     sum(dates.values())
 
     sorted(dates.iteritems(), key=operator.itemgetter(0))
@@ -562,4 +562,50 @@ def get_stats(project_id, geo=False, period='2 week'):
     users_stats = stats_format_users(project_id, users, anon_users, auth_users,
                                      geo)
 
+    data = dict(dates_stats=dates_stats,
+                hours_stats=hours_stats,
+                users_stats=users_stats)
+    ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+
+    n_tasks = cached_projects.n_tasks(project_id)
+    n_task_runs = cached_projects.n_task_runs(project_id)
+    n_results = cached_projects.n_results(project_id)
+    overall_progress = cached_projects.overall_progress(project_id)
+    last_activity = cached_projects.last_activity(project_id)
+    n_volunteers = cached_projects.n_volunteers(project_id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project_id)
+    average_time = cached_projects.average_contribution_time(project_id)
+    n_blogposts = cached_projects.n_blogposts(project_id)
+
+    if ps is None:
+        ps = ProjectStats(project_id=project_id, info=data,
+                          n_tasks=n_tasks,
+                          n_task_runs=n_task_runs,
+                          n_results=n_results,
+                          n_volunteers=n_volunteers,
+                          n_completed_tasks=n_completed_tasks,
+                          average_time=average_time,
+                          overall_progress=overall_progress,
+                          n_blogposts=n_blogposts,
+                          last_activity=last_activity)
+        db.session.add(ps)
+    else:
+        ps.info = data
+        ps.n_tasks = n_tasks
+        ps.n_task_runs = n_task_runs
+        ps.overall_progress = overall_progress
+        ps.last_activity = last_activity
+        ps.n_results = n_results
+        ps.n_completed_tasks = n_completed_tasks
+        ps.n_volunteers = n_volunteers
+        ps.average_time = average_time
+        ps.n_blogposts = n_blogposts
+    db.session.commit()
     return dates_stats, hours_stats, users_stats
+
+
+@memoize(timeout=FIVE_MINUTES)
+def get_stats(project_id, geo=False, period='2 week'):
+    """Get project's stats."""
+    ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+    return ps.info['dates_stats'], ps.info['hours_stats'], ps.info['users_stats']

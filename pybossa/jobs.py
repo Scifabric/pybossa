@@ -106,7 +106,7 @@ def get_periodic_jobs(queue):
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
     # Based on type of user
-    project_jobs = get_project_jobs() if queue == 'super' else []
+    project_jobs = get_project_jobs(queue) if queue in ('super', 'high') else []
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
@@ -175,14 +175,26 @@ def project_export(_id):
         csv_exporter.pregenerate_zip_files(app)
 
 
-def get_project_jobs(queue='super'):
+def get_project_jobs(queue):
     """Return a list of jobs based on user type."""
+    from pybossa.core import project_repo
     from pybossa.cache import projects as cached_projects
     timeout = current_app.config.get('TIMEOUT')
-    return create_dict_jobs(cached_projects.get_from_pro_user(),
-                            get_project_stats,
-                            timeout=timeout,
-                            queue=queue)
+    if queue == 'super':
+        projects = cached_projects.get_from_pro_user()
+    elif queue == 'high':
+        projects = (p.dictize() for p in project_repo.filter_by(published=True)
+                    if p.owner.pro is False)
+    else:
+        projects = []
+    for project in projects:
+        project_id = project.get('id')
+        project_short_name = project.get('short_name')
+        job = dict(name=get_project_stats,
+                   args=[project_id, project_short_name], kwargs={},
+                   timeout=timeout,
+                   queue=queue)
+        yield job
 
 
 def create_dict_jobs(data, function, timeout, queue='low'):
@@ -337,14 +349,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     from flask import current_app
 
     cached_projects.get_project(short_name)
-    cached_projects.n_tasks(_id)
-    cached_projects.n_task_runs(_id)
-    cached_projects.overall_progress(_id)
-    cached_projects.last_activity(_id)
-    cached_projects.n_completed_tasks(_id)
-    cached_projects.n_volunteers(_id)
-    cached_projects.browse_tasks(_id)
-    stats.get_stats(_id, current_app.config.get('GEO'))
+    stats.update_stats(_id, current_app.config.get('GEO'))
 
 
 @with_cache_disabled
@@ -384,17 +389,17 @@ def warm_cache():  # pragma: no cover
     def warm_project(_id, short_name, featured=False):
         if _id not in projects_cached:
             cached_projects.get_project(short_name)
-            cached_projects.n_tasks(_id)
-            n_task_runs = cached_projects.n_task_runs(_id)
-            cached_projects.overall_progress(_id)
-            cached_projects.last_activity(_id)
-            cached_projects.n_completed_tasks(_id)
-            cached_projects.n_volunteers(_id)
-            cached_projects.browse_tasks(_id)
-            if n_task_runs >= 1000 or featured:
-                # print ("Getting stats for %s as it has %s task runs" %
-                #        (short_name, n_task_runs))
-                stats.get_stats(_id, app.config.get('GEO'))
+            #cached_projects.n_tasks(_id)
+            #n_task_runs = cached_projects.n_task_runs(_id)
+            #cached_projects.overall_progress(_id)
+            #cached_projects.last_activity(_id)
+            #cached_projects.n_completed_tasks(_id)
+            #cached_projects.n_volunteers(_id)
+            #cached_projects.browse_tasks(_id)
+            #if n_task_runs >= 1000 or featured:
+            #    # print ("Getting stats for %s as it has %s task runs" %
+            #    #        (short_name, n_task_runs))
+            stats.update_stats(_id, app.config.get('GEO'))
             projects_cached.append(_id)
 
     # Cache top projects
@@ -628,12 +633,13 @@ def get_weekly_stats_update_projects():
 
 
 def send_weekly_stats_project(project_id):
-    from pybossa.cache.project_stats import get_stats
+    from pybossa.cache.project_stats import update_stats, get_stats
     from pybossa.core import project_repo
     from datetime import datetime
     project = project_repo.get(project_id)
     if project.owner.subscribed is False:
         return "Owner does not want updates by email"
+    update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,
                                                       geo=True,
                                                       period='1 week')
