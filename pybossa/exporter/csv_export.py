@@ -68,6 +68,7 @@ class CsvExporter(Exporter):
                     zipped_datafile.close()
             finally:
                 datafile.close()
+                info_datafile.close()
 
     def download_name(self, project, ty):
         return super(CsvExporter, self).download_name(project, ty, 'csv')
