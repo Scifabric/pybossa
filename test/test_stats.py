@@ -106,6 +106,7 @@ class TestStats(Test):
         auth = 0
         TaskRunFactory.create(task=self.project.tasks[0])
         TaskRunFactory.create(task=self.project.tasks[1])
+        stats.update_stats(self.project.id)
         dates_stats, hours_stats, user_stats = stats.get_stats(self.project.id)
         for item in dates_stats:
             if item['label'] == 'Anon + Auth':
