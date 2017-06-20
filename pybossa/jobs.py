@@ -106,7 +106,7 @@ def get_periodic_jobs(queue):
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
     # Based on type of user
-    project_jobs = get_project_jobs(queue) if queue == ('super', 'maintenance') else []
+    project_jobs = get_project_jobs(queue) if queue in ('super', 'high') else []
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
@@ -180,14 +180,13 @@ def get_project_jobs(queue):
     from pybossa.core import project_repo
     from pybossa.cache import projects as cached_projects
     timeout = current_app.config.get('TIMEOUT')
-    #                        get_project_stats,
-    #                        timeout=timeout,
-    #                        queue=queue)
     if queue == 'super':
         projects = cached_projects.get_from_pro_user()
-    else:
+    elif queue == 'high':
         projects = (p.dictize() for p in project_repo.filter_by(published=True)
                     if p.owner.pro is False)
+    else:
+        projects = []
     for project in projects:
         project_id = project.get('id')
         job = dict(name=get_project_stats,
