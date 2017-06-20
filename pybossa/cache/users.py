@@ -376,7 +376,7 @@ def get_users_for_report():
                     additional_comments=row.additional_comments,
                     type_of_user=row.type_of_user, first_submission_date=row.first_submission_date,
                     last_submission_date=row.last_submission_date,
-                    completed_tasks=row.completed_tasks, avg_time_per_task=str(row.avg_time_per_task.total_seconds()),
+                    completed_tasks=row.completed_tasks, avg_time_per_task=str(round(row.avg_time_per_task.total_seconds() / 60, 2)),
                     total_projects_contributed=n_projects_contributed(row.u_id),
                     percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2))
                     for row in results]
@@ -415,6 +415,6 @@ def get_project_report_userdata(project_id):
          str(row.timezone), row.type_of_user, row.additional_comments,
          str(row.completed_tasks), str(row.percent_completed_tasks),
          row.first_submission_date, row.last_submission_date,
-         str(row.avg_time_per_task.total_seconds())]
+         str(round(row.avg_time_per_task.total_seconds() / 60, 2))]
          for row in results]
     return users_report
