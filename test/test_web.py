@@ -280,6 +280,7 @@ class TestWeb(web.Helper):
 
         # With stats
         url = '/project/%s/stats' % project.short_name
+        update_stats(project.id)
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
         assert "Distribution" in res.data, res.data
@@ -440,6 +441,7 @@ class TestWeb(web.Helper):
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
+        update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
         res = self.app.get(pro_url)
         assert_raises(ValueError, json.loads, res.data)
@@ -451,6 +453,7 @@ class TestWeb(web.Helper):
         pro_owned_project = ProjectFactory.create(owner=pro_owner)
         task = TaskFactory.create(project=pro_owned_project)
         TaskRunFactory.create(task=task)
+        update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
 
         res = self.app_get_json(pro_url)
@@ -6424,6 +6427,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project, n_answers=1)
         taskrun = TaskRunFactory.create(task=task, user=user)
+        update_stats(project.id)
         res = self.app.get('/project/%s/newtask' % project.short_name)
 
         assert task.state == 'completed', task.state
