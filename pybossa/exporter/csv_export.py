@@ -33,21 +33,16 @@ import pandas as pd
 
 class CsvExporter(Exporter):
 
-    def _respond_csv(self, table, project_id):
+    def _respond_csv(self, table, project_id, info_only=False):
         flat_data = self._get_data(table, project_id,
-                                   flat=True)
-        return pd.DataFrame(flat_data)
-
-    def _respond_csv_info_only(self, table, project_id):
-        flat_data = self._get_data(table, project_id,
-                                   flat=True, info_only=True)
+                                   flat=True, info_only=info_only)
         return pd.DataFrame(flat_data)
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
         if dataframe is not None:
-            info_dataframe = self._respond_csv_info_only(ty, project.id)
+            info_dataframe = self._respond_csv(ty, project.id, info_only=True)
             datafile = tempfile.NamedTemporaryFile()
             info_datafile = tempfile.NamedTemporaryFile()
             try:
