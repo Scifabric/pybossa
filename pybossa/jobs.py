@@ -189,8 +189,9 @@ def get_project_jobs(queue):
         projects = []
     for project in projects:
         project_id = project.get('id')
+        project_short_name = project.get('short_name')
         job = dict(name=get_project_stats,
-                   args=[project_id], kwargs={},
+                   args=[project_id, project_short_name], kwargs={},
                    timeout=timeout,
                    queue=queue)
         yield job

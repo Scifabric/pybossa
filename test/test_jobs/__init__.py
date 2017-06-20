@@ -118,7 +118,7 @@ class TestJobs(Test):
         # Does not call unnecessary functions for performance
         assert non_contr.called == False
         assert inactive.called == False
-        assert project.called == False
+        assert project.called == True
         assert autoimport.called == False
 
     @with_context
