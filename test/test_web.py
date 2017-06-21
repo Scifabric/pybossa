@@ -4531,11 +4531,13 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
-        err_msg = "filename count in ZIP is not 1"
-        assert len(zip.namelist()) == 1, err_msg
+        err_msg = "filename count in ZIP is not 2"
+        assert len(zip.namelist()) == 2, err_msg
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'project1_task_run.csv', zip.namelist()[0]
+        extracted_filename_info_only = zip.namelist()[1]
+        assert extracted_filename_info_only == 'project1_task_run_info_only.csv', zip.namelist()[1]
 
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
