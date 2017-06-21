@@ -33,25 +33,32 @@ import pandas as pd
 
 class CsvExporter(Exporter):
 
-    def _respond_csv(self, table, project_id):
+    def _respond_csv(self, table, project_id, info_only=False):
         flat_data = self._get_data(table, project_id,
-                                   flat=True)
+                                   flat=True, info_only=info_only)
         return pd.DataFrame(flat_data)
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)
         if dataframe is not None:
+            info_dataframe = self._respond_csv(ty, project.id, info_only=True)
             datafile = tempfile.NamedTemporaryFile()
+            info_datafile = tempfile.NamedTemporaryFile()
             try:
                 dataframe.to_csv(datafile, index=False,
                                  encoding='utf-8')
+                info_dataframe.to_csv(
+                    info_datafile, index=False, encoding='utf-8')
                 datafile.flush()
+                info_datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     _zip = self._zip_factory(zipped_datafile.name)
                     _zip.write(
                         datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
+                    _zip.write(
+                        info_datafile.name, secure_filename('%s_%s_info_only.csv' % (name, ty)))
                     _zip.close()
                     container = "user_%d" % project.owner_id
                     _file = FileStorage(
@@ -61,6 +68,7 @@ class CsvExporter(Exporter):
                     zipped_datafile.close()
             finally:
                 datafile.close()
+                info_datafile.close()
 
     def download_name(self, project, ty):
         return super(CsvExporter, self).download_name(project, ty, 'csv')
