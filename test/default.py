@@ -63,9 +63,15 @@ def delete_materialized_views():
         db.session.execute(sql)
         db.session.commit()
 
+def delete_indexes():
+    sql = text('''DROP INDEX users_rank_idx''')
+    db.session.execute(sql)
+    db.session.commit()
+
 
 def rebuild_db():
     """Rebuild the DB."""
+    delete_indexes()
     delete_materialized_views()
     db.drop_all()
     db.create_all()
@@ -96,6 +102,7 @@ class Test(object):
 
     def tearDown(self):
         with self.flask_app.app_context():
+            delete_indexes()
             delete_materialized_views()
             db.session.remove()
             self.redis_flushall()
