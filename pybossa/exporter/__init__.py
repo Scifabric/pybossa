@@ -43,9 +43,19 @@ class Exporter(object):
         data = getattr(repo, query)(project_id=project_id)
         if info_only:
             if flat:
-                tmp = [flatten(row.dictize()['info']) for row in data]
+                tmp = []
+                for row in data:
+                    if row.dictize()['info']:
+                        tmp.append(flatten(row.dictize()['info']))
+                    else:
+                        tmp.append({})
             else:
-                tmp = [row.dictize()['info'] for row in data]
+                tmp = []
+                for row in data:
+                    if row.dictize()['info']:
+                        tmp.append(row.dictize()['info'])
+                    else:
+                        tmp.append({})
         else:
             if flat:
                 tmp = [flatten(row.dictize()) for row in data]
