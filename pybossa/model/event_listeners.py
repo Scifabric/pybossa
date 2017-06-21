@@ -20,6 +20,8 @@ from datetime import datetime
 from rq import Queue
 from sqlalchemy import event
 
+from flask import url_for
+
 from pybossa.feed import update_feed
 from pybossa.model import update_project_timestamp, update_target_timestamp
 from pybossa.model import make_timestamp
@@ -30,12 +32,16 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
-from pybossa.core import result_repo
+from pybossa.model.counter import Counter
+from pybossa.core import result_repo, db
 from pybossa.jobs import webhook, notify_blog_users
+from pybossa.jobs import push_notification
+
 from pybossa.core import sentinel
 
 webhook_queue = Queue('high', connection=sentinel.master)
 mail_queue = Queue('email', connection=sentinel.master)
+webpush_queue = Queue('webpush', connection=sentinel.master)
 
 
 @event.listens_for(Blogpost, 'after_insert')
@@ -58,6 +64,22 @@ def add_blog_event(mapper, conn, target):
     mail_queue.enqueue(notify_blog_users,
                        blog_id=target.id,
                        project_id=target.project_id)
+    contents = {"en": "New update!"}
+    headings = {"en": target.title}
+    launch_url = url_for('project.show_blogpost',
+                         short_name=tmp['short_name'],
+                         id=target.id,
+                         _external=True)
+    web_buttons = [{"id": "read-more-button",
+                    "text": "Read more",
+                    "icon": "http://i.imgur.com/MIxJp1L.png",
+                    "url": launch_url }]
+    webpush_queue.enqueue(push_notification,
+                          project_id=target.project_id,
+                          contents=contents,
+                          headings=headings,
+                          web_buttons=web_buttons,
+                          launch_url=launch_url)
 
 
 @event.listens_for(Project, 'after_insert')
@@ -71,6 +93,13 @@ def add_project_event(mapper, conn, target):
     tmp = Project().to_public_json(tmp)
     obj.update(tmp)
     update_feed(obj)
+    # Create a clean projectstats object for it
+    sql_query = """INSERT INTO project_stats 
+                   (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
+                   n_completed_tasks, overall_progress, average_time,
+                   n_blogposts, last_activity, info)
+                   VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (target.id)
+    conn.execute(sql_query)
 
 
 @event.listens_for(Task, 'after_insert')
@@ -95,7 +124,7 @@ def add_task_event(mapper, conn, target):
 def add_user_event(mapper, conn, target):
     """Update PYBOSSA feed with new user."""
     obj = target.to_public_json()
-    obj['action_updated']='User'
+    obj['action_updated'] = 'User'
     update_feed(obj)
 
 
@@ -232,3 +261,24 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
+
+@event.listens_for(Task, 'after_insert')
+def create_zero_counter(mapper, conn, target):
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, 0)"
+                 % (make_timestamp(), target.project_id, target.id))
+    conn.execute(sql_query)
+
+@event.listens_for(TaskRun, 'after_insert')
+def increase_task_counter(mapper, conn, target):
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, 1)"
+                 % (make_timestamp(), target.project_id, target.task_id))
+    conn.execute(sql_query)
+
+@event.listens_for(TaskRun, 'after_delete')
+def decrease_task_counter(mapper, conn, target):
+    sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
+                 VALUES (TIMESTAMP '%s', %s, %s, -1)"
+                 % (make_timestamp(), target.project_id, target.task_id))
+    conn.execute(sql_query)

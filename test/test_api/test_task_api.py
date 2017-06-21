@@ -61,6 +61,7 @@ class TestTaskAPI(TestAPI):
         t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
         tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
         t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119', info={'question': 'answer'})
+
         tasks.insert(0, t1)
         tasks.append(t2)
 
@@ -69,6 +70,7 @@ class TestTaskAPI(TestAPI):
         assert len(tasks) == 10, tasks
         task = tasks[0]
         assert task['info']['question'] == 'answer', task
+
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -80,6 +82,46 @@ class TestTaskAPI(TestAPI):
         err_msg = "It should get the last item first."
         assert data[0]['created'] == tasks[len(tasks)-1]['created'], err_msg
 
+        # Desc filter
+        url = "/api/task?orderby=wrongattribute"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
+        # Desc filter
+        url = "/api/task?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        tasks_by_id = sorted(tasks, key=lambda x: x['id'], reverse=False)
+        i = 0
+        for t in tasks_by_id:
+            assert tasks_by_id[i]['id'] == data[i]['id']
+            i += 1
+
+        # Desc filter
+        url = "/api/task?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        tasks_by_id = sorted(tasks, key=lambda x: x['id'], reverse=True)
+        i = 0
+        for t in tasks_by_id:
+            assert tasks_by_id[i]['id'] == data[i]['id']
+            i += 1
+
+        # Related
+        taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
+        res = self.app.get('/api/task?id=' + str(t2.id) + '&related=True')
+        data = json.loads(res.data)
+        task = data[0]
+        assert task['info']['question'] == 'answer', task
+        assert len(task['task_runs']) == 8, task
+        assert len(task['task_runs']) == len(taskruns), task
+        assert task['result'] == None, task
 
     @with_context
     def test_task_query_without_params_with_context(self):
@@ -338,6 +380,7 @@ class TestTaskAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
     def test_task_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -352,6 +395,22 @@ class TestTaskAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
+    def test_task_post_with_reserved_fav_user_ids(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = {'fav_user_ids': [1, 2, 3],
+                'project_id': project.id}
+
+        res = self.app.post('/api/task?api_key=' + user.api_key,
+                            data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
+
+    @with_context
     def test_task_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -366,6 +425,21 @@ class TestTaskAPI(TestAPI):
         assert res.status_code == 400, res.status_code
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
+
+    @with_context
+    def test_task_put_with_fav_user_ids_fields_returns_error(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
+        data = {'fav_user_ids': [1,2,3]}
+
+        res = self.app.put(url, data=json.dumps(data))
+
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
+
 
     @with_context
     def test_task_update(self):
@@ -522,6 +596,7 @@ class TestTaskAPI(TestAPI):
         assert root_task not in tasks, tasks
 
 
+    @with_context
     @patch('pybossa.repositories.task_repository.uploader')
     def test_task_delete_deletes_zip_files(self, uploader):
         """Test API task delete deletes also zip files with tasks and taskruns"""
@@ -535,7 +610,6 @@ class TestTaskAPI(TestAPI):
                     call('1_project1_task_run_json.zip', 'user_1'),
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
-
 
     @with_context
     def test_delete_task_cascade(self):

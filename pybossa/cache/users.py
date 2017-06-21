@@ -17,95 +17,28 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for users."""
 from sqlalchemy.sql import text
+from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
 from pybossa.model.project import Project
+from pybossa.leaderboard.data import get_leaderboard as gl
+from pybossa.leaderboard.jobs import leaderboard as lb
 
 
 session = db.slave_session
 
 
-@memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def get_leaderboard(n, user_id=None):
+def get_leaderboard(n, user_id=None, window=0):
     """Return the top n users with their rank."""
-    sql = text('''
-               WITH global_rank AS (
-                    WITH scores AS (
-                        SELECT user_id, COUNT(*) AS score FROM task_run
-                        WHERE user_id IS NOT NULL GROUP BY user_id)
-                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                    FROM scores)
-               SELECT rank, id, name, fullname, email_addr, info, created,
-               score FROM global_rank
-               JOIN public."user" on (user_id=public."user".id) ORDER BY rank
-               LIMIT :limit;
-               ''')
-
-    results = session.execute(sql, dict(limit=n))
-
-    u = User()
-
-    top_users = []
-    user_in_top = False
-    for row in results:
-        if (row.id == user_id):
-            user_in_top = True
-        user = dict(
-            rank=row.rank,
-            id=row.id,
-            name=row.name,
-            fullname=row.fullname,
-            email_addr=row.email_addr,
-            info=row.info,
-            created=row.created,
-            score=row.score)
-        tmp = u.to_public_json(data=user)
-        top_users.append(tmp)
-    if (user_id is not None):
-        if not user_in_top:
-            sql = text('''
-                       WITH global_rank AS (
-                            WITH scores AS (
-                                SELECT user_id, COUNT(*) AS score FROM task_run
-                                WHERE user_id IS NOT NULL GROUP BY user_id)
-                            SELECT user_id, score, rank() OVER
-                                (ORDER BY score desc)
-                            FROM scores)
-                       SELECT rank, id, name, fullname, email_addr, info, created,
-                              score FROM global_rank
-                       JOIN public."user" on (user_id=public."user".id)
-                       WHERE user_id=:user_id ORDER BY rank;
-                       ''')
-            user_rank = session.execute(sql, dict(user_id=user_id))
-            u = User.query.get(user_id)
-            # Load by default user data with no rank
-            user = dict(
-                rank=-1,
-                id=u.id,
-                name=u.name,
-                fullname=u.fullname,
-                email_addr=u.email_addr,
-                info=u.info,
-                created=u.created,
-                score=-1)
-            user = u.to_public_json(data=user)
-            for row in user_rank:  # pragma: no cover
-                user = dict(
-                    rank=row.rank,
-                    id=row.id,
-                    name=row.name,
-                    fullname=row.fullname,
-                    email_addr=row.email_addr,
-                    info=row.info,
-                    created=row.created,
-                    score=row.score)
-                user = u.to_public_json(data=user)
-            top_users.append(user)
-
-    return top_users
+    try:
+        return gl(top_users=n, user_id=user_id, window=window)
+    except ProgrammingError:
+        db.session.rollback()
+        lb()
+        return gl(top_users=n, user_id=user_id, window=window)
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))

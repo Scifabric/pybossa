@@ -1,17 +1,19 @@
-[![Build Status](https://travis-ci.org/Scifabric/pybossa.svg?branch=master)](https://travis-ci.org/Scifabric/pybossa)[![Code Health](https://landscape.io/github/Scifabric/pybossa/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/pybossa/master)
+[![Scifabric](https://img.shields.io/badge/made%20by-scifabric-blue.svg)](https://scifabric.com/)
+[![Build Status](https://travis-ci.org/Scifabric/pybossa.svg?branch=master)](https://travis-ci.org/Scifabric/pybossa) [![Code Health](https://landscape.io/github/Scifabric/pybossa/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/pybossa/master) 
  [![Coverage
 Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveralls.io/r/Scifabric/pybossa?branch=master)
 [![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Slack](http://slackin.crowdcrafting.org/badge.svg)](http://slackin.crowdcrafting.org) 
 [![DOI](https://zenodo.org/badge/12868/PyBossa/pybossa.svg)](https://zenodo.org/badge/latestdoi/12868/PyBossa/pybossa)
 
 
-
-PyBossa is an open source platform for crowd-sourcing online (volunteer)
+PYBOSSA is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
 etc).
 
-![Shuttleworth Foundation Funded](http://pybossa.com/assets/img/shuttleworth-funded.png)
+Actividad subvencionada por el Ministerio de Educación, Cultura y Deporte
+
+![Ministerio de Educación, Cultura y Deporte](http://i.imgur.com/4ShmIt1.jpg)
 
 PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
 python (hence the name!). It can be used for any distributed tasks project
@@ -65,6 +67,10 @@ It has the instructions to become a contributor.
 * [FontAwesome fonts](http://fortawesome.github.com/Font-Awesome/)
 * [GeoLite data by MaxMind](http://www.maxmind.com)
 
+Special thanks to Shuttleworth Foundations for funding us and their true support:
+* [Shuttleworth Foundation](https://www.shuttleworthfoundation.org/)
+![Shuttleworth Foundation Funded](http://pybossa.com/assets/img/shuttleworth-funded.png)
+
 ## Copyright / License
 
 Copyright 2015 [SciFabric LTD](http://scifabric.com).
@@ -78,3 +84,4 @@ cooperation with the community in the case of network server software.
 
 Documentation and media is under a Creative Commons Attribution License version
 3.
+

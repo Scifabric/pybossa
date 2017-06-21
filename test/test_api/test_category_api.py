@@ -30,7 +30,9 @@ class TestCategoryAPI(TestAPI):
     @with_context
     def test_query_category(self):
         """Test API query for category endpoint works"""
-        CategoryFactory.create(name='thinking', short_name='thinking')
+        categories = []
+        cat = CategoryFactory.create(name='thinking', short_name='thinking')
+        categories.append(cat.dictize())
         # Test for real field
         url = "/api/category"
         res = self.app.get(url + "?short_name=thinking")
@@ -62,7 +64,8 @@ class TestCategoryAPI(TestAPI):
         assert len(data) == 1, data
 
         # Keyset pagination
-        CategoryFactory.create(name='computing', short_name='computing')
+        cat = CategoryFactory.create(name='computing', short_name='computing')
+        categories.append(cat.dictize())
         res = self.app.get(url)
         data = json.loads(res.data)
         tmp = '?limit=1&last_id=%s' % data[0]['id']
@@ -80,6 +83,34 @@ class TestCategoryAPI(TestAPI):
         assert err['action'] == 'GET', err_msg
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == 'AttributeError', err_msg
+
+        # Desc filter
+        url = "/api/category?orderby=wrongattribute"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
+        # Desc filter
+        url = "/api/category?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        categories_by_id = sorted(categories, key=lambda x: x['id'], reverse=False)
+        for i in range(len(categories)):
+            assert categories_by_id[i]['id'] == data[i]['id']
+
+        # Desc filter
+        url = "/api/category?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        categories_by_id = sorted(categories, key=lambda x: x['id'], reverse=True)
+        for i in range(len(categories)):
+            assert categories_by_id[i]['id'] == data[i]['id']
+
 
     @with_context
     def test_category_post(self):

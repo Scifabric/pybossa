@@ -22,6 +22,7 @@ from flask import render_template
 
 from pybossa.cache import site_stats
 from pybossa.cache import projects as cached_projects
+from pybossa.util import handle_content_type
 
 blueprint = Blueprint('stats', __name__)
 
@@ -78,12 +79,13 @@ def index():
                      dict(label='Tasks', value=[0, n_tasks]),
                      dict(label='Answers', value=[1, n_task_runs])])
 
-    return render_template('/stats/global.html', title=title,
-                           users=json.dumps(users),
-                           projects=json.dumps(projects),
-                           tasks=json.dumps(tasks),
-                           locs=json.dumps(locs),
-                           show_locs=show_locs,
-                           top5_users_24_hours=top5_users_24_hours,
-                           top5_projects_24_hours=top5_projects_24_hours,
-                           stats=stats)
+    response = dict(template='/stats/global.html', title=title,
+                    users=json.dumps(users),
+                    projects=json.dumps(projects),
+                    tasks=json.dumps(tasks),
+                    locs=json.dumps(locs),
+                    show_locs=show_locs,
+                    top5_users_24_hours=top5_users_24_hours,
+                    top5_projects_24_hours=top5_projects_24_hours,
+                    stats=stats)
+    return handle_content_type(response)

@@ -135,3 +135,15 @@ CORS_RESOURCES = {r"/api/*": {"origins": "*",
 
 FAILED_JOBS_RETRIES = 3
 FAILED_JOBS_MAILS = 7
+
+FULLTEXTSEARCH_LANGUAGE = 'english'
+
+STRICT_SLASHES = True
+
+# Background jobs default time outs
+MINUTE = 60
+TIMEOUT = 10 * MINUTE
+
+# OneSignal GCM Sender ID
+# DO NOT MODIFY THIS
+GCM_SENDER_ID = "482941778795"

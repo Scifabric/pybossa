@@ -27,6 +27,12 @@ from readability.readability import Document
 blueprint = Blueprint('help', __name__)
 
 
+@blueprint.route('/')
+def index():
+    """Render the default help page."""
+    response = dict(template='help/index.html', title='Help')
+    return handle_content_type(response)
+
 @blueprint.route('/api')
 def api():
     """Render help/api page."""

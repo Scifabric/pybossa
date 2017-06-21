@@ -1,0 +1,16 @@
+================
+Changelog v2.3.8
+================
+
+If you are going to upgrade to this version you will have to be sure
+to run the following steps:
+
+ * Take a backup of your database. 
+ * Get the latest code.
+ * Install all the dependencies.
+ * Run alembic upgrade head. This will run a migration in the DB.
+ * Run the command python cli.py update_counters. This command will take some time. It will populate your new table counters with the current status of the DB. RUN this step otherwise the system will fail.
+   
+
+If you are installing this version for the very first time, just go with the standard setup.
+

@@ -42,4 +42,10 @@ class ProjectFactory(BaseFactory):
     owner_id = factory.LazyAttribute(lambda project: project.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')
     category_id = factory.LazyAttribute(lambda project: project.category.id)
-    info = {'task_presenter': '<div>utf8=✓</div>'}
+    info = {'task_presenter': '<div>utf8=✓</div>',
+            'thumbnail': 'img.png',
+            'container': 'container',
+            'thumbnail_url': 'http://cdn.com/container/img.png',
+            'onesignal': {'data': 'private'},
+            'onesignal_app_id': 1
+            }

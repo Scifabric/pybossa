@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises
+from default import Test, assert_not_raises, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -35,6 +35,7 @@ class TestWebhookAuthorization(Test):
 
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_webhook(self):
         """Test anonymous users cannot read a webhook"""
@@ -45,6 +46,7 @@ class TestWebhookAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'read', webhook)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_project_webhooks(self):
         """Test anonymous users cannot read webhooks of a specific project"""
@@ -54,6 +56,7 @@ class TestWebhookAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'read', Webhook, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_webhook(self):
         """Test owner users can read a webhook"""
@@ -67,6 +70,7 @@ class TestWebhookAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', webhook)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_project_webhooks(self):
         """Test owner users can read webhooks of a specific project"""
@@ -77,6 +81,7 @@ class TestWebhookAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', Webhook, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_can_read_webhook(self):
         """Test admin users can read a webhook"""
@@ -89,6 +94,7 @@ class TestWebhookAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', webhook)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_can_read_project_webhooks(self):
         """Test admin users can read webhooks from a project"""
@@ -100,6 +106,7 @@ class TestWebhookAuthorization(Test):
         assert_not_raises(Exception, ensure_authorized_to, 'read', Webhook, project_id=project.id)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud_webhook(self):
         """Test anonymous users cannot crud webhooks"""
@@ -111,6 +118,7 @@ class TestWebhookAuthorization(Test):
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', webhook)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_crud_webhook(self):
         """Test authenticated users cannot crud webhooks"""
@@ -122,6 +130,7 @@ class TestWebhookAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', webhook)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_webhook(self):
         """Test admin users cannot crud webhooks"""

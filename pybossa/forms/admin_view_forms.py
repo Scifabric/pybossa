@@ -18,5 +18,6 @@
 
 
 from forms import (
+    AnnouncementForm,
     SearchForm,
     CategoryForm)

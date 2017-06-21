@@ -21,14 +21,12 @@ import math
 import requests
 from flask import current_app, render_template
 from flask.ext.mail import Message
-from pybossa.core import mail, task_repo, importer
+from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
-
-
-MINUTE = 60
-IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
+import pybossa.leaderboard.jobs as leaderboard 
+from pbsonesignal import PybossaOneSignal
 
 
 def schedule_job(function, scheduler):
@@ -108,13 +106,14 @@ def get_periodic_jobs(queue):
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
     # Based on type of user
-    project_jobs = get_project_jobs() if queue == 'super' else []
+    project_jobs = get_project_jobs(queue) if queue in ('super', 'high') else []
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
+    leaderboard_jobs = get_leaderboard_jobs() if queue == 'super' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
@@ -125,19 +124,21 @@ def get_periodic_jobs(queue):
 
 def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
+    timeout = current_app.config.get('TIMEOUT')
     yield dict(name=warm_up_stats, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='high')
+               timeout=timeout, queue='high')
     yield dict(name=warn_old_project_owners, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=timeout, queue='low')
     yield dict(name=warm_cache, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='super')
+               timeout=timeout, queue='super')
     yield dict(name=news, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='low')
+               timeout=timeout, queue='low')
 
 def get_maintenance_jobs():
     """Return mantainance jobs."""
+    timeout = current_app.config.get('TIMEOUT')
     yield dict(name=check_failed, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue='maintenance')
+               timeout=timeout, queue='maintenance')
 
 
 def get_export_task_jobs(queue):
@@ -146,19 +147,20 @@ def get_export_task_jobs(queue):
     import pybossa.cache.projects as cached_projects
     from pybossa.pro_features import ProFeatureHandler
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+    timeout = current_app.config.get('TIMEOUT')
     if feature_handler.only_for_pro('updated_exports'):
         if queue == 'high':
             projects = cached_projects.get_from_pro_user()
         else:
-            projects = (p.dictize() for p in project_repo.get_all()
+            projects = (p.dictize() for p in project_repo.filter_by(published=True)
                         if p.owner.pro is False)
     else:
-        projects = (p.dictize() for p in project_repo.get_all())
+        projects = (p.dictize() for p in project_repo.filter_by(published=True))
     for project in projects:
         project_id = project.get('id')
         job = dict(name=project_export,
                    args=[project_id], kwargs={},
-                   timeout=(10 * MINUTE),
+                   timeout=timeout,
                    queue=queue)
         yield job
 
@@ -173,16 +175,29 @@ def project_export(_id):
         csv_exporter.pregenerate_zip_files(app)
 
 
-def get_project_jobs(queue='super'):
+def get_project_jobs(queue):
     """Return a list of jobs based on user type."""
+    from pybossa.core import project_repo
     from pybossa.cache import projects as cached_projects
-    return create_dict_jobs(cached_projects.get_from_pro_user(),
-                            get_project_stats,
-                            timeout=(10 * MINUTE),
-                            queue=queue)
+    timeout = current_app.config.get('TIMEOUT')
+    if queue == 'super':
+        projects = cached_projects.get_from_pro_user()
+    elif queue == 'high':
+        projects = (p.dictize() for p in project_repo.filter_by(published=True)
+                    if p.owner.pro is False)
+    else:
+        projects = []
+    for project in projects:
+        project_id = project.get('id')
+        project_short_name = project.get('short_name')
+        job = dict(name=get_project_stats,
+                   args=[project_id, project_short_name], kwargs={},
+                   timeout=timeout,
+                   queue=queue)
+        yield job
 
 
-def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
+def create_dict_jobs(data, function, timeout, queue='low'):
     """Create a dict job."""
     for d in data:
         jobs = dict(name=function,
@@ -206,6 +221,9 @@ def get_inactive_users_jobs(queue='quaterly'):
                < NOW() - '3 month'::INTERVAL
                GROUP BY user_id ORDER BY user_id;''')
     results = db.slave_session.execute(sql)
+
+    timeout = current_app.config.get('TIMEOUT')
+
     for row in results:
 
         user = User.query.get(row.user_id)
@@ -227,31 +245,39 @@ def get_inactive_users_jobs(queue='quaterly'):
             job = dict(name=send_mail,
                        args=[mail_dict],
                        kwargs={},
-                       timeout=(10 * MINUTE),
+                       timeout=timeout,
                        queue=queue)
             yield job
 
 
 def get_dashboard_jobs(queue='low'):  # pragma: no cover
     """Return dashboard jobs."""
+    timeout = current_app.config.get('TIMEOUT')
     yield dict(name=dashboard.active_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.active_anon_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.draft_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.published_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.update_projects_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.new_tasks_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.new_task_runs_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.new_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
     yield dict(name=dashboard.returning_users_week, args=[], kwargs={},
-               timeout=(10 * MINUTE), queue=queue)
+               timeout=timeout, queue=queue)
+
+
+def get_leaderboard_jobs(queue='super'):  # pragma: no cover
+    """Return leaderboard jobs."""
+    timeout = current_app.config.get('TIMEOUT')
+    yield dict(name=leaderboard.leaderboard, args=[], kwargs={},
+               timeout=timeout, queue=queue)
 
 
 def get_non_contributors_users_jobs(queue='quaterly'):
@@ -264,6 +290,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
                NOT EXISTS (SELECT user_id FROM task_run
                WHERE task_run.user_id="user".id)''')
     results = db.slave_session.execute(sql)
+    timeout = current_app.config.get('TIMEOUT')
     for row in results:
         user = User.query.get(row.id)
 
@@ -283,7 +310,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
             job = dict(name=send_mail,
                        args=[mail_dict],
                        kwargs={},
-                       timeout=(10 * MINUTE),
+                       timeout=timeout,
                        queue=queue)
             yield job
 
@@ -294,6 +321,9 @@ def get_autoimport_jobs(queue='low'):
     import pybossa.cache.projects as cached_projects
     from pybossa.pro_features import ProFeatureHandler
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
+
+    timeout = current_app.config.get('TIMEOUT')
+
     if feature_handler.only_for_pro('autoimporter'):
         projects = cached_projects.get_from_pro_user()
     else:
@@ -304,7 +334,7 @@ def get_autoimport_jobs(queue='low'):
             job = dict(name=import_tasks,
                        args=[project.id, True],
                        kwargs=project.get_autoimporter(),
-                       timeout=IMPORT_TASKS_TIMEOUT,
+                       timeout=timeout,
                        queue=queue)
             yield job
 
@@ -319,14 +349,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     from flask import current_app
 
     cached_projects.get_project(short_name)
-    cached_projects.n_tasks(_id)
-    cached_projects.n_task_runs(_id)
-    cached_projects.overall_progress(_id)
-    cached_projects.last_activity(_id)
-    cached_projects.n_completed_tasks(_id)
-    cached_projects.n_volunteers(_id)
-    cached_projects.browse_tasks(_id)
-    stats.get_stats(_id, current_app.config.get('GEO'))
+    stats.update_stats(_id, current_app.config.get('GEO'))
 
 
 @with_cache_disabled
@@ -366,17 +389,17 @@ def warm_cache():  # pragma: no cover
     def warm_project(_id, short_name, featured=False):
         if _id not in projects_cached:
             cached_projects.get_project(short_name)
-            cached_projects.n_tasks(_id)
-            n_task_runs = cached_projects.n_task_runs(_id)
-            cached_projects.overall_progress(_id)
-            cached_projects.last_activity(_id)
-            cached_projects.n_completed_tasks(_id)
-            cached_projects.n_volunteers(_id)
-            cached_projects.browse_tasks(_id)
-            if n_task_runs >= 1000 or featured:
-                # print ("Getting stats for %s as it has %s task runs" %
-                #        (short_name, n_task_runs))
-                stats.get_stats(_id, app.config.get('GEO'))
+            #cached_projects.n_tasks(_id)
+            #n_task_runs = cached_projects.n_task_runs(_id)
+            #cached_projects.overall_progress(_id)
+            #cached_projects.last_activity(_id)
+            #cached_projects.n_completed_tasks(_id)
+            #cached_projects.n_volunteers(_id)
+            #cached_projects.browse_tasks(_id)
+            #if n_task_runs >= 1000 or featured:
+            #    # print ("Getting stats for %s as it has %s task runs" %
+            #    #        (short_name, n_task_runs))
+            stats.update_stats(_id, app.config.get('GEO'))
             projects_cached.append(_id)
 
     # Cache top projects
@@ -537,6 +560,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     users = 0
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     only_pros = feature_handler.only_for_pro('notify_blog_updates')
+    timeout = current_app.config.get('TIMEOUT')
     if blog.project.featured or (blog.project.owner.pro or not only_pros):
         sql = text('''
                    SELECT email_addr, name from "user", task_run
@@ -565,7 +589,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
             job = dict(name=send_mail,
                        args=[mail_dict],
                        kwargs={},
-                       timeout=(10 * MINUTE),
+                       timeout=timeout,
                        queue=queue)
             enqueue_job(job)
             users += 1
@@ -584,6 +608,7 @@ def get_weekly_stats_update_projects():
     only_pros_sql = 'AND "user".pro=true' if only_pros else ''
     send_emails_date = current_app.config.get('WEEKLY_UPDATE_STATS')
     today = datetime.today().strftime('%A').lower()
+    timeout = current_app.config.get('TIMEOUT')
     if today.lower() == send_emails_date.lower():
         sql = text('''
                    SELECT project.id
@@ -602,22 +627,25 @@ def get_weekly_stats_update_projects():
             job = dict(name=send_weekly_stats_project,
                        args=[row.id],
                        kwargs={},
-                       timeout=(10 * MINUTE),
+                       timeout=timeout,
                        queue='low')
             yield job
 
 
 def send_weekly_stats_project(project_id):
-    from pybossa.cache.project_stats import get_stats
+    from pybossa.cache.project_stats import update_stats, get_stats
     from pybossa.core import project_repo
     from datetime import datetime
     project = project_repo.get(project_id)
     if project.owner.subscribed is False:
         return "Owner does not want updates by email"
+    update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,
                                                       geo=True,
                                                       period='1 week')
     subject = "Weekly Update: %s" % project.name
+
+    timeout = current_app.config.get('TIMEOUT')
 
     # Max number of completed tasks
     n_completed_tasks = 0
@@ -651,7 +679,7 @@ def send_weekly_stats_project(project_id):
     job = dict(name=send_mail,
                args=[mail_dict],
                kwargs={},
-               timeout=(10 * MINUTE),
+               timeout=timeout,
                queue='high')
     enqueue_job(job)
 
@@ -719,3 +747,19 @@ def check_failed():
         return "JOBS: %s You have failed the system." % job_ids
     else:
         return "You have not failed the system"
+
+
+def push_notification(project_id, **kwargs):
+    """Send push notification."""
+    from pybossa.core import project_repo
+    project = project_repo.get(project_id)
+    if project.info.get('onesignal'):
+        app_id = current_app.config.get('ONESIGNAL_APP_ID') 
+        api_key = current_app.config.get('ONESIGNAL_API_KEY')
+        client = PybossaOneSignal(app_id=app_id, api_key=api_key)
+        filters = [{"field": "tag", "key": project_id, "relation": "exists"}]
+        return client.push_msg(contents=kwargs['contents'],
+                               headings=kwargs['headings'],
+                               launch_url=kwargs['launch_url'],
+                               web_buttons=kwargs['web_buttons'],
+                               filters=filters)

@@ -18,6 +18,7 @@
 
 import string
 from pybossa.importers.s3 import BulkTaskS3Import
+from default import with_context
 
 
 class TestBulkTaskS3Import(object):
@@ -27,6 +28,7 @@ class TestBulkTaskS3Import(object):
         'bucket': 'mybucket'
     }
 
+    @with_context
     def test_count_tasks_returns_0_if_no_files_to_import(self):
         form_data = {
             'files': [],
@@ -36,6 +38,7 @@ class TestBulkTaskS3Import(object):
 
         assert number_of_tasks == 0, number_of_tasks
 
+    @with_context
     def test_count_tasks_returns_1_if_1_file_to_import(self):
         form_data = {
             'files': ['myfile.png'],
@@ -45,6 +48,7 @@ class TestBulkTaskS3Import(object):
 
         assert number_of_tasks == 1, number_of_tasks
 
+    @with_context
     def test_tasks_return_emtpy_list_if_no_files_to_import(self):
         form_data = {
             'files': [],
@@ -54,6 +58,7 @@ class TestBulkTaskS3Import(object):
 
         assert tasks == [], tasks
 
+    @with_context
     def test_tasks_returns_list_with_1_file_data_if_1_file_to_import(self):
         form_data = {
             'files': ['myfile.png'],
@@ -63,6 +68,7 @@ class TestBulkTaskS3Import(object):
 
         assert len(tasks) == 1, tasks
 
+    @with_context
     def test_tasks_returns_tasks_with_fields_for_generic_files(self):
         #For generic file extensions: link, filename, url
         form_data = {
@@ -75,6 +81,7 @@ class TestBulkTaskS3Import(object):
         assert tasks[0]['info']['link'] == "https://mybucket.s3.amazonaws.com/myfile.png"
         assert tasks[0]['info']['url'] == "https://mybucket.s3.amazonaws.com/myfile.png"
 
+    @with_context
     def test_tasks_attributes_for_image_files(self):
         #For image file extensions: link, filename, url, url_m, url_b, title
         image_ext = ['png', 'jpg', 'jpeg', 'gif']
@@ -95,6 +102,7 @@ class TestBulkTaskS3Import(object):
             assert tasks[0]['info']['url_b'] == "https://mybucket.s3.amazonaws.com/myfile.%s" % ext
             assert tasks[0]['info']['title'] == "myfile.%s" % ext
 
+    @with_context
     def test_tasks_attributes_for_pdf_files(self):
         #For pdf file extension: link, filename, url, pdf_url
         pdf_file_data = 'mypdf.pdf'
@@ -110,6 +118,7 @@ class TestBulkTaskS3Import(object):
         assert tasks[0]['info']['url'] == "https://mybucket.s3.amazonaws.com/mypdf.pdf"
         assert tasks[0]['info']['pdf_url'] == "https://mybucket.s3.amazonaws.com/mypdf.pdf"
 
+    @with_context
     def test_tasks_attributes_for_video_files(self):
         #For video file extension: link, filename, url, video_url
         video_ext = ['mp4', 'm4v', 'ogg', 'ogv', 'webm', 'avi']
@@ -128,6 +137,7 @@ class TestBulkTaskS3Import(object):
             assert tasks[0]['info']['url'] == "https://mybucket.s3.amazonaws.com/myfile.%s" % ext
             assert tasks[0]['info']['video_url'] == "https://mybucket.s3.amazonaws.com/myfile.%s" % ext
 
+    @with_context
     def test_tasks_attributes_for_audio_files(self):
         #For audio file extension: link, filename, url, audio_url
         audio_ext = ['mp4', 'm4a', 'mp3', 'ogg', 'oga', 'webm', 'wav']

@@ -13,10 +13,13 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.api_base.APIBase
    :members:
 
-.. autoclass:: pybossa.api.AppAPI
+.. autoclass:: pybossa.api.UserAPI
    :members:
 
 .. autoclass:: pybossa.api.ProjectAPI
+   :members:
+
+.. autoclass:: pybossa.api.BlogpostAPI
    :members:
 
 .. autoclass:: pybossa.api.TaskAPI
@@ -33,6 +36,13 @@ It expects and returns JSON.
 
 .. autoclass:: pybossa.api.VmcpAPI
    :members:
+
+.. autoclass:: pybossa.api.FavoritesAPI
+   :members:
+
+.. autoclass:: pybossa.api.HelpingMaterial
+   :members:
+
 
 Some requests will need an **API-KEY** to authenticate & authorize the
 operation. You can get your API-KEY in your *profile* account.
@@ -112,13 +122,8 @@ PYBOSSA, as it is really simple to check those values:
         pass # Do your stuff
 
 
-Operations
-----------
-
-The following operations are supported:
-
 List
-~~~~
+----
 
 List domain objects::
 
@@ -173,6 +178,21 @@ Finally, you can get a list of users by doing::
 
     GET http://{pybossa-site-url}/api/user
 
+Order by
+--------
+
+Any query can be ordered by an attribute of the domain object that you are querying. For example
+you can get a list of tasks ordered by ID::
+
+    GET http://{pybossa-site-url}/api/task?orderby=id
+
+If you want, you can order them in descending order::
+
+    GET http://{pybossa-site-url}/api/task?orderby=id&desc=true
+
+
+Check all the attritbutes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
+
 .. note::
     Please, notice that in order to keep users privacy, only their locale and
     nickname will be shared by default. Optionally, users can disable privacy
@@ -199,8 +219,17 @@ Finally, you can get a list of users by doing::
     after the last project ID that you've received you will write the query
     like this: GET /api/project?last_id={{last_id}}.
 
+Related data
+~~~~~~~~~~~~
+
+For Tasks, TaskRuns and Results you can get the associated data using the argument: *related=True*.
+
+This flag will allow you to get in one call all the TaskRuns and Result for a given task. You can do the same for a TaskRun getting the Task and associated Result, and for a Result getting all the task_runs and associated Task.
+
+Projects do not have this feature, as it will be too expensive for the API.
+
 Get
-~~~
+---
 
 Get a specific domain object by id (by default any GET action will return only
 20 objects, you can get more or less objects using the **limit** option).
@@ -229,7 +258,7 @@ Any other error will return the same object but with the proper status code and
 error message.
 
 Search
-~~~~~~
+------
 
 Get a list of domain objects by its fields. Returns a list of domain objects
 matching the query::
@@ -262,8 +291,10 @@ For adding more keys::
 These parameters will be ANDs, so, it will return objects that have those keys with
 and **and** operator.
 
-It is also possible to use full text search queries within those first level keys. For
-searching like that all you have to do is adding the following argument::
+Full text search
+----------------
+
+It is also possible to use full text search queries within those first level keys (as seen before). For searching like that all you have to do is adding the following argument::
 
     info=key1::value1&fulltextsearch=1
 
@@ -277,6 +308,49 @@ Another option could be the following::
 This second query will return objects that has the words word1 and word2. It's important
 to escape the & operator with %26 to use the and operator.
 
+When you use the fulltextsearch argument, the API will return the objects enriched with the following two fields:
+
+ * **headline**: The matched words of the key1::value1 found, with <b></b> items to highlight them.
+ * **rank**: The ranking returned by the database. Ranking attempts to measure how relevant documents are to a particular query, so that when there are many matches the most relevant ones can be shown first.
+
+Here you have an example of the expected output for an api call like this:: 
+
+    /api/task?project_id=1&info=name::ipsum%26bravo&fulltextsearch=1 
+
+.. code-block:: python
+
+    [
+      {
+        "info": {
+          "url": "https://domain.com/img.png",
+          "name": "Lore ipsum delta bravo",
+        },
+        "n_answers": 1,
+        "quorum": 0,
+        "links": [
+          "<link rel='parent' title='project' href='http://localhost:5000/api/project/1'/>"
+        ],
+        "calibration": 0,
+        "headline": "Lore <b>ipsum</b> delta <b>bravo</b>",
+        "created": "2016-05-10T11:20:45.005725",
+        "rank": 0.05,
+        "state": "completed",
+        "link": "<link rel='self' title='task' href='http://localhost:5001/api/task/1'/>",
+        "project_id": 1,
+        "id": 1,
+        "priority_0": 0
+      },
+    ]
+
+.. note::
+	When you use the fulltextsearch API the results are always sorted by rank, showing first the most relevant ones to your query.
+
+.. note::
+    We use PostgreSQL ts_rank_cd with the following configuration: ts_rank_cd(textsearch, query, 4). For more details check the official documentation of PostgreSQL.
+
+.. note::
+	By default PYBOSSA uses English for the searches. You can customize this behavior using any of the supported languages by PostgreSQL changing the settings_local.py config variable: *FULLTEXTSEARCH_LANGUAGE* = 'spanish'. 
+
 .. note::
     By default all GET queries return a maximum of 20 objects unless the
     **limit** keyword is used to get more: limit=50. However, a maximum amount
@@ -287,15 +361,8 @@ to escape the & operator with %26 to use the and operator.
     list []
 
 
-Finally you can also get the results ordered by date of creation listing first the latest
-domain objects (projects, tasks, task runs and results) using the following argument
-in the URL::
-
-    GET http://server.com/api/project?desc=true
-
-
 Create
-~~~~~~
+------
 
 Create a domain object. Returns created domain object.::
 
@@ -321,7 +388,7 @@ If an error occurs, the action will return a JSON object like this:
 Where **target** will refer to a Project, Task or TaskRun object.
 
 Update
-~~~~~~
+------
 
 Update a domain object::
 
@@ -347,7 +414,7 @@ If an error occurs, the action will return a JSON object like this:
 Where **target** will refer to a project, Task or TaskRun object.
 
 Delete
-~~~~~~
+------
 
 Delete a domain object::
 
@@ -372,9 +439,31 @@ If an error occurs, the action will return a JSON object like this:
 
 Where **target** will refer to a Project, Task or TaskRun object.
 
+Favorites
+---------
+
+Authenticated users can mark a task as a favorite. This is useful for users when they
+want to see all the tasks they have done to remember them. For example, a user can mark 
+as a favorite a picture that's beautiful and that he/she has marked as favorited.
+
+For serving this purpose PYBOSSA provides the following api endpoint::
+
+    GET /api/favorites
+
+If the user is authenticated it will return all the tasks the user has marked as favorited. 
+
+To add a task as a favorite, a POST should be done with a payload of {'task_id': Task.id}::
+
+    POST /api/favorites
+
+For removing one task from the favorites, do a DELETE::
+
+    DEL /api/favorites/task.id
+
+Be sure to have always the user authenticated, otherwise the user will not be able to see it.
 
 Requesting a new task for current user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 You can request a new task for the current user (anonymous or authenticated)
 by::
@@ -384,14 +473,43 @@ by::
 This will return a domain Task object in JSON format if there is a task
 available for the user, otherwise it will return **None**.
 
+You can also use **limit** to get more than 1 task for the user like this::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=100
+
+That query will return 100 tasks for the user. 
+
 .. note::
-    Some projects will want to pre-load the next task for the current user.
-    This is possible by passing the argument **?offset=1** to the **newtask**
-    endpoint.
+    That's the maximum of tasks that a user can get at once. If you pass an argument of 200,
+    PYBOSSA will convert it to 100.
+
+You can also, use **offset** to get the next tasks, if you want, allowing you to preload::
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?offset=1
+
+That query will return the next task for the user, once it solves the previous task.
+
+Both arguments, limit and offset can be used together::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=2offset=2
+
+That will load the next two tasks for the user.
+
+
+Also you can request the tasks to be sorted by a Task attribute (like ID, created, etc.) using the following
+arguments: **orderby** and **desc** to sort them in descending order::
+
+
+    GET http://{pybossa-site-url}/api/{project.id}/newtask?orderby=priority_0&desc=true
+
+
+That query will return the tasks order by priority in descending order, in other words, it will return first
+the tasks with higher priority.
 
 
 Requesting the user's oAuth tokens
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 A user who has registered or signed in with any of the third parties supported
 by PYBOSSA (currently Twitter, Facebook and Google) can request his own oAuth
@@ -408,7 +526,7 @@ Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 'facebook' or 'google'.
 
 Using your own user database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Since version v2.3.0 PYBOSSA supports external User IDs. This means that you can
 easily use your own database of users without having to registering them in the
@@ -458,6 +576,61 @@ this::
 
 As simple as that!
 
+.. _disqus-api:
+
+Disqus Single Sign On (SSO)
+---------------------------
+
+If the PYBOSSA server is configured with Disqus SSO keys (see :ref:`disqus`), then you can
+get the authentication parameters in this endpoint: *api/disqus/sso*
+
+The endpoint will return a JSON object with two keys: *api_key* and *remote_auth_s3*. Use those values to authenticate the user in Disqus. Check their official documentation_.
+
+.. `Disqus SSO`: customizing.html#disqus-single-sign-on-sso
+.. _documentation:  https://help.disqus.com/customer/portal/articles/236206
+
+
+User api endpoint
+----------------
+
+While all the other endpoints behave the same, this one is a bit special as we deal with private information
+like emails. 
+
+Anonymous users
+~~~~~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Update an existing user via a PUT
+#. Delete an existing user via a DEL
+
+Read action will only return user name and locale for that user.
+
+Authenticated users
+~~~~~~~~~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Update an existing user via a PUT different than the same user
+#. Delete an existing user via a DEL
+
+
+Read action will only return user name and locale for that user. If the user access its own page, then
+all the information will be available to him/her.
+
+Admin users
+~~~~~~~~~~~
+
+The following actions cannot be done:
+
+#. Create a new user via a POST
+#. Delete an existing user via a DEL
+
+Read action can be done on any user. The admins will have access to the User IDs. This will be helpful in
+case that you want to give, for example badges, for users when using our webhooks solution. Each user has
+in the info field a new field named **extra** where that information (or anything else) could be stored.
 
 Command line Example Usage of the API
 -------------------------------------
@@ -561,6 +734,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "form": {
         "confirm": null,
@@ -587,6 +761,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
         "next":"/about"
     }
@@ -740,6 +915,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "form": {
         "csrf": "token,"
@@ -761,6 +937,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": [
         "We don't have this email in our records. You may have signed up with a different email or used Twitter, Facebook, or Google to sign-in"
@@ -896,11 +1073,8 @@ If logged in you will get the same information as on /account/<name> (see above)
 
 **Example output**
 
-If you are not logged in you will get this output:
-
-**Example output**
-
 .. code-block:: python
+
     {
       "next": "/account/signin",
       "status": "not_signed_in"
@@ -983,6 +1157,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": null,
       "form": {
@@ -1043,6 +1218,7 @@ It returns a JSON object with the following information:
 **Example output**
 
 .. code-block:: python
+
     {
       "flash": "Your profile has been updated!",
       "next": "/account/pruebaadfadfa/update",
@@ -1053,6 +1229,7 @@ It returns a JSON object with the following information:
 If there's an error in the form fields, you will get them in the **form.errors** key:
 
 .. code-block:: python
+
     {
       "flash": "Please correct the errors",
       "form": {
@@ -1283,74 +1460,566 @@ It returns a JSON object with the following information:
 
 .. code-block:: python
 
-{
-  "categories": [
     {
-      "created": null,
-      "description": null,
-      "id": null,
-      "name": "Featured",
-      "short_name": "featured"
-    },
-    {
-      "description": "Economic projects",
-      "id": 6,
-      "name": "Economics",
-      "short_name": "economics"
-    },
-  ],
-  "categories_projects": {
-    "economics": [
-      {
-        "description": "Description",
-        "info": {
-          "container": "user",
-          "thumbnail": "415602833.png"
+      "categories": [
+        {
+          "created": null,
+          "description": null,
+          "id": null,
+          "name": "Featured",
+          "short_name": "featured"
         },
-        "n_tasks": 18,
-        "n_volunteers": 26,
-        "name": "Man made objects identity",
-        "overall_progress": 0,
-        "short_name": "manmadeobjectsidentity"
+        {
+          "description": "Economic projects",
+          "id": 6,
+          "name": "Economics",
+          "short_name": "economics"
+        },
+      ],
+      "categories_projects": {
+        "economics": [
+          {
+            "description": "Description",
+            "info": {
+              "container": "user",
+              "thumbnail": "415602833.png"
+            },
+            "n_tasks": 18,
+            "n_volunteers": 26,
+            "name": "Man made objects identity",
+            "overall_progress": 0,
+            "short_name": "manmadeobjectsidentity"
+          },
+        ],
       },
-    ],
-  },
-  "template": "/home/index.html",
-  "top_projects": [
+      "template": "/home/index.html",
+      "top_projects": [
+        {
+          "description": "Image pattern recognition",
+          "info": {
+            "container": "user",
+            "thumbnail": "772569.58.png"
+          },
+          "n_tasks": null,
+          "n_volunteers": 17499,
+          "name": "Name",
+          "overall_progress": null,
+          "short_name": "name"
+        },
+      ],
+      "top_users": [
+        {
+          "created": "2014-08-17T18:28:56.738119",
+          "fullname": "John Doe",
+          "info": {
+            "avatar": "1410771tar.png",
+            "container": "05"
+          },
+          "n_answers": null,
+          "name": "johndoe",
+          "rank": 1,
+          "registered_ago": null,
+          "score": 54247
+        },
+      ]
+    }
+
+Project shortname
+~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project information and owner information.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for logged in user JohnDoe:
+
+.. code-block:: python
+
     {
-      "description": "Image pattern recognition",
-      "info": {
-        "container": "user",
-        "thumbnail": "772569.58.png"
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "akjhfd85-8afd6-48af-f7afg-kjhsfdlkjhf1",
+        "confirmation_email_sent": false,
+        "created": "2014-08-11T08:59:32.079599",
+        "email_addr": "johndoe@johndoe.com",
+        "facebook_user_id": null,
+        "fullname": "John Doe",
+        "google_user_id": null,
+        "id": 1234,
+        "info": {
+          "container": "user_1234"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56,
+        "total": 11093,
+        "twitter_user_id": null,
+        "valid_email": true
       },
-      "n_tasks": null,
-      "n_volunteers": 17499,
-      "name": "Name",
-      "overall_progress": null,
-      "short_name": "name"
-    },
-  ],
-  "top_users": [
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 2,
+        "contacted": true,
+        "contrib_button": "can_contribute",
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 4567,
+        "info": {
+          "task_presenter": "<div> .... "
+        },
+        "long_description": "flickr678\r\n",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "flickr678",
+        "owner_id": 9876,
+        "published": true,
+        "secret_key": "veryverysecretkey",
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626",
+        "webhook": null
+      },
+      "template": "/projects/project.html",
+      "title": "Project: flickr678"
+    }
+
+Anonymous and other user output:
+
+.. code-block:: python
+
     {
-      "created": "2014-08-17T18:28:56.738119",
-      "fullname": "John Doe",
-      "info": {
-        "avatar": "1410771tar.png",
-        "container": "05"
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": null,
+          "container": "user_4953"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56
       },
-      "n_answers": null,
-      "name": "johndoe",
-      "rank": 1,
-      "registered_ago": null,
-      "score": 54247
-    },
-  ]
-}
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "id": 4567,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626"
+      },
+      "template": "/projects/project.html",
+      "title": "Project: flickr678"
+    }
+
+Project settings
+~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/settings**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project information and owner information.
+Only works for authenticated users for their own projects (or admins).
+Anonymous users will get a 302 to login page.
+Logged in users with access rights will get a 403 when it's not their own project.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+The example output matches **/project/<short_name>/**
+
+Project results
+~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/results**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows information about a project results template.
+If the logged in user is the owner of the project you will get more detailed
+owner information and project information.
+
+* **last_activity**: Last activity on the project.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_results**: Number of results
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Overall progress.
+* **owner**: Owner user information.
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template for results
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for anonymous user or when you are not the project owner:
+
+.. code-block:: python
+
+    {
+      "last_activity": "2015-01-21T12:01:41.209270",
+      "n_completed_tasks": 0,
+      "n_results": 0,
+      "n_task_runs": 3,
+      "n_tasks": 8,
+      "n_volunteers": 1,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John",
+        "info": {
+          "avatar": null,
+          "container": "user_4953"
+        },
+        "n_answers": 56,
+        "name": "JohnDoe",
+        "rank": 1813,
+        "registered_ago": "2 years ago",
+        "score": 56
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 2417,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2016-04-13T08:07:38.897626"
+      },
+      "template": "/projects/results.html",
+      "title": "Project: flickr678"
+    }
+
+Project stats
+~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/stats**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project statistics if available.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **avg_contrib_time**: Average contribution time (NOT existing when no statistics there!).
+* **projectStats**: Project statistics (NOT existing when no statistics there!).
+* **userStats**: User statistics (NOT existing when no statistics there!).
+* **n_completed_tasks**: Number of completed tasks.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Progress (0..100).
+* **owner**: Owner user information
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+
+**Example output**
+Statistics are existing in this output:
+
+.. code-block:: python
+
+    {
+      "avg_contrib_time": 0,
+      "n_completed_tasks": 2,
+      "n_tasks": 2,
+      "n_volunteers": 59,
+      "overall_progress": 100,
+      "owner": {
+        "created": "2012-06-06T06:27:18.760254",
+        "fullname": "Daniel Lombraña González",
+        "info": {
+          "avatar": "1422360933.8_avatar.png",
+          "container": "user_3"
+        },
+        "n_answers": 2998,
+        "name": "teleyinex",
+        "rank": 66,
+        "registered_ago": "4 years ago",
+        "score": 2998
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "better_stats_enabled": true,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2013-01-10T19:58:55.454015",
+        "description": "Facial expressions that convey feelings",
+        "featured": true,
+        "id": 253,
+        "info": {
+          "container": "user_3",
+          "thumbnail": "project_253_thumbnail_1460620575.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "The Face We Make",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "thefacewemake",
+        "updated": "2016-04-14T07:56:16.114006"
+      },
+      "projectStats": "{\"userAuthStats\": {\"top5\": [], \"values\": [], \"label\": \"Authenticated Users\"} ...",
+      "template": "/projects/stats.html",
+      "title": "Project: The Face We Make &middot; Statistics",
+      "userStats": {
+        "anonymous": {
+          "pct_taskruns": 0,
+          "taskruns": 0,
+          "top5": [],
+          "users": 0
+        },
+        "authenticated": {
+          "pct_taskruns": 0,
+          "taskruns": 0,
+          "top5": [],
+          "users": 0
+        },
+        "geo": false
+      }
+    }
+
+Project tasks
+~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows project tasks.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **autoimporter_enabled**: If autoimporter is enabled.
+* **last_activity**: Last activity.
+* **n_completed_tasks**: Number of completed tasks.
+* **n_task_runs**: Number of task runs.
+* **n_tasks**: Number of tasks.
+* **n_volunteers**: Number of volunteers.
+* **overall_progress**: Progress (0..100).
+* **owner**: Owner user information
+* **pro_features**: Enabled pro features for the project.
+* **project**: Project information.
+* **template**: Jinja2 template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for another project where you are not the owner:
+
+.. code-block:: python
+
+    {
+      "autoimporter_enabled": true,
+      "last_activity": "2017-03-02T21:00:33.627277",
+      "n_completed_tasks": 184839,
+      "n_task_runs": 1282945,
+      "n_tasks": 193090,
+      "n_volunteers": 20016,
+      "overall_progress": 95,
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Smith",
+        "info": {
+          "avatar": "1410769844.15_avatar.png",
+          "container": "user_3927",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 43565,
+        "name": "pmisson",
+        "rank": 3,
+        "registered_ago": "3 years ago",
+        "score": 43565
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1377,
+        "info": {
+          "container": "user_3927",
+          "thumbnail": "app_1377_thumbnail_1410772569.58.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Cool Project",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "coolproject",
+        "updated": "2017-03-02T21:00:33.965587"
+      },
+      "template": "/projects/tasks.html",
+      "title": "Project: Cool project"
+    }
+
+Project task id
+~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/task/<int:task_id>**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows a project task based on id.
+
+If you are not the owner of the project or anonymous then you will get only
+public available information for the owner and the project itself.
+
+* **owner**: Owner user information
+* **project**: Project information.
+* **template**: Jinja2 template of the task HTML template.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+for another project where you are not the owner:
+
+.. code-block:: python
+
+    {
+      "owner": {
+        "created": "2014-08-11T08:59:32.079599",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "1458638093.9_avatar.png",
+          "container": "user_4953",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 257,
+        "name": "JohnD",
+        "rank": 840,
+        "registered_ago": "2 years ago",
+        "score": 257
+      },
+      "project": {
+        "created": "2015-01-21T11:59:36.519541",
+        "description": "flickr678",
+        "featured": false,
+        "id": 2417,
+        "info": {
+          "container": null,
+          "thumbnail": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "flickr678",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "flickr678",
+        "updated": "2017-03-22T13:03:55.496660"
+      },
+      "template": "/projects/presenter.html",
+      "title": "Project: flickr678 &middot; Contribute"
+    }
 
 
 Leaderboard
 ~~~~~~~~~~~
 **Endpoint: /leaderboard/**
+**Endpoint: /leaderboard/window/<int:window>**
 
 *Allowed methods*: **GET**
 
@@ -1359,6 +2028,11 @@ Leaderboard
 Shows you the top 20 contributors rank in a sorted leaderboard.
 If you are logged in you will also get the rank of yourself even when you are
 not visible on the top public leaderboard.
+
+By default the window is zero, adding the authenticated user to the bottom of the
+top 20, so the user can know the rank. If you want, you can use a window to show
+the previous and next users taking into account authenticated user rank. For example,
+you can get the previous 3 and next 3 accessing this URL: /leaderboard/window/3.
 
 * **template**: Jinja2 template.
 * **title**: the title for the endpoint.
@@ -1369,6 +2043,7 @@ not visible on the top public leaderboard.
 for logged in user JohnDoe (normally not visible in public leaderboard):
 
 .. code-block:: python
+
     {
         "template": "/stats/index.html",
         "title": "Community Leaderboard",
@@ -1401,6 +2076,232 @@ for logged in user JohnDoe (normally not visible in public leaderboard):
                 "score": 56
             }
         ]
+    }
+
+
+Announcements
+~~~~~~~~~~~~~
+**Endpoint: /announcements/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Shows you PYBOSSA wide announcements
+
+* **announcements**: Announcements
+* **template**: the rendered Announcements tamplate (currently empty)
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "announcements": [
+            {
+                "body": "test123",
+                "created": "2017-05-31T15:23:44.858735",
+                "id": 5,
+                "title": "title123",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-05-31T15:23:28.477516",
+                "id": 4,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:42:45.042010",
+                "id": 7,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:45:11.612801",
+                "id": 8,
+                "title": "blogpost title",
+                "user_id": 4953
+            }
+        ],
+        "template": ""
+    }
+
+
+Admin announcement
+~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement**
+
+**GET**
+
+Shows you PYBOSSA wide announcements
+
+* **announcements**: Announcements
+* **csrf**: csrf token
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+**Example output**
+
+.. code-block:: python
+
+    {
+        "announcements": [
+            {
+                "body": "test123",
+                "created": "2017-05-31T15:23:44.858735",
+                "id": 5,
+                "title": "title123",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-05-31T15:23:28.477516",
+                "id": 4,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:42:45.042010",
+                "id": 7,
+                "title": "blogpost title",
+                "user_id": 4953
+            },
+            {
+                "body": "new body",
+                "created": "2017-06-01T23:45:11.612801",
+                "id": 8,
+                "title": "blogpost title",
+                "user_id": 4953
+            }
+        ],
+      "csrf": "1496394861.12##1bfcbb386bae5d1625c023a23b08865b4176579d",
+      "template": "",
+      "title": "Manage global Announcements"
+    }
+
+
+Admin announcement new
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/new**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Creates a new PYBOSSA wide announcement
+
+* **form**: form input
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "body": null,
+        "csrf": "1496394903.81##bb5fb0c527955073ec9ad694ed9097e7c868272a",
+        "errors": {},
+        "title": null
+      },
+      "template": "",
+      "title": "Write a new post"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Annnouncement created!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement update
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Updates a PYBOSSA announcement
+
+* **form**: form input
+* **template**: the rendered Announcements tamplate (currently empty)
+* **title**: title of rendered endpoint
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "body": "test6",
+        "csrf": "1496328993.27##aa51e026938129afdfb0e6a5eab8c6b9427f81f6",
+        "errors": {},
+        "id": 4,
+        "title": "test6"
+      },
+      "template": "",
+      "title": "Edit a post"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement updated!",
+      "next": "/admin/announcement",
+      "status": "success"
+    }
+
+
+Admin announcement delete
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /admin/announcement/<id>/delete**
+
+*Allowed methods*: **POST**
+
+Deletes a PYBOSSA announcement
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken". You can get the token from /admin/announcement
+On success you will get a 200 http code and following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Announcement deleted!",
+      "next": "/admin/announcement",
+      "status": "success"
     }
 
 
@@ -2081,6 +2982,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 On Success it will give you the project information
 
 .. code-block:: python
+
     {
       "info": {
         "task_presenter": "...",
@@ -2107,6 +3009,7 @@ On Success it will give you the project information
 If a project is already featured:
 
 .. code-block:: python
+
     {
       "code": 400,
       "description": "CSRF token missing or incorrect.",
@@ -2125,6 +3028,7 @@ To send a valid DELETE request you need to pass the *csrf token* in the headers.
 On Success it will give you the project information
 
 .. code-block:: python
+
     {
       "info": {
         "task_presenter": "...",
@@ -2151,6 +3055,7 @@ On Success it will give you the project information
 If a project is already unfeatured:
 
 .. code-block:: python
+
     {
       "status_code": 415,
       "error": "Project.id 1069 is not featured"
@@ -2173,6 +3078,7 @@ Gives you the API help for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "project_id": 1104,
       "template": "help/privacy.html",
@@ -2196,6 +3102,7 @@ Gives you the privacy policy for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>privacy policy here</p></body></html>"
       "template": "help/privacy.html",
@@ -2219,6 +3126,7 @@ Gives you the cookie policy for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>cookie policy here</p></body></html>"
       "template": "help/cookies_policy.html",
@@ -2242,8 +3150,1140 @@ Gives you the terms of use for your PYBOSSA
 **Example output**
 
 .. code-block:: python
+
     {
       "content": "<html><body><p>Terms of use text</p></body></html>"
       "template": "help/tos.html",
       "title": "Help: Terms of Use"
+    }
+
+PYBOSSA server stats
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /stats/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the global stats of the PYBOSSA server.
+
+* **title**: the title for the endpoint.
+* **locs**: localizations for anonymous users that have contributed.
+* **projects**: statistics about total published and draft projects.
+* **show_locs**: if GEOIP is enabled to show that data.
+* **stats**: Number of anonymous and authenticated users, number of draft and published projects, number of tasks, taskruns and total number of users.
+* **tasks**: Task and Taskrun statistics.
+* **tasks**: Task and Taskrun statistics.
+* **top_5_projects_24_hours**: Top 5 projects in the last 24 hours.
+* **top_5_users_24_hours**: Top 5 users in the last 24 hours.
+* **users**: User statistics.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "locs": "[]",
+      "projects": {
+        "label": "Projects Statistics",
+        "values": [
+          {
+            "label": "Published",
+            "value": [
+              0,
+              534
+            ]
+          },
+          {
+            "label": "Draft",
+            "value": [
+              0,
+              1278
+            ]
+          }
+        ]
+      },
+      "show_locs": false,
+      "stats": {
+        "n_anon": 27587,
+        "n_auth": 11134,
+        "n_draft_projects": 1278,
+        "n_published_projects": 534,
+        "n_task_runs": 1801222,
+        "n_tasks": 553012,
+        "n_total_projects": 1812,
+        "n_total_users": 38721
+      },
+      "tasks": {
+        "label": "Task and Task Run Statistics",
+        "values": [
+          {
+            "label": "Tasks",
+            "value": [
+              0,
+              553012
+            ]
+          },
+          {
+            "label": "Answers",
+            "value": [
+              1,
+              1801222
+            ]
+          }
+        ]
+      },
+      "template": "/stats/global.html",
+      "title": "Global Statistics",
+      "top5_projects_24_hours": [],
+      "top5_users_24_hours": [],
+      "users": {
+        "label": "User Statistics",
+        "values": [
+          {
+            "label": "Anonymous",
+            "value": [
+              0,
+              27587
+            ]
+          },
+          {
+            "label": "Authenticated",
+            "value": [
+              0,
+              11134
+            ]
+          }
+        ]
+      }
+    }
+
+
+Project Category Featured
+~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/category/featured/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of featured projects.
+
+* **pagination**: A pagination object for getting new featured projets from this category.
+* **active_cat**: Active category.
+* **projects**: List of projects belonging to this category.
+* **categories**: List of available categories in this server.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "active_cat": {
+        "created": null,
+        "description": "Featured projects",
+        "id": null,
+        "name": "Featured",
+        "short_name": "featured"
+      },
+      "categories": [
+        {
+          "created": null,
+          "description": "Featured projects",
+          "id": null,
+          "name": "Featured",
+          "short_name": "featured"
+        },
+        {
+          "created": null,
+          "description": "Social projects",
+          "id": 2,
+          "name": "Social",
+          "short_name": "social"
+        },
+        {
+          "created": "2013-06-18T11:13:44.789149",
+          "description": "Art projects",
+          "id": 3,
+          "name": "Art",
+          "short_name": "art"
+        },
+      ],
+      "pagination": {
+        "next": false,
+        "page": 1,
+        "per_page": 20,
+        "prev": false,
+        "total": 1
+      },
+      "projects": [
+        {
+          "created": "2014-02-22T15:09:23.691811",
+          "description": "Image pattern recognition",
+          "id": 1377,
+          "info": {
+            "container": "7",
+            "thumbnail": "58.png"
+          },
+          "last_activity": "2 weeks ago",
+          "last_activity_raw": "2017-01-31T09:18:28.450391",
+          "n_tasks": 169671,
+          "n_volunteers": 17499,
+          "name": "Name",
+          "overall_progress": 80,
+          "owner": "John Doe",
+          "short_name": "name",
+          "updated": "2017-01-31T09:18:28.491496"
+        },
+      ],
+      "template": "/projects/index.html",
+      "title": "Projects"
+    }
+
+Project Category Draft
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/category/draft/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of featured projects.
+
+* **pagination**: A pagination object for getting new draft projets from this category.
+* **active_cat**: Active category.
+* **projects**: List of projects belonging to this category.
+* **categories**: List of available categories in this server.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "active_cat": {
+        "created": null,
+        "description": "Draft projects",
+        "id": null,
+        "name": "Draft",
+        "short_name": "draft"
+      },
+      "categories": [
+        {
+          "created": null,
+          "description": "Draft projects",
+          "id": null,
+          "name": "Draft",
+          "short_name": "draft"
+        },
+        {
+          "created": null,
+          "description": "Social projects",
+          "id": 2,
+          "name": "Social",
+          "short_name": "social"
+        },
+        {
+          "created": "2013-06-18T11:13:44.789149",
+          "description": "Art projects",
+          "id": 3,
+          "name": "Art",
+          "short_name": "art"
+        },
+      ],
+      "pagination": {
+        "next": false,
+        "page": 1,
+        "per_page": 20,
+        "prev": false,
+        "total": 1
+      },
+      "projects": [
+        {
+          "created": "2014-02-22T15:09:23.691811",
+          "description": "Draft 1",
+          "id": 17,
+          "info": {
+            "container": "7",
+            "thumbnail": "58.png"
+          },
+          "last_activity": "2 weeks ago",
+          "last_activity_raw": "2017-01-31T09:18:28.450391",
+          "n_tasks": 0,
+          "n_volunteers": 0,
+          "name": "Name",
+          "overall_progress": 0,
+          "owner": "John Doe",
+          "short_name": "name",
+          "updated": "2017-01-31T09:18:28.491496"
+        },
+      ],
+      "template": "/projects/index.html",
+      "title": "Projects"
+    }
+
+Project Creation
+~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/new**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+Gives you the list of required fields in the form to create a project.
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+* **form**: The form fields that need to be sent for creating the project. It contains the CSRF token for validating the POST, as well as an errors field in case that something is wrong.
+
+
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "errors": false,
+      "form": {
+        "csrf": "token",
+        "description": null,
+        "errors": {},
+        "long_description": null,
+        "name": null,
+        "short_name": null
+      },
+      "template": "projects/new.html",
+      "title": "Create a Project"
+    }
+
+Project Blog list
+~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/blog**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of posted blogs by the given project short name.
+
+* **blogposts**: All the blog posts for the given project.
+* **project**: Info about the project.
+
+
+The project and owner fields will have more information if the onwer of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
+
+**Example public output**
+
+.. code-block:: python
+
+    {
+      "blogposts": [
+        {
+          "body": "Please, e-mail us to alejasan 4t ucm dot es if you find any bug. Thanks.",
+          "created": "2014-05-14T14:25:04.899079",
+          "id": 1,
+          "project_id": 1377,
+          "title": "We are working on the Alpha version.",
+          "user_id": 3927
+        },
+      ],
+      "n_completed_tasks": 137051,
+      "n_task_runs": 1070561,
+      "n_tasks": 169671,
+      "n_volunteers": 17499,
+      "overall_progress": 80,
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "avatar.png",
+          "container": "container"
+        },
+        "n_answers": 32814,
+        "name": "johndoe",
+        "rank": 4,
+        "registered_ago": "3 years ago",
+        "score": 32814
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1,
+        "info": {
+          "container": "container",
+          "thumbnail": "58.png"
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Dark Skies ISS",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "darkskies",
+        "updated": "2017-01-31T09:18:28.491496"
+      },
+      "template": "projects/blog.html"
+    }
+
+Project Task Presenter Editor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/taskpresentereditor**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+This endpoint allows you to get the list of available templates for the current project. This will only happen
+when the project has an empty template, otherwise it will load the template for you.
+
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+* **presenters**: List of available templates (in HTML format). The name of them without the '.html' will be the argument for the endpoint.
+* **last_activit**: last activity of the project.
+* **n_task_runs**: number of task runs.
+* **n_tasks**: number of tasks.
+* **n_volunteers**: number of volunteers.
+* **owner**: information about the owner.
+* **pro_features**: which pro features are enabled.
+* **pro_features**: which pro features are enabled.
+* **project**: info about the project.
+* **status**: status of the flash message.
+* **flash**: flash message.
+
+
+**Example output**
+
+.. code-block:: python
+
+     {
+      "flash": "<strong>Note</strong> You will need to upload the tasks using the<a href=\"/project/asdf123/tasks/import\"> CSV importer</a> or download the project bundle and run the <strong>createTasks.py</strong> script in your computer",
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 0,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 12030,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "presenters": [
+        "projects/presenters/basic.html",
+        "projects/presenters/image.html",
+        "projects/presenters/sound.html",
+        "projects/presenters/video.html",
+        "projects/presenters/map.html",
+        "projects/presenters/pdf.html"
+      ],
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 4,
+        "contacted": false,
+        "contrib_button": "draft",
+        "created": "2017-01-11T09:37:43.613007",
+        "description": "adsf",
+        "featured": false,
+        "id": 3,
+        "info": {
+          "passwd_hash": null,
+          "task_presenter": ""
+        },
+        "long_description": "adsf",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "asdf1324",
+        "owner_id": 12030,
+        "published": false,
+        "secret_key": "73aee9df-be47-4e4c-8192-3a8bf0ab5161",
+        "short_name": "asdf123",
+        "updated": "2017-03-15T13:20:48.022328",
+        "webhook": ""
+      },
+      "status": "info",
+      "template": "projects/task_presenter_options.html",
+      "title": "Project: asdf1324 &middot; Task Presenter Editor"
+    }
+
+If you want to preload the template from one of the available prenters, you have to pass the following
+argument: **?template=basic** for the basic or **?template=iamge** for the image template.
+
+**Example output**
+
+.. code-block:: python
+
+     {
+      "errors": false,
+      "flash": "Your code will be <em>automagically</em> rendered in                       the <strong>preview section</strong>. Click in the                       preview button!",
+      "form": {
+        "csrf": "token",
+        "editor": "<div class=\"row\">\n    <div class=\"col-md-12\">\n        <h1>Write here your HTML Task Presenter</h1>\n    </div>\n</div>\n<script type=\"text/javascript\">\n(function() {\n    // Your JavaScript code\n    pybossa.taskLoaded(function(task, deferred){\n        // When the task is loaded, do....\n    });\n\n    pybossa.presentTask(function(task, deferred){\n        // Present the current task to the user\n        // Load the task data into the HTML DOM\n    });\n\n    pybossa.run('asdf123');\n})();\n</script>",
+        "errors": {},
+        "id": 3
+      },
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 0,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 4,
+        "contacted": false,
+        "contrib_button": "draft",
+        "created": "2017-01-11T09:37:43.613007",
+        "description": "adsf",
+        "featured": false,
+        "id": 3,
+        "info": {
+          "passwd_hash": null,
+          "task_presenter": ""
+        },
+        "long_description": "adsf",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "asdf1324",
+        "owner_id": 0,
+        "published": false,
+        "secret_key": "73aee9df-be47-4e4c-8192-3a8bf0ab5161",
+        "short_name": "asdf123",
+        "updated": "2017-03-15T13:20:48.022328",
+        "webhook": ""
+      },
+      "status": "info",
+      "template": "projects/task_presenter_editor.html",
+      "title": "Project: asdf1324 &middot; Task Presenter Editor"
+    }
+
+Then, you can use that template, or if you prefer you can do a POST directly without that information. As in 
+any other request involving a POST you will need the CSRFToken to validate it.
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken". You will have to POST the data fields found in the previous example,
+as it contains the information about the fields: specifically **editor** with the HTML/CSS/JS that you want
+to provide.
+
+If the post is successfull, you will get the following output:
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "<i class=\"icon-ok\"></i> Task presenter added!",
+      "next": "/project/asdf123/tasks/",
+      "status": "success"
+    }
+
+Project Delete
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/delete**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+The GET endpoint allows you to get all the info about the project (see the Project endpoint as well) as well
+as the csrf token. As this endpoint does not have any form, the csrf token is not inside the form field.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "csrf": "token",
+      "last_activity": null,
+      "n_tasks": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2016-09-15T11:30:42.660450",
+        "email_addr": "prueba@prueba.com",
+        "facebook_user_id": null,
+        "fullname": "prueba de json",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "0"
+        },
+        "n_answers": 5,
+        "name": "pruebaadfadfa",
+        "rank": 4411,
+        "registered_ago": "6 months ago",
+        "score": 5,
+        "total": 11134,
+        "twitter_user_id": null,
+        "valid_email": true
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "allow_anonymous_contributors": true,
+        "category_id": 2,
+        "contacted": false,
+        "created": "2017-03-15T15:02:12.160810",
+        "description": "asdf",
+        "featured": false,
+        "id": 3,
+        "info": {},
+        "long_description": "asdf",
+        "name": "algo",
+        "owner_id": 12030,
+        "published": false,
+        "secret_key": "c5a77943-f5a4-484a-86bb-d69559e80357",
+        "short_name": "algo",
+        "updated": "2017-03-15T15:02:12.160823",
+        "webhook": null
+      },
+      "template": "/projects/delete.html",
+      "title": "Project: algo &middot; Delete"
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "Project deleted!",
+      "next": "/account/pruebaadfadfa/",
+      "status": "success"
+    }
+
+
+Project update
+~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/update**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **form**: the form fields that need to be sent for updating the project. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **upload_form**: the form fields that need to be sent for updating the project's avatar. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "form": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "csrf": "token",
+        "description": "description",
+        "errors": {},
+        "id": 3117,
+        "long_description": "long description",
+        "name": "name",
+        "password": null,
+        "protect": false,
+        "short_name": "slug",
+        "webhook": null
+      },
+      "last_activity": null,
+      "n_completed_tasks": 0,
+      "n_task_runs": 0,
+      "n_tasks": 2,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2012-06-06T06:27:18.760254",
+        "email_addr": "email.com",
+        "facebook_user_id": null,
+        "fullname": "John Doe",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user",
+          "twitter_token": {
+            "oauth_token": "token",
+            "oauth_token_secret": "token"
+          }
+        },
+        "n_answers": 2414,
+        "name": "johndoe",
+        "rank": 69,
+        "registered_ago": "4 years ago",
+        "score": 2414,
+        "total": 11134,
+        "twitter_user_id": 12,
+        "valid_email": false
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "contacted": false,
+        "contrib_button": "can_contribute",
+        "created": "2015-06-29T08:23:14.201331",
+        "description": "description",
+        "featured": false,
+        "id": 0,
+        "info": {
+          "container": "user",
+          "passwd_hash": null,
+          "task_presenter": "HTML+CSS+JS,
+          "thumbnail": "thumbnail.png"
+        },
+        "long_description": "long description",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "name",
+        "owner_id": 0,
+        "published": true,
+        "secret_key": "key",
+        "short_name": "slug",
+        "updated": "2017-03-16T14:50:45.055331",
+        "webhook": null
+      },
+      "template": "/projects/update.html",
+      "title": "Project: name &middot; Update",
+      "upload_form": {
+        "avatar": null,
+        "csrf": "token",
+        "errors": {},
+        "id": null,
+        "x1": 0,
+        "x2": 0,
+        "y1": 0,
+        "y2": 0
+      }
+    }
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+As this endpoint supports **two** different forms, you must specify which form are
+you targetting adding an extra key: **btn**. The options for this key are:
+
+  **Upload**: to update the **upload_form**.
+
+The other one does not need this extra key.
+
+.. note::
+    Be sure to respect the Uppercase in the first letter, otherwise it will fail.
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+* **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "Your profile has been updated!",
+      "next": "/account/pruebaadfadfa/update",
+      "status": "success"
+    }
+
+
+If there's an error in the form fields, you will get them in the **form.errors** key:
+
+.. code-block:: python
+
+    {
+      "flash": "Please correct the errors",
+      "form": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "csrf": "token",
+        "description": "description",
+        "errors": {
+          "short_name": [
+            "This field is required."
+          ]
+        },
+        "id": 3117,
+        "long_description": "new description",
+        "name": "new name",
+        "password": null,
+        "protect": true,
+        "short_name": "",
+        "webhook": null
+      },
+      ...
+    }
+
+.. note::
+    For updating the avatar is very important to not set the *Content-Type*. If you
+    are using jQuery, set it to False, so the file is handled properly.
+
+    The (x1,x2,y1,y2) are the coordinates for cutting the image and create the avatar.
+
+    (x1,y1) are the offset left of the cropped area and  the offset top of the cropped
+    area respectively; and (x2,y2) are the width and height of the crop. And don't forget
+    to add an extra key to the form-data: 'btn' with a value Upload to select this form.
+
+Project reset secret key
+~~~~~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/resetsecretkey**
+
+*Allowed methods*: **POST**
+
+Resets the secret key of a project.
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken" retrieved from the GET endpont **/project/<short_name>/update**.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "New secret key generated",
+      "next": "/project/flickrproject2/update",
+      "status": "success"
+    }
+
+Project tasks browse
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/browse/**
+**Endpoint: /project/<short_name>/tasks/browse/<int:page>**
+
+*Allowed methods*: **GET**
+
+* **n_completed_tasks**: number of completed tasks
+* **n_tasks**: number of tasks
+* **n_volunteers**: number of volunteers
+* **overall_progress**: overall progress
+* **owner**: project owner
+* **pagination**: pagination information
+* **pro_features**: pro features enabled or not
+* **project**: project information
+* **tasks**: tasks, paginated
+* **template**: the Jinja2 template that should be rendered in case of text/html.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "n_completed_tasks": 0,
+      "n_tasks": 1,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "created": "2017-04-17T23:56:22.892222",
+        "fullname": "John Doe",
+        "info": {},
+        "locale": null,
+        "n_answers": 0,
+        "name": "johndoe",
+        "rank": null,
+        "registered_ago": "3 hours ago",
+        "score": null
+      },
+      "pagination": {
+        "next": false,
+        "page": 1,
+        "per_page": 10,
+        "prev": false,
+        "total": 1
+      },
+      "pro_features": {
+        "auditlog_enabled": false,
+        "autoimporter_enabled": false,
+        "webhooks_enabled": false
+      },
+      "project": {
+        "created": "2017-04-17T23:56:23.416754",
+        "description": "Description",
+        "featured": false,
+        "id": 1,
+        "info": {},
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "Sample Project",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "sampleapp",
+        "updated": "2017-04-17T23:56:23.589652"
+      },
+      "tasks": [
+        {
+          "id": 1,
+          "n_answers": 10,
+          "n_task_runs": 0,
+          "pct_status": 0.0
+        }
+      ],
+      "template": "/projects/tasks_browse.html",
+      "title": "Project: Sample Project &middot; Tasks"
+    }
+
+Project tasks import
+~~~~~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tasks/import**
+
+*Allowed methods*: **GET/POST**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **available_importers**: A list of available importers for the server. To use one of the items, you have to add to the endpoint the following argument: *?type=name* where name is the string that you will find in the list of importers in the format: *projects/tasks/name.html*.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "available_importers": [
+        "projects/tasks/epicollect.html",
+        "projects/tasks/csv.html",
+        "projects/tasks/s3.html",
+        "projects/tasks/twitter.html",
+        "projects/tasks/youtube.html",
+        "projects/tasks/gdocs.html",
+        "projects/tasks/dropbox.html",
+        "projects/tasks/flickr.html"
+      ],
+      "form": null,
+      "loading_text": "Importing tasks, this may take a while, wait...",
+      "n_completed_tasks": 0,
+      "n_tasks": 5,
+      "n_volunteers": 0,
+      "overall_progress": 0,
+      "owner": {
+        "api_key": "key",
+        "confirmation_email_sent": false,
+        "created": "2012-06-06T06:27:18.760254",
+        "email_addr": "johndoe@gmail.com",
+        "facebook_user_id": null,
+        "fullname": "John Doe",
+        "google_user_id": null,
+        "id": 0,
+        "info": {
+          "avatar": "avatar.png",
+          "container": "user",
+          "twitter_token": {
+            "oauth_token": "",
+            "oauth_token_secret": ""
+          }
+        },
+        "n_answers": 2414,
+        "name": "johndoe",
+        "rank": 69,
+        "registered_ago": "4 years ago",
+        "score": 2414,
+        "total": 11134,
+        "twitter_user_id": 12,
+        "valid_email": false
+      },
+      "pro_features": {
+        "auditlog_enabled": true,
+        "autoimporter_enabled": true,
+        "webhooks_enabled": true
+      },
+      "project": {
+        "allow_anonymous_contributors": false,
+        "category_id": 2,
+        "contacted": false,
+        "contrib_button": "can_contribute",
+        "created": "2015-06-29T08:23:14.201331",
+        "description": "old",
+        "featured": false,
+        "id": 3117,
+        "info": {
+          "container": "user",
+          "passwd_hash": null,
+          "task_presenter": "HTML+CSS+JS"
+          "thumbnail": "avatar.png"
+        },
+        "long_description": "algo",
+        "n_blogposts": 0,
+        "n_results": 0,
+        "name": "name",
+        "owner_id": 3,
+        "published": true,
+        "secret_key": "f",
+        "short_name": "name",
+        "updated": "2017-03-17T09:15:46.867215",
+        "webhook": null
+      },
+      "target": "project.import_task",
+      "task_tmpls": [
+        "projects/tasks/gdocs-sound.html",
+        "projects/tasks/gdocs-map.html",
+        "projects/tasks/gdocs-image.html",
+        "projects/tasks/gdocs-video.html",
+        "projects/tasks/gdocs-pdf.html"
+      ],
+      "template": "/projects/task_import_options.html",
+      "title": "Project: bevan &middot; Import Tasks"
+    }
+
+Therefore, if you want to import tasks from a CSV link, you will have to do the following GET::
+
+    GET server/project/<short_name>/tasks/import?type=csv
+
+That query will return the same output as before, but instead of the available_importers, you will get the the form fields and CSRF token for that importer. 
+
+**POST**
+
+To send a valid POST request you need to pass the *csrf token* in the headers. Use
+the following header: "X-CSRFToken".
+
+It returns a JSON object with the following information:
+
+* **flash**: A success message, or error indicating if the request was succesful.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "flash": "Tasks imported",
+      "next": "/project/<short_name>/tasks/",
+      "status": "success"
+    }
+
+Project tutorial
+~~~~~~~~~~~~~~~~
+**Endpoint: /project/<short_name>/tutorial**
+
+**GET**
+
+It returns a JSON object with the following information:
+
+* **owner**: owner information
+* **project**: project information
+* **template**: The Jinja2 template that could be rendered.
+* **title**: The title for the view.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "owner": {
+        "created": "2014-02-13T15:28:08.420187",
+        "fullname": "John Doe",
+        "info": {
+          "avatar": "1410769844.15_avatar.png",
+          "avatar_url": null,
+          "container": "user_3927",
+          "extra": null
+        },
+        "locale": null,
+        "n_answers": 43565,
+        "name": "jdoe",
+        "rank": 3,
+        "registered_ago": "3 years ago",
+        "score": 43565
+      },
+      "project": {
+        "created": "2014-02-22T15:09:23.691811",
+        "description": "Image pattern recognition",
+        "featured": true,
+        "id": 1377,
+        "info": {
+          "container": "user_3927",
+          "thumbnail": "app_1377_thumbnail_1410772569.58.png",
+          "thumbnail_url": null
+        },
+        "last_activity": null,
+        "last_activity_raw": null,
+        "n_tasks": null,
+        "n_volunteers": null,
+        "name": "myproject",
+        "overall_progress": null,
+        "owner": null,
+        "short_name": "johndoeproject",
+        "updated": "2017-03-02T21:00:33.965587"
+      },
+      "template": "/projects/tutorial.html",
+      "title": "Project: myproject"
     }

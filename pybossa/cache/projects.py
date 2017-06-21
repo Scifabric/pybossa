@@ -58,18 +58,19 @@ def get_top(n=4):
     return top_projects
 
 
-@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
-def browse_tasks(project_id):
+#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+def browse_tasks(project_id, limit=10, offset=0):
     """Cache browse tasks view for a project."""
     sql = text('''
-               SELECT task.id, coalesce(ct, 0) as n_task_runs, task.n_answers
-               FROM task LEFT OUTER JOIN
-               (SELECT task_id, COUNT(id) AS ct FROM task_run
-               WHERE project_id=:project_id GROUP BY task_id) AS log_counts
-               ON task.id=log_counts.task_id
-               WHERE task.project_id=:project_id ORDER BY id ASC
+               SELECT task.id, task.n_answers, sum(counter.n_task_runs) as n_task_runs
+               FROM task, counter
+               WHERE task.id=counter.task_id and task.project_id=:project_id
+               GROUP BY task.id
+               ORDER BY task.id ASC LIMIT :limit OFFSET :offset
                ''')
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, dict(project_id=project_id,
+                                        limit=limit,
+                                        offset=offset))
     tasks = []
     for row in results:
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
@@ -218,7 +219,23 @@ def average_contribution_time(project_id):
     results = session.execute(sql, dict(project_id=project_id)).fetchall()
     for row in results:
         average_time = row.average_time
-    return average_time or 0
+    if average_time:
+        return average_time.total_seconds()
+    else:
+        return 0
+
+
+def n_blogposts(project_id):
+    """Return number of blogposts of a project."""
+    sql = text('''
+               SELECT COUNT(id) as ct from blogpost
+               WHERE project_id=:project_id;
+               ''')
+    results = session.execute(sql, dict(project_id=project_id))
+    n_blogposts = 0
+    for row in results:
+        n_blogposts = row.ct
+    return n_blogposts
 
 
 # This function does not change too much, so cache it for a longer time
@@ -402,9 +419,9 @@ def get(category, page=1, per_page=5):
 
 # TODO: find a convenient cache timeout and cache, if needed
 def get_from_pro_user():
-    """Return the list of projects belonging to 'pro' users."""
+    """Return the list of published projects belonging to 'pro' users."""
     sql = text('''SELECT project.id, project.short_name FROM project, "user"
-               WHERE project.owner_id="user".id AND "user".pro=True;''')
+               WHERE project.owner_id="user".id AND "user".pro=True and project.published=True;''')
     results = db.slave_session.execute(sql)
     projects = []
     for row in results:

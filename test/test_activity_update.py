@@ -22,6 +22,11 @@ from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory, 
 
 class TestActivityFeed(Test):
 
+    def setUp(self):
+        super(TestActivityFeed, self).setUp()
+
+
+    @with_context
     def test_user_creation(self):
         """Test ACTIVITY FEED works for User creation."""
         user = UserFactory.create()
@@ -33,6 +38,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be User"
         assert update_feed[0]['action_updated'] == 'User', err_msg
 
+    @with_context
     def test_project_creation(self):
         """Test ACTIVITY FEED works for project creation."""
         project = ProjectFactory.create()
@@ -45,6 +51,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Project', err_msg
 
+    @with_context
     def test_blogpost_creation(self):
         """Test ACTIVITY FEED works for blog post creation."""
         blogpost = BlogpostFactory.create()
@@ -57,6 +64,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Blog', err_msg
 
+    @with_context
     def test_task_creation(self):
         """Test ACTIVITY FEED works for task creation."""
         task = TaskFactory.create()
@@ -69,6 +77,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Task', err_msg
 
+    @with_context
     def test_taskrun_creation(self):
         """Test ACTIVITY FEED works for task_run creation."""
         task_run = TaskRunFactory.create()
@@ -82,6 +91,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'UserContribution', err_msg
 
+    @with_context
     def test_taskrun_creation_state_completed(self):
         """Test ACTIVITY FEED works for task_run creation state completed."""
         task = TaskFactory.create(n_answers=1)
@@ -95,6 +105,7 @@ class TestActivityFeed(Test):
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'TaskCompleted', err_msg
 
+    @with_context
     def test_max_limit(self):
         """Test ACTIVITY FEED limit works."""
         ProjectFactory.create_batch(101)

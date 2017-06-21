@@ -17,9 +17,9 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import pybossa.vmcp as vmcp
-from mock import patch
+from mock import patch, mock_open
 import hashlib
-import M2Crypto
+import rsa
 import base64
 from default import assert_not_raises
 
@@ -58,7 +58,10 @@ class TestVMCP(object):
 
     def test_sign(self):
         """Test sign works."""
-        rsa = M2Crypto.RSA.gen_key(2048, 65537)
+        # rsa_pk = M2Crypto.RSA.gen_key(2048, 65537)
+        rsa_keys = rsa.newkeys(2048, 65537)
+        rsa_pk = rsa_keys[1]
+        rsa_pub = rsa_keys[0]
         salt = 'salt'
         data = {"flags": 8,
                 "name": "MyAwesomeVM",
@@ -68,21 +71,21 @@ class TestVMCP(object):
                 "vcpus": 1,
                 "version": "1.5"}
         strBuffer = vmcp.calculate_buffer(data, salt)
-        digest = hashlib.new('sha512', strBuffer).digest()
+        
+        with patch('rsa.PrivateKey.load_pkcs1', return_value=rsa_pk):
+            with patch('pybossa.vmcp.open', mock_open(read_data=''), create=True) as m:
+                out = vmcp.sign(data, salt, 'testkey')
+                err_msg = "There should be a key named signature"
+                assert out.get('signature'), err_msg
 
-        with patch('M2Crypto.RSA.load_key', return_value=rsa):
-            out = vmcp.sign(data, salt, 'key')
-            err_msg = "There should be a key named signature"
-            assert out.get('signature'), err_msg
+                err_msg = "The signature should not be empty"
+                assert out['signature'] is not None, err_msg
+                assert out['signature'] != '', err_msg
 
-            err_msg = "The signature should not be empty"
-            assert out['signature'] is not None, err_msg
-            assert out['signature'] != '', err_msg
+                err_msg = "The signature should be the same"
+                signature = base64.b64decode(out['signature'])
+                assert rsa.verify(strBuffer, signature, rsa_pub) == 1, err_msg
 
-            err_msg = "The signature should be the same"
-            signature = base64.b64decode(out['signature'])
-            assert rsa.verify(digest, signature, 'sha512') == 1, err_msg
-
-            # The output must be convertible into json object
-            import json
-            assert_not_raises(Exception, json.dumps, out)
+                # The output must be convertible into json object
+                import json
+                assert_not_raises(Exception, json.dumps, out)

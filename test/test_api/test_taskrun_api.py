@@ -26,6 +26,7 @@ from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db
 from pybossa.auth.errcodes import *
+from pybossa.model.task_run import TaskRun
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -33,6 +34,10 @@ result_repo = ResultRepository(db)
 
 
 class TestTaskrunAPI(TestAPI):
+
+    def setUp(self):
+        super(TestTaskrunAPI, self).setUp()
+        db.session.query(TaskRun).delete()
 
     def create_result(self, n_results=1, n_answers=1, owner=None,
                       filter_by=False):
@@ -67,8 +72,8 @@ class TestTaskrunAPI(TestAPI):
                                     info={'answer': 'annakarenina'})
         date_new = '2019-01-01T14:37:30.642119'
         date_old = '2014-01-01T14:37:30.642119'
-        TaskRunFactory.create(created=date_new)
-        TaskRunFactory.create(created=date_old)
+        t21 = TaskRunFactory.create(created=date_new)
+        t22 = TaskRunFactory.create(created=date_old)
 
         project_ids = [project.id, project_two.id]
         # As anon, it sould return everything
@@ -79,6 +84,16 @@ class TestTaskrunAPI(TestAPI):
             assert tr['project_id'] in project_ids, tr
             assert tr['info']['answer'] == 'annakarenina', tr
 
+        # Related
+        res = self.app.get('/api/taskrun?related=True')
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 20, taskruns
+        for tr in taskruns:
+            assert tr['project_id'] in project_ids, tr
+            assert tr['info']['answer'] == 'annakarenina', tr
+            assert tr['task']['id'] == tr['task_id'], tr
+            assert tr['result'] == None, tr
+
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
@@ -87,6 +102,11 @@ class TestTaskrunAPI(TestAPI):
         res = self.app.get('/api/taskrun?api_key=' + user.api_key)
         taskruns = json.loads(res.data)
         assert len(taskruns) == 0, taskruns
+
+        res = self.app.get('/api/taskrun?related=True&api_key=' + user.api_key)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 0, taskruns
+
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -124,13 +144,43 @@ class TestTaskrunAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
-        url = "/api/taskrun?desc=true"
+        url = "/api/taskrun?desc=true&orderby=created"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['created'] == date_new, err_msg
 
+        # Desc filter
+        url = "/api/taskrun?orderby=wrongattribute"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
 
+        taskruns.append(t21.dictize())
+        taskruns.append(t22.dictize())
+
+        # Desc filter
+        url = "/api/taskrun?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=False)
+
+        for i in range(20):
+            assert taskruns_by_id[i]['id'] == data[i]['id']
+
+        # Desc filter
+        url = "/api/taskrun?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
+        for i in range(20):
+            print data[i]['id']
+            assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context
     def test_query_taskrun(self):
@@ -532,6 +582,7 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
 
 
+    @with_context
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
@@ -557,6 +608,7 @@ class TestTaskrunAPI(TestAPI):
         success = self.app.post('/api/taskrun', data=datajson)
         assert success.status_code == 200, success.data
 
+    @with_context
     def test_taskrun_post_requires_newtask_first_external_uid(self):
         """Test API TaskRun post fails if task was not previously requested for
         external user"""
@@ -832,6 +884,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 
+    @with_context
     def test_taskrun_create_with_reserved_fields_returns_error(self):
         """Test API taskrun post with reserved fields raises an error"""
         project = ProjectFactory.create()
@@ -852,6 +905,7 @@ class TestTaskrunAPI(TestAPI):
         error = json.loads(resp.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_is_stored_if_project_is_not_published(self, guard):
         """Test API taskrun post stores the taskrun even if project is not published"""
@@ -873,6 +927,7 @@ class TestTaskrunAPI(TestAPI):
         assert len(task_runs) == 1, task_runs
         assert task_runs[0].info == 'my result', task_runs[0]
 
+    @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_created_with_time_it_was_requested_on_creation(self, guard):
         """Test API taskrun post adds the created timestamp of the moment the task

@@ -15,17 +15,17 @@ requirements = [
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",
-    "M2Crypto>=0.24.0, <0.24.1",        # let's be more restrictive on M2Crypto version
+    "rsa>=3.4.2",
     "markdown>=2.4, <3.0",
     "psycopg2>=2.5.2, <3.0",
     "pygeoip>=0.3.1, <1.0",
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
-    "pyOpenSSL>=0.15.1, <1.0",          # fix for python below 2.7.9
+    "pyOpenSSL>=16.2",                  # fix for python below 2.7.9
     "ndg-httpsclient>=0.4.0, <1.0",     # fix for python below 2.7.9
     "pyasn1>=0.1.7, <1.0",              # fix for python below 2.7.9
     "requests>=2.2.1, <3.0",
-    "SQLAlchemy>=1.0.5, <1.0.6",
+    "SQLAlchemy>=1.1.7, <1.1.8",
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
@@ -56,12 +56,15 @@ requirements = [
     "flask_json_multidict",
     "flask-cors>=3.0.2, <3.0.3",
     "webassets>=0.12.1, <0.12.2",
-    "readability-lxml>=0.6.2, <1.0"
+    "readability-lxml>=0.6.2, <1.0",
+    "pybossa-onesignal",
+    "pandas>=0.20.2, <0.20.3",
+    "flatten-json"
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.3.5',
+    version = '2.5.0',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
@@ -70,7 +73,8 @@ setup(
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
     dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
-                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard'],
+                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
+                        'git+https://github.com/amirziai/flatten.git@5bbe314d1dac1b1ae0e7c52690109077732a5431#egg=flatten_json'],
 
     # metadata for upload to PyPI
     author = 'Scifabric LTD',

@@ -20,10 +20,12 @@ from default import Test, db, with_context
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                       AnonymousTaskRunFactory, UserFactory)
 from pybossa.cache import helpers
+from pybossa.cache.project_stats import update_stats
 
 
 class TestHelpersCache(Test):
 
+    @with_context
     def test_n_available_tasks_no_tasks_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if the project
         has no tasks"""
@@ -33,6 +35,8 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 0, n_available_tasks
 
+
+    @with_context
     def test_n_available_tasks_no_tasks_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if the project
         has no tasks"""
@@ -42,6 +46,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 0, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_no_taskruns_authenticated_user(self):
         """Test n_available_tasks returns 1 for authenticated user
         if there are no taskruns"""
@@ -52,6 +57,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 1, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_no_taskruns_anonymous_user(self):
         """Test n_available_tasks returns 1 for anonymous user
         if there are no taskruns"""
@@ -62,6 +68,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 1, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_all_tasks_completed_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if all the
         tasks are completed"""
@@ -72,6 +79,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 0, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_all_tasks_completed_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if all the
         tasks are completed"""
@@ -82,6 +90,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 0, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_all_tasks_answered_by_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if he has
         submitted taskruns for all the tasks"""
@@ -95,6 +104,7 @@ class TestHelpersCache(Test):
         assert task.state != 'completed', task.state
         assert n_available_tasks == 0, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_all_tasks_answered_by_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if he has
         submitted taskruns for all the tasks"""
@@ -107,6 +117,7 @@ class TestHelpersCache(Test):
         assert task.state != 'completed', task.state
         assert n_available_tasks == 0, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_some_tasks_answered_by_authenticated_user(self):
         """Test n_available_tasks returns 1 for authenticated user if he has
         submitted taskruns for one of the tasks but there is still another task"""
@@ -119,6 +130,7 @@ class TestHelpersCache(Test):
         n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
         assert n_available_tasks == 1, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_some_tasks_answered_by_anonymous_user(self):
         """Test n_available_tasks returns 1 for anonymous user if he has
         submitted taskruns for one of the tasks but there is still another task"""
@@ -131,6 +143,7 @@ class TestHelpersCache(Test):
 
         assert n_available_tasks == 1, n_available_tasks
 
+    @with_context
     def test_n_available_tasks_some_task_answered_by_another_user(self):
         """Test n_available_tasks returns 1 for a user if another
         user has submitted taskruns for the task but he hasn't"""
@@ -142,6 +155,7 @@ class TestHelpersCache(Test):
         n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
         assert n_available_tasks == 1, n_available_tasks
 
+    @with_context
     def test_check_contributing_state_completed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed and user that has contributed to it"""
@@ -150,12 +164,14 @@ class TestHelpersCache(Test):
         user = UserFactory.create()
         TaskRunFactory.create_batch(1, task=task, user=user)
 
+        update_stats(project.id)
         contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert task.state == 'completed', task.state
         assert contributing_state == 'completed', contributing_state
 
+    @with_context
     def test_check_contributing_state_completed_user_not_contributed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed even if the user has not contributed to it"""
@@ -163,13 +179,14 @@ class TestHelpersCache(Test):
         task = TaskFactory.create(project=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=task)
         user = UserFactory.create()
-
+        update_stats(project.id)
         contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert task.state == 'completed', task.state
         assert contributing_state == 'completed', contributing_state
 
+    @with_context
     def test_check_contributing_state_ongoing_tasks_not_contributed(self):
         """Test check_contributing_state returns 'can_contribute' for a project
         with ongoing tasks a user has not contributed to"""
@@ -182,6 +199,7 @@ class TestHelpersCache(Test):
 
         assert contributing_state == 'can_contribute', contributing_state
 
+    @with_context
     def test_check_contributing_state_ongoing_tasks_contributed(self):
         """Test check_contributing_state returns 'cannot_contribute' for a project
         with ongoing tasks to which the user has already contributed"""
@@ -194,6 +212,7 @@ class TestHelpersCache(Test):
 
         assert contributing_state == 'cannot_contribute', contributing_state
 
+    @with_context
     def test_check_contributing_state_draft(self):
         """Test check_contributing_state returns 'draft' for a project that has
         ongoing tasks but has no presenter"""
@@ -207,6 +226,7 @@ class TestHelpersCache(Test):
         assert 'task_presenter' not in project.info
         assert contributing_state == 'draft', contributing_state
 
+    @with_context
     def test_check_contributing_state_draft_presenter(self):
         """Test check_contributing_state returns 'draft' for a project that has
         no tasks but has a presenter"""
@@ -219,6 +239,7 @@ class TestHelpersCache(Test):
         assert 'task_presenter' in project.info
         assert contributing_state == 'draft', contributing_state
 
+    @with_context
     def test_check_contributing_state_publish(self):
         """Test check_contributing_state returns 'publish' for a project that is
         not published but is ready to be validated for publication (i.e. has both

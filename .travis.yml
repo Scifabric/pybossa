@@ -1,5 +1,6 @@
 sudo: required
 dist: trusty
+group: edge
 language: python
 python:
 - '2.7'
@@ -29,9 +30,10 @@ script:
     - alembic -c alembictest.ini upgrade head
     - nosetests test/
 notifications:
-  hipchat: 11e2176ebb4b7372ee0d1fbc8abf4d@Github
   slack:
     secure: lgJj/SealCb3hZsMvclA9VQGwx9TJrtK6ccOZiiHZpJa5in0UkRwE6ymrZ5wqwUagAVwOLYVKHdmrtPMPsaOqavnzq9ItJFqSRo8T5ZgKK+m+X9l88ROn7+QfJyPUkpblhSXMm6+s7duBjdM/no80lA4GEoNWD5G5uQwjJWQSWk=
+  email: false
 after_success:
 - pip install coveralls
 - coveralls
+- codecov

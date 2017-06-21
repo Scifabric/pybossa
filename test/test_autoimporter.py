@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-from default import db
+from default import db, with_context
 from helper import web
 from pybossa.jobs import import_tasks
 from factories import ProjectFactory
@@ -29,6 +29,7 @@ user_repo = UserRepository(db)
 
 class TestAutoimporterAccessAndResponses(web.Helper):
 
+    @with_context
     def test_autoimporter_get_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint requires login"""
         project = ProjectFactory.create()
@@ -40,6 +41,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert redirect_url in res.location, res.location
 
 
+    @with_context
     def test_autoimporter_get_forbidden_non_owner(self):
         """Test task autoimporter returns Forbidden if non owner accesses"""
         self.register()
@@ -54,6 +56,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_autoimporter_get_forbidden_owner_no_pro(self):
         """Test task autoimporter returns Forbidden if no pro accesses"""
         self.register()
@@ -68,6 +71,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_autoimporter_get_owner_pro(self):
         """Test task autoimporter works for pro user"""
         self.register()
@@ -86,6 +90,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_autoimporter_get_admin(self):
         """Test task autoimporter works for admin user"""
         self.register()
@@ -102,6 +107,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_autoimporter_get_nonexisting_project(self):
         """Test task autoimporter to a non existing project returns 404"""
         self.register()
@@ -110,6 +116,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     def test_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint post requires login"""
         project = ProjectFactory.create()
@@ -121,6 +128,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert redirect_url in res.location, res.location
 
 
+    @with_context
     def test_autoimporter_post_forbidden_non_owner(self):
         """Test task autoimporter post returns Forbidden if non owner accesses"""
         self.register()
@@ -135,6 +143,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_autoimporter_post_forbidden_owner_no_pro(self):
         """Test task autoimporter post returns Forbidden if no pro accesses"""
         self.register()
@@ -149,6 +158,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_autoimporter_post_owner_pro(self):
         """Test task autoimporter post works for pro user"""
         self.register()
@@ -169,6 +179,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_autoimporter_post_admin(self):
         """Test task autoimporter post works for admin user"""
         self.register()
@@ -187,6 +198,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_autoimporter_post_nonexisting_project(self):
         """Test task autoimporter post to a non existing project returns 404"""
         self.register()
@@ -195,6 +207,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     def test_delete_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test delete task autoimporter endpoint requires login"""
         project = ProjectFactory.create()
@@ -206,6 +219,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert redirect_url in res.location, res.location
 
 
+    @with_context
     def test_delete_autoimporter_post_forbidden_non_owner(self):
         """Test delete task autoimporter returns Forbidden if non owner accesses"""
         self.register()
@@ -220,6 +234,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_delete_autoimporter_post_forbidden_owner_no_pro(self):
         """Test delete task autoimporter returns Forbidden if no pro accesses"""
         self.register()
@@ -234,6 +249,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 403, res.status_code
 
 
+    @with_context
     def test_delete_autoimporter_post_owner_pro(self):
         """Test delete task autoimporter works for pro user"""
         self.register()
@@ -252,6 +268,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_delete_autoimporter_post_admin(self):
         """Test delete task autoimporter works for admin user"""
         self.register()
@@ -268,6 +285,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         assert  res.status_code == 200, res.status_code
 
 
+    @with_context
     def test_delete_autoimporter_get_nonexisting_project(self):
         """Test task delete autoimporter to a non existing project returns 404"""
         self.register()
@@ -279,6 +297,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
 class TestAutoimporterBehaviour(web.Helper):
 
+    @with_context
     def test_autoimporter_shows_template_to_create_new_if_no_autoimporter(self):
         """Test task autoimporter get renders the template for creating new
         autoimporter if none exists"""
@@ -299,6 +318,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'Dropbox' not in res.data
 
 
+    @with_context
     @patch('pybossa.core.importer.get_autoimporter_names')
     def test_autoimporter_doesnt_show_unavailable_importers(self, names):
         names.return_value = ['csv', 'gdocs', 'epicollect']
@@ -312,6 +332,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'Flickr' not in res.data
 
 
+    @with_context
     def test_autoimporter_with_specific_variant_argument(self):
         """Test task autoimporter with specific autoimporter variant argument
         shows the form for it, for each of the variants"""
@@ -373,6 +394,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     def test_autoimporter_shows_current_autoimporter_if_exists(self):
         """Test task autoimporter shows the current autoimporter if exists"""
         self.register()
@@ -386,6 +408,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert "You currently have the following autoimporter" in res.data
 
 
+    @with_context
     def test_autoimporter_post_creates_autoimporter_attribute(self):
         """Test a valid post to autoimporter endpoint sets an autoimporter to
         the project"""
@@ -402,6 +425,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert project.get_autoimporter() == autoimporter, project.get_autoimporter()
 
 
+    @with_context
     def test_autoimporter_prevents_from_duplicated(self):
         """Test a valid post to autoimporter endpoint will not create another
         autoimporter if one exists for that project"""
@@ -417,6 +441,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert project.get_autoimporter() == autoimporter, project.get_autoimporter()
 
 
+    @with_context
     def test_delete_autoimporter_deletes_current_autoimporter_job(self):
         self.register()
         owner = user_repo.get(1)
@@ -429,6 +454,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert project.has_autoimporter() is False, project.get_autoimporter()
 
 
+    @with_context
     def test_flickr_autoimporter_page_shows_option_to_log_in_to_flickr(self):
         self.register()
         owner = user_repo.get(1)

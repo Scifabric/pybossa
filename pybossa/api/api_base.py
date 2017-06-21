@@ -31,31 +31,41 @@ from flask import request, abort, Response
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-from pybossa.util import jsonpify
+from pybossa.util import jsonpify, fuzzyboolean
 from pybossa.core import ratelimits
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
+from pybossa.core import announcement_repo, blog_repo, helping_repo
+from pybossa.model import DomainObject
 
-repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
-                     'get': 'get_task', 'save': 'save', 'update': 'update',
-                     'delete': 'delete'},
-        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by',
-                     'get': 'get_task_run',  'save': 'save', 'update': 'update',
-                     'delete': 'delete'},
-        'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update'},
-         'Project' : {'repo': project_repo, 'filter': 'filter_by',
-                      'context': 'filter_owner_by', 'get': 'get',
-                      'save': 'save', 'update': 'update', 'delete': 'delete'},
-        'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
-                     'get': 'get_category', 'save': 'save_category',
-                     'update': 'update_category', 'delete': 'delete_category'},
-        'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
-                    'update': 'update'}
-        }
+repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
+                  'get': 'get_task', 'save': 'save', 'update': 'update',
+                  'delete': 'delete'},
+         'TaskRun': {'repo': task_repo, 'filter': 'filter_task_runs_by',
+                     'get': 'get_task_run',  'save': 'save',
+                     'update': 'update', 'delete': 'delete'},
+         'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
+                  'save': 'save', 'update': 'update'},
+         'Project': {'repo': project_repo, 'filter': 'filter_by',
+                     'context': 'filter_owner_by', 'get': 'get',
+                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
+                      'get': 'get_category', 'save': 'save_category',
+                      'update': 'update_category',
+                      'delete': 'delete_category'},
+         'Result': {'repo': result_repo, 'filter': 'filter_by', 'get': 'get',
+                    'update': 'update'},
+         'Announcement': {'repo': announcement_repo, 'filter': 'filter_by', 'get': 'get',
+                          'get_all_announcements': 'get_all_announcements',
+                          'update': 'update', 'save': 'save', 'delete': 'delete'},
+         'Blogpost': {'repo': blog_repo, 'filter': 'filter_by', 'get': 'get',
+                      'update': 'update', 'save': 'save', 'delete': 'delete'},
+         'HelpingMaterial': {'repo': helping_repo, 'filter': 'filter_by',
+                             'get': 'get', 'update': 'update',
+                             'save': 'save', 'delete': 'delete'}}
 
 
 error = ErrorStatus()
@@ -105,13 +115,28 @@ class APIBase(MethodView):
         if len(query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
-        for item in query_result:
+        for result in query_result:
+            # This is for n_favs orderby case
+            if not isinstance(result, DomainObject):
+                result = result[0]
             try:
-                items.append(self._create_dict_from_model(item))
+                if (result.__class__ != self.__class__):
+                    (item, headline, rank) = result
+                else:
+                    item = result
+                    headline = None
+                    rank = None
+                datum = self._create_dict_from_model(item)
+                if headline:
+                    datum['headline'] = headline
+                if rank:
+                    datum['rank'] = rank
                 ensure_authorized_to('read', item)
+                items.append(datum)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
-                items.pop()
+                if len(items) > 0:
+                    items.pop()
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
@@ -124,6 +149,37 @@ class APIBase(MethodView):
 
     def _add_hateoas_links(self, item):
         obj = item.dictize()
+        related = request.args.get('related')
+        if related:
+            if item.__class__.__name__ == 'Task':
+                obj['task_runs'] = []
+                obj['result'] = None
+                task_runs = task_repo.filter_task_runs_by(task_id=item.id)
+                results = result_repo.filter_by(task_id=item.id, last_version=True)
+                for tr in task_runs:
+                    obj['task_runs'].append(tr.dictize())
+                for r in results:
+                    obj['result'] = r.dictize()
+
+            if item.__class__.__name__ == 'TaskRun':
+                tasks = task_repo.filter_tasks_by(id=item.task_id)
+                results = result_repo.filter_by(task_id=item.task_id, last_version=True)
+                obj['task'] = None
+                obj['result'] = None
+                for t in tasks:
+                    obj['task'] = t.dictize()
+                for r in results:
+                    obj['result'] = r.dictize()
+
+            if item.__class__.__name__ == 'Result':
+                tasks = task_repo.filter_tasks_by(id=item.task_id)
+                task_runs = task_repo.filter_task_runs_by(task_id=item.task_id)
+                obj['task_runs'] = []
+                for t in tasks:
+                    obj['task'] = t.dictize()
+                for tr in task_runs:
+                    obj['task_runs'].append(tr.dictize())
+
         links, link = self.hateoas.create_links(item)
         if links:
             obj['links'] = links
@@ -135,8 +191,8 @@ class APIBase(MethodView):
         """Returns a list with the results of the query"""
         repo_info = repos[self.__class__.__name__]
         if oid is None:
-            limit, offset = self._set_limit_and_offset()
-            results = self._filter_query(repo_info, limit, offset)
+            limit, offset, orderby = self._set_limit_and_offset()
+            results = self._filter_query(repo_info, limit, offset, orderby)
         else:
             repo = repo_info['repo']
             query_func = repo_info['get']
@@ -150,11 +206,11 @@ class APIBase(MethodView):
             del filters['owner_id']
         return filters
 
-    def _filter_query(self, repo_info, limit, offset):
+    def _filter_query(self, repo_info, limit, offset, orderby):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc']:
+                         'fulltextsearch', 'desc', 'orderby', 'related']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
@@ -164,16 +220,19 @@ class APIBase(MethodView):
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
         fulltextsearch = request.args.get('fulltextsearch')
-        desc = request.args.get('desc')
+        desc = request.args.get('desc') if request.args.get('desc') else False
+        desc = fuzzyboolean(desc)
         if last_id:
             results = getattr(repo, query_func)(limit=limit, last_id=last_id,
                                                 fulltextsearch=fulltextsearch,
                                                 desc=False,
+                                                orderby=orderby,
                                                 **filters)
         else:
             results = getattr(repo, query_func)(limit=limit, offset=offset,
                                                 fulltextsearch=fulltextsearch,
                                                 desc=desc,
+                                                orderby=orderby,
                                                 **filters)
         return results
 
@@ -186,7 +245,11 @@ class APIBase(MethodView):
             offset = int(request.args.get('offset'))
         except (ValueError, TypeError):
             offset = 0
-        return limit, offset
+        try:
+            orderby = request.args.get('orderby') if request.args.get('orderby') else 'id'
+        except (ValueError, TypeError):
+            orderby = 'updated'
+        return limit, offset, orderby
 
     @jsonpify
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
@@ -199,7 +262,9 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            data = json.loads(request.data)
+            data = self._file_upload(request)
+            if data is None:
+                data = json.loads(request.data)
             self._forbidden_attributes(data)
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
@@ -251,6 +316,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         ensure_authorized_to('delete', inst)
+        self._file_delete(request, inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -348,3 +414,13 @@ class APIBase(MethodView):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
         pass
+
+    def _file_upload(self, data):
+        """Method that must be overriden by the class to allow file uploads for
+        only a few classes."""
+        pass
+
+    def _file_delete(self, request, data):
+       """Method that must be overriden by the class to delete file uploads for
+       only a few classes."""
+       pass

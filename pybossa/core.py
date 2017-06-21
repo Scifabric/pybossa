@@ -29,7 +29,7 @@ from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
-from pybossa.util import pretty_date, handle_content_type
+from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
@@ -50,7 +50,7 @@ def create_app(run_as_server=True):
     setup_babel(app)
     setup_markdown(app)
     setup_db(app)
-    setup_repositories()
+    setup_repositories(app)
     setup_exporter(app)
     mail.init_app(app)
     sentinel.init_app(app)
@@ -97,6 +97,7 @@ def configure_app(app):
         print "Slave binds are misssing, adding Master as slave too."
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
+    app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
 
 
 def setup_json_serializer(app):
@@ -175,29 +176,36 @@ def setup_db(app):
             return response_or_exc
 
 
-def setup_repositories():
+def setup_repositories(app):
     """Setup repositories."""
     from pybossa.repositories import UserRepository
     from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import AnnouncementRepository
     from pybossa.repositories import BlogRepository
     from pybossa.repositories import TaskRepository
     from pybossa.repositories import AuditlogRepository
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
+    from pybossa.repositories import HelpingMaterialRepository
     global user_repo
     global project_repo
+    global announcement_repo
     global blog_repo
     global task_repo
     global auditlog_repo
     global webhook_repo
     global result_repo
+    global helping_repo
+    language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
+    announcement_repo = AnnouncementRepository(db)
     blog_repo = BlogRepository(db)
-    task_repo = TaskRepository(db)
+    task_repo = TaskRepository(db, language)
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
+    helping_repo = HelpingMaterialRepository(db)
 
 
 def setup_error_email(app):
@@ -259,7 +267,7 @@ def setup_babel(app):
         if (lang is None or lang == '' or
                 lang.lower() not in locales):
             lang = app.config.get('DEFAULT_LOCALE') or 'en'
-        if request.headers['Content-Type'] == 'application/json':
+        if request.headers.get('Content-Type') == 'application/json':
             lang = 'en'
         return lang.lower()
     return babel
@@ -271,6 +279,7 @@ def setup_blueprints(app):
     from pybossa.view.account import blueprint as account
     from pybossa.view.projects import blueprint as projects
     from pybossa.view.admin import blueprint as admin
+    from pybossa.view.announcements import blueprint as announcements
     from pybossa.view.leaderboard import blueprint as leaderboard
     from pybossa.view.stats import blueprint as stats
     from pybossa.view.help import blueprint as helper
@@ -283,6 +292,7 @@ def setup_blueprints(app):
                   {'handler': account, 'url_prefix': '/account'},
                   {'handler': projects, 'url_prefix': '/project'},
                   {'handler': admin, 'url_prefix': '/admin'},
+                  {'handler': announcements, 'url_prefix': '/announcements'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},
                   {'handler': helper, 'url_prefix': '/help'},
                   {'handler': stats, 'url_prefix': '/stats'},
@@ -503,7 +513,7 @@ def setup_hooks(app):
         # Handle forms
         request.body = request.form
         if (request.method == 'POST' and
-                request.headers['Content-Type'] == 'application/json' and
+                request.headers.get('Content-Type') == 'application/json' and
                 request.data):
             try:
                 request.body = get_json_multidict(request)
@@ -592,6 +602,10 @@ def setup_jinja2_filters(app):
     @app.template_filter('humanize_intword')
     def _humanize_intword(obj):
         return humanize.intword(obj)
+
+    @app.template_filter('disqus_sso')
+    def _disqus_sso(obj): # pragma: no cover
+        return get_disqus_sso(obj)
 
 
 def setup_csrf_protection(app):

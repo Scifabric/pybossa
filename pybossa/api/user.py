@@ -22,7 +22,7 @@ This package adds GET method for:
     * users
 
 """
-from api_base import APIBase
+from api_base import APIBase, error, jsonpify, ratelimits, ratelimit
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed
 from flask import request
@@ -50,10 +50,16 @@ class UserAPI(APIBase):
     allowed_attributes = ('name', 'locale', 'fullname', 'created')
 
     def _select_attributes(self, user_data):
-        privacy = self._is_user_private(user_data)
-        for attribute in user_data.keys():
-            self._remove_attribute_if_private(attribute, user_data, privacy)
-        return user_data
+        if current_user.is_authenticated() and current_user.admin:
+            tmp = User().to_public_json(user_data)
+            tmp['id'] = user_data['id']
+            tmp['email_addr'] = user_data['email_addr']
+            return tmp
+        else:
+            privacy = self._is_user_private(user_data)
+            for attribute in user_data.keys():
+                self._remove_attribute_if_private(attribute, user_data, privacy)
+            return user_data
 
     def _remove_attribute_if_private(self, attribute, user_data, privacy):
         if self._is_attribute_private(attribute, privacy):
@@ -81,11 +87,24 @@ class UserAPI(APIBase):
                 return True
         return False
 
+    @jsonpify
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
-        raise MethodNotAllowed(valid_methods=['GET'])
+        try:
+            raise MethodNotAllowed
+        except MethodNotAllowed as e:
+            return error.format_exception(
+                e,
+                target=self.__class__.__name__.lower(),
+                action='POST')
 
+    @jsonpify
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, oid=None):
-        raise MethodNotAllowed(valid_methods=['GET'])
-
-    def put(self, oid=None):
-        raise MethodNotAllowed(valid_methods=['GET'])
+        try:
+            raise MethodNotAllowed
+        except MethodNotAllowed as e:
+            return error.format_exception(
+                e,
+                target=self.__class__.__name__.lower(),
+                action='DEL')

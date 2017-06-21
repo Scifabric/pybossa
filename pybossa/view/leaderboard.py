@@ -17,7 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Leaderboard view for PYBOSSA."""
 from flask import Blueprint, current_app
-from flask import render_template
 from flask.ext.login import current_user
 from pybossa.cache import users as cached_users
 from pybossa.util import handle_content_type
@@ -26,15 +25,22 @@ blueprint = Blueprint('leaderboard', __name__)
 
 
 @blueprint.route('/')
-def index():
+@blueprint.route('/window/<int:window>')
+def index(window=0):
     """Get the last activity from users and projects."""
     if current_user.is_authenticated():
         user_id = current_user.id
     else:
         user_id = None
-    top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
-                                             user_id=user_id)
 
-    response = dict(template='/stats/index.html', title="Community Leaderboard",
+    if window >= 10:
+        window = 10
+
+    top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
+                                             user_id=user_id,
+                                             window=window)
+
+    response = dict(template='/stats/index.html',
+                    title="Community Leaderboard",
                     top_users=top_users)
     return handle_content_type(response)

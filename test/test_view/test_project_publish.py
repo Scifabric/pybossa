@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from mock import patch
 
-from default import db
+from default import db, with_context
 from factories import ProjectFactory, TaskFactory, UserFactory, TaskRunFactory
 from helper import web
 from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository, WebhookRepository, ResultRepository
@@ -32,6 +32,7 @@ result_repo = ResultRepository(db)
 
 class TestProjectPublicationView(web.Helper):
 
+    @with_context
     def setUp(self):
         super(TestProjectPublicationView, self).setUp()
         self.owner = UserFactory.create(email_addr='a@a.com')
@@ -40,6 +41,7 @@ class TestProjectPublicationView(web.Helper):
         self.project = ProjectFactory.create(owner=self.owner, published=False)
         self.signin(email='a@a.com', password='1234')
 
+    @with_context
     @patch('pybossa.view.projects.ensure_authorized_to')
     def test_it_checks_permissions_over_project(self, fake_auth):
         post_resp = self.app.get('/project/%s/publish' % self.project.short_name)
@@ -53,6 +55,7 @@ class TestProjectPublicationView(web.Helper):
         assert call_args[1][0][0] == 'publish', call_args[1]
         assert call_args[1][0][1].id == self.project.id, call_args[1]
 
+    @with_context
     @patch('pybossa.view.projects.render_template', wraps=render_template)
     def test_it_renders_template_when_get(self, fake_render):
         TaskFactory.create(project=self.project)
@@ -62,6 +65,7 @@ class TestProjectPublicationView(web.Helper):
         assert call_args[0][0][0] == 'projects/publish.html', call_args[0]
         assert call_args[0][1]['project'].id == self.project.id, call_args[0]
 
+    @with_context
     def test_it_changes_project_to_published_after_post(self):
         TaskFactory.create(project=self.project)
         resp = self.app.post('/project/%s/publish' % self.project.short_name,
@@ -71,6 +75,7 @@ class TestProjectPublicationView(web.Helper):
         assert resp.status_code == 200, resp.status_code
         assert project.published == True, project
 
+    @with_context
     @patch('pybossa.view.projects.webhook_repo.delete_entries_from_project')
     @patch('pybossa.view.projects.result_repo.delete_results_from_project')
     @patch('pybossa.view.projects.task_repo')
@@ -92,6 +97,7 @@ class TestProjectPublicationView(web.Helper):
         mock_webhook_repo.assert_called_with(self.project)
         mock_result_repo.assert_called_with(self.project)
 
+    @with_context
     @patch('pybossa.view.projects.auditlogger')
     def test_it_logs_the_event_in_auditlog(self, fake_logger):
         TaskFactory.create(project=self.project)

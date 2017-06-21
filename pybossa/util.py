@@ -22,13 +22,20 @@ from flask_wtf import Form
 import csv
 import codecs
 import cStringIO
-from flask import abort, request, make_response, current_app
+from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
 from flask.ext.login import current_user
+from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from math import ceil
 import json
+import base64
+import hashlib
+import hmac
+import simplejson
+import time
 
 
 def last_flashed_message():
@@ -51,10 +58,10 @@ def user_to_json(user):
     """Return a user in JSON format."""
     return user.dictize()
 
-
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
-    if request.headers['Content-Type'] == 'application/json':
+    from pybossa.model.project import Project
+    if request.headers.get('Content-Type') == 'application/json':
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
@@ -64,6 +71,10 @@ def handle_content_type(data):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
+            if (item == 'announcements'):
+                data[item] = [announcement.to_public_json() for announcement in data[item]]
+            if (item == 'blogposts'):
+                data[item] = [blog.to_public_json() for blog in data[item]]
             if (item == 'categories'):
                 tmp = []
                 for cat in data[item]:
@@ -71,8 +82,14 @@ def handle_content_type(data):
                         cat = cat.to_public_json()
                     tmp.append(cat)
                 data[item] = tmp
-            if (item == 'users'):
+            if (item == 'active_cat'):
+                if type(data[item]) != dict:
+                    cat = data[item].to_public_json()
+                data[item] = cat
+            if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
+            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str: 
+                data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'category'):
@@ -96,7 +113,7 @@ def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
         data['status'] = status
-    if request.headers['Content-Type'] == 'application/json':
+    if request.headers.get('Content-Type') == 'application/json':
         return handle_content_type(data)
     else:
         return redirect(url)
@@ -438,3 +455,94 @@ def publish_channel(sentinel, project_short_name, data, type, private=True):
         channel = "channel_%s_%s" % ("public", project_short_name)
     msg = dict(type=type, data=data)
     sentinel.master.publish(channel, json.dumps(msg))
+
+# See https://github.com/flask-restful/flask-restful/issues/332#issuecomment-63155660
+def fuzzyboolean(value):
+    if type(value) == bool:
+        return value
+
+    if not value:
+        raise ValueError("boolean type must be non-null")
+    value = value.lower()
+    if value in ('false', 'no', 'off', 'n', '0',):
+        return False
+    if value in ('true', 'yes', 'on', 'y', '1',):
+        return True
+    raise ValueError("Invalid literal for boolean(): {}".format(value))
+
+
+def get_avatar_url(upload_method, avatar, container):
+    """Return absolute URL for avatar."""
+    if upload_method.lower() == 'rackspace':
+        return url_for('rackspace',
+                       filename=avatar,
+                       container=container)
+    else:
+        filename = container + '/' + avatar
+        return url_for('uploads.uploaded_file', filename=filename)
+
+
+def get_disqus_sso(user): # pragma: no cover
+    # create a JSON packet of our data attributes
+    # return a script tag to insert the sso message."""
+    message, timestamp, sig, pub_key = get_disqus_sso_payload(user)
+    return """<script type="text/javascript">
+    var disqus_config = function() {
+        this.page.remote_auth_s3 = "%(message)s %(sig)s %(timestamp)s";
+        this.page.api_key = "%(pub_key)s";
+    }
+    </script>""" % dict(
+        message=message,
+        timestamp=timestamp,
+        sig=sig,
+        pub_key=pub_key,
+    )
+
+
+def get_disqus_sso_payload(user):
+    """Return remote_auth_s3 and api_key for user."""
+    DISQUS_PUBLIC_KEY = current_app.config.get('DISQUS_PUBLIC_KEY')
+    DISQUS_SECRET_KEY = current_app.config.get('DISQUS_SECRET_KEY')
+    if DISQUS_PUBLIC_KEY and DISQUS_SECRET_KEY:
+        if user:
+            data = simplejson.dumps({
+                'id': user.id,
+                'username': user.name,
+                'email': user.email_addr,
+            })
+        else:
+            data = simplejson.dumps({})
+        # encode the data to base64
+        message = base64.b64encode(data)
+        # generate a timestamp for signing the message
+        timestamp = int(time.time())
+        # generate our hmac signature
+        sig = hmac.HMAC(DISQUS_SECRET_KEY, '%s %s' % (message, timestamp),
+                        hashlib.sha1).hexdigest()
+
+        return message, timestamp, sig, DISQUS_PUBLIC_KEY
+    else:
+        return None, None, None, None
+
+
+def exists_materialized_view(db, view):
+    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
+               relname = :view);''')
+    results = db.slave_session.execute(sql, dict(view=view))
+    for result in results:
+        return result.exists
+    return False
+
+
+def refresh_materialized_view(db, view):
+    try:
+        sql = text('REFRESH MATERIALIZED VIEW CONCURRENTLY %s' % view)
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view refreshed"
+    except ProgrammingError:
+        sql = text('REFRESH MATERIALIZED VIEW %s' % view)
+        db.session.rollback()
+        db.session.execute(sql)
+        db.session.commit()
+        return "Materialized view refreshed"

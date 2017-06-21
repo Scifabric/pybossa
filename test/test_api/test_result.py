@@ -69,16 +69,59 @@ class TestResultAPI(TestAPI):
         assert result['task_id'] == 1, result
         assert result['created'] is not None, result
 
+        # Related
+        res = self.app.get('/api/result?related=True')
+        results = json.loads(res.data)
+        assert len(results) == 1, results
+        result = results[0]
+        assert result['info'] is None, result
+        assert len(result['task_run_ids']) == 10, result
+        assert result['task_run_ids'] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], result
+        assert result['project_id'] == 1, result
+        assert result['task_id'] == 1, result
+        assert result['created'] is not None, result
+        assert result['task']['id'] == result['task_id'], result
+        assert len(result['task_runs']) == 10, result
+        for tr in result['task_runs']:
+            assert tr['task_id'] == result['task_id'], tr
+            url = '/api/taskrun?id=%s&related=True' % tr['id']
+            taskrun = self.app.get(url)
+            taskrun = json.loads(taskrun.data)[0]
+            assert taskrun['result']['id'] == result['id'], taskrun['result']
+            assert taskrun['task']['id'] == result['task_id'], taskrun['task']
+        url = '/api/task?id=%s&related=True' % result['task_id']
+        task = self.app.get(url)
+        task = json.loads(task.data)[0]
+        assert task['result']['id'] == result['id'], task['result']
+        for tr in task['task_runs']:
+            assert tr['id'] in result['task_run_ids'], task['task']
+
         result = self.create_result(n_answers=10)
         result = result_repo.get(2)
         result.created = '2119-01-01T14:37:30.642119'
         result_repo.update(result)
 
-        url = '/api/result?desc=true'
+        url = '/api/result?orderby=created&desc=true'
         res = self.app.get(url)
         data = json.loads(res.data)
+        print data
         err_msg = "It should get the last item first."
         assert data[0]['created'] == '2119-01-01T14:37:30.642119', err_msg
+
+        url = '/api/result?orderby=id&desc=false'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be sorted by id."
+        assert data[1]['id'] == result.id, err_msg
+
+        url = '/api/result?orderby=wrongattribute'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should be 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
 
         url = '/api/result'
         res = self.app.get(url)
@@ -279,6 +322,7 @@ class TestResultAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
     def test_result_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -292,6 +336,7 @@ class TestResultAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_result_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         result = self.create_result(owner=user)

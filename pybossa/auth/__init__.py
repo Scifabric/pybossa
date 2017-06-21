@@ -19,7 +19,7 @@
 import inspect
 from flask import abort
 from flask.ext.login import current_user
-from pybossa.core import task_repo, project_repo, result_repo
+from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
 from pybossa.auth.errcodes import *
 
 import jwt
@@ -32,10 +32,12 @@ import taskrun
 import category
 import user
 import token
+import announcement
 import blogpost
 import auditlog
 import webhook
 import result
+import helpingmaterial
 
 assert project
 assert task
@@ -43,6 +45,7 @@ assert taskrun
 assert category
 assert user
 assert token
+assert announcement
 assert blogpost
 assert auditlog
 assert webhook
@@ -52,6 +55,7 @@ assert result
 _actions = ['create', 'read', 'update', 'delete']
 _auth_classes = {'project': project.ProjectAuth,
                  'auditlog': auditlog.AuditlogAuth,
+                 'announcement': announcement.AnnouncementAuth,
                  'blogpost': blogpost.BlogpostAuth,
                  'category': category.CategoryAuth,
                  'task': task.TaskAuth,
@@ -59,7 +63,8 @@ _auth_classes = {'project': project.ProjectAuth,
                  'token': token.TokenAuth,
                  'user': user.UserAuth,
                  'webhook': webhook.WebhookAuth,
-                 'result': result.ResultAuth}
+                 'result': result.ResultAuth,
+                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth}
 
 
 def is_authorized(user, action, resource, **kwargs):
@@ -89,7 +94,8 @@ def _authorizer_for(resource_name):
     if resource_name in ('project', 'taskrun'):
         kwargs.update({'task_repo': task_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
-                         'taskrun', 'webhook', 'result'):
+                         'taskrun', 'webhook', 'result',
+                         'helpingmaterial'):
         kwargs.update({'project_repo': project_repo})
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})

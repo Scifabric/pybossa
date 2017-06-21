@@ -19,6 +19,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import cast, Date
 
+from pybossa.repositories import Repository
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
@@ -26,7 +27,7 @@ from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 
 
-class ProjectRepository(object):
+class ProjectRepository(Repository):
 
     def __init__(self, db):
         self.db = db
@@ -48,20 +49,8 @@ class ProjectRepository(object):
                   fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
             filters['owner_id'] = filters.get('owner_id')
-        query = self.db.session.query(Project).filter_by(**filters)
-        if last_id:
-            query = query.filter(Project.id > last_id)
-            query = query.order_by(Project.id).limit(limit)
-        else:
-            if desc:
-                query = query.order_by(cast(Project.updated, Date).desc())\
-                        .limit(limit).offset(offset)
-            else:
-                query = query.order_by(Project.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(Project, limit, offset, yielded, last_id,
+                               fulltextsearch, desc, **filters)
 
     def save(self, project):
         self._validate_can_be('saved', project)
@@ -109,19 +98,12 @@ class ProjectRepository(object):
 
     def filter_categories_by(self, limit=None, offset=0, yielded=False,
                              last_id=None, fulltextsearch=None,
+                             orderby='id',
                              desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
-        query = self.db.session.query(Category).filter_by(**filters)
-        if last_id:
-            query = query.filter(Category.id > last_id)
-            query = query.order_by(Category.id).limit(limit)
-        else:
-            query = query.order_by(Category.id).limit(limit).offset(offset)
-        if yielded:
-            limit = limit or 1
-            return query.yield_per(limit)
-        return query.all()
+        return self._filter_by(Category, limit, offset, yielded, last_id,
+                               fulltextsearch, desc, orderby, **filters)
 
     def save_category(self, category):
         self._validate_can_be('saved as a Category', category, klass=Category)

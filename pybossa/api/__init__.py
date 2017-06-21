@@ -34,7 +34,8 @@ import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, get_user_id_or_ip
+from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
+from pybossa.util import get_disqus_sso_payload
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -44,16 +45,20 @@ from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
 from task import TaskAPI
 from task_run import TaskRunAPI
-from app import AppAPI
 from project import ProjectAPI
+from announcement import AnnouncementAPI
+from blogpost import BlogpostAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
+from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
+from werkzeug.exceptions import MethodNotAllowed
 
 blueprint = Blueprint('api', __name__)
 
@@ -86,37 +91,48 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-register_api(AppAPI, 'api_app', '/app', pk='oid', pk_type='int')
 register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
+register_api(AnnouncementAPI, 'api_announcement', '/announcement', pk='oid', pk_type='int')
+register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
+register_api(HelpingMaterialAPI, 'api_helpingmaterial',
+             '/helpingmaterial', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
+register_api(FavoritesAPI, 'api_favorites', '/favorites',
+             pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
-@blueprint.route('/app/<project_id>/newtask')
 @blueprint.route('/project/<project_id>/newtask')
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        task = _retrieve_new_task(project_id)
+        tasks = _retrieve_new_task(project_id)
 
-        if type(task) is Response:
-            return task
+        if type(tasks) is Response:
+            return tasks
 
         # If there is a task for the user, return it
-        if task is not None:
+        if tasks is not None:
             guard = ContributionsGuard(sentinel.master)
-            guard.stamp(task, get_user_id_or_ip())
-            response = make_response(json.dumps(task.dictize()))
+            for task in tasks:
+                guard.stamp(task, get_user_id_or_ip())
+            data = [task.dictize() for task in tasks]
+            if len(data) == 0:
+                response = make_response(json.dumps({}))
+            elif len(data) == 1:
+                response = make_response(json.dumps(data[0]))
+            else:
+                response = make_response(json.dumps(data))
             response.mimetype = "application/json"
             return response
         return Response(json.dumps({}), mimetype="application/json")
@@ -134,7 +150,7 @@ def _retrieve_new_task(project_id):
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
-        error = model.task.Task(info=info)
+        error = [model.task.Task(info=info)]
         return error
 
     if request.args.get('external_uid'):
@@ -143,10 +159,29 @@ def _retrieve_new_task(project_id):
         if resp != True:
             return resp
 
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    else:
+        limit = 1
+
+    if limit > 100:
+        limit = 100
+
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
         offset = 0
+
+    if request.args.get('orderby'):
+        orderby = request.args.get('orderby')
+    else:
+        orderby = 'id'
+
+    if request.args.get('desc'):
+        desc = fuzzyboolean(request.args.get('desc'))
+    else:
+        desc = False
+   
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
@@ -154,7 +189,10 @@ def _retrieve_new_task(project_id):
                           user_id,
                           user_ip,
                           external_uid,
-                          offset)
+                          offset,
+                          limit,
+                          orderby=orderby,
+                          desc=desc)
     return task
 
 
@@ -216,3 +254,25 @@ def auth_jwt_project(short_name):
             return abort(404)
     else:
         return abort(403)
+
+
+@jsonpify
+@blueprint.route('/disqus/sso')
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def get_disqus_sso_api():
+    """Return remote_auth_s3 and api_key for disqus SSO."""
+    try:
+        if current_user.is_authenticated():
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
+        else:
+            message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
+
+        if message and timestamp and sig and pub_key:
+            remote_auth_s3 = "%s %s %s" % (message, sig, timestamp)
+            tmp = dict(remote_auth_s3=remote_auth_s3, api_key=pub_key)
+            return Response(json.dumps(tmp), mimetype='application/json')
+        else:
+            raise MethodNotAllowed
+    except MethodNotAllowed as e:
+        e.message = "Disqus keys are missing"
+        return error.format_exception(e, target='DISQUS_SSO', action='GET')

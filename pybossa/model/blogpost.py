@@ -40,3 +40,14 @@ class Blogpost(db.Model, DomainObject):
     title = Column(Unicode(length=255), nullable=False)
     #: Body of the Blogpost
     body = Column(UnicodeText, nullable=False)
+
+    @classmethod
+    def public_attributes(self):
+        """Return a list of public attributes."""
+        return ['created', 'project_id', 'id', 'user_id',
+                'title', 'body']
+
+    @classmethod
+    def public_info_keys(self):
+        """Return a list of public info keys."""
+        return []

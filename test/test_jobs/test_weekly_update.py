@@ -60,7 +60,7 @@ class TestWeeklyStats(Test):
             assert job['name'] == send_weekly_stats_project
             assert job['args'] == [pr.id]
             assert job['kwargs'] == {}
-            assert job['timeout'] == (10 * 60)
+            assert job['timeout'] == self.flask_app.config.get('TIMEOUT')
             assert job['queue'] == 'low'
 
     @with_context
@@ -101,7 +101,7 @@ class TestWeeklyStats(Test):
             assert job['name'] == send_weekly_stats_project
             assert job['args'] == [pr.id]
             assert job['kwargs'] == {}
-            assert job['timeout'] == (10 * 60)
+            assert job['timeout'] == self.flask_app.config.get('TIMEOUT')
             assert job['queue'] == 'low'
 
     @with_context
@@ -137,7 +137,7 @@ class TestWeeklyStats(Test):
             assert job['name'] == send_weekly_stats_project
             assert job['args'] == [pr.id]
             assert job['kwargs'] == {}
-            assert job['timeout'] == (10 * 60)
+            assert job['timeout'] == self.flask_app.config.get('TIMEOUT')
             assert job['queue'] == 'low'
 
     @with_context

@@ -19,6 +19,7 @@ import json
 from default import with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
+from pybossa.core import project_repo
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
@@ -26,6 +27,8 @@ from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
 class TestApiCommon(TestAPI):
 
+    def setUp(self):
+        super(TestApiCommon, self).setUp()
 
     @with_context
     def test_limits_query(self):
@@ -89,20 +92,22 @@ class TestApiCommon(TestAPI):
     @with_context
     def test_get_query_with_api_key_and_all(self):
         """ Test API GET query with an API-KEY requesting all results"""
-        users = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=users[0], info={'total': 150})
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner, info={'total': 150, 'onesignal': 'something', 'onesignal_app_id': 1}, published=True)
         task = TaskFactory.create(project=project, info={'url': 'my url'})
-        taskrun = TaskRunFactory.create(task=task, user=users[0],
+        taskrun = TaskRunFactory.create(task=task, user=admin,
                                         info={'answer': 'annakarenina'})
+
+
         for endpoint in self.endpoints:
-            url = '/api/' + endpoint + '?api_key=' + users[1].api_key + '&all=1'
+            url = '/api/' + endpoint + '?api_key=' + user.api_key + '&all=1'
             res = self.app.get(url)
             data = json.loads(res.data)
 
             if endpoint == 'project':
                 assert len(data) == 1, data
-                project = data[0]
-                assert project['info']['total'] == 150, data
+                project_res = data[0]
+                assert 'total' not in project_res['info'].keys(), data
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'task':
@@ -119,9 +124,76 @@ class TestApiCommon(TestAPI):
 
             if endpoint == 'user':
                 assert len(data) == 3, data
-                user = data[0]
-                assert user['name'] == 'user1', data
+                user_res = data[0]
+                assert user_res['name'] == 'user1', data
                 assert res.mimetype == 'application/json', res
+
+        tmp = project_repo.get(project.id)
+
+        assert tmp.id == project.id, tmp
+        assert tmp.info['total'] == 150, tmp
+
+        for endpoint in self.endpoints:
+            url = '/api/' + endpoint + '?api_key=' + owner.api_key + '&all=1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            if endpoint == 'project':
+                assert len(data) == 1, data
+                project_res = data[0]
+                assert 'total' in project_res['info'].keys(), data
+                assert project_res['info']['total'] == 150, data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'task':
+                assert len(data) == 1, data
+                task = data[0]
+                assert task['info']['url'] == 'my url', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'taskrun':
+                assert len(data) == 1, data
+                taskrun = data[0]
+                assert taskrun['info']['answer'] == 'annakarenina', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'user':
+                assert len(data) == 3, data
+                user_res = data[0]
+                assert user_res['name'] == 'user1', data
+                assert res.mimetype == 'application/json', res
+
+        for endpoint in self.endpoints:
+            url = '/api/' + endpoint + '?api_key=' + admin.api_key + '&all=1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            if endpoint == 'project':
+                assert len(data) == 1, data
+                project_res = data[0]
+                assert 'total' in project_res['info'].keys(), data
+                assert project_res['info']['total'] == 150, data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'task':
+                assert len(data) == 1, data
+                task = data[0]
+                assert task['info']['url'] == 'my url', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'taskrun':
+                assert len(data) == 1, data
+                taskrun = data[0]
+                assert taskrun['info']['answer'] == 'annakarenina', data
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'user':
+                assert len(data) == 3, data
+                user_res = data[0]
+                assert user_res['name'] == 'user1', data
+                assert res.mimetype == 'application/json', res
+
+
 
     @with_context
     def test_get_query_with_api_key_context(self):
@@ -133,7 +205,6 @@ class TestApiCommon(TestAPI):
         taskrun_oc = TaskRunFactory.create(task=task_oc, user=users[0],
                                         info={'answer': 'annakarenina'})
         for p in projects:
-            print p.owner_id
             task_tmp = TaskFactory.create(project=p)
             TaskRunFactory.create(task=task_tmp)
 
@@ -221,11 +292,13 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
 
-
+    @with_context
     def test_jsonpify(self):
         """Test API jsonpify decorator works."""
-        res = self.app.get('/api/project/1?callback=mycallback')
+        project = ProjectFactory.create()
+        res = self.app.get('/api/project/%s?callback=mycallback' % project.id)
         err_msg = "mycallback should be included in the response"
+        print res.data
         assert "mycallback" in res.data, err_msg
         err_msg = "Status code should be 200"
         assert res.status_code == 200, err_msg

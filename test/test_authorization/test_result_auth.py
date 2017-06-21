@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, assert_not_raises, db
+from default import Test, db, with_context
 from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -49,6 +49,7 @@ class TestResultAuthorization(Test):
             return self.result_repo.get_by(project_id=1)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_result(self):
         """Test anonymous users can read results"""
@@ -57,6 +58,7 @@ class TestResultAuthorization(Test):
 
         assert ensure_authorized_to('read', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_auth_user_can_read_result(self):
         """Test auth users can read results"""
@@ -65,6 +67,7 @@ class TestResultAuthorization(Test):
 
         assert ensure_authorized_to('read', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_can_read_result(self):
         """Test admin users can read results"""
@@ -74,6 +77,7 @@ class TestResultAuthorization(Test):
         assert ensure_authorized_to('read', result)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_save_results(self):
         """Test anonymous users cannot save results of a specific project"""
@@ -82,6 +86,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_save_results(self):
         """Test authenticated users cannot save results of a specific project"""
@@ -91,6 +96,7 @@ class TestResultAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'create', result)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_save_results(self):
         """Test admin users cannot save results of a specific project"""
@@ -99,6 +105,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Forbidden, ensure_authorized_to, 'create', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_delete_results(self):
         """Test anonymous users cannot delete results of a specific project"""
@@ -107,6 +114,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_delete_results(self):
         """Test authenticated users cannot delete results of a specific project"""
@@ -116,6 +124,7 @@ class TestResultAuthorization(Test):
         assert_raises(Forbidden, ensure_authorized_to, 'delete', result)
 
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_delete_results(self):
         """Test admin users cannot delete results of a specific project"""
@@ -124,6 +133,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Forbidden, ensure_authorized_to, 'delete', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_update_results(self):
         """Test anonymous users cannot update results of a specific project"""
@@ -132,6 +142,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Unauthorized, ensure_authorized_to, 'update', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_auth_user_cannot_update_results(self):
         """Test auth users but not owner cannot update results of a specific project"""
@@ -140,6 +151,7 @@ class TestResultAuthorization(Test):
 
         assert_raises(Forbidden, ensure_authorized_to, 'update', result)
 
+    @with_context
     @patch('pybossa.auth.current_user', new=mock_owner)
     def test_auth_owner_can_update_results(self):
         """Test auth owner can update results of a specific project"""

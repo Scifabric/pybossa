@@ -25,16 +25,17 @@ import pybossa.cache.project_stats as stats
 
 
 class TestStats(Test):
-    def setUp(self):
-        super(TestStats, self).setUp()
+
+    def prepare_data(self):
         self.project = ProjectFactory.create()
         for task in TaskFactory.create_batch(4, project=self.project, n_answers=3):
             TaskRunFactory.create(task=task)
             AnonymousTaskRunFactory.create(task=task)
 
-
+    @with_context
     def test_stats_dates_no_completed_tasks_on_different_days(self):
         """Test STATS stats_dates with no completed tasks"""
+        self.prepare_data()
         today = unicode(datetime.date.today())
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
         assert len(dates.keys()) == 15, "There should be 15 days."
@@ -46,12 +47,16 @@ class TestStats(Test):
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 4, dates_auth[today]
 
+    @with_context
     def test_n_tasks_returns_total_number_tasks(self):
         """Test STATS n_tasks returns the total amount of tasks of the project"""
+        self.prepare_data()
         assert stats.n_tasks(self.project.id) == 4, stats.n_tasks(self.project.id)
 
+    @with_context
     def test_stats_dates_completed_tasks(self):
         """Test STATS stats_dates with tasks completed tasks"""
+        self.prepare_data()
         today = unicode(datetime.date.today())
         TaskRunFactory.create(task=self.project.tasks[1])
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
@@ -59,8 +64,10 @@ class TestStats(Test):
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 5, dates_auth[today]
 
+    @with_context
     def test_02_stats_hours(self):
         """Test STATS hours method works"""
+        self.prepare_data()
         hour = unicode(datetime.datetime.utcnow().strftime('%H'))
         hours, hours_anon, hours_auth, max_hours,\
             max_hours_anon, max_hours_auth = stats.stats_hours(self.project.id)
@@ -91,6 +98,7 @@ class TestStats(Test):
     @with_context
     def test_03_stats(self):
         """Test STATS stats method works"""
+        self.prepare_data()
         today = unicode(datetime.date.today())
         hour = int(datetime.datetime.utcnow().strftime('%H'))
         date_ms = time.mktime(time.strptime(today, "%Y-%m-%d")) * 1000
@@ -98,6 +106,7 @@ class TestStats(Test):
         auth = 0
         TaskRunFactory.create(task=self.project.tasks[0])
         TaskRunFactory.create(task=self.project.tasks[1])
+        stats.update_stats(self.project.id)
         dates_stats, hours_stats, user_stats = stats.get_stats(self.project.id)
         for item in dates_stats:
             if item['label'] == 'Anon + Auth':

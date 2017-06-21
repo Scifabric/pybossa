@@ -27,11 +27,16 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTas
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.project import Project
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 result_repo = ResultRepository(db)
 
 class TestProjectAPI(TestAPI):
+
+    def setUp(self):
+        super(TestProjectAPI, self).setUp()
+        db.session.query(Project).delete()
 
     def create_result(self, n_results=1, n_answers=1, owner=None,
                       filter_by=False):
@@ -56,17 +61,19 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        project = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150})
-        projects = ProjectFactory.create_batch(8, info={'total': 150})
-        project = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150})
-        projects.insert(0, project)
-        projects.append(project)
+        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
+
+        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        projects.insert(0, project1)
+        projects.append(project2)
         res = self.app.get('/api/project')
         data = json.loads(res.data)
         dataNoDesc = data
         assert len(data) == 10, data
         project = data[0]
-        assert project['info']['total'] == 150, data
+        assert project['info']['task_presenter'] == 'foo', data
+        assert 'total' not in project['info'].keys(), data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -85,21 +92,60 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 5, data
 
+        # Related
+        res = self.app.get("/api/project?limit=1&related=True")
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        keys = ['tasks', 'task_runs', 'results']
+        for key in keys:
+            assert key not in data[0].keys()
 
         # Keyset pagination
         url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
         res = self.app.get(url)
         data = json.loads(res.data)
-        assert len(data) == 5, data
-        assert data[0]['id'] == projects[5].id, data
+        assert len(data) == 5, len(data)
+        assert data[0]['id'] == projects[5].id, (data[0]['id'], projects[5].id)
 
         # Desc filter
-        url = "/api/project?desc=true"
+        url = "/api/project?orderby=updated&desc=true"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['updated'] == projects[len(projects)-1].updated, err_msg
 
+        # Orderby filter
+        url = "/api/project?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['id'] == projects[len(projects)-1].id, err_msg
+
+        # Orderby filter non attribute
+        url = "/api/project?orderby=wrongattribute&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should return 415."
+        assert data['status'] == 'failed', data
+        assert data['status_code'] == 415, data
+        assert 'has no attribute' in data['exception_msg'], data
+
+        # Desc filter
+        url = "/api/project?orderby=id"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        projects_by_id = sorted(projects, key=lambda x: x.id, reverse=False)
+        for i in range(len(projects_by_id)):
+            assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
+
+        url = "/api/project?orderby=id&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        projects_by_id = sorted(projects, key=lambda x: x.id, reverse=True)
+        for i in range(len(projects_by_id)):
+            assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
 
     @with_context
     def test_project_query_with_context(self):
@@ -356,9 +402,10 @@ class TestProjectAPI(TestAPI):
 
         # test update
         data = {'name': 'My New Title', 'links': 'hateoas'}
+        data = dict(name='My New Title', links='hateoas', info={})
         datajson = json.dumps(data)
         ## anonymous
-        res = self.app.put('/api/project/%s' % id_, data=data)
+        res = self.app.put('/api/project/%s' % id_, data=datajson)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
@@ -390,6 +437,19 @@ class TestProjectAPI(TestAPI):
 
         # without hateoas links
         del data['links']
+        newdata = json.dumps(data)
+        res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
+                           data=newdata)
+
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = project_repo.get(id_)
+        assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+        assert 'task_presenter' not in out.get('info').keys(), error
+
+        data['info']['task_presenter'] = 'htmlpresenter'
         newdata = json.dumps(data)
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
                            data=newdata)
@@ -455,7 +515,7 @@ class TestProjectAPI(TestAPI):
         assert err['exception_cls'] == 'DBIntegrityError', err
 
         # With not JSON data
-        datajson = data
+        datajson = {'foo': 'bar'}
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
@@ -642,6 +702,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
+        print data
 
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
@@ -819,6 +880,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.get(url)
         assert res.data == '{}', res.data
 
+    @with_context
     @patch('pybossa.repositories.project_repository.uploader')
     def test_project_delete_deletes_zip_files(self, uploader):
         """Test API project delete deletes also zip files of tasks and taskruns"""
@@ -833,6 +895,7 @@ class TestProjectAPI(TestAPI):
                     call('1_project1_task_run_csv.zip', 'user_1')]
         assert uploader.delete_file.call_args_list == expected
 
+    @with_context
     def test_project_post_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         CategoryFactory.create()
@@ -855,6 +918,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_project_put_with_reserved_returns_error(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -868,6 +932,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['exception_msg'] == "Reserved keys in payload", error
 
+    @with_context
     def test_project_post_with_published_attribute_is_forbidden(self):
         user = UserFactory.create()
         data = dict(
@@ -886,6 +951,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
 
+    @with_context
     def test_project_update_with_published_attribute_is_forbidden(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
@@ -899,6 +965,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
 
+    @with_context
     def test_project_delete_with_results(self):
         """Test API delete project with results cannot be deleted."""
         result = self.create_result()
@@ -909,6 +976,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
 
+    @with_context
     def test_project_delete_with_results_var(self):
         """Test API delete project with results cannot be deleted by admin."""
         root = UserFactory.create(admin=True)

@@ -15,12 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+
 import json
 from default import flask_app, with_context
-from mock import patch, Mock
+from mock import patch, Mock, mock_open
 from test_api import TestAPI
-
-
+import rsa
 
 class TestVmcpAPI(TestAPI):
 
@@ -69,17 +69,19 @@ class TestVmcpAPI(TestAPI):
     @patch.dict(flask_app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vmcp_02(self):
         """Test VMCP signing works."""
-        rsa = Mock()
-        rsa.sign.return_value = 'signed'
+        rsa_keys = rsa.newkeys(2048, 65537)
+        rsa_pk = rsa_keys[1]
+        rsa_pub = rsa_keys[0]
         with patch('os.path.exists', return_value=True):
-            with patch('M2Crypto.RSA.load_key', return_value=rsa):
-                res = self.app.get('api/vmcp?cvm_salt=testsalt',
-                                   follow_redirects=True)
-                out = json.loads(res.data)
-                assert res.status_code == 200, out
-                assert out.get('signature') is not None, out
+            with patch('rsa.PrivateKey.load_pkcs1', return_value=rsa_pk):
+                with patch('pybossa.vmcp.open', mock_open(read_data=''), create=True) as m:
+                    res = self.app.get('api/vmcp?cvm_salt=testsalt',
+                                       follow_redirects=True)
+                    out = json.loads(res.data)
+                    assert res.status_code == 200, out
+                    assert out.get('signature') is not None, out
 
-                # Now with a post
-                res = self.app.post('api/vmcp?cvm_salt=testsalt',
-                                   follow_redirects=True)
-                assert res.status_code == 405, res.status_code
+                    # Now with a post
+                    res = self.app.post('api/vmcp?cvm_salt=testsalt',
+                                       follow_redirects=True)
+                    assert res.status_code == 405, res.status_code

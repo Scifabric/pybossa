@@ -18,15 +18,17 @@
 import pybossa.util as util
 from mock import MagicMock
 from mock import patch
-from default import with_context
+from default import with_context, db, Test
 from datetime import datetime, timedelta
 from flask_wtf import Form
+from factories import UserFactory
 import calendar
 import time
 import csv
 import tempfile
 import os
 import json
+import hashlib
 
 
 def myjsonify(data):
@@ -37,9 +39,9 @@ def myrender(template, **data):
     return template, data
 
 
-class TestPybossaUtil(object):
+class TestPybossaUtil(Test):
 
-    # TODO: test these 2 decorators in a more unitary way. The following tests have
+    # TODO: test this decorator in a more unitary way. The following tests have
     # been moved to test_api_common.py
     # def test_jsonpify(self):
     #     """Test jsonpify decorator works."""
@@ -49,18 +51,79 @@ class TestPybossaUtil(object):
     #     err_msg = "Status code should be 200"
     #     assert res.status_code == 200, err_msg
 
-    # def test_cors(self):
-    #     """Test CORS decorator works."""
-    #     res = self.app.get('/api/app/1')
-    #     err_msg = "CORS should be enabled"
-    #     print res.headers
-    #     assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
-    #     methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
-    #     for m in methods:
-    #         assert m in res.headers['Access-Control-Allow-Methods'], err_msg
-    #     assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
-    #     headers = 'CONTENT-TYPE, AUTHORIZATION'
-    #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_auth_user(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO payload auth works."""
+        user = UserFactory.create()
+
+        DISQUS_PUBLIC_KEY = 'public'
+        DISQUS_SECRET_KEY = 'secret'
+        patch_dict = {'DISQUS_PUBLIC_KEY': DISQUS_PUBLIC_KEY,
+                      'DISQUS_SECRET_KEY': DISQUS_SECRET_KEY}
+        data = json.dumps({'id': user.id,
+                           'username': user.name,
+                           'email': user.email_addr})
+
+        mock_b64encode.return_value = data
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            message, timestamp, sig, pub_key = util.get_disqus_sso_payload(user)
+            mock_b64encode.assert_called_with(data)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+                                         hashlib.sha1)
+            assert timestamp
+            assert sig
+            assert pub_key == DISQUS_PUBLIC_KEY
+
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_auth_user_no_keys(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO without keys works."""
+        user = UserFactory.create()
+        message, timestamp, sig, pub_key = util.get_disqus_sso_payload(user)
+        assert message is None
+        assert timestamp is None
+        assert sig is None
+        assert pub_key is None
+
+
+    @with_context
+    @patch('pybossa.util.hmac.HMAC')
+    @patch('pybossa.util.base64.b64encode')
+    def test_disqus_sso_payload_anon_user(self, mock_b64encode, mock_hmac):
+        """Test Disqus SSO payload anon works."""
+
+        DISQUS_PUBLIC_KEY = 'public'
+        DISQUS_SECRET_KEY = 'secret'
+        patch_dict = {'DISQUS_PUBLIC_KEY': DISQUS_PUBLIC_KEY,
+                      'DISQUS_SECRET_KEY': DISQUS_SECRET_KEY}
+
+        data = json.dumps({})
+
+        mock_b64encode.return_value = data
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            message, timestamp, sig, pub_key = util.get_disqus_sso_payload(None)
+            mock_b64encode.assert_called_with(data)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+                                         hashlib.sha1)
+            assert timestamp
+            assert sig
+            assert pub_key == DISQUS_PUBLIC_KEY
+
+
+    @with_context
+    def test_disqus_sso_payload_anon_user_no_keys(self):
+        """Test Disqus SSO without keys anon works."""
+        message, timestamp, sig, pub_key = util.get_disqus_sso_payload(None)
+        assert message is None
+        assert timestamp is None
+        assert sig is None
+        assert pub_key is None
+
 
     @patch('pybossa.util.get_flashed_messages')
     def test_last_flashed_messages(self, mockflash):
@@ -87,7 +150,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json(self, mocklast, mockjsonify,
                                       mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.handle_content_type(dict(template='example.html'))
         err_msg = "template key should exist"
@@ -102,7 +168,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json_error(self, mocklast, mockjsonify,
                                             mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res, code = util.handle_content_type(
                                              dict(
@@ -128,7 +197,10 @@ class TestPybossaUtil(object):
     def test_handle_content_type_json_form(self, mocklast, mockcsrf,
                                            mockjsonify, mockrender,
                                            mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockcsrf.return_value = "yourcsrf"
         form = MagicMock(spec=Form, data=dict(foo=1), errors=None)
@@ -153,7 +225,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.last_flashed_message')
     def test_handle_content_type_json_pagination(self, mocklast, mockjsonify,
                                                  mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
         res = util.handle_content_type(dict(template='example.html',
@@ -172,7 +247,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_handle_content_type_html(self, mockjsonify,
                                       mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
         pagination = util.Pagination(page=1, per_page=5, total_count=10)
@@ -193,7 +271,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_handle_content_type_html_error(self, mockjsonify,
                                             mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         mockrender.side_effect = myrender
         template, code = util.handle_content_type(dict(template='example.html',
@@ -224,7 +305,10 @@ class TestPybossaUtil(object):
         mockjsonify,
         mockrender,
      mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri')
         err_msg = "next URI is wrong in redirction"
@@ -240,7 +324,10 @@ class TestPybossaUtil(object):
     def test_redirect_content_type_json_message(
             self, mocklast, mockjsonify, mockrender, mockrequest):
         mocklast.return_value = None
-        mockrequest.headers.__getitem__.return_value = 'application/json'
+        fake_d = {'Content-Type': 'application/json'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('http://next.uri', status='hallo123')
         err_msg = "next URI is wrong in redirction"
@@ -256,7 +343,10 @@ class TestPybossaUtil(object):
     @patch('pybossa.util.jsonify')
     def test_redirect_content_type_json_html(
             self, mockjsonify, mockrender, mockrequest):
-        mockrequest.headers.__getitem__.return_value = 'text/html'
+        fake_d = {'Content-Type': 'text/html'}
+        mockrequest.headers.__getitem__.side_effect = fake_d.__getitem__
+        mockrequest.headers.get.side_effect = fake_d.get
+        mockrequest.headers.__iter__.side_effect = fake_d.__iter__
         mockjsonify.side_effect = myjsonify
         res = util.redirect_content_type('/')
         err_msg = "redirect 302 should be the response"
@@ -430,12 +520,6 @@ class TestIsReservedName(object):
             reserved = util.is_reserved_name('project', 'new')
             assert reserved is True, reserved
             reserved = util.is_reserved_name('project', 'category')
-            assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'page')
-            assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'draft')
-            assert reserved is True, reserved
-            reserved = util.is_reserved_name('project', 'published')
             assert reserved is True, reserved
 
     def test_returns_false_for_valid_name_for_app_blueprint(self):
@@ -718,6 +802,15 @@ class TestRankProjects(object):
         assert ranked[2]['name'] == 'third', ranked[2]['name']
         assert ranked[3]['name'] == 'fourth', ranked[3]['name']
         assert ranked[4]['name'] == 'last', ranked[4]['name']
+
+    @patch('pybossa.util.url_for')
+    def test_get_avatar_url(self, mock_url_for):
+        """Test get_avatar_url works."""
+        util.get_avatar_url('rackspace', '1.png', '1')
+        mock_url_for.assert_called_with('rackspace', container='1', filename='1.png')
+
+        util.get_avatar_url('local', '1.png', '1')
+        mock_url_for.assert_called_with('uploads.uploaded_file', filename='1/1.png')
 
 
 class TestJSONEncoder(object):
