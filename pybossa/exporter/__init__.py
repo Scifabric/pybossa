@@ -45,10 +45,11 @@ class Exporter(object):
             if flat:
                 tmp = []
                 for row in data:
-                    if row.dictize()['info']:
-                        tmp.append(flatten(row.dictize()['info']))
+                    inf = row.dictize()['info']
+                    if inf and type(inf) == dict:
+                        tmp.append(flatten(inf))
                     else:
-                        tmp.append({})
+                        tmp.append({'info': inf})
             else:
                 tmp = []
                 for row in data:
