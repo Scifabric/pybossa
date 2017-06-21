@@ -35,4 +35,9 @@ def leaderboard():
                    ''')
         db.session.execute(sql)
         db.session.commit()
+        sql = text('''
+                   CREATE INDEX  users_rank_idx on users_rank(id);
+                   ''')
+        db.session.execute(sql)
+        db.session.commit()
         return "Materialized view created"
