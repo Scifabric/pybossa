@@ -4330,8 +4330,8 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
-        err_msg = "filename count in ZIP is not 1"
-        assert len(zip.namelist()) == 1, err_msg
+        err_msg = "filename count in ZIP is not 2"
+        assert len(zip.namelist()) == 2, err_msg
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'project1_result.csv', zip.namelist()[0]
