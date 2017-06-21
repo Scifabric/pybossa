@@ -64,9 +64,12 @@ def delete_materialized_views():
         db.session.commit()
 
 def delete_indexes():
-    sql = text('''DROP INDEX users_rank_idx''')
-    db.session.execute(sql)
-    db.session.commit()
+    sql = text('''select * from pg_indexes WHERE tablename = 'users_rank' ''')
+    results = db.session.execute(sql)
+    for row in results:
+        sql = 'drop index %s;' % row.indexname
+        db.session.execute(sql)
+        db.session.commit()
 
 
 def rebuild_db():
