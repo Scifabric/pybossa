@@ -14,6 +14,8 @@ jobs:
           POSTGRES_PASSWORD: "rtester"
       - image: redis
       - image: s7anley/redis-sentinel-docker
+        environment:
+            MASTER_NAME: mymaster
     steps:
       - checkout
       - run:
