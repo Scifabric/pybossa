@@ -98,7 +98,8 @@ class Importer(object):
         for task_data in tasks:
             task = Task(project_id=project.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            found = task_repo.get_task_by(project_id=project.id, info=task.info)
+            found = task_repo.find_duplicate(project_id=project.id,
+                                             info=task.info)
             if found is None:
                 if valid_or_no_s3_bucket(task.info):
                     task_repo.save(task)
