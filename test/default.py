@@ -62,6 +62,9 @@ def delete_materialized_views():
         sql = 'drop materialized view if exists %s cascade' % row.relname
         db.session.execute(sql)
         db.session.commit()
+    sql = 'vacuum full'
+    db.session.execute(sql)
+    db.session.commit()
 
 def delete_indexes():
     sql = text('''select * from pg_indexes WHERE tablename = 'users_rank' ''')
