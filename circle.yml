@@ -36,10 +36,6 @@ jobs:
           command: |
             nosetests -x test/
       - run:
-          name: "Send Codecov"
-          command: |
-              bash <(curl -s https://codecov.io/bash)
-      - run:
           name: "Install coveralls"
           command: |
               pip install coveralls
