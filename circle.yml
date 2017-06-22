@@ -12,7 +12,7 @@ jobs:
           POSTGRES_USER: rtester
           POSTGRES_DB: pybossa_test
           POSTGRES_PASSWORD: "rtester"
-      - image: redis-sentinel
+      - image: miko2u/redis-sentinel
     steps:
       - checkout
       - run:
