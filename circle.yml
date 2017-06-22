@@ -39,6 +39,14 @@ jobs:
           name: "Send Codecov"
           command: |
               bash <(curl -s https://codecov.io/bash)
+      - run:
+          name: "Install coveralls"
+          command: |
+              pip install coveralls
+      - run:
+          name: "Send to coveralls"
+          command: |
+              coveralls
       - store_artifacts:
           path: test-reports/
           destination: tr1
