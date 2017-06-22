@@ -19,9 +19,10 @@ jobs:
             MASTER_NAME: mymaster
     steps:
       - checkout
-        post:
-        - git submodule sync --recursive
-        - git submodule update --recursive --init
+      - run:
+          name: "Get PYBOSSA and PYBOSSA.JS installed"
+          command: |
+              git submodule sync --recursive && git submodule update --recursive --init
       - run:
           name: Install Python deps 
           command: |
