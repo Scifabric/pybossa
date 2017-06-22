@@ -16,7 +16,9 @@ before_install:
 - git submodule update --init --recursive
   #- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
 - redis-server --version
-- redis-sentinel contrib/redis/sentinel.conf --sentinel
+- redis-server contrib/redis/sentinel.conf --sentinel
+- redis-cli set foo 1
+- redis-cli get foo
 - cd pybossa && ln -s themes/default/translations && cd ..
 install:
 - pip install -U pip
