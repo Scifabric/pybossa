@@ -3709,7 +3709,7 @@ class TestWeb(web.Helper):
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': google.passwd_hash, 'user': google.name}
         csrf = self.get_csrf('/account/forgot-password')
@@ -3727,7 +3727,7 @@ class TestWeb(web.Helper):
         assert 'your Google account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': facebook.passwd_hash, 'user': facebook.name}
         csrf = self.get_csrf('/account/forgot-password')
@@ -3743,7 +3743,7 @@ class TestWeb(web.Helper):
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         # Test with not valid form
         csrf = self.get_csrf('/account/forgot-password')
