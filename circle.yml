@@ -36,15 +36,9 @@ jobs:
           command: |
             nosetests -x test/
       - run:
-          name: "Install coveralls"
-          environment: 
-            COVERALLS_REPO_TOKEN: JxPYwzb6BU6wdvSgLqlQPrAy6kersfcwW
+          name: "Send Codecov"
           command: |
-              pip install coveralls
-      - run:
-          name: "Send Coverage"
-          command: |
-              coveralls
+              bash <(curl -s https://codecov.io/bash)
       - store_artifacts:
           path: test-reports/
           destination: tr1
