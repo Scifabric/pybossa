@@ -46,6 +46,14 @@ def with_context(f):
             return f(*args, **kwargs)
     return decorated_function
 
+def delete_indexes():
+    sql = text('''select * from pg_indexes WHERE tablename = 'users_rank' ''')
+    results = db.session.execute(sql)
+    for row in results:
+        sql = 'drop index %s;' % row.indexname
+        db.session.execute(sql)
+        db.session.commit()
+
 def delete_materialized_views():
     """Delete materialized views."""
     sql = text('''SELECT relname
@@ -66,6 +74,7 @@ def delete_materialized_views():
 
 def rebuild_db():
     """Rebuild the DB."""
+    delete_indexes()
     delete_materialized_views()
     db.drop_all()
     db.create_all()
