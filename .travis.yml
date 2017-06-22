@@ -1,6 +1,7 @@
 sudo: false
 dist: trusty
 language: python
+group: edge
 python:
 - '2.7'
 # git submodules workaround
