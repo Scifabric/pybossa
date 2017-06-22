@@ -105,6 +105,7 @@ class Test(object):
 
     def tearDown(self):
         with self.flask_app.app_context():
+            delete_indexes()
             delete_materialized_views()
             db.session.remove()
             self.redis_flushall()
