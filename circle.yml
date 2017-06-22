@@ -32,8 +32,17 @@ jobs:
           command: |
             cd pybossa && ln -s themes/default/translations && cd ..
       - run:
+          name: "Test PYBOSSA"
           command: |
             nosetests -x test/
+      - run:
+          name: "Install coveralls"
+          command: |
+              pip install coveralls
+      - run:
+          name: "Send Coverage"
+          command: |
+              coveralls
       - store_artifacts:
           path: test-reports/
           destination: tr1
