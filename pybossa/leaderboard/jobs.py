@@ -36,7 +36,8 @@ def leaderboard():
         db.session.execute(sql)
         db.session.commit()
         sql = text('''
-                   CREATE INDEX  users_rank_idx on users_rank(id);
+                   CREATE INDEX users_rank_idx on users_rank(id);
+                   CREATE INDEX users_rank_rkidx on users_rank(rank);
                    ''')
         db.session.execute(sql)
         db.session.commit()
