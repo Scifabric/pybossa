@@ -15,14 +15,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Python deps in a venv
+          name: Install Python deps 
           command: |
-            python -m venv venv
-            . venv/bin/activate
             pip install -r requirements.txt
       - run:
           command: |
-            . venv/bin/activate
             nosetests -x test/
       - store_artifacts:
           path: test-reports/
