@@ -37,6 +37,8 @@ jobs:
             nosetests -x test/
       - run:
           name: "Install coveralls"
+          environment: 
+            COVERALLS_REPO_TOKEN: JxPYwzb6BU6wdvSgLqlQPrAy6kersfcwW
           command: |
               pip install coveralls
       - run:
