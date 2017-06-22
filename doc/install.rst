@@ -11,15 +11,15 @@ You need this guide if you want to
 
 Officially supported requirements:
 
-  * Ubuntu 14.04 LTS
+  * Ubuntu 16.04 LTS
   * Python >= 2.7.6, <3.0
-  * PostgreSQL >= 9.3
+  * PostgreSQL >= 9.5
   * Redis >= 2.6
   * pip >= 6.1
 
 It may also run with older software but we do not officially support it:
 
-  * Ubuntu 12.04 LTS
+  * Ubuntu 14.04 LTS
   * Python >= 2.7.2, <3.0
   * PostgreSQL >= 9.3
   * Redis >= 2.6
@@ -104,7 +104,7 @@ Installing the required libraries for PYBOSSA is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
+    sudo apt-get install python-dev build-essential libjpeg-dev libssl-dev libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
 
 Then, you are ready to download the code and install the required libraries for
 running PYBOSSA.
