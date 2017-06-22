@@ -3691,7 +3691,7 @@ class TestWeb(web.Helper):
         assert 'To recover your password' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         csrf = self.get_csrf('/account/forgot-password')
