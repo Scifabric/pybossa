@@ -28,6 +28,10 @@ jobs:
           command: |
             pip install -r requirements.txt
       - run:
+          name: "Add PYBOSSA i18n"
+          command: |
+            cd pybossa && ln -s themes/default/translations && cd ..
+      - run:
           command: |
             nosetests -x test/
       - store_artifacts:
