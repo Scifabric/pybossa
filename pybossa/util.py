@@ -348,7 +348,8 @@ def get_user_id_or_ip():
     user_id = current_user.id if current_user.is_authenticated() else None
     user_ip = request.remote_addr or "127.0.0.1" \
         if current_user.is_anonymous() else None
-    return dict(user_id=user_id, user_ip=user_ip)
+    external_uid = request.args.get('external_uid')
+    return dict(user_id=user_id, user_ip=user_ip, external_uid=external_uid)
 
 
 def with_cache_disabled(f):

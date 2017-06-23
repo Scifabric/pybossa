@@ -642,10 +642,11 @@ class TestTaskrunAPI(TestAPI):
             info='my task result',
             external_uid=external_uid)
         datajson = json.dumps(data)
-        fail = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        url = '/api/taskrun?external_uid={}'.format(external_uid)
+        fail = self.app.post(url, data=datajson, headers=headers)
         err = json.loads(fail.data)
 
-        assert fail.status_code == 403, fail.status_code
+        assert fail.status_code == 403, (fail.status_code, fail.data)
         assert err['status'] == 'failed', err
         assert err['status_code'] == 403, err
         assert err['exception_msg'] == 'You must request a task first!', err
@@ -664,7 +665,8 @@ class TestTaskrunAPI(TestAPI):
         res = self.app.get(url, headers=headers)
         newtask = json.loads(res.data)
         assert newtask['id'] == task.id
-        success = self.app.post('/api/taskrun', data=datajson, headers=headers)
+        url = '/api/taskrun?external_uid={}'.format(external_uid)
+        success = self.app.post(url, data=datajson, headers=headers)
         assert success.status_code == 200, success.data
 
 
