@@ -42,7 +42,7 @@ class ContributionsGuard(object):
 
     def _create_key(self, task, user):
         user_id = user['user_id'] or user['user_ip']
-        if user['external_uid']:
+        if user.get('external_uid'):
             user_id = user['external_uid']
         return self.KEY_PREFIX % (user_id, task.id)
 
