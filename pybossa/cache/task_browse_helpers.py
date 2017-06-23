@@ -15,7 +15,7 @@ def get_task_filters(args):
 
     if args.get('task_id'):
         params['task_id'] = args['task_id']
-        filters += ' AND id = :task_id'
+        filters += ' AND task.id = :task_id'
     if args.get('hide_completed') and args.get('hide_completed') is True:
         filters += " AND task.state='ongoing'"
     if args.get('pcomplete_from') is not None:
