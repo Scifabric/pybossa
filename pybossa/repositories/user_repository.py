@@ -18,9 +18,10 @@
 
 from sqlalchemy import or_, func
 from sqlalchemy.exc import IntegrityError
-
 from pybossa.repositories import Repository
+from sqlalchemy import text
 from pybossa.model.user import User
+from pybossa.util import AttrDict
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
@@ -87,3 +88,15 @@ class UserRepository(Repository):
 
     def search_by_email(self, email_addr):
         return self.db.session.query(User).filter(func.lower(User.email_addr) == email_addr).first()
+
+    def get_info_columns(self):
+        return [u'languages', u'locations', u'start_time', u'end_time', u'timezone', u'user_type', u'review']
+
+    def smart_search(self, where, query_params):
+        sql = text('''
+                    SELECT id, name, fullname, info, enabled
+                    FROM public.user
+                    WHERE {where};
+                    '''.format(where=where))
+        results = self.db.session.execute(sql, query_params)
+        return [dict(row) for row in results]

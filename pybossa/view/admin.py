@@ -41,6 +41,7 @@ from pybossa.util import generate_manage_user_email
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import site_stats
+from pybossa.cache import task_browse_helpers as helper
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
@@ -48,6 +49,7 @@ import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
 import json
 from StringIO import StringIO
+
 
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
@@ -708,11 +710,33 @@ def userimport():
 @admin_required
 def manageusers(user_id=None):
     """Enable/disable users of PyBossa."""
+    found = []
+    args = request.args
     form = SearchForm(request.form)
     users = [user for user in user_repo.filter_by(enabled=True)
              if user.id != current_user.id]
     disabledusers = [user for user in user_repo.filter_by(enabled=False)
              if user.id != current_user.id]
+    columns = user_repo.get_info_columns()
+
+    if args.get('filter_by_field'):
+        search_criteria = []
+        params = {}
+        smart_search_input = helper._get_field_filters(args['filter_by_field'])
+        for field in smart_search_input:
+            if field[0].lower() in columns:
+                if field[0].lower() == 'languages' or field[0].lower() == 'locations':
+                    search_criteria.append("user_pref -> '{}' @> :data".format(field[0]))
+                    params['data'] = '["{}"]'.format(field[2].title())
+                elif field[0].lower() == 'review':
+                    search_criteria.append("info::json -> 'metadata' ->> '{}' iLike :review".format(field[0]))
+                    params['review'] = '%{}%'.format(field[2].title())
+                else:
+                    search_criteria.append("info::json -> 'metadata' ->> '{}' iLike :info".format(field[0]))
+                    params['info'] = field[2].title()
+        if search_criteria:
+            criteria = ' AND '.join(search_criteria)
+            found = user_repo.smart_search(criteria, params)
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
@@ -722,12 +746,8 @@ def manageusers(user_id=None):
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
-        return render_template('/admin/manageusers.html', found=found, users=users,
-                               disabledusers=disabledusers, title=gettext("Enable/Disable Users"),
-                               form=form)
-
-    return render_template('/admin/manageusers.html', found=[], users=users,
-                           disabledusers=disabledusers, title=gettext("Enable/Disable Users"), form=form)
+    return render_template('/admin/manageusers.html', found=found, users=users,
+                           disabledusers=disabledusers, title=gettext("Enable/Disable Users"), form=form, filter_columns=columns, filter_data=[])
 
 
 @blueprint.route('/users/enable_user/<int:user_id>')
