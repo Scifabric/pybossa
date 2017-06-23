@@ -22,18 +22,37 @@ from pybossa.core import db
 from factories import UserFactory, TaskRunFactory
 from default import Test, with_context
 from mock import patch, MagicMock
+from sqlalchemy.exc import ProgrammingError
 
 
 class TestDashBoardActiveAnon(Test):
 
     @with_context
     @patch('pybossa.leaderboard.jobs.db')
-    def test_materialized_view_refreshed(self, db_mock):
+    def test_materialized_view_refreshed_concurrently(self, db_mock):
         """Test JOB leaderboard materialized view is refreshed."""
         result = MagicMock()
         result.exists = True
         results = [result]
         db_mock.slave_session.execute.return_value = results
+        res = leaderboard()
+        assert db_mock.session.execute.called
+        assert res == 'Materialized view refreshed concurrently'
+
+    @with_context
+    @patch('pybossa.leaderboard.jobs.exists_materialized_view')
+    @patch('pybossa.leaderboard.jobs.db')
+    def test_materialized_view_refreshed(self, db_mock, exists_mock):
+        """Test JOB leaderboard materialized view is refreshed."""
+        result = MagicMock()
+        result.exists = True
+        results = [result]
+        exists_mock.return_value = True
+        db_mock.slave_session.execute.side_effect = results
+        db_mock.session.execute.side_effect = [ProgrammingError('foo',
+                                                                'bar',
+                                                                'bar'),
+                                               True]
         res = leaderboard()
         assert db_mock.session.execute.called
         assert res == 'Materialized view refreshed'

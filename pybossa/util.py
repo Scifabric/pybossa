@@ -539,7 +539,7 @@ def refresh_materialized_view(db, view):
         sql = text('REFRESH MATERIALIZED VIEW CONCURRENTLY %s' % view)
         db.session.execute(sql)
         db.session.commit()
-        return "Materialized view refreshed"
+        return "Materialized view refreshed concurrently"
     except ProgrammingError:
         sql = text('REFRESH MATERIALIZED VIEW %s' % view)
         db.session.rollback()

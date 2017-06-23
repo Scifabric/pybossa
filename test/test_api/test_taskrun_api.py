@@ -524,13 +524,14 @@ class TestTaskrunAPI(TestAPI):
         headers = {'Authorization': project.secret_key}
         token = self.app.get(url, headers=headers)
         headers['Authorization'] = 'Bearer %s' % token.data
+        external_uid = 'as2d-4cab-3daf-234a-2344x'
 
         task = TaskFactory.create(project=project)
         data = dict(
             project_id=project.id,
             task_id=task.id,
             info='my task result',
-            external_uid='1xa')
+            external_uid=external_uid)
 
         # With wrong project_id
         data['project_id'] = 100000000000000000
@@ -566,7 +567,7 @@ class TestTaskrunAPI(TestAPI):
             task_id=task.id,
             user_id=project.owner.id,
             info='my task result',
-            external_uid='1xa')
+            external_uid=external_uid)
         datajson = json.dumps(data)
         # But without authentication
         tmp = self.app.post(url, data=datajson)
@@ -618,11 +619,12 @@ class TestTaskrunAPI(TestAPI):
         token = self.app.get(url, headers=headers)
         headers['Authorization'] = 'Bearer %s' % token.data
         task = TaskFactory.create(project=project)
+        external_uid = 'as2d-4cab-3daf-234a-2344x'
         data = dict(
             project_id=project.id,
             task_id=task.id,
             info='my task result',
-            external_uid='1xa')
+            external_uid=external_uid)
         datajson = json.dumps(data)
         fail = self.app.post('/api/taskrun', data=datajson, headers=headers)
         err = json.loads(fail.data)
@@ -635,13 +637,15 @@ class TestTaskrunAPI(TestAPI):
         assert err['target'] == 'taskrun', err
 
         # Succeeds after requesting a task
-        res = self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id)
+        res = self.app.get('/api/project/%s/newtask?external_uid=%s' %
+                           (project.id, external_uid))
         assert res.status_code == 401
         assert json.loads(res.data) == INVALID_HEADER_MISSING
 
 
         # Succeeds after requesting a task
-        self.app.get('/api/project/%s/newtask?external_uid=1xa' % project.id,
+        self.app.get('/api/project/%s/newtask?external_uid=%s' % (project.id,
+                                                                  external_uid),
                      headers=headers)
         success = self.app.post('/api/taskrun', data=datajson, headers=headers)
         assert success.status_code == 200, success.data

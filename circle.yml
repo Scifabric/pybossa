@@ -1,0 +1,50 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/circulate
+    docker:
+      - image: python:2.7.12
+        environment:
+          FLASK_CONFIG: testing
+          TEST_DATABASE_URL: postgresql://rtester:rtester@localhost/pybossa_test?sslmode=disable
+      - image: postgres:9.5.0
+        environment:
+          POSTGRES_USER: rtester
+          POSTGRES_DB: pybossa_test
+          POSTGRES_PASSWORD: "rtester"
+      - image: redis
+      - image: s7anley/redis-sentinel-docker
+        environment:
+            MASTER: localhost:6379
+            MASTER_NAME: mymaster
+    steps:
+      - checkout
+      - run:
+          name: "Get PYBOSSA and PYBOSSA.JS installed"
+          command: |
+              git submodule sync --recursive && git submodule update --recursive --init
+      - run:
+          name: Install Python deps 
+          command: |
+            pip install -r requirements.txt
+      - run:
+          name: "Add PYBOSSA i18n"
+          command: |
+            cd pybossa && ln -s themes/default/translations && cd ..
+      - run:
+          name: "Test PYBOSSA"
+          command: |
+            nosetests -x test/
+      - run:
+          name: "Install coveralls"
+          command: |
+              pip install coveralls
+      - run:
+          name: "Send to coveralls"
+          command: |
+              coveralls
+      - store_artifacts:
+          path: test-reports/
+          destination: tr1
+      - store_test_results:
+          path: test-reports/
