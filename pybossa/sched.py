@@ -223,6 +223,8 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     if offset == 1:
         return None
 
+    user_count = get_active_user_count(project_id, sentinel.slave)
+
     user_pref_list = cached_users.get_user_preferences(user_id)
     if user_pref_list is None:
         sql = '''
@@ -239,7 +241,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
                AND (task.user_pref IS NULL OR task.user_pref = '{0}')
                AND task.state !='completed'
                group by task.id ORDER BY priority_0 DESC, id ASC
-               LIMIT 15; '''.format('{}')
+               LIMIT :limit; '''.format('{}')
     else:
         sql = '''
                SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
@@ -255,24 +257,21 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
                AND (task.user_pref @> {0})
                AND task.state !='completed'
                group by task.id ORDER BY priority_0 DESC, id ASC
-               LIMIT 15; '''.format(user_pref_list)
+               LIMIT :limit; '''.format(user_pref_list)
     sqltext = text(sql)
     try:
-        rows = session.execute(sqltext, dict(project_id=project_id, user_id=user_id))
+        rows = session.execute(sqltext, dict(project_id=project_id, user_id=user_id, limit=user_count + 5))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None
-    skipped = 0
 
     for task_id, taskcount, n_answers, timeout in rows:
         timeout = timeout or TIMEOUT
         remaining = n_answers - taskcount
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
-            if skipped == offset:
-                rows.close()
-                return session.query(Task).get(task_id)
-            else:
-                skipped += 1
+            rows.close()
+            register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
+            return session.query(Task).get(task_id)
     return None
 
 
