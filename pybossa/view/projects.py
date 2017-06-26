@@ -1418,10 +1418,8 @@ def show_blogposts(short_name):
                     overall_progress=ps.overall_progress,
                     n_tasks=ps.n_tasks,
                     n_task_runs=ps.n_task_runs,
-                    n_completed_tasks=cached_projects.n_completed_tasks(
-                        project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(
-                        project.get('id')),
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers),
                     pro_features=pro)
     return handle_content_type(response)
 
