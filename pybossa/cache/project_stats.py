@@ -605,7 +605,10 @@ def update_stats(project_id, geo=False, period='2 week'):
 
 
 @memoize(timeout=FIVE_MINUTES)
-def get_stats(project_id, geo=False, period='2 week'):
+def get_stats(project_id, geo=False, period='2 week', full=False):
     """Get project's stats."""
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
-    return ps.info['dates_stats'], ps.info['hours_stats'], ps.info['users_stats']
+    if full:
+        return ps
+    else:
+        return ps.info['dates_stats'], ps.info['hours_stats'], ps.info['users_stats']
