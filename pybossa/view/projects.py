@@ -1409,7 +1409,9 @@ def show_blogposts(short_name):
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user)
 
     response = dict(template='projects/blog.html',
                     project=project_sanitized,
@@ -1418,10 +1420,8 @@ def show_blogposts(short_name):
                     overall_progress=ps.overall_progress,
                     n_tasks=ps.n_tasks,
                     n_task_runs=ps.n_task_runs,
-                    n_completed_tasks=cached_projects.n_completed_tasks(
-                        project.get('id')),
-                    n_volunteers=cached_projects.n_volunteers(
-                        project.get('id')),
+                    n_completed_tasks=ps.n_completed_tasks,
+                    n_volunteers=ps.n_volunteers,
                     pro_features=pro)
     return handle_content_type(response)
 
