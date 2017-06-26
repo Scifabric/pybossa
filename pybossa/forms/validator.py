@@ -143,7 +143,9 @@ def _get_message(require_uppercase=True, require_lowercase=True,
     if require_special:
         message_parts.append('at least one special !@$%%^&*#')
 
-    return 'The password must contain {} character.'.format(', '.join(message_parts))
+    if message_parts:
+        return 'The password must contain {} character.'.format(', '.join(message_parts))
+    return None
 
 
 class CheckPasswordStrength(object):
@@ -153,12 +155,12 @@ class CheckPasswordStrength(object):
                  require_numeric=True, require_special=True):
 
         self.default_message = _get_message(require_uppercase, require_lowercase, require_numeric, require_special)
-        self.min_length=min_length
-        self.max_length=max_length
-        self.require_uppercase=require_uppercase
-        self.require_lowercase=require_lowercase
-        self.require_numeric=require_numeric
-        self.require_special=require_special
+        self.min_length = min_length
+        self.max_length = max_length
+        self.require_uppercase = require_uppercase
+        self.require_lowercase = require_lowercase
+        self.require_numeric = require_numeric
+        self.require_special = require_special
 
         if not message:
             self.message = self.default_message

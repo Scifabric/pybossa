@@ -43,6 +43,7 @@ from validator import TimeFieldsValidator
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
+PROJECT_PWD_MIN_LEN = 5
 
 ### Forms for projects view
 
@@ -63,7 +64,7 @@ class ProjectForm(Form):
     description = TextAreaField(lazy_gettext('Description'),
                                 [validators.Length(max=255)])
     password = TextField(lazy_gettext('Password'), [validators.Required(), pb_validator.CheckPasswordStrength(
-                                                                                min_length=5, require_special=False)])
+                                                                                min_length=PROJECT_PWD_MIN_LEN, require_special=False)])
 
 
 class ProjectUpdateForm(ProjectForm):
@@ -78,7 +79,7 @@ class ProjectUpdateForm(ProjectForm):
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
     password = TextField(lazy_gettext('Password'), [validators.Optional(), pb_validator.CheckPasswordStrength(
-                                                                                min_length=5, require_special=False)])
+                                                                                min_length=PROJECT_PWD_MIN_LEN, require_special=False)])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
 
