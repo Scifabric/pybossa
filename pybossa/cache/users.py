@@ -92,16 +92,7 @@ def public_get_user_summary(name):
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
     """Return rank and score for a user."""
-    # See: https://gist.github.com/tokumine/1583695
-    sql = text('''
-               WITH global_rank AS (
-                    WITH scores AS (
-                        SELECT user_id, COUNT(*) AS score FROM task_run
-                        WHERE user_id IS NOT NULL GROUP BY user_id)
-                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                    FROM scores)
-               SELECT * from global_rank WHERE user_id=:user_id;
-               ''')
+    sql = text('''SELECT * from users_rank WHERE id=:user_id''')
     results = session.execute(sql, dict(user_id=user_id))
     rank_and_score = dict(rank=None, score=None)
     for row in results:
