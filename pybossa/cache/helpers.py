@@ -59,7 +59,8 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     return n_tasks
 
 
-def check_contributing_state(project, user_id=None, user_ip=None, ps=None):
+def check_contributing_state(project, user_id=None, user_ip=None,
+                             external_uid=None, ps=None):
     """Return the state of a given project for a given user.
 
     Depending on whether the project is completed or not and the user can

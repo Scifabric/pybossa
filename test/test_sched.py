@@ -866,7 +866,8 @@ class TestSched(sched.Helper):
                       external_uid='2xb')
             tr = json.dumps(tr)
 
-            res = self.app.post('/api/taskrun', data=tr, headers=headers)
+            res = self.app.post('/api/taskrun?external_uid=2xb',
+                                data=tr, headers=headers)
         # Get two tasks again
         res = self.app.get(url, headers=headers)
         task3 = json.loads(res.data)
@@ -924,7 +925,8 @@ class TestSched(sched.Helper):
                       external_uid='2xb')
             tr = json.dumps(tr)
 
-            res = self.app.post('/api/taskrun', data=tr, headers=headers)
+            res = self.app.post('/api/taskrun?external_uid=2xb',
+                                data=tr, headers=headers)
         # Get two tasks again
         res = self.app.get(url, headers=headers)
         tasks3 = json.loads(res.data)

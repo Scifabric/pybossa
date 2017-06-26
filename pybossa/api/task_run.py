@@ -52,6 +52,7 @@ class TaskRunAPI(APIBase):
         self._add_user_info(taskrun)
         self._add_created_timestamp(taskrun, task, guard)
 
+
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
@@ -83,3 +84,4 @@ class TaskRunAPI(APIBase):
 
     def _add_created_timestamp(self, taskrun, task, guard):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
+        guard._remove_task_stamped(task, get_user_id_or_ip())

@@ -568,7 +568,7 @@ PYBOSSA. Then, once the user has completed the task you will be able to submit i
 this::
 
     HEADERS Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
-    POST http://{pybossa-site-url}/api/taskrun
+    POST http://{pybossa-site-url}/api/taskrun?external_uid=1xa
 
 
 .. note::
