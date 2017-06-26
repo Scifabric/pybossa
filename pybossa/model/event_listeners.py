@@ -145,9 +145,10 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
         update_feed(tmp)
 
 
-def is_task_completed(conn, task_id):
+def is_task_completed(conn, task_id, project_id):
     sql_query = ('select count(id) from task_run \
-                 where task_run.task_id=%s') % task_id
+                 where task_run.task_id=%s and \
+                 task_run.project_id=%s') % (task_id, project_id)
     n_answers = conn.scalar(sql_query)
     sql_query = ('select n_answers from task \
                  where task.id=%s') % task_id
@@ -230,7 +231,7 @@ def on_taskrun_submit(mapper, conn, target):
     project_public['action_updated'] = 'TaskCompleted'
 
     add_user_contributed_to_feed(conn, target.user_id, project_public)
-    if is_task_completed(conn, target.task_id):
+    if is_task_completed(conn, target.task_id, task.project_id):
         update_task_state(conn, target.task_id)
         update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
