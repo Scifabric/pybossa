@@ -59,7 +59,8 @@ class TestHelpingMaterialAPI(TestAPI):
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get(url + '?info=foo::' + helpingmaterials[0].info['foo'] + '&project_id=' + str(project.id))
+        res = self.app.get(url + '?info=container::' +
+                           helpingmaterials[0].info['container'] + '&project_id=' + str(project.id))
         data = json.loads(res.data)
         # One result
         assert len(data) == 9, data
