@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-import io
 import json
 from default import db, with_context
 from nose.tools import assert_equal
@@ -650,49 +649,3 @@ class TestTaskAPI(TestAPI):
                                            project.owner.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
-
-    @with_context
-    def test_post_file(self):
-        """Test API file upload creation."""
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        # As anon
-        url = '/api/task'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 405, data
-        assert data['status_code'] == 405, data
-
-        # As a user
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/task?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 405, data
-        assert data['status_code'] == 405, data
-
-        # As owner
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/task?api_key=%s' % project.owner.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 405, data
-        assert data['status_code'] == 405, data

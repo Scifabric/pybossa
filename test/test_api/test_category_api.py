@@ -20,7 +20,7 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 
-from factories import UserFactory, CategoryFactory
+from factories import UserFactory, CategoryFactory, ProjectFactory
 
 from pybossa.repositories import ProjectRepository
 project_repo = ProjectRepository(db)
@@ -128,7 +128,7 @@ class TestCategoryAPI(TestAPI):
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 401, (err_msg, res.data)
         assert err['action'] == 'POST', err_msg
         assert err['exception_cls'] == 'Unauthorized', err_msg
 

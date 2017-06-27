@@ -422,35 +422,32 @@ class APIBase(MethodView):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
-        if cls_name in self.allowed_classes_upload:
-            content_type = 'multipart/form-data'
-            if content_type in request.headers.get('Content-Type'):
-                tmp = dict()
-                for key in request.form.keys():
-                    tmp[key] = request.form[key]
+        content_type = 'multipart/form-data'
+        if (content_type in request.headers.get('Content-Type') and
+                cls_name in self.allowed_classes_upload):
+            tmp = dict()
+            for key in request.form.keys():
+                tmp[key] = request.form[key]
 
-                ensure_authorized_to('create', self.__class__,
-                                     project_id=tmp['project_id'])
-                upload_method = current_app.config.get('UPLOAD_METHOD')
-                if request.files.get('file') is None:
-                    raise AttributeError
-                _file = request.files['file']
-                container = "user_%s" % current_user.id
-                uploader.upload_file(_file,
-                                     container=container)
-                file_url = get_avatar_url(upload_method,
-                                          _file.filename, container)
-                tmp['media_url'] = file_url
-                if tmp.get('info') is None:
-                    tmp['info'] = dict()
-                tmp['info']['container'] = container
-                tmp['info']['file_name'] = _file.filename
-                return tmp
-            else:
-                return None
+            ensure_authorized_to('create', self.__class__,
+                                 project_id=tmp['project_id'])
+            upload_method = current_app.config.get('UPLOAD_METHOD')
+            if request.files.get('file') is None:
+                raise AttributeError
+            _file = request.files['file']
+            container = "user_%s" % current_user.id
+            uploader.upload_file(_file,
+                                 container=container)
+            file_url = get_avatar_url(upload_method,
+                                      _file.filename, container)
+            tmp['media_url'] = file_url
+            if tmp.get('info') is None:
+                tmp['info'] = dict()
+            tmp['info']['container'] = container
+            tmp['info']['file_name'] = _file.filename
+            return tmp
         else:
-            raise MethodNotAllowed
-
+            return None
 
     def _file_delete(self, request, obj):
         """Delete file object."""
@@ -461,5 +458,3 @@ class APIBase(MethodView):
                 ensure_authorized_to('delete', obj)
                 uploader.delete_file(obj.info['file_name'],
                                      obj.info['container'])
-        else:
-            raise MethodNotAllowed
