@@ -31,6 +31,7 @@ from flask import request, abort, Response, current_app
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
+from werkzeug.exceptions import MethodNotAllowed
 from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
 from pybossa.core import ratelimits, uploader
 from pybossa.auth import ensure_authorized_to
@@ -448,7 +449,7 @@ class APIBase(MethodView):
             else:
                 return None
         else:
-            return None
+            raise MethodNotAllowed
 
 
     def _file_delete(self, request, obj):
@@ -460,3 +461,5 @@ class APIBase(MethodView):
                 ensure_authorized_to('delete', obj)
                 uploader.delete_file(obj.info['file_name'],
                                      obj.info['container'])
+        else:
+            raise MethodNotAllowed
