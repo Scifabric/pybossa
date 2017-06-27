@@ -421,7 +421,7 @@ class APIBase(MethodView):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
-        if cls_name in self.allowed_classes_upload: 
+        if cls_name in self.allowed_classes_upload:
             content_type = 'multipart/form-data'
             if content_type in request.headers.get('Content-Type'):
                 tmp = dict()
