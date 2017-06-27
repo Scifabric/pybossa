@@ -1214,7 +1214,37 @@ You can use Markdown or plain text for the content of the posts. And you will
 also be able to edit them or delete after creation if you want.
 
 To write a post simply go to the project **Settings tab and there you will
-find an option to write, read or delete your blog posts.
+find an option to write, read or delete your blog posts**.
+
+
+You can use the endpoint /api/blogpost to add also blogposts, update them and
+delete them. The api endpoint allows you as well to upload a picture to your
+blogpost.
+
+This endpoint allows you to add JSON and media files (images, videos or sounds) that you can
+use with your blogpost.
+
+As with any *api* PYBOSSA endpoint it follows the same rules. However, you can use it
+for uploading images via the endpoint using the multipart/form-data Content-Type.
+
+For example, imagine that you want to add a photo as a cover and then the body of the blogpost.
+In this case, you can do the following (using the popular Python requests library, but you can use any other programming language):
+
+
+.. code-block:: python
+
+    import requests
+    url = 'https://server/api/blogpost?api_key=YOURKEY'
+    # Upload a picture
+    files = {'file': open('test.jpg', 'rb')}
+    data = {'project_id': YOURPROJECT_ID, title='title', body='body'}
+    r = requests.post(url, data=data, files=files)
+    # Get the created blogpost
+    bp = r.json()
+    # Update the body with the meta-data of the picture
+    url = 'https://server/api/blogpost/%s?api_key=YOURKEY' % bp['id']
+    body = 'hello ![img](%s)' % bp['media_url']
+    r = requests.put(url, json={'body': body})
 
 
 .. _export-results:
