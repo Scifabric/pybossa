@@ -104,6 +104,7 @@ class TestUsersCache(Test):
             i += 1
             taskruns = TaskRunFactory.create_batch(i, user=user, task=tasks[i - 1])
 
+        update_leaderboard()
         first_in_rank = cached_users.rank_and_score(users[3].id)
         last_in_rank = cached_users.rank_and_score(users[0].id)
         print first_in_rank

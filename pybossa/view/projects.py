@@ -114,9 +114,8 @@ def project_by_shortname(short_name):
     project = cached_projects.get_project(short_name)
     if project:
         # Get owner
+        ps = stats.get_stats(project.id, full=True)
         owner = user_repo.get(project.owner_id)
-        ps = db.session.query(ProjectStats)\
-               .filter_by(project_id=project.id).first()
         return (project, owner, ps)
     else:
         cached_projects.delete_project(short_name)
