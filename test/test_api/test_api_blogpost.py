@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+import io
 from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
@@ -23,6 +24,7 @@ from test_api import TestAPI
 from factories import UserFactory, BlogpostFactory, ProjectFactory
 
 from pybossa.repositories import BlogRepository
+from mock import patch
 blog_repo = BlogRepository(db)
 
 class TestBlogpostAPI(TestAPI):
@@ -67,6 +69,7 @@ class TestBlogpostAPI(TestAPI):
         # Correct result
         assert data[0]['title'] == blogpost.title, data
         assert data[0]['body'] == blogpost.body, data
+        assert data[0]['media_url'] == blogpost.media_url, data
 
         # Limits
         res = self.app.get(url + "?limit=1")
@@ -80,8 +83,6 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 1, len(data)
         assert data[0]['id'] == blogpost.id
-
-
 
         # Errors
         res = self.app.get(url + "?something")
@@ -251,8 +252,10 @@ class TestBlogpostAPI(TestAPI):
         assert 'foo' in data['exception_msg'], data
 
     @with_context
-    def test_delete_blogpost(self):
+    @patch('pybossa.api.api_base.uploader.delete_file')
+    def test_delete_blogpost(self, mock_delete):
         """Test API Blogpost delete post (DEL)."""
+        mock_delete.return_value = True
         admin = UserFactory.create()
         owner = UserFactory.create()
         user = UserFactory.create()
@@ -275,8 +278,114 @@ class TestBlogpostAPI(TestAPI):
         url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
         res = self.app.delete(url)
         assert res.status_code == 204, res.status_code
+        assert mock_delete.called_with(blogpost.info['file_name'],
+                                       blogpost.info['container'])
 
         # As admin
         url = '/api/blogpost/%s?api_key=%s' % (blogpost2.id, admin.api_key)
         res = self.app.delete(url)
         assert res.status_code == 204, res.status_code
+
+    @with_context
+    def test_blogpost_post_file(self):
+        """Test API Blogpost file upload creation."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
+
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        # As anon
+        url = '/api/blogpost'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % user.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
+
+        # As owner
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img,
+                       title='title',
+                       body='body')
+
+        url = '/api/blogpost?api_key=%s' % project.owner.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        container = "user_%s" % owner.id
+        assert data['info']['container'] == container, data
+        assert data['info']['file_name'] == 'test_file.jpg', data
+        assert 'test_file.jpg' in data['media_url'], data
+
+        # As owner wrong 404 project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = -1
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using wrong project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+
+        # As owner using wrong attribute
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       wrong=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using reserved key 
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        payload['id'] = 3
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert data['exception_msg'] == 'Reserved keys in payload', data

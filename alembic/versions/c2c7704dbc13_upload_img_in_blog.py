@@ -12,13 +12,16 @@ down_revision = 'd1add5e3e65e'
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSON
 
 field = 'media_url'
 
 
 def upgrade():
     op.add_column('blogpost', sa.Column(field, sa.String))
+    op.add_column('blogpost', sa.Column('info', JSON))
 
 
 def downgrade():
     op.drop_column('blogpost', field)
+    op.drop_column('blogpost', 'info')

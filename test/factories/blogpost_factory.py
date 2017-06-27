@@ -30,11 +30,14 @@ class BlogpostFactory(BaseFactory):
         blog_repo.save(blogpost)
         return blogpost
 
+    owner = factory.SelfAttribute('project.owner')
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'
     body = u'Blogpost body text'
+    media_url = 'https://server.com/img.jpg'
+    info = {'file_name': 'img.jpg',
+            'container': 'user'}
     project = factory.SubFactory('factories.ProjectFactory')
     project_id = factory.LazyAttribute(lambda blogpost: blogpost.project.id)
-    owner = factory.SelfAttribute('project.owner')
     user_id = factory.LazyAttribute(
         lambda blogpost: blogpost.owner.id if blogpost.owner else None)
