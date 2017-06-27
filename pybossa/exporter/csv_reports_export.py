@@ -63,7 +63,7 @@ class ProjectReportCsvExporter(CsvExporter):
 
             writer.writerow(empty_row)
             user_section = ['User Statistics']
-            user_header = ['Id', 'Name', 'Fullname', 'Email', 'Admin', 'Subadmin', 'Languages',
+            user_header = ['Id', 'Name', 'Fullname', 'Email', 'Admin', 'Subadmin', 'Enabled', 'Languages',
                            'Locations', 'Start Time', 'End Time', 'Timezone', 'Type of User',
                            'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed',
                            'First Task Submission', 'Last Task Submission', 'Average Time Per Task']

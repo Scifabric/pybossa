@@ -28,11 +28,12 @@ import pybossa.dashboard.jobs as dashboard
 import pybossa.leaderboard.jobs as leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
+from datetime import datetime
 
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
-TASK_DELETE_TIMEOUT =  (60 * MINUTE)
+TASK_DELETE_TIMEOUT = (60 * MINUTE)
 EXPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
 
@@ -140,6 +141,9 @@ def get_default_jobs():  # pragma: no cover
                timeout=timeout, queue='super')
     yield dict(name=news, args=[], kwargs={},
                timeout=timeout, queue='low')
+    yield dict(name=disable_users_job, args=[],kwargs={},
+               timeout=timeout, queue='low')
+
 
 def get_maintenance_jobs():
     """Return mantainance jobs."""
@@ -485,6 +489,27 @@ def warn_old_project_owners():
             project.published = False
             clean(project.id)
             project_repo.update(project)
+    return True
+
+
+def disable_users_job():
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db, user_repo
+    from pybossa.util import generate_manage_user_email
+    sql = text('''Select id
+                  FROM public.user
+                  WHERE current_timestamp - to_timestamp(last_login, 'YYYY-MM-DD"T"HH24:MI:SS.US') > interval '3 month'
+                  AND enabled = true AND admin = false;
+               ''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        user = User.query.get(row.id)
+        user.enabled = False
+        user_repo.update(user)
+        msg = generate_manage_user_email(user, "disable")
+        if msg:
+            send_mail(msg)
     return True
 
 

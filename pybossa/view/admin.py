@@ -169,13 +169,12 @@ def users(user_id=None):
 def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'admin', 'subadmin', 'languages',
+                             'created', 'admin', 'subadmin', 'enabled', 'languages',
                              'locations', 'start_time', 'end_time',
                              'timezone', 'type_of_user', 'additional_comments',
                              'total_projects_contributed', 'completed_tasks',
                              'percentage_tasks_completed', 'first_submission_date',
-                             'last_submission_date', 'avg_time_per_task'
-                             )
+                             'last_submission_date', 'avg_time_per_task')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'

@@ -354,7 +354,7 @@ def get_user_preferences(user_id=None):
 def get_users_for_report():
     """Return information for all users to generate report."""
     sql = text("""
-                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin,
+                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled,
                 subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
                 u.info->'metadata'->'start_time' AS start_time, u.info->'metadata'->'end_time' AS end_time,
                 u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
@@ -370,7 +370,7 @@ def get_users_for_report():
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
-                    admin=row.admin, subadmin=row.subadmin, languages=row.languages,
+                    admin=row.admin, subadmin=row.subadmin, enabled=row.enabled, languages=row.languages,
                     locations=row.locations, start_time=row.start_time,
                     end_time=row.end_time, timezone=row.timezone,
                     additional_comments=row.additional_comments,

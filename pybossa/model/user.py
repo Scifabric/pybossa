@@ -66,6 +66,7 @@ class User(db.Model, DomainObject, UserMixin):
     subadmin = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
     user_pref = Column(JSONB)
+    last_login = Column(Text, default=make_timestamp)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')

@@ -59,6 +59,7 @@ from pybossa.contributions_guard import ContributionsGuard
 import os
 import base64
 import time
+import datetime
 from pybossa.cache.users import get_user_preferences
 
 
@@ -225,6 +226,8 @@ def signin():
 
 def _sign_in_user(user):
     login_user(user, remember=False)
+    user.last_login = model.make_timestamp()
+    user_repo.update(user)
     if newsletter.ask_user_to_subscribe(user):
         return redirect_content_type(url_for('account.newsletter_subscribe',
                                              next=request.args.get('next')))
