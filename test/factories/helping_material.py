@@ -34,5 +34,6 @@ class HelpingMaterialFactory(BaseFactory):
         return helpingmaterial
 
     id = factory.Sequence(lambda n: n)
-    info = {'foo': 'bar'}
+    info = {'file_name': 'test.jpg',
+            'container': 'user_3'}
     media_url = '/uploads/user_3/test.jpg'

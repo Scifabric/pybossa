@@ -59,7 +59,8 @@ class TestHelpingMaterialAPI(TestAPI):
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get(url + '?info=foo::' + helpingmaterials[0].info['foo'] + '&project_id=' + str(project.id))
+        res = self.app.get(url + '?info=container::' +
+                           helpingmaterials[0].info['container'] + '&project_id=' + str(project.id))
         data = json.loads(res.data)
         # One result
         assert len(data) == 9, data
@@ -238,7 +239,7 @@ class TestHelpingMaterialAPI(TestAPI):
         assert 'foo' in data['exception_msg'], data
 
     @with_context
-    @patch('pybossa.api.helpingmaterial.uploader.delete_file')
+    @patch('pybossa.api.api_base.uploader.delete_file')
     def test_delete_helpingmaterial(self, mock_delete):
         """Test API HelpingMaterialpost delete post (DEL)."""
         mock_delete.return_value = True

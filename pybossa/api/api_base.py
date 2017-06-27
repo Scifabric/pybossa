@@ -27,12 +27,13 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 
 """
 import json
-from flask import request, abort, Response
+from flask import request, abort, Response, current_app
 from flask.ext.login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-from pybossa.util import jsonpify, fuzzyboolean
-from pybossa.core import ratelimits
+from werkzeug.exceptions import MethodNotAllowed
+from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
+from pybossa.core import ratelimits, uploader
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
@@ -76,6 +77,8 @@ class APIBase(MethodView):
     """Class to create CRUD methods."""
 
     hateoas = Hateoas()
+
+    allowed_classes_upload = ['blogpost', 'helpingmaterial']
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -418,9 +421,40 @@ class APIBase(MethodView):
     def _file_upload(self, data):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
-        pass
+        cls_name = self.__class__.__name__.lower()
+        content_type = 'multipart/form-data'
+        if (content_type in request.headers.get('Content-Type') and
+                cls_name in self.allowed_classes_upload):
+            tmp = dict()
+            for key in request.form.keys():
+                tmp[key] = request.form[key]
 
-    def _file_delete(self, request, data):
-       """Method that must be overriden by the class to delete file uploads for
-       only a few classes."""
-       pass
+            ensure_authorized_to('create', self.__class__,
+                                 project_id=tmp['project_id'])
+            upload_method = current_app.config.get('UPLOAD_METHOD')
+            if request.files.get('file') is None:
+                raise AttributeError
+            _file = request.files['file']
+            container = "user_%s" % current_user.id
+            uploader.upload_file(_file,
+                                 container=container)
+            file_url = get_avatar_url(upload_method,
+                                      _file.filename, container)
+            tmp['media_url'] = file_url
+            if tmp.get('info') is None:
+                tmp['info'] = dict()
+            tmp['info']['container'] = container
+            tmp['info']['file_name'] = _file.filename
+            return tmp
+        else:
+            return None
+
+    def _file_delete(self, request, obj):
+        """Delete file object."""
+        cls_name = self.__class__.__name__.lower()
+        if cls_name in self.allowed_classes_upload:
+            keys = obj.info.keys()
+            if 'file_name' in keys and 'container' in keys:
+                ensure_authorized_to('delete', obj)
+                uploader.delete_file(obj.info['file_name'],
+                                     obj.info['container'])

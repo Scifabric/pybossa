@@ -24,13 +24,8 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from api_base import APIBase
 from pybossa.model.helpingmaterial import HelpingMaterial
-from pybossa.core import user_repo, project_repo, uploader
-from pybossa.util import get_avatar_url
 from flask.ext.login import current_user
-from flask import current_app
-from werkzeug.exceptions import BadRequest, NotFound
-from pybossa.auth import ensure_authorized_to
-import json
+from werkzeug.exceptions import BadRequest
 
 
 class HelpingMaterialAPI(APIBase):
@@ -40,42 +35,6 @@ class HelpingMaterialAPI(APIBase):
     reserved_keys = set(['id', 'created'])
 
     __class__ = HelpingMaterial
-
-    def _file_upload(self, request):
-        content_type = 'multipart/form-data'
-        if content_type in request.headers.get('Content-Type'):
-            tmp = dict()
-            for key in request.form.keys():
-                tmp[key] = request.form[key]
-
-            ensure_authorized_to('create', HelpingMaterial,
-                                 project_id=tmp['project_id'])
-            upload_method = current_app.config.get('UPLOAD_METHOD')
-            if request.files.get('file') is None:
-                raise AttributeError
-            _file = request.files['file']
-            container = "user_%s" % current_user.id
-            uploader.upload_file(_file,
-                                 container=container)
-            file_url = get_avatar_url(upload_method,
-                                      _file.filename, container)
-            tmp['media_url'] = file_url
-            if tmp.get('info') is None:
-                tmp['info'] = dict()
-            tmp['info']['container'] = container
-            tmp['info']['file_name'] = _file.filename
-            return tmp
-        else:
-            return None
-
-    def _file_delete(self, request, obj):
-        """Delete file from obj."""
-        keys = obj.info.keys()
-        if 'file_name' in keys and 'container' in keys:
-            ensure_authorized_to('delete', obj)
-            uploader.delete_file(obj.info['file_name'],
-                                 obj.info['container'])
-
 
     def _forbidden_attributes(self, data):
         for key in data.keys():

@@ -21,6 +21,8 @@ from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import MutableDict
 
 
 class Blogpost(db.Model, DomainObject):
@@ -33,19 +35,24 @@ class Blogpost(db.Model, DomainObject):
     #: UTC timestamp when the blogpost is created
     created = Column(Text, default=make_timestamp)
     #: Project.ID for the Blogpost
-    project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'), nullable=False)
+    project_id = Column(Integer, ForeignKey('project.id',
+                                            ondelete='CASCADE'),
+                        nullable=False)
     #: User.ID for the Blogpost
     user_id = Column(Integer, ForeignKey('user.id'))
     #: Title of the Blogpost
     title = Column(Unicode(length=255), nullable=False)
     #: Body of the Blogpost
     body = Column(UnicodeText, nullable=False)
+    #: media_url Heading picture or cover for blogpost
+    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    media_url = Column(Text)
 
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
         return ['created', 'project_id', 'id', 'user_id',
-                'title', 'body']
+                'title', 'body', 'media_url']
 
     @classmethod
     def public_info_keys(self):
