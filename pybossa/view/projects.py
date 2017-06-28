@@ -1006,6 +1006,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
+    allowed_records_per_page = [10, 20, 30, 50, 70, 100]
 
     try:
         columns = get_searchable_columns(project.id)
@@ -1020,9 +1021,11 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         flash(gettext('Invalid filtering criteria'), 'error')
         abort(404)
 
-
     def respond():
-        per_page = records_per_page
+        if records_per_page in allowed_records_per_page:
+            per_page = records_per_page
+        else:
+            per_page = 10
         offset = (page - 1) * per_page
         args["records_per_page"] = per_page
         args["offset"] = offset
