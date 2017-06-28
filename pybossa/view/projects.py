@@ -1433,7 +1433,11 @@ def task_priority(short_name):
 def show_blogposts(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
-    blogposts = blog_repo.filter_by(project_id=project.id)
+    if current_user.is_authenticated() and current_user.id == owner.id:
+        blogposts = blog_repo.filter_by(project_id=project.id)
+    else:
+        blogposts = blog_repo.filter_by(project_id=project.id,
+                                        published=True)
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
