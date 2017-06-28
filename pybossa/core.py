@@ -509,8 +509,10 @@ def setup_error_handlers(app):
                         description=UNAUTHORIZED)
         return handle_content_type(response)
 
+
 def is_coowner(project_id, user=current_user):
     return any(project_id == co.project_id for co in user.coowned_projects)
+
 
 def setup_hooks(app):
     """Setup hooks."""

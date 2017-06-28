@@ -39,6 +39,8 @@ from pybossa.auth import jwt_authorize_project
 from datetime import datetime
 from pybossa.sched import can_post, after_save
 
+from pybossa.model.completion_event import mark_if_complete
+
 
 class TaskRunAPI(APIBase):
 
@@ -111,6 +113,7 @@ class TaskRunAPI(APIBase):
 
     def _after_save(self, instance):
         after_save(instance.project_id, instance.task_id, instance.user_id)
+        mark_if_complete(instance.task_id, instance.project_id)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()

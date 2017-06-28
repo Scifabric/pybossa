@@ -210,6 +210,7 @@ def create_result(conn, project_id, task_id):
     for r in results:
         return r.id
 
+
 @event.listens_for(TaskRun, 'after_insert')
 def on_taskrun_submit(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
@@ -232,13 +233,15 @@ def on_taskrun_submit(mapper, conn, target):
 
     add_user_contributed_to_feed(conn, target.user_id, project_public)
     if is_task_completed(conn, target.task_id, target.project_id):
-        update_task_state(conn, target.task_id)
+        # TODO: uncomment the line below when a fix for the isolation problem is found
+        # update_task_state(conn, target.task_id)
         update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
         project_private = dict()
         project_private.update(project_public)
         project_private['webhook'] = _webhook
         push_webhook(project_private, target.task_id, result_id)
+
 
 @event.listens_for(Blogpost, 'after_insert')
 @event.listens_for(Blogpost, 'after_update')
@@ -249,6 +252,7 @@ def on_taskrun_submit(mapper, conn, target):
 def update_project(mapper, conn, target):
     """Update project updated timestamp."""
     update_project_timestamp(mapper, conn, target)
+
 
 @event.listens_for(Webhook, 'after_update')
 def update_timestamp(mapper, conn, target):
