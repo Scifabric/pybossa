@@ -124,6 +124,7 @@ class BlogpostForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
+    published = BooleanField(lazy_gettext('Publish'))
 
 
 class PasswordForm(Form):

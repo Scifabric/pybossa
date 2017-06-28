@@ -217,12 +217,16 @@ class TestBlogpostAPI(TestAPI):
         payload = blogpost.dictize()
         del payload['user_id']
         del payload['created']
+        del payload['updated']
         del payload['id']
+        payload['published'] = True
         res = self.app.put(url, data=json.dumps(payload))
         data = json.loads(res.data)
-        assert res.status_code == 200, res.status_code
+        assert res.status_code == 200, data
         assert data['title'] == 'new', data
         assert data['body'] == 'new body', data
+        assert data['updated'] != data['created'], data
+        assert data['published'] is True, data
 
         # as owner with reserved key
         blogpost.title = 'new'
@@ -244,11 +248,12 @@ class TestBlogpostAPI(TestAPI):
         payload = blogpost.dictize()
         del payload['user_id']
         del payload['created']
+        del payload['updated']
         del payload['id']
         payload['foo'] = 'bar'
         res = self.app.put(url, data=json.dumps(payload))
         data = json.loads(res.data)
-        assert res.status_code == 415, res.status_code
+        assert res.status_code == 415, data
         assert 'foo' in data['exception_msg'], data
 
     @with_context

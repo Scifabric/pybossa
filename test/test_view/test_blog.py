@@ -37,8 +37,16 @@ class TestBlogpostView(web.Helper):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
         project = ProjectFactory.create(owner=user)
-        blogpost_1 = BlogpostFactory.create(owner=user, project=project, title='titleone')
-        blogpost_2 = BlogpostFactory.create(owner=user, project=project, title='titletwo')
+        blogpost_1 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titleone', published=True)
+        blogpost_2 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titletwo',
+                                            published=True)
+
+        blogpost_3 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titlethree',
+                                            published=False)
+
 
         url = "/project/%s/blog" % project.short_name
 
@@ -54,14 +62,19 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert 'titleone' in res.data
         assert 'titletwo' in res.data
+        assert 'titlethree' not in res.data
 
     @with_context
     def test_json_blogposts_get_all(self):
         """Test JSON blogpost GET all blogposts"""
         user = self.create_users()[1]
         project = ProjectFactory.create(owner=user)
-        blogpost_1 = BlogpostFactory.create(owner=user, project=project, title='titleone')
-        blogpost_2 = BlogpostFactory.create(owner=user, project=project, title='titletwo')
+        blogpost_1 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titleone', published=True)
+        blogpost_2 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titletwo', published=True)
+        blogpost_3 = BlogpostFactory.create(owner=user, project=project,
+                                            title='titlethree', published=False)
 
         url = "/project/%s/blog" % project.short_name
 
@@ -74,6 +87,7 @@ class TestBlogpostView(web.Helper):
         assert 'google_user_id' not in data['owner'].keys()
         assert 'facebook_user_id' not in data['owner'].keys()
         assert 'twitter_user_id' not in data['owner'].keys()
+        assert len(data['blogposts']) == 2
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
 
@@ -87,9 +101,9 @@ class TestBlogpostView(web.Helper):
         assert 'google_user_id' not in data['owner'].keys()
         assert 'facebook_user_id' not in data['owner'].keys()
         assert 'twitter_user_id' not in data['owner'].keys()
+        assert len(data['blogposts']) == 2
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
-
         self.signout()
 
         # As owner 
@@ -102,9 +116,9 @@ class TestBlogpostView(web.Helper):
         assert 'google_user_id' in data['owner'].keys()
         assert 'facebook_user_id' in data['owner'].keys()
         assert 'twitter_user_id' in data['owner'].keys()
+        assert len(data['blogposts']) == 3
         for blogpost in data['blogposts']:
-            assert blogpost['title'] in ['titleone', 'titletwo']
-
+            assert blogpost['title'] in ['titleone', 'titletwo', 'titlethree']
         self.signout()
 
 
@@ -135,7 +149,8 @@ class TestBlogpostView(web.Helper):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
         project = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(project=project, title='title')
+        blogpost = BlogpostFactory.create(project=project, title='title',
+                                          published=True)
         url = "/project/%s/%s" % (project.short_name, blogpost.id)
 
         # As anonymous
@@ -145,6 +160,31 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.register()
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert 'title' in res.data
+
+    @with_context
+    def test_blogpost_get_one_draft(self):
+        """Test blogpost GET draft with id shows one blogpost"""
+        user = self.create_users()[1]
+        project = ProjectFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(project=project, title='title',
+                                          published=False)
+        url = "/project/%s/%s" % (project.short_name, blogpost.id)
+
+        # As anonymous
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # As authenticated
+        self.register()
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # As owner
+        url = "/project/%s/%s?api_key=%s" % (project.short_name, blogpost.id,
+                                             user.api_key)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert 'title' in res.data
@@ -198,6 +238,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.project_id == project.id, blogpost.project.id
         assert blogpost.user_id == user.id, blogpost.user_id
+        assert blogpost.published is False, blogpost.published
 
 
     @with_context
@@ -269,7 +310,8 @@ class TestBlogpostView(web.Helper):
         res = self.app.post(url,
                             data={'id': blogpost.id,
                                   'title':'blogpost title',
-                                  'body':'new body'},
+                                  'body':'new body',
+                                  'published': True},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
         mock_redirect.assert_called_with('/project/%E2%9C%93project1/blog')
@@ -277,7 +319,7 @@ class TestBlogpostView(web.Helper):
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.body == 'new body', blogpost.body
-
+        assert blogpost.published, blogpost.published
 
 
     @with_context
