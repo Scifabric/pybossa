@@ -46,13 +46,16 @@ class Blogpost(db.Model, DomainObject):
     body = Column(UnicodeText, nullable=False)
     #: media_url Heading picture or cover for blogpost
     info = Column(MutableDict.as_mutable(JSON), default=dict())
+    #: Media URL with cover photo for the blog post
     media_url = Column(Text)
+    #: Published flag
+    published = Column(Boolean, nullable=False, default=False)
 
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
         return ['created', 'project_id', 'id', 'user_id',
-                'title', 'body', 'media_url']
+                'title', 'body', 'media_url', 'published']
 
     @classmethod
     def public_info_keys(self):
