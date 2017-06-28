@@ -78,7 +78,7 @@ importer_queue = Queue('medium',
 webhook_queue = Queue('high', connection=sentinel.master)
 
 
-def sanitize_project_owner(project, owner, current_user):
+def sanitize_project_owner(project, owner, current_user, ps=None):
     """Sanitize project and owner data."""
     if current_user.is_authenticated() and owner.id == current_user.id:
         if isinstance(project, Project):
@@ -99,6 +99,16 @@ def sanitize_project_owner(project, owner, current_user):
             else:
                 project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    if ps:
+        project_sanitized['n_tasks'] = ps.n_tasks
+        project_sanitized['n_task_runs'] = ps.n_tasks
+        project_sanitized['n_results'] = ps.n_results
+        project_sanitized['n_completed_tasks'] = ps.n_completed_tasks
+        project_sanitized['n_volunteers'] = ps.n_volunteers
+        project_sanitized['overall_progress'] = ps.overall_progress
+        project_sanitized['n_blogposts'] = ps.n_blogposts
+        project_sanitized['last_activity'] = ps.last_activity
+        project_sanitized['overall_progress'] = ps.overall_progress
     return project_sanitized, owner_sanitized
 
 
@@ -328,7 +338,8 @@ def task_presenter_editor(short_name):
             project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                         owner,
-                                                                        current_user)
+                                                                        current_user,
+                                                                        ps)
             response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
@@ -353,7 +364,8 @@ def task_presenter_editor(short_name):
         flash(gettext(msg), 'info')
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
 
     dict_project = add_custom_contrib_button_to(project_sanitized,
                                                 get_user_id_or_ip())
@@ -382,7 +394,9 @@ def delete(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('delete', project)
     pro = pro_features()
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     if request.method == 'GET':
         response = dict(template='/projects/delete.html',
                         title=title,
@@ -492,7 +506,9 @@ def update(short_name):
             return redirect_content_type(url_for('.update', short_name=short_name))
 
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     response = dict(template='/projects/update.html',
                     form=form,
                     upload_form=upload_form,
@@ -525,7 +541,9 @@ def details(short_name):
 
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner":  owner_sanitized,
@@ -581,7 +599,10 @@ def import_task(short_name):
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     pro = pro_features()
     dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-    project_sanitized, owner_sanitized = sanitize_project_owner(dict_project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(dict_project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
     template_args = dict(title=title, loading_text=loading_text,
                          project=project_sanitized,
                          owner=owner_sanitized,
@@ -766,7 +787,9 @@ def task_presenter(short_name, task_id):
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = project_title(project, "Contribute")
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
 
     def respond(tmpl):
@@ -851,7 +874,9 @@ def tutorial(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
 
     response = dict(template='/projects/tutorial.html', title=title,
                     project=project_sanitized, owner=owner_sanitized)
@@ -901,7 +926,8 @@ def tasks(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
 
     response = dict(template='/projects/tasks.html',
                     title=title,
@@ -935,7 +961,10 @@ def tasks_browse(short_name, page=1):
 
         pagination = Pagination(page, per_page, count)
 
-        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+        project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
+                                                                    current_user,
+                                                                    ps)
 
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
@@ -976,7 +1005,8 @@ def delete_tasks(short_name):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         project_sanitized, owner_sanitized = sanitize_project_owner(project, 
                                                                     owner, 
-                                                                    current_user)
+                                                                    current_user,
+                                                                    ps)
         response = dict(template='projects/tasks/delete.html',
                         project=project_sanitized,
                         owner=owner_sanitized,
@@ -1150,7 +1180,8 @@ def show_stats(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
 
     if not ((ps.n_tasks > 0) and (ps.n_task_runs > 0)):
         project = add_custom_contrib_button_to(project, get_user_id_or_ip(),
@@ -1203,7 +1234,8 @@ def show_stats(short_name):
     formatted_contrib_time = round(ps.average_time, 2)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
 
     # Handle JSON project stats depending of output 
     # (needs to be escaped for HTML)
@@ -1260,7 +1292,8 @@ def task_n_answers(short_name):
     pro = pro_features()
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
     if request.method == 'GET':
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
@@ -1301,7 +1334,8 @@ def task_scheduler(short_name):
     def respond():
         project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                     owner,
-                                                                    current_user)
+                                                                    current_user,
+                                                                    ps)
         response = dict(template='/projects/task_scheduler.html',
                         title=title,
                         form=form,
@@ -1355,7 +1389,8 @@ def task_priority(short_name):
     def respond():
         project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                     owner,
-                                                                    current_user)
+                                                                    current_user,
+                                                                    ps)
         response = dict(template='/projects/task_priority.html',
                         title=title,
                         form=form,
@@ -1410,7 +1445,8 @@ def show_blogposts(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
-                                                                current_user)
+                                                                current_user,
+                                                                ps)
 
     response = dict(template='projects/blog.html',
                     project=project_sanitized,
@@ -1478,7 +1514,9 @@ def new_blogpost(short_name):
     form = BlogpostForm(request.form)
     del form.id
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
 
     if request.method != 'POST':
         ensure_authorized_to('create', Blogpost, project_id=project.id)
@@ -1705,7 +1743,9 @@ def results(short_name):
     title = project_title(project, None)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner, current_user)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
 
     template_args = {"project": project_sanitized,
                      "title": title,
