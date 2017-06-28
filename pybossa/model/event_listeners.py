@@ -256,6 +256,11 @@ def update_timestamp(mapper, conn, target):
     """Update domain object with timestamp."""
     update_target_timestamp(mapper, conn, target)
 
+@event.listens_for(Blogpost, 'after_update')
+def update_timestamp(mapper, conn, target):
+    """Update domain object with timestamp."""
+    update_target_timestamp(mapper, conn, target)
+
 
 @event.listens_for(User, 'before_insert')
 def make_admin(mapper, conn, target):
