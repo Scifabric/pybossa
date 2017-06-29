@@ -363,6 +363,8 @@ class APIBase(MethodView):
             self._forbidden_attributes(data)
             # Remove hateoas links
             data = self.hateoas.remove_links(data)
+        else:
+            self._forbidden_attributes(request.form)
         # may be missing the id as we allow partial updates
         self.__class__(**data)
         old = self.__class__(**existing.dictize())
