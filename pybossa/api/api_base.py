@@ -340,8 +340,14 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
+            repo = repos[self.__class__.__name__]['repo']
+            query_func = repos[self.__class__.__name__]['get']
+            existing = getattr(repo, query_func)(oid)
+            if existing is None:
+                raise NotFound
+            ensure_authorized_to('update', existing)
             data = self._file_upload(request)
-            inst = self._update_instance(oid, new_upload=data)
+            inst = self._update_instance(existing, repo, repos, new_upload=data)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
@@ -350,27 +356,22 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='PUT')
 
-    def _update_instance(self, oid, new_upload=None):
-        repo = repos[self.__class__.__name__]['repo']
-        query_func = repos[self.__class__.__name__]['get']
-        existing = getattr(repo, query_func)(oid)
-        if existing is None:
-            raise NotFound
-        ensure_authorized_to('update', existing)
-        data = json.loads(request.data)
-        self._forbidden_attributes(data)
-        # Remove hateoas links
-        data = self.hateoas.remove_links(data)
+    def _update_instance(self, existing, repo, repos, new_upload=None):
+        data = dict()
+        if new_upload is None:
+            data = json.loads(request.data)
+            self._forbidden_attributes(data)
+            # Remove hateoas links
+            data = self.hateoas.remove_links(data)
         # may be missing the id as we allow partial updates
-        data['id'] = oid
         self.__class__(**data)
         old = self.__class__(**existing.dictize())
         for key in data:
             setattr(existing, key, data[key])
         if new_upload:
-            existing['media_url'] = new_upload['media_url']
-            existing['info']['container'] = new_upload['containter']
-            existing['info']['file_name'] = new_upload['file_name']
+            existing.media_url = new_upload['media_url']
+            existing.info['container'] = new_upload['info']['container']
+            existing.info['file_name'] = new_upload['info']['file_name']
         self._update_attribute(existing, old)
         update_func = repos[self.__class__.__name__]['update']
         self._validate_instance(existing)
