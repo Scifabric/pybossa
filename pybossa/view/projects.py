@@ -1510,6 +1510,8 @@ def export_projects():
 def show_stats(short_name):
     """Returns Project Stats"""
     project, owner, ps = project_by_shortname(short_name)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    n_pending_tasks = ps.n_tasks-n_completed_tasks
     title = project_title(project, "Statistics")
     pro = pro_features(owner)
 
@@ -1569,6 +1571,8 @@ def show_stats(short_name):
         userAnonStats=users_stats['anon'],
         userAuthStats=users_stats['auth'],
         dayStats=dates_stats,
+        n_completed_tasks=n_completed_tasks,
+        n_pending_tasks=n_pending_tasks,
         hourStats=hours_stats)
 
     project_dict = add_custom_contrib_button_to(project, get_user_id_or_ip(),

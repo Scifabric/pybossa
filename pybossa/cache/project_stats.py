@@ -19,7 +19,7 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
+from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES, ONE_HOUR
 import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
@@ -34,7 +34,7 @@ import os
 session = db.slave_session
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def n_tasks(project_id):
     """Return number of tasks of project.
 
@@ -44,7 +44,7 @@ def n_tasks(project_id):
     return projects.n_tasks(project_id)
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_users(project_id, period=None):
     """Return users's stats for a given project_id."""
     users = {}
@@ -160,7 +160,7 @@ def convert_period_to_days(period):
     return int_period
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_dates(project_id, period='15 day'):
     """Return statistics with dates for a project."""
     dates = {}
@@ -252,7 +252,7 @@ def stats_dates(project_id, period='15 day'):
     return dates, dates_anon, dates_auth
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_hours(project_id, period='2 week'):
     """Return statistics of a project per hours."""
     hours = {}
@@ -394,7 +394,7 @@ def stats_hours(project_id, period='2 week'):
         max_hours_auth
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format."""
     dayNewStats = dict(label=gettext("Anon + Auth"), values=[])
@@ -432,7 +432,7 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
         dayCompletedTasks
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format."""
@@ -472,7 +472,7 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
     return hourNewStats, hourNewAnonStats, hourNewAuthStats
 
 
-@memoize(timeout=ONE_DAY)
+@memoize(timeout=ONE_HOUR)
 def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON."""
     userStats = dict(label="User Statistics", values=[])
