@@ -188,7 +188,7 @@ class TestProjectPassword(Test):
             '/stats', '/blog', '/1', '/task/1')
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
-        BlogpostFactory.create(project=project)
+        BlogpostFactory.create(project=project, published=True)
         project.set_password('mysecret')
         project_repo.update(project)
 

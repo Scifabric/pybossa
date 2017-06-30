@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Unicode, UnicodeText, Text
+from sqlalchemy import Integer, Unicode, UnicodeText, Text, Boolean
 from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
@@ -34,6 +34,8 @@ class Blogpost(db.Model, DomainObject):
     id = Column(Integer, primary_key=True)
     #: UTC timestamp when the blogpost is created
     created = Column(Text, default=make_timestamp)
+    #: UTC timestamp when the blogpost is updated 
+    updated = Column(Text, default=make_timestamp)
     #: Project.ID for the Blogpost
     project_id = Column(Integer, ForeignKey('project.id',
                                             ondelete='CASCADE'),
@@ -46,13 +48,16 @@ class Blogpost(db.Model, DomainObject):
     body = Column(UnicodeText, nullable=False)
     #: media_url Heading picture or cover for blogpost
     info = Column(MutableDict.as_mutable(JSON), default=dict())
+    #: Media URL with cover photo for the blog post
     media_url = Column(Text)
+    #: Published flag
+    published = Column(Boolean, nullable=False, default=False)
 
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
-        return ['created', 'project_id', 'id', 'user_id',
-                'title', 'body', 'media_url']
+        return ['created', 'updated', 'project_id', 'id', 'user_id',
+                'title', 'body', 'media_url', 'published']
 
     @classmethod
     def public_info_keys(self):

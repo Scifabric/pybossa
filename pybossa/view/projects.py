@@ -1433,7 +1433,11 @@ def task_priority(short_name):
 def show_blogposts(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
-    blogposts = blog_repo.filter_by(project_id=project.id)
+    if current_user.is_authenticated() and current_user.id == owner.id:
+        blogposts = blog_repo.filter_by(project_id=project.id)
+    else:
+        blogposts = blog_repo.filter_by(project_id=project.id,
+                                        published=True)
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
@@ -1467,6 +1471,12 @@ def show_blogpost(short_name, id):
 
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
+        raise abort(404)
+    if current_user.is_anonymous() and blogpost.published is False:
+        raise abort(404)
+    if (blogpost.published is False and
+            current_user.is_authenticated() and
+            current_user.id != blogpost.user_id):
         raise abort(404)
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -1578,7 +1588,8 @@ def update_blogpost(short_name, id):
                         title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        project_id=project.id)
+                        project_id=project.id,
+                        published=form.published.data)
     blog_repo.update(blogpost)
     cached_projects.delete_project(short_name)
 
