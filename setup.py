@@ -59,7 +59,11 @@ requirements = [
     "readability-lxml>=0.6.2, <1.0",
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
-    "flatten-json"
+    "flatten-json",
+    "pycountry",
+    "boto>=2.47.0, <2.48",
+    "python-magic>=0.4.13, <0.4.14",
+    "wtforms-components>=0.10.3, <0.10.4"
 ]
 
 setup(
