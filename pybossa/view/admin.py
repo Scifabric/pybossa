@@ -593,7 +593,7 @@ def management_dashboard():
 @blueprint.route('/subadminusers', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def subadminusers(user_id=None):
+def subadminusers():
     """Manage subadminusers of PyBossa."""
     form = SearchForm(request.form)
     users = [user for user in user_repo.filter_by(subadmin=True)
@@ -607,7 +607,8 @@ def subadminusers(user_id=None):
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
-        return render_template('/admin/subadminusers.html', found=found, users=users,
+        return render_template('/admin/subadminusers.html', found=found,
+                               users=users,
                                title=gettext("Manage Subadmin Users"),
                                form=form)
 
@@ -679,7 +680,9 @@ def _import_users(**form_data):
 @login_required
 @admin_required
 def userimport():
-    """Import Users in bulk using local csv containing user information; only for admins."""
+    """
+    Import Users in bulk using local csv containing user information;
+    only for admins."""
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = userimporter.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -707,7 +710,7 @@ def userimport():
 @blueprint.route('/manageusers', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def manageusers(user_id=None):
+def manageusers():
     """Enable/disable users of PyBossa."""
     found = []
     locs = countries()
@@ -726,17 +729,21 @@ def manageusers(user_id=None):
         search_criteria = []
         params = {}
         smart_search_input = helper._get_field_filters(args['filter_by_field'])
-        for field in smart_search_input:
-            if field[0].lower() in columns:
-                if field[0].lower() == 'languages' or field[0].lower() == 'locations':
-                    search_criteria.append("user_pref -> '{}' @> :data".format(field[0]))
-                    params['data'] = '["{}"]'.format(field[2].title())
-                elif field[0].lower() == 'additional_comments':
-                    search_criteria.append("info::json -> 'metadata' ->> 'review' iLike :review")
-                    params['review'] = '%{}%'.format(field[2])
+        for field, _, value in smart_search_input:
+            if field in columns:
+                if field == 'languages' or field == 'locations':
+                    search_criteria.append(
+                        "user_pref -> '{}' @> :data".format(field))
+                    params['data'] = '["{}"]'.format(value)
+                elif field == 'additional_comments':
+                    search_criteria.append(
+                        "info::json -> 'metadata' ->> 'review' iLike :review")
+                    params['review'] = '%{}%'.format(value)
                 else:
-                    search_criteria.append("info::json -> 'metadata' ->> '{}' iLike :info".format(field[0]))
-                    params['info'] = field[2]
+                    search_criteria.append(
+                        "info::json -> 'metadata' ->> '{}' iLike :info"
+                        .format(field))
+                    params['info'] = value
         if search_criteria:
             criteria = ' AND '.join(search_criteria)
             found = user_repo.smart_search(criteria, params)
@@ -750,9 +757,11 @@ def manageusers(user_id=None):
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
     return render_template('/admin/manageusers.html', found=found, users=users,
-                           disabledusers=disabledusers, title=gettext("Enable/Disable Users"), form=form,
-                           filter_columns=columns, filter_data=[], locations=locs, languages=langs,
-                           user_types=utypes, timezones=timezone)
+                           disabledusers=disabledusers,
+                           title=gettext("Enable/Disable Users"), form=form,
+                           filter_columns=columns, filter_data=[],
+                           locations=locs, languages=langs, user_types=utypes,
+                           timezones=timezone)
 
 
 @blueprint.route('/users/enable_user/<int:user_id>')
