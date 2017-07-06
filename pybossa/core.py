@@ -535,7 +535,7 @@ def setup_hooks(app):
             apikey = request.headers.get('Authorization')
         if apikey:
             user = user_repo.get_by(api_key=apikey)
-            if user:
+            if user and user.enabled:
                 _request_ctx_stack.top.user = user
         # Handle forms
         request.body = request.form

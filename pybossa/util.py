@@ -666,14 +666,15 @@ def refresh_materialized_view(db, view):
 def generate_invitation_email_for_new_user(user, project_slugs=None):
     project_slugs = project_slugs or []
     server_url = current_app.config.get('SERVER_URL')
-    user_manual_label=current_app.config.get('USER_MANUAL_LABEL')
-    user_manual_url=current_app.config.get('USER_MANUAL_URL')
+    user_manual_label = current_app.config.get('USER_MANUAL_LABEL')
+    user_manual_url = current_app.config.get('USER_MANUAL_URL')
+    brand = current_app.config.get('BRAND')
     project_urls = []
     for project_slug in project_slugs:
         project_url = None if not project_slug else server_url + '/project/' + project_slug
         if project_url:
             project_urls.append(project_url)
-    msg = dict(subject='New account with GIGwork',
+    msg = dict(subject='New account with {}'.format(brand),
                recipients=[user['email_addr']],
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/newaccount_invite.html',
@@ -689,13 +690,15 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
         return None
 
     server_url = current_app.config.get('SERVER_URL')
-    admin_manual_label=current_app.config.get('ADMIN_MANUAL_LABEL')
-    admin_manual_url=current_app.config.get('ADMIN_MANUAL_URL')
-    msg = dict(subject='Account access update on GIGwork',
+    admin_manual_label = current_app.config.get('ADMIN_MANUAL_LABEL')
+    admin_manual_url = current_app.config.get('ADMIN_MANUAL_URL')
+    brand = current_app.config.get('BRAND')
+    msg = dict(subject='Account access update on {}'.format(brand),
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/adminsubadmin_invite.html',
-                                  username=user.fullname, access_type=access_type,
+                                  username=user.fullname,
+                                  access_type=access_type,
                                   admin_manual_label=admin_manual_label,
                                   admin_manual_url=admin_manual_url,
                                   server_url=server_url)
@@ -706,26 +709,27 @@ def generate_manage_user_email(user, operation):
     if not user or not operation:
         return None
 
+    brand = current_app.config.get('BRAND')
     server_url = current_app.config.get('SERVER_URL')
 
-    if operation == "enable":
-        msg_header = 'GIGwork Account Enabled'
-        msg_text = 'Your account {0} with GIGwork at {1} has been enabled.'\
-                      'You can now login with your account credentials.'\
-                      .format(user.email_addr, server_url)
+    if operation == 'enable':
+        msg_header = '{} Account Enabled'.format(brand)
+        msg_text = 'Your account {0} with {1} at {2} has been enabled. '\
+                   'You can now login with your account credentials.'\
+                   .format(user.email_addr, brand, server_url)
 
-    elif operation == "disable":
-        msg_header = 'GIGwork Account Disabled'
-        msg_text = 'Your account {0} with GIGwork at {1} has been disabled.'\
-                       'Please contact your GIGwork administrator about reinstating your account.'\
-                       .format(user.email_addr, server_url)
+    elif operation == 'disable':
+        msg_header = '{} Account Disabled'.format(brand)
+        msg_text = 'Your account {0} with {1} at {2} has been disabled. '\
+                   'Please contact your {1} administrator about reinstating your account.'\
+                   .format(user.email_addr, brand, server_url)
     else:
         return None
 
-    if server_url == "https://qa.gigwork.net":
+    if current_app.config.get('IS_QA'):
         msg_header = msg_header + ' (QA Version)'
 
-    msg = dict(subject='Account update on GIGwork',
+    msg = dict(subject='Account update on {}'.format(brand),
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/manageuser.html',
@@ -823,9 +827,10 @@ def countries():
         cts.append((name, name))
     return sorted(cts)
 
-def check_password_strength(password, min_length=8, max_length=15, upper=True, lower=True, num=True, special=True, message=""):
-    # password must contain following characters;
-    # at least one character from each category
+
+def check_password_strength(password, min_length=8, max_length=15,
+                            upper=True, lower=True, num=True, special=True,
+                            message=""):
     required_chars = []
     if upper:
         required_chars.append(r'[A-Z]')
@@ -840,7 +845,7 @@ def check_password_strength(password, min_length=8, max_length=15, upper=True, l
 
     pwdlen = len(password)
     if pwdlen < pwd_min_len or pwdlen > pwd_max_len:
-        message = lazy_gettext(u'Password must be between {0} and {1} characters'\
+        message = lazy_gettext(u'Password must be between {0} and {1} characters'
                     .format(pwd_min_len, pwd_max_len))
         return False, message
 
@@ -849,6 +854,7 @@ def check_password_strength(password, min_length=8, max_length=15, upper=True, l
         return False, message
     else:
         return True, None
+
 
 def get_s3_bucket_name(url):
     # for 'http://bucket.s3.amazonaws.com/
@@ -860,6 +866,7 @@ def get_s3_bucket_name(url):
     if found:
         return found.group(1)
     return None
+
 
 def valid_or_no_s3_bucket(task_data):
     """ Returns False when task has s3 url and s3 bucket is not cf-s3uploads"""
