@@ -51,6 +51,7 @@ from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
+from pybossa import otp
 
 from pybossa.forms.account_view_forms import *
 
@@ -100,9 +101,16 @@ def signin():
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
-            msg_1 = gettext("Welcome back") + " " + user.fullname
-            flash(msg_1, 'success')
-            return _sign_in_user(user)
+            if not current_app.config.get('ENABLE_TWO_FACTOR_AUTH'):
+                msg_1 = gettext("Welcome back") + " " + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
+            else:
+                _email_two_factor_auth(user)
+                url_token = otp.generate_url_token(user.email_addr)
+                return redirect_content_type(url_for('account.otpvalidation',
+                                             token=url_token,
+                                             next=request.args.get('next')))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
@@ -144,6 +152,65 @@ def _sign_in_user(user):
                                              next=request.args.get('next')))
     return redirect_content_type(request.args.get("next") or
                                  url_for("home.home"))
+
+
+def _email_two_factor_auth(user, invalid_token=False):
+    msg = dict(subject='One time password generation details for PYBOSSA',
+               recipients=[user.email_addr])
+    msg['body'] = render_template(
+        '/account/email/otp.md',
+        user=user)
+    otp_code = otp.generate_otp_secret(user.email_addr)
+    current_app.logger.debug('otp code generated before sending email: '
+                             '{}, for email: {}'.format(otp_code,
+                                                        user.email_addr))
+    msg['html'] = render_template(
+                        '/account/email/otp.html',
+                        user=user, otpcode=otp_code)
+    mail_queue.enqueue(send_mail, msg)
+    if not invalid_token:
+        flash(gettext('an email has been sent to you with one time password'),
+              'success')
+
+
+@blueprint.route('/<token>/otpvalidation', methods=['GET', 'POST'])
+def otpvalidation(token):
+    email = otp.retrieve_email_for_token(token)
+    if not email:
+        flash(gettext('Please sign in.'), 'error')
+        return redirect(url_for('account.signin'))
+    form = OTPForm(request.form)
+    user_otp = form.otp.data
+    user = user_repo.get_by(email_addr=email)
+    current_app.logger.info('validating otp for user email: {}'.format(email))
+    if request.method == 'POST' and form.validate():
+        otp_code = otp.retrieve_user_otp_secret(email)
+        if otp_code is not None:
+            if otp_code == user_otp:
+                msg = gettext('OTP verified. You are logged in to the system')
+                flash(msg, 'success')
+                otp.expire_token(token)
+                return _sign_in_user(user)
+            else:
+                msg = gettext('Invalid one time password, a newly generated '
+                              'one time password was sent to your email.')
+                flash(msg, 'error')
+        else:
+            msg = gettext('Expired one time password, a newly generated one '
+                          'time password was sent to your email.')
+            flash(msg, 'error')
+
+        current_app.logger.info(('Invalid OTP. retrieved: {}, submitted: {}, '
+                                 'email: {}').format(otp_code, user_otp, email))
+        _email_two_factor_auth(user, True)
+        form.otp.data = ''
+    response = dict(template='/account/otpvalidation.html',
+                    title='Verify OTP',
+                    form=form,
+                    user=user.to_public_json(),
+                    next=request.args.get('next'),
+                    token=token)
+    return handle_content_type(response)
 
 
 @blueprint.route('/signout')
