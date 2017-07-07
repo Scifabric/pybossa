@@ -36,6 +36,7 @@ from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
+from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.util import generate_manage_user_email, countries, languages, timezones, user_types
 from pybossa.cache import projects as cached_projects
@@ -78,7 +79,7 @@ def format_error(msg, status_code):
 
 @blueprint.route('/')
 @login_required
-@admin_required
+@admin_or_subadmin_required
 def index():
     """List admin actions."""
     key = NOTIFY_ADMIN + str(current_user.id)
@@ -709,7 +710,7 @@ def userimport():
 
 @blueprint.route('/manageusers', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@admin_or_subadmin_required
 def manageusers():
     """Enable/disable users of PyBossa."""
     found = []
@@ -719,9 +720,17 @@ def manageusers():
     timezone = [time[0] for time in timezones()]
     args = request.args
     form = SearchForm(request.form)
-    users = [user for user in user_repo.filter_by(enabled=True)
+
+    efilters = dict(enabled=True)
+    dfilters = dict(enabled=False)
+
+    if current_user.subadmin:
+        efilters.update(admin=False, subadmin=False)
+        dfilters.update(admin=False, subadmin=False)
+
+    users = [user for user in user_repo.filter_by(**efilters)
              if user.id != current_user.id]
-    disabledusers = [user for user in user_repo.filter_by(enabled=False)
+    disabledusers = [user for user in user_repo.filter_by(**dfilters)
              if user.id != current_user.id]
     columns = user_repo.get_info_columns()
 
@@ -752,7 +761,9 @@ def manageusers():
         query = form.user.data
         found = [user for user in user_repo.search_by_name(query)
                  if user.id != current_user.id]
-        [ensure_authorized_to('update', found_user) for found_user in found]
+        if current_user.subadmin and (user.admin or user.subadmin):
+            found = False
+
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
@@ -766,14 +777,17 @@ def manageusers():
 
 @blueprint.route('/users/enable_user/<int:user_id>')
 @login_required
-@admin_required
+@admin_or_subadmin_required
 def enable_user(user_id=None):
     """Set enabled flag to True for user_id."""
     try:
         if user_id:
             user = user_repo.get(user_id)
             if user:
-                ensure_authorized_to('update', user)
+                # avoid enabling admin/subadmin user by subadmin with direct url
+                if current_user.subadmin and (user.admin or user.subadmin):
+                    return render_template('403.html')
+
                 user.enabled = True
                 user_repo.update(user)
                 msg = generate_manage_user_email(user, "enable")
@@ -789,14 +803,17 @@ def enable_user(user_id=None):
 
 @blueprint.route('/users/disable_user/<int:user_id>')
 @login_required
-@admin_required
+@admin_or_subadmin_required
 def disable_user(user_id=None):
     """Set enabled flag to False for user_id."""
     try:
         if user_id:
             user = user_repo.get(user_id)
             if user:
-                ensure_authorized_to('update', user)
+                # avoid disabling admin/subadmin user by subadmin with direct url
+                if current_user.subadmin and (user.admin or user.subadmin):
+                    return render_template('403.html')
+
                 user.enabled = False
                 user_repo.update(user)
                 msg = generate_manage_user_email(user, "disable")

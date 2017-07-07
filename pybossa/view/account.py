@@ -41,6 +41,7 @@ from flask_wtf.csrf import generate_csrf
 from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter, twofactor_auth
 from pybossa.util import Pagination, handle_content_type, admin_required
+from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
@@ -846,7 +847,7 @@ def reset_api_key(name):
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
-@admin_required
+@admin_or_subadmin_required
 @login_required
 def add_metadata(name):
     """
