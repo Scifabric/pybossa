@@ -39,7 +39,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
 from flask import jsonify
-from pybossa.core import signer, uploader, sentinel, newsletter, twofactor_auth
+from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
@@ -55,10 +55,7 @@ from pybossa.messages import *
 
 from pybossa.forms.forms import MetadataForm
 from pybossa.forms.account_view_forms import *
-from otpauth import OtpAuth
-from pybossa.contributions_guard import ContributionsGuard
-import os
-import base64
+from pybossa import otp
 import time
 import datetime
 from pybossa.cache.users import get_user_preferences
@@ -97,70 +94,62 @@ def index(page=1):
 
 
 def _email_two_factor_auth(user, invalid_token=False):
-    # send email to user that has details on
-    # how to apply TOTP to login to pybossa
-    if user and user.email_addr:
-        msg = dict(subject='One time password generation details for {}'.format(current_app.config.get('BRAND')),
-                   recipients=[user.email_addr])
-        msg['body'] = render_template(
-            '/account/email/otp.md',
-            user=user)
-        guard = ContributionsGuard(sentinel.master)
-        otpsecret = OtpAuth(base64.b32encode(os.urandom(10)).decode('utf-8'))
-        if otpsecret is None:
-            guard.add_otp_secret(user.email_addr, None)
-            flash(gettext("Problem with generating one time password"), 'error')
-            current_app.logger.error("Problem with generating one time password for email: %s" %user.email_addr)
-        else:
-            otpcode = otpsecret.totp()
-            guard.add_otp_secret(user.email_addr, otpcode)
-            current_app.logger.info('********** OTP code generated before sending email: %r, for email: %s' % (otpcode, user.email_addr))
-            msg['html'] = render_template(
-                                '/account/email/otp.html',
-                                user=user, otpcode=otpcode)
-            mail_queue.enqueue(send_mail, msg)
-            if not invalid_token:
-                flash(gettext("An email has been sent to you with one time password"),'success')
-    else:
-        flash(gettext("We don't have this email in our records. "
-                      "You may have signed up with a different "
-                      "email or used Twitter, Facebook, or "
-                      "Google to sign-in"), 'error')
+    subject = 'One time password generation details for {}'
+    msg = dict(subject=subject.format(current_app.config.get('BRAND')),
+               recipients=[user.email_addr])
+    msg['body'] = render_template(
+        '/account/email/otp.md',
+        user=user)
+    otp_code = otp.generate_otp_secret(user.email_addr)
+    current_app.logger.debug('otp code generated before sending email: '
+                             '{}, for email: {}'.format(otp_code,
+                                                        user.email_addr))
+    msg['html'] = render_template(
+                        '/account/email/otp.html',
+                        user=user, otpcode=otp_code)
+    mail_queue.enqueue(send_mail, msg)
+    if not invalid_token:
+        flash(gettext('an email has been sent to you with one time password'),
+              'success')
 
 
-@blueprint.route('/<email>/otpvalidation', methods=['GET', 'POST'])
-def otpvalidation(email):
+@blueprint.route('/<token>/otpvalidation', methods=['GET', 'POST'])
+def otpvalidation(token):
+    email = otp.retrieve_email_for_token(token)
+    if not email:
+        flash(gettext('Please sign in.'), 'error')
+        return redirect(url_for('account.signin'))
     form = OTPForm(request.form)
-    otp = form.otp.data
-    current_app.logger.info('validating otp for user email: %r' % email)
+    user_otp = form.otp.data
     user = user_repo.get_by(email_addr=email)
+    current_app.logger.info('validating otp for user email: {}'.format(email))
     if request.method == 'POST' and form.validate():
-        guard = ContributionsGuard(sentinel.master)
-        otpcode = guard.retrieve_user_otp_secret(email)
-        if otpcode is not None:
-            if (otpcode == otp):
-                # user provided valid otp, signin user
-                msg = gettext("OTP verified. You are logged in to the system")
+        otp_code = otp.retrieve_user_otp_secret(email)
+        if otp_code is not None:
+            if otp_code == user_otp:
+                msg = gettext('OTP verified. You are logged in to the system')
                 flash(msg, 'success')
                 _sign_in_user(user)
-                return redirect(url_for("home.home"))
+                otp.expire_token(token)
+                return redirect(url_for('home.home'))
             else:
-                # invalid otp
-                msg = gettext("Invalid one time password, a newly generated one time password was sent to your email.")
+                msg = gettext('Invalid one time password, a newly generated '
+                              'one time password was sent to your email.')
                 flash(msg, 'error')
         else:
-            # invalid otp
-            msg = gettext("Expired one time password, a newly generated one time password was sent to your email.")
+            msg = gettext('Expired one time password, a newly generated one '
+                          'time password was sent to your email.')
             flash(msg, 'error')
 
-        current_app.logger.error('******** Invalid OTP. retrieved: %r, submitted: %r, email: %r' % (otpcode, otp, email))
-        # incase of an invalid or expired password
+        current_app.logger.info(('Invalid OTP. retrieved: {}, submitted: {}, '
+                                 'email: {}').format(otp_code, user_otp, email))
         _email_two_factor_auth(user, True)
-        otpform = OTPForm(request.form)
+        form.otp.data = ''
     return render_template('/account/otpvalidation.html',
-                title="Verify OTP",
-                form=form,
-                user=user)
+                           title='Verify OTP',
+                           form=form,
+                           user=user,
+                           token=token)
 
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
@@ -176,31 +165,31 @@ def signin():
         password = form.password.data
         email_addr = form.email.data.lower()
         user = user_repo.search_by_email(email_addr=email_addr)
-        if user and user.enabled == False:
-            flash(gettext("Your account is disabled. Please contact your GIGwork administrator."), 'error')
-            return redirect(url_for("home.home"))
+        if user and not user.enabled:
+            flash(gettext('Your account is disabled. '
+                          'Please contact your GIGwork administrator.'),
+                  'error')
+            return redirect(url_for('home.home'))
         if user and user.check_password(password):
-            if twofactor_auth == False:
-                msg_1 = gettext("Welcome back") + " " + user.fullname
+            if not current_app.config.get('ENABLE_TWO_FACTOR_AUTH'):
+                msg_1 = gettext('Welcome back') + ' ' + user.fullname
                 flash(msg_1, 'success')
                 return _sign_in_user(user)
             else:
                 _email_two_factor_auth(user)
-                otpform = OTPForm(request.form)
-                return render_template('/account/otpvalidation.html',
-                                title="Verify OTP",
-                                form=otpform,
-                                user=user)
+                url_token = otp.generate_url_token(user.email_addr)
+                return redirect(url_for('account.otpvalidation',
+                                        token=url_token))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
-                msg = gettext("Ooops, Incorrect email/password")
+                msg = gettext('Ooops, Incorrect email/password')
                 flash(msg, 'error')
             else:
                 flash(msg, 'info')
         else:
-            msg = gettext("Ooops, we didn&#39;t find you in the system, \
-                          did you sign up?")
+            msg = gettext('Ooops, we didn&#39;t find you in the system, \
+                          did you sign up?')
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
