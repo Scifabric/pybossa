@@ -104,6 +104,9 @@ def configure_app(app):
     if app.config.get('PERMANENT_SESSION_LIFETIME'):
         app.permanent_session_lifetime = timedelta(minutes=int(app.config['PERMANENT_SESSION_LIFETIME']))
 
+    global enable_strong_password
+    enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
+
 
 def setup_json_serializer(app):
     app.json_encoder = JSONEncoder

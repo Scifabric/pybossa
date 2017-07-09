@@ -130,50 +130,53 @@ class ReservedName(object):
         if is_reserved_name(self.blueprint, field.data):
             raise ValidationError(self.message)
 
-
-def _get_message(require_uppercase=True, require_lowercase=True,
-                 require_numeric=True, require_special=True):
-    message_parts = []
-    if require_uppercase:
-        message_parts.append('at least one uppercase')
-    if require_lowercase:
-        message_parts.append('at least one lowercase')
-    if require_numeric:
-        message_parts.append('at least one numeric ')
-    if require_special:
-        message_parts.append('at least one special !@$%%^&*#')
-
-    if message_parts:
-        return 'The password must contain {} character.'.format(', '.join(message_parts))
-    return None
-
-
 class CheckPasswordStrength(object):
-    """ apply strong password policy """
-    def __init__(self, message=None, min_length=8, max_length=15,
-                 require_uppercase=True, require_lowercase=True,
-                 require_numeric=True, require_special=True):
+    """ Validator to apply strong password policy """
 
-        self.default_message = _get_message(require_uppercase, require_lowercase, require_numeric, require_special)
-        self.min_length = min_length
-        self.max_length = max_length
-        self.require_uppercase = require_uppercase
-        self.require_lowercase = require_lowercase
-        self.require_numeric = require_numeric
-        self.require_special = require_special
+    def __init__(
+            self, message=None, min_len=8,
+            max_len=15, uppercase=True,
+            lowercase=True, numeric=True,
+            special=True):
+        self.min_len = min_len
+        self.max_len = max_len
+        self.uppercase = uppercase
+        self.lowercase = lowercase
+        self.numeric = numeric
+        self.special = special
 
-        if not message:
-            self.message = self.default_message
-        else:
+        if message:
             self.message = message
+        else:
+            self.message = self._get_message(
+                                    uppercase, lowercase,
+                                    numeric, special)
 
     def __call__(self, form, field):
         pwd = field.data
-        is_password_valid, message = check_password_strength(pwd, self.min_length, self.max_length,
-                                                             self.require_uppercase, self.require_lowercase,
-                                                             self.require_numeric, self.require_special, self.message)
-        if not is_password_valid:
+        valid, message = check_password_strength(
+                            pwd, self.min_len, self.max_len,
+                            self.uppercase, self.lowercase,
+                            self.numeric, self.special, self.message)
+        if not valid:
             raise ValidationError(message)
+
+    def _get_message(self, uppercase=True, lowercase=True,
+                     numeric=True, special=True):
+        message = []
+        if uppercase:
+            message.append('one uppercase')
+        if lowercase:
+            message.append('one lowercase')
+        if numeric:
+            message.append('one numeric ')
+        if special:
+            message.append('one special !@$%%^&*#')
+
+        if message:
+            return 'Password must contain at least {} character.'\
+                .format(', '.join(message))
+        return None
 
 
 class TimeFieldsValidator(object):

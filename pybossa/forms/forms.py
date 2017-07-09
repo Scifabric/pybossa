@@ -31,7 +31,7 @@ from wtforms.widgets import HiddenInput
 import validator as pb_validator
 from pybossa import util
 from pybossa.core import project_repo, user_repo, task_repo
-from pybossa.core import uploader
+from pybossa.core import uploader, enable_strong_password
 from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
@@ -63,8 +63,12 @@ class ProjectForm(Form):
                                      [validators.Required()])
     description = TextAreaField(lazy_gettext('Description'),
                                 [validators.Length(max=255)])
-    password = TextField(lazy_gettext('Password'), [validators.Required(), pb_validator.CheckPasswordStrength(
-                                                                                min_length=PROJECT_PWD_MIN_LEN, require_special=False)])
+    password = TextField(
+                    lazy_gettext('Password'),
+                    [validators.Required(),
+                        pb_validator.CheckPasswordStrength(
+                                        min_len=PROJECT_PWD_MIN_LEN,
+                                        special=False)])
 
 
 class ProjectUpdateForm(ProjectForm):
@@ -78,8 +82,12 @@ class ProjectUpdateForm(ProjectForm):
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
-    password = TextField(lazy_gettext('Password'), [validators.Optional(), pb_validator.CheckPasswordStrength(
-                                                                                min_length=PROJECT_PWD_MIN_LEN, require_special=False)])
+    password = TextField(
+                    lazy_gettext('Password'),
+                    [validators.Optional(),
+                        pb_validator.CheckPasswordStrength(
+                                        min_len=PROJECT_PWD_MIN_LEN,
+                                        special=False)])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
 
@@ -371,10 +379,17 @@ class RegisterForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    password = PasswordField(lazy_gettext('New Password'),
-                             [validators.Required(err_msg),
-                              validators.EqualTo('confirm', err_msg_2),
-                              pb_validator.CheckPasswordStrength()])
+    if enable_strong_password:
+        password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2),
+                            pb_validator.CheckPasswordStrength()])
+    else:
+        password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     project_slug = SelectMultipleField(lazy_gettext('Project'), choices=[])

@@ -828,29 +828,33 @@ def countries():
     return sorted(cts)
 
 
-def check_password_strength(password, min_length=8, max_length=15,
-                            upper=True, lower=True, num=True, special=True,
-                            message=""):
+def check_password_strength(
+        password, min_len=8, max_len=15,
+        uppercase=True, lowercase=True,
+        numeric=True, special=True, message=""):
+    """Check password strength, return True if passed.
+    Otherwise return False with exact failure message.
+    """
+
     required_chars = []
-    if upper:
+    if uppercase:
         required_chars.append(r'[A-Z]')
-    if lower:
+    if lowercase:
         required_chars.append(r'[a-z]')
-    if num:
+    if numeric:
         required_chars.append(r'[0-9]')
     if special:
         required_chars.append(r'[!@$%^&*#]')
-    pwd_min_len = min_length
-    pwd_max_len = max_length
 
-    pwdlen = len(password)
-    if pwdlen < pwd_min_len or pwdlen > pwd_max_len:
-        message = lazy_gettext(u'Password must be between {0} and {1} characters'
-                    .format(pwd_min_len, pwd_max_len))
+    pwd_len = len(password)
+    if pwd_len < min_len or pwd_len > max_len:
+        message = lazy_gettext(
+                    u'Password must be between {0} and {1} characters'
+                    .format(min_len, max_len))
         return False, message
 
-    is_pwd_valid = all(re.search(ch, password) for ch in required_chars)
-    if not is_pwd_valid:
+    valid = all(re.search(ch, password) for ch in required_chars)
+    if not valid:
         return False, message
     else:
         return True, None
