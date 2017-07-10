@@ -57,7 +57,6 @@ from pybossa.forms.forms import MetadataForm
 from pybossa.forms.account_view_forms import *
 from pybossa import otp
 import time
-import datetime
 from pybossa.cache.users import get_user_preferences
 
 
@@ -129,9 +128,8 @@ def otpvalidation(token):
             if otp_code == user_otp:
                 msg = gettext('OTP verified. You are logged in to the system')
                 flash(msg, 'success')
-                _sign_in_user(user)
                 otp.expire_token(token)
-                return redirect(url_for('home.home'))
+                return _sign_in_user(user)
             else:
                 msg = gettext('Invalid one time password, a newly generated '
                               'one time password was sent to your email.')
@@ -149,6 +147,7 @@ def otpvalidation(token):
                            title='Verify OTP',
                            form=form,
                            user=user,
+                           next=request.args.get('next'),
                            token=token)
 
 
@@ -179,7 +178,8 @@ def signin():
                 _email_two_factor_auth(user)
                 url_token = otp.generate_url_token(user.email_addr)
                 return redirect(url_for('account.otpvalidation',
-                                        token=url_token))
+                                        token=url_token,
+                                        next=request.args.get('next')))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
