@@ -786,7 +786,7 @@ def enable_user(user_id=None):
             if user:
                 # avoid enabling admin/subadmin user by subadmin with direct url
                 if current_user.subadmin and (user.admin or user.subadmin):
-                    return render_template('403.html')
+                    return abort(403)
 
                 user.enabled = True
                 user_repo.update(user)
@@ -812,7 +812,7 @@ def disable_user(user_id=None):
             if user:
                 # avoid disabling admin/subadmin user by subadmin with direct url
                 if current_user.subadmin and (user.admin or user.subadmin):
-                    return render_template('403.html')
+                    return abort(403)
 
                 user.enabled = False
                 user_repo.update(user)
