@@ -756,6 +756,8 @@ def manageusers():
         if search_criteria:
             criteria = ' AND '.join(search_criteria)
             found = user_repo.smart_search(criteria, params)
+            if not found:
+                flash('No user found matching your query')
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
@@ -765,8 +767,8 @@ def manageusers():
             found = False
 
         if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "
-                  "matching your query: <strong>%s</strong>" % form.user.data)
+            flash('No user found matching your query: {}'.format(form.user.data))
+
     return render_template('/admin/manageusers.html', found=found, users=users,
                            disabledusers=disabledusers,
                            title=gettext("Enable/Disable Users"), form=form,
