@@ -829,3 +829,36 @@ class TestJSONEncoder(object):
         data = json.loads(data)
         err_msg = "The encoder should manage lazystrings"
         assert data.get('foo') == sval, err_msg
+
+
+class TestStrongPassword(object):
+
+    def test_strong_password_missing_special_char(self):
+        password = 'Abcd12345'
+        valid, _ = util.check_password_strength(password=password)
+        assert not valid
+
+    def test_strong_password_missing_uppercase(self):
+        password = 'abcd12345!'
+        valid, _ = util.check_password_strength(password=password)
+        assert not valid
+
+    def test_strong_password_missing_lowercase(self):
+        password = 'ABCD12345!'
+        valid, _ = util.check_password_strength(password=password)
+        assert not valid
+
+    def test_strong_password_missing_lowercase(self):
+        password = 'ABCD12345!'
+        valid, _ = util.check_password_strength(password=password)
+        assert not valid
+
+    def test_strong_password_min_length(self):
+        password = 'abc'
+        valid, _ = util.check_password_strength(password=password)
+        assert not valid
+
+    def test_valid_strong_password_works(self):
+        password = 'AaBbCD12345!'
+        valid, _ = util.check_password_strength(password=password)
+        assert valid

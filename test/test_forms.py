@@ -198,43 +198,6 @@ class TestRegisterForm(Test):
         assert "Passwords must match" in form.errors['password'], form.errors
 
     @with_context
-    def test_register_password_min_length(self):
-        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'abc'
-        form = RegisterForm(**self.fill_in_data)
-        assert not form.validate()
-        assert 'Password must be between 8 and 15 characters' in form.errors['password']
-
-    @with_context
-    def test_register_password_special_char(self):
-        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'Abcd12345'
-        form = RegisterForm(**self.fill_in_data)
-
-        assert not form.validate()
-        assert 'Password must contain at least one uppercase, '\
-            'one lowercase, one numeric , one special !@$%%^&*# character.'\
-            in form.errors['password']
-
-    @with_context
-    def test_register_password_uppercase_char(self):
-        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'abcd12345!'
-        form = RegisterForm(**self.fill_in_data)
-
-        assert not form.validate()
-        assert 'Password must contain at least one uppercase, '\
-            'one lowercase, one numeric , one special !@$%%^&*# character.'\
-            in form.errors['password']
-
-    @with_context
-    def test_register_password_lowercase_char(self):
-        self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'ABCD12345!'
-        form = RegisterForm(**self.fill_in_data)
-
-        assert not form.validate()
-        assert 'Password must contain at least one uppercase, '\
-            'one lowercase, one numeric , one special !@$%%^&*# character.'\
-            in form.errors['password']
-
-    @with_context
     def test_register_password_valid_password(self):
         self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'Abcd12345!'
         form = RegisterForm(**self.fill_in_data)
