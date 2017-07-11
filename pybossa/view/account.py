@@ -96,13 +96,13 @@ def _email_two_factor_auth(user, invalid_token=False):
     subject = 'One time password generation details for {}'
     msg = dict(subject=subject.format(current_app.config.get('BRAND')),
                recipients=[user.email_addr])
-    msg['body'] = render_template(
-        '/account/email/otp.md',
-        user=user)
     otp_code = otp.generate_otp_secret(user.email_addr)
     current_app.logger.debug('otp code generated before sending email: '
                              '{}, for email: {}'.format(otp_code,
                                                         user.email_addr))
+    msg['body'] = render_template(
+                        '/account/email/otp.md',
+                        user=user, otpcode=otp_code)
     msg['html'] = render_template(
                         '/account/email/otp.html',
                         user=user, otpcode=otp_code)
