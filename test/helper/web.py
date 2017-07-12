@@ -73,6 +73,27 @@ class Helper(Test):
             return self.app.get(url, follow_redirects=follow_redirects,
                                 content_type=content_type, headers=headers)
 
+    def otpvalidation(self, method="POST", token='invalid', otp='-1',
+                      content_type="multipart/form-data", follow_redirects=True,
+                      csrf=None):
+        url = '/account/{}/otpvalidation'.format(token)
+        headers = None
+        if method == 'POST':
+            payload = dict(otp=otp)
+            if content_type == 'application/json':
+                data = json.dumps(payload)
+            else:
+                data = payload
+            if csrf:
+                headers = {'X-CSRFToken': csrf}
+            return self.app.post(url, data=data,
+                                 content_type=content_type,
+                                 follow_redirects=follow_redirects,
+                                 headers=headers)
+        else:
+            return self.app.get(url, data=data,
+                                content_type=content_type, headers=headers)
+
     def profile(self, name="johndoe"):
         """Helper function to check profile of signed in user"""
         url = "/account/%s" % name

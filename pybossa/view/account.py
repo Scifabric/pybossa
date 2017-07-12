@@ -157,13 +157,13 @@ def _sign_in_user(user):
 def _email_two_factor_auth(user, invalid_token=False):
     msg = dict(subject='One time password generation details for PYBOSSA',
                recipients=[user.email_addr])
-    msg['body'] = render_template(
-        '/account/email/otp.md',
-        user=user)
     otp_code = otp.generate_otp_secret(user.email_addr)
     current_app.logger.debug('otp code generated before sending email: '
                              '{}, for email: {}'.format(otp_code,
                                                         user.email_addr))
+    msg['body'] = render_template(
+                        '/account/email/otp.md',
+                        user=user, otpcode=otp_code)
     msg['html'] = render_template(
                         '/account/email/otp.html',
                         user=user, otpcode=otp_code)
@@ -178,8 +178,8 @@ def otpvalidation(token):
     email = otp.retrieve_email_for_token(token)
     if not email:
         flash(gettext('Please sign in.'), 'error')
-        return redirect(url_for('account.signin'))
-    form = OTPForm(request.form)
+        return redirect_content_type(url_for('account.signin'))
+    form = OTPForm(request.body)
     user_otp = form.otp.data
     user = user_repo.get_by(email_addr=email)
     current_app.logger.info('validating otp for user email: {}'.format(email))
