@@ -6677,3 +6677,40 @@ class TestWeb(web.Helper):
         assert data.get('flash') == msg, (msg, data)
         assert data.get('status') == SUCCESS, data
         assert data.get('next') == '/', data
+
+    @patch('pybossa.view.account.otp.retrieve_user_otp_secret')
+    @patch('pybossa.otp.OtpAuth')
+    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
+    def test_login_expired_otp(self, OtpAuth, retrieve_user_otp_secret):
+        """Test expired otp json"""
+        self.register()
+        # Log out as the registration already logs in the user
+        self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data['form'].get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        OTP = '1234'
+        otp_secret = OtpAuth.return_value
+        otp_secret.totp.return_value = OTP
+        retrieve_user_otp_secret.return_value = None
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=True)
+        data = json.loads(res.data)
+
+        token = data.get('next').split('/')[-2]
+
+        # pass otp - mock expired
+        res = self.otpvalidation(token=token, follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'OTP should be expired'
+        assert data['status'] == ERROR, (err_msg, data)
+        assert 'Expired one time password' in data.get('flash'), (err_msg, data)
