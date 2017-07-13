@@ -179,7 +179,7 @@ class Exporter(object):
                                                    .format(name, obj, file_format)))
                         _zip.content_type = 'application/zip'
 
-                    filename=self.download_name(project, obj)
+                    filename = self.download_name(project, obj)
                     zip_file = FileStorage(filename=filename,
                                            stream=zipped_datafile)
 

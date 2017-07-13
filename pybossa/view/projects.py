@@ -1491,7 +1491,9 @@ def export_projects():
 
     def respond_csv():
         import datetime
-        info = AttrDict(id=0, short_name=datetime.datetime.now().isoformat(), owner_id=current_user.id, base_url=request.url_root+'project/')
+        info = AttrDict(id=0, short_name=datetime.datetime.now().isoformat(),
+                        owner_id=current_user.id,
+                        base_url=request.url_root+'project/')
 
         return project_csv_exporter.response_zip(info, 'projects')
 
@@ -2271,6 +2273,7 @@ def del_coowner(short_name, user_id=None):
         current_app.logger.error(e)
         return abort(500)
 
+
 @blueprint.route('/<short_name>/tasks/projectreport/export')
 @login_required
 @admin_or_subadmin_required
@@ -2281,7 +2284,7 @@ def export_project_report(short_name):
      n_results) = project_by_shortname(short_name)
 
     def respond_csv(ty):
-        if ty not in ('project'):
+        if ty not in ('project',):
             return abort(404)
 
         try:
@@ -2294,7 +2297,6 @@ def export_project_report(short_name):
             flash(gettext('There was an error while exporting your data.'),
                   'error')
         return abort(500)
-
 
     export_formats = ['csv']
     ty = request.args.get('type')

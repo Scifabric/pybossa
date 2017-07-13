@@ -24,25 +24,26 @@ from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
 
+
 class ProjectReportCsvExporter(CsvExporter):
     """Project reports exporter in CSV format"""
 
     def response_zip(self, project, ty):
         return super(ProjectReportCsvExporter, self).response_zip(project, ty)
 
-
     def download_name(self, project, ty):
         """Get the filename (without) path of the file which should be downloaded.
            This function does not check if this filename actually exists!"""
-        validReports = ('project')
+        valid_reports = ('project',)
 
-        if ty not in validReports:
+        if ty not in valid_reports:
             return abort(404)
 
         name = self._project_name_latin_encoded(project)
         filename = '%s_%s_%s_report.zip' % (str(project.id), name, ty)  # Example: 123_feynman_project_report_csv.zip
         filename = secure_filename(filename)
         return filename
+
     def _get_csv(self, out, writer):
         out.seek(0)
         yield out.read()

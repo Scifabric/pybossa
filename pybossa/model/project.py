@@ -141,26 +141,32 @@ class Project(db.Model, DomainObject):
             return default
 
     def get_presenter_headers(self):
-        if not self.has_presenter():
-            return None
-
         headers = set()
+        task_presenter = self.info.get('task_presenter')
+
+        if not task_presenter:
+            return headers
+
         search_backward_stop = 0
-        for match in re.finditer('\.info\.([a-zA-Z0-9_]+)', self.info.get('task_presenter')):
-            linebreak_index = self.info.get('task_presenter').rfind('\n', search_backward_stop, match.start())
-            if self.info.get('task_presenter').rfind('//', linebreak_index if linebreak_index > -1 else search_backward_stop, match.start()) > -1:
+        for match in re.finditer('\.info\.([a-zA-Z0-9_]+)', task_presenter):
+            linebreak_index = task_presenter.rfind(
+                '\n', search_backward_stop, match.start())
+            if linebreak_index > -1:
+                search_start = linebreak_index
+            else:
+                search_start = search_backward_stop
+            if task_presenter.rfind('//', search_start, match.start()) > -1:
                 continue
 
-            comment_start = self.info.get('task_presenter').rfind('/*', search_backward_stop, match.start())
+            comment_start = task_presenter.rfind(
+                '/*', search_backward_stop, match.start())
             if comment_start > -1:
                 search_backward_stop = comment_start
-                comment_end = self.info.get('task_presenter').rfind('*/', search_backward_stop, match.start())
+                comment_end = 'task_presenter'.rfind(
+                    '*/', search_backward_stop, match.start())
                 if comment_end < 0:
                     continue
             headers.add(match.group(1))
             search_backward_stop = match.end()
-
-        if len(headers) < 1:
-            return None
 
         return headers

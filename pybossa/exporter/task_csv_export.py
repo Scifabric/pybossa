@@ -67,7 +67,7 @@ class TaskCsvExporter(CsvExporter):
         return [str(key) for key in keys]
 
     @classmethod
-    def get_value(self, row, *args):
+    def get_value(cls, row, key):
         """Recursively get value from a dictionary by
         passing an arbitrarily long list of nested keys.
         Ex:
@@ -78,17 +78,21 @@ class TaskCsvExporter(CsvExporter):
             ...          "nested_z": True
             ...       }}
             >>> exp = CsvExporter()
-            >>> exp.get_value(row, *['c', 'nested_y', 'double_nested'])
+            >>> exp.get_value(row, 'c__nested_y__double_nested'])
             'www.example.com'
         """
-        while len(args) > 0:
-            for arg in args:
-                try:
-                    args = args[1:]
-                    return self.get_value(row[arg], *args)
-                except:
-                    return None
-        return row
+        if not isinstance(row, dict):
+            return None
+        if key in row:
+            return row[key]
+        splits = key.split('__')
+        for i in range(1, len(splits)):
+            key1 = '__'.join(splits[:i])
+            if key1 in row:
+                key2 = '__'.join(splits[i:])
+                val = cls.get_value(row[key1], key2)
+                if val is not None:
+                    return val
 
     @staticmethod
     def merge_objects(t):
@@ -137,9 +141,8 @@ class TaskCsvExporter(CsvExporter):
 
         return new_row
 
-
     def _format_csv_row(self, row, headers):
-        return [self.get_value(row, *header.split('__')[1:])
+        return [self.get_value(row, header.split('__', 1)[1])
                 for header in headers]
 
     def _handle_row(self, writer, t, headers):
@@ -180,7 +183,6 @@ class TaskCsvExporter(CsvExporter):
 
         out.seek(0)
         yield out.read()
-
 
     def _get_all_headers(self, objs, expanded, table=None, from_obj=True):
         """Construct headers to **guarantee** that all headers

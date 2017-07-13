@@ -78,12 +78,11 @@ class Importer(object):
                 msg = gettext('Could not load project info')
             else:
                 task_presenter_headers = project.get_presenter_headers()
-                if task_presenter_headers:
-                    mismatch_headers = [header for header in task_presenter_headers
-                                        if header not in import_headers]
+                mismatch_headers = [header for header in task_presenter_headers
+                                    if header not in import_headers]
 
             if mismatch_headers:
-                msg = 'Imported columns do not match task presenter code.'
+                msg = 'Imported columns do not match task presenter code.\n'
                 additional_msg = 'Mismatched columns: {}'.format((', '.join(mismatch_headers))[:80])
                 current_app.logger.error(msg)
                 current_app.logger.error(', '.join(mismatch_headers))
