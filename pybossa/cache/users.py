@@ -392,7 +392,7 @@ def get_project_report_userdata(project_id):
     total_tasks = n_tasks(project_id)
     sql = text(
             '''
-            SELECT id as u_id, name, fullname, email_addr, admin, subadmin,
+            SELECT id as u_id, name, fullname, email_addr, admin, subadmin, enabled,
             user_pref->'languages' AS languages, user_pref->'locations' AS locations,
             info->'metadata'->'start_time' AS start_time, info->'metadata'->'end_time' AS end_time,
             info->'metadata'->'timezone' AS timezone, info->'metadata'->'user_type' AS type_of_user,
@@ -410,7 +410,7 @@ def get_project_report_userdata(project_id):
     results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
     users_report = [
         [str(row.u_id), row.name, row.fullname, row.email_addr,
-         str(row.admin), str(row.subadmin), str(row.languages),
+         str(row.admin), str(row.subadmin), str(row.enabled), str(row.languages),
          str(row.locations), str(row.start_time), str(row.end_time),
          str(row.timezone), row.type_of_user, row.additional_comments,
          str(row.completed_tasks), str(row.percent_completed_tasks),
