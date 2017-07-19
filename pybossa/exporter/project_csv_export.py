@@ -34,7 +34,7 @@ class ProjectCsvExporter(CsvExporter):
     def _format_csv_row(self, row, ty):
         tmp = row.keys()
         keys = []
-        for k in tmp: 
+        for k in tmp:
             k = "%s__%s" % (ty, k)
             keys.append(k)
 
@@ -62,7 +62,7 @@ class ProjectCsvExporter(CsvExporter):
     def _get_csv(self, out, writer, table, id, rows=None):
         if rows is None:
             return
-        
+
         for tr in rows:
             self._handle_row(writer, tr, table)
         out.seek(0)
@@ -76,11 +76,11 @@ class ProjectCsvExporter(CsvExporter):
 
         return task_keys
 
-    def _respond_csv(self, ty, base_url):
+    def _respond_csv(self, ty, base_url, info_only=True):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         t = project_repo.get_projects_report(base_url)
-        
+
         if t is not None:
             headers = self._format_headers(next(iter(t), None), ty)
             writer.writerow(headers)

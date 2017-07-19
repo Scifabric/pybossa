@@ -203,7 +203,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
             rows.close()
             register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
-            return session.query(Task).get(task_id)
+            return [session.query(Task).get(task_id)]
 
     return None
 
@@ -271,7 +271,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
         if acquire_lock(project_id, task_id, user_id, remaining, timeout):
             rows.close()
             register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
-            return session.query(Task).get(task_id)
+            return [session.query(Task).get(task_id)]
     return None
 
 

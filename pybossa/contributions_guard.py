@@ -18,7 +18,6 @@
 
 from pybossa.model import make_timestamp
 
-
 class ContributionsGuard(object):
 
     KEY_PREFIX = 'pybossa:task_requested:user:{0}:task:{1}'
@@ -55,7 +54,7 @@ class ContributionsGuard(object):
         user_id = user['user_id'] or user['user_ip']
         if user.get('external_uid'):
             user_id = user['external_uid']
-        return self.KEY_PREFIX % (user_id, task.id)
+        return self.KEY_PREFIX.format(user_id, task.id)
 
     def _remove_task_stamped(self, task, user):
         key = self._create_key(task, user)

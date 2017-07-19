@@ -159,20 +159,6 @@ class CsvExporter(Exporter):
         keys = task_keys + task_info_keys
         return sorted(keys)
 
-    def _respond_csv(self, ty, id):
-        out = tempfile.TemporaryFile()
-        writer = UnicodeWriter(out)
-        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
-        if t is not None:
-            headers = self._format_headers(t, ty)
-            writer.writerow(headers)
-
-            return self._get_csv(out, writer, ty, id)
-        else:
-            def empty_csv(out):
-                yield out.read()
-            return empty_csv(out)
-
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         dataframe = self._respond_csv(ty, project.id)

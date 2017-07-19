@@ -18,8 +18,9 @@
 # Cache global variables for timeouts
 import tempfile
 from pybossa.exporter.csv_export import CsvExporter
-from pybossa.core import project_repo
+from pybossa.core import project_repo, uploader
 from pybossa.util import UnicodeWriter
+from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
@@ -48,7 +49,7 @@ class ProjectReportCsvExporter(CsvExporter):
         out.seek(0)
         yield out.read()
 
-    def _respond_csv(self, ty, id):
+    def _respond_csv(self, ty, id, info_only=False):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         empty_row = []
@@ -86,6 +87,34 @@ class ProjectReportCsvExporter(CsvExporter):
             def empty_csv(out):
                 yield out.read()
             return empty_csv(out)
+
+    def _make_zip(self, project, ty):
+        name = self._project_name_latin_encoded(project)
+        csv_task_generator = self._respond_csv(ty, project.id)
+        if csv_task_generator is not None:
+            # TODO: use temp file from csv generation directly
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in csv_task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                csv_task_generator.close()  # delete temp csv file
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(
+                        datafile.name,
+                        secure_filename('%s_%s.csv' % (name, ty)))
+                    _zip.close()
+                    container = "user_%d" % project.owner_id
+                    _file = FileStorage(
+                        filename=self.download_name(project, ty),
+                        stream=zipped_datafile)
+                    uploader.upload_file(_file, container=container)
+                finally:
+                    zipped_datafile.close()
+            finally:
+                datafile.close()
 
     def pregenerate_zip_files(self, project):
         self._make_zip(project, "project")
