@@ -607,8 +607,12 @@ def update_stats(project_id, geo=False, period='2 week'):
 def get_stats(project_id, geo=False, period='2 week', full=False):
     """Get project's stats."""
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
+    if not ps:
+        update_stats(project_id, geo, period)
+        ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
     # stuff we want real-time
     ps.overall_progress = cached_projects.overall_progress(project_id)
+    ps.n_tasks = cached_projects.n_tasks(project_id)
     # end
     if full:
         return ps
