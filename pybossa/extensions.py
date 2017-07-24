@@ -144,3 +144,6 @@ class JSONEncoder(BaseEncoder): # pragma: no cover
 # CORS
 from flask_cors import CORS
 cors = CORS()
+
+# Strong password
+enable_strong_password = None

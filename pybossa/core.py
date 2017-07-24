@@ -52,6 +52,7 @@ def create_app(run_as_server=True):
     setup_db(app)
     setup_repositories(app)
     setup_exporter(app)
+    setup_strong_password(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -98,8 +99,6 @@ def configure_app(app):
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
-    global enable_strong_password
-    enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
 
 
 def setup_json_serializer(app):
@@ -694,3 +693,8 @@ def setup_assets(app):
     """Setup assets."""
     from flask.ext.assets import Environment
     assets = Environment(app)
+
+
+def setup_strong_password(app):
+    global enable_strong_password
+    enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
