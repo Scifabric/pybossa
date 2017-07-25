@@ -21,7 +21,7 @@ import os
 import shutil
 import zipfile
 from StringIO import StringIO
-from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
+from default import db, Fixtures, with_context, with_context_settings, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call, MagicMock
 from flask import redirect
@@ -1293,7 +1293,7 @@ class TestWeb(web.Helper):
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
-        msg = "Ooops, we didn't find you in the system"
+        msg = "Ooops, we didn&#39;t find you in the system"
         res = self.signin(email='wrongemail')
         assert msg in res.data, res.data
 
@@ -3192,7 +3192,7 @@ class TestWeb(web.Helper):
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Ooops, we didn't find you in the system" in res.data, res.data
+        assert "Ooops, we didn&#39;t find you in the system" in res.data, res.data
 
     @with_context
     def test_39_google_oauth_creation(self):
@@ -3466,7 +3466,7 @@ class TestWeb(web.Helper):
                                   'confirm': "p4ssw0rd",
                                   'btn': 'Password'},
                             follow_redirects=True)
-        msg = "Your current password doesn't match the one in our records"
+        msg = "Your current password doesn&#39;t match the one in our records"
         assert msg in res.data
 
         res = self.app.post('/account/johndoe/update',
@@ -3767,7 +3767,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/account/forgot-password',
                             data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
-        assert ("We don't have this email in our records. You may have"
+        assert ("We don&#39;t have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
                 "Facebook, or Google to sign-in") in res.data
 
@@ -4884,7 +4884,7 @@ class TestWeb(web.Helper):
         assert data['available_importers'] == importers, data
 
         importers = ['&type=epicollect',
-                     '&type=csv', 
+                     '&type=csv',
                      '&type=s3',
                      '&type=twitter',
                      '&type=youtube',
@@ -5149,7 +5149,7 @@ class TestWeb(web.Helper):
         assert tasks == [], "Tasks should not be immediately added"
         data = {'type': 'csv', 'csv_url': 'http://myfakecsvurl.com'}
         queue.enqueue.assert_called_once_with(import_tasks, project.id, **data)
-        msg = "You're trying to import a large amount of tasks, so please be patient.\
+        msg = "You&#39;re trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
@@ -5843,7 +5843,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % project.name
+        msg = "Oops! You have to sign in to participate in &lt;strong&gt;%s&lt;/strong&gt;" % project.name
         assert msg in res.data, err_msg
 
         # As registered user
@@ -6609,3 +6609,108 @@ class TestWeb(web.Helper):
         res = self.app_post_json(url)
 
         assert res.status_code == 403, res.status_code
+
+    @patch('pybossa.view.account.mail_queue')
+    @patch('pybossa.otp.OtpAuth')
+    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
+    def test_otp_signin_signout_json(self, OtpAuth, mail_queue):
+        """Test WEB two factor sign in and sign out JSON works"""
+        self.register()
+        # Log out as the registration already logs in the user
+        self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data['form'].get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        OTP = '1234'
+        otp_secret = OtpAuth.return_value
+        otp_secret.totp.return_value = OTP
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=True)
+        data = json.loads(res.data)
+        msg = "an email has been sent to you with one time password"
+        err_msg = 'Should redirect to otp validation page'
+        otp_secret.totp.assert_called()
+        mail_queue.enqueue.assert_called()
+        assert data.get('flash') == msg, (err_msg, data)
+        assert data.get('status') == SUCCESS, (err_msg, data)
+        assert data.get('next').split('/')[-1] == 'otpvalidation', (err_msg, data)
+
+        token = data.get('next').split('/')[-2]
+
+        # pass wrong token
+        res = self.otpvalidation(follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'Should be error'
+        assert data['status'] == 'error', (err_msg, data)
+        assert data['flash'] == 'Please sign in.', (err_msg, data)
+
+        # pass wrong otp
+        res = self.otpvalidation(token=token, follow_redirects=True,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'There should be an invalid OTP error message'
+        assert data['status'] == 'error', (err_msg, data)
+        msg = 'Invalid one time password, a newly generated one time password was sent to your email.'
+        assert data['flash'] == msg, (err_msg, data)
+
+        # pass right otp
+        res = self.otpvalidation(token=token, follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'There should not be an invalid OTP error message'
+        assert data['status'] == 'success', (err_msg, data)
+
+        # Log out
+        res = self.signout(content_type="application/json",
+                           follow_redirects=False)
+        msg = "You are now signed out"
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, data
+        assert data.get('next') == '/', data
+
+    @patch('pybossa.view.account.otp.retrieve_user_otp_secret')
+    @patch('pybossa.otp.OtpAuth')
+    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
+    def test_login_expired_otp(self, OtpAuth, retrieve_user_otp_secret):
+        """Test expired otp json"""
+        self.register()
+        # Log out as the registration already logs in the user
+        self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data['form'].get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        OTP = '1234'
+        otp_secret = OtpAuth.return_value
+        otp_secret.totp.return_value = OTP
+        retrieve_user_otp_secret.return_value = None
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=True)
+        data = json.loads(res.data)
+
+        token = data.get('next').split('/')[-2]
+
+        # pass otp - mock expired
+        res = self.otpvalidation(token=token, follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'OTP should be expired'
+        assert data['status'] == ERROR, (err_msg, data)
+        assert 'Expired one time password' in data.get('flash'), (err_msg, data)

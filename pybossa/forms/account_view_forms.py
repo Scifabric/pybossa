@@ -24,4 +24,5 @@ from forms import (
     ChangePasswordForm,
     ResetPasswordForm,
     ForgotPasswordForm,
-    AvatarUploadForm)
+    AvatarUploadForm,
+    OTPForm)
