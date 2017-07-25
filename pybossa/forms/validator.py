@@ -21,7 +21,7 @@ from wtforms.validators import ValidationError
 import re
 import requests
 
-from pybossa.util import is_reserved_name
+from pybossa.util import is_reserved_name, check_password_strength
 
 
 class Unique(object):
@@ -116,3 +116,50 @@ class ReservedName(object):
         if is_reserved_name(self.blueprint, field.data):
             raise ValidationError(self.message)
 
+class CheckPasswordStrength(object):
+    """ Validator to apply strong password policy """
+
+    def __init__(
+            self, message=None, min_len=8,
+            max_len=15, uppercase=True,
+            lowercase=True, numeric=True,
+            special=True):
+        self.min_len = min_len
+        self.max_len = max_len
+        self.uppercase = uppercase
+        self.lowercase = lowercase
+        self.numeric = numeric
+        self.special = special
+
+        if message:
+            self.message = message
+        else:
+            self.message = self._get_message(
+                                    uppercase, lowercase,
+                                    numeric, special)
+
+    def __call__(self, form, field):
+        pwd = field.data
+        valid, message = check_password_strength(
+                            pwd, self.min_len, self.max_len,
+                            self.uppercase, self.lowercase,
+                            self.numeric, self.special, self.message)
+        if not valid:
+            raise ValidationError(message)
+
+    def _get_message(self, uppercase=True, lowercase=True,
+                     numeric=True, special=True):
+        message = []
+        if uppercase:
+            message.append('one uppercase')
+        if lowercase:
+            message.append('one lowercase')
+        if numeric:
+            message.append('one numeric ')
+        if special:
+            message.append('one special !@$%^&*#')
+
+        if message:
+            return 'Password must contain at least {} character.'\
+                .format(', '.join(message))
+        return None

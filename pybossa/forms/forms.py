@@ -28,6 +28,7 @@ from flask.ext.babel import lazy_gettext, gettext
 from pybossa.core import project_repo, user_repo
 from pybossa.sched import sched_variants
 import validator as pb_validator
+from pybossa.core import enable_strong_password
 
 
 EMAIL_MAX_LENGTH = 254
@@ -299,9 +300,17 @@ class RegisterForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    password = PasswordField(lazy_gettext('New Password'),
-                             [validators.Required(err_msg),
-                              validators.EqualTo('confirm', err_msg_2)])
+    if enable_strong_password:
+        password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2),
+                            pb_validator.CheckPasswordStrength()])
+    else:
+        password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 

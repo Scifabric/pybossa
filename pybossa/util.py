@@ -36,6 +36,8 @@ import hashlib
 import hmac
 import simplejson
 import time
+from flask.ext.babel import lazy_gettext
+import re
 
 
 def last_flashed_message():
@@ -88,7 +90,7 @@ def handle_content_type(data):
                 data[item] = cat
             if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
-            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str: 
+            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
                 data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
@@ -547,3 +549,35 @@ def refresh_materialized_view(db, view):
         db.session.execute(sql)
         db.session.commit()
         return "Materialized view refreshed"
+
+
+def check_password_strength(
+        password, min_len=8, max_len=15,
+        uppercase=True, lowercase=True,
+        numeric=True, special=True, message=""):
+    """Check password strength, return True if passed.
+    Otherwise return False with exact failure message.
+    """
+
+    required_chars = []
+    if uppercase:
+        required_chars.append(r'[A-Z]')
+    if lowercase:
+        required_chars.append(r'[a-z]')
+    if numeric:
+        required_chars.append(r'[0-9]')
+    if special:
+        required_chars.append(r'[!@$%^&*#]')
+
+    pwd_len = len(password)
+    if pwd_len < min_len or pwd_len > max_len:
+        message = lazy_gettext(
+                    u'Password must be between {0} and {1} characters'
+                    .format(min_len, max_len))
+        return False, message
+
+    valid = all(re.search(ch, password) for ch in required_chars)
+    if not valid:
+        return False, message
+    else:
+        return True, None
