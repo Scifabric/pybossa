@@ -4442,7 +4442,7 @@ class TestWeb(web.Helper):
             err_msg = "All the task column names should be included"
             for tk in flatten(t.dictize()).keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (expected_key, err_msg)
             err_msg = "All the task.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk

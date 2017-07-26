@@ -25,7 +25,7 @@ import zipfile
 from pybossa.core import uploader, task_repo, result_repo
 from pybossa.uploader import local
 from unidecode import unidecode
-from flask import url_for, safe_join, send_file, redirect
+from flask import url_for, safe_join, send_file, redirect, current_app
 from werkzeug.utils import secure_filename
 from flatten_json import flatten
 
@@ -41,11 +41,14 @@ class Exporter(object):
         """Get the data for a given table."""
         repo, query = self.repositories[table]
         data = getattr(repo, query)(project_id=project_id)
+        ignore_keys = current_app.config.get('IGNORE_FLAT_KEYS')
         if info_only:
             if flat:
                 tmp = []
                 for row in data:
                     inf = row.dictize()['info']
+                    inf = self._clean_ignore_keys(inf,
+                                                  ignore_keys)
                     if inf and type(inf) == dict:
                         tmp.append(flatten(inf))
                     else:
@@ -59,10 +62,22 @@ class Exporter(object):
                         tmp.append({})
         else:
             if flat:
-                tmp = [flatten(row.dictize()) for row in data]
+                tmp = []
+                for row in data:
+                    datum = row.dictize()
+                    datum['info'] = self._clean_ignore_keys(datum['info'],
+                                                            ignore_keys)
+                    tmp.append(flatten(datum))
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
+
+    def _clean_ignore_keys(self, data, ignore_keys):
+        """Remove key/value pairs so flatten can work fast."""
+        if ignore_keys:
+            for key in ignore_keys:
+                data.pop(key, None)
+        return data
 
     def _project_name_latin_encoded(self, project):
         """project short name for later HTML header usage"""
