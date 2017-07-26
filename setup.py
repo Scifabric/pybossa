@@ -59,7 +59,8 @@ requirements = [
     "readability-lxml>=0.6.2, <1.0",
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
-    "flatten-json"
+    "flatten-json",
+    "otpauth>=1.0.1, <1.0.2"
 ]
 
 setup(

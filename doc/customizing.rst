@@ -793,6 +793,18 @@ with this configuration parameter::
 
     ACCOUNT_CONFIRMATION_DISABLED = True
 
+Two factor authentication on login
+==================================
+
+If you need an extra layer of security for user authentication, PYBOSSA allows
+you to enable two factor authentication by setting this configuration value::
+
+    ENABLE_TWO_FACTOR_AUTH = True
+
+With this parameter set, after password verification users will receive a
+one-time code in their email, and will be redirected to a page where they can
+insert the code to complete the login process.
+
 Sending weekly email stats to project owners
 ============================================
 

@@ -39,12 +39,30 @@ os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 flask_app = create_app(run_as_server=False)
 
+
 def with_context(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         with flask_app.app_context():
             return f(*args, **kwargs)
     return decorated_function
+
+
+def with_context_settings(**kwargs):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*fargs, **fkwargs):
+            config = flask_app.config
+            original = {key: config.get(key) for key in kwargs}
+            config.update(kwargs)
+            with flask_app.app_context():
+                try:
+                    return f(*fargs, **fkwargs)
+                finally:
+                    config.update(original)
+        return decorated
+    return decorator
+
 
 def delete_indexes():
     sql = text('''select * from pg_indexes WHERE tablename = 'users_rank' ''')
