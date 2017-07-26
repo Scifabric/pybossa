@@ -1293,7 +1293,7 @@ class TestWeb(web.Helper):
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
-        msg = "Ooops, we didn&#39;t find you in the system"
+        msg = "Ooops, we didn't find you in the system"
         res = self.signin(email='wrongemail')
         assert msg in res.data, res.data
 
