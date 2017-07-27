@@ -33,6 +33,7 @@ from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
+from verify_email import validate_email
 
 
 def create_app(run_as_server=True):
@@ -524,10 +525,6 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if current_user and current_user.is_authenticated():
-            if current_user.email_addr == current_user.name:
-                flash(gettext("Please update your e-mail address in your"
-                      " profile page, right now it is empty!"), 'error')
         if (current_user and current_user.is_authenticated()
             and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
