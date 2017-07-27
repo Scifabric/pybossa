@@ -3466,7 +3466,7 @@ class TestWeb(web.Helper):
                                   'confirm': "p4ssw0rd",
                                   'btn': 'Password'},
                             follow_redirects=True)
-        msg = "Your current password doesn&#39;t match the one in our records"
+        msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
         res = self.app.post('/account/johndoe/update',
@@ -3767,7 +3767,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/account/forgot-password',
                             data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
-        assert ("We don&#39;t have this email in our records. You may have"
+        assert ("We don't have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
                 "Facebook, or Google to sign-in") in res.data
 
@@ -5149,7 +5149,7 @@ class TestWeb(web.Helper):
         assert tasks == [], "Tasks should not be immediately added"
         data = {'type': 'csv', 'csv_url': 'http://myfakecsvurl.com'}
         queue.enqueue.assert_called_once_with(import_tasks, project.id, **data)
-        msg = "You&#39;re trying to import a large amount of tasks, so please be patient.\
+        msg = "You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
@@ -5843,7 +5843,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        msg = "Oops! You have to sign in to participate in &lt;strong&gt;%s&lt;/strong&gt;" % project.name
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % project.name
         assert msg in res.data, err_msg
 
         # As registered user
