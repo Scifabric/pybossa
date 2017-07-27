@@ -3192,7 +3192,7 @@ class TestWeb(web.Helper):
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Ooops, we didn&#39;t find you in the system" in res.data, res.data
+        assert "Ooops, we didn't find you in the system" in res.data, res.data
 
     @with_context
     def test_39_google_oauth_creation(self):
