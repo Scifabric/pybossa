@@ -33,7 +33,6 @@ from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
-from verify_email import validate_email
 
 
 def create_app(run_as_server=True):
