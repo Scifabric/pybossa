@@ -41,6 +41,7 @@ class Exporter(object):
         """Get the data for a given table."""
         repo, query = self.repositories[table]
         data = getattr(repo, query)(project_id=project_id)
+        ignore_keys = current_password.config.get('IGNORE_FLAT_KEYS')
         if info_only:
             if flat:
                 tmp = []
