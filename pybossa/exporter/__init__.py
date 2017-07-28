@@ -47,6 +47,8 @@ class Exporter(object):
                 tmp = []
                 for row in data:
                     inf = row.dictize()['info']
+                    inf = self._clean_ignore_keys(inf,
+                                                  ignore_keys)
                     if inf and type(inf) == dict:
                         tmp.append(flatten(inf))
                     else:
@@ -60,7 +62,10 @@ class Exporter(object):
                         tmp.append({})
         else:
             if flat:
-                tmp = [flatten(row.dictize()) for row in data]
+                tmp = []
+                for row in data:
+                    tmp.append(self._clean_ignore_keys(row.dictize(),
+                                                       ignore_keys))
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
