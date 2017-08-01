@@ -2483,29 +2483,6 @@ class TestWeb(web.Helper):
         assert uploader.delete_file.call_args_list == expected
 
     @with_context
-    def test_15_twitter_email_warning(self):
-        """Test WEB Twitter email warning works"""
-        # This test assumes that the user allows Twitter to authenticate,
-        #  returning a valid resp. The only difference is a user object
-        #  without a password
-        #  Register a user and sign out
-        user = User(name="tester", passwd_hash="tester",
-                    fullname="tester",
-                    email_addr="tester")
-        user.set_password('tester')
-        db.session.add(user)
-        db.session.commit()
-        db.session.query(User).all()
-
-        # Sign in again and check the warning message
-        self.signin(email="tester", password="tester")
-        res = self.app.get('/', follow_redirects=True)
-        msg = ("Please update your e-mail address in your"
-               " profile page, right now it is empty!")
-        user = db.session.query(User).get(1)
-        assert msg in res.data, res.data
-
-    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
@@ -4442,7 +4419,7 @@ class TestWeb(web.Helper):
             err_msg = "All the task column names should be included"
             for tk in flatten(t.dictize()).keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (expected_key, err_msg)
             err_msg = "All the task.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
