@@ -20,6 +20,7 @@
 Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
+import copy
 import os
 import zipfile
 from pybossa.core import uploader, task_repo, result_repo
@@ -48,7 +49,8 @@ class Exporter(object):
                 for row in data:
                     inf = row.dictize()['info']
                     inf = self._clean_ignore_keys(inf,
-                                                  ignore_keys)
+                                                  ignore_keys,
+                                                  info_only)
 
                     if inf and type(inf) == dict:
                         tmp.append(flatten(inf))
@@ -66,17 +68,22 @@ class Exporter(object):
                 tmp = []
                 for row in data:
                     cleaned = self._clean_ignore_keys(row.dictize(),
-                                                      ignore_keys)
+                                                      ignore_keys,
+                                                      info_only)
                     tmp.append(flatten(cleaned))
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
 
-    def _clean_ignore_keys(self, data, ignore_keys):
+    def _clean_ignore_keys(self, data, ignore_keys, info_only):
         """Remove key/value pairs so flatten can work fast."""
+        data = copy.deepcopy(data)
         if ignore_keys:
             for key in ignore_keys:
-                data.pop(key, None)
+                if info_only:
+                    data.pop(key, None)
+                else:
+                    data['info'].pop(key, None)
         return data
 
     def _project_name_latin_encoded(self, project):
