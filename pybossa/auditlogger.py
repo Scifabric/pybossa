@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """AuditLogger module."""
 from pybossa.model.auditlog import Auditlog
+import json
 
 
 class AuditLogger(object):
@@ -28,8 +29,16 @@ class AuditLogger(object):
         self.repo = auditlog_repo
         self.caller = caller
 
-    def log_event(self, project, user, action, attribute, old_value, new_value):
+    def log_event(self, project, user, action, attribute,
+                  old_value, new_value):
         """Log event."""
+
+        if type(old_value) in [dict, list]:
+            old_value = json.dumps(old_value)
+
+        if type(new_value) in [dict, list]:
+            new_value = json.dumps(new_value)
+
         log = Auditlog(
             project_id=project.id,
             project_short_name=project.short_name,
