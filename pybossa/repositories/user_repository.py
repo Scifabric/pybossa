@@ -81,3 +81,8 @@ class UserRepository(Repository):
             name = user.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def get_users(self, ids):
+        if not ids:
+            return []
+        return self.db.session.query(User).filter(User.id.in_(ids)).all()
