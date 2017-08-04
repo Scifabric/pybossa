@@ -92,11 +92,13 @@ class UserRepository(Repository):
     def get_info_columns(self):
         return [u'languages', u'locations', u'start_time', u'end_time', u'timezone', u'user_type', u'additional_comments']
 
-    def smart_search(self, where, query_params):
+    def smart_search(self, current_user_is_admin, where, query_params):
         sql = text('''
                     SELECT id, name, fullname, info, enabled
                     FROM public.user
-                    WHERE {where};
+                    WHERE {where}
+                    AND (:is_admin OR (NOT admin AND NOT subadmin));
                     '''.format(where=where))
+        query_params['is_admin'] = current_user_is_admin
         results = self.db.session.execute(sql, query_params)
         return [dict(row) for row in results]

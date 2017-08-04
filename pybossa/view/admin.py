@@ -39,6 +39,7 @@ from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.util import generate_manage_user_email, countries, languages, timezones, user_types
+from pybossa.util import can_update_user_info
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import site_stats
@@ -724,7 +725,7 @@ def manageusers():
     efilters = dict(enabled=True)
     dfilters = dict(enabled=False)
 
-    if current_user.subadmin:
+    if not current_user.admin:
         efilters.update(admin=False, subadmin=False)
         dfilters.update(admin=False, subadmin=False)
 
@@ -755,16 +756,15 @@ def manageusers():
                     params['info'] = value
         if search_criteria:
             criteria = ' AND '.join(search_criteria)
-            found = user_repo.smart_search(criteria, params)
+            found = user_repo.smart_search(current_user.admin, criteria, params)
             if not found:
                 flash('No user found matching your query')
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
         found = [user for user in user_repo.search_by_name(query)
-                 if user.id != current_user.id]
-        if current_user.subadmin and (user.admin or user.subadmin):
-            found = False
+                 if user.id != current_user.id
+                 and can_update_user_info(current_user, user)]
 
         if not found:
             flash('No user found matching your query: {}'.format(form.user.data))
@@ -787,7 +787,7 @@ def enable_user(user_id=None):
             user = user_repo.get(user_id)
             if user:
                 # avoid enabling admin/subadmin user by subadmin with direct url
-                if current_user.subadmin and (user.admin or user.subadmin):
+                if not can_update_user_info(current_user, user):
                     return abort(403)
 
                 user.enabled = True
@@ -813,7 +813,7 @@ def disable_user(user_id=None):
             user = user_repo.get(user_id)
             if user:
                 # avoid disabling admin/subadmin user by subadmin with direct url
-                if current_user.subadmin and (user.admin or user.subadmin):
+                if not can_update_user_info(current_user, user):
                     return abort(403)
 
                 user.enabled = False
