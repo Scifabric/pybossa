@@ -31,7 +31,7 @@ class ProjectPasswdManager(object):
     def password_needed(self, project, user_id_or_ip):
         """Check if password is required."""
         if project.needs_password() and (current_user.is_anonymous() or not
-                                         (current_user.admin or
+                                         (current_user.admin or current_user.subadmin or
                                           current_user.id == project.owner_id or is_coowner(project.id))):
             cookie = self.cookie_handler.get_cookie_from(project)
             request_passwd = user_id_or_ip not in cookie
