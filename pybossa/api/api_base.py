@@ -125,7 +125,7 @@ class APIBase(MethodView):
         items = []
         for result in query_result:
             # This is for n_favs orderby case
-            if not isinstance(result, DomainObject):
+            if 'n_favs' in result.keys():
                 result = result[0]
             try:
                 if (result.__class__ != self.__class__):
