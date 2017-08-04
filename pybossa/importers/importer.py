@@ -82,7 +82,7 @@ class Importer(object):
                                     if header not in import_headers]
 
             if mismatch_headers:
-                msg = 'Imported columns do not match task presenter code.\n'
+                msg = 'Imported columns do not match task presenter code. '
                 additional_msg = 'Mismatched columns: {}'.format((', '.join(mismatch_headers))[:80])
                 current_app.logger.error(msg)
                 current_app.logger.error(', '.join(mismatch_headers))
