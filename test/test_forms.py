@@ -84,15 +84,6 @@ class TestValidator(Test):
     @with_context
     @raises(ValidationError)
     def test_check_password_strength(self):
-        """Test VALIDATOR CheckPasswordStrength  for new user password"""
-        form = RegisterForm()
-        form.password.data = 'Abcd12345'
-        u = validator.CheckPasswordStrength()
-        u.__call__(form, form.password)
-
-    @with_context
-    @raises(ValidationError)
-    def test_check_password_strength(self):
         """Test VALIDATOR CheckPasswordStrength for new user password"""
         form = RegisterForm()
         form.password.data = 'Abcd12345'

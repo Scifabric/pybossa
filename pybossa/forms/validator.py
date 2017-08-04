@@ -171,7 +171,7 @@ class CheckPasswordStrength(object):
         if numeric:
             message.append('one numeric ')
         if special:
-            message.append('one special !@$%%^&*#')
+            message.append('one special !@$%^&*#')
 
         if message:
             return 'Password must contain at least {} character.'\

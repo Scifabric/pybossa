@@ -793,6 +793,18 @@ with this configuration parameter::
 
     ACCOUNT_CONFIRMATION_DISABLED = True
 
+Two factor authentication on login
+==================================
+
+If you need an extra layer of security for user authentication, PYBOSSA allows
+you to enable two factor authentication by setting this configuration value::
+
+    ENABLE_TWO_FACTOR_AUTH = True
+
+With this parameter set, after password verification users will receive a
+one-time code in their email, and will be redirected to a page where they can
+insert the code to complete the login process.
+
 Sending weekly email stats to project owners
 ============================================
 
@@ -1018,3 +1030,16 @@ vary a lot from one project to another, we do not provide a template but some gu
    or not.
 
 For more info regarding Onesignal JS SDK, check their `documentation. <https://documentation.onesignal.com/docs/web-push-sdk>`_
+
+Ignore specific keys when exporting data in CSV format
+======================================================
+
+Sometimes your PYBOSSA project saves information like GeoJSON within the tasks or task_runs. This is a bad thing
+for the exporter, as it will try to flatten it. In such scenarios, you want to instruct PYBOSSA to ignore those
+keys, as they will be included in the JSON export files, and reduce all the overhead (as well as destroying the format
+due to the normalization).
+
+For ignoring a key (or a list of keys), just add the following config variable to your settings_local.py file::
+
+    IGNORE_FLAT_KEYS = [ 'geojson', 'key1', ...]
+

@@ -85,29 +85,35 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_project_update_attributes(self):
         """Test Auditlog API project update attributes works."""
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(info=dict(list=[0]))
 
         data = {'name': 'New Name',
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
+                'info': {u'list': [1]}
                 }
         attributes = data.keys()
+        attributes.append('list')
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
 
-        assert len(logs) == 5, logs
+        assert len(logs) == 6, (len(logs), logs)
         for log in logs:
             assert log.user_id == project.owner_id, log.user_id
             assert log.user_name == project.owner.name, log.user_name
             assert log.project_short_name == project.short_name, log.project_short_name
             assert log.action == 'update', log.action
             assert log.caller == 'api', log.caller
-            assert log.attribute in attributes, log.attribute
-            msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert data[log.attribute] == log.new_value, msg
+            assert log.attribute in attributes, (log.attribute, attributes)
+            if log.attribute != 'list':
+                msg = "%s != %s" % (data[log.attribute], log.new_value)
+                assert data[log.attribute] == log.new_value, msg
+            else:
+                msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
+                assert data['info'][log.attribute] == json.loads(log.new_value), msg
 
     @with_context
     def test_project_update_attributes_admin(self):
