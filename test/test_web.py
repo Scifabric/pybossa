@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import json
 import os
 import shutil
 import zipfile
 from StringIO import StringIO
-from default import db, Fixtures, with_context, FakeResponse, mock_contributions_guard
+from default import db, Fixtures, with_context, with_context_settings, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call, MagicMock
 from flask import redirect
@@ -1310,7 +1311,7 @@ class TestWeb(web.Helper):
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
-        msg = "Ooops, we didn't find you in the system"
+        msg = "Ooops, we didn&#39;t find you in the system"
         res = self.signin(email='wrongemail')
         assert msg in res.data, res.data
 
@@ -2532,29 +2533,6 @@ class TestWeb(web.Helper):
         assert uploader.delete_file.call_args_list == expected
 
     @with_context
-    def test_15_twitter_email_warning(self):
-        """Test WEB Twitter email warning works"""
-        # This test assumes that the user allows Twitter to authenticate,
-        #  returning a valid resp. The only difference is a user object
-        #  without a password
-        #  Register a user and sign out
-        user = User(name="tester", passwd_hash="tester",
-                    fullname="tester",
-                    email_addr="tester")
-        user.set_password('tester')
-        db.session.add(user)
-        db.session.commit()
-        db.session.query(User).all()
-
-        # Sign in again and check the warning message
-        self.signin(email="tester", password="tester")
-        res = self.app.get('/', follow_redirects=True)
-        msg = ("Please update your e-mail address in your"
-               " profile page, right now it is empty!")
-        user = db.session.query(User).get(1)
-        assert msg in res.data, res.data
-
-    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
@@ -3258,7 +3236,7 @@ class TestWeb(web.Helper):
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Ooops, we didn't find you in the system" in res.data, res.data
+        assert "Ooops, we didn&#39;t find you in the system" in res.data, res.data
 
     @with_context
     def test_39_google_oauth_creation(self):
@@ -3533,7 +3511,7 @@ class TestWeb(web.Helper):
                                   'confirm': "p4ssw0rd",
                                   'btn': 'Password'},
                             follow_redirects=True)
-        msg = "Your current password doesn't match the one in our records"
+        msg = "Your current password doesn&#39;t match the one in our records"
         assert msg in res.data
 
         res = self.app.post('/account/johndoe/update',
@@ -3755,7 +3733,7 @@ class TestWeb(web.Helper):
         assert 'To recover your password' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         csrf = self.get_csrf('/account/forgot-password')
@@ -3773,7 +3751,7 @@ class TestWeb(web.Helper):
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': google.passwd_hash, 'user': google.name}
         csrf = self.get_csrf('/account/forgot-password')
@@ -3791,7 +3769,7 @@ class TestWeb(web.Helper):
         assert 'your Google account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         data = {'password': facebook.passwd_hash, 'user': facebook.name}
         csrf = self.get_csrf('/account/forgot-password')
@@ -3807,7 +3785,7 @@ class TestWeb(web.Helper):
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
-        assert "send you an email" in resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
 
         # Test with not valid form
         csrf = self.get_csrf('/account/forgot-password')
@@ -3831,7 +3809,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/account/forgot-password',
                             data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
-        assert ("We don't have this email in our records. You may have"
+        assert ("We don&#39;t have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
                 "Facebook, or Google to sign-in") in res.data
 
@@ -4477,6 +4455,97 @@ class TestWeb(web.Helper):
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
+    def test_export_task_csv_ignore_keys(self):
+        """Test WEB export Tasks to CSV with ignore keys works"""
+        # First test for a non-existant project
+        with patch.dict(self.flask_app.config, {'IGNORE_FLAT_KEYS': ['geojson']}):
+            uri = '/project/somethingnotexists/tasks/export'
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+            # Now get the tasks in CSV format
+            uri = "/project/somethingnotexists/tasks/export?type=task&format=csv"
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+            # Now get the wrong table name in CSV format
+            uri = "/project/%s/tasks/export?type=wrong&format=csv" % Fixtures.project_short_name
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+
+            # Now with a real project
+            project = ProjectFactory.create()
+            self.clear_temp_container(project.owner_id)
+
+            TaskFactory.create_batch(5, project=project, info={'question': 'qu',
+                                                               'geojson':
+                                                               'complexjson'})
+            uri = '/project/%s/tasks/export' % project.short_name
+            res = self.app.get(uri, follow_redirects=True)
+            heading = "Export All Tasks and Task Runs"
+            data = res.data.decode('utf-8')
+            assert heading in data, "Export page should be available\n %s" % data
+            # Now get the tasks in CSV format
+            uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
+            res = self.app.get(uri, follow_redirects=True)
+            zip = zipfile.ZipFile(StringIO(res.data))
+            # Check only one file in zipfile
+            err_msg = "filename count in ZIP is not 2"
+            assert len(zip.namelist()) == 2, err_msg
+            # Check ZIP filename
+            extracted_filename = zip.namelist()[0]
+            assert extracted_filename == 'project1_task.csv', zip.namelist()[0]
+
+            csv_content = StringIO(zip.read(extracted_filename))
+            csvreader = unicode_csv_reader(csv_content)
+            project = db.session.query(Project)\
+                        .filter_by(short_name=project.short_name)\
+                        .first()
+            exported_tasks = []
+            n = 0
+            for row in csvreader:
+                if n != 0:
+                    exported_tasks.append(row)
+                else:
+                    keys = row
+                n = n + 1
+            err_msg = "The number of exported tasks is different from Project Tasks"
+            assert len(exported_tasks) == len(project.tasks), err_msg
+            for t in project.tasks:
+                err_msg = "All the task column names should be included"
+                d = copy.deepcopy(t.dictize())
+                d['info'].pop('geojson', None)
+                for tk in flatten(d).keys():
+                    expected_key = "%s" % tk
+                    assert expected_key in keys, (expected_key, err_msg)
+                err_msg = "All the task.info column names should be included except geojson"
+                info_keys = copy.deepcopy(t.info.keys())
+                info_keys.pop(info_keys.index('geojson'))
+                for tk in info_keys:
+                    expected_key = "info_%s" % tk
+                    assert expected_key in keys, (expected_key, err_msg)
+
+            for et in exported_tasks:
+                task_id = et[keys.index('id')]
+                task = db.session.query(Task).get(task_id)
+                task_dict = copy.deepcopy(task.dictize())
+                task_dict['info'].pop('geojson', None)
+                task_dict_flat = copy.deepcopy(flatten(task_dict))
+                for k in task_dict_flat.keys():
+                    slug = '%s' % k
+                    err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
+                    if task_dict_flat[k] is not None:
+                        assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    else:
+                        assert u'' == et[keys.index(slug)], err_msg
+                for k in task_dict['info'].keys():
+                    slug = 'info_%s' % k
+                    err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                    assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+            # Tasks are exported as an attached file
+            content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
+            assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+
+    @with_context
     def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
         # First test for a non-existant project
@@ -4524,7 +4593,6 @@ class TestWeb(web.Helper):
         exported_tasks = []
         n = 0
         for row in csvreader:
-            print row
             if n != 0:
                 exported_tasks.append(row)
             else:
@@ -4536,7 +4604,7 @@ class TestWeb(web.Helper):
             err_msg = "All the task column names should be included"
             for tk in flatten(t.dictize()).keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (expected_key, err_msg)
             err_msg = "All the task.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
@@ -5274,7 +5342,7 @@ class TestWeb(web.Helper):
         assert tasks == [], "Tasks should not be immediately added"
         data = {'type': 'csv', 'csv_url': 'http://myfakecsvurl.com'}
         queue.enqueue.assert_called_once_with(import_tasks, project.id, **data)
-        msg = "You're trying to import a large amount of tasks, so please be patient.\
+        msg = "You&#39;re trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
@@ -5979,7 +6047,8 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        assert "sign in" in res.data, err_msg
+        msg = "Oops! You have to sign in to participate in &lt;strong&gt;%s&lt;/strong&gt;" % project.name
+        assert msg in res.data, err_msg
 
         # As registered user
         res = self.signin()
@@ -6749,3 +6818,108 @@ class TestWeb(web.Helper):
         res = self.app_post_json(url)
 
         assert res.status_code == 403, res.status_code
+
+    @patch('pybossa.view.account.mail_queue')
+    @patch('pybossa.otp.OtpAuth')
+    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
+    def test_otp_signin_signout_json(self, OtpAuth, mail_queue):
+        """Test WEB two factor sign in and sign out JSON works"""
+        self.register()
+        # Log out as the registration already logs in the user
+        self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data['form'].get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        OTP = '1234'
+        otp_secret = OtpAuth.return_value
+        otp_secret.totp.return_value = OTP
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=True)
+        data = json.loads(res.data)
+        msg = "an email has been sent to you with one time password"
+        err_msg = 'Should redirect to otp validation page'
+        otp_secret.totp.assert_called()
+        mail_queue.enqueue.assert_called()
+        assert data.get('flash') == msg, (err_msg, data)
+        assert data.get('status') == SUCCESS, (err_msg, data)
+        assert data.get('next').split('/')[-1] == 'otpvalidation', (err_msg, data)
+
+        token = data.get('next').split('/')[-2]
+
+        # pass wrong token
+        res = self.otpvalidation(follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'Should be error'
+        assert data['status'] == 'error', (err_msg, data)
+        assert data['flash'] == 'Please sign in.', (err_msg, data)
+
+        # pass wrong otp
+        res = self.otpvalidation(token=token, follow_redirects=True,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'There should be an invalid OTP error message'
+        assert data['status'] == 'error', (err_msg, data)
+        msg = 'Invalid one time password, a newly generated one time password was sent to your email.'
+        assert data['flash'] == msg, (err_msg, data)
+
+        # pass right otp
+        res = self.otpvalidation(token=token, follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'There should not be an invalid OTP error message'
+        assert data['status'] == 'success', (err_msg, data)
+
+        # Log out
+        res = self.signout(content_type="application/json",
+                           follow_redirects=False)
+        msg = "You are now signed out"
+        data = json.loads(res.data)
+        assert data.get('flash') == msg, (msg, data)
+        assert data.get('status') == SUCCESS, data
+        assert data.get('next') == '/', data
+
+    @patch('pybossa.view.account.otp.retrieve_user_otp_secret')
+    @patch('pybossa.otp.OtpAuth')
+    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
+    def test_login_expired_otp(self, OtpAuth, retrieve_user_otp_secret):
+        """Test expired otp json"""
+        self.register()
+        # Log out as the registration already logs in the user
+        self.signout()
+
+        res = self.signin(method="GET", content_type="application/json",
+                          follow_redirects=False)
+        data = json.loads(res.data)
+        err_msg = "There should be a form with two keys email & password"
+        csrf = data['form'].get('csrf')
+        assert data.get('title') == "Sign in", data
+        assert 'email' in data.get('form').keys(), (err_msg, data)
+        assert 'password' in data.get('form').keys(), (err_msg, data)
+
+        OTP = '1234'
+        otp_secret = OtpAuth.return_value
+        otp_secret.totp.return_value = OTP
+        retrieve_user_otp_secret.return_value = None
+
+        res = self.signin(content_type="application/json",
+                          csrf=csrf, follow_redirects=True)
+        data = json.loads(res.data)
+
+        token = data.get('next').split('/')[-2]
+
+        # pass otp - mock expired
+        res = self.otpvalidation(token=token, follow_redirects=True, otp=OTP,
+                                 content_type='application/json')
+        data = json.loads(res.data)
+        err_msg = 'OTP should be expired'
+        assert data['status'] == ERROR, (err_msg, data)
+        assert 'Expired one time password' in data.get('flash'), (err_msg, data)

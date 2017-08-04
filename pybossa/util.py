@@ -45,6 +45,7 @@ import pycountry
 from flask.ext.babel import lazy_gettext
 import re
 
+
 def last_flashed_message():
     """Return last flashed message by flask."""
     messages = get_flashed_messages(with_categories=True)

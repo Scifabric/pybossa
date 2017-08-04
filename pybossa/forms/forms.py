@@ -47,6 +47,7 @@ USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
 PROJECT_PWD_MIN_LEN = 5
 
+
 ### Forms for projects view
 
 class ProjectForm(Form):
@@ -148,6 +149,7 @@ class TaskSchedulerForm(Form):
         _translate_names = lambda variant: (variant[0], lazy_gettext(variant[1]))
         _choices = map(_translate_names, new_options)
         cls.sched.kwargs['choices'] = _choices
+
 
 class AnnouncementForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -287,6 +289,7 @@ class BulkTaskTwitterImportForm(Form):
             'max_tweets': self.max_tweets.data,
             'user_credentials': self.user_credentials.data,
         }
+
 
 class BulkTaskYoutubeImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='youtube')
@@ -466,7 +469,6 @@ class ResetPasswordForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
 
-
 class ForgotPasswordForm(Form):
 
     """Form Class for forgotten password."""
@@ -479,12 +481,12 @@ class ForgotPasswordForm(Form):
                                               message=err_msg),
                             validators.Email()])
 
+
 class OTPForm(Form):
-    #email_addr = EmailField(label=None, widget=HiddenInput())
     otp = TextField(lazy_gettext('One Time Password'),
-                             [validators.Required(
-                                 message=lazy_gettext(
-                                     "You must provide a valid OTP code"))])
+                    [validators.Required(message=lazy_gettext(
+                        'You must provide a valid OTP code'))])
+
 
 ### Forms for admin view
 
