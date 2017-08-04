@@ -60,7 +60,9 @@ class TestTaskAPI(TestAPI):
         project = ProjectFactory.create()
         t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
         tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
-        t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119', info={'question': 'answer'})
+        t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119',
+                                info={'question': 'answer'},
+                                fav_user_ids=[1,2,3,4])
 
         tasks.insert(0, t1)
         tasks.append(t2)
@@ -112,6 +114,15 @@ class TestTaskAPI(TestAPI):
         for t in tasks_by_id:
             assert tasks_by_id[i]['id'] == data[i]['id']
             i += 1
+
+        # fav_user_ids
+        url = "/api/task?orderby=fav_user_ids&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        print data
+        assert data[0]['id'] == t2.id, err_msg
+
 
         # Related
         taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
