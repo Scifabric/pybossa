@@ -26,6 +26,7 @@ from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
+from mock import patch
 
 user_repo = UserRepository(db)
 
@@ -87,6 +88,33 @@ class TestValidator(Test):
         form = RegisterForm()
         form.password.data = 'Abcd12345'
         u = validator.CheckPasswordStrength()
+        u.__call__(form, form.password)
+
+    @with_context
+    @raises(ValidationError)
+    def test_check_password_strength(self):
+        """Test VALIDATOR CheckPasswordStrength for new user password"""
+        form = RegisterForm()
+        form.password.data = 'Abcd12345'
+        u = validator.CheckPasswordStrength()
+        u.__call__(form, form.password)
+
+    @with_context
+    @raises(ValidationError)
+    def test_check_password_strength_custom_message(self):
+        """Test VALIDATOR CheckPasswordStrength with custom message """
+        form = RegisterForm()
+        form.password.data = 'Abcd12345'
+        u = validator.CheckPasswordStrength(message='custom message')
+        u.__call__(form, form.password)
+
+    @with_context
+    def test_check_password_strength_no_policy(self):
+        """Test VALIDATOR CheckPasswordStrength with no password policy """
+        form = RegisterForm()
+        form.password.data = 'Abcd12345'
+        u = validator.CheckPasswordStrength(uppercase=None,
+                lowercase=None, numeric=None, special=None)
         u.__call__(form, form.password)
 
 

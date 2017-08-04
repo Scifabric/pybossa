@@ -31,7 +31,7 @@ from wtforms.widgets import HiddenInput
 import validator as pb_validator
 from pybossa import util
 from pybossa.core import project_repo, user_repo, task_repo
-from pybossa.core import uploader, enable_strong_password
+from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
@@ -39,6 +39,8 @@ import os
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
+from pybossa.core import enable_strong_password
+
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
