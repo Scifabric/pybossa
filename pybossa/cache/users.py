@@ -68,8 +68,7 @@ def get_user_summary(name):
                "user".google_user_id, "user".info,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
                "user".valid_email, "user".confirmation_email_sent,
-               max(task_run.finish_time) AS last_task_submission_on,
-               count(task_run.id) AS total_tasks_submitted
+               max(task_run.finish_time) AS last_task_submission_on
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
@@ -88,8 +87,7 @@ def get_user_summary(name):
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
                     registered_ago=pretty_date(row.created),
-                    last_task_submission_on=row.last_task_submission_on,
-                    total_tasks_submitted=row.total_tasks_submitted)
+                    last_task_submission_on=row.last_task_submission_on)
     if user:
         rank_score = rank_and_score(user['id'])
         user['rank'] = rank_score['rank']

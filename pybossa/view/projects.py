@@ -1128,9 +1128,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 @admin_or_subadmin_required
 def bulk_priority_update(short_name):
     try:
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
         ensure_authorized_to('read', project)
         ensure_authorized_to('update', project)
         req_data = request.json
@@ -1170,9 +1168,7 @@ def bulk_priority_update(short_name):
 @admin_or_subadmin_required
 def bulk_redundancy_update(short_name):
     try:
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
         ensure_authorized_to('read', project)
         ensure_authorized_to('update', project)
         req_data = request.json
@@ -1220,9 +1216,7 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
 @admin_or_subadmin_required
 def delete_selected_tasks(short_name):
     try:
-        (project, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity,
-         n_results) = project_by_shortname(short_name)
+        project, owner, ps = project_by_shortname(short_name)
         ensure_authorized_to('read', project)
         ensure_authorized_to('update', project)
         req_data = request.json
@@ -1780,9 +1774,7 @@ def task_priority(short_name):
 @blueprint.route('/<short_name>/tasks/timeout', methods=['GET', 'POST'])
 @login_required
 def task_timeout(short_name):
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, gettext('Timeout'))
     form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
@@ -2279,9 +2271,7 @@ def del_coowner(short_name, user_id=None):
 @admin_or_subadmin_required
 def export_project_report(short_name):
     """Export individual project information in the given format"""
-    (project, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity,
-     n_results) = project_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     def respond_csv(ty):
         if ty not in ('project',):

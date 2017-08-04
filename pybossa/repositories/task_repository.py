@@ -124,11 +124,6 @@ class TaskRepository(Repository):
         query = self.create_context(filters, fulltextsearch, TaskRun)
         return self._filter_query(query, TaskRun, limit, offset, last_id, yielded, desc)
 
-    def count_task_runs_with(self, **filters):
-        query_args = self.generate_query_from_keywords(TaskRun, **filters)
-        return self.db.session.query(TaskRun).filter(*query_args).count()
-
-
     # Filter helpers
     def _filter_query(self, query, obj, limit, offset, last_id, yielded, desc):
         if last_id:
