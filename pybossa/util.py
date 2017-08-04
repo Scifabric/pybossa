@@ -823,7 +823,7 @@ def languages():
 def countries():
     cts = []
     for ct in pycountry.countries:
-        name = ct.name.encode('ascii','ignore')
+        name = ct.name.encode('ascii', 'ignore').replace("'", "")
         cts.append((name, name))
     return sorted(cts)
 
