@@ -331,6 +331,8 @@ def task_presenter_editor(short_name):
         old_project = Project(**db_project.dictize())
         old_info = dict(db_project.info)
         old_info['task_presenter'] = form.editor.data
+        for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
+            old_info.pop(field, None)
         db_project.info = old_info
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
