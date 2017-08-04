@@ -45,6 +45,7 @@ from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
+from pybossa.util import can_update_user_info
 from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
 from pybossa.auth import ensure_authorized_to
@@ -443,6 +444,7 @@ def _show_public_profile(user):
                     form=form,
                     projects_created=projects_created,
                     metadata=md,
+                    can_update=can_update_user_info(current_user, user),
                     total_projects_contributed=total_projects_contributed,
                     percentage_tasks_completed=percentage_tasks_completed)
 
@@ -846,6 +848,8 @@ def add_metadata(name):
 
     """
     user = user_repo.get_by_name(name=name)
+    if not can_update_user_info(current_user, user):
+        abort(403)
     form = MetadataForm(request.form)
     if not any(value for value in form.data.values()):
         user.info['metadata'] = {}

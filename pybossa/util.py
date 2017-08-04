@@ -885,3 +885,11 @@ def valid_or_no_s3_bucket(task_data):
         if bucket is not None and bucket not in allowed_s3_buckets:
             return False
     return True
+
+
+def can_update_user_info(current_user, user_to_update):
+    if current_user.admin:
+        return True
+    if not current_user.subadmin:
+        return False
+    return not (user_to_update.admin or user_to_update.subadmin)
