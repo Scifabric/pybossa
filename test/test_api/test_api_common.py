@@ -267,6 +267,29 @@ class TestApiCommon(TestAPI):
             assert err['action'] == 'GET', err
             assert err['exception_cls'] == 'AttributeError', err
 
+    @with_context
+    def test_query_search_fulltext(self):
+        """ Test API query search fulltext works"""
+        # Test first a non-existant field for all end-points
+        TaskFactory.create(info={'foo': 'fox'})
+        TaskFactory.create(info={'foo': 'foxes something'})
+        res = self.app.get('/api/task?all=1&info=foo::fox&fulltextsearch=1')
+        data = json.loads(res.data)
+        assert len(data) == 2, res.data
+        for d in data:
+            assert 'fox' in d['info']['foo']
+            assert 'rank' in d.keys()
+            assert 'headline' in d.keys()
+
+        # Without the fulltextsearch
+        res = self.app.get('/api/task?all=1&info=foo::fox')
+        data = json.loads(res.data)
+        assert len(data) == 1, res.data
+        for d in data:
+            assert 'fox' in d['info']['foo']
+            assert 'rank' not in d.keys()
+            assert 'headline'  not in d.keys()
+
 
     @with_context
     def test_query_sql_injection(self):
