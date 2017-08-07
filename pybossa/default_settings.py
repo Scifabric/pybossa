@@ -57,7 +57,6 @@ LEADERBOARD = 20
 ENABLE_DEBUG_TOOLBAR = False
 
 # Cache default key prefix
-REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_MASTER = 'mymaster'
 REDIS_DB = 0
