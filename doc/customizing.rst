@@ -1043,3 +1043,14 @@ For ignoring a key (or a list of keys), just add the following config variable t
 
     IGNORE_FLAT_KEYS = [ 'geojson', 'key1', ...]
 
+
+Disable task presenter check for pure JavaScript apps
+=====================================================
+
+When you are using PYBOSSA native JSON support, you will not be building your project
+presenter within the PYBOSSA structure, but within the JS framework of your choice.
+
+In such a case, you would like to disable the check for the task_presenter when publishing
+a project. If you need this, just add this flag to your settings_local.py file::
+
+    DISABLE_TASK_PRESENTER = True
