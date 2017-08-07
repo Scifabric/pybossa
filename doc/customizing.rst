@@ -1030,3 +1030,16 @@ vary a lot from one project to another, we do not provide a template but some gu
    or not.
 
 For more info regarding Onesignal JS SDK, check their `documentation. <https://documentation.onesignal.com/docs/web-push-sdk>`_
+
+Ignore specific keys when exporting data in CSV format
+======================================================
+
+Sometimes your PYBOSSA project saves information like GeoJSON within the tasks or task_runs. This is a bad thing
+for the exporter, as it will try to flatten it. In such scenarios, you want to instruct PYBOSSA to ignore those
+keys, as they will be included in the JSON export files, and reduce all the overhead (as well as destroying the format
+due to the normalization).
+
+For ignoring a key (or a list of keys), just add the following config variable to your settings_local.py file::
+
+    IGNORE_FLAT_KEYS = [ 'geojson', 'key1', ...]
+

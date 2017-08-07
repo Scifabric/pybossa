@@ -524,10 +524,6 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if current_user and current_user.is_authenticated():
-            if current_user.email_addr == current_user.name:
-                flash(gettext("Please update your e-mail address in your"
-                      " profile page, right now it is empty!"), 'error')
         if (current_user and current_user.is_authenticated()
             and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
