@@ -125,8 +125,7 @@ class TestBlogpostAPI(TestAPI):
     @with_context
     def test_blogpost_post(self):
         """Test API Blogpost creation."""
-        owner = UserFactory.create()
-        user = UserFactory.create()
+        admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         project2 = ProjectFactory.create(owner=user)
 
@@ -148,6 +147,15 @@ class TestBlogpostAPI(TestAPI):
 
         # As owner
         url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['title'] == 'hello', data
+        assert data['body'] == 'world', data
+
+        # As admin
+        url = '/api/blogpost?api_key=%s' % admin.api_key
         payload['project_id'] = project.id
         res = self.app.post(url, data=json.dumps(payload))
         data = json.loads(res.data)
@@ -184,13 +192,12 @@ class TestBlogpostAPI(TestAPI):
         res = self.app.post(url, data=json.dumps(payload))
         data = json.loads(res.data)
         assert res.status_code == 400, data
-        assert data['exception_msg'] == 'Reserved keys in payload', data
+        assert 'Reserved keys in payload' in data['exception_msg'], data
 
     @with_context
     def test_update_blogpost(self):
         """Test API Blogpost update post (PUT)."""
-        user = UserFactory.create()
-        owner = UserFactory.create()
+        admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         blogpost = BlogpostFactory.create(project=project)
 
@@ -206,14 +213,37 @@ class TestBlogpostAPI(TestAPI):
         blogpost.title = 'new'
         blogpost.body = 'new body'
         url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, user.api_key)
-        res = self.app.put(url, data=json.dumps(blogpost.dictize()))
+        data = blogpost.dictize()
+        del data['id']
+        del data['created']
+        del data['updated']
+        del data['user_id']
+        res = self.app.put(url, data=json.dumps(data))
         data = json.loads(res.data)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 403, (res.status_code, res.data)
 
         # As owner
         blogpost.title = 'new'
         blogpost.body = 'new body'
         url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, owner.api_key)
+        payload = blogpost.dictize()
+        del payload['user_id']
+        del payload['created']
+        del payload['updated']
+        del payload['id']
+        payload['published'] = True
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['title'] == 'new', data
+        assert data['body'] == 'new body', data
+        assert data['updated'] != data['created'], data
+        assert data['published'] is True, data
+
+        # As admin
+        blogpost.title = 'new'
+        blogpost.body = 'new body'
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, admin.api_key)
         payload = blogpost.dictize()
         del payload['user_id']
         del payload['created']
@@ -238,7 +268,7 @@ class TestBlogpostAPI(TestAPI):
         res = self.app.put(url, data=json.dumps(payload))
         data = json.loads(res.data)
         assert res.status_code == 400, res.status_code
-        assert data['exception_msg'] == 'Reserved keys in payload',  data
+        assert 'Reserved keys in payload' in data['exception_msg'] ,  data
 
 
         # as owner with wrong key
@@ -342,103 +372,17 @@ class TestBlogpostAPI(TestAPI):
         assert data['info']['file_name'] == 'test_file.jpg', data
         assert 'test_file.jpg' in data['media_url'], data
 
-        # As owner wrong 404 project_id
+        # As admin
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,
-                       file=img)
+                       file=img,
+                       title='title',
+                       body='body')
 
-        url = '/api/blogpost?api_key=%s' % owner.api_key
-        payload['project_id'] = -1
+        url = '/api/blogpost?api_key=%s' % admin.api_key
         res = self.app.post(url, data=payload,
                             content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 415, data
-
-        # As owner using wrong project_id
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/blogpost?api_key=%s' % owner.api_key
-        payload['project_id'] = project2.id
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-
-        # As owner using wrong attribute
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       wrong=img)
-
-        url = '/api/blogpost?api_key=%s' % owner.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 415, data
-
-        # As owner using reserved key 
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/blogpost?api_key=%s' % owner.api_key
-        payload['project_id'] = project.id
-        payload['id'] = 3
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 400, data
-        assert data['exception_msg'] == 'Reserved keys in payload', data
-
-    @with_context
-    def test_blogpost_put_file(self):
-        """Test API Blogpost file upload update."""
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(project=project)
-
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        # As anon
-        url = '/api/blogpost/%s' % blogpost.id
-        res = self.app.put(url, data=payload,
-                           content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 401, data
-        assert data['status_code'] == 401, data
-
-        # As a user
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, user.api_key)
-        res = self.app.put(url, data=payload,
-                           content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-        assert data['status_code'] == 403, data
-
-        # As owner
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id,
-                                               project.owner.api_key)
-        res = self.app.put(url, data=payload,
-                           content_type="multipart/form-data")
         data = json.loads(res.data)
         assert res.status_code == 200, data
         container = "user_%s" % owner.id
@@ -497,4 +441,126 @@ class TestBlogpostAPI(TestAPI):
                             content_type="multipart/form-data")
         data = json.loads(res.data)
         assert res.status_code == 400, data
-        assert data['exception_msg'] == 'Reserved keys in payload', data
+        assert 'Reserved keys in payload' in data['exception_msg'], data
+
+    @with_context
+    def test_blogpost_put_file(self):
+        """Test API Blogpost file upload update."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(project=project)
+
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        # As anon
+        url = '/api/blogpost/%s' % blogpost.id
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id, user.api_key)
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
+
+        # As owner
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id,
+                                               project.owner.api_key)
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        container = "user_%s" % owner.id
+        assert data['info']['container'] == container, data
+        assert data['info']['file_name'] == 'test_file.jpg', data
+        assert 'test_file.jpg' in data['media_url'], data
+
+        # As admin
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost/%s?api_key=%s' % (blogpost.id,
+                                               admin.api_key)
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        container = "user_%s" % owner.id
+        assert data['info']['container'] == container, data
+        assert data['info']['file_name'] == 'test_file.jpg', data
+        assert 'test_file.jpg' in data['media_url'], data
+
+
+        # As owner wrong 404 project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = -1
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using wrong project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+
+        # As owner using wrong attribute
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       wrong=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # As owner using reserved key 
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        url = '/api/blogpost?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        payload['id'] = 3
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert 'Reserved keys in payload' in data['exception_msg'] , data
