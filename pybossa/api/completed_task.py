@@ -62,7 +62,7 @@ class CompletedTaskAPI(APIBase):
                     raise BadRequest("Insufficient privilege to the request")
             else:
                 raise BadRequest("Insufficient privilege to the request")
-                    
+
             # set filter from args
             # add 'state'='completed' if missing
             filters = {}
@@ -75,11 +75,11 @@ class CompletedTaskAPI(APIBase):
                     # against Task class in filter_completed_task_runs_by
                     if k not in ['exported']:
                         # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)    
+                        getattr(self.__class__, k)
                     filters[k] = request.args[k]
-            
-            # set limit, offset    
-            limit, offset = self._set_limit_and_offset()
+
+            # set limit, offset
+            limit, offset, orderby = self._set_limit_and_offset()
             # query database to obtain the requested data
             query = task_repo.filter_tasks_by(limit=limit, offset=offset, **filters)
             json_response = self._create_json_response(query, oid)

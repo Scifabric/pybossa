@@ -51,12 +51,6 @@ class TaskRepository(Repository):
         return self._filter_by(Task, limit, offset, yielded, last_id,
                               fulltextsearch, desc, **filters)
 
-    def filter_tasks_by_g(self, limit=None, offset=0, yielded=False,
-                        last_id=None, fulltextsearch=None, desc=False,
-                        **filters):
-        query = self.create_context(filters, fulltextsearch, Task)
-        return self._filter_query(query, Task, limit, offset, last_id, yielded, desc)
-
     def filter_completed_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
         # exported col is present in Task table
         # anything passed under filters will be
@@ -117,12 +111,6 @@ class TaskRepository(Repository):
     def count_task_runs_with(self, **filters):
         query_args, _, _, _ = self.generate_query_from_keywords(TaskRun, **filters)
         return self.db.session.query(TaskRun).filter(*query_args).count()
-
-    def filter_task_runs_by_g(self, limit=None, offset=0, last_id=None,
-                            yielded=False, fulltextsearch=None,
-                            desc=False, **filters):
-        query = self.create_context(filters, fulltextsearch, TaskRun)
-        return self._filter_query(query, TaskRun, limit, offset, last_id, yielded, desc)
 
     # Filter helpers
     def _filter_query(self, query, obj, limit, offset, last_id, yielded, desc):
