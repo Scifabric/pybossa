@@ -242,7 +242,6 @@ def n_task_runs(project_id):
     return n_task_runs
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def overall_progress(project_id):
     """Return the percentage of completed tasks for a project."""
     if n_tasks(project_id) != 0:
