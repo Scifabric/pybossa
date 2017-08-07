@@ -3193,9 +3193,25 @@ class TestWeb(web.Helper):
         newtask_response = self.app.get(newtask_url, follow_redirects=True)
         task_response = self.app.get(task_url, follow_redirects=True)
 
-        # TODO: Do not test this for now. Needs discussion about text or id
-        # assert message in newtask_response.data
-        # assert message in task_response.data
+        assert message in newtask_response.data
+        assert message in task_response.data
+
+    @with_context
+    def test_message_is_flashed_contributing_to_project_without_presenter(self):
+        """Test task_presenter check is not raised."""
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(project=project)
+        newtask_url = '/project/%s/newtask' % project.short_name
+        task_url = '/project/%s/task/%s' % (project.short_name, task.id)
+        message = ("Sorry, but this project is still a draft and does "
+                   "not have a task presenter.")
+        with patch.dict(self.flask_app.config,
+                        {'DISABLE_TASK_PRESENTER': True}):
+            newtask_response = self.app.get(newtask_url)
+            task_response = self.app.get(task_url, follow_redirects=True)
+
+            assert message not in newtask_response.data, newtask_response.data
+            assert message not in task_response.data, task_response.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
