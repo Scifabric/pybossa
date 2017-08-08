@@ -57,6 +57,8 @@ class TaskRepository(Repository):
         last_id = filters.get('last_id', None)
         desc = filters.get('desc', False)
         orderby = filters.get('orderby', 'id')
+        if last_id:
+            query = query.filter(Task.id > last_id)
         query = self._set_orderby_desc(query, Task, limit,
                                        last_id, offset,
                                        desc, orderby)
