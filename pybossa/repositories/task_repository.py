@@ -49,10 +49,20 @@ class TaskRepository(Repository):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)
         return self.db.session.query(Task).filter(*query_args).count()
 
-    def filter_tasks_by_user_favorites(self, uid):
+    def filter_tasks_by_user_favorites(self, uid, **filters):
         """Return tasks marked as favorited by user.id."""
-        tasks = self.db.session.query(Task).filter(Task.fav_user_ids.any(uid)).all()
-        return tasks
+        query = self.db.session.query(Task).filter(Task.fav_user_ids.any(uid))
+        limit = filters.get('limit', 20)
+        offset = filters.get('offset', 0)
+        last_id = filters.get('last_id', None)
+        desc = filters.get('desc', False)
+        orderby = filters.get('orderby', 'id')
+        if last_id:
+            query = query.filter(Task.id > last_id)
+        query = self._set_orderby_desc(query, Task, limit,
+                                       last_id, offset,
+                                       desc, orderby)
+        return query.all()
 
     def get_task_favorited(self, uid, task_id):
         """Return task marked as favorited by user.id."""

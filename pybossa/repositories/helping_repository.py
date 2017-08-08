@@ -25,19 +25,16 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 
 class HelpingMaterialRepository(Repository):
 
-    def __init__(self, db):
-        self.db = db
-
     def get(self, id):
         return self.db.session.query(HelpingMaterial).get(id)
 
     def get_by(self, **attributes):
         return self.db.session.query(HelpingMaterial).filter_by(**attributes).first()
 
-    def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  **filters):
+    def filter_by(self, limit=None, offset=0, yielded=False,
+                  last_id=None, fulltextsearch=None, desc=False, **filters):
         return self._filter_by(HelpingMaterial, limit, offset, yielded, 
-                               last_id, **filters)
+                               last_id, fulltextsearch, desc, **filters)
 
     def save(self, blogpost):
         self._validate_can_be('saved', blogpost)

@@ -40,7 +40,8 @@ class BlogpostAPI(APIBase):
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
-                raise BadRequest("Reserved keys in payload")
+                msg = "Reserved keys in payload: %s" % key
+                raise BadRequest(msg)
 
     def _update_object(self, obj):
         if not current_user.is_anonymous():

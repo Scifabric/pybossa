@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module with helper functions."""
 
+from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
@@ -102,14 +103,18 @@ def add_custom_contrib_button_to(project, user_id_or_ip, ps=None):
 
 def has_no_presenter(project):
     """Return if a project has no presenter."""
-    empty_presenters = ('', None)
-    try:
-        return not project.has_presenter()
-    except AttributeError:
+    if current_app.config.get('DISABLE_TASK_PRESENTER'):
+        return False
+    else:
+        empty_presenters = ('', None)
         try:
-            return project.get('info').get('task_presenter') in empty_presenters
+            return not project.has_presenter()
         except AttributeError:
-            return True
+            try:
+                return (project.get('info').get('task_presenter') in
+                        empty_presenters)
+            except AttributeError:
+                return True
 
 
 def _has_no_tasks(project_id):

@@ -36,8 +36,8 @@ class BlogpostAuth(object):
             return False
         project = self._get_project(blogpost, project_id)
         if blogpost is None:
-            return project.owner_id == user.id
-        return blogpost.user_id == project.owner_id == user.id
+            return project.owner_id == user.id or user.admin
+        return blogpost.user_id == project.owner_id == user.id or user.admin
 
     def _read(self, user, blogpost=None, project_id=None):
         if blogpost or project_id:
@@ -53,12 +53,12 @@ class BlogpostAuth(object):
     def _update(self, user, blogpost, project_id=None):
         if user.is_anonymous():
             return False
-        return blogpost.user_id == user.id
+        return blogpost.user_id == user.id or user.admin
 
     def _delete(self, user, blogpost, project_id=None):
         if user.is_anonymous():
             return False
-        return user.admin or blogpost.user_id == user.id
+        return blogpost.user_id == user.id or user.admin
 
     def _get_project(self, blogpost, project_id):
         if blogpost is not None:
