@@ -76,6 +76,17 @@ class TestFavoritesAPI(TestAPI):
         assert len(data[0]['fav_user_ids']) == 1, data
         assert data[0]['id'] == tasks[1].id
 
+        # last_id
+        res = self.app.get(self.url + '?limit=1&last_id=%s&api_key=%s' %
+                           (tasks[2].id, user.api_key))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert len(data) == 1, len(data)
+        assert data[0]['fav_user_ids'] == [user.id], data
+        assert len(data[0]['fav_user_ids']) == 1, data
+        assert data[0]['id'] == tasks[3].id, data[0]['id']
+
+
 
     @with_context
     def test_query_put_favorites_auth(self):
