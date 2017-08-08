@@ -33,6 +33,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
+from pybossa.util import get_user_id_or_ip
 from pybossa.core import ratelimits, uploader
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
@@ -219,7 +220,8 @@ class APIBase(MethodView):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc', 'orderby', 'related']:
+                         'fulltextsearch', 'desc', 'orderby', 'related',
+                         'participated']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
                 filters[k] = request.args[k]
@@ -228,6 +230,8 @@ class APIBase(MethodView):
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
+        if request.args.get('participated'):
+            filters['participated'] = get_user_id_or_ip()
         fulltextsearch = request.args.get('fulltextsearch')
         desc = request.args.get('desc') if request.args.get('desc') else False
         desc = fuzzyboolean(desc)
