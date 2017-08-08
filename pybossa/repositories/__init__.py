@@ -165,7 +165,6 @@ class Repository(object):
         if last_id:
             query = query.limit(limit)
         else:
-            print offset
             query = query.limit(limit).offset(offset)
         return query
 
