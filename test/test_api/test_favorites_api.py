@@ -26,6 +26,7 @@ from pybossa.repositories import TaskRepository
 
 task_repo = TaskRepository(db)
 
+
 class TestFavoritesAPI(TestAPI):
 
     url = '/api/favorites'
@@ -45,16 +46,26 @@ class TestFavoritesAPI(TestAPI):
         """Test API GET Favorites works for user."""
         user = UserFactory.create()
         user2 = UserFactory.create()
-        task = TaskFactory.create(fav_user_ids=[user.id])
+        tasks = TaskFactory.create_batch(30, fav_user_ids=[user.id])
+        task = tasks[0]
         TaskFactory.create(fav_user_ids=[user2.id])
         res = self.app.get(self.url + '?api_key=%s' % user.api_key)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
-        assert len(data) == 1, data
+        assert len(data) == 20, data
         data = data[0]
         assert data['id'] == task.id, (data, task)
         assert data['fav_user_ids'] == [user.id], data
         assert len(data['fav_user_ids']) == 1, data
+
+        # limit
+        res = self.app.get(self.url + '?limit=1&api_key=%s' % user.api_key)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert len(data) == 1, len(data)
+        assert data[0]['id'] == task.id, (data, task)
+        assert data[0]['fav_user_ids'] == [user.id], data
+        assert len(data[0]['fav_user_ids']) == 1, data
 
     @with_context
     def test_query_put_favorites_auth(self):
