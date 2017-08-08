@@ -461,7 +461,7 @@ def update_announcement(id):
         raise abort(404)
 
     def respond():
-        response = dict(template='',  # template='admin/update_announcement.html',
+        response = dict(template='admin/update_announcement.html',
                         title=gettext("Edit a post"),
                         form=form)
         return handle_content_type(response)
