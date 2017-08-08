@@ -33,6 +33,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
+from pybossa.util import get_user_id_or_ip
 from pybossa.core import ratelimits, uploader
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
@@ -41,6 +42,7 @@ from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
 from pybossa.model import DomainObject
+from pybossa.model.task import Task
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -214,15 +216,21 @@ class APIBase(MethodView):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc', 'orderby', 'related']:
+                         'fulltextsearch', 'desc', 'orderby', 'related',
+                         'participated']:
                 # Raise an error if the k arg is not a column
-                getattr(self.__class__, k)
+                if self.__class__ == Task and k == 'external_uid':
+                    pass
+                else:
+                    getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
         filters = self.api_context(all_arg=request.args.get('all'), **filters)
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
+        if request.args.get('participated'):
+            filters['participated'] = get_user_id_or_ip()
         fulltextsearch = request.args.get('fulltextsearch')
         desc = request.args.get('desc') if request.args.get('desc') else False
         desc = fuzzyboolean(desc)

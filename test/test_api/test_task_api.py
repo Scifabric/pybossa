@@ -22,6 +22,7 @@ from test_api import TestAPI
 from mock import patch, call
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
@@ -53,6 +54,237 @@ class TestTaskAPI(TestAPI):
         else:
             return result_repo.get_by(project_id=1)
 
+    @with_context
+    def test_task_query_participated_user_ip(self):
+        """Test API Task query with participated arg user_ip."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        tasks1 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='fox'))
+        tasks2 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='dog'))
+        tasks = tasks1 + tasks2
+        AnonymousTaskRunFactory.create(task=tasks[0])
+        AnonymousTaskRunFactory.create(task=tasks[1])
+        AnonymousTaskRunFactory.create(task=tasks[2])
+
+        url = '/api/task?participated=1&all=1'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # limit & offset
+        url = '/api/task?participated=1&all=1&limit=10&offset=10'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # last_id
+        url = '/api/task?participated=1&all=1&last_id=%s' % (tasks[0].id)
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # orderby & desc
+        url = '/api/task?participated=1&all=1&orderby=created&desc=1'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # info & fulltextsearch
+        url = '/api/task?participated=1&all=1&orderby=created&desc=1&info=foo::fox&fulltextsearch=1'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks1[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+    @with_context
+    def test_task_query_participated_external_uid(self):
+        """Test API Task query with participated arg external_uid."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        tasks1 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='fox'))
+        tasks2 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='dog'))
+        tasks = tasks1 + tasks2
+        ExternalUidTaskRunFactory.create(task=tasks[0])
+        ExternalUidTaskRunFactory.create(task=tasks[1])
+        ExternalUidTaskRunFactory.create(task=tasks[2])
+
+        url = '/api/task?participated=1&all=1&external_uid=1xa' 
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, data
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # limit & offset
+        url = '/api/task?participated=1&all=1&limit=10&offset=10&external_uid=1xa'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # last_id
+        url = '/api/task?external_uid=1xa&participated=1&all=1&last_id=%s' % (tasks[0].id)
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # orderby & desc
+        url = '/api/task?external_uid=1x&participated=1&all=1&orderby=created&desc=1'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # info & fulltextsearch
+        url = '/api/task?external_uid=1xa&participated=1&all=1&orderby=created&desc=1&info=foo::fox&fulltextsearch=1'
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks1[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+
+    @with_context
+    def test_task_query_participated(self):
+        """Test API Task query with participated arg."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        tasks1 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='fox'))
+        tasks2 = TaskFactory.create_batch(10, project=project,
+                                         info=dict(foo='dog'))
+        tasks = tasks1 + tasks2
+        TaskRunFactory.create(task=tasks[0], user=user)
+        TaskRunFactory.create(task=tasks[1], user=user)
+        TaskRunFactory.create(task=tasks[2], user=user)
+
+        url = '/api/task?api_key=%s&participated=1&all=1' % user.api_key
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # limit & offset
+        url = '/api/task?api_key=%s&participated=1&all=1&limit=10&offset=10' % user.api_key
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # last_id
+        url = '/api/task?api_key=%s&participated=1&all=1&last_id=%s' % (user.api_key, tasks[0].id)
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # orderby & desc
+        url = '/api/task?api_key=%s&participated=1&all=1&orderby=created&desc=1' % user.api_key
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 17, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
+
+        # info & fulltextsearch
+        url = '/api/task?api_key=%s&participated=1&all=1&orderby=created&desc=1&info=foo::fox&fulltextsearch=1' % user.api_key
+
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert len(data) == 7, len(data)
+        participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
+
+        assert data[0]['id'] == tasks1[-1].id
+
+        for task in data:
+            assert task['id'] not in participated_tasks, task['id']
 
     @with_context
     def test_task_query_without_params(self):
