@@ -106,6 +106,11 @@ class Repository(object):
         if filters.get('owner_id'):
             owner_id = filters.get('owner_id')
             del filters['owner_id']
+
+        # Prevent external_uid for taks & participated arg
+        if filters.get('participated') and filters.get('external_uid'):
+            del filters['external_uid']
+
         if filters.get('participated'):
             participated = filters.get('participated')
             del filters['participated']

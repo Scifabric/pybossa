@@ -42,6 +42,7 @@ from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
 from pybossa.model import DomainObject
+from pybossa.model.task import Task
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -218,7 +219,8 @@ class APIBase(MethodView):
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated']:
                 # Raise an error if the k arg is not a column
-                getattr(self.__class__, k)
+                if self.__class__ == Task and k != 'external_uid':
+                    getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
         filters = self.api_context(all_arg=request.args.get('all'), **filters)
