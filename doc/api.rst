@@ -360,6 +360,22 @@ Here you have an example of the expected output for an api call like this::
     If the search does not find anything, the server will return an empty JSON
     list []
 
+Excluding contributed tasks from GET queries
+--------------------------------------------
+
+For the Tasks endpoint, you can do also something else, which could be pretty handy
+for PYBOSSA projects that are built using only Javascript (Single Page Applications) and do not want to use
+the /newtask endpoint.
+
+Basically, you can use any of the previous filters for the /api/task endpoint and add
+the following argument: **participated=1** to remove from the results, the tasks that
+the user has participated in. In this way, you will be completely in charge of how
+the tasks are presented to your users. You will design how they will be delivered.
+
+This endpoint now accepts as well the **external_uid** parameter, as by default it identifies
+authenticated users, as well as anonymouse users. If you are using the external UID,
+include it.
+
 
 Create
 ------
