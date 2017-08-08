@@ -219,7 +219,9 @@ class APIBase(MethodView):
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated']:
                 # Raise an error if the k arg is not a column
-                if k != 'external_uid' and self.__class__ != Task:
+                if self.__class__ == Task and k == 'external_uid':
+                    pass
+                else:
                     getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
