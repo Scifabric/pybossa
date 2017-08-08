@@ -52,13 +52,16 @@ class FavoritesAPI(APIBase):
                 raise abort(401)
             uid = current_user.id
             limit, offset, orderby = self._set_limit_and_offset()
+            last_id = request.args.get('last_id')
+            print last_id
             desc = request.args.get('desc') if request.args.get('desc') else False
             desc = fuzzyboolean(desc)
 
             tasks = task_repo.filter_tasks_by_user_favorites(uid, limit=limit,
                                                              offset=offset,
                                                              orderby=orderby,
-                                                             desc=desc)
+                                                             desc=desc,
+                                                             last_id=last_id)
             data = self._create_json_response(tasks, oid)
             return Response(data, 200,
                             mimetype='application/json')
