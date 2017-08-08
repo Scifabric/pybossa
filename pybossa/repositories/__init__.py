@@ -142,10 +142,9 @@ class Repository(object):
                 subquery = self.db.session.query(TaskRun)\
                                .with_entities(TaskRun.task_id)\
                                .filter_by(user_ip=participated['user_ip']).subquery()
-            if (model == Task):
-                query = self.db.session.query(model)\
-                            .filter(~model.id.in_(subquery),
-                                    *query_args)
+            query = self.db.session.query(model)\
+                        .filter(~model.id.in_(subquery),
+                                *query_args)
         if len(headlines) > 0:
             query = query.add_column(headlines[0])
         if len(orders) > 0:
