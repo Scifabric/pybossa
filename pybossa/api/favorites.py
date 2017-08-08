@@ -29,7 +29,7 @@ from flask.ext.login import current_user, request
 from flask import Response, abort
 from werkzeug.exceptions import MethodNotAllowed, NotFound, Unauthorized
 from pybossa.core import ratelimits
-from pybossa.util import jsonpify
+from pybossa.util import jsonpify, fuzzyboolean
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.model.task import Task
@@ -51,7 +51,17 @@ class FavoritesAPI(APIBase):
             if current_user.is_anonymous():
                 raise abort(401)
             uid = current_user.id
-            tasks = task_repo.filter_tasks_by_user_favorites(uid)
+            limit, offset, orderby = self._set_limit_and_offset()
+            last_id = request.args.get('last_id')
+            print last_id
+            desc = request.args.get('desc') if request.args.get('desc') else False
+            desc = fuzzyboolean(desc)
+
+            tasks = task_repo.filter_tasks_by_user_favorites(uid, limit=limit,
+                                                             offset=offset,
+                                                             orderby=orderby,
+                                                             desc=desc,
+                                                             last_id=last_id)
             data = self._create_json_response(tasks, oid)
             return Response(data, 200,
                             mimetype='application/json')
