@@ -382,7 +382,7 @@ def update_category(id):
 def announcement():
     """Manage anncounements."""
     announcements = announcement_repo.get_all_announcements()
-    response = dict(template='admin/announcement.html', # template='admin/announcement.html',
+    response = dict(template='admin/announcement.html',
                     title=gettext("Manage global Announcements"),
                     announcements=announcements,
                     csrf=generate_csrf())
