@@ -113,7 +113,10 @@ class Project(db.Model, DomainObject):
         del self.info['autoimporter']
 
     def has_presenter(self):
-        return self.info.get('task_presenter') not in ('', None)
+        if current_app.config.get('DISABLE_TASK_PRESENTER') is True:
+            return True
+        else:
+            return self.info.get('task_presenter') not in ('', None)
 
     @classmethod
     def public_attributes(self):
