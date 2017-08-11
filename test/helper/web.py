@@ -159,6 +159,7 @@ class Helper(Test):
                 'short_name': short_name,
                 'description': description,
                 'long_description': long_description,
+                'password': 'Abc01$'
             }, follow_redirects=True)
         else:
             return self.app.get("/project/new", follow_redirects=True)

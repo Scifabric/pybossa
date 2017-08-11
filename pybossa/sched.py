@@ -205,7 +205,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
             register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
             return [session.query(Task).get(task_id)]
 
-    return None
+    return []
 
 
 def get_user_pref_task(project_id, user_id=None, user_ip=None,

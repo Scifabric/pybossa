@@ -263,7 +263,7 @@ def setup_logging(app):
 def setup_login_manager(app):
     """Setup login manager."""
     login_manager.login_view = 'account.signin'
-    login_manager.login_message = u"This feature requires being logged in. If you were previously logged in, your session may have timed out."
+    login_manager.login_message = u"Please sign in to access this page."
 
     @login_manager.user_loader
     def _load_user(username):

@@ -49,3 +49,4 @@ class ProjectFactory(BaseFactory):
             'onesignal': {'data': 'private'},
             'onesignal_app_id': 1
             }
+    coowners = []

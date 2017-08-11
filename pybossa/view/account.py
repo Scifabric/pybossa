@@ -71,7 +71,6 @@ mail_queue = Queue('email', connection=sentinel.master)
 @login_required
 def index(page=1):
     """Index page for all PYBOSSA registered users."""
-
     update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
