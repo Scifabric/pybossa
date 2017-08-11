@@ -116,7 +116,7 @@ class Project(db.Model, DomainObject):
         if current_app.config.get('DISABLE_TASK_PRESENTER') is True:
             return True
         else:
-        return self.info.get('task_presenter') not in ('', None)
+            return self.info.get('task_presenter') not in ('', None)
 
     @classmethod
     def public_attributes(self):
