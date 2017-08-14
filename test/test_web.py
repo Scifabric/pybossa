@@ -4308,7 +4308,7 @@ class TestWeb(web.Helper):
                                   info={'question': task.id},
                                   task=task)
 
-        # Get results and updat them
+        # Get results and update them
         results = result_repo.filter_by(project_id=project.id)
         for result in results:
             result.info = dict(key='value')
@@ -4402,6 +4402,8 @@ class TestWeb(web.Helper):
             TaskFactory.create_batch(5, project=project, info={'question': 'qu',
                                                                'geojson':
                                                                'complexjson'})
+            # Empty task that should be handled as well.
+            TaskFactory.create(project=project, info=None)
             uri = '/project/%s/tasks/export' % project.short_name
             res = self.app.get(uri, follow_redirects=True)
             heading = "Export All Tasks and Task Runs"
@@ -4436,34 +4438,38 @@ class TestWeb(web.Helper):
             for t in project.tasks:
                 err_msg = "All the task column names should be included"
                 d = copy.deepcopy(t.dictize())
-                d['info'].pop('geojson', None)
+                if d['info']:
+                    d['info'].pop('geojson', None)
                 for tk in flatten(d).keys():
                     expected_key = "%s" % tk
                     assert expected_key in keys, (expected_key, err_msg)
                 err_msg = "All the task.info column names should be included except geojson"
-                info_keys = copy.deepcopy(t.info.keys())
-                info_keys.pop(info_keys.index('geojson'))
-                for tk in info_keys:
-                    expected_key = "info_%s" % tk
-                    assert expected_key in keys, (expected_key, err_msg)
+                info_keys = None
+                if t.info:
+                    info_keys = copy.deepcopy(t.info.keys())
+                    info_keys.pop(info_keys.index('geojson'))
+                    for tk in info_keys:
+                        expected_key = "info_%s" % tk
+                        assert expected_key in keys, (expected_key, err_msg)
 
             for et in exported_tasks:
                 task_id = et[keys.index('id')]
                 task = db.session.query(Task).get(task_id)
                 task_dict = copy.deepcopy(task.dictize())
-                task_dict['info'].pop('geojson', None)
-                task_dict_flat = copy.deepcopy(flatten(task_dict))
-                for k in task_dict_flat.keys():
-                    slug = '%s' % k
-                    err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
-                    if task_dict_flat[k] is not None:
-                        assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
-                    else:
-                        assert u'' == et[keys.index(slug)], err_msg
-                for k in task_dict['info'].keys():
-                    slug = 'info_%s' % k
-                    err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
-                    assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                if task_dict['info']:
+                    task_dict['info'].pop('geojson', None)
+                    task_dict_flat = copy.deepcopy(flatten(task_dict))
+                    for k in task_dict_flat.keys():
+                        slug = '%s' % k
+                        err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
+                        if task_dict_flat[k] is not None:
+                            assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                        else:
+                            assert u'' == et[keys.index(slug)], err_msg
+                    for k in task_dict['info'].keys():
+                        slug = 'info_%s' % k
+                        err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                        assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
