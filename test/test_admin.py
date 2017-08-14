@@ -89,7 +89,7 @@ class TestAdmin(web.Helper):
         res = self.app.get("/admin", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
     @with_context
     def test_01_admin_index_anonymous_json(self):
@@ -97,7 +97,7 @@ class TestAdmin(web.Helper):
         res = self.app_get_json("/admin/", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
 
     @with_context
@@ -166,7 +166,7 @@ class TestAdmin(web.Helper):
     def test_04_admin_featured_apps_as_anonymous(self):
         """Test ADMIN featured projects works as an anonymous user"""
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Please sign in to access this page" in res.data, res.data
+        assert "This feature requires being logged in." in res.data, res.data
 
     @with_context
     def test_04_2_admin_featured_apps_as_anonymous_json(self):
@@ -317,19 +317,19 @@ class TestAdmin(web.Helper):
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
         # Try to add the project to the featured list
         res = self.app.post('/admin/featured/1', follow_redirects=True)
         err_msg = ("The user should not be able to POST to this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
         # Try to remove it again from the Featured list
         res = self.app.delete('/admin/featured/1', follow_redirects=True)
         err_msg = ("The user should not be able to DELETE to this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
     @with_context
     def test_09_admin_users_as_admin(self):
@@ -550,11 +550,11 @@ class TestAdmin(web.Helper):
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         err_msg = "User should be redirected to signin"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
         err_msg = "User should be redirected to signin"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
     @with_context
     def test_15_admin_user_add_del_authenticated(self):

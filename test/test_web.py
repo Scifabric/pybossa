@@ -1285,7 +1285,7 @@ class TestWeb(web.Helper):
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
         assert self.html_title("Sign in") in res.data, res.data
-        assert "Please sign in to access this page." in res.data, res.data
+        assert "This feature requires being logged in.." in res.data, res.data
 
         # TODO: Add JSON to profile
         # res = self.signin(next='%2Faccount%2Fprofile',
@@ -1358,7 +1358,7 @@ class TestWeb(web.Helper):
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
         assert self.html_title("Sign in") in res.data, res.data
-        assert "Please sign in to access this page." in res.data, res.data
+        assert "This feature requires being logged in.." in res.data, res.data
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
@@ -1633,13 +1633,13 @@ class TestWeb(web.Helper):
         # the title will be the redirection to log in
         res = self.update_profile(method="GET")
         assert self.html_title("Sign in") in res.data, res
-        assert "Please sign in to access this page." in res.data, res
+        assert "This feature requires being logged in.." in res.data, res
 
         # A user must be signed in to access the update page, the page
         # the title will be the redirection to log in
         res = self.update_profile()
         assert self.html_title("Sign in") in res.data, res
-        assert "Please sign in to access this page." in res.data, res
+        assert "This feature requires being logged in.." in res.data, res
 
         self.register(fullname="new", name="new")
         self.signin(email="new@example.com", password="p4ssw0rd")
@@ -2080,7 +2080,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert res.status == '200 OK', res.status
         err_msg = "Anonymous user should be redirected to sign in page"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
@@ -2218,11 +2218,11 @@ class TestWeb(web.Helper):
         # Create a project as an anonymous user
         res = self.new_project(method="GET")
         assert self.html_title("Sign in") in res.data, res
-        assert "Please sign in to access this page" in res.data, res
+        assert "This feature requires being logged in." in res.data, res
 
         res = self.new_project()
         assert self.html_title("Sign in") in res.data, res.data
-        assert "Please sign in to access this page." in res.data, res.data
+        assert "This feature requires being logged in.." in res.data, res.data
 
         # Sign in and create a project
         res = self.register()
@@ -5693,11 +5693,11 @@ class TestWeb(web.Helper):
         # Anonymous user
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         err_msg = "Anonymous user should not be allowed to delete tasks"
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Anonymous user should not be allowed to delete tasks"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
         # Authenticated user but not owner
         self.register()
@@ -5743,11 +5743,11 @@ class TestWeb(web.Helper):
         # Anonymous user
         res = self.app_get_json(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         err_msg = "Anonymous user should not be allowed to delete tasks"
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Anonymous user should not be allowed to delete tasks"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
 
         # Authenticated user but not owner
         res = self.app_get_json(url + '?api_key=%s' % user.api_key)
@@ -5798,9 +5798,9 @@ class TestWeb(web.Helper):
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         res = self.app.post(url, follow_redirects=True)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         # Authenticated user
         self.register()
         self.signin()
@@ -5836,9 +5836,9 @@ class TestWeb(web.Helper):
         # Anonymous user
         res = self.app_get_json(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "This feature requires being logged in." in res.data, err_msg
         res = self.app_post_json(url, data=dict(foo=1), follow_redirects=True)
-        assert "Please sign in to access this page" in res.data, res.data
+        assert "This feature requires being logged in." in res.data, res.data
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
