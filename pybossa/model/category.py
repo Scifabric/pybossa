@@ -18,6 +18,9 @@
 
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import MutableDict
+from flask import current_app
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
@@ -38,12 +41,14 @@ class Category(db.Model, DomainObject):
     description = Column(Text, nullable=False)
     #: UTC timestamp when the Category was created
     created = Column(Text, default=make_timestamp)
+    #: Info field formatted as JSON for storing additional data
+    info = Column(MutableDict.as_mutable(JSON), default=dict())
 
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
-        return ['description', 'short_name', 'created', 'id', 'name']
+        return ['description', 'short_name', 'created', 'id', 'name', 'info']
 
     def public_info_keys(self):
         """Return a list of public info keys."""
-        return []
+        pass
