@@ -78,12 +78,13 @@ class Exporter(object):
     def _clean_ignore_keys(self, data, ignore_keys, info_only):
         """Remove key/value pairs so flatten can work fast."""
         data = copy.deepcopy(data)
-        if ignore_keys:
+        if ignore_keys and data != None:
             for key in ignore_keys:
                 if info_only:
                     data.pop(key, None)
                 else:
-                    data['info'].pop(key, None)
+                    if data['info']:
+                        data['info'].pop(key, None)
         return data
 
     def _project_name_latin_encoded(self, project):
