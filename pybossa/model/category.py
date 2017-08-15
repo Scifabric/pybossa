@@ -49,6 +49,12 @@ class Category(db.Model, DomainObject):
         """Return a list of public attributes."""
         return ['description', 'short_name', 'created', 'id', 'name', 'info']
 
+    @classmethod
     def public_info_keys(self):
         """Return a list of public info keys."""
-        pass
+        default = []
+        extra = current_app.config.get('CATEGORY_INFO_PUBLIC_FIELDS')
+        if extra:
+            return list(set(default).union(set(extra)))
+        else:
+            return default
