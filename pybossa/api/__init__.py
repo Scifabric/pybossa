@@ -164,13 +164,13 @@ def _retrieve_new_task_with_timeout(project_id):
         info = dict(
             error="This project does not allow anonymous contributors")
         error = [model.task.Task(info=info)]
-        return error
+        return error, None
 
     if request.args.get('external_uid'):
         resp = jwt_authorize_project(project,
                                      request.headers.get('Authorization'))
         if resp != True:
-            return resp
+            return resp, None
 
     if request.args.get('limit'):
         limit = int(request.args.get('limit'))
