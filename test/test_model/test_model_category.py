@@ -16,22 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from default import Test, db, with_context
+from nose.tools import assert_raises
+from sqlalchemy.exc import IntegrityError
 from pybossa.model.category import Category
-from . import BaseFactory, factory, project_repo
+from factories import CategoryFactory
 
 
-class CategoryFactory(BaseFactory):
-    class Meta:
-        model = Category
+class TestModelCategory(Test):
 
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        category = model_class(*args, **kwargs)
-        project_repo.save_category(category)
-        return category
-
-    id = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: 'category_name_%d' % n)
-    short_name = factory.Sequence(lambda n: 'category_short_name_%d' % n)
-    description = 'Category description for testing purposes'
-    info = {'file_name': 'test.jpg', 'container': 'user_1'}
+    @with_context
+    def test_category_public_attributes(self):
+        """Test public attributes works."""
+        hm = CategoryFactory.create()
+        assert hm.public_attributes().sort() == hm.dictize().keys().sort()

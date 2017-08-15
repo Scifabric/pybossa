@@ -139,7 +139,7 @@ Multiple languages
 ==================
 
 By default PYBOSSA only speaks English, however the default theme comes with a few
-translations (Spanish, French, Italian, Japanese, Greek and German). 
+translations (Spanish, French, Italian, Japanese, Greek and German).
 
 You can enable those translations (mostly user interface strings and actions) by doing
 the following: creating a symlink to the translations folders:
@@ -150,14 +150,14 @@ the following: creating a symlink to the translations folders:
 
 This will use the default translations of PYBOSSA for your server. We recommend to use
 these translations with the default theme. If you use your own theme, the best thing is
-to do your own translation, (see :ref:`translating`), as you might want to name things 
+to do your own translation, (see :ref:`translating`), as you might want to name things
 differently on the templates.
 
 You can disable/enable different languages in your config file
 **settings_local.py**. For example, to remove French you can add
 this configuration to the settings file:
 
-.. code-block:: python 
+.. code-block:: python
 
     LOCALES = [('en', 'English'), ('es', u'Español'),
                ('it', 'Italiano'), ('ja', u'日本語')]
@@ -167,7 +167,7 @@ Also, you can always specify a different default locale using the following
 snippet in the same settings file
 
 
-.. code-block:: python 
+.. code-block:: python
 
     DEFAULT_LOCALE = 'es'
 
@@ -175,7 +175,7 @@ snippet in the same settings file
 .. note::
     PYBOSSA tries to first match the user preferred language from their
     browser. This will work for anonymous users, while registered ones can
-    specify the language they want using their user preferences. 
+    specify the language they want using their user preferences.
 
 
 .. note::
@@ -183,7 +183,7 @@ snippet in the same settings file
     language, PYBOSSA looks for a cookie named **language** where it expects
     the key of any of the supported langes in the LOCALES list. You can use
     JavaScript to set it up.
-    
+
 
 Creating your own theme
 =======================
@@ -699,7 +699,7 @@ Making extra key/value pairs in info field public
 =================================================
 
 By default PYBOSSA protects all the information the info field except for those
-values that are public like the url of the image of the project, the container 
+values that are public like the url of the image of the project, the container
 where that picture is stored and a few extra. While this will be more than enough
 for most projects, sometimes, a server will need to expose more information publicly
 via the info field for the User and Project Domain Objects.
@@ -712,7 +712,7 @@ to show user's badges to anonymous people.
 With projects it could be the same. You want to highlight some info to anyone, but hide everything else.
 
 As PYBOSSA hides everything by default, you can always turn on which other fields from the
-info field can be shown to anonymous users, making them public. 
+info field can be shown to anonymous users, making them public.
 
 .. note::
 
@@ -725,6 +725,7 @@ the following config variables::
 
     PROJECT_INFO_PUBLIC_FIELDS = ['key1', 'key2']
     USER_INFO_PUBLIC_FIELDS = ['badges', 'key2', ...]
+    CATEGORY_INFO_PUBLIC_FIELDS = ['key1', 'key2']
 
 Add as many as you want, need. But please, be careful about which information you disclose.
 
@@ -903,7 +904,7 @@ If you want to enable it, you will have to add to your settings_local.py::
 
     SSE = True
 
-Also, you will need to configure uwsgi and nginx to support SSE events. This is not 
+Also, you will need to configure uwsgi and nginx to support SSE events. This is not
 trivial, as there are several different scenarios, libraries and options, so instead of
 recommending one solution, we invite you to read the `uwsgi documentation about it <http://uwsgi-docs.readthedocs.org/en/latest/Async.html>`_, so you can take a decission based on your
 own infrastructure and preferences.
@@ -996,7 +997,7 @@ Web Push notifications
     onesignal.com in order to support this feature. If you cannot use HTTPS we recommend to not enable
     it.
 
-PYBOSSA can send web push notifications to Google Chrome, Mozilla Firefox and Safari browsers. 
+PYBOSSA can send web push notifications to Google Chrome, Mozilla Firefox and Safari browsers.
 
 For supporting this feature, PYBOSSA uses the Onesignal.com service. You will need an account and create
 an app for your PYBOSSA server. Then follow their documentation to download the WebPush SDK and configure
@@ -1016,13 +1017,13 @@ settings_local.py file::
     ONESIGNAL_APP_ID = 'app-id'
     ONESIGNAL_API_KEY = 'app-key'
 
-Restart the server, and add one background worker for the *webpush* queue. This queue will handle the 
+Restart the server, and add one background worker for the *webpush* queue. This queue will handle the
 creation of the apps, as well as sending the push notifications.
 
 Then you will need to update your PYBOSSA theme in order to allow your users to subscribe. As this could
 vary a lot from one project to another, we do not provide a template but some guidelines:
 
- * Use the JS SDK to subscribe a user to a given project using the *tags* option of Onesignal. 
+ * Use the JS SDK to subscribe a user to a given project using the *tags* option of Onesignal.
  * PYBOSSA sends notifications using those tags thanks to the *filters* option that allows us to
    segment traffic. PYBOSSA is especting the project.id as the tag key for segmenting.
  * The JS SDK allows you to subscribe/unsubscribe a user to a give project (not only the whole server) with
