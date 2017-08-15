@@ -31,7 +31,8 @@ class TestCategoryAPI(TestAPI):
     def test_query_category(self):
         """Test API query for category endpoint works"""
         categories = []
-        cat = CategoryFactory.create(name='thinking', short_name='thinking')
+        cat = CategoryFactory.create(name='thinking', short_name='thinking'
+                                     info=dict(foo='monkey'))
         categories.append(cat.dictize())
         # Test for real field
         url = "/api/category"
@@ -110,6 +111,17 @@ class TestCategoryAPI(TestAPI):
         categories_by_id = sorted(categories, key=lambda x: x['id'], reverse=True)
         for i in range(len(categories)):
             assert categories_by_id[i]['id'] == data[i]['id']
+
+        # info & fulltextsearch
+        url = '/api/task?info=foo::monkey&fulltextsearch=1'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 1, len(data)
+
+        url = '/api/task?info=foo::fish&fulltextsearch=1'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 0, len(data)
 
 
     @with_context
@@ -198,7 +210,7 @@ class TestCategoryAPI(TestAPI):
         ### real user but not allowed as not admin!
         url = '/api/category/%s?api_key=%s' % (cat.id, user.api_key)
         res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update projects of others'
+        error_msg = 'Should not be able to update categories of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
@@ -250,6 +262,19 @@ class TestCategoryAPI(TestAPI):
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'AttributeError', err
+
+        # With reserved keys
+        data = dict(
+            id='123'
+            name='Category3',
+            short_name='category3')
+
+        datajson = json.dumps(data)
+        res = self.app.put('/api/category/%s?api_key=%s' % (cat.id, admin.api_key),
+                           data=datajson)
+        assert res.status_code == 400, res.status_code
+        error = json.loads(res.data)
+        assert error['exception_msg'] == "Reserved keys in payload", error
 
         # test delete
         ## anonymous
