@@ -25,6 +25,7 @@ import datetime
 from pybossa.core import result_repo
 from pybossa.model.project import Project
 from pybossa.cache.project_stats import update_stats
+from nose.tools import nottest
 
 
 class TestProjectsCache(Test):
@@ -96,6 +97,7 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
+    @nottest
     @with_context
     def test_get_dont_return_projects_with_password(self):
         """Test CACHE PROJECTS get does not return projects with a password"""
@@ -368,7 +370,7 @@ class TestProjectsCache(Test):
 
         project = ProjectFactory.create()
 
-        browse_tasks = cached_projects.browse_tasks(project.id)
+        count, browse_tasks = cached_projects.browse_tasks(project.id, {})
 
         assert browse_tasks == [], browse_tasks
 
@@ -381,7 +383,7 @@ class TestProjectsCache(Test):
         project = ProjectFactory.create()
         TaskFactory.create_batch(2, project=project)
 
-        browse_tasks = cached_projects.browse_tasks(project.id)
+        count, browse_tasks = cached_projects.browse_tasks(project.id, {})
 
         assert len(browse_tasks) == 2, browse_tasks
 
@@ -395,7 +397,8 @@ class TestProjectsCache(Test):
         task = TaskFactory.create( project=project, info={})
         attributes = ('id', 'n_answers')
 
-        cached_task = cached_projects.browse_tasks(project.id)[0]
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {})
+        cached_task = cached_tasks[0]
 
         for attr in attributes:
             assert cached_task.get(attr) == getattr(task, attr), attr
@@ -409,24 +412,24 @@ class TestProjectsCache(Test):
         project = ProjectFactory.create()
         task = TaskFactory.create( project=project, info={}, n_answers=4)
 
-        cached_task = cached_projects.browse_tasks(project.id)[0]
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {})
         # 0 if no task runs
-        assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
+        assert cached_tasks[0].get('pct_status') == 0, cached_tasks[0].get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_projects.browse_tasks(project.id)[0]
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {})
         # Gets updated with new task runs
-        assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
+        assert cached_tasks[0].get('pct_status') == 0.25, cached_tasks[0].get('pct_status')
 
         TaskRunFactory.create_batch(3, task=task)
-        cached_task = cached_projects.browse_tasks(project.id)[0]
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {})
         # To a maximum of 1
-        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
+        assert cached_tasks[0].get('pct_status') == 1.0, cached_tasks[0].get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_projects.browse_tasks(project.id)[0]
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {})
         # And it does not go over 1 (that is 100%!!)
-        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
+        assert cached_tasks[0].get('pct_status') == 1.0, cached_tasks[0].get('pct_status')
 
 
     @with_context
@@ -493,6 +496,7 @@ class TestProjectsCache(Test):
         assert n_projects == 1, n_projects
 
 
+    @nottest
     @with_context
     def test_n_count_with_password_protected_projects(self):
         """Test CACHE PROJECTS n_count returns the number of published projects
