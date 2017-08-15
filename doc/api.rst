@@ -274,8 +274,8 @@ It is possible to limit the number of returned objects::
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&limit=20]
 
 
-It is possible to access first level JSON keys within the **info** field of Projects,
-Tasks, Task Runs and Results::
+It is possible to access first level JSON keys within the **info** field of Categories,
+Projects, Tasks, Task Runs and Results::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&info=foo::bar&limit=20]
 
