@@ -19,6 +19,7 @@
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from sqlalchemy.exc import IntegrityError
+from mock import patch
 from pybossa.model.category import Category
 from factories import CategoryFactory
 
@@ -27,6 +28,18 @@ class TestModelCategory(Test):
 
     @with_context
     def test_category_public_attributes(self):
-        """Test public attributes works."""
-        hm = CategoryFactory.create()
-        assert hm.public_attributes().sort() == hm.dictize().keys().sort()
+        """Test CATEGORY public attributes works."""
+        cat = CategoryFactory.create()
+        assert cat.public_attributes().sort() == cat.dictize().keys().sort()
+
+    @with_context
+    def test_blogpost_public_json(self):
+        """Test CATEGORY to_public_json method works with extra fields."""
+        cat = CategoryFactory.create()
+        cat.info = {'secret': 'mysecret', 'public': 'hello'}
+        err_msg = "There should be info keys"
+        with patch.dict(self.flask_app.config, {'CATEGORY_INFO_PUBLIC_FIELDS': ['public']}):
+            json = cat.to_public_json()
+            assert json['info'].keys().sort() == Category().public_info_keys().sort(), err_msg
+            assert 'public' in json['info'].keys()
+            assert 'secret' not in json['info'].keys()
