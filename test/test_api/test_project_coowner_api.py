@@ -21,7 +21,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
 
-from factories import ProjectFactory, UserFactory
+from factories import ProjectFactory, UserFactory, ProjectCoownerFactory
 
 from pybossa.repositories import ProjectRepository, ProjectCoownerRepository
 

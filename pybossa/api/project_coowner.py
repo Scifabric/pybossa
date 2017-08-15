@@ -52,7 +52,7 @@ class ProjectCoownerAPI(APIBase):
         """
         json_obj = super(ProjectCoownerAPI, self)._create_json_response(query_result, oid)
         obj = json.loads(json_obj)
-        projects = list(set([i['project_id']  for i in obj]))
+        projects = list(set([i['project_id'] for i in obj]))
         consolidated_obj = [{'project_id': project, 'coowner_ids': [coowner['coowner_id']
                             for coowner in obj if coowner['project_id'] == project]}
                             for project in projects]
