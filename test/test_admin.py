@@ -75,6 +75,7 @@ class TestAdmin(web.Helper):
     def test_01_admin_index_json(self, sentinel_mock):
         """Test ADMIN JSON index page works"""
         self.register()
+        self.signin()
         res = self.app_get_json("/admin/")
         data = json.loads(res.data)
         err_msg = "There should be an index page for admin users and projects"
@@ -120,6 +121,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
+        self.signin(email="tester2@tester.com", password="tester")
         res = self.app_get_json("/admin/")
         data = json.loads(res.data)
         err_msg = ("The user should not be able to access this page"
@@ -195,6 +197,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
+        self.signin(email="tester2@tester.com", password="tester")
         res = self.app_get_json('/admin/featured')
         assert res.status == "403 FORBIDDEN", res.status
         err_msg = 'private information leaked'
@@ -343,6 +346,7 @@ class TestAdmin(web.Helper):
     def test_09_admin_users_as_admin_json(self):
         """Test ADMIN JSON users works as an admin user"""
         self.register()
+        self.signin()
         res = self.app_get_json('/admin/users')
         data = json.loads(res.data)
         assert data.get('form') is not None, data
@@ -377,6 +381,7 @@ class TestAdmin(web.Helper):
     def test_11_admin_user_not_listed_in_search_json(self):
         """Test ADMIN JSON users does not list himself in the search works"""
         self.register()
+        self.signin()
         data = {'user': 'john'}
         res = self.app_post_json('/admin/users', data=data)
         dat = json.loads(res.data)
@@ -1161,6 +1166,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="juan", name="juan")
+        self.signin(email="juan@example.com")
         res = self.app_get_json(url)
         err_msg = "It should return 403"
         assert res.status_code == 403, err_msg
@@ -1184,6 +1190,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN JSON dashboard admins can access it"""
         url = '/admin/dashboard/'
         self.register()
+        self.signin()
         self.new_project()
         res = self.app_get_json(url)
         print res.data
@@ -1197,6 +1204,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN JSON dashboard admins can access it with data"""
         url = '/admin/dashboard/'
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         import pybossa.dashboard.jobs as dashboard
@@ -1278,6 +1286,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN JSON dashboard admins refresh can access it with data"""
         url = '/admin/dashboard/?refresh=1'
         self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
         import pybossa.dashboard.jobs as dashboard
@@ -1308,6 +1317,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN JSON announcement"""
         url = '/admin/announcement'
         self.register()
+        self.signin()
         res = self.app_get_json(url)
         print res.data
         err_msg = "It should return 200"
@@ -1331,6 +1341,7 @@ class TestAdmin(web.Helper):
     def test_announcement_create_json(self):
         """Test announcement creation"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         url = "/admin/announcement/new"
 
@@ -1369,6 +1380,7 @@ class TestAdmin(web.Helper):
     def test_announcement_update_json(self):
         """Test announcement update"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         announcement = AnnouncementFactory.create()
         url = "/admin/announcement/1/update"
@@ -1399,6 +1411,7 @@ class TestAdmin(web.Helper):
     def test_announcement_update_json_error(self):
         """Test announcement update error"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         announcement = AnnouncementFactory.create()
         url = "/admin/announcement/1/update"
@@ -1421,6 +1434,7 @@ class TestAdmin(web.Helper):
     def test_announcement_delete_json(self):
         """Test announcement delete"""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         print user.admin
         announcement = AnnouncementFactory.create()
