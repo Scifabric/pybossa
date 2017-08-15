@@ -725,7 +725,6 @@ the following config variables::
 
     PROJECT_INFO_PUBLIC_FIELDS = ['key1', 'key2']
     USER_INFO_PUBLIC_FIELDS = ['badges', 'key2', ...]
-    CATEGORY_INFO_PUBLIC_FIELDS = ['key1', 'key2']
 
 Add as many as you want, need. But please, be careful about which information you disclose.
 
