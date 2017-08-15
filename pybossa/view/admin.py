@@ -170,7 +170,7 @@ def users(user_id=None):
 @admin_required
 def export_users():
     """Export Users list in the given format, only for admins."""
-    exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
+    exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
                              'created', 'admin', 'subadmin', 'enabled', 'languages',
                              'locations', 'start_time', 'end_time',
                              'timezone', 'type_of_user', 'additional_comments',
