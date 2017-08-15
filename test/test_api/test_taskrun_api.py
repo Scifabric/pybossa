@@ -28,6 +28,7 @@ from pybossa.repositories import ResultRepository
 from pybossa.core import db
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
+from nose.tools import nottest
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -480,6 +481,7 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
+        print err
         assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
@@ -517,6 +519,7 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
 
 
+    @nottest
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
@@ -1105,4 +1108,4 @@ class TestTaskrunAPI(TestAPI):
 
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
 
-        assert result is not None, result
+        assert result is None, result

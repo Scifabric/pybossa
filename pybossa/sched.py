@@ -25,7 +25,7 @@ from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 import random
 from pybossa.cache import users as cached_users
 from flask import current_app
@@ -304,6 +304,8 @@ def get_key(project_id, task_id):
 
 def get_project_scheduler_and_timeout(project_id):
     project = project_repo.get(project_id)
+    if not project:
+        raise Forbidden('Invalid project_id')
     scheduler = project.info.get('sched', 'default')
     timeout = project.info.get('timeout', TIMEOUT)
     if scheduler == 'default':
