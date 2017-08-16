@@ -258,7 +258,8 @@ class TestProjectAPI(TestAPI):
         user = UserFactory.create()
         user_two = UserFactory.create()
         project_oc = ProjectFactory.create(owner=user, short_name='test-app',
-                                           name='My New Project')
+                                           name='My New Project',
+                                           info=dict(foo='fox'))
         ProjectFactory.create()
         # Test for real field
         url = "/api/project?short_name=test-app&api_key=" + user.api_key
@@ -323,6 +324,11 @@ class TestProjectAPI(TestAPI):
         assert data[0]['name'] == 'My New Project', data
         assert data[0]['owner_id'] == user.id, data
 
+        # fulltextsearch
+        url = '/api/project?&info=foo::fox&fulltextsearch=1'
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 1, len(data)
 
 
     @with_context

@@ -29,9 +29,6 @@ from pybossa.core import uploader
 
 class ProjectRepository(Repository):
 
-    def __init__(self, db):
-        self.db = db
-
     # Methods for Project objects
     def get(self, id):
         return self.db.session.query(Project).get(id)
