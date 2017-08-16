@@ -25,7 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
-import pybossa.leaderboard.jobs as leaderboard 
+from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
 
 
@@ -276,7 +276,7 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
 def get_leaderboard_jobs(queue='super'):  # pragma: no cover
     """Return leaderboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
-    yield dict(name=leaderboard.leaderboard, args=[], kwargs={},
+    yield dict(name=leaderboard, args=[], kwargs={},
                timeout=timeout, queue=queue)
 
 
