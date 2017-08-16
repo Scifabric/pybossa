@@ -40,8 +40,9 @@ class ProjectCoownerRepository(object):
     def filter_by(self, limit=None, offset=0, yielded=False, fulltextsearch=None, desc=False, **filters):
         # Remove owner_id from filters
         # it's just used for authentication
-        if filters.get('owner_id'):
-            del filters['owner_id']
+        for attr in ['owner_id', 'orderby']:
+            if filters.get(attr):
+                del filters[attr]
         query = self.db.session.query(ProjectCoowner).filter_by(**filters)
         query = query.order_by(ProjectCoowner.project_id).limit(limit).offset(offset)
         if yielded:

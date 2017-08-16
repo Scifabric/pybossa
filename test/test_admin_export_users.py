@@ -21,7 +21,7 @@ import StringIO
 from default import with_context
 from pybossa.util import unicode_csv_reader
 from helper import web
-
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 
 
 class TestExportUsers(web.Helper):
@@ -29,9 +29,26 @@ class TestExportUsers(web.Helper):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
                              'created', 'locale', 'admin')
 
+    def create_project_and_tasks(self):
+        owner = UserFactory.create(id=333)
+        project = ProjectFactory.create(owner=owner)
+        TaskFactory.create(project=project, n_answers=20)
+        return project
+
+    def contribute(self, project):
+        res = self.app.get('api/project/%s/newtask' % project.id)
+        data = json.loads(res.data)
+        data = {'project_id': project.id,
+                'task_id': data['id'],
+                'info': {}}
+        res = self.app.post('api/taskrun', data=json.dumps(data))
+
     @with_context
     def test_json_contains_all_attributes(self):
         self.register()
+        self.signin()
+        project = self.create_project_and_tasks()
+        self.contribute(project)
 
         res = self.app.get('/admin/users/export?format=json',
                             follow_redirects=True)
@@ -43,12 +60,20 @@ class TestExportUsers(web.Helper):
     @with_context
     def test_json_returns_all_users(self):
         self.register(fullname="Manolita")
+        project = self.create_project_and_tasks()
+        self.signin()
+        self.contribute(project)
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
+        self.signin(email="juan@juan.com", password="juan")
+        self.contribute(project)
         self.signout()
         self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
+        self.signin(email="juan2@juan.com", password="juan2")
+        self.contribute(project)
+        self.signout()
         self.signin()
 
         res = self.app.get('/admin/users/export?format=json',
@@ -64,6 +89,7 @@ class TestExportUsers(web.Helper):
     @with_context
     def test_csv_contains_all_attributes(self):
         self.register()
+        self.signin()
 
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
@@ -75,12 +101,22 @@ class TestExportUsers(web.Helper):
     @with_context
     def test_csv_returns_all_users(self):
         self.register(fullname="Manolita")
+        project = self.create_project_and_tasks()
+        self.signin()
+        self.contribute(project)
         self.signout()
+
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
+        self.signin(email="juan@juan.com", password="juan")
+        self.contribute(project)
         self.signout()
+
         self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
+        self.signin(email="juan2@juan.com", password="juan2")
+        self.contribute(project)
+        self.signout()
         self.signin()
 
         res = self.app.get('/admin/users/export?format=csv',

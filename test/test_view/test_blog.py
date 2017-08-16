@@ -106,7 +106,7 @@ class TestBlogpostView(web.Helper):
             assert blogpost['title'] in ['titleone', 'titletwo']
         self.signout()
 
-        # As owner 
+        # As owner
         self.signin(email=user.email_addr, password=self.password)
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -251,13 +251,13 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data, res
+        assert "This feature requires being logged in." in res.data, res
 
         res = self.app.post(url,
                             data={'title':'blogpost title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "This feature requires being logged in." in res.data
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost == None, blogpost
@@ -336,7 +336,7 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data, res.data
+        assert "This feature requires being logged in." in res.data, res.data
 
         res = self.app.post(url,
                             data={'id':blogpost.id,
@@ -344,7 +344,7 @@ class TestBlogpostView(web.Helper):
                                   'body':'new body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "This feature requires being logged in." in res.data
 
         blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
@@ -435,7 +435,7 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "This feature requires being logged in." in res.data
 
         blogpost = blog_repo.get_by()
         assert blogpost is not None

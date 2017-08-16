@@ -78,7 +78,5 @@ class ErrorStatus(object):
                         mimetype='application/json')
 
     def log_exception(self):
-        current_app.logger.exception('Exception on {} [{}]'.format(
+        current_app.logger.exception(u'Exception on {} [{}]'.format(
             request.path, request.method))
-        current_app.logger.error('{}\n{}\n'.format(
-            request.values, request.data))

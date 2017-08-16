@@ -276,9 +276,8 @@ def get_users_page(page, per_page=24):
     sql = text('''SELECT "user".id, "user".name,
                "user".fullname, "user".email_addr,
                "user".created, "user".info, COUNT(task_run.id) AS task_runs
-               FROM "user" LEFT OUTER JOIN task_run
-               ON "user".id=task_run.user_id
-               WHERE "user".enabled=True GROUP BY "user".id
+               FROM task_run, "user" 
+               WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = session.execute(sql, dict(limit=per_page, offset=offset))
     accounts = []
@@ -352,7 +351,7 @@ def get_user_preferences(user_id=None):
 def get_users_for_report():
     """Return information for all users to generate report."""
     sql = text("""
-                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled,
+                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled, locale,
                 subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
                 u.info->'metadata'->'start_time' AS start_time, u.info->'metadata'->'end_time' AS end_time,
                 u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
@@ -367,7 +366,7 @@ def get_users_for_report():
                """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
-                    email_addr=row.email_addr, created=row.created,
+                    email_addr=row.email_addr, created=row.created, locale=row.locale,
                     admin=row.admin, subadmin=row.subadmin, enabled=row.enabled, languages=row.languages,
                     locations=row.locations, start_time=row.start_time,
                     end_time=row.end_time, timezone=row.timezone,

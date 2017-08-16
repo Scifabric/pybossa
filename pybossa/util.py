@@ -675,9 +675,12 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
         project_url = None if not project_slug else server_url + '/project/' + project_slug
         if project_url:
             project_urls.append(project_url)
+    bcc = []
+    if current_user.is_authenticated():
+        bcc.append(current_user.email_addr)
     msg = dict(subject='New account with {}'.format(brand),
                recipients=[user['email_addr']],
-               bcc=[current_user.email_addr])
+               bcc=bcc)
     msg['html'] = render_template('/account/email/newaccount_invite.html',
                                   user=user, project_urls=project_urls,
                                   user_manual_label=user_manual_label,

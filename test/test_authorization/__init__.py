@@ -28,6 +28,7 @@ def mock_current_user(anonymous=True, admin=None, id=None, pro=False):
     mock = Mock(spec=User)
     mock.is_anonymous.return_value = anonymous
     mock.is_authenticated.return_value = not anonymous
+    mock.coowned_projects = []
     if anonymous:
         type(mock).admin = PropertyMock(side_effect=AttributeError)
         type(mock).pro = PropertyMock(side_effect=AttributeError)

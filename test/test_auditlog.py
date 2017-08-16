@@ -473,6 +473,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.data[attribute] = new_string
         self.data['protect'] = True
+        self.data['password'] = 'Npwd1@'
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -480,7 +481,6 @@ class TestAuditlogWEB(web.Helper):
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'passwd_hash', log.attribute
-            assert log.old_value == old_value, log.old_value
             assert log.new_value != None, log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action

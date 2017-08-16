@@ -174,6 +174,7 @@ class TaskRepository(Repository):
     def delete_valid_from_project(self, project, force_reset=False, filters=None):
         if not force_reset:
             """Delete only tasks that have no results associated."""
+            params = {}
             sql = text('''
                 DELETE FROM task WHERE task.project_id=:project_id
                 AND task.id NOT IN

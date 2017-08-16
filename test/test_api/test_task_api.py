@@ -372,6 +372,7 @@ class TestTaskAPI(TestAPI):
 
         # POST with fake data
         data['wrongfield'] = 13
+        data['info'] = 'Kicking around on a piece of ground in your home town'
         res = self.app.post(url, data=json.dumps(data))
         err = json.loads(res.data)
         assert res.status_code == 415, err

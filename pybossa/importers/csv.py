@@ -114,7 +114,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         r.encoding = 'utf-8'
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
-        return list(self._import_csv_tasks(csvreader))
+        return self._import_csv_tasks(csvreader)
 
 
 class BulkTaskGDImport(BulkTaskCSVImport):

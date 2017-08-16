@@ -108,7 +108,7 @@ class TaskRedundancyForm(Form):
                                   max=task_repo.MAX_REDUNDANCY,
                                   message=lazy_gettext(
                                       'Number of answers should be a \
-                                       value between {} and {}'.format(
+                                       value between {} and {:,}'.format(
                                           task_repo.MIN_REDUNDANCY,
                                           task_repo.MAX_REDUNDANCY
                                       )))])

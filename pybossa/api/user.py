@@ -64,12 +64,13 @@ class UserAPI(APIBase):
                 self._remove_attribute_if_private(attribute, user_data, privacy)
             return user_data
 
-    def _remove_attribute_if_not_allowed(self, attribute, user_data):
-        if not self._is_attribute_allowed(attribute):
+    def _remove_attribute_if_private(self, attribute, user_data, privacy):
+        if self._is_attribute_private(attribute, privacy):
             del user_data[attribute]
 
-    def _is_attribute_allowed(self, attribute):
-        return attribute in self.attributes_to_return
+    def _is_attribute_private(self, attribute, privacy):
+        return (attribute not in self.allowed_attributes or
+                privacy and attribute not in self.public_attributes)
 
     def _is_user_private(self, user):
         return not self._is_requester_admin() and user['privacy_mode']

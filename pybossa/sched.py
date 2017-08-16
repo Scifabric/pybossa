@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
 from sqlalchemy.sql import func, desc, text
+from sqlalchemy.sql import and_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -24,7 +25,7 @@ from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 import random
 from pybossa.cache import users as cached_users
 from flask import current_app
@@ -205,7 +206,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
             register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
             return [session.query(Task).get(task_id)]
 
-    return None
+    return []
 
 
 def get_user_pref_task(project_id, user_id=None, user_ip=None,
@@ -303,6 +304,8 @@ def get_key(project_id, task_id):
 
 def get_project_scheduler_and_timeout(project_id):
     project = project_repo.get(project_id)
+    if not project:
+        raise Forbidden('Invalid project_id')
     scheduler = project.info.get('sched', 'default')
     timeout = project.info.get('timeout', TIMEOUT)
     if scheduler == 'default':

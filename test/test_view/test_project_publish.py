@@ -85,7 +85,7 @@ class TestProjectPublicationView(web.Helper):
         task = TaskFactory.create(project=self.project, n_answers=1)
         TaskRunFactory.create(task=task)
         result = result_repo.get_by(project_id=task.project_id)
-        assert result, "There should be a result"
+        assert not result, "There should not be a result"
         resp = self.app.post('/project/%s/publish' % self.project.short_name,
                              follow_redirects=True)
 

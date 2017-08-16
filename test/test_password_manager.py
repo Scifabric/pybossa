@@ -84,12 +84,15 @@ class TestProjectPasswdManager(object):
 
 
     @patch('pybossa.password_manager.current_user')
-    def test_password_needed_auth_passwd_no_id(self, mock_user):
+    @patch('pybossa.password_manager.is_coowner')
+    def test_password_needed_auth_passwd_no_id(self, mock_user, is_coowner):
         """Test password_needed should return True for an authenticated user and
         a project with password, if the cookie does not contain the user id"""
         mock_user.is_anonymous.return_value = False
         mock_user.admin = False
+        mock_user.subadmin = False
         mock_user.id = 2
+        is_coowner.return_value = False
         self.cookie_handler.get_cookie_from.return_value = []
         self.project.needs_password.return_value = True
 
@@ -100,12 +103,15 @@ class TestProjectPasswdManager(object):
 
 
     @patch('pybossa.password_manager.current_user')
-    def test_password_needed_auth_passwd_ip(self, mock_user):
+    @patch('pybossa.password_manager.is_coowner')
+    def test_password_needed_auth_passwd_ip(self, mock_user, is_coowner):
         """Test password_needed should return False for an authenticated user and
         a project with password, if the cookie contains the user id"""
         mock_user.is_anonymous.return_value = False
         mock_user.admin = False
+        mock_user.subadmin = False
         mock_user.id = 2
+        is_coowner.return_value = False
         self.cookie_handler.get_cookie_from.return_value = [2]
         self.project.needs_password.return_value = True
 

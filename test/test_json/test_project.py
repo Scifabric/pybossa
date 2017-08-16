@@ -42,8 +42,9 @@ class TestJsonProject(web.Helper):
     @with_context
     def test_project_new_auth(self):
         """Test JSON PROJECT (GET/POST) New works."""
+        self.register()
+        self.signin()
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
-            self.register()
             url = '/project/new'
             res = self.app_get_json(url, follow_redirects=True)
             data = json.loads(res.data)
@@ -68,7 +69,8 @@ class TestJsonProject(web.Helper):
             assert len(data.get('form').get('errors').get('long_description')) == 1, data
 
             # New Project
-            project = dict(name='project1', short_name='project1', long_description='lore ipsum')
+            project = dict(name='project1', short_name='project1', long_description='lore ipsum',
+                           password='TestPwd1')
             csrf = self.get_csrf(url)
             print csrf
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)

@@ -703,6 +703,8 @@ class TestProjectAPI(TestAPI):
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
         print data
+        assert res.status_code == 401
+        return
 
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg

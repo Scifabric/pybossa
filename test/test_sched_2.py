@@ -78,7 +78,9 @@ class TestSched(sched.Helper):
                   info={'answer': 'No No'})
         tr = json.dumps(tr)
 
-        self.app.post('/api/taskrun', data=tr)
+        res = self.app.post('/api/taskrun', data=tr)
+        # no anonymous contributions
+        assert res.status_code != 200
 
         #### Get the only task now with an answer as User2!
         self.signin(email="mariedoe@example.com", password="dr0wss4p")
@@ -87,4 +89,4 @@ class TestSched(sched.Helper):
 
         # Check that we received a Task with answer
         assert data.get('info'), data
-        assert data.get('info').get('last_answer').get('answer') == 'No No'
+        assert data.get('info').get('last_answer').get('answer') == 'No'

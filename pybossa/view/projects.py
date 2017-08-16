@@ -2009,7 +2009,7 @@ def _check_if_redirect_to_password(project):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(project, get_user_id_or_ip()):
-        return redirect(url_for('.password_required',
+        return redirect_content_type(url_for('.password_required',
                                 short_name=project.short_name, next=request.path))
 
 

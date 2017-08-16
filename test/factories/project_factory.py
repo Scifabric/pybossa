@@ -47,5 +47,7 @@ class ProjectFactory(BaseFactory):
             'container': 'container',
             'thumbnail_url': 'http://cdn.com/container/img.png',
             'onesignal': {'data': 'private'},
-            'onesignal_app_id': 1
+            'onesignal_app_id': 1,
+            'sched': 'breadth_first'
             }
+    coowners = []

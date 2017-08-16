@@ -233,8 +233,7 @@ def on_taskrun_submit(mapper, conn, target):
 
     add_user_contributed_to_feed(conn, target.user_id, project_public)
     if is_task_completed(conn, target.task_id, target.project_id) and _published:
-        # TODO: uncomment the line below when a fix for the isolation problem is found
-        # update_task_state(conn, target.task_id)
+        update_task_state(conn, target.task_id)
         update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
         project_private = dict()

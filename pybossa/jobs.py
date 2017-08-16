@@ -612,7 +612,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     try:
         report = importer.create_tasks(task_repo, project, **form_data)
     except:
-        msg = ('Import tasks to your project {0} by {1} failed'
+        msg = (u'Import tasks to your project {0} by {1} failed'
                .format(project.name, current_user_fullname))
         subject = 'Tasks Import to your project %s' % project.name
         body = ('Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
@@ -626,7 +626,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)
         project_repo.save(project)
-    msg = report.message + ' to your project {0} by {1}'.format(project.name, current_user_fullname)
+    msg = report.message + u' to your project {0} by {1}'.format(project.name, current_user_fullname)
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
