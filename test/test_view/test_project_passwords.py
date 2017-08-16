@@ -90,10 +90,10 @@ class TestProjectPassword(Helper):
         project_repo.update(project)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'This feature requires being logged in' in res.data
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'This feature requires being logged in' in res.data
 
     @with_context
     def test_password_not_required_for_anonymous_contributors(self):

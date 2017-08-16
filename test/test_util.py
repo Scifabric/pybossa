@@ -29,6 +29,7 @@ import tempfile
 import os
 import json
 import hashlib
+from nose.tools import nottest
 
 
 def myjsonify(data):
@@ -690,6 +691,7 @@ class TestRankProjects(object):
         assert ranked[0]['name'] == "uncompleted"
         assert ranked[1]['name'] == "completed"
 
+    @nottest
     def test_it_penalizes_projects_with_test_in_the_name_or_short_name(self):
         projects = [{'info': {},
                      'n_tasks': 4,
