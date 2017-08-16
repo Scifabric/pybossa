@@ -122,10 +122,10 @@ class Project(db.Model, DomainObject):
     def public_attributes(self):
         """Return a list of public attributes."""
         return ['id', 'description', 'info', 'n_tasks', 'n_volunteers', 'name',
-                'overall_progress', 'short_name', 'created', 'description',
-                'last_activity', 'last_activity_raw', 'overall_progress',
+                'overall_progress', 'short_name', 'created',
+                'long_description', 'last_activity', 'last_activity_raw',
                 'n_task_runs', 'n_results', 'owner', 'updated', 'featured',
-                'owner_id', 'n_completed_tasks', 'n_blogposts' ]
+                'owner_id', 'n_completed_tasks', 'n_blogposts']
 
     @classmethod
     def public_info_keys(self):
