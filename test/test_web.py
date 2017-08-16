@@ -1763,6 +1763,37 @@ class TestWeb(web.Helper):
         assert data['code'] == 404, data
 
     @with_context
+    def test_get_project_json(self):
+        """Test WEB JSON get project by short name."""
+        project = ProjectFactory.create()
+        url = '/project/%s/' % project.short_name
+        res = self.app_get_json(url)
+
+        data = json.loads(res.data)['project']
+
+        assert 'id' in data.keys(), data.keys()
+        assert 'description' in data.keys(), data.keys()
+        assert 'info' in data.keys(), data.keys()
+        assert 'long_description' in data.keys(), data.keys()
+        assert 'n_tasks' in data.keys(), data.keys()
+        assert 'n_volunteers' in data.keys(), data.keys()
+        assert 'name' in data.keys(), data.keys()
+        assert 'overall_progress' in data.keys(), data.keys()
+        assert 'short_name' in data.keys(), data.keys()
+        assert 'created' in data.keys(), data.keys()
+        assert 'long_description' in data.keys(), data.keys()
+        assert 'last_activity' in data.keys(), data.keys()
+        assert 'last_activity_raw' in data.keys(), data.keys()
+        assert 'n_task_runs' in data.keys(), data.keys()
+        assert 'n_results' in data.keys(), data.keys()
+        assert 'owner' in data.keys(), data.keys()
+        assert 'updated' in data.keys(), data.keys()
+        assert 'featured' in data.keys(), data.keys()
+        assert 'owner_id' in data.keys(), data.keys()
+        assert 'n_completed_tasks' in data.keys(), data.keys()
+        assert 'n_blogposts' in data.keys(), data.keys()
+
+    @with_context
     def test_update_project_json_as_user(self):
         """Test WEB JSON update project as user."""
         admin = UserFactory.create()
