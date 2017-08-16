@@ -118,7 +118,7 @@ def get_periodic_jobs(queue):
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
-            weekly_update_jobs, failed_jobs]
+            weekly_update_jobs, failed_jobs, leaderboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
