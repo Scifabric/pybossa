@@ -302,7 +302,7 @@ def register():
             project_slugs=form.project_slug.data
             create_account(account, project_slugs=project_slugs)
             flash(gettext('Created user succesfully!'), 'success')
-            return redirect(url_for("home.home"))
+            return redirect_content_type(url_for("home.home"))
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
@@ -430,7 +430,7 @@ def _show_public_profile(user):
     projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_created = cached_users.published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
-    percentage_tasks_completed = user_dict['n_answers'] * 100 / n_total_tasks()
+    percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
 
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)

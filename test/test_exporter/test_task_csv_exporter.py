@@ -66,7 +66,7 @@ class TestTaskCsvExporter(Test):
                  'nested_y': {'double_nested': 'www.example.com'},
                  'nested_z': True}}
 
-        value = exporter.get_value(row, *['c', 'nested_y', 'double_nested'])
+        value = exporter.get_value(row, 'c__nested_y__double_nested')
 
         assert value == 'www.example.com'
 

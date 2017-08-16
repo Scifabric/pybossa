@@ -31,23 +31,24 @@ class TestImportTasksJob(Test):
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
 
-        import_tasks(project.id, **form_data)
+        import_tasks(project.id, 'Hodor', **form_data)
 
-        create.assert_called_once_with(task_repo, project.id, **form_data)
+        create.assert_called_once_with(task_repo, project, **form_data)
 
     @with_context
     @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.importer.create_tasks')
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
+        uploader_name = 'Cersei Lannister'
         create.return_value = ImportReport(message='1 new task was imported successfully', metadata=None, total=1)
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PYBOSSA team.' % project.name
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s by %s\n\nAll the best,\nThe PYBOSSA team.' % (project.name, uploader_name)
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
-        import_tasks(project.id, **form_data)
+        import_tasks(project.id, uploader_name, **form_data)
 
         send_mail.assert_called_once_with(email_data)
 
@@ -63,7 +64,7 @@ class TestImportTasksJob(Test):
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
-        import_tasks(project.id, from_auto=True, **form_data)
+        import_tasks(project.id, 'Jon Snow', from_auto=True, **form_data)
         autoimporter = project.get_autoimporter()
 
         assert autoimporter.get('last_import_meta') == 'meta', autoimporter
@@ -80,7 +81,7 @@ class TestImportTasksJob(Test):
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
-        import_tasks(project.id, from_auto=False, **form_data)
+        import_tasks(project.id, 'The Hound', from_auto=False, **form_data)
         autoimporter = project.get_autoimporter()
 
         assert autoimporter.get('last_import_meta') == None, autoimporter
