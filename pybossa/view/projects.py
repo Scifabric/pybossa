@@ -1662,6 +1662,7 @@ def publish(short_name):
     task_repo.delete_taskruns_from_project(project)
     result_repo.delete_results_from_project(project)
     webhook_repo.delete_entries_from_project(project)
+    cached_projects.delete_project(short_name)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
