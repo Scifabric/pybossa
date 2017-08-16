@@ -1055,6 +1055,7 @@ Example of logged in user:
     {
         ...
         "user": {
+            "admin": false,
             "api_key": "aa3ee485-896d-488a-83f7-88a29bf45171",
             "confirmation_email_sent": false,
             "created": "2014-08-11T08:59:32.079599",
@@ -1579,6 +1580,7 @@ for logged in user JohnDoe:
       "n_volunteers": 1,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "akjhfd85-8afd6-48af-f7afg-kjhsfdlkjhf1",
         "confirmation_email_sent": false,
         "created": "2014-08-11T08:59:32.079599",
@@ -3590,6 +3592,7 @@ when the project has an empty template, otherwise it will load the template for 
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3676,6 +3679,7 @@ argument: **?template=basic** for the basic or **?template=iamge** for the image
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3774,6 +3778,7 @@ as the csrf token. As this endpoint does not have any form, the csrf token is no
       "n_tasks": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3879,6 +3884,7 @@ It returns a JSON object with the following information:
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2012-06-06T06:27:18.760254",
@@ -4153,6 +4159,7 @@ It returns a JSON object with the following information:
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2012-06-06T06:27:18.760254",

@@ -47,7 +47,7 @@ def get_user_summary(name):
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
-               "user".google_user_id, "user".info,
+               "user".google_user_id, "user".info, "user".admin,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
                "user".valid_email, "user".confirmation_email_sent
                FROM "user"
@@ -63,7 +63,7 @@ def get_user_summary(name):
                     twitter_user_id=row.twitter_user_id,
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
-                    info=row.info,
+                    info=row.info, admin=row.admin,
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
