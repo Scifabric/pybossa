@@ -435,7 +435,7 @@ class TestProjectRepositoryForCategories(Test):
         info_new = {'f': 'v'}
         category.info = info_new
 
-        self.project_repo.update(category)
+        self.project_repo.update_category(category)
         updated_category = self.project_repo.get_category(category.id)
 
         assert updated_category.info == info_new, updated_category
