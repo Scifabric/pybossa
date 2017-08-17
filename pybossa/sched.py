@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
+from functools import wraps
 from sqlalchemy.sql import func, desc, text
 from sqlalchemy.sql import and_
 from pybossa.model import DomainObject
@@ -51,7 +52,11 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 def can_post(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
-        return has_lock(project_id, task_id, user_id, timeout)
+        allowed = has_lock(project_id, task_id, user_id, timeout)
+        current_app.logger.info(
+            'Project {} - user {} can submit for task {}: {}'
+            .format(project_id, user_id, task_id, allowed))
+        return allowed
     else:
         return True
 
@@ -162,6 +167,44 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
     return _handle_tuples(data)
 
 
+def locked_scheduler(query_factory):
+    @wraps(query_factory)
+    def template_get_locked_task(project_id, user_id=None, user_ip=None,
+                                 external_uid=None, limit=1, offset=0,
+                                 orderby='priority_0', desc=True):
+        if offset > 2:
+            raise BadRequest()
+        if offset == 1:
+            return None
+        user_count = get_active_user_count(project_id, sentinel.slave)
+        current_app.logger.info(
+            "Project {} - number of current users: {}"
+            .format(project_id, user_count))
+
+        sql = query_factory(project_id, user_id, user_ip, external_uid,
+                            limit, offset, orderby, desc)
+
+        rows = session.execute(sql, dict(project_id=project_id,
+                                         user_id=user_id,
+                                         limit=user_count + 5))
+
+        for task_id, taskcount, n_answers, timeout in rows:
+            timeout = timeout or TIMEOUT
+            remaining = n_answers - taskcount
+            if acquire_lock(project_id, task_id, user_id, remaining, timeout):
+                rows.close()
+                register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
+                current_app.logger.info(
+                    'Project {} - user {} obtained task {}, timeout: {}'
+                    .format(project_id, user_id, task_id, timeout))
+                return [session.query(Task).get(task_id)]
+
+        return []
+
+    return template_get_locked_task
+
+
+@locked_scheduler
 def get_locked_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, limit=1, offset=0,
                     orderby='priority_0', desc=True):
@@ -172,13 +215,6 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     a lock on the task and return the task to the user. If offset is nonzero,
     skip that amount of available tasks before returning to the user.
     """
-    if offset > 2:
-        raise BadRequest()
-    if offset == 1:
-        return None
-    user_count = get_active_user_count(project_id, sentinel.slave)
-
-    current_app.logger.info("Number of current users: {}".format(user_count))
     sql = text('''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -194,23 +230,13 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            ORDER BY priority_0 DESC, id ASC LIMIT :limit;
            ''')
 
-    rows = session.execute(sql, dict(project_id=project_id,
-                                     user_id=user_id,
-                                     limit=user_count + 5))
-
-    for task_id, taskcount, n_answers, timeout in rows:
-        timeout = timeout or TIMEOUT
-        remaining = n_answers - taskcount
-        if acquire_lock(project_id, task_id, user_id, remaining, timeout):
-            rows.close()
-            register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
-            return [session.query(Task).get(task_id)]
-
-    return []
+    return sql
 
 
+@locked_scheduler
 def get_user_pref_task(project_id, user_id=None, user_ip=None,
-                    external_uid=None, offset=0):
+                       external_uid=None, limit=1, offset=0,
+                       orderby='priority_0', desc=True):
     """ Select a new task based on user preference set under user profile.
 
     For each incomplete task, check if the number of users working on the task
@@ -219,13 +245,6 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
-    if offset > 2:
-        raise BadRequest()
-    if offset == 1:
-        return None
-
-    user_count = get_active_user_count(project_id, sentinel.slave)
-
     user_pref_list = cached_users.get_user_preferences(user_id)
     if user_pref_list is None:
         sql = '''
@@ -259,21 +278,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
                AND task.state !='completed'
                group by task.id ORDER BY priority_0 DESC, id ASC
                LIMIT :limit; '''.format(user_pref_list)
-    sqltext = text(sql)
-    try:
-        rows = session.execute(sqltext, dict(project_id=project_id, user_id=user_id, limit=user_count + 5))
-    except Exception as e:
-        current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
-        return None
-
-    for task_id, taskcount, n_answers, timeout in rows:
-        timeout = timeout or TIMEOUT
-        remaining = n_answers - taskcount
-        if acquire_lock(project_id, task_id, user_id, remaining, timeout):
-            rows.close()
-            register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
-            return [session.query(Task).get(task_id)]
-    return None
+    return text(sql)
 
 
 KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
