@@ -1052,6 +1052,12 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         args.pop("records_per_page", None)
         args.pop("offset", None)
 
+        for task in page_tasks:
+            task_info = task_repo.get_task(task['id']).info
+            for col in args['display_columns']:
+                task[col] = task_info.get(col, '')
+        info_columns = [col for col in columns if col in args['display_columns']]
+
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
                     owner=owner_sanitized,
@@ -1066,6 +1072,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     records_per_page=records_per_page,
                     filter_data=args,
                     first_task_id=first_task_id,
+                    info_columns=info_columns,
                     filter_columns=columns)
 
         return handle_content_type(data)
