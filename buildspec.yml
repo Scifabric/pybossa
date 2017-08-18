@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Install started on `date`
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - git submodule update --init --recursive
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - pybossa/**/*
+    - appspec.yml
+    - scripts/*
