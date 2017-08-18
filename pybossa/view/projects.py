@@ -1069,6 +1069,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     n_volunteers=ps.n_volunteers,
                     n_completed_tasks=ps.n_completed_tasks,
                     pro_features=pro,
+                    allowed_records_per_page=allowed_records_per_page,
                     records_per_page=records_per_page,
                     filter_data=args,
                     first_task_id=first_task_id,
