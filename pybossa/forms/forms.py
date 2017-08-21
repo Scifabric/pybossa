@@ -85,6 +85,7 @@ class ProjectUpdateForm(ProjectForm):
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
+    email_notif = BooleanField(lazy_gettext('Email Notifications'))
     password = TextField(
                     lazy_gettext('Password'),
                     [validators.Optional(),

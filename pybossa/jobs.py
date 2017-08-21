@@ -29,6 +29,7 @@ import pybossa.leaderboard.jobs as leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
 from datetime import datetime
+from pybossa.core import user_repo
 
 
 MINUTE = 60
@@ -143,6 +144,8 @@ def get_default_jobs():  # pragma: no cover
                timeout=timeout, queue='low')
     yield dict(name=disable_users_job, args=[],kwargs={},
                timeout=timeout, queue='low')
+    yield dict(name=send_email_notifications, args=[], kwargs={},
+               timeout=timeout, queue='super')
 
 
 def get_maintenance_jobs():
@@ -596,6 +599,34 @@ def delete_bulk_tasks(data):
         % current_app.config.get('BRAND')
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
+
+
+def send_email_notifications():
+    from pybossa.core import sentinel
+    from pybossa.cache import projects as cached_projects
+    from pybossa.core import project_repo
+
+    redis_conn = sentinel.master
+    project_set = redis_conn.smembers('updated_project_ids')
+    if project_set:
+        for project_id in project_set:
+            project = project_repo.get(project_id)
+            if cached_projects.overall_progress(project_id) != 100 and project.email_notif:
+                user_emails = user_repo.get_recent_contributor_emails(project_id)
+                recipients = []
+
+                if user_emails:
+                    for email_addr in user_emails:
+                        if email_addr not in recipients:
+                            recipients.append(email_addr)
+                    subject = ('New Tasks have been imported to {}'.format(project.name))
+                    body = "Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
+                           "\nLog on to {1} to complete any available tasks." \
+                        .format(project.name, current_app.config.get('BRAND'))
+                    mail_dict = dict(recipients=recipients, subject=subject, body=body)
+                    send_mail(mail_dict)
+            redis_conn.srem('updated_project_ids', project_id)
+    return True
 
 
 def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data):

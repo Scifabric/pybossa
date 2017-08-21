@@ -73,6 +73,8 @@ class Project(db.Model, DomainObject):
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
     info = Column(MutableDict.as_mutable(JSON), default=dict())
+    #: If emails are sent to users about new tasks
+    email_notif = Column(Boolean, default=False)
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='project')
     task_runs = relationship(TaskRun, backref='project',
