@@ -36,6 +36,7 @@ from pybossa.model.counter import Counter
 from pybossa.core import result_repo, db
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.jobs import push_notification
+from pybossa.cache import projects as cached_projects
 
 from pybossa.core import sentinel
 
@@ -100,6 +101,13 @@ def add_project_event(mapper, conn, target):
                    n_blogposts, last_activity, info)
                    VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (target.id)
     conn.execute(sql_query)
+
+
+@event.listens_for(Task, 'before_insert')
+def before_add_task_event(mapper, conn, target):
+    redis_conn = sentinel.master
+    if cached_projects.overall_progress(target.project_id) == 100:
+        redis_conn.sadd('updated_project_ids', target.project_id)
 
 
 @event.listens_for(Task, 'after_insert')

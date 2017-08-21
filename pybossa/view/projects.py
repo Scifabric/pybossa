@@ -466,6 +466,7 @@ def update(short_name):
             new_project.owner_id = project.owner_id
             new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
             new_project.category_id = form.category_id.data
+            new_project.email_notif = form.email_notif.data
 
         if form.password.data:
             new_project.set_password(form.password.data)

@@ -102,3 +102,15 @@ class UserRepository(Repository):
         query_params['is_admin'] = current_user_is_admin
         results = self.db.session.execute(sql, query_params)
         return [dict(row) for row in results]
+
+    def get_recent_contributor_emails(self, project_id):
+        sql = text('''
+                    SELECT DISTINCT email_addr
+                    FROM public.user INNER JOIN task_run
+                    ON (task_run.user_id = public.user.id)
+                    WHERE project_id = :project_id
+                    AND current_timestamp - to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        < interval '1 month';
+                    ''')
+        results = self.db.session.execute(sql, dict(project_id=project_id))
+        return [row.email_addr for row in results]
