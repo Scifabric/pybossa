@@ -763,9 +763,10 @@ class TestWeb(web.Helper):
             self.register()
             self.signin()
             csrf = self.get_csrf('/account/register')
-            data = dict(fullname="John Doe", name="johndoe2",
+            data = dict(fullname="John Doe", name="johndoe",
                         password="p4ssw0rd", confirm="p4ssw0rd",
-                        email_addr="johndoe2@example.com")
+                        email_addr="johndoe@example.com",
+                        consent=False)
             signer.dumps.return_value = ''
             render.return_value = ''
             res = self.app.post('/account/register', data=json.dumps(data),
@@ -1082,7 +1083,9 @@ class TestWeb(web.Helper):
         """Test WEB register confirmation gets the account data from the key"""
         exp_time = self.flask_app.config.get('ACCOUNT_LINK_EXPIRATION')
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=True)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         fake_signer.loads.assert_called_with('valid-key', max_age=exp_time, salt='account-validation')
@@ -1099,7 +1102,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr=user.email_addr)
+                                              email_addr=user.email_addr,
+                                              consent=False)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
@@ -1121,7 +1125,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr='new@email.com')
+                                              email_addr='new@email.com',
+                                              consent=True)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
