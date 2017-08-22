@@ -41,6 +41,7 @@ from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
+import settings_local as settings
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -407,6 +408,8 @@ class RegisterForm(Form):
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     project_slug = SelectMultipleField(lazy_gettext('Project'), choices=[])
+    msg = "I agree to receive e-mails from %s" % settings.BRAND
+    consent = BooleanField(lazy_gettext(msg))
 
 
 class UpdateProfileForm(Form):
