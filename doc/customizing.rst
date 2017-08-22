@@ -1055,3 +1055,14 @@ In such a case, you would like to disable the check for the task_presenter when 
 a project. If you need this, just add this flag to your settings_local.py file::
 
     DISABLE_TASK_PRESENTER = True
+
+Consent field for users
+=======================
+
+Sometimes you will  need the users to click in a check box before creating
+an account to get the agreement for sending them email notifications or of
+any other type. By default PYBOSSA provides this flag, and it's set to False.
+
+Change in the theme (or your frontend) the label of the field to whatever you
+prefer: Terms of Service, Communications, etc. so you will be able to keep track
+of who has accepted/declined to get notifications from you.
