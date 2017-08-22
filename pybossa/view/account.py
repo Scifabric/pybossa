@@ -275,7 +275,8 @@ def register():
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,
-                       password=form.password.data)
+                       password=form.password.data,
+                       consent=form.consent.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return _create_account(account)
@@ -349,7 +350,8 @@ def _create_account(user_data):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
-                               valid_email=True)
+                               valid_email=True,
+                               consent=user_data['consent'])
     new_user.set_password(user_data['password'])
     user_repo.save(new_user)
     flash(gettext('Thanks for signing-up'), 'success')
