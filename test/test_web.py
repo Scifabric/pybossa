@@ -1147,7 +1147,9 @@ class TestWeb(web.Helper):
     def test_register_confirmation_creates_new_account(self, fake_signer):
         """Test WEB register confirmation creates the new account"""
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=False)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).filter_by(name='name').first()
