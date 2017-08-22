@@ -39,6 +39,7 @@ class UserFactory(BaseFactory):
     pro = False
     subscribed = True
     privacy_mode = True
+    consent = False
     api_key = factory.Sequence(lambda n: u'api-key%d' % n)
     info = dict(foo='bar', container='container',
                 avatar='img.png',

@@ -708,9 +708,10 @@ class TestWeb(web.Helper):
         account validation is enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
-        data = dict(fullname="John Doe", name="johndoe",
+        data = dict(fullname="AJohn Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
-                    email_addr="johndoe@example.com")
+                    email_addr="johndoe@example.com",
+                    consent=False)
         signer.dumps.return_value = ''
         render.return_value = ''
         res = self.app.post('/account/register', data=data)
@@ -741,7 +742,8 @@ class TestWeb(web.Helper):
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe",
                         password="p4ssw0rd", confirm="p4ssw0rd",
-                        email_addr="johndoe@example.com")
+                        email_addr="johndoe@example.com",
+                        consent=False)
             signer.dumps.return_value = ''
             render.return_value = ''
             res = self.app.post('/account/register', data=json.dumps(data),
@@ -804,7 +806,8 @@ class TestWeb(web.Helper):
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe", password='daniel',
-                        email_addr="new@mail.com", confirm='daniel')
+                        email_addr="new@mail.com", confirm='daniel',
+                        consent=True)
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
@@ -812,6 +815,10 @@ class TestWeb(web.Helper):
             cookie = self.check_cookie(res, 'remember_token')
             err_msg = "User should be logged in"
             assert "johndoe" in cookie, err_msg
+            user = user_repo.get_by(name='johndoe')
+            assert user.consent, user
+            assert user.name == 'johndoe', user
+            assert user.email_addr == 'new@mail.com', user
 
     @with_context
     def test_register_json_error(self):
@@ -1041,7 +1048,9 @@ class TestWeb(web.Helper):
         """Test WEB register confirmation gets the account data from the key"""
         exp_time = self.flask_app.config.get('ACCOUNT_LINK_EXPIRATION')
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=True)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         fake_signer.loads.assert_called_with('valid-key', max_age=exp_time, salt='account-validation')
@@ -1058,7 +1067,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr=user.email_addr)
+                                              email_addr=user.email_addr,
+                                              consent=False)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
@@ -1080,7 +1090,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr='new@email.com')
+                                              email_addr='new@email.com',
+                                              consent=True)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
@@ -1142,7 +1153,9 @@ class TestWeb(web.Helper):
     def test_register_confirmation_creates_new_account(self, fake_signer):
         """Test WEB register confirmation creates the new account"""
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=False)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).filter_by(name='name').first()
