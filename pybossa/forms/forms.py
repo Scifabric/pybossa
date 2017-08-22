@@ -29,6 +29,7 @@ from pybossa.core import project_repo, user_repo
 from pybossa.sched import sched_variants
 import validator as pb_validator
 from pybossa.core import enable_strong_password
+import settings_local as settings
 
 
 EMAIL_MAX_LENGTH = 254
@@ -313,6 +314,8 @@ class RegisterForm(Form):
                             validators.EqualTo('confirm', err_msg_2)])
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
+    msg = "I agree to receive e-mails from %s" % settings.BRAND
+    consent = BooleanField(lazy_gettext(msg))
 
 
 class UpdateProfileForm(Form):
