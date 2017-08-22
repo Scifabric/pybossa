@@ -829,7 +829,8 @@ class TestWeb(web.Helper):
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe", password='daniel',
-                        email_addr="new@mail.com", confirm='daniel')
+                        email_addr="new@mail.com", confirm='daniel',
+                        consent=True)
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
@@ -837,6 +838,10 @@ class TestWeb(web.Helper):
             cookie = self.check_cookie(res, 'remember_token')
             err_msg = "User should be logged in"
             assert "johndoe" in cookie, err_msg
+            user = user_repo.get_by(name='johndoe')
+            assert user.consent, user
+            assert user.name == 'johndoe', user
+            assert user.email_addr == 'new@mail.com', user
 
     @with_context
     def test_register_json_error(self):
