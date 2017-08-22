@@ -62,6 +62,7 @@ class User(db.Model, DomainObject, UserMixin):
     valid_email = Column(Boolean, default=False)
     confirmation_email_sent = Column(Boolean, default=False)
     subscribed = Column(Boolean, default=True)
+    consent = Column(Boolean, default=False)
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     subadmin = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
