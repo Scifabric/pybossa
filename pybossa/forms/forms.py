@@ -408,8 +408,7 @@ class RegisterForm(Form):
 
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     project_slug = SelectMultipleField(lazy_gettext('Project'), choices=[])
-    msg = "I agree to receive e-mails from %s" % settings.BRAND
-    consent = BooleanField(lazy_gettext(msg))
+    consent = BooleanField(false_values=("False", "false", '', '0', 0))
 
 
 class UpdateProfileForm(Form):
