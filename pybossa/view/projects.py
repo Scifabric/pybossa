@@ -1055,7 +1055,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
         for task in page_tasks:
             task_info = task_repo.get_task(task['id']).info
-            for col in args['display_columns']:
+            for col in columns:
                 task[col] = task_info.get(col, '')
         info_columns = [col for col in columns if col in args['display_columns']]
 
