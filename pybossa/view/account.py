@@ -293,6 +293,8 @@ def register():
     """
     form = RegisterForm(request.body)
     form.project_slug.choices = get_project_choices()
+    msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
+    form.consent.label = msg
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,
