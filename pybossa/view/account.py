@@ -129,8 +129,8 @@ def signin():
             else:
                 flash(msg, 'info')
         else:
-            msg = gettext('Ooops, we didn&#39;t find you in the system, \
-                          did you sign up?')
+            msg = gettext("Ooops, we didn't find you in the system, \
+                          did you sign up?")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
@@ -797,11 +797,11 @@ def forgot_password():
                     '/account/email/forgot_password.html',
                     user=user, recovery_url=recovery_url)
             mail_queue.enqueue(send_mail, msg)
-            flash(gettext("We&#39;ve send you an email with account "
+            flash(gettext("We've sent you an email with account "
                           "recovery instructions!"),
                   'success')
         else:
-            flash(gettext("We don&#39;t have this email in our records. "
+            flash(gettext("We don't have this email in our records. "
                           "You may have signed up with a different "
                           "email"), 'error')
     if request.method == 'POST' and not form.validate():

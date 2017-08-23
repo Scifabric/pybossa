@@ -26,6 +26,7 @@ from StringIO import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
+from flask import Markup
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
@@ -299,13 +300,14 @@ def new():
     project_repo.save(project)
 
     msg_1 = gettext('Project created!')
-    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-    flash('<i class="icon-bullhorn"></i> ' +
-          gettext('You can check the ') +
-          '<strong><a href="https://docs.pybossa.com">' +
-          gettext('Guide and Documentation') +
-          '</a></strong> ' +
-          gettext('for adding tasks, a thumbnail, using PYBOSSA.JS, etc.'),
+    flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
+    markup = Markup('<i class="icon-bullhorn"></i> {} ' +
+                    '<strong><a href="https://docs.pybossa.com"> {}' +
+                    '</a></strong> {}')
+    flash(markup.format(
+              gettext('You can check the '),
+              gettext('Guide and Documentation'),
+              gettext('for adding tasks, a thumbnail, using PYBOSSA.JS, etc.')),
           'success')
     auditlogger.add_log_entry(None, project, current_user)
 
@@ -337,7 +339,8 @@ def task_presenter_editor(short_name):
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
         msg_1 = gettext('Task presenter added!')
-        flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+        markup = Markup('<i class="icon-ok"></i> {}')
+        flash(markup.format(msg_1), 'success')
         return redirect_content_type(url_for('.tasks',
                                              short_name=project.short_name))
 
@@ -359,7 +362,7 @@ def task_presenter_editor(short_name):
             url = '<a href="%s"> %s</a>' % (url_for('project.import_task',
                                                     short_name=project.short_name), msg_2)
             msg = msg_1 + url + msg_3
-            flash(msg, 'info')
+            flash(Markup(msg), 'info')
 
             wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
@@ -390,7 +393,7 @@ def task_presenter_editor(short_name):
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
-        flash(gettext(msg), 'info')
+        flash(Markup(gettext(msg)), 'info')
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
                                                                 current_user,
@@ -699,7 +702,7 @@ def _import_tasks(project, **form_data):
             cached_projects.delete_browse_tasks(project.id)
     else:
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
-        flash(gettext("You&#39;re trying to import a large amount of tasks, so please be patient.\
+        flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
     return redirect_content_type(url_for('.tasks',
                                          short_name=project.short_name))
@@ -820,7 +823,7 @@ def task_presenter(short_name, task_id):
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
                    "project" % project.name)
-            flash(gettext(msg), 'warning')
+            flash(Markup(gettext(msg)), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
                                     short_name=project.short_name)))
@@ -829,10 +832,12 @@ def task_presenter(short_name, task_id):
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
+            msg_2 = gettext('Sign in now!')
             next_url = url_for('project.task_presenter',
                                 short_name=short_name, task_id=task_id)
             url = url_for('account.signin', next=next_url)
-            flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
+            markup = Markup('{{}} <a href="{}">{{}}</a>'.format(url))
+            flash(markup.format(msg_1, msg_2), "warning")
 
     title = project_title(project, "Contribute")
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
@@ -894,7 +899,7 @@ def presenter(short_name):
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
                project" % project.name
-        flash(gettext(msg), 'warning')
+        flash(Markup(gettext(msg)), 'warning')
         return redirect(url_for('account.signin',
                         next=url_for('.presenter',
                                      short_name=project.short_name)))
@@ -1310,7 +1315,7 @@ def delete_tasks(short_name):
                     'curr_user': current_user.email_addr, 'force_reset': force_reset,
                     'coowners': project.coowners, 'current_user_fullname': current_user.fullname}
             task_queue.enqueue(delete_bulk_tasks, data)
-            flash(gettext("You&#39;re trying to delete a large amount of tasks, so please be patient.\
+            flash(gettext("You're trying to delete a large amount of tasks, so please be patient.\
                     You will receive an email when the tasks deletion is complete."))
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
 
@@ -1944,7 +1949,7 @@ def new_blogpost(short_name):
     cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
-    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+    flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
 
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
@@ -1993,7 +1998,7 @@ def update_blogpost(short_name, id):
     cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
-    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+    flash(Markup('<i class="icon-ok"></i> {}'.format(msg_1)), 'success')
 
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
@@ -2010,7 +2015,8 @@ def delete_blogpost(short_name, id):
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
     cached_projects.delete_project(short_name)
-    flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
+    msg_1 = gettext('Blog post deleted!')
+    flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
