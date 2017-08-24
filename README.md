@@ -28,7 +28,7 @@ PYBOSSA allows data capture for further analysis made by users in a transparent 
 ## Supporting PYBOSSA
 
 PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome 
-[backers](https://github.com/Scifabric/pybossa/blob/dev/BACKERS.md). If you'd like to join them, check out 
+[backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out 
 [Scifabric's Patreon campaign](https://www.patreon.com/scifabric).
 
 
