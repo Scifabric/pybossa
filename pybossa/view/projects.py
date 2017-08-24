@@ -2040,7 +2040,7 @@ def update_blogpost(short_name, id):
     cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
-    flash(Markup('<i class="icon-ok"></i> {}'.format(msg_1)), 'success')
+    flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
 
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
