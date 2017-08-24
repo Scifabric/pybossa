@@ -4442,7 +4442,7 @@ class TestWeb(web.Helper):
             # Now with a real project
             project = ProjectFactory.create()
             self.clear_temp_container(project.owner_id)
-            
+
             TaskFactory.create_batch(5, project=project, info={'question': 'qu',
                                                                'geojson':
                                                                'complexjson'})
@@ -5977,7 +5977,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        msg = "Oops! You have to sign in to participate in &lt;strong&gt;%s&lt;/strong&gt;" % project.name
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % project.name
         assert msg in res.data, err_msg
 
         # As registered user
