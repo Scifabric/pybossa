@@ -24,7 +24,7 @@ from pybossa.core import user_repo, webhook_repo
 from pybossa.model import make_timestamp
 from pybossa.model.webhook import Webhook
 from pybossa.jobs import webhook
-from mock import patch
+from mock import patch, call
 
 class TestWebhookView(web.Helper):
 
@@ -217,3 +217,32 @@ class TestWebhookView(web.Helper):
         assert res.status_code == 200, res.status_code
         q.assert_called_once_with(webhook, project.webhook,
                                   wh.payload, wh.id)
+
+    @with_context
+    @patch('pybossa.view.projects.webhook_queue.enqueue')
+    def test_webhook_handler_all(self, q):
+        """Test WEBHOOK requeing all works."""
+        self.register()
+        user = user_repo.get(1)
+        project = ProjectFactory.create(owner=user, webhook='server')
+        task = TaskFactory.create(project=project, n_answers=1)
+        AnonymousTaskRunFactory.create(project=project, task=task)
+        payload = self.payload(project, task)
+        wh1 = Webhook(project_id=project.id, payload=payload,
+                     response='error', response_status_code=500)
+        webhook_repo.save(wh1)
+        wh2 = Webhook(project_id=project.id, payload=payload,
+                      response='ok', response_status_code=200)
+        webhook_repo.save(wh2)
+        wh3 = Webhook(project_id=project.id, payload=payload,
+                      response='ok', response_status_code=200)
+        webhook_repo.save(wh3)
+        whs = webhook_repo.filter_by(project_id=project.id)
+        url = "/project/%s/webhook?all=true" % (project.short_name)
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        calls = []
+        for w in whs:
+            calls.append(call(webhook, project.webhook,
+                              w.payload, w.id))
+        q.assert_has_calls(calls)
