@@ -204,9 +204,16 @@ class TestWebhookView(web.Helper):
         wh = Webhook(project_id=project.id, payload=payload,
                      response='error', response_status_code=500)
         webhook_repo.save(wh)
+        wh2 = Webhook(project_id=project.id, payload=payload,
+                      response='ok', response_status_code=200)
+        webhook_repo.save(wh2)
+        wh3 = Webhook(project_id=project.id, payload=payload,
+                      response='ok', response_status_code=200)
+        webhook_repo.save(wh3)
+
         wh = webhook_repo.get(1)
         url = "/project/%s/webhook?failed=true" % (project.short_name)
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
-        q.assert_called_with(webhook, project.webhook,
-                             wh.payload, wh.id)
+        q.assert_called_once_with(webhook, project.webhook,
+                                  wh.payload, wh.id)
