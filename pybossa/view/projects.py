@@ -784,11 +784,12 @@ def task_presenter(short_name, task_id):
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
+            msg_2 = gettext('Sign in now!')
             next_url = url_for('project.task_presenter',
                                 short_name=short_name, task_id=task_id)
             url = url_for('account.signin', next=next_url)
-            markup = Markup('<a href="{}">Sign in now!</a>'.format(url))
-            flash(msg_1 + markup, "warning")
+            markup = Markup('{{}} <a href="{}">{{}}</a>'.format(url))
+            flash(markup.format(msg_1, msg_2), "warning")
 
     title = project_title(project, "Contribute")
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,

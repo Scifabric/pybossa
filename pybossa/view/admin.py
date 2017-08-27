@@ -139,8 +139,8 @@ def users(user_id=None):
         [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
             markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
-            flash(markup.format("Ooops!",
-                                "We didn't find a user matching your query:",
+            flash(markup.format(gettext("Ooops!"),
+                                gettext("We didn't find a user matching your query:"),
                                 form.user.data))
         response = dict(template='/admin/users.html', found=found, users=users,
                         title=gettext("Manage Admin Users"),
@@ -478,8 +478,9 @@ def delete_announcement(id):
 
     ensure_authorized_to('delete', announcement)
     announcement_repo.delete(announcement)
+    msg_1 = gettext('Announcement deleted!')
     markup = '<i class="icon-ok"></i> {}'
-    flash(markup.format('Announcement deleted!'), 'success')
+    flash(markup.format(msg_1), 'success')
     return redirect_content_type(url_for('admin.announcement'))
 
 
