@@ -1725,11 +1725,27 @@ def webhook_handler(short_name, oid=None):
         else:
             abort(404)
 
+
     ensure_authorized_to('read', Webhook, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
+
+    if request.method == 'GET' and request.args.get('all'):
+        for wh in responses:
+            webhook_queue.enqueue(webhook, project.webhook,
+                                  wh.payload, wh.id)
+        flash('All webhooks enqueued')
+
+    if request.method == 'GET' and request.args.get('failed'):
+        for wh in responses:
+            if wh.response_status_code != 200:
+                webhook_queue.enqueue(webhook, project.webhook,
+                                      wh.payload, wh.id)
+        flash('All webhooks enqueued')
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+
     return render_template('projects/webhook.html', project=project,
                            owner=owner, responses=responses,
                            overall_progress=ps.overall_progress,
