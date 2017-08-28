@@ -462,7 +462,7 @@ def update_announcement(id):
     announcement_repo.update(announcement)
 
     msg_1 = gettext('Announcement updated!')
-    markup = '<i class="icon-ok"></i> {}'
+    markup = Markup('<i class="icon-ok"></i> {}')
     flash(markup.format(msg_1), 'success')
 
     return redirect_content_type(url_for('admin.announcement'))
@@ -479,7 +479,7 @@ def delete_announcement(id):
     ensure_authorized_to('delete', announcement)
     announcement_repo.delete(announcement)
     msg_1 = gettext('Announcement deleted!')
-    markup = '<i class="icon-ok"></i> {}'
+    markup = Markup('<i class="icon-ok"></i> {}')
     flash(markup.format(msg_1), 'success')
     return redirect_content_type(url_for('admin.announcement'))
 
