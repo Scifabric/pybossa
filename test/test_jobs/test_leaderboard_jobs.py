@@ -109,6 +109,27 @@ class TestLeaderboard(Test):
         assert top_users[-1]['name'] == users[0].name
         assert top_users[-1]['score'] == users[0].info.get('foo')
 
+    @with_context
+    def test_leaderboard_foo_key_current_user_window(self):
+        """Test JOB leaderboard returns users for foo key with current user and
+        window."""
+        UserFactory.create_batch(10, info=dict(n=0))
+        UserFactory.create_batch(10, info=dict(n=2))
+        users = []
+        for score in range(11, 22):
+            users.append(UserFactory.create(info=dict(n=score)))
+        myself = UserFactory.create(info=dict(n=1))
+
+        leaderboard(info='n')
+
+        top_users = get_leaderboard(user_id=myself.id, info='n', window=5)
+
+        assert len(top_users) == 20 + 5 + 1 + 5, len(top_users)
+        assert top_users[25]['name'] == myself.name
+        assert top_users[25]['score'] == myself.info.get('n')
+        assert top_users[24]['score'] >= myself.info.get('n')
+        assert top_users[26]['score'] <= myself.info.get('n')
+
 
     #@with_context
     #def test_format_anon_week(self):
