@@ -414,7 +414,7 @@ class TestAdmin(web.Helper):
         # warning should be issued for non-found users
         data = {'user': 'nothingexists'}
         res = self.app_post_json('/admin/users', data=data)
-        warning = ("We didn't find")
+        warning = ("We didn&#39;t find")
         err_msg = "a flash message should be returned for non-found users"
         dat = json.loads(res.data)
         assert warning in dat.get('flash'), (err_msg, dat)

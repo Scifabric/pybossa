@@ -26,6 +26,7 @@ from flask import redirect
 from flask import url_for
 from flask import current_app
 from flask import Response
+from flask import Markup
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
@@ -137,8 +138,10 @@ def users(user_id=None):
                  if user.id != current_user.id]
         [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "
-                  "matching your query: <strong>%s</strong>" % form.user.data)
+            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+            flash(markup.format(gettext("Ooops!"),
+                                gettext("We didn't find a user matching your query:"),
+                                form.user.data))
         response = dict(template='/admin/users.html', found=found, users=users,
                         title=gettext("Manage Admin Users"),
                         form=form)
@@ -420,7 +423,8 @@ def new_announcement():
     announcement_repo.save(announcement)
 
     msg_1 = gettext('Annnouncement created!')
-    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+    markup = Markup('<i class="icon-ok"></i> {}')
+    flash(markup.format(msg_1), 'success')
 
     return redirect_content_type(url_for('admin.announcement'))
 
@@ -458,7 +462,8 @@ def update_announcement(id):
     announcement_repo.update(announcement)
 
     msg_1 = gettext('Announcement updated!')
-    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+    markup = '<i class="icon-ok"></i> {}'
+    flash(markup.format(msg_1), 'success')
 
     return redirect_content_type(url_for('admin.announcement'))
 
@@ -473,7 +478,9 @@ def delete_announcement(id):
 
     ensure_authorized_to('delete', announcement)
     announcement_repo.delete(announcement)
-    flash('<i class="icon-ok"></i> ' + 'Announcement deleted!', 'success')
+    msg_1 = gettext('Announcement deleted!')
+    markup = '<i class="icon-ok"></i> {}'
+    flash(markup.format(msg_1), 'success')
     return redirect_content_type(url_for('admin.announcement'))
 
 
