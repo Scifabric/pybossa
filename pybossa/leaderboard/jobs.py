@@ -39,6 +39,12 @@ def leaderboard(info=None):
                         ON task_run.user_id="user".id GROUP BY "user".id
                     ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
               '''.format(materialized_view)
+        if info:
+            sql = '''
+                       CREATE MATERIALIZED VIEW {} AS WITH scores AS (
+                            SELECT "user".*, CAST("user".info->>'{}' AS INTEGER) AS score
+                            FROM "user" ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
+                  '''.format(materialized_view, info)
         db.session.execute(sql)
         db.session.commit()
         sql = '''
