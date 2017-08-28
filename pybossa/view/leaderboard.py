@@ -36,9 +36,11 @@ def index(window=0):
     if window >= 10:
         window = 10
 
+
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id,
-                                             window=window)
+                                             window=window,
+                                             info=request.args.get('info'))
 
     response = dict(template='/stats/index.html',
                     title="Community Leaderboard",
