@@ -1066,3 +1066,35 @@ any other type. By default PYBOSSA provides this flag, and it's set to False.
 Change in the theme (or your frontend) the label of the field to whatever you
 prefer: Terms of Service, Communications, etc. so you will be able to keep track
 of who has accepted/declined to get notifications from you.
+
+Custom Leaderboards
+===================
+
+By default PYBOSSA provides a unique leaderboard. This leaderboard is based on
+the number of task runs that a user has submitted, however, you may want more 
+flexibility. For this reason, you can use use the "user".info field to store
+any other "badges" or values that you want to score your users.
+
+If your users have identified very complicated stuff, and you want to give
+points to them based on that, just use the info field and instruct PYBOSSA to
+create a leaderboard for you.
+
+.. note::
+    It is imoportant that this key,value pair is computed by you. You can
+    use the API to update these values, so this will not be handled by 
+    PYBOSSA but by yourself.
+
+Imagine the score is named: foo, then, PYBOSSA will create for you a leaderboard
+using that key like this: edit the settings_local.py file and add the following
+config variable:
+
+.. code-block:: python
+
+    LEADERBOARDS = ['foo']
+
+Then, you can access the specific leaderboard using the endpoint: /leaderboard/?info=foo
+
+As simple as that.
+
+.. note::
+    This feature relies on background jobs. Be sure that you are running them.

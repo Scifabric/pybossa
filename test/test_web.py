@@ -204,14 +204,17 @@ class TestWeb(web.Helper):
 
         update_leaderboard()
 
+        for score in range(1, 11):
+            UserFactory.create(info=dict(n=score))
+
+        update_leaderboard(info='n')
+
         res = self.app_get_json('/leaderboard/window/3?api_key=%s' % user.api_key)
         data = json.loads(res.data)
         err_msg = 'Top users missing'
         assert 'top_users' in data, err_msg
         err_msg = 'leaderboard user information missing'
         leaders = data['top_users']
-        for u in leaders:
-            print u['rank'], u['name'], u['score']
         assert len(leaders) == (20+3+1+3), len(leaders)
         assert leaders[23]['name'] == user.name
 
@@ -221,11 +224,33 @@ class TestWeb(web.Helper):
         assert 'top_users' in data, err_msg
         err_msg = 'leaderboard user information missing'
         leaders = data['top_users']
-        for u in leaders:
-            print u['rank'], u['name'], u['score']
         assert len(leaders) == (20+10+1+10), len(leaders)
         assert leaders[30]['name'] == user.name
 
+        res = self.app_get_json('/leaderboard/?info=n')
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        assert len(leaders) == (20), len(leaders)
+        score = 10
+        rank = 1
+        for u in leaders[0:10]:
+            assert u['score'] == score, u
+            assert u['rank'] == rank, u
+            score = score - 1
+            rank = rank + 1
+
+        res = self.app_get_json('/leaderboard/window/3?api_key=%s&info=n' % user.api_key)
+        data = json.loads(res.data)
+        err_msg = 'Top users missing'
+        assert 'top_users' in data, err_msg
+        err_msg = 'leaderboard user information missing'
+        leaders = data['top_users']
+        assert len(leaders) == (20+3+1+3), len(leaders)
+        assert leaders[23]['name'] == user.name
+        assert leaders[23]['score'] == 0
 
 
     @with_context

@@ -19,13 +19,25 @@
 from pybossa.leaderboard.jobs import leaderboard
 from pybossa.leaderboard.data import get_leaderboard
 from pybossa.core import db
+from pybossa.jobs import get_leaderboard_jobs
 from factories import UserFactory, TaskRunFactory
 from default import Test, with_context
 from mock import patch, MagicMock
 from sqlalchemy.exc import ProgrammingError
 
 
-class TestDashBoardActiveAnon(Test):
+class TestLeaderboard(Test):
+
+
+    @with_context
+    def test_get_leaderboard_jobs_reads_settings(self):
+        """Test JOB returns all leaderboard jobs."""
+        with patch.dict(self.flask_app.config, {'LEADERBOARDS': ['n']}):
+            jobs = []
+            for job in get_leaderboard_jobs():
+                jobs.append(job)
+            assert len(jobs) == 2
+            assert jobs[0]['kwargs'] == {'info': 'n'}, jobs[0]
 
     @with_context
     @patch('pybossa.leaderboard.jobs.db')
@@ -78,6 +90,58 @@ class TestDashBoardActiveAnon(Test):
         leaderboard()
         top_users = get_leaderboard()
         assert len(top_users) == 20, len(top_users)
+
+    @with_context
+    def test_leaderboard_foo_key(self):
+        """Test JOB leaderboard returns users for foo key."""
+        users = []
+        for score in range(1, 11):
+            users.append(UserFactory.create(info=dict(foo=score)))
+        leaderboard(info='foo')
+        top_users = get_leaderboard(info='foo')
+        assert len(top_users) == 10, len(top_users)
+        score = 10
+        for user in top_users:
+            user['score'] == score, user
+            score = score - 1
+
+    @with_context
+    def test_leaderboard_foo_key_current_user(self):
+        """Test JOB leaderboard returns users for foo key with current user."""
+        users = []
+        for score in range(1, 11):
+            users.append(UserFactory.create(info=dict(foo=score)))
+        leaderboard(info='foo')
+        top_users = get_leaderboard(user_id=users[0].id, info='foo')
+        assert len(top_users) == 11, len(top_users)
+        score = 10
+        for user in top_users[0:10]:
+            user['score'] == score, user
+            score = score - 1
+        assert top_users[-1]['name'] == users[0].name
+        assert top_users[-1]['score'] == users[0].info.get('foo')
+
+    @with_context
+    def test_leaderboard_foo_key_current_user_window(self):
+        """Test JOB leaderboard returns users for foo key with current user and
+        window."""
+        UserFactory.create_batch(10, info=dict(n=0))
+        UserFactory.create_batch(10, info=dict(n=2))
+        users = []
+        for score in range(11, 22):
+            users.append(UserFactory.create(info=dict(n=score)))
+        myself = UserFactory.create(info=dict(n=1))
+
+        leaderboard(info='n')
+
+        top_users = get_leaderboard(user_id=myself.id, info='n', window=5)
+
+        assert len(top_users) == 20 + 5 + 1 + 5, len(top_users)
+        assert top_users[25]['name'] == myself.name
+        assert top_users[25]['score'] == myself.info.get('n')
+        assert top_users[24]['score'] >= myself.info.get('n')
+        assert top_users[26]['score'] <= myself.info.get('n')
+
 
     #@with_context
     #def test_format_anon_week(self):
