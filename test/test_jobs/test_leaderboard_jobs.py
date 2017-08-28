@@ -19,6 +19,7 @@
 from pybossa.leaderboard.jobs import leaderboard
 from pybossa.leaderboard.data import get_leaderboard
 from pybossa.core import db
+from pybossa.jobs import get_leaderboard_jobs
 from factories import UserFactory, TaskRunFactory
 from default import Test, with_context
 from mock import patch, MagicMock
@@ -26,6 +27,17 @@ from sqlalchemy.exc import ProgrammingError
 
 
 class TestLeaderboard(Test):
+
+
+    @with_context
+    def test_get_leaderboard_jobs_reads_settings(self):
+        """Test JOB returns all leaderboard jobs."""
+        with patch.dict(self.flask_app.config, {'LEADERBOARDS': ['n']}):
+            jobs = []
+            for job in get_leaderboard_jobs():
+                jobs.append(job)
+            assert len(jobs) == 2
+            assert jobs[0]['kwargs'] == {'info': 'n'}, jobs[0]
 
     @with_context
     @patch('pybossa.leaderboard.jobs.db')
