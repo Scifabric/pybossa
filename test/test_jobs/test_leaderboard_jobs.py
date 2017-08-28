@@ -25,7 +25,7 @@ from mock import patch, MagicMock
 from sqlalchemy.exc import ProgrammingError
 
 
-class TestDashBoardActiveAnon(Test):
+class TestLeaderboard(Test):
 
     @with_context
     @patch('pybossa.leaderboard.jobs.db')
