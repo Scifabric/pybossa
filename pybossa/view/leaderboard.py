@@ -26,6 +26,7 @@ blueprint = Blueprint('leaderboard', __name__)
 
 @blueprint.route('/')
 @blueprint.route('/window/<int:window>')
+@login_required
 def index(window=0):
     """Get the last activity from users and projects."""
     if current_user.is_authenticated():
