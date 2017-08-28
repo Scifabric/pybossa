@@ -31,14 +31,14 @@ from pybossa.leaderboard.jobs import leaderboard as lb
 session = db.slave_session
 
 
-def get_leaderboard(n, user_id=None, window=0):
+def get_leaderboard(n, user_id=None, window=0, info=None):
     """Return the top n users with their rank."""
     try:
-        return gl(top_users=n, user_id=user_id, window=window)
+        return gl(top_users=n, user_id=user_id, window=window, info=info)
     except ProgrammingError:
         db.session.rollback()
-        lb()
-        return gl(top_users=n, user_id=user_id, window=window)
+        lb(info=info)
+        return gl(top_users=n, user_id=user_id, window=window, info=info)
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
