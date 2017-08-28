@@ -42,8 +42,8 @@ def leaderboard(info=None):
         if info:
             sql = '''
                        CREATE MATERIALIZED VIEW {} AS WITH scores AS (
-                            SELECT "user".*, CAST("user".info->>'{}' AS INTEGER) AS score
-                            FROM "user" ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
+                            SELECT "user".*, COALESCE(CAST("user".info->>'{}' AS INTEGER), 0) AS score
+                            FROM "user" ORDER BY score DESC) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
                   '''.format(materialized_view, info)
         db.session.execute(sql)
         db.session.commit()

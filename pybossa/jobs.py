@@ -287,6 +287,9 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
 def get_leaderboard_jobs(queue='super'):  # pragma: no cover
     """Return leaderboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
+    for leaderboard_key in current_app.config.get('LEADERBOARDS'):
+        yield dict(name=leaderboard, args=[], kwargs={'info': leaderboard_key},
+                   timeout=timeout, queue=queue)
     yield dict(name=leaderboard, args=[], kwargs={},
                timeout=timeout, queue=queue)
 
