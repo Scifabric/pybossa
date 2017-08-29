@@ -158,6 +158,15 @@ def project_by_shortname(short_name):
         return abort(404)
 
 
+def allow_deny_project_info(project_short_name):
+    """Return project info for user as admin, subadmin or project coowner."""
+    project, owner, ps = project_by_shortname(project_short_name)
+    if not current_user.admin and not current_user.subadmin \
+            and not is_coowner(project.id):
+        return abort(403)
+    return project, owner, ps
+
+
 def pro_features(owner=None):
     feature_handler = ProFeatureHandler(current_app.config.get('PRO_FEATURES'))
     pro = {
@@ -1005,13 +1014,14 @@ def tasks(short_name):
 
     return handle_content_type(response)
 
+
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>/<int:records_per_page>')
 @login_required
-@admin_or_subadmin_required
 def tasks_browse(short_name, page=1, records_per_page=10):
-    project, owner, ps = project_by_shortname(short_name)
+    project, owner, ps = allow_deny_project_info(short_name)
+
     title = project_title(project, "Tasks")
     pro = pro_features()
     allowed_records_per_page = [10, 20, 30, 50, 70, 100]
@@ -1322,10 +1332,9 @@ def delete_tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/export')
 @login_required
-@admin_or_subadmin_required
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    project, owner, ps = project_by_shortname(short_name)
+    project, owner, ps = allow_deny_project_info(short_name)
     supported_tables = ['task', 'task_run', 'result']
 
     title = project_title(project, gettext("Export"))
@@ -2215,7 +2224,7 @@ def coowners(short_name):
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query, subadmin=True) if user.id != current_user.id]
+        found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
         found = [type('', (object,), { "user": user, "isCoowner":any(user.id == coowner.id for coowner in coowners)}) for user in found]
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
@@ -2285,10 +2294,9 @@ def del_coowner(short_name, user_id=None):
 
 @blueprint.route('/<short_name>/tasks/projectreport/export')
 @login_required
-@admin_or_subadmin_required
 def export_project_report(short_name):
     """Export individual project information in the given format"""
-    project, owner, ps = project_by_shortname(short_name)
+    project, owner, ps = allow_deny_project_info(short_name)
 
     def respond_csv(ty):
         if ty not in ('project',):

@@ -150,7 +150,7 @@ def jsonpify(f):
 
 
 def admin_required(f):  # pragma: no cover
-    """Check if the user is and admin or not."""
+    """Check if the user is admin or not."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.admin:
@@ -161,7 +161,7 @@ def admin_required(f):  # pragma: no cover
 
 
 def admin_or_subadmin_required(f):  # pragma: no cover
-    """Check if the user is and admin or not."""
+    """Check if the user is admin or subadmin"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.admin or current_user.subadmin:
