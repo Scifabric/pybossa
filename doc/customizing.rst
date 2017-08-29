@@ -1098,3 +1098,15 @@ As simple as that.
 
 .. note::
     This feature relies on background jobs. Be sure that you are running them.
+
+Unpublish inactive projects
+===========================
+
+PYBOSSA by default unpublishes projects that have not been active in the last
+3 months. You can disable this feature by changing this config variable in your
+settings_local.py file:
+
+.. code-block:: python
+
+    UNPUBLISH_PROJECTS = False
+
