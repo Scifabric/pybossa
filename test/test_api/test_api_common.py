@@ -114,6 +114,7 @@ class TestApiCommon(TestAPI):
         taskrun = TaskRunFactory.create(task=task, user=admin,
                                         info={'answer': 'annakarenina'})
 
+        year = datetime.datetime.now().year
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + user.api_key + '&all=1'
