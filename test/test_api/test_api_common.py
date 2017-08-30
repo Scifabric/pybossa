@@ -35,6 +35,7 @@ class TestApiCommon(TestAPI):
         """Test API GET limits works"""
         owner = UserFactory.create()
         projects = ProjectFactory.create_batch(30, owner=owner)
+        project_created = ProjectFactory.create(created='2000-01-01T12:08:47.134025')
         for project in projects:
             task = TaskFactory.create(project=project)
             TaskRunFactory.create(task=task)
@@ -88,6 +89,12 @@ class TestApiCommon(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user11', data
+
+        # By date created
+        res = self.app.get('/api/project?created=2000-01')
+        data = json.loads(res.data)
+        assert len(data) == 1, len(data)
+        assert data[0].get('id') == project_created.id
 
     @with_context
     def test_get_query_with_api_key_and_all(self):
