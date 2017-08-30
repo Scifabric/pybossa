@@ -21,7 +21,8 @@ from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
-
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import MutableDict
 
 class Announcement(db.Model, DomainObject):
     """An Announcement"""
@@ -34,7 +35,7 @@ class Announcement(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     #: User.ID for the Announcement
     user_id = Column(Integer, ForeignKey('user.id'))
-    #: UTC timestamp when the blogpost is updated 
+    #: UTC timestamp when the blogpost is updated
     updated = Column(Text, default=make_timestamp)
     #: Title of the Announcement
     title = Column(Unicode(length=255), nullable=False)
