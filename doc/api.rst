@@ -178,6 +178,27 @@ Finally, you can get a list of users by doing::
 
     GET http://{pybossa-site-url}/api/user
 
+Created
+-------
+
+If you want, you can use the the domain attribute *created* to get items
+from the DB. Basically, you can specify a year, year-month, year-month-day
+to get all the values for those ranges. For example, if you want all
+the tasks that have been created in 2015, just use::
+
+    GET http://{pybossa-site-url}/api/task?created=2015&all=1
+
+If you want all the task runs from 2015-05::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05&all=1
+
+You can for example get all the task runs that a user has submitted on 
+a given day like this::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05-03&user_id=3
+
+This filter works for any object that has the *created* attribute.
+
 Order by
 --------
 
