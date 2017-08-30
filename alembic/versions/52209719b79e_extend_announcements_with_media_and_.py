@@ -14,15 +14,13 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSON
 
-field = 'media_url'
-
 def make_timestamp():
     now = datetime.datetime.utcnow()
     return now.isoformat()
 
 
 def upgrade():
-    op.add_column('announcement', sa.Column(field, sa.String))
+    op.add_column('announcement', sa.Column('media_url', sa.String))
     op.add_column('announcement', sa.Column('info', JSON))
     op.add_column('announcement', sa.Column('published', sa.Boolean, default=False))
     op.add_column('announcement', sa.Column('updated', sa.Text,
@@ -32,7 +30,7 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_column('announcement', field)
+    op.drop_column('announcement', 'media_url')
     op.drop_column('announcement', 'info')
     op.drop_column('announcement', 'published')
     op.drop_column('announcement', 'updated')
