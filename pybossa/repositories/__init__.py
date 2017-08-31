@@ -53,14 +53,19 @@ class Repository(object):
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
-                       if key != 'info' and key != 'fav_user_ids']
+                       if key != 'info' and key != 'fav_user_ids' and key != 'created']
         queries = []
         headlines = []
         order_by_ranks = []
+
         if 'info' in kwargs.keys():
             queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
                                                                        fulltextsearch)
             clauses = clauses + queries
+
+        if 'created' in kwargs.keys():
+            like_query = kwargs['created'] + '%'
+            clauses.append(_entity_descriptor(model,'created').like(like_query))
 
         if len(clauses) != 1:
             return and_(*clauses), queries, headlines, order_by_ranks
