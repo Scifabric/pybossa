@@ -124,7 +124,10 @@ class Repository(object):
         query_args, queries, headlines, orders = self.generate_query_from_keywords(model,
                                                                fulltextsearch,
                                                                **filters)
-        if owner_id:
+
+        project_var_existing = ('Project' in locals())
+
+        if project_var_existing and owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
