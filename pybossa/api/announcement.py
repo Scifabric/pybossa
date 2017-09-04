@@ -19,7 +19,7 @@
 PYBOSSA api module for domain object Announcement via an API.
 
 This package adds GET, POST, PUT and DELETE methods for:
-    * blopost
+    * announcement
 
 """
 from api_base import APIBase
