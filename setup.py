@@ -69,7 +69,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '2.6.3',
+    version = '2.6.4',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
