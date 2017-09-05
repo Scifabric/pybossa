@@ -59,6 +59,7 @@ class Repository(object):
         queries = []
         headlines = []
         order_by_ranks = []
+        or_clauses = []
 
         if 'info' in kwargs.keys():
             queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
@@ -71,7 +72,6 @@ class Repository(object):
 
         if 'project_id' in kwargs.keys():
             project_ids = re.findall(r'\d+', kwargs['project_id'])
-            or_clauses = []
             for project_id in project_ids:
                 or_clauses.append((_entity_descriptor(model, 'project_id') ==
                                    project_id))
