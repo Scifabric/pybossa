@@ -71,7 +71,8 @@ class Repository(object):
             clauses.append(_entity_descriptor(model,'created').like(like_query))
 
         if 'project_id' in kwargs.keys():
-            project_ids = re.findall(r'\d+', kwargs['project_id'])
+            tmp = "%s" % kwargs['project_id']
+            project_ids = re.findall(r'\d+', tmp)
             for project_id in project_ids:
                 or_clauses.append((_entity_descriptor(model, 'project_id') ==
                                    project_id))
@@ -143,8 +144,6 @@ class Repository(object):
                                     *query_args)
         else:
             query = self.db.session.query(model).filter(*query_args)
-
-        print query
 
         if participated and model == Task:
             if participated['user_id']:
