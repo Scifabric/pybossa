@@ -126,13 +126,20 @@ def redirect_content_type(url, status=None):
     else:
         return redirect(url)
 
-
 def static_vars(**kwargs):
     def decorate(func):
         for k in kwargs:
             setattr(func, k, kwargs[k])
         return func
     return decorate
+
+def url_for_app_type(endpoint, **values):
+    """Generate a URL for an SPA, or otherwise."""
+    spa_server_name = current_app.config.get('SPA_SERVER_NAME')
+    if spa_server_name:
+      values.pop('_external', None)
+      return spa_server_name + url_for(endpoint, **values)
+    return url_for(endpoint, **values)
 
 
 def jsonpify(f):

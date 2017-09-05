@@ -45,7 +45,7 @@ from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
-from pybossa.util import can_update_user_info
+from pybossa.util import can_update_user_info, url_for_app_type
 from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
 from pybossa.auth import ensure_authorized_to
@@ -242,11 +242,7 @@ def signout():
 def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
-    confirm_url = url_for('.confirm_account', key=key, _external=True)
-    if current_app.config.get('SPA_SERVER_NAME'):
-        server_name = current_app.config.get('SPA_SERVER_NAME')
-        confirm_url = server_name + url_for('.confirm_account', key=key)
-    return confirm_url
+    return url_for_app_type('.confirm_account', key=key, _external=True)
 
 
 @blueprint.route('/confirm-email')
@@ -795,13 +791,8 @@ def forgot_password():
             else:
                 userdict = {'user': user.name, 'password': user.passwd_hash}
                 key = signer.dumps(userdict, salt='password-reset')
-                recovery_url = url_for('.reset_password',
-                                       key=key, _external=True)
-                if current_app.config.get('SPA_SERVER_NAME'):
-                    server_name = current_app.config.get('SPA_SERVER_NAME')
-                    recovery_url = server_name + url_for('.reset_password',
-                                                         key=key)
-                    print recovery_url
+                recovery_url = url_for_app_type('.reset_password',
+                                                key=key, _external=True)
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
