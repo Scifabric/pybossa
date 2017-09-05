@@ -24,6 +24,7 @@ from flask_oauthlib.client import OAuthException
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
+from pybossa.util import url_for_app_type
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
