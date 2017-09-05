@@ -718,7 +718,6 @@ def forgot_password():
                 recovery_url = url_for('.reset_password',
                                        key=key, _external=True)
                 if current_app.config.get('SPA_SERVER_NAME'):
-                    print "HOLA"
                     server_name = current_app.config.get('SPA_SERVER_NAME')
                     recovery_url = server_name + url_for('.reset_password',
                                                          key=key)
