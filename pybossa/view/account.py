@@ -243,6 +243,9 @@ def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
     confirm_url = url_for('.confirm_account', key=key, _external=True)
+    if current_app.config.get('SPA_SERVER_NAME'):
+        server_name = current_app.config.get('SPA_SERVER_NAME')
+        confirm_url = server_name + url_for('.confirm_account', key=key)
     return confirm_url
 
 
