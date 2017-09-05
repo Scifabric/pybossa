@@ -38,8 +38,9 @@ For more complex DB queries, refer to other packages or services within
 PYBOSSA.
 """
 import json
+import re
 from pybossa.model.project import Project, TaskRun, Task
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
@@ -54,7 +55,8 @@ class Repository(object):
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
-                       if key != 'info' and key != 'fav_user_ids' and key != 'created']
+                       if (key != 'info' and key != 'fav_user_ids'
+                            and key != 'created' and key != 'project_id')]
         queries = []
         headlines = []
         order_by_ranks = []
@@ -68,10 +70,14 @@ class Repository(object):
             like_query = kwargs['created'] + '%'
             clauses.append(_entity_descriptor(model,'created').like(like_query))
 
-        if len(clauses) != 1:
-            return and_(*clauses), queries, headlines, order_by_ranks
-        else:
-            return (and_(*clauses), ), queries, headlines, order_by_ranks
+        if 'project_id' in kwargs.keys():
+            project_ids = re.findall(r'\d+', kwargs['project_id'])
+            or_clauses = []
+            for project_id in project_ids:
+                or_clauses.append((_entity_descriptor(model, 'project_id') ==
+                                   project_id))
+        all_clauses = and_(and_(*clauses), or_(*or_clauses))
+        return (all_clauses,), queries, headlines, order_by_ranks
 
 
     def handle_info_json(self, model, info, fulltextsearch=None):
@@ -141,6 +147,8 @@ class Repository(object):
                                     *query_args)
         else:
             query = self.db.session.query(model).filter(*query_args)
+
+        print query
 
         if participated and model == Task:
             if participated['user_id']:
