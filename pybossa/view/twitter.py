@@ -68,7 +68,12 @@ def oauth_authorized():  # pragma: no cover
     redirect back unless the user clicks on the application name.
     """
     resp = twitter.oauth.authorized_response()
-    next_url = request.args.get('next') or url_for('home.home')
+    home_url = url_for('home.home')
+    spa_server_name = current_app.config.get('SPA_SERVER_NAME')
+    if spa_server_name:
+        home_url = spa_server_name + home_url
+
+    next_url = request.args.get('next') or home_url
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         return redirect(next_url)
@@ -119,26 +124,39 @@ def manage_user(access_token, user_data):
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
+    spa_server_name = current_app.config.get('SPA_SERVER_NAME')
+    print spa_server_name
     if user is None:
         user = user_repo.get_by_name(user_data['screen_name'])
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for('account.forgot_password'))
+            redirect_url = url_for('account.forgot_password')
+            if spa_server_name:
+                redirect_url = spa_server_name + redirect_url
+            return redirect(redirect_url)
         else:
-            return redirect(url_for('account.signin'))
+            redirect_url = url_for('account.signin')
+            if spa_server_name:
+                redirect_url = spa_server_name + redirect_url
+            return redirect(redirect_url)
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
             and newsletter.is_initialized()):
-        return redirect(url_for('account.newsletter_subscribe',
-                                next=next_url))
+        redirect_url = url_for('account.newsletter_subscribe', next=next_url)
+        if spa_server_name:
+            redirect_url = spa_server_name + redirect_url
+        return redirect(redirect_url)
     if user.email_addr != user.name:
         return redirect(next_url)
     else:
         flash("Please update your e-mail address in your profile page")
-        return redirect(url_for('account.update_profile', name=user.name))
+        redirect_url = url_for('account.update_profile', name=user.name)
+        if spa_server_name:
+            redirect_url = spa_server_name + redirect_url
+        return redirect(redirect_url)
 
 
 def manage_user_no_login(access_token, next_url):
