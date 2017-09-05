@@ -3713,9 +3713,10 @@ class TestWeb(web.Helper):
         assert 403 == res.status_code
 
     @with_context
+    @patch('pybossa.view.account.url_for')
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.signer')
-    def test_45_password_reset_link_json(self, signer, queue):
+    def test_45_password_reset_link_json(self, signer, queue, mock_url):
         """Test WEB password reset email form"""
         csrf = self.get_csrf('/account/forgot-password')
         res = self.app.post('/account/forgot-password',
@@ -3755,10 +3756,12 @@ class TestWeb(web.Helper):
                             headers={'X-CSRFToken': csrf})
         resdata = json.loads(res.data)
         signer.dumps.assert_called_with(data, salt='password-reset')
+        key = signer.dumps(data, salt='password-reset')
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
+        assert mock_url.called_with('.reset_password', key=key, _external=True)
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
@@ -3827,6 +3830,27 @@ class TestWeb(web.Helper):
         msg = "Something went wrong, please correct the errors"
         assert msg in resdata.get('flash'), res.data
         assert resdata.get('form').get('errors').get('email_addr') is not None, resdata
+
+        with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME':
+                                                'http://local.com'}):
+            data = {'password': user.passwd_hash, 'user': user.name}
+            csrf = self.get_csrf('/account/forgot-password')
+            res = self.app.post('/account/forgot-password',
+                                data=json.dumps({'email_addr': user.email_addr}),
+                                follow_redirects=False,
+                                content_type="application/json",
+                                headers={'X-CSRFToken': csrf})
+            resdata = json.loads(res.data)
+            signer.dumps.assert_called_with(data, salt='password-reset')
+            key = signer.dumps(data, salt='password-reset')
+            enqueue_call = queue.enqueue.call_args_list[0]
+            assert send_mail == enqueue_call[0][0], "send_mail not called"
+            assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+            assert 'To recover your password' in enqueue_call[0][1]['html']
+            assert mock_url.called_with('.reset_password', key=key)
+            err_msg = "There should be a flash message"
+            assert resdata.get('flash'), err_msg
+            assert "sent you an email" in resdata.get('flash'), err_msg
 
 
     @with_context
