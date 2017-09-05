@@ -79,6 +79,23 @@ class TestTaskAPI(TestAPI):
         data = json.loads(res.data)
         assert data[0]['id'] == tasks[-1].id
 
+        user = UserFactory.create()
+        task_orig = tasks[0]
+        task_run = TaskRunFactory.create(task=task_orig, user=user)
+
+        project_ids = [project.id for project in projects]
+        url = '/api/task?project_id=%s&limit=100&participated=true&api_key=%s' % (project_ids, user.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == (3 * 2) - 1, len(data)
+        for task in data:
+            assert task['project_id'] in project_ids
+        task_project_ids = list(set([task['project_id'] for task in data]))
+        assert sorted(project_ids) == sorted(task_project_ids)
+        task_ids = [task['id'] for task in data]
+        err_msg = 'This task should not be in the list as the user participated.'
+        assert task_orig.id not in task_ids, err_msg
+
     @with_context
     def test_task_query_participated_user_ip(self):
         """Test API Task query with participated arg user_ip."""
