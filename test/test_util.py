@@ -369,6 +369,15 @@ class TestPybossaUtil(Test):
             expected = spa_name + fake_endpoint
             assert spa_url == expected, spa_url
 
+    @with_context
+    @patch('pybossa.util.url_for')
+    def test_url_for_app_type_mvc(self, mock_url_for):
+        """Test that the correct MVC URL is returned"""
+        fake_endpoint = '/example'
+        mock_url_for.return_value = fake_endpoint
+        spa_url = util.url_for_app_type('home.home')
+        assert spa_url == fake_endpoint, spa_url
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()
