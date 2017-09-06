@@ -55,6 +55,48 @@ class TestTaskAPI(TestAPI):
             return result_repo.get_by(project_id=1)
 
     @with_context
+    def test_task_query_list_project_ids(self):
+        """Get a list of tasks using a list of project_ids."""
+        projects = ProjectFactory.create_batch(3)
+        tasks = []
+        for project in projects:
+            tmp = TaskFactory.create_batch(2, project=project)
+            for t in tmp:
+                tasks.append(t)
+
+        project_ids = [project.id for project in projects]
+        url = '/api/task?project_id=%s&limit=100' % project_ids
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 3 * 2, len(data)
+        for task in data:
+            assert task['project_id'] in project_ids
+        task_project_ids = list(set([task['project_id'] for task in data]))
+        assert sorted(project_ids) == sorted(task_project_ids)
+
+        # more filters
+        res = self.app.get(url + '&orderby=created&desc=true')
+        data = json.loads(res.data)
+        assert data[0]['id'] == tasks[-1].id
+
+        user = UserFactory.create()
+        task_orig = tasks[0]
+        task_run = TaskRunFactory.create(task=task_orig, user=user)
+
+        project_ids = [project.id for project in projects]
+        url = '/api/task?project_id=%s&limit=100&participated=true&api_key=%s' % (project_ids, user.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == (3 * 2) - 1, len(data)
+        for task in data:
+            assert task['project_id'] in project_ids
+        task_project_ids = list(set([task['project_id'] for task in data]))
+        assert sorted(project_ids) == sorted(task_project_ids)
+        task_ids = [task['id'] for task in data]
+        err_msg = 'This task should not be in the list as the user participated.'
+        assert task_orig.id not in task_ids, err_msg
+
+    @with_context
     def test_task_query_participated_user_ip(self):
         """Test API Task query with participated arg user_ip."""
         admin, owner, user = UserFactory.create_batch(3)

@@ -178,6 +178,42 @@ Finally, you can get a list of users by doing::
 
     GET http://{pybossa-site-url}/api/user
 
+List of project of project IDs
+------------------------------
+
+In PYBOSSA most of the domain objects are related to a project. Therefore, you can
+query (or filter) a list of project IDs directly via the API to reduce the number
+of queries that you need to do. This is specially useful for Single Page Applications
+that only use the PYBOSSA JSON endpoints.
+
+For example, you can get all the tasks for a list of projects like this::
+
+    GET http://{pybossa-site-url}/api/task?project_id=[1,2,3]
+
+That filter will return tasks for project IDs 1, 2 and 3. The same can be done
+for task runs and blogposts.
+
+Created
+-------
+
+If you want, you can use the the domain attribute *created* to get items
+from the DB. Basically, you can specify a year, year-month, year-month-day
+to get all the values for those ranges. For example, if you want all
+the tasks that have been created in 2015, just use::
+
+    GET http://{pybossa-site-url}/api/task?created=2015&all=1
+
+If you want all the task runs from 2015-05::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05&all=1
+
+You can for example get all the task runs that a user has submitted on 
+a given day like this::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05-03&user_id=3
+
+This filter works for any object that has the *created* attribute.
+
 Order by
 --------
 

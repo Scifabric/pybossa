@@ -717,6 +717,12 @@ def forgot_password():
                 key = signer.dumps(userdict, salt='password-reset')
                 recovery_url = url_for('.reset_password',
                                        key=key, _external=True)
+                if current_app.config.get('SPA_SERVER_NAME'):
+                    print "HOLA"
+                    server_name = current_app.config.get('SPA_SERVER_NAME')
+                    recovery_url = server_name + url_for('.reset_password',
+                                                         key=key)
+                    print recovery_url
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
