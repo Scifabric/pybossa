@@ -44,14 +44,8 @@ class TestAnnouncementAPI(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 10, data
 
-        # # As user
+        # As user
         res = self.app_get_json(url + '?api_key=' + user.api_key)
-        data = json.loads(res.data)
-        # TODO: project_id is tried to load with api_key. Do not load it?
-        assert data['exception_cls'] == 'AttributeError', data
-
-        # # As owner
-        res = self.app_get_json(url + '?api_key=' + owner.api_key)
         data = json.loads(res.data)
         # TODO: project_id is tried to load with api_key. Do not load it?
         assert data['exception_cls'] == 'AttributeError', data
@@ -124,10 +118,39 @@ class TestAnnouncementAPI(TestAPI):
 
 
     @with_context
+    def test_announcement_post(self):
+        """Test API Announcement creation."""
+        admin, user = UserFactory.create_batch(2)
+
+        payload = dict(title='hello', body='world')
+
+        # As anon
+        url = '/api/announcement'
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        url = '/api/announcement?api_key=%s' % user.api_key
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
+
+        # As admin
+        url = '/api/announcement?api_key=%s' % admin.api_key
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['title'] == 'hello', data
+        assert data['body'] == 'world', data
+
+
+    @with_context
     def test_update_announcement(self):
         """Test API Announcement update post (PUT)."""
-        admin, owner, user = UserFactory.create_batch(3)
-        # project = ProjectFactory.create(owner=owner)
+        admin, user = UserFactory.create_batch(2)
         announcement = AnnouncementFactory.create()
 
         # As anon
@@ -137,3 +160,36 @@ class TestAnnouncementAPI(TestAPI):
         res = self.app.put(url, data=json.dumps(announcement.dictize()))
         data = json.loads(res.data)
         assert res.status_code == 401, res.status_code
+
+        # As user
+        announcement.title = 'new'
+        announcement.body = 'new body'
+        url = '/api/announcement/%s?api_key=%s' % (announcement.id, user.api_key)
+        data = announcement.dictize()
+        del data['id']
+        del data['created']
+        del data['updated']
+        del data['user_id']
+        res = self.app.put(url, data=json.dumps(data))
+        data = json.loads(res.data)
+        assert res.status_code == 403, (res.status_code, res.data)
+
+        # TODO: as project owner too?
+
+        # As admin
+        announcement.title = 'new'
+        announcement.body = 'new body'
+        url = '/api/announcement/%s?api_key=%s' % (announcement.id, admin.api_key)
+        payload = announcement.dictize()
+        del payload['user_id']
+        del payload['created']
+        del payload['updated']
+        del payload['id']
+        payload['published'] = True
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['title'] == 'new', data
+        assert data['body'] == 'new body', data
+        assert data['updated'] != data['created'], data
+        assert data['published'] is True, data
