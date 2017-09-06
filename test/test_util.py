@@ -356,6 +356,27 @@ class TestPybossaUtil(Test):
         err_msg = "jsonify should not be called"
         assert mockjsonify.called is False, err_msg
 
+    @with_context
+    @patch('pybossa.util.url_for')
+    def test_url_for_app_type_spa(self, mock_url_for):
+        """Test that the correct SPA URL is returned"""
+        spa_name = 'http://local.com'
+        fake_endpoint = '/example'
+        mock_url_for.return_value = fake_endpoint
+        with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME': spa_name}):
+            spa_url = util.url_for_app_type('home.home')
+            expected = spa_name + fake_endpoint
+            assert spa_url == expected, spa_url
+
+    @with_context
+    @patch('pybossa.util.url_for')
+    def test_url_for_app_type_mvc(self, mock_url_for):
+        """Test that the correct MVC URL is returned"""
+        fake_endpoint = '/example'
+        mock_url_for.return_value = fake_endpoint
+        spa_url = util.url_for_app_type('home.home')
+        assert spa_url == fake_endpoint, spa_url
+
     def test_pretty_date(self):
         """Test pretty_date works."""
         now = datetime.now()

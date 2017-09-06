@@ -96,10 +96,10 @@ class TestGoogle(Test):
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
-    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.url_for_app_type', return_value=True)
     @patch('pybossa.view.google.redirect', return_value=True)
     def test_manage_user_with_oauth_newsletter(self, redirect,
-                                               url_for, flash,
+                                               url_for_app_type, flash,
                                                login_user,
                                                newsletter):
         """Test GOOGLE manage_user_login shows newsletter works."""
@@ -110,17 +110,17 @@ class TestGoogle(Test):
         manage_user_login(user, user_data, next_url=next_url)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is False
-        url_for.assert_called_with('account.newsletter_subscribe',
-                                   next=next_url)
+        url_for_app_type.assert_called_with('account.newsletter_subscribe',
+                                            next=next_url)
 
     @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
-    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.url_for_app_type', return_value=True)
     @patch('pybossa.view.google.redirect', return_value=True)
     def test_manage_user_is_not_asked_twice(self, redirect,
-                                            url_for, flash,
+                                            url_for_app_type, flash,
                                             login_user,
                                             newsletter):
         """Test GOOGLE manage_user_login shows newsletter only once works."""
@@ -132,16 +132,16 @@ class TestGoogle(Test):
         manage_user_login(user, user_data, next_url=next_url)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is True
-        assert url_for.called is False
+        assert url_for_app_type.called is False
 
     @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
-    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.url_for_app_type', return_value=True)
     @patch('pybossa.view.google.redirect', return_value=True)
     def test_manage_login_without_user(self, redirect,
-                                       url_for, flash,
+                                       url_for_app_type, flash,
                                        login_user,
                                        newsletter):
         """Test GOOGLE manage_user_login without user works."""
@@ -150,16 +150,16 @@ class TestGoogle(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url=next_url)
         assert login_user.called is False
-        url_for.assert_called_with('account.forgot_password')
+        url_for_app_type.assert_called_with('account.forgot_password')
 
     @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
-    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.url_for_app_type', return_value=True)
     @patch('pybossa.view.google.redirect', return_value=True)
     def test_manage_login_without_user_facebook(self, redirect,
-                                                url_for, flash,
+                                                url_for_app_type, flash,
                                                 login_user,
                                                 newsletter):
         """Test GOOGLE manage_user_login without user facebook works."""
@@ -169,4 +169,4 @@ class TestGoogle(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url=next_url)
         assert login_user.called is False
-        url_for.assert_called_with('account.signin')
+        url_for_app_type.assert_called_with('account.signin')
