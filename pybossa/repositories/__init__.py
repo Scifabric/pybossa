@@ -132,7 +132,7 @@ class Repository(object):
                                                                fulltextsearch,
                                                                **filters)
 
-        project_var_existing = ('Project' in locals())
+        project_var_existing = ('Project' in locals() or 'Project' in globals())
 
         if project_var_existing and owner_id:
             subquery = self.db.session.query(Project)\
