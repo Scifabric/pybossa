@@ -268,3 +268,50 @@ class TestAnnouncementAPI(TestAPI):
                             content_type="multipart/form-data")
         data = json.loads(res.data)
         assert res.status_code == 403, data
+
+
+    @with_context
+    def test_announcement_put_file(self):
+        """Test API Announcement file upload update."""
+        admin, user = UserFactory.create_batch(2)
+        announcement = AnnouncementFactory.create()
+
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(file=img)
+
+        # As anon
+        url = '/api/announcement/%s' % blogpost.id
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As a user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(file=img)
+
+        url = '/api/announcement/%s?api_key=%s' % (announcement.id, user.api_key)
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
+
+        # As admin
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(file=img)
+
+        url = '/api/announcement/%s?api_key=%s' % (announcement.id,
+                                                   admin.api_key)
+        res = self.app.put(url, data=payload,
+                           content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        container = "user_%s" % user.id
+        assert data['info']['container'] == container, data
+        assert data['info']['file_name'] == 'test_file.jpg', data
+        assert 'test_file.jpg' in data['media_url'], data
