@@ -35,7 +35,6 @@ class TestAnnouncementAPI(TestAPI):
         """Test API query for announcement endpoint works"""
         owner = UserFactory.create()
         user = UserFactory.create()
-        # project = ProjectFactory(owner=owner)
         announcements = AnnouncementFactory.create_batch(9)
         announcement = AnnouncementFactory.create()
 
@@ -281,7 +280,7 @@ class TestAnnouncementAPI(TestAPI):
         payload = dict(file=img)
 
         # As anon
-        url = '/api/announcement/%s' % blogpost.id
+        url = '/api/announcement/%s' % announcement.id
         res = self.app.put(url, data=payload,
                            content_type="multipart/form-data")
         data = json.loads(res.data)
