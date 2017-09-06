@@ -576,7 +576,7 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 415, data
 
-        # As owner using reserved key 
+        # As owner using reserved key
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,

@@ -446,9 +446,9 @@ class APIBase(MethodView):
             for key in request.form.keys():
                 tmp[key] = request.form[key]
 
-            ensure_authorized_to('create', self.__class__,
-                                 project_id=tmp['project_id'])
-            project = project_repo.get(tmp['project_id'])
+            # ensure_authorized_to('create', self.__class__,
+                                #  project_id=tmp['project_id'])
+            # project = project_repo.get(tmp['project_id'])
             upload_method = current_app.config.get('UPLOAD_METHOD')
             if request.files.get('file') is None:
                 raise AttributeError
