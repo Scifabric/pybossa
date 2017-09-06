@@ -4746,6 +4746,8 @@ class TestWeb(web.Helper):
             .filter_by(short_name=Fixtures.project_short_name)\
             .first()
         self.clear_temp_container(project.owner_id)
+        for i in range(0, 5):
+            task = TaskFactory.create(project=project, info={u'questiönñ': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
