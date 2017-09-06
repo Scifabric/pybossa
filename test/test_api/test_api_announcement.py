@@ -310,7 +310,7 @@ class TestAnnouncementAPI(TestAPI):
                            content_type="multipart/form-data")
         data = json.loads(res.data)
         assert res.status_code == 200, data
-        container = "user_%s" % user.id
+        container = "user_%s" % admin.id
         assert data['info']['container'] == container, data
         assert data['info']['file_name'] == 'test_file.jpg', data
         assert 'test_file.jpg' in data['media_url'], data
