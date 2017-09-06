@@ -824,7 +824,7 @@ def task_presenter(short_name, task_id):
     else:
         ensure_authorized_to('read', project)
 
-    if not sched.can_read_task(task, current_user):
+    if not sched.can_read_task(task, current_user) and not is_coowner(project.id):
         raise abort(403)
 
     if current_user.is_anonymous():
@@ -953,11 +953,10 @@ def tutorial(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 @login_required
-@admin_or_subadmin_required
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
-    # Check if the project exists
-    project, owner, ps = project_by_shortname(short_name)
+    # Check if the project exists and current_user has valid access to it
+    project, owner, ps = allow_deny_project_info(short_name)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
