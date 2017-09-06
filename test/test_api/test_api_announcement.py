@@ -121,3 +121,19 @@ class TestAnnouncementAPI(TestAPI):
         announcements_by_id = sorted(announcements, key=lambda x: x.id, reverse=True)
         for i in range(len(announcements)):
             assert announcements_by_id[i].id == data[i]['id']
+
+
+    @with_context
+    def test_update_announcement(self):
+        """Test API Announcement update post (PUT)."""
+        admin, owner, user = UserFactory.create_batch(3)
+        # project = ProjectFactory.create(owner=owner)
+        announcement = AnnouncementFactory.create()
+
+        # As anon
+        announcement.title = 'new'
+        announcement.body = 'new body'
+        url = '/api/announcement/%s' % announcement.id
+        res = self.app.put(url, data=json.dumps(announcement.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
