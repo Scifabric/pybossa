@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+import io
 from default import db, with_context
 from test_api import TestAPI
 from factories import AnnouncementFactory
-from factories import UserFactory, HelpingMaterialFactory, ProjectFactory
+from factories import UserFactory
 from pybossa.repositories import AnnouncementRepository
 from mock import patch
 from nose.tools import assert_raises
@@ -220,3 +221,50 @@ class TestAnnouncementAPI(TestAPI):
         url = '/api/announcement/%s?api_key=%s' % (announcement2.id, admin.api_key)
         res = self.app.delete(url)
         assert res.status_code == 204, res.status_code
+
+
+    @with_context
+    def test_announcement_post_file(self):
+        """Test API Announcement file upload creation."""
+        admin, user = UserFactory.create_batch(2)
+
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(file=img, hello='1')
+
+        # As anon
+        url = '/api/announcement'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
+
+        # As admin
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(
+                       file=img,
+                       title='title',
+                       body='body')
+
+        url = '/api/announcement?api_key=%s' % admin.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        container = "user_%s" % admin.id
+        assert data['info']['container'] == container, data
+        assert data['info']['file_name'] == 'test_file.jpg', data
+        assert 'test_file.jpg' in data['media_url'], data
+
+        # As normal user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(file=img)
+
+        url = '/api/announcement?api_key=%s' % user.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
