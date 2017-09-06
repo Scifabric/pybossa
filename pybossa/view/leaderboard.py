@@ -37,6 +37,13 @@ def index(window=0):
     if window >= 10:
         window = 10
 
+    info = request.args.get('info')
+
+    leaderboards = current_app.config.get('LEADERBOARDS')
+
+    if info is not None:
+        if leaderboards is None or info not in leaderboards:
+            return abort(404)
 
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id,
