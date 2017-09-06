@@ -193,3 +193,30 @@ class TestAnnouncementAPI(TestAPI):
         assert data['body'] == 'new body', data
         assert data['updated'] != data['created'], data
         assert data['published'] is True, data
+
+
+    @with_context
+    @patch('pybossa.api.api_base.uploader.delete_file')
+    def test_delete_announcement(self, mock_delete):
+        """Test API Announcement delete post (DEL)."""
+        mock_delete.return_value = True
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        announcement = AnnouncementFactory.create()
+        announcement2 = AnnouncementFactory.create()
+
+        # As anon
+        url = '/api/announcement/%s' % announcement.id
+        res = self.app.delete(url)
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        url = '/api/announcement/%s?api_key=%s' % (announcement.id, user.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 403, res.status_code
+
+        # As admin
+        url = '/api/announcement/%s?api_key=%s' % (announcement2.id, admin.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
