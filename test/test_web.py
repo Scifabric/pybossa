@@ -4596,7 +4596,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create()
         self.clear_temp_container(project.owner_id)
         for i in range(0, 5):
-            task = TaskFactory.create(project=project, info={'question': i})
+            task = TaskFactory.create(project=project, info={u'questiönñ': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
