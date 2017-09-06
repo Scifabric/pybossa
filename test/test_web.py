@@ -5039,7 +5039,8 @@ class TestWeb(web.Helper):
                      "projects/tasks/youtube.html",
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
-                     "projects/tasks/flickr.html"]
+                     "projects/tasks/flickr.html",
+                     "projects/tasks/localCSV.html"]
         assert data['available_importers'] == importers, data
 
         importers = ['&type=epicollect',
@@ -5049,7 +5050,8 @@ class TestWeb(web.Helper):
                      '&type=youtube',
                      '&type=gdocs',
                      '&type=dropbox',
-                     '&type=flickr']
+                     '&type=flickr',
+                     '&type=localCSV']
 
         for importer in importers:
             res = self.app_get_json(url + importer)
@@ -5075,6 +5077,8 @@ class TestWeb(web.Helper):
                 assert 'files' in data['form'].keys(), data
             if 'flickr' in importer:
                 assert 'album_id' in data['form'].keys(), data
+            if 'localCSV' in importer:
+                assert 'form_name' in data['form'].keys(), data
 
         for importer in importers:
             if 'epicollect' in importer:
@@ -5139,7 +5143,8 @@ class TestWeb(web.Helper):
                      "projects/tasks/youtube.html",
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
-                     "projects/tasks/flickr.html"]
+                     "projects/tasks/flickr.html",
+                     "projects/tasks/localCSV.html"]
         assert data['available_importers'] == importers, data
 
 
