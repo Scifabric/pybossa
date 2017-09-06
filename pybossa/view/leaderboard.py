@@ -40,11 +40,9 @@ def index(window=0):
 
     leaderboards = current_app.config.get('LEADERBOARDS')
 
-    if leaderboards is None and info:
-        return abort(404)
-
-    if leaderboards and info not in leaderboards:
-        return abort(404)
+    if info is not None:
+        if leaderboards is None or info not in leaderboards:
+            return abort(404)
 
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id,
