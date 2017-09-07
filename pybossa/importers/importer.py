@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.babel import gettext
-from .csv import BulkTaskCSVImport, BulkTaskGDImport
+from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
 from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
@@ -34,7 +34,8 @@ class Importer(object):
         self._importers = dict(csv=BulkTaskCSVImport,
                                gdocs=BulkTaskGDImport,
                                epicollect=BulkTaskEpiCollectPlusImport,
-                               s3=BulkTaskS3Import)
+                               s3=BulkTaskS3Import,
+                               localCSV=BulkTaskLocalCSVImport)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
