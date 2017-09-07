@@ -1213,8 +1213,8 @@ def bulk_redundancy_update(short_name):
                 'n_answers': n_answers
             })
 
-        auditlogger.log_event(project, current_user, 'bulk update priority',
-                              'task.priority_0', 'N/A', new_value)
+        auditlogger.log_event(project, current_user, 'bulk update redundancy',
+                              'task.n_answers', 'N/A', new_value)
         return Response('{}', 200, mimetype='application/json')
     except Exception as e:
         return ErrorStatus().format_exception(e, 'redundancyupdate', 'POST')
@@ -1231,8 +1231,9 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
             if t and t.n_answers != n_answers:
                 t.n_answers = n_answers
                 t.state = 'ongoing'
+                if len(t.task_runs) >= n_answers:
+                    t.state = 'complete'
                 task_repo.update(t)
-    task_repo.update_task_state(project_id, n_answers)
 
 
 @crossdomain(origin='*', headers=cors_headers)
