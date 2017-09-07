@@ -2156,32 +2156,46 @@ Shows you PYBOSSA wide announcements
                 "body": "test123",
                 "created": "2017-05-31T15:23:44.858735",
                 "id": 5,
+                "media_url": null,
+                "published": true,
                 "title": "title123",
+                "updated": "2017-05-31T15:23:44.858735",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-05-31T15:23:28.477516",
                 "id": 4,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-05-31T15:23:28.477516",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:42:45.042010",
                 "id": 7,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:42:45.042010",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:45:11.612801",
                 "id": 8,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:45:11.612801",
                 "user_id": 4953
             }
         ],
-        "template": ""
+        "csrf": "1504710446.52##6a7fakjsdhsdflkj",
+        "template": "admin/announcement.html",
+        "title": "Manage global Announcements"
     }
 
 
@@ -2208,34 +2222,46 @@ Shows you PYBOSSA wide announcements
                 "body": "test123",
                 "created": "2017-05-31T15:23:44.858735",
                 "id": 5,
+                "media_url": null,
+                "published": true,
                 "title": "title123",
+                "updated": "2017-05-31T15:23:44.858735",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-05-31T15:23:28.477516",
                 "id": 4,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-05-31T15:23:28.477516",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:42:45.042010",
                 "id": 7,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:42:45.042010",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:45:11.612801",
                 "id": 8,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:45:11.612801",
                 "user_id": 4953
             }
         ],
-      "csrf": "1496394861.12##1bfcbb386bae5d1625c023a23b08865b4176579d",
-      "template": "",
-      "title": "Manage global Announcements"
+        "csrf": "1504710446.52##6a7fakjsdhsdflkj",
+        "template": "admin/announcement.html",
+        "title": "Manage global Announcements"
     }
 
 
@@ -2265,7 +2291,7 @@ Creates a new PYBOSSA wide announcement
         "errors": {},
         "title": null
       },
-      "template": "",
+      "template": "admin/new_announcement.html",
       "title": "Write a new post"
     }
 
@@ -2313,9 +2339,10 @@ Updates a PYBOSSA announcement
         "id": 4,
         "title": "test6"
       },
-      "template": "",
+      "template": "admin/update_announcement.html",
       "title": "Edit a post"
     }
+
 
 **POST**
 
