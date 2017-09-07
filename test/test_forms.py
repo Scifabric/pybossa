@@ -223,7 +223,7 @@ class TestRegisterForm(Test):
         assert form.validate()
 
 class TestBulkTaskLocalCSVForm(Test):
-
+    
     def setUp(self):
         super(TestBulkTaskLocalCSVForm, self).setUp()
         self.form_data = {'csv_filename': 'sample.csv'}

@@ -359,11 +359,9 @@ class BulkTaskLocalCSVImportForm(Form):
     def get_import_data(self):
         if request.method == 'POST':
             if 'file' not in request.files:
-                flash('No file part')
                 return {'type': 'localCSV', 'csv_filename': None}
             csv_file = request.files['file']
             if csv_file.filename == '':
-                flash('No file selected')
                 return {'type': 'localCSV', 'csv_filename': None}
             if csv_file and self._allowed_file(csv_file.filename):
                 filename = secure_filename(csv_file.filename)
