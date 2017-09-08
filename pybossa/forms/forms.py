@@ -256,6 +256,7 @@ class BulkTaskLocalCSVImportForm(Form):
 
     def _upload_path(self):
         container = self._container()
+        filepath = None
         if isinstance(uploader, local.LocalUploader):
             filepath = safe_join(uploader.upload_folder, container)
             if not os.path.isdir(filepath):

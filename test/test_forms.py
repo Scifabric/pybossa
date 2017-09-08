@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from wtforms import ValidationError
-from nose.tools import raises
+from nose.tools import raises, assert_raises
 from flask import current_app
 
 from default import Test, db, with_context
@@ -274,3 +274,17 @@ class TestBulkTaskLocalCSVForm(Test):
         return_value = form.get_import_data()
         assert return_value['type'] is 'localCSV', return_value
         assert 'user_1/sample.csv' in return_value['csv_filename'], return_value
+
+    @with_context
+    @patch('pybossa.forms.forms.uploader')
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_ioerror(self, mock_user, mock_request,
+                                        mock_uploader):
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        assert_raises(IOError, form.get_import_data)
