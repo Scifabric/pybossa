@@ -260,3 +260,17 @@ class TestBulkTaskLocalCSVForm(Test):
         form = BulkTaskLocalCSVImportForm(**self.form_data)
         return_value = form.get_import_data()
         assert return_value['type'] is 'localCSV' and return_value['csv_filename'] is None
+
+    @with_context
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_works(self, mock_user, mock_request):
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        return_value = form.get_import_data()
+        assert return_value['type'] is 'localCSV', return_value
+        assert 'user_1/sample.csv' in return_value['csv_filename'], return_value
