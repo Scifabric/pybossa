@@ -125,10 +125,12 @@ def get_periodic_jobs(queue):
 def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
     timeout = current_app.config.get('TIMEOUT')
+    unpublish_projects = current_app.config.get('UNPUBLISH_PROJECTS')
     yield dict(name=warm_up_stats, args=[], kwargs={},
                timeout=timeout, queue='high')
-    yield dict(name=warn_old_project_owners, args=[], kwargs={},
-               timeout=timeout, queue='low')
+    if unpublish_projects:
+        yield dict(name=warn_old_project_owners, args=[], kwargs={},
+                   timeout=timeout, queue='low')
     yield dict(name=warm_cache, args=[], kwargs={},
                timeout=timeout, queue='super')
     yield dict(name=news, args=[], kwargs={},

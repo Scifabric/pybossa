@@ -72,6 +72,7 @@ copyright = u'%s, Scifabric LTD' %\
 # built documents.
 #
 # The short X.Y version.
+
 version = 'v2.6.5'
 # The full version, including alpha/beta/rc tags.
 release = 'v2.6.5'

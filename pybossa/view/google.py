@@ -24,6 +24,7 @@ from flask_oauthlib.client import OAuthException
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
+from pybossa.util import url_for_app_type
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -57,14 +58,14 @@ def get_google_token():  # pragma: no cover
 def oauth_authorized():  # pragma: no cover
     """Authorize Oauth."""
     resp = google.oauth.authorized_response()
-    next_url = url_for('home.home')
+    next_url = url_for_app_type('home.home')
 
     if resp is None or request.args.get('error'):
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
             current_app.logger.error(resp)
-            return redirect(url_for('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
@@ -77,7 +78,7 @@ def oauth_authorized():  # pragma: no cover
     except requests.exceptions.http_error:
         # Unauthorized - bad token
         if r.status_code == 401:
-            return redirect(url_for('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
         return r.content
 
     access_token = resp['access_token']
@@ -136,13 +137,13 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for('account.forgot_password'))
+            return redirect(url_for_app_type('account.forgot_password'))
         else:
-            return redirect(url_for('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         if user.newsletter_prompted is False and newsletter.is_initialized():
-            return redirect(url_for('account.newsletter_subscribe',
-                                    next=next_url))
+            return redirect(url_for_app_type('account.newsletter_subscribe',
+                                             next=next_url))
         return redirect(next_url)

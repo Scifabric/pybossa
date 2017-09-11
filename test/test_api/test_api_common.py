@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+import datetime
 from default import with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
@@ -35,6 +36,7 @@ class TestApiCommon(TestAPI):
         """Test API GET limits works"""
         owner = UserFactory.create()
         projects = ProjectFactory.create_batch(30, owner=owner)
+        project_created = ProjectFactory.create(created='2000-01-01T12:08:47.134025')
         for project in projects:
             task = TaskFactory.create(project=project)
             TaskRunFactory.create(task=task)
@@ -89,6 +91,20 @@ class TestApiCommon(TestAPI):
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user11', data
 
+        # By date created
+        res = self.app.get('/api/project?created=2000-01')
+        data = json.loads(res.data)
+        assert len(data) == 1, len(data)
+        assert data[0].get('id') == project_created.id
+        year = datetime.datetime.now().year
+        res = self.app.get('/api/project?created=%s' % year)
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+        res = self.app.get('/api/project?created=%s&limit=100' % year)
+        data = json.loads(res.data)
+        assert len(data) == 30, len(data)
+
+
     @with_context
     def test_get_query_with_api_key_and_all(self):
         """ Test API GET query with an API-KEY requesting all results"""
@@ -98,6 +114,7 @@ class TestApiCommon(TestAPI):
         taskrun = TaskRunFactory.create(task=task, user=admin,
                                         info={'answer': 'annakarenina'})
 
+        year = datetime.datetime.now().year
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + user.api_key + '&all=1'

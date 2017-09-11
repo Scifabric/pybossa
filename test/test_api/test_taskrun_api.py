@@ -58,6 +58,30 @@ class TestTaskrunAPI(TestAPI):
         else:
             return result_repo.get_by(project_id=1)
 
+    @with_context
+    def test_taskrun_query_list_project_ids(self):
+        """Get a list of tasks runs using a list of project_ids."""
+        projects = ProjectFactory.create_batch(3)
+        task_runs = []
+        for project in projects:
+            tmp = TaskRunFactory.create_batch(2, project=project)
+            for t in tmp:
+                task_runs.append(t)
+
+        project_ids = [project.id for project in projects]
+        url = '/api/taskrun?project_id=%s&limit=100' % project_ids
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        assert len(data) == 3 * 2, len(data)
+        for task in data:
+            assert task['project_id'] in project_ids
+        task_run_project_ids = list(set([task['project_id'] for task in data]))
+        assert sorted(project_ids) == sorted(task_run_project_ids)
+
+        # more filters
+        res = self.app.get(url + '&orderby=created&desc=true')
+        data = json.loads(res.data)
+        assert data[0]['id'] == task_runs[-1].id
 
     @with_context
     def test_taskrun_query_without_params(self):
