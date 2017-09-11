@@ -39,10 +39,7 @@ class AnnouncementAuth(object):
         return False
 
     def _read(self, user, announcement=None):
-        if announcement is None:
-            return False
-        else:
-            return True
+        return True
 
     def _update(self, user, announcement):
         if user.is_anonymous() or (announcement is None):

@@ -41,7 +41,7 @@ from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
-from pybossa.model import DomainObject
+from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
@@ -80,7 +80,7 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    allowed_classes_upload = ['blogpost', 'helpingmaterial']
+    allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -446,17 +446,26 @@ class APIBase(MethodView):
             for key in request.form.keys():
                 tmp[key] = request.form[key]
 
-            ensure_authorized_to('create', self.__class__,
-                                 project_id=tmp['project_id'])
-            project = project_repo.get(tmp['project_id'])
-            upload_method = current_app.config.get('UPLOAD_METHOD')
-            if request.files.get('file') is None:
-                raise AttributeError
-            _file = request.files['file']
-            if current_user.admin:
-                container = "user_%s" % project.owner.id
-            else:
+            if isinstance(self, announcement.Announcement):
+                # don't check project id for announcements
+                ensure_authorized_to('create', self)
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                if request.files.get('file') is None:
+                    raise AttributeError
+                _file = request.files['file']
                 container = "user_%s" % current_user.id
+            else:
+                ensure_authorized_to('create', self.__class__,
+                                    project_id=tmp['project_id'])
+                project = project_repo.get(tmp['project_id'])
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                if request.files.get('file') is None:
+                    raise AttributeError
+                _file = request.files['file']
+                if current_user.admin:
+                    container = "user_%s" % project.owner.id
+                else:
+                    container = "user_%s" % current_user.id
             uploader.upload_file(_file,
                                  container=container)
             file_url = get_avatar_url(upload_method,
