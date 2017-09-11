@@ -111,7 +111,7 @@ class TestImporterPublicMethods(Test):
     @with_context
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect', 's3']
+        expected_importers = ['csv', 'gdocs', 'epicollect', 's3', 'localCSV']
 
         assert set(importers) == set(expected_importers)
 
@@ -134,7 +134,7 @@ class TestImporterPublicMethods(Test):
     @with_context
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
         importers = self.importer.get_autoimporter_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect']
+        expected_importers = ['csv', 'gdocs', 'epicollect', 'localCSV']
 
         assert set(importers) == set(expected_importers)
 

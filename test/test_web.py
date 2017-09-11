@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 import copy
 import json
 import os
@@ -4596,7 +4597,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create()
         self.clear_temp_container(project.owner_id)
         for i in range(0, 5):
-            task = TaskFactory.create(project=project, info={'question': i})
+            task = TaskFactory.create(project=project, info={u'eñe': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
@@ -4605,7 +4606,11 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        file_name = '/tmp/task_%s.zip' % project.short_name
+        with open(file_name, 'w') as f:
+            f.write(res.data)
+        zip = zipfile.ZipFile(file_name, 'r')
+        zip.extractall('/tmp')
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
         assert len(zip.namelist()) == 2, err_msg
@@ -4613,7 +4618,8 @@ class TestWeb(web.Helper):
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'project1_task.csv', zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
+        csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
+
         csvreader = unicode_csv_reader(csv_content)
         project = db.session.query(Project)\
                     .filter_by(short_name=project.short_name)\
@@ -4627,7 +4633,9 @@ class TestWeb(web.Helper):
                 keys = row
             n = n + 1
         err_msg = "The number of exported tasks is different from Project Tasks"
-        assert len(exported_tasks) == len(project.tasks), err_msg
+        assert len(exported_tasks) == len(project.tasks), (err_msg,
+                                                           len(exported_tasks),
+                                                           len(project.tasks))
         for t in project.tasks:
             err_msg = "All the task column names should be included"
             for tk in flatten(t.dictize()).keys():
@@ -4636,7 +4644,7 @@ class TestWeb(web.Helper):
             err_msg = "All the task.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
 
         for et in exported_tasks:
             task_id = et[keys.index('id')]
@@ -5070,7 +5078,8 @@ class TestWeb(web.Helper):
                      "projects/tasks/youtube.html",
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
-                     "projects/tasks/flickr.html"]
+                     "projects/tasks/flickr.html",
+                     "projects/tasks/localCSV.html"]
         assert data['available_importers'] == importers, data
 
         importers = ['&type=epicollect',
@@ -5080,7 +5089,8 @@ class TestWeb(web.Helper):
                      '&type=youtube',
                      '&type=gdocs',
                      '&type=dropbox',
-                     '&type=flickr']
+                     '&type=flickr',
+                     '&type=localCSV']
 
         for importer in importers:
             res = self.app_get_json(url + importer)
@@ -5106,6 +5116,8 @@ class TestWeb(web.Helper):
                 assert 'files' in data['form'].keys(), data
             if 'flickr' in importer:
                 assert 'album_id' in data['form'].keys(), data
+            if 'localCSV' in importer:
+                assert 'form_name' in data['form'].keys(), data
 
         for importer in importers:
             if 'epicollect' in importer:
@@ -5170,7 +5182,8 @@ class TestWeb(web.Helper):
                      "projects/tasks/youtube.html",
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
-                     "projects/tasks/flickr.html"]
+                     "projects/tasks/flickr.html",
+                     "projects/tasks/localCSV.html"]
         assert data['available_importers'] == importers, data
 
 

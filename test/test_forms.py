@@ -17,16 +17,17 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from wtforms import ValidationError
-from nose.tools import raises
+from nose.tools import raises, assert_raises
 from flask import current_app
 
 from default import Test, db, with_context
 from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
-    USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH)
+    USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm)
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
-from mock import patch
+from mock import patch, MagicMock
+
 
 user_repo = UserRepository(db)
 
@@ -221,3 +222,69 @@ class TestRegisterForm(Test):
         self.fill_in_data['password'] = self.fill_in_data['confirm'] = 'Abcd12345!'
         form = RegisterForm(**self.fill_in_data)
         assert form.validate()
+
+class TestBulkTaskLocalCSVForm(Test):
+    
+    def setUp(self):
+        super(TestBulkTaskLocalCSVForm, self).setUp()
+        self.form_data = {'csv_filename': 'sample.csv'}
+
+    @with_context
+    @patch('pybossa.forms.forms.request')
+    def test_import_request_with_no_file_returns_none(self, mock_request):
+        from flask import flash
+        mock_request.method = 'POST'
+        mock_request.files = dict(somekey='somevalue')
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        return_value = form.get_import_data()
+        assert return_value['type'] is 'localCSV' and return_value['csv_filename'] is None
+
+    @with_context
+    @patch('pybossa.forms.forms.request')
+    def test_import_blank_local_csv_file_returns_none(self, mock_request):
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = ''
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        return_value = form.get_import_data()
+        assert return_value['type'] is 'localCSV' and return_value['csv_filename'] is None
+
+    @with_context
+    @patch('pybossa.forms.forms.request')
+    def test_import_invalid_local_csv_file_ext_returns_none(self, mock_request):
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.txt'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        return_value = form.get_import_data()
+        assert return_value['type'] is 'localCSV' and return_value['csv_filename'] is None
+
+    @with_context
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_works(self, mock_user, mock_request):
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        return_value = form.get_import_data()
+        assert return_value['type'] is 'localCSV', return_value
+        assert 'user_1/sample.csv' in return_value['csv_filename'], return_value
+
+    @with_context
+    @patch('pybossa.forms.forms.uploader')
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_ioerror(self, mock_user, mock_request,
+                                        mock_uploader):
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        assert_raises(IOError, form.get_import_data)

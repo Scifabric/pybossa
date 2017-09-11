@@ -67,10 +67,10 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
-    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_login_with_newsletter(self, redirect,
-                                               url_for,
+                                               url_for_app_type,
                                                flash,
                                                login_user,
                                                newsletter):
@@ -81,17 +81,17 @@ class TestTwitter(Test):
         user_data = dict(id=user.id, screen_name=user.name)
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for.assert_called_once_with('account.newsletter_subscribe',
-                                        next=next_url)
+        url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
+                                                 next=next_url)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
-    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_login_with_newsletter_no_email(self, redirect,
-                                                        url_for,
+                                                        url_for_app_type,
                                                         flash,
                                                         login_user,
                                                         newsletter):
@@ -104,17 +104,17 @@ class TestTwitter(Test):
         user_repo.update(user)
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for.assert_called_once_with('account.update_profile',
-                                        name=user.name)
+        url_for_app_type.assert_called_once_with('account.update_profile',
+                                                 name=user.name)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
-    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_login_without_user_local(self, redirect,
-                                                  url_for,
+                                                  url_for_app_type,
                                                   flash,
                                                   login_user,
                                                   newsletter):
@@ -127,16 +127,16 @@ class TestTwitter(Test):
         user_repo.update(user)
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
-        url_for.assert_called_once_with('account.forgot_password')
+        url_for_app_type.assert_called_once_with('account.forgot_password')
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
-    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_login_without_user(self, redirect,
-                                            url_for,
+                                            url_for_app_type,
                                             flash,
                                             login_user,
                                             newsletter):
@@ -149,16 +149,16 @@ class TestTwitter(Test):
         user_repo.update(user)
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
-        url_for.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin')
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
-    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_login_with_newsletter_twice(self, redirect,
-                                                     url_for,
+                                                     url_for_app_type,
                                                      flash,
                                                      login_user,
                                                      newsletter):
