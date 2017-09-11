@@ -146,3 +146,6 @@ TIMEOUT = 10 * MINUTE
 # OneSignal GCM Sender ID
 # DO NOT MODIFY THIS
 GCM_SENDER_ID = "482941778795"
+
+# Unpublish inactive projects
+UNPUBLISH_PROJECTS = True

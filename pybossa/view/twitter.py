@@ -23,7 +23,7 @@ from flask_oauthlib.client import OAuthException
 
 from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, url_for_app_type
 
 blueprint = Blueprint('twitter', __name__)
 
@@ -68,7 +68,7 @@ def oauth_authorized():  # pragma: no cover
     redirect back unless the user clicks on the application name.
     """
     resp = twitter.oauth.authorized_response()
-    next_url = request.args.get('next') or url_for('home.home')
+    next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         return redirect(next_url)
@@ -124,21 +124,22 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for('account.forgot_password'))
+            return redirect(url_for_app_type('account.forgot_password'))
         else:
-            return redirect(url_for('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
             and newsletter.is_initialized()):
-        return redirect(url_for('account.newsletter_subscribe',
-                                next=next_url))
+        return redirect(url_for_app_type('account.newsletter_subscribe',
+                                         next=next_url))
     if user.email_addr != user.name:
         return redirect(next_url)
     else:
         flash("Please update your e-mail address in your profile page")
-        return redirect(url_for('account.update_profile', name=user.name))
+        return redirect(url_for_app_type('account.update_profile',
+                                         name=user.name))
 
 
 def manage_user_no_login(access_token, next_url):

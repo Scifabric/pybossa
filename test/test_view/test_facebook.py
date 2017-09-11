@@ -120,10 +120,10 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_local(self, redirect,
-                                     url_for, flash,
+                                     url_for_app_type, flash,
                                      login_user,
                                      newsletter):
         """Test manage login user works."""
@@ -132,16 +132,16 @@ class TestFacebook(Test):
         user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for.assert_called_once_with('account.forgot_password')
+        url_for_app_type.assert_called_once_with('account.forgot_password')
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_google_token(self, redirect,
-                                            url_for, flash,
+                                            url_for_app_type, flash,
                                             login_user,
                                             newsletter):
         """Test manage login user works."""
@@ -150,16 +150,16 @@ class TestFacebook(Test):
         user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin')
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_empty(self, redirect,
-                                     url_for, flash,
+                                     url_for_app_type, flash,
                                      login_user,
                                      newsletter):
         """Test manage login user works."""
@@ -167,13 +167,13 @@ class TestFacebook(Test):
         user_data = dict(name='algo', email='email')
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin')
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_empty_no_email(self, redirect,
                                               url_for, flash,
@@ -190,10 +190,10 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_update_email(self, redirect,
-                                            url_for, flash,
+                                            url_for_app_type, flash,
                                             login_user,
                                             newsletter):
         """Test manage login user works."""
@@ -203,17 +203,17 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for.assert_called_once_with('account.update_profile',
-                                        name=user.name)
+        url_for_app_type.assert_called_once_with('account.update_profile',
+                                                 name=user.name)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_good_email(self, redirect,
-                                          url_for, flash,
+                                          url_for_app_type, flash,
                                           login_user,
                                           newsletter):
         """Test manage login user with good email works."""
@@ -223,17 +223,17 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for.assert_called_once_with('account.newsletter_subscribe',
-                                        next=next_url)
+        url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
+                                                 next=next_url)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
-    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_already_asked(self, redirect,
-                                             url_for, flash,
+                                             url_for_app_type, flash,
                                              login_user,
                                              newsletter):
         """Test manage login user already asked works."""
