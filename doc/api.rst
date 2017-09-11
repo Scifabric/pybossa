@@ -2339,7 +2339,7 @@ Updates a PYBOSSA announcement
         "id": 4,
         "title": "test6"
       },
-      "template": "admin/update_announcement.html",
+      "template": "admin/new_announcement.html",
       "title": "Edit a post"
     }
 
