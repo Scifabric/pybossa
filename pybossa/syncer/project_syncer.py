@@ -66,10 +66,12 @@ class ProjectSyncer(object):
             return None
 
     @staticmethod
-    def is_sync_enabled(target):
+    def is_sync_enabled(project):
         """Is the target project enabled for syncing?"""
-        return True
-        return target['info']['sync']['enabled']
+        try:
+            return project.info['sync']['enabled']
+        except:
+            return False
 
     def sync(self, project):
         """Sync a project with replicated project on
@@ -80,13 +82,13 @@ class ProjectSyncer(object):
         :param project: a project object
         :return: an HTTP response object
         """
-        target_url = project.info['sync_target_url']
-        target_key = project.info['sync_target_key']
+        target_url = project.info.get('sync', {}).get('target_url')
+        target_key = project.info.get('sync', {}).get('target_key')
         target = self.get(
             project.short_name, target_url, target_key)
         if not target:
             self._create_new_project(project)
-        elif self.is_sync_enabled(target):
+        elif self.is_sync_enabled(project):
             target_id = target['id']
             self._cache_target(target)
             payload = self._build_payload(project, target)
@@ -107,7 +109,12 @@ class ProjectSyncer(object):
             payload = self._merge_pass_through_keys(
                 project_dict, target)
 
-        payload['info']['sync_timestamp'] = str(datetime.now())
+        latest_sync = str(datetime.now())
+        if payload['info'].get('sync'):
+            payload['info']['sync']['latest_sync'] = latest_sync
+        else:
+            payload['info']['sync'] = dict(
+                latest_sync=latest_sync)
 
         return json.dumps(payload)
 

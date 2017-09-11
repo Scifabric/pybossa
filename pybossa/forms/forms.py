@@ -96,6 +96,7 @@ class ProjectUpdateForm(ProjectForm):
                         [pb_validator.Webhook()])
     sync_target_url = TextField(lazy_gettext('Target URL'))
     sync_target_key = TextField(lazy_gettext('API Key'))
+    sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))
 
 
 class TaskPresenterForm(Form):

@@ -484,9 +484,16 @@ def update(short_name):
         if form.password.data:
             new_project.set_password(form.password.data)
 
-        if form.sync_target_url and form.sync_target_key:
-            new_project.info['sync_target_url'] = form.sync_target_url.data
-            new_project.info['sync_target_key'] = form.sync_target_key.data
+        sync = new_project.info.get('sync')
+        if not sync:
+            sync = dict(target_url=form.sync_target_url.data,
+                        target_key=form.sync_target_key.data,
+                        enabled=form.sync_enabled.data)
+        else:
+            sync['target_url'] = form.sync_target_url.data
+            sync['target_key'] = form.sync_target_key.data
+            sync['sync_enabled'] = form.sync_enabled.data
+        new_project.info['sync'] = sync
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -503,10 +510,12 @@ def update(short_name):
 
     title = project_title(project, "Update")
     if request.method == 'GET':
-        if project.info['sync_target_url']:
-            project.sync_target_url = project.info['sync_target_url']
-        if project.info['sync_target_key']:
-            project.sync_target_key = project.info['sync_target_key']
+        sync = project.info.get('sync')
+        if sync:
+            project.sync_target_url = sync.get('target_url')
+            project.sync_target_key = sync.get('target_key')
+            project.sync_enabled = sync.get('enabled')
+
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
@@ -2358,12 +2367,17 @@ def sync_project(short_name):
             msg = gettext('Project sync completed')
             flash(msg, 'success')
         else:
+            current_app.logger.exception(
+                'A request error occurred while syncing {}: {}'
+                .format(project.short_name, res.reason))
             msg = gettext('There was an issue syncing your project')
             flash(msg, 'error')
-    except:
+    except Exception as err:
+        current_app.logger.exception(
+            'An error occurred while syncing {}'
+            .format(project.short_name))
         msg = gettext('There was an issue syncing your project')
         flash(msg, 'error')
 
     return redirect_content_type(
         url_for('.update', short_name=short_name))
-
