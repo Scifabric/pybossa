@@ -2339,3 +2339,19 @@ def export_project_report(short_name):
             ensure_authorized_to('read', project)
 
     return {'csv': respond_csv}[fmt](ty)
+
+
+@blueprint.route('/<short_name>/syncproject', methods=['POST'])
+@login_required
+@admin_or_subadmin_required
+def sync_project(short_name):
+    """Sync project."""
+    project, owner, ps = project_by_shortname(short_name)
+    title = project_title(project, "Sync")
+
+    ensure_authorized_to('update', project)
+    msg = gettext('Project sync completed')
+    flash(msg, 'success')
+
+    return redirect_content_type(url_for('.update', short_name=short_name))
+
