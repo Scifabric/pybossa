@@ -37,7 +37,8 @@ import pybossa.sched as sched
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
                           csv_exporter, importer, db, is_coowner,
                           task_json_exporter, task_csv_exporter,
-                          project_csv_exporter, project_report_csv_exporter)
+                          project_csv_exporter, project_report_csv_exporter,
+                          project_syncer)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -2350,8 +2351,19 @@ def sync_project(short_name):
     title = project_title(project, "Sync")
 
     ensure_authorized_to('update', project)
-    msg = gettext('Project sync completed')
-    flash(msg, 'success')
 
-    return redirect_content_type(url_for('.update', short_name=short_name))
+    try:
+        res = project_syncer.sync(project)
+        if res.ok:
+            msg = gettext('Project sync completed')
+            flash(msg, 'success')
+        else:
+            msg = gettext('There was an issue syncing your project')
+            flash(msg, 'error')
+    except:
+        msg = gettext('There was an issue syncing your project')
+        flash(msg, 'error')
+
+    return redirect_content_type(
+        url_for('.update', short_name=short_name))
 
