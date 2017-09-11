@@ -205,7 +205,7 @@ class BulkTaskGDImportForm(Form):
 
 
 class BulkTaskLocalCSVImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='localcsv')
+    form_name = TextField(label=None, widget=HiddenInput(), default='localCSV')
     _allowed_extensions = set(['csv'])
     def _allowed_file(self, filename):
         return '.' in filename and \
@@ -216,6 +216,7 @@ class BulkTaskLocalCSVImportForm(Form):
 
     def _upload_path(self):
         container = self._container()
+        filepath = None
         if isinstance(uploader, local.LocalUploader):
             filepath = safe_join(uploader.upload_folder, container)
             if not os.path.isdir(filepath):
@@ -228,19 +229,17 @@ class BulkTaskLocalCSVImportForm(Form):
     def get_import_data(self):
         if request.method == 'POST':
             if 'file' not in request.files:
-                flash('No file part')
-                return {'type': 'localcsv', 'csv_filename': None}
+                return {'type': 'localCSV', 'csv_filename': None}
             csv_file = request.files['file']
             if csv_file.filename == '':
-                flash('No file selected')
-                return {'type': 'localcsv', 'csv_filename': None}
+                return {'type': 'localCSV', 'csv_filename': None}
             if csv_file and self._allowed_file(csv_file.filename):
                 filename = secure_filename(csv_file.filename)
                 filepath = self._upload_path()
                 tmpfile = safe_join(filepath, filename)
                 csv_file.save(tmpfile)
-                return {'type': 'localcsv', 'csv_filename': tmpfile}
-        return {'type': 'localcsv', 'csv_filename': None}
+                return {'type': 'localCSV', 'csv_filename': tmpfile}
+        return {'type': 'localCSV', 'csv_filename': None}
 
 
 class BulkTaskEpiCollectPlusImportForm(Form):
@@ -328,7 +327,7 @@ class GenericBulkTaskImportForm(object):
               'twitter': BulkTaskTwitterImportForm,
               's3': BulkTaskS3ImportForm,
               'youtube': BulkTaskYoutubeImportForm,
-              'localcsv': BulkTaskLocalCSVImportForm }
+              'localCSV': BulkTaskLocalCSVImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:

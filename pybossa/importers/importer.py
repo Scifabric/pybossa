@@ -40,7 +40,7 @@ class Importer(object):
                                gdocs=BulkTaskGDImport,
                                epicollect=BulkTaskEpiCollectPlusImport,
                                s3=BulkTaskS3Import,
-                               localcsv=BulkTaskLocalCSVImport)
+                               localCSV=BulkTaskLocalCSVImport)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):

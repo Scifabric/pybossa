@@ -142,7 +142,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
     """Class to import CSV tasks in bulk from local file."""
 
-    importer_id = "localcsv"
+    importer_id = "localCSV"
 
     def __init__(self, **form_data):
        self.form_data = form_data
