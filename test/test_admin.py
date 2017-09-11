@@ -1366,7 +1366,7 @@ class TestAdmin(web.Helper):
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert data['template'] == 'admin/update_announcement.html'
+        assert data['template'] == 'admin/new_announcement.html'
 
         res = self.app_get_json('/admin/announcement/2/update')
         assert res.status_code == 404, res.status_code
@@ -1398,7 +1398,7 @@ class TestAdmin(web.Helper):
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert data['template'] == 'admin/update_announcement.html'
+        assert data['template'] == 'admin/new_announcement.html'
 
         res = self.app_get_json('/admin/announcement/2/update')
         assert res.status_code == 404, res.status_code
