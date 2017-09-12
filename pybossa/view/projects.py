@@ -2381,3 +2381,35 @@ def sync_project(short_name):
 
     return redirect_content_type(
         url_for('.update', short_name=short_name))
+
+
+@blueprint.route('/<short_name>/undosyncproject', methods=['POST'])
+@login_required
+@admin_or_subadmin_required
+def undo_sync_project(short_name):
+    """Undo a prior syncing of project."""
+    project, owner, ps = project_by_shortname(short_name)
+    title = project_title(project, "Undo Sync")
+
+    ensure_authorized_to('update', project)
+
+    try:
+        res = project_syncer.undo_sync(project)
+        if res.ok:
+            msg = gettext('Project sync completed')
+            flash(msg, 'success')
+        else:
+            current_app.logger.exception(
+                'A request error occurred while undoing sync {}: {}'
+                .format(project.short_name, res.reason))
+            msg = gettext('There was an issue undoing your project sync')
+            flash(msg, 'error')
+    except Exception as err:
+        current_app.logger.exception(
+            'An error occurred while undoing sync {}'
+            .format(project.short_name))
+        msg = gettext('There was an issue undoing your project sync')
+        flash(msg, 'error')
+
+    return redirect_content_type(
+        url_for('.update', short_name=short_name))

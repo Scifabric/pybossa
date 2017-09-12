@@ -23,9 +23,10 @@ ProjectSyncer module for syncing projects on different domains.
 import json
 from datetime import datetime
 import requests
+from pybossa.syncer import Syncer
 
 
-class ProjectSyncer(object):
+class ProjectSyncer(Syncer):
     """Syncs one project with another."""
 
     RESERVED_KEYS = (
@@ -42,7 +43,7 @@ class ProjectSyncer(object):
         """GET request to fetch a project object.
 
         :param short_name: project short name
-        :param url: a valid protocol and hostname,
+        :param url: a valid URL,
             ex: https://www.my-domain.com
         :param api_key: the API key for the url
         :return: a project object (dict) or None
@@ -90,7 +91,7 @@ class ProjectSyncer(object):
             self._create_new_project(project)
         elif self.is_sync_enabled(project):
             target_id = target['id']
-            self._cache_target(target)
+            self.cache_target(target, target_url, project.short_name)
             payload = self._build_payload(project, target)
             target_url = ('{}/api/project/{}'
                           .format(target_url, target_id))
@@ -100,6 +101,23 @@ class ProjectSyncer(object):
             return res
         else:
             raise Exception('Unauthorized')
+
+    def undo_sync(self, project):
+        """Undo a project sync action by getting the
+        targets cached value and sending a PUT request
+        to reset it to it's original state.
+        """
+        target_url = project.info.get('sync', {}).get('target_url')
+        target_key = project.info.get('sync', {}).get('target_key')
+        target = self.get_target_cache(target_url, project.short_name)
+        target_id = target['id']
+        payload = json.dumps(dict(info=target['info']))
+        target_url = ('{}/api/project/{}'
+                      .format(target_url, target_id))
+        params = {'api_key': target_key}
+        res = requests.put(
+            target_url, data=payload, params=params)
+        return res
 
     def _build_payload(self, project, target, full=False):
         project_dict = project.dictize()
@@ -143,16 +161,6 @@ class ProjectSyncer(object):
     def sync_all(self):
         """Sync all target projects with the source project."""
         return [self.sync(target) for target in self.targets]
-
-    def undo_sync(self, target):
-        cached_target = self._fetch_cached_target(target)
-        return self._sync(cached_target, target)
-
-    def _cache_target(self, target):
-        pass
-
-    def _fetch_cached_target(self, target):
-        pass
 
     def _get_target_projects(self):
         print 'get target projects'
