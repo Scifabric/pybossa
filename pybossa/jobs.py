@@ -41,9 +41,9 @@ def schedule_job(function, scheduler):
         repeat=None,
         timeout=function['timeout'])
     for sj in scheduled_jobs:
-        if (function['name'].__name__ in sj.__name__ and
-            sj.args == function['args'] and
-            sj.kwargs == function['kwargs']):
+        if (function['name'].__name__ in sj.func_name and
+                sj.args == function['args'] and
+                sj.kwargs == function['kwargs']):
             job.cancel()
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
@@ -172,7 +172,7 @@ def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
-        print("Export project id %d" % _id)
+        print(("Export project id %d" % _id))
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 

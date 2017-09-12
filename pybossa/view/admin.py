@@ -45,7 +45,7 @@ from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
 import json
-from StringIO import StringIO
+from io import StringIO
 
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN

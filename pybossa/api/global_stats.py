@@ -22,7 +22,7 @@ This package adds GET method for Global Stats.
 
 """
 import json
-from api_base import APIBase
+from .api_base import APIBase
 from flask import Response
 import pybossa.cache.site_stats as stats
 import pybossa.cache.projects as cached_projects
