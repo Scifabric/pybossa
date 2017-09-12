@@ -74,7 +74,7 @@ class CsvExporter(Exporter):
         return super(CsvExporter, self).download_name(project, ty, 'csv')
 
     def pregenerate_zip_files(self, project):
-        print "%d (csv)" % project.id
+        print("%d (csv)" % project.id)
         self._make_zip(project, "task")
         self._make_zip(project, "task_run")
         self._make_zip(project, "result")
