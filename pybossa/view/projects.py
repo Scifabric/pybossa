@@ -486,12 +486,8 @@ def update(short_name):
 
         sync = new_project.info.get('sync')
         if not sync:
-            sync = dict(target_url=form.sync_target_url.data,
-                        target_key=form.sync_target_key.data,
-                        enabled=form.sync_enabled.data)
+            sync = dict(enabled=form.sync_enabled.data)
         else:
-            sync['target_url'] = form.sync_target_url.data
-            sync['target_key'] = form.sync_target_key.data
             sync['sync_enabled'] = form.sync_enabled.data
         new_project.info['sync'] = sync
 
@@ -512,12 +508,11 @@ def update(short_name):
     if request.method == 'GET':
         sync = project.info.get('sync')
         if sync:
-            project.sync_target_url = sync.get('target_url')
-            project.sync_target_key = sync.get('target_key')
             project.sync_enabled = sync.get('enabled')
 
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
+        sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if project.category_id is None:
@@ -570,6 +565,7 @@ def update(short_name):
     response = dict(template='/projects/update.html',
                     form=form,
                     upload_form=upload_form,
+                    sync_form=sync_form,
                     project=project_sanitized,
                     owner=owner_sanitized,
                     n_tasks=ps.n_tasks,
@@ -2359,56 +2355,37 @@ def sync_project(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Sync")
 
-    ensure_authorized_to('update', project)
+    sync_form = ProjectSyncForm()
+    target_url = sync_form.target_url.data
+    target_key = sync_form.target_key.data
 
     try:
-        res = project_syncer.sync(project)
-        if res.ok:
+        if request.form.get('btn') == 'sync':
+            res = project_syncer.sync(
+                project, target_url, target_key)
             msg = gettext('Project sync completed')
+        else:
+            res = project_syncer.undo_sync(
+                project, target_url, target_key)
+            msg = gettext('Last sync have been reverted')
+
+        if res.ok:
             flash(msg, 'success')
         else:
             current_app.logger.exception(
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, res.reason))
-            msg = gettext('There was an issue syncing your project')
+            msg = gettext(
+                'The target server returned an error.'
+                '  Check the Target API Key.')
             flash(msg, 'error')
     except Exception as err:
         current_app.logger.exception(
             'An error occurred while syncing {}'
             .format(project.short_name))
-        msg = gettext('There was an issue syncing your project')
-        flash(msg, 'error')
-
-    return redirect_content_type(
-        url_for('.update', short_name=short_name))
-
-
-@blueprint.route('/<short_name>/undosyncproject', methods=['POST'])
-@login_required
-@admin_or_subadmin_required
-def undo_sync_project(short_name):
-    """Undo a prior syncing of project."""
-    project, owner, ps = project_by_shortname(short_name)
-    title = project_title(project, "Undo Sync")
-
-    ensure_authorized_to('update', project)
-
-    try:
-        res = project_syncer.undo_sync(project)
-        if res.ok:
-            msg = gettext('Project sync completed')
-            flash(msg, 'success')
-        else:
-            current_app.logger.exception(
-                'A request error occurred while undoing sync {}: {}'
-                .format(project.short_name, res.reason))
-            msg = gettext('There was an issue undoing your project sync')
-            flash(msg, 'error')
-    except Exception as err:
-        current_app.logger.exception(
-            'An error occurred while undoing sync {}'
-            .format(project.short_name))
-        msg = gettext('There was an issue undoing your project sync')
+        msg = gettext(
+            'An error occurred while trying to reach your target.'
+            '  Check the Target URL and Target API Key fields.')
         flash(msg, 'error')
 
     return redirect_content_type(

@@ -99,6 +99,11 @@ class ProjectUpdateForm(ProjectForm):
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))
 
 
+class ProjectSyncForm(Form):
+    target_url = TextField(lazy_gettext('Target URL'))
+    target_key = TextField(lazy_gettext('API Key'))
+
+
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')

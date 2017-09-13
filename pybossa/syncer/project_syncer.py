@@ -74,24 +74,28 @@ class ProjectSyncer(Syncer):
         except:
             return False
 
-    def sync(self, project):
+    def sync(self, project, target_url, target_key):
         """Sync a project with replicated project on
         another domain. Short names must match on each
         domain. If not project exists on the target
         domain, then a new replica project is created.
 
         :param project: a project object
+        :param target_url: the server where the target
+            project exists
+        :param target_key: the API key for the target
+            server to allow the target project to be
+            updated
         :return: an HTTP response object
         """
-        target_url = project.info.get('sync', {}).get('target_url')
-        target_key = project.info.get('sync', {}).get('target_key')
         target = self.get(
             project.short_name, target_url, target_key)
         if not target:
             self._create_new_project(project)
         elif self.is_sync_enabled(project):
             target_id = target['id']
-            self.cache_target(target, target_url, project.short_name)
+            self.cache_target(
+                target, target_url, project.short_name)
             payload = self._build_payload(project, target)
             target_url = ('{}/api/project/{}'
                           .format(target_url, target_id))
@@ -102,14 +106,21 @@ class ProjectSyncer(Syncer):
         else:
             raise Exception('Unauthorized')
 
-    def undo_sync(self, project):
+    def undo_sync(self, project, target_url, target_key):
         """Undo a project sync action by getting the
         targets cached value and sending a PUT request
         to reset it to it's original state.
+
+        :param project: a project object
+        :param target_url: the server where the target
+            project exists
+        :param target_key: the API key for the target
+            server to allow the target project to be
+            updated
+        :return: an HTTP response object
         """
-        target_url = project.info.get('sync', {}).get('target_url')
-        target_key = project.info.get('sync', {}).get('target_key')
-        target = self.get_target_cache(target_url, project.short_name)
+        target = self.get_target_cache(
+            target_url, project.short_name)
         target_id = target['id']
         payload = json.dumps(dict(info=target['info']))
         target_url = ('{}/api/project/{}'
