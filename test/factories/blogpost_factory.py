@@ -32,8 +32,8 @@ class BlogpostFactory(BaseFactory):
 
     owner = factory.SelfAttribute('project.owner')
     id = factory.Sequence(lambda n: n)
-    title = u'Blogpost title'
-    body = u'Blogpost body text'
+    title = 'Blogpost title'
+    body = 'Blogpost body text'
     media_url = 'https://server.com/img.jpg'
     info = {'file_name': 'img.jpg',
             'container': 'user'}
