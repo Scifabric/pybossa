@@ -22,6 +22,7 @@ ProjectSyncer module for syncing projects on different domains.
 
 import json
 from datetime import datetime
+from socket import gethostname
 import requests
 from pybossa.syncer import Syncer
 
@@ -90,21 +91,35 @@ class ProjectSyncer(Syncer):
         """
         target = self.get(
             project.short_name, target_url, target_key)
+
+        params = {'api_key': target_key}
+
         if not target:
-            self._create_new_project(project)
+            payload = self._build_payload(project, full=True)
+            return self._create_new_project(
+                project, target_url, params)
         elif self.is_sync_enabled(project):
             target_id = target['id']
             self.cache_target(
                 target, target_url, project.short_name)
             payload = self._build_payload(project, target)
-            target_url = ('{}/api/project/{}'
-                          .format(target_url, target_id))
-            params = {'api_key': target_key}
-            res = requests.put(
-                target_url, data=payload, params=params)
-            return res
+            return self._sync(
+                payload, target_url, target_id, params)
         else:
             raise Exception('Unauthorized')
+
+    def _sync(self, payload, target_url, target_id, params):
+        url = ('{}/api/project/{}'
+               .format(target_url, target_id))
+        res = requests.put(
+            url, data=payload, params=params)
+        return res
+
+    def _create_new_project(self, payload, target_url, params):
+        url = '{}/api/project'.format(target_url)
+        res = requests.post(
+            url, data=payload, params=params)
+        return res
 
     def undo_sync(self, project, target_url, target_key):
         """Undo a project sync action by getting the
@@ -121,16 +136,19 @@ class ProjectSyncer(Syncer):
         """
         target = self.get_target_cache(
             target_url, project.short_name)
-        target_id = target['id']
-        payload = json.dumps(dict(info=target['info']))
-        target_url = ('{}/api/project/{}'
-                      .format(target_url, target_id))
-        params = {'api_key': target_key}
-        res = requests.put(
-            target_url, data=payload, params=params)
-        return res
 
-    def _build_payload(self, project, target, full=False):
+        if target:
+            params = {'api_key': target_key}
+            payload = json.dumps(dict(info=target['info']))
+            target_id = target['id']
+            res = self._sync(
+                payload, target_url, target_id, params)
+            self.delete_target_cache(target_url, project.short_name)
+            return res
+        else:
+            return
+
+    def _build_payload(self, project, target=None, full=False):
         project_dict = project.dictize()
         if full:
             payload = self._remove_reserved_keys(project_dict)
@@ -139,11 +157,14 @@ class ProjectSyncer(Syncer):
                 project_dict, target)
 
         latest_sync = str(datetime.now())
+        source_host = gethostname()
         if payload['info'].get('sync'):
             payload['info']['sync']['latest_sync'] = latest_sync
+            payload['info']['sync']['source_host'] = source_host
         else:
             payload['info']['sync'] = dict(
-                latest_sync=latest_sync)
+                latest_sync=latest_sync,
+                source_host=source_host)
 
         return json.dumps(payload)
 
@@ -161,20 +182,3 @@ class ProjectSyncer(Syncer):
                 payload['info'][key] = value
 
         return payload
-
-###############################################################################
-
-    def _create_new_project(self, payload):
-        """Create new project at the target URL."""
-        return payload
-
-
-    def sync_all(self):
-        """Sync all target projects with the source project."""
-        return [self.sync(target) for target in self.targets]
-
-    def _get_target_projects(self):
-        print 'get target projects'
-        return {
-            target['url']: self._get(target['url'], self.short_name, target['api_key'])
-            for target in self.targets}

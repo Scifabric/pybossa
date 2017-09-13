@@ -40,10 +40,7 @@ class Syncer(object):
         """
         target = json.dumps(target)
         sentinel.master.set(
-            self.SYNC_KEY.format(
-                self.__class__.__name__,
-                target_url,
-                target_id),
+            self._get_key(target_url, target_id),
             target)
 
     def get_target_cache(self, target_url, target_id):
@@ -52,10 +49,27 @@ class Syncer(object):
         :param target_url: the target URL
         :param target_id: the identifier used
             to create a unique key
+        :return: a dict of the target
         """
         target = sentinel.master.get(
-            self.SYNC_KEY.format(
-                self.__class__.__name__,
-                target_url,
-                target_id))
-        return json.loads(target)
+            self._get_key(target_url, target_id))
+        if target:
+            return json.loads(target)
+        else:
+            return
+
+    def delete_target_cache(self, target_url, target_id):
+        """Delete cached target value.
+
+        :param target_url: the target URL
+        :param target_id: the identifier used
+            to create a unique key
+        """
+        sentinel.master.delete(
+            self._get_key(target_url, target_id))
+
+    def _get_key(self, target_url, target_id):
+        return self.SYNC_KEY.format(
+            self.__class__.__name__,
+            target_url,
+            target_id)

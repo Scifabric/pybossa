@@ -2363,22 +2363,35 @@ def sync_project(short_name):
         if request.form.get('btn') == 'sync':
             res = project_syncer.sync(
                 project, target_url, target_key)
-            msg = gettext('Project sync completed')
+            if res.ok:
+                msg = gettext('Project sync completed!')
+                flash(msg, 'success')
+            else:
+                current_app.logger.exception(
+                    'A request error occurred while syncing {}: {}'
+                    .format(project.short_name, res.reason))
+                msg = gettext(
+                    'The target server returned an error.'
+                    '  Check the Target API Key.')
+                flash(msg, 'error')
         else:
             res = project_syncer.undo_sync(
                 project, target_url, target_key)
-            msg = gettext('Last sync have been reverted')
-
-        if res.ok:
-            flash(msg, 'success')
-        else:
-            current_app.logger.exception(
-                'A request error occurred while syncing {}: {}'
-                .format(project.short_name, res.reason))
-            msg = gettext(
-                'The target server returned an error.'
-                '  Check the Target API Key.')
-            flash(msg, 'error')
+            if not res:
+                msg = gettext('There is nothing to revert.')
+                flash(msg, 'warning')
+            else:
+                if res.ok:
+                    msg = gettext('Last sync has been reverted')
+                    flash(msg, 'success')
+                else:
+                    current_app.logger.exception(
+                        'A request error occurred while syncing {}: {}'
+                        .format(project.short_name, res.reason))
+                    msg = gettext(
+                        'The target server returned an error.'
+                        '  Check the Target API Key.')
+                    flash(msg, 'error')
     except Exception as err:
         current_app.logger.exception(
             'An error occurred while syncing {}'
