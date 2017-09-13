@@ -31,8 +31,8 @@ class AnnouncementFactory(BaseFactory):
         return announcement
 
     id = factory.Sequence(lambda n: n)
-    title = u'Announcement title'
-    body = u'Announcement body text'
+    title = 'Announcement title'
+    body = 'Announcement body text'
     user_id = None
     media_url = 'https://server.com/img.jpg'
     info = {'file_name': 'img.jpg',

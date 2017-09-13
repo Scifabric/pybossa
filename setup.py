@@ -29,7 +29,7 @@ requirements = [
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
-    "redis>=2.9, <2.10",
+    "redis>=2.10.6, <2.11",
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "nose-cov",
@@ -38,8 +38,8 @@ requirements = [
     "pillow>=3.0, <3.1",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
-    "rq>=0.4.6, <0.5",
-    "rq-scheduler>=0.5.1, <0.5.2",
+    "rq>=0.8.2, <0.9",
+    "rq-scheduler>=0.7.0, <0.7.1",
     "rq-dashboard",
     "unidecode>=0.04.16, <0.05",
     "mailchimp",
@@ -60,7 +60,8 @@ requirements = [
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
     "flatten-json",
-    "otpauth>=1.0.1, <1.0.2"
+    "otpauth>=1.0.1, <1.0.2",
+    "six"
 ]
 
 setup(
