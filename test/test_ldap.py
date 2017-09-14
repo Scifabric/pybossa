@@ -18,9 +18,13 @@
 import json
 from default import with_context, Test
 from mock import patch
+from pybossa.messages import *
 
 
 class TestLDAP(Test):
+
+
+    ldap_user = dict(cn='cn', givenName=['John Doe'])
 
     @with_context
     def test_register_404(self):
@@ -38,7 +42,20 @@ class TestLDAP(Test):
             url = '/account/signin'
             res = self.app_get_json(url)
             data = json.loads(res.data)
-            assert data['form']['csrf'] is not None
-            assert data['auth']['twitter'] is False
-            assert data['auth']['facebook'] is False
-            assert data['auth']['google'] is False
+            assert data['form']['csrf'] is not None, data
+
+    @with_context
+    @patch('pybossa.view.account.ldap')
+    def test_signin(self, ldap_mock):
+        """Test signin creates a PYBOSSA user."""
+        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
+            url = '/account/signin'
+            payload = {'email': 'cn', 'password': 'password'}
+            ldap_mock.bind_user.return_value = True
+            ldap_mock.get_object_details.return_value = self.ldap_user
+            res = self.app.post(url, data=json.dumps(payload),
+                                content_type='application/json')
+            data = json.loads(res.data)
+            assert data['status'] == SUCCESS, data
+            assert data['next'] == '/', data
+

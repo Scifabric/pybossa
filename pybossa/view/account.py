@@ -787,11 +787,3 @@ def reset_api_key(name):
     else:
         csrf = dict(form=dict(csrf=generate_csrf()))
         return jsonify(csrf)
-
-@blueprint.route('/ldap')
-def ldap_protected():
-    if ldap.bind_user('test', 'test'):
-        print ldap.get_object_details('test')
-        return "HOLA"
-    else:
-        return "INvalid"
