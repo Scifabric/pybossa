@@ -49,7 +49,7 @@ from pybossa.util import url_for_app_type
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
-from pybossa.core import user_repo
+from pybossa.core import user_repo, ldap
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
 from pybossa import otp
@@ -763,3 +763,11 @@ def reset_api_key(name):
     else:
         csrf = dict(form=dict(csrf=generate_csrf()))
         return jsonify(csrf)
+
+@blueprint.route('/ldap')
+def ldap_protected():
+    if ldap.bind_user('test', 'test'):
+        print ldap.get_object_details('test')
+        return "HOLA"
+    else:
+        return "INvalid"
