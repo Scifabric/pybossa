@@ -182,3 +182,38 @@ class ProjectSyncer(Syncer):
                 payload['info'][key] = value
 
         return payload
+
+    def get_target_owners(self, project, target_url, target_key):
+        """
+        Get the email addresses of all owners and coowners
+        for the target project.
+
+        :param project: a project object
+        :param target_url: the server where the target
+            project exists
+        :param target_key: the API key for the target
+        :return: an list of email addresses
+        """
+        target = self.get(
+            project.short_name, target_url, target_key)
+        owner = target['owner_id']
+        target_id = target['id']
+        url = '{}/api/projectcoowner'.format(target_url)
+        params = dict(api_key=target_key,
+                      project_id=target_id)
+        res = requests.get(url, params=params)
+        coowners = json.loads(res.content)
+
+        owners = [owner] + coowners
+        owner_emails = [
+            self.get_user_email(owner, target_url, target_key)
+            for owner in owners]
+        return owner_emails
+
+    @staticmethod
+    def get_user_email(user_id, target_url, target_key):
+        url = '{}/api/user/{}'.format(target_url, user_id)
+        params = {'api_key': target_key}
+        res = requests.get(url, params=params)
+        user = json.loads(res.content)
+        return user['email_addr']

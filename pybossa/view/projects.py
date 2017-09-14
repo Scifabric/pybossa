@@ -23,6 +23,7 @@ import os
 import math
 import requests
 from StringIO import StringIO
+from socket import gethostname
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
@@ -63,7 +64,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import (webhook,
+from pybossa.jobs import (webhook, send_mail,
                           import_tasks, IMPORT_TASKS_TIMEOUT,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT)
@@ -93,6 +94,7 @@ MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
+mail_queue = Queue('email', connection=sentinel.master)
 importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=TIMEOUT)
@@ -2358,22 +2360,52 @@ def sync_project(short_name):
     sync_form = ProjectSyncForm()
     target_url = sync_form.target_url.data
     target_key = sync_form.target_key.data
+    owners = project_syncer.get_target_owners(
+        project, target_url, target_key)
+    synced_url = '{}/project/{}'.format(
+        target_url, project.short_name)
 
     try:
+        # Sync
         if request.form.get('btn') == 'sync':
             res = project_syncer.sync(
                 project, target_url, target_key)
+            # Success
             if res.ok:
-                msg = gettext('Project sync completed!')
+                msg = Markup(
+                    '{} '
+                    '<strong>'
+                    '<a href="{}" target="_blank">{}</a>'
+                    '</strong>').format(
+                        gettext('Project sync completed! '),
+                        synced_url,
+                        'Synced Project Link')
                 flash(msg, 'success')
+                subject = 'Your project has been synced'
+                body = ('A project that you an owner/co-owner '
+                        'of has been synced with a project on '
+                        'another server.\n\n'
+                        '    Project Short Name: {short_name}\n'
+                        '    Source Server: {source_url}\n'
+                        '    User who performed sync: {syncer}') \
+                        .format(
+                            short_name=project.short_name,
+                            source_url=gethostname(),
+                            syncer=current_user.email_addr)
+                email = dict(recipients=owners,
+                             subject=subject,
+                             body=body)
+                mail_queue.enqueue(send_mail, email)
+            # Failure
             else:
                 current_app.logger.exception(
                     'A request error occurred while syncing {}: {}'
                     .format(project.short_name, res.reason))
                 msg = gettext(
-                    'The target server returned an error.'
-                    '  Check the Target API Key.')
+                    'The target server returned an error.  '
+                    'Check the Target API Key.')
                 flash(msg, 'error')
+        # Unsync
         else:
             res = project_syncer.undo_sync(
                 project, target_url, target_key)
@@ -2381,9 +2413,35 @@ def sync_project(short_name):
                 msg = gettext('There is nothing to revert.')
                 flash(msg, 'warning')
             else:
+                # Success
                 if res.ok:
-                    msg = gettext('Last sync has been reverted')
+                    msg = Markup(
+                        '{} '
+                        '<strong>'
+                        '<a href="{}" target="_blank">{}</a>'
+                        '</strong>') \
+                        .format(
+                            gettext('Last sync has been reverted! '),
+                            synced_url,
+                            'Synced Project Link')
                     flash(msg, 'success')
+                    subject = 'Your synced project has been reverted'
+                    body = ('A project that you an owner/co-owner of '
+                            'was previously synced with a project on '
+                            'another server, but has now been '
+                            'reverted to it\'s earlier state.\n\n'
+                            '    Project Short Name: {short_name}\n'
+                            '    Source Server: {source_url}\n'
+                            '    User who reverted sync: {syncer}') \
+                            .format(
+                                short_name=project.short_name,
+                                source_url=gethostname(),
+                                syncer=current_user.email_addr)
+                    email = dict(recipients=owners,
+                                 subject=subject,
+                                 body=body)
+                    mail_queue.enqueue(send_mail, email)
+                # Failure
                 else:
                     current_app.logger.exception(
                         'A request error occurred while syncing {}: {}'
