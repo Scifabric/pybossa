@@ -19,6 +19,7 @@ import json
 from default import with_context, Test
 from mock import patch
 from pybossa.messages import *
+from pybossa.core import user_repo
 
 
 class TestLDAP(Test):
@@ -58,7 +59,9 @@ class TestLDAP(Test):
             ldap_mock.get_object_details.return_value = self.ldap_user
             res = self.app.post(url, data=json.dumps(payload),
                                 content_type='application/json')
+            user = user_repo.get_by(name='cn')
             data = json.loads(res.data)
             assert data['status'] == SUCCESS, data
             assert data['next'] == '/', data
-
+            assert user.name == 'cn', user
+            assert user.email_addr == 'cn', user
