@@ -36,13 +36,16 @@ blueprint = Blueprint('google', __name__)
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
     """Login with Google."""
-    if request.args.get("next"):
-        request_token_params = {
-            'scope': 'profile email',
-            'response_type': 'code'}
-        google.oauth.request_token_params = request_token_params
-    return google.oauth.authorize(callback=url_for('.oauth_authorized',
-                                  _external=True))
+    if not current_app.config('LDAP_HOST', False):
+        if request.args.get("next"):
+            request_token_params = {
+                'scope': 'profile email',
+                'response_type': 'code'}
+            google.oauth.request_token_params = request_token_params
+        return google.oauth.authorize(callback=url_for('.oauth_authorized',
+                                      _external=True))
+    else:
+        return abort(404)
 
 
 @google.oauth.tokengetter

@@ -18,6 +18,7 @@
 
 """Twitter view for PYBOSSA."""
 from flask import Blueprint, request, url_for, flash, redirect, current_app
+from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
@@ -35,9 +36,13 @@ def login():  # pragma: no cover
     """Login with Twitter."""
     next_url = request.args.get("next")
     no_login = request.args.get(NO_LOGIN)
-    return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                    next=next_url,
-                                                    no_login=no_login))
+    ldap_enabled = current_app.config.get('LDAP_HOST', False)
+    if (ldap_enabled and no_login is None):
+        return abort(404)
+    if ((ldap_enabled and no_login) or (not ldap_enabled)):
+        return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
+                                                        next=next_url,
+                                                        no_login=no_login))
 
 
 @twitter.oauth.tokengetter

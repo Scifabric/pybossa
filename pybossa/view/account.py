@@ -150,6 +150,8 @@ def signin():
                                  valid_email=True,
                                  consent=False)
                 _create_account(user_data, ldap_disabled=False)
+            else:
+                login_user(user_db, remember=True)
         else:
             msg = gettext("User LDAP credentails are wrong.")
             flash(msg, 'info')
@@ -159,12 +161,13 @@ def signin():
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if ('twitter' in current_app.blueprints):  # pragma: no cover
-            auth['twitter'] = True
-        if ('facebook' in current_app.blueprints):  # pragma: no cover
-            auth['facebook'] = True
-        if ('google' in current_app.blueprints):  # pragma: no cover
-            auth['google'] = True
+        if (isLdap is False):
+            if ('twitter' in current_app.blueprints):  # pragma: no cover
+                auth['twitter'] = True
+            if ('facebook' in current_app.blueprints):  # pragma: no cover
+                auth['facebook'] = True
+            if ('google' in current_app.blueprints):  # pragma: no cover
+                auth['google'] = True
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,

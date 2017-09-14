@@ -43,6 +43,9 @@ class TestLDAP(Test):
             res = self.app_get_json(url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
+            assert data['auth']['twitter'] is False, data
+            assert data['auth']['facebook'] is False, data
+            assert data['auth']['google'] is False, data
 
     @with_context
     @patch('pybossa.view.account.ldap')
