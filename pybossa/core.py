@@ -733,4 +733,5 @@ def setup_strong_password(app):
     enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
 
 def setup_ldap(app):
-    ldap.init_app(app)
+    if app.config.get('LDAP_HOST'):
+        ldap.init_app(app)
