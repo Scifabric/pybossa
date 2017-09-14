@@ -2227,8 +2227,10 @@ def coowners(short_name):
         found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
         found = [type('', (object,), { "user": user, "isCoowner":any(user.id == coowner.id for coowner in coowners)}) for user in found]
         if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "
-                  "matching your query: <strong>%s</strong>" % form.user.data)
+            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+            flash(markup.format(gettext("Ooops!"),
+                                gettext("We didn't find a user matching your query:"),
+                                form.user.data))
         return render_template('/projects/coowners.html', project=project, short_name=short_name, found=found, coowners=coowners,
                                title=gettext("Manage Co-owners"),
                                form=form, pro_features=pro_features())
