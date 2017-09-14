@@ -311,6 +311,8 @@ def register():
     Returns a Jinja2 template
 
     """
+    if current_app.config.get('LDAP_HOST', False):
+        return abort(404)
     form = RegisterForm(request.body)
     form.project_slug.choices = get_project_choices()
     msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
