@@ -60,7 +60,8 @@ requirements = [
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
     "flatten-json",
-    "otpauth>=1.0.1, <1.0.2"
+    "otpauth>=1.0.1, <1.0.2",
+    "Flask-SimpleLDAP >=1.1.2, <1.1.3",
 ]
 
 setup(
