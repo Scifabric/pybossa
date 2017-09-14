@@ -114,3 +114,11 @@ class TestLDAP(Test):
             res = self.app.get(url)
             assert res.status_code == 404, res.status_code
 
+    @with_context
+    def test_google_login(self):
+        """Test Google login is disabled."""
+        url = '/google/'
+        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
+            res = self.app.get(url)
+            assert res.status_code == 404, res.status_code
+
