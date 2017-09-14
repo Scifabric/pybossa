@@ -63,6 +63,7 @@ def create_app(run_as_server=True):
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
+    setup_ldap(app)
     setup_external_services(app)
     setup_jinja(app)
     setup_geocoding(app)
@@ -73,7 +74,6 @@ def create_app(run_as_server=True):
     setup_sse(app)
     setup_json_serializer(app)
     setup_cors(app)
-    setup_ldap(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -324,7 +324,8 @@ def setup_external_services(app):
 def setup_twitter_login(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
-                app.config['TWITTER_CONSUMER_SECRET']):
+                app.config['TWITTER_CONSUMER_SECRET'] and
+                app.config['LDAP_HOST'] is None):
             twitter.init_app(app)
             from pybossa.view.twitter import blueprint as twitter_bp
             app.register_blueprint(twitter_bp, url_prefix='/twitter')
@@ -340,7 +341,8 @@ def setup_twitter_login(app):
 def setup_facebook_login(app):
     try:  # pragma: no cover
         if (app.config['FACEBOOK_APP_ID']
-                and app.config['FACEBOOK_APP_SECRET']):
+                and app.config['FACEBOOK_APP_SECRET']
+                and app.config['LDAP_HOST'] is None):
             facebook.init_app(app)
             from pybossa.view.facebook import blueprint as facebook_bp
             app.register_blueprint(facebook_bp, url_prefix='/facebook')
@@ -356,7 +358,8 @@ def setup_facebook_login(app):
 def setup_google_login(app):
     try:  # pragma: no cover
         if (app.config['GOOGLE_CLIENT_ID']
-                and app.config['GOOGLE_CLIENT_SECRET']):
+                and app.config['GOOGLE_CLIENT_SECRET']
+                and app.config['LDAP_HOST'] is None):
             google.init_app(app)
             from pybossa.view.google import blueprint as google_bp
             app.register_blueprint(google_bp, url_prefix='/google')
@@ -565,6 +568,9 @@ def setup_hooks(app):
         # Available plugins
         plugins = plugin_manager.plugins
 
+        # LDAP enabled
+        ldap_enabled = app.config.get('LDAP_HOST', False)
+
         return dict(
             brand=app.config['BRAND'],
             title=app.config['TITLE'],
@@ -582,7 +588,8 @@ def setup_hooks(app):
             upload_method=app.config['UPLOAD_METHOD'],
             news=news,
             notify_admin=notify_admin,
-            plugins=plugins)
+            plugins=plugins,
+            ldap_enabled=ldap_enabled)
 
     @csrf.error_handler
     def csrf_error_handler(reason):
