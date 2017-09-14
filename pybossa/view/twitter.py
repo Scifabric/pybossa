@@ -40,9 +40,10 @@ def login():  # pragma: no cover
     if (ldap_enabled and no_login is None):
         return abort(404)
     if ((ldap_enabled and no_login) or (not ldap_enabled)):
-        return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                        next=next_url,
-                                                        no_login=no_login))
+        callback = url_for('.oauth_authorized',
+                           next=next_url,
+                           no_login=no_login)
+        return twitter.oauth.authorize(callback=callback)
 
 
 @twitter.oauth.tokengetter
