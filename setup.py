@@ -64,7 +64,8 @@ requirements = [
     "boto>=2.47.0, <2.48",
     "python-magic>=0.4.13, <0.4.14",
     "wtforms-components>=0.10.3, <0.10.4",
-    "otpauth>=1.0.1, <1.0.2"
+    "otpauth>=1.0.1, <1.0.2",
+    "Flask-SimpleLDAP >=1.1.2, <1.1.3",
 ]
 
 setup(
