@@ -97,7 +97,9 @@ def signin():
 
     """
     form = LoginForm(request.body)
-    if request.method == 'POST' and form.validate():
+    isLdap = current_app.config.get('LDAP_HOST', False)
+    if (request.method == 'POST' and form.validate()
+            and isLdap is False):
         password = form.password.data
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
@@ -122,6 +124,25 @@ def signin():
         else:
             msg = gettext("Ooops, we didn't find you in the system, \
                           did you sign up?")
+            flash(msg, 'info')
+
+    if (request.method == 'POST' and form.validate()
+            and isLdap):
+        password = form.password.data
+        cn = form.email.data
+        ldap_user = None
+        if ldap.bind_user(cn, password):
+            ldap_user = ldap.get_object_details(cn)
+            user_db = user_repo.get_by(name=ldap_user['cn'][0])
+            if (user_db is None):
+                user_data = dict(fullname=ldap_user['givenName'][0],
+                                 name=cn,
+                                 email_addr=cn,
+                                 valid_email=True,
+                                 consent=False)
+                _create_account(user_data, ldap_disabled=False)
+        else:
+            msg = gettext("User LDAP credentails are wrong.")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
@@ -346,13 +367,14 @@ def confirm_account():
     return _create_account(userdict)
 
 
-def _create_account(user_data):
+def _create_account(user_data, ldap_disabled=True):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data['consent'])
-    new_user.set_password(user_data['password'])
+    if ldap_disabled:
+        new_user.set_password(user_data['password'])
     user_repo.save(new_user)
     flash(gettext('Thanks for signing-up'), 'success')
     return _sign_in_user(new_user)
