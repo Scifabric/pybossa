@@ -18,6 +18,7 @@
 
 """Facebook view for PYBOSSA."""
 from flask import Blueprint, request, url_for, flash, redirect, session, current_app
+from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
@@ -37,9 +38,10 @@ def login():  # pragma: no cover
     """Login using Facebook Oauth."""
     if not current_app.config.get('LDAP_HOST', False):
         next_url = request.args.get("next")
-        return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                         next=next_url,
-                                                         _external=True))
+        callback = url_for('.oauth_authorized',
+                           next=next_url,
+                           _external=True)
+        return facebook.oauth.authorize(callback=callback)
     else:
         return abort(404)
 

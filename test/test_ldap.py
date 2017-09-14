@@ -105,3 +105,12 @@ class TestLDAP(Test):
         with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
             res = self.app.get(url)
             assert mock_twitter.authorize.called_with('url')
+
+    @with_context
+    def test_facebook_login(self):
+        """Test Facebook login is disabled."""
+        url = '/facebook/'
+        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
+            res = self.app.get(url)
+            assert res.status_code == 404, res.status_code
+
