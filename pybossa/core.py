@@ -75,6 +75,7 @@ def create_app(run_as_server=True):
     setup_sse(app)
     setup_json_serializer(app)
     setup_cors(app)
+    setup_ldap(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -723,3 +724,6 @@ def setup_assets(app):
 def setup_strong_password(app):
     global enable_strong_password
     enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
+
+def setup_ldap(app):
+    ldap.init_app(app)
