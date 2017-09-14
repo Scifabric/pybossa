@@ -325,6 +325,7 @@ def setup_twitter_login(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
                 app.config['TWITTER_CONSUMER_SECRET']):
+            twitter.init_app(app)
             from pybossa.view.twitter import blueprint as twitter_bp
             app.register_blueprint(twitter_bp, url_prefix='/twitter')
     except Exception as inst:  # pragma: no cover
@@ -338,8 +339,6 @@ def setup_twitter_login(app):
 
 def setup_facebook_login(app):
     try:  # pragma: no cover
-        if app.config.get('LDAP_HOST') is not None:
-            raise Exception("LDAP is enabled")
         if (app.config['FACEBOOK_APP_ID']
                 and app.config['FACEBOOK_APP_SECRET']
                 and app.config.get('LDAP_HOST') is None):
@@ -347,7 +346,6 @@ def setup_facebook_login(app):
             from pybossa.view.facebook import blueprint as facebook_bp
             app.register_blueprint(facebook_bp, url_prefix='/facebook')
     except Exception as inst:  # pragma: no cover
-        raise 
         print type(inst)
         print inst.args
         print inst
@@ -358,8 +356,6 @@ def setup_facebook_login(app):
 
 def setup_google_login(app):
     try:  # pragma: no cover
-        if app.config.get('LDAP_HOST') is not None:
-            raise Exception("LDAP is enabled")
         if (app.config['GOOGLE_CLIENT_ID']
                 and app.config['GOOGLE_CLIENT_SECRET']
                 and app.config.get('LDAP_HOST') is None):

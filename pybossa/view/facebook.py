@@ -35,10 +35,13 @@ blueprint = Blueprint('facebook', __name__)
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
     """Login using Facebook Oauth."""
-    next_url = request.args.get("next")
-    return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                     next=next_url,
-                                                     _external=True))
+    if not current_app.config.get('LDAP_HOST', False):
+        next_url = request.args.get("next")
+        return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
+                                                         next=next_url,
+                                                         _external=True))
+    else:
+        return abort(404)
 
 
 @facebook.oauth.tokengetter
