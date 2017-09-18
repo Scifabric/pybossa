@@ -68,10 +68,10 @@ class ProjectSyncer(Syncer):
             return None
 
     @staticmethod
-    def is_sync_enabled(project):
+    def is_sync_enabled(target):
         """Is the target project enabled for syncing?"""
         try:
-            return project.info['sync']['enabled']
+            return target['info']['sync']['enabled']
         except:
             return False
 
@@ -98,7 +98,7 @@ class ProjectSyncer(Syncer):
             payload = self._build_payload(project, full=True)
             return self._create_new_project(
                 project, target_url, params)
-        elif self.is_sync_enabled(project):
+        elif self.is_sync_enabled(target):
             target_id = target['id']
             self.cache_target(
                 target, target_url, project.short_name)
@@ -113,6 +113,7 @@ class ProjectSyncer(Syncer):
                .format(target_url, target_id))
         res = requests.put(
             url, data=payload, params=params)
+        print res
         return res
 
     def _create_new_project(self, payload, target_url, params):

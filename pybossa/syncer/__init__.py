@@ -69,6 +69,7 @@ class Syncer(object):
             self._get_key(target_url, target_id))
 
     def _get_key(self, target_url, target_id):
+        target_id = target_id.encode('utf-8')
         return self.SYNC_KEY.format(
             self.__class__.__name__,
             target_url,
