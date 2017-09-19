@@ -532,69 +532,90 @@ def delete_bulk_tasks(data):
     coowners = data['coowners']
     current_user_fullname = data['current_user_fullname']
     force_reset = data['force_reset']
-    recipients = [curr_user]
-    for user in coowners:
-        recipients.append(user.email_addr)
+    params = {}
 
-    sql = text('''
-               ALTER TABLE result DISABLE TRIGGER USER;
-               ALTER TABLE task_run DISABLE TRIGGER USER;
-               ALTER TABLE task DISABLE TRIGGER USER;
-               ''')
-    db.session.execute(sql)
-    db.session.commit()
-    if force_reset:
-        args = data.get('filters', {})
-        conditions, params = get_task_filters(args)
+    # lock tasks for given project with SELECT FOR UPDATE
+    # create temp table with all tasks to be deleted
+    # during transaction, disable constraints check with session_replication_role
+    # delete rows from child talbes first and then from parent
+    if not force_reset:
+        """Delete only tasks that have no results associated."""
         sql = text('''
-           CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
-                SELECT task.id as id,
-                coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
-                priority_0, task.created
-                FROM task LEFT OUTER JOIN
-                (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
-                MAX(finish_time) as ft FROM task_run
-                WHERE project_id=:project_id GROUP BY task_id) AS log_counts
-                ON task.id=log_counts.task_id
-                WHERE task.project_id=:project_id {} );
-           '''.format(conditions))
-        db.session.execute(sql, dict(project_id=project_id, **params))
-        sql = text('''DELETE FROM result
-                      WHERE task_id IN (select id from to_delete);''')
-        db.session.execute(sql, dict(project_id=project_id))
-        sql = text('''DELETE FROM task_run
-                      WHERE task_id IN (select id from to_delete);''')
-        db.session.execute(sql, dict(project_id=project_id))
-        sql = text('''DELETE FROM task
-                      WHERE id IN (select id from to_delete);''')
-        db.session.execute(sql, dict(project_id=project_id))
-        msg = ("Tasks, taskruns and results associated have been "
-               "deleted from project {0} as requested by {1}"
-               .format(project_name, current_user_fullname))
-    else:
-        sql = text('''
-                    DELETE FROM task WHERE task.project_id=:project_id
+                BEGIN;
+                SELECT task_id FROM counter WHERE project_id=:project_id FOR UPDATE;
+                SELECT task_id FROM task_run WHERE project_id=:project_id FOR UPDATE;
+                SELECT id FROM task WHERE project_id=:project_id FOR UPDATE;
+
+                SET session_replication_role TO replica;
+
+                CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
+                    SELECT task.id as id FROM task WHERE project_id=:project_id
                     AND task.id NOT IN
                     (SELECT task_id FROM result
                     WHERE result.project_id=:project_id
-                    GROUP BY result.task_id);
-                    ''')
-        db.session.execute(sql, dict(project_id=project_id))
+                    GROUP BY result.task_id)
+                );
+
+                DELETE FROM counter WHERE project_id=:project_id
+                        AND task_id IN (SELECT id FROM to_delete);
+                DELETE FROM task_run WHERE project_id=:project_id
+                        AND task_id IN (SELECT id FROM to_delete);
+                DELETE FROM task WHERE project_id=:project_id
+                        AND id IN (SELECT id FROM to_delete);
+
+                COMMIT;
+                ''')
         msg = ("Tasks and taskruns with no associated results have been "
                "deleted from project {0} by {1}"
                .format(project_name, current_user_fullname))
+    else:
+        args = data.get('filters', {})
+        conditions, params = get_task_filters(args)
+        sql = text('''
+                BEGIN;
+                SELECT task_id FROM counter WHERE project_id=:project_id FOR UPDATE;
+                SELECT task_id FROM result WHERE project_id=:project_id FOR UPDATE;
+                SELECT task_id FROM task_run WHERE project_id=:project_id FOR UPDATE;
+                SELECT id FROM task WHERE project_id=:project_id FOR UPDATE;
 
-    sql = text('''
-               ALTER TABLE result ENABLE TRIGGER USER;
-               ALTER TABLE task_run ENABLE TRIGGER USER;
-               ALTER TABLE task ENABLE TRIGGER USER;
-               ''')
-    db.session.execute(sql)
-    db.session.commit()
+                SET session_replication_role TO replica;
+
+                CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
+                    SELECT task.id as id,
+                    coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                    priority_0, task.created
+                    FROM task LEFT OUTER JOIN
+                    (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                    MAX(finish_time) as ft FROM task_run
+                    WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                    ON task.id=log_counts.task_id
+                    WHERE task.project_id=:project_id {}
+                );
+
+                DELETE FROM counter WHERE project_id=:project_id
+                        AND task_id IN (SELECT id FROM to_delete);
+                DELETE FROM result WHERE project_id=:project_id
+                       AND task_id in (SELECT id FROM to_delete);
+                DELETE FROM task_run WHERE project_id=:project_id
+                       AND task_id in (SELECT id FROM to_delete);
+                DELETE FROM task WHERE task.project_id=:project_id
+                       AND id in (SELECT id FROM to_delete);
+
+                COMMIT;
+                '''.format(conditions))
+        msg = ("Tasks, taskruns and results associated have been "
+               "deleted from project {0} as requested by {1}"
+               .format(project_name, current_user_fullname))
+    db.session.execute(sql, dict(project_id=project_id, **params))
     cached_projects.clean_project(project_id)
     subject = 'Tasks deletion from %s' % project_name
     body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\
         % current_app.config.get('BRAND')
+
+    recipients = [curr_user]
+    for user in coowners:
+        recipients.append(user.email_addr)
+
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
 
