@@ -21,12 +21,11 @@ from pybossa.syncer import Syncer
 from default import Test, with_context
 
 
-TARGET = {'x': 'I am a target', 'id': 1}
-TARGET_URL = 'http://test.com'
-TARGET_ID = 'some_target_id'
-
-
 class TestSyncer(Test):
+
+    TARGET = {'x': 'I am a target', 'id': 1}
+    TARGET_URL = 'http://test.com'
+    TARGET_ID = 'some_target_id'
 
     def setUp(self):
         super(TestSyncer, self).setUp()
@@ -34,10 +33,14 @@ class TestSyncer(Test):
 
     @with_context
     def test_cache_target(self):
-        self.syncer.cache_target(TARGET, TARGET_URL, TARGET_ID)
-        cache = self.syncer.get_target_cache(TARGET_URL, TARGET_ID)
-        assert cache == TARGET
+        self.syncer.cache_target(
+            self.TARGET, self.TARGET_URL, self.TARGET_ID)
+        cache = self.syncer.get_target_cache(
+            self.TARGET_URL, self.TARGET_ID)
+        assert cache == self.TARGET
 
-        self.syncer.delete_target_cache(TARGET_URL, TARGET_ID)
-        cache = self.syncer.get_target_cache(TARGET_URL, TARGET_ID)
+        self.syncer.delete_target_cache(
+            self.TARGET_URL, self.TARGET_ID)
+        cache = self.syncer.get_target_cache(
+            self.TARGET_URL, self.TARGET_ID)
         assert cache == None

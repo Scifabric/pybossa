@@ -2379,7 +2379,7 @@ def sync_project(short_name):
         # Sync
         if request.form.get('btn') == 'sync':
             res = project_syncer.sync(
-                project, target_url, target_key)
+                project, target_url, target_key, current_user)
             # Success
             if res.ok:
                 msg = Markup(

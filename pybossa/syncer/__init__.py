@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Syncer modeule for syncing objects on different domains.
+Syncer module for syncing objects on different domains.
 """
 
 import json

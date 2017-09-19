@@ -75,10 +75,10 @@ class ProjectSyncer(Syncer):
         except:
             return False
 
-    def sync(self, project, target_url, target_key):
+    def sync(self, project, target_url, target_key, current_user):
         """Sync a project with replicated project on
         another domain. Short names must match on each
-        domain. If not project exists on the target
+        domain. If project does not exist on the target
         domain, then a new replica project is created.
 
         :param project: a project object
@@ -87,6 +87,8 @@ class ProjectSyncer(Syncer):
         :param target_key: the API key for the target
             server to allow the target project to be
             updated
+        :param current_user: the user that initiated the
+            sync
         :return: an HTTP response object
         """
         target = self.get(
@@ -95,14 +97,18 @@ class ProjectSyncer(Syncer):
         params = {'api_key': target_key}
 
         if not target:
-            payload = self._build_payload(project, full=True)
+            payload = self._build_payload(project=project,
+                                          current_user=current_user,
+                                          full=True)
             return self._create_new_project(
                 project, target_url, params)
         elif self.is_sync_enabled(target):
             target_id = target['id']
             self.cache_target(
                 target, target_url, project.short_name)
-            payload = self._build_payload(project, target)
+            payload = self._build_payload(project=project,
+                                          current_user=current_user,
+                                          target=target)
             return self._sync(
                 payload, target_url, target_id, params)
         else:
@@ -113,7 +119,6 @@ class ProjectSyncer(Syncer):
                .format(target_url, target_id))
         res = requests.put(
             url, data=payload, params=params)
-        print res
         return res
 
     def _create_new_project(self, payload, target_url, params):
@@ -144,12 +149,14 @@ class ProjectSyncer(Syncer):
             target_id = target['id']
             res = self._sync(
                 payload, target_url, target_id, params)
-            self.delete_target_cache(target_url, project.short_name)
+            self.delete_target_cache(
+                target_url, project.short_name)
             return res
         else:
             return
 
-    def _build_payload(self, project, target=None, full=False):
+    def _build_payload(self, project, current_user,
+                       target=None, full=False):
         project_dict = project.dictize()
         if full:
             payload = self._remove_reserved_keys(project_dict)
@@ -162,11 +169,12 @@ class ProjectSyncer(Syncer):
         if payload['info'].get('sync'):
             payload['info']['sync']['latest_sync'] = latest_sync
             payload['info']['sync']['source_host'] = source_host
+            payload['info']['sync']['syncer'] = current_user.email_addr
         else:
             payload['info']['sync'] = dict(
                 latest_sync=latest_sync,
-                source_host=source_host)
-
+                source_host=source_host,
+                syncer=current_user.email_addr)
         return json.dumps(payload)
 
     def _remove_reserved_keys(self, project_dict):

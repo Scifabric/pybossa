@@ -66,7 +66,8 @@ class TestProjectSyncer(Test):
     @patch('pybossa.syncer.project_syncer.ProjectSyncer._create_new_project')
     def test_sync_create_new(self, mock_create, mock_get):
         project = ProjectFactory.create()
-        self.project_syncer.sync(project, self.TARGET_URL, self.TARGET_KEY)
+        admin = UserFactory(admin=True, email_addr=u'admin@test.com')
+        self.project_syncer.sync(project, self.TARGET_URL, self.TARGET_KEY, admin)
         self.project_syncer.get.assert_called_once()
         self.project_syncer._create_new_project.assert_called_once()
 
@@ -77,7 +78,8 @@ class TestProjectSyncer(Test):
     def test_sync_update_existing(self, mock_update, mock_cache, mock_get):
         mock_get.return_value = self.TARGET
         project = ProjectFactory.create()
-        self.project_syncer.sync(project, self.TARGET_URL, self.TARGET_KEY)
+        admin = UserFactory(admin=True, email_addr=u'admin@test.com')
+        self.project_syncer.sync(project, self.TARGET_URL, self.TARGET_KEY, admin)
         self.project_syncer.get.assert_called_once()
         self.project_syncer.cache_target.assert_called_once()
         self.project_syncer._sync.assert_called_once()
@@ -88,9 +90,11 @@ class TestProjectSyncer(Test):
     def test_sync_update_unauthorized(self, mock_update, mock_get):
         mock_get.return_value = self.TARGET
         project = ProjectFactory.create()
+        admin = UserFactory(admin=True, email_addr=u'admin@test.com')
         target = self.TARGET['info']['sync']['enabled'] = False
         assert_raises(
-            Exception, self.project_syncer.sync, project, self.TARGET_URL, self.TARGET_KEY)
+            Exception, self.project_syncer.sync, project,
+            self.TARGET_URL, self.TARGET_KEY, admin)
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync')
