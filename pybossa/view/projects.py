@@ -23,7 +23,6 @@ import os
 import math
 import requests
 from StringIO import StringIO
-from socket import gethostname
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
@@ -353,7 +352,7 @@ def task_presenter_editor(short_name):
         # Remove sync info on save
         old_sync = old_info.pop('sync', None)
         if old_sync:
-            for field in ['syncer', 'latest_sync', 'source_host']:
+            for field in ['syncer', 'latest_sync', 'source_url']:
                 old_sync.pop(field, None)
             old_info['sync'] = old_sync
 
@@ -500,7 +499,7 @@ def update(short_name):
         if not sync:
             sync = dict(enabled=form.sync_enabled.data)
         else:
-            sync['sync_enabled'] = form.sync_enabled.data
+            sync['enabled'] = form.sync_enabled.data
         new_project.info['sync'] = sync
 
         project_repo.update(new_project)
@@ -518,10 +517,6 @@ def update(short_name):
 
     title = project_title(project, "Update")
     if request.method == 'GET':
-        sync = project.info.get('sync')
-        if sync:
-            project.sync_enabled = sync.get('enabled')
-
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
@@ -533,6 +528,7 @@ def update(short_name):
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
+        sync_form = ProjectSyncForm()
         form = ProjectUpdateForm(request.body)
         categories = cached_cat.get_all()
         form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -2370,96 +2366,77 @@ def sync_project(short_name):
     sync_form = ProjectSyncForm()
     target_url = sync_form.target_url.data
     target_key = sync_form.target_key.data
-    owners = project_syncer.get_target_owners(
-        project, target_url, target_key)
+
     synced_url = '{}/project/{}'.format(
         target_url, project.short_name)
+    success_msg = Markup(
+        '{} <strong><a href="{}" target="_blank">{}</a></strong>')
+    success_body = (
+        'A project that you an owner/co-owner of has been'
+        ' {action}ed with a project on another server.\n\n'
+        '    Project Short Name: {short_name}\n'
+        '    Source URL: {source_url}\n'
+        '    User who performed sync: {syncer}')
 
     try:
-        # Sync
+        source_url = current_app.config.get('SERVER_URL')
+
+        # Ensure fields are passed
+        if not target_url or not target_key:
+            msg = Markup('Enter a <strong>Target URL</strong> and'
+                         ' an <strong>API Key</strong> to sync'
+                         ' your project')
+            flash(msg, 'error')
+
+            return redirect_content_type(
+                url_for('.update', short_name=short_name))
+
         if request.form.get('btn') == 'sync':
+            action = 'sync'
             res = project_syncer.sync(
                 project, target_url, target_key, current_user)
-            # Success
-            if res.ok:
-                msg = Markup(
-                    '{} '
-                    '<strong>'
-                    '<a href="{}" target="_blank">{}</a>'
-                    '</strong>').format(
-                        gettext('Project sync completed! '),
-                        synced_url,
-                        'Synced Project Link')
-                flash(msg, 'success')
-                subject = 'Your project has been synced'
-                body = ('A project that you an owner/co-owner '
-                        'of has been synced with a project on '
-                        'another server.\n\n'
-                        '    Project Short Name: {short_name}\n'
-                        '    Source Server: {source_url}\n'
-                        '    User who performed sync: {syncer}') \
-                        .format(
-                            short_name=project.short_name,
-                            source_url=gethostname(),
-                            syncer=current_user.email_addr)
-                email = dict(recipients=owners,
-                             subject=subject,
-                             body=body)
-                mail_queue.enqueue(send_mail, email)
-            # Failure
-            else:
-                current_app.logger.exception(
-                    'A request error occurred while syncing {}: {}'
-                    .format(project.short_name, res.reason))
-                msg = gettext(
-                    'The target server returned an error.  '
-                    'Check the Target API Key.')
-                flash(msg, 'error')
-        # Unsync
-        else:
+        elif request.form.get('btn') == 'undo':
+            action = 'unsync'
             res = project_syncer.undo_sync(
                 project, target_url, target_key)
-            if not res:
-                msg = gettext('There is nothing to revert.')
-                flash(msg, 'warning')
-            else:
-                # Success
-                if res.ok:
-                    msg = Markup(
-                        '{} '
-                        '<strong>'
-                        '<a href="{}" target="_blank">{}</a>'
-                        '</strong>') \
-                        .format(
-                            gettext('Last sync has been reverted! '),
-                            synced_url,
-                            'Synced Project Link')
-                    flash(msg, 'success')
-                    subject = 'Your synced project has been reverted'
-                    body = ('A project that you an owner/co-owner of '
-                            'was previously synced with a project on '
-                            'another server, but has now been '
-                            'reverted to it\'s earlier state.\n\n'
-                            '    Project Short Name: {short_name}\n'
-                            '    Source Server: {source_url}\n'
-                            '    User who reverted sync: {syncer}') \
-                            .format(
-                                short_name=project.short_name,
-                                source_url=gethostname(),
-                                syncer=current_user.email_addr)
-                    email = dict(recipients=owners,
-                                 subject=subject,
-                                 body=body)
-                    mail_queue.enqueue(send_mail, email)
-                # Failure
-                else:
-                    current_app.logger.exception(
-                        'A request error occurred while syncing {}: {}'
-                        .format(project.short_name, res.reason))
-                    msg = gettext(
-                        'The target server returned an error.'
-                        '  Check the Target API Key.')
-                    flash(msg, 'error')
+
+        # Nothing to revert
+        if not res and action == 'unsync':
+            msg = gettext('There is nothing to revert.')
+            flash(msg, 'warning')
+        # Success
+        elif res.ok:
+            if action == 'sync':
+                sync_msg = gettext('Project sync completed! ')
+                subject = 'Your project has been synced'
+            elif action == 'unsync':
+                sync_msg = gettext('Last sync has been reverted! ')
+                subject = 'Your synced project has been reverted'
+
+            msg = success_msg.format(
+                sync_msg , synced_url, 'Synced Project Link')
+            flash(msg, 'success')
+
+            body = success_body.format(
+                action=action,
+                short_name=project.short_name,
+                source_url=source_url,
+                syncer=current_user.email_addr)
+            owners = project_syncer.get_target_owners(
+                project, target_url, target_key)
+            email = dict(recipients=owners,
+                         subject=subject,
+                         body=body)
+            mail_queue.enqueue(send_mail, email)
+        # Failure
+        else:
+            current_app.logger.exception(
+                'A request error occurred while syncing {}: {}'
+                .format(project.short_name, res.reason))
+            msg = gettext(
+                'The target server returned an error.  '
+                'Check the Target API Key.')
+            flash(msg, 'error')
     except Exception as err:
         current_app.logger.exception(
             'An error occurred while syncing {}'

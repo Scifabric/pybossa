@@ -22,8 +22,8 @@ ProjectSyncer module for syncing projects on different domains.
 
 import json
 from datetime import datetime
-from socket import gethostname
 import requests
+from flask import current_app
 from pybossa.syncer import Syncer
 
 
@@ -31,13 +31,11 @@ class ProjectSyncer(Syncer):
     """Syncs one project with another."""
 
     RESERVED_KEYS = (
-        'id', 'created', 'updated', 'completed',
-        'contacted', 'published', 'secret_key',
-        'owner_id', 'links', 'link', 'category_id')
-
-    PASS_THROUGH_KEYS = (
-        'task_presenter', 'pusher', 'ref', 'ref_url',
-        'timestamp')
+        'id', 'created', 'updated', 'completed', 'contacted',
+        'published', 'secret_key', 'owner_id', 'links',
+        'link', 'category_id')
+    PASS_THROUGH_KEYS = ('task_presenter', )
+    GITHUB_KEYS = ('pusher', 'ref', 'ref_url', 'timestamp')
 
     @staticmethod
     def get(short_name, url, api_key):
@@ -50,10 +48,8 @@ class ProjectSyncer(Syncer):
         :return: a project object (dict) or None
         """
         url = '{}/api/project'.format(url)
-
         params = dict(short_name=short_name,
                       api_key=api_key)
-
         res = requests.get(url, params=params)
         if res.ok:
             res = json.loads(res.content)
@@ -93,22 +89,18 @@ class ProjectSyncer(Syncer):
         """
         target = self.get(
             project.short_name, target_url, target_key)
-
         params = {'api_key': target_key}
-
+        payload = self._build_payload(project=project,
+                                      current_user=current_user,
+                                      target=target,
+                                      full=not target)
         if not target:
-            payload = self._build_payload(project=project,
-                                          current_user=current_user,
-                                          full=True)
             return self._create_new_project(
-                project, target_url, params)
+                payload, target_url, params)
         elif self.is_sync_enabled(target):
             target_id = target['id']
             self.cache_target(
                 target, target_url, project.short_name)
-            payload = self._build_payload(project=project,
-                                          current_user=current_user,
-                                          target=target)
             return self._sync(
                 payload, target_url, target_id, params)
         else:
@@ -152,8 +144,6 @@ class ProjectSyncer(Syncer):
             self.delete_target_cache(
                 target_url, project.short_name)
             return res
-        else:
-            return
 
     def _build_payload(self, project, current_user,
                        target=None, full=False):
@@ -165,16 +155,15 @@ class ProjectSyncer(Syncer):
                 project_dict, target)
 
         latest_sync = str(datetime.now())
-        source_host = gethostname()
-        if payload['info'].get('sync'):
-            payload['info']['sync']['latest_sync'] = latest_sync
-            payload['info']['sync']['source_host'] = source_host
-            payload['info']['sync']['syncer'] = current_user.email_addr
-        else:
-            payload['info']['sync'] = dict(
-                latest_sync=latest_sync,
-                source_host=source_host,
-                syncer=current_user.email_addr)
+        source_url = current_app.config.get('SERVER_URL')
+
+        payload['info']['sync'] = dict(latest_sync=latest_sync,
+                                       source_url=source_url,
+                                       syncer=current_user.email_addr,
+                                       enabled=True)
+
+        payload = self._merge_github_keys(project_dict, payload)
+
         return json.dumps(payload)
 
     def _remove_reserved_keys(self, project_dict):
@@ -183,19 +172,26 @@ class ProjectSyncer(Syncer):
 
         return project_dict
 
-    def _merge_pass_through_keys(self, project, target):
+    def _merge_pass_through_keys(self, project_dict, target):
         payload = {'info': target['info']}
         for key in self.PASS_THROUGH_KEYS:
-            value = project['info'].pop(key, None)
+            value = project_dict['info'].pop(key, None)
             if value:
                 payload['info'][key] = value
 
         return payload
 
+    def _merge_github_keys(self, project_dict, payload):
+        for key in self.GITHUB_KEYS:
+            value = payload['info'].pop(key, None)
+            if key in ('ref', 'ref_url') and value:
+                payload['info']['sync'][key] = value
+
+        return payload
+
     def get_target_owners(self, project, target_url, target_key):
-        """
-        Get the email addresses of all owners and coowners
-        for the target project.
+        """Get the email addresses of all owners and
+        coowners for the target project.
 
         :param project: a project object
         :param target_url: the server where the target
