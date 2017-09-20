@@ -141,7 +141,7 @@ class Exporter(object):
         """Delete existing ZIP from uploads directory"""
         filename = self.download_name(project, ty)
         if uploader.file_exists(filename, self._container(project)):
-            uploader.delete_file(filename, self._container(project))
+            assert uploader.delete_file(filename, self._container(project))
 
     def get_zip(self, project, ty):
         """Delete existing ZIP file directly from uploads directory,
@@ -205,7 +205,9 @@ class Exporter(object):
                     zip_file = FileStorage(filename=filename,
                                            stream=zipped_datafile)
 
-                    container = 'user_{}'.format(project.owner_id)
+                    container = self._container(project)
+                    if uploader.file_exists(filename, container):
+                        assert uploader.delete_file(filename, container)
                     uploader.upload_file(zip_file, container=container)
 
                     if isinstance(uploader, local.LocalUploader):
