@@ -36,11 +36,7 @@ class Importer(object):
 
     def __init__(self):
         """Init method."""
-        self._importers = dict(csv=BulkTaskCSVImport,
-                               gdocs=BulkTaskGDImport,
-                               epicollect=BulkTaskEpiCollectPlusImport,
-                               s3=BulkTaskS3Import,
-                               localCSV=BulkTaskLocalCSVImport)
+        self._importers = dict(localCSV=BulkTaskLocalCSVImport)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
