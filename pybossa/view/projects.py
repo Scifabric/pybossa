@@ -688,6 +688,9 @@ def import_task(short_name):
     if request.method == 'GET':
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
         if importer_type is None:
+            return redirect_content_type(url_for('.import_task',
+                                                 short_name=short_name,
+                                                 type=all_importers[0]))
             template_wrap = lambda i: "projects/tasks/gdocs-%s.html" % i
             task_tmpls = map(template_wrap, template_tasks)
             template_args['task_tmpls'] = task_tmpls
