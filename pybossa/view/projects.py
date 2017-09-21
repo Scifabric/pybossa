@@ -37,8 +37,7 @@ import pybossa.sched as sched
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
                           csv_exporter, importer, db, is_coowner,
                           task_json_exporter, task_csv_exporter,
-                          project_csv_exporter, project_report_csv_exporter,
-                          project_syncer)
+                          project_csv_exporter, project_report_csv_exporter)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -81,6 +80,8 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
 from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
+from pybossa.syncer import NotEnabled
+from pybossa.syncer.project_syncer import ProjectSyncer
 
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -2383,6 +2384,7 @@ def sync_project(short_name):
         '    User who performed sync: {syncer}')
 
     try:
+        project_syncer = ProjectSyncer()
         source_url = current_app.config.get('SERVER_URL')
 
         # Ensure fields are passed
@@ -2441,6 +2443,10 @@ def sync_project(short_name):
                 'The target server returned an error.  '
                 'Check the Target API Key.')
             flash(msg, 'error')
+    except NotEnabled:
+        msg = gettext(
+            'The target project has not been enabled for syncing.')
+        flash(msg, 'error')
     except Exception as err:
         current_app.logger.exception(
             'An error occurred while syncing {}'

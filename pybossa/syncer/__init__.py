@@ -74,3 +74,12 @@ class Syncer(object):
             self.__class__.__name__,
             target_url,
             target_id)
+
+
+class NotEnabled(Exception):
+    """An exception indicating that an error
+    has occurred where a syncer tried to sync,
+    but could not due to the target not being
+    enabled for syncing.
+    """
+    pass

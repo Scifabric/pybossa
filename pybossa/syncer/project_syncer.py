@@ -21,10 +21,11 @@ ProjectSyncer module for syncing projects on different domains.
 """
 
 import json
+from copy import deepcopy
 from datetime import datetime
 import requests
 from flask import current_app
-from pybossa.syncer import Syncer
+from pybossa.syncer import Syncer, NotEnabled
 
 
 class ProjectSyncer(Syncer):
@@ -104,7 +105,7 @@ class ProjectSyncer(Syncer):
             return self._sync(
                 payload, target_url, target_id, params)
         else:
-            raise Exception('Unauthorized')
+            raise NotEnabled
 
     def _sync(self, payload, target_url, target_id, params):
         url = ('{}/api/project/{}'
@@ -173,7 +174,7 @@ class ProjectSyncer(Syncer):
         return project_dict
 
     def _merge_pass_through_keys(self, project_dict, target):
-        payload = {'info': target['info']}
+        payload = {'info': deepcopy(target['info'])}
         for key in self.PASS_THROUGH_KEYS:
             value = project_dict['info'].pop(key, None)
             if value:
