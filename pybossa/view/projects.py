@@ -2434,7 +2434,7 @@ def sync_project(short_name):
             mail_queue.enqueue(send_mail, email)
         # Failure
         else:
-            current_app.logger.exception(
+            current_app.logger.error(
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, res.reason))
             msg = gettext(
