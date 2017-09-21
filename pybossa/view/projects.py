@@ -517,6 +517,10 @@ def update(short_name):
 
     title = project_title(project, "Update")
     if request.method == 'GET':
+        sync = project.info.get('sync')
+        if sync:
+            project.sync_enabled = sync.get('enabled')
+
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()

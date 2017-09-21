@@ -160,7 +160,7 @@ class ProjectSyncer(Syncer):
         payload['info']['sync'] = dict(latest_sync=latest_sync,
                                        source_url=source_url,
                                        syncer=current_user.email_addr,
-                                       enabled=True)
+                                       enabled=False)
 
         payload = self._merge_github_keys(project_dict, payload)
 
