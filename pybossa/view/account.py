@@ -153,7 +153,7 @@ def signin():
             else:
                 login_user(user_db, remember=True)
         else:
-            msg = gettext("User LDAP credentails are wrong.")
+            msg = gettext("User LDAP credentials are wrong.")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
