@@ -60,12 +60,13 @@ requirements = [
     "pybossa-onesignal",
     "pandas>=0.20.2, <0.20.3",
     "flatten-json",
-    "otpauth>=1.0.1, <1.0.2"
+    "otpauth>=1.0.1, <1.0.2",
+    "Flask-SimpleLDAP >=1.1.2, <1.1.3",
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.6.5',
+    version = '2.7.0',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

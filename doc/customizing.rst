@@ -1110,3 +1110,49 @@ settings_local.py file:
 
     UNPUBLISH_PROJECTS = False
 
+LDAP integration
+================
+
+PYBOSSA can use LDAP for authenticating users. Basically, you will need to 
+add a few config variables to the settings_local.py file in order to make it work.
+
+PYBOSSA supports LDAP and OpenLDAP protocols, so you should be able to use any of them.
+
+.. note::
+    By enabling PYBOSSA LDAP integration, all other means for creating accounts and/or 
+    signin will be disabled. 
+
+LDAP_HOST
+~~~~~~~~~
+This variable should have the IP or domain name of your LDAP server.
+
+LDAP_BASE_DN
+~~~~~~~~~~~~
+This is the LDAP Base DN for your organization.
+
+LDAP_USERNAME
+~~~~~~~~~~~~~
+This variable should have the admin account, so PYBOSSA can access the
+LDAP server and search for users.
+
+LDAP_PASSWORD
+~~~~~~~~~~~~~
+The admin account password.
+
+LDAP_OBJECTS_DN
+~~~~~~~~~~~~~~~
+The DN.
+
+LDAP_OPENLDAP
+~~~~~~~~~~~~~
+Set it to True if you are using it.
+
+LDAT_USER_OBJECT_FILTER
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This is really important. The filter that you write in here needs to be adapted to
+your institution, otherwise it will not work when authenticating and validating your
+users.
+
+Don't use the default configuration in the settings template. You will need to adapt
+it to your needs.

@@ -41,7 +41,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'announcement_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
-           'plugin_manager', 'assets', 'JSONEncoder', 'cors']
+           'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'ldap']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -147,3 +147,7 @@ cors = CORS()
 
 # Strong password
 enable_strong_password = None
+
+# LDAP
+from flask_simpleldap import LDAP
+ldap = LDAP()
