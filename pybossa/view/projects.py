@@ -62,7 +62,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import (webhook,
+from pybossa.jobs import (webhook, send_mail,
                           import_tasks, IMPORT_TASKS_TIMEOUT,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT)
@@ -80,6 +80,8 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
 from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
+from pybossa.syncer import NotEnabled
+from pybossa.syncer.project_syncer import ProjectSyncer
 
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -92,6 +94,7 @@ MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
+mail_queue = Queue('email', connection=sentinel.master)
 importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=TIMEOUT)
@@ -342,8 +345,18 @@ def task_presenter_editor(short_name):
         old_project = Project(**db_project.dictize())
         old_info = dict(db_project.info)
         old_info['task_presenter'] = form.editor.data
+
+        # Remove GitHub info on save
         for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
             old_info.pop(field, None)
+
+        # Remove sync info on save
+        old_sync = old_info.pop('sync', None)
+        if old_sync:
+            for field in ['syncer', 'latest_sync', 'source_url']:
+                old_sync.pop(field, None)
+            old_info['sync'] = old_sync
+
         db_project.info = old_info
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
@@ -483,6 +496,13 @@ def update(short_name):
         if form.password.data:
             new_project.set_password(form.password.data)
 
+        sync = new_project.info.get('sync')
+        if not sync:
+            sync = dict(enabled=form.sync_enabled.data)
+        else:
+            sync['enabled'] = form.sync_enabled.data
+        new_project.info['sync'] = sync
+
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_cat.reset()
@@ -498,8 +518,13 @@ def update(short_name):
 
     title = project_title(project, "Update")
     if request.method == 'GET':
+        sync = project.info.get('sync')
+        if sync:
+            project.sync_enabled = sync.get('enabled')
+
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
+        sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if project.category_id is None:
@@ -508,6 +533,7 @@ def update(short_name):
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
+        sync_form = ProjectSyncForm()
         form = ProjectUpdateForm(request.body)
         categories = cached_cat.get_all()
         form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -552,6 +578,7 @@ def update(short_name):
     response = dict(template='/projects/update.html',
                     form=form,
                     upload_form=upload_form,
+                    sync_form=sync_form,
                     project=project_sanitized,
                     owner=owner_sanitized,
                     n_tasks=ps.n_tasks,
@@ -2337,3 +2364,103 @@ def export_project_report(short_name):
             ensure_authorized_to('read', project)
 
     return {'csv': respond_csv}[fmt](ty)
+
+
+@blueprint.route('/<short_name>/syncproject', methods=['POST'])
+@login_required
+@admin_or_subadmin_required
+def sync_project(short_name):
+    """Sync project."""
+    project, owner, ps = project_by_shortname(short_name)
+    title = project_title(project, "Sync")
+
+    sync_form = ProjectSyncForm()
+    target_url = sync_form.target_url.data
+    target_key = sync_form.target_key.data
+
+    synced_url = '{}/project/{}'.format(
+        target_url, project.short_name)
+    success_msg = Markup(
+        '{} <strong><a href="{}" target="_blank">{}</a></strong>')
+    success_body = (
+        'A project that you an owner/co-owner of has been'
+        ' {action}ed with a project on another server.\n\n'
+        '    Project Short Name: {short_name}\n'
+        '    Source URL: {source_url}\n'
+        '    User who performed sync: {syncer}')
+
+    try:
+        project_syncer = ProjectSyncer()
+        source_url = current_app.config.get('SERVER_URL')
+
+        # Ensure fields are passed
+        if not target_url or not target_key:
+            msg = Markup('Enter a <strong>Target URL</strong> and'
+                         ' an <strong>API Key</strong> to sync'
+                         ' your project')
+            flash(msg, 'error')
+
+            return redirect_content_type(
+                url_for('.update', short_name=short_name))
+
+        if request.form.get('btn') == 'sync':
+            action = 'sync'
+            res = project_syncer.sync(
+                project, target_url, target_key, current_user)
+        elif request.form.get('btn') == 'undo':
+            action = 'unsync'
+            res = project_syncer.undo_sync(
+                project, target_url, target_key)
+
+        # Nothing to revert
+        if not res and action == 'unsync':
+            msg = gettext('There is nothing to revert.')
+            flash(msg, 'warning')
+        # Success
+        elif res.ok:
+            if action == 'sync':
+                sync_msg = gettext('Project sync completed! ')
+                subject = 'Your project has been synced'
+            elif action == 'unsync':
+                sync_msg = gettext('Last sync has been reverted! ')
+                subject = 'Your synced project has been reverted'
+
+            msg = success_msg.format(
+                sync_msg , synced_url, 'Synced Project Link')
+            flash(msg, 'success')
+
+            body = success_body.format(
+                action=action,
+                short_name=project.short_name,
+                source_url=source_url,
+                syncer=current_user.email_addr)
+            owners = project_syncer.get_target_owners(
+                project, target_url, target_key)
+            email = dict(recipients=owners,
+                         subject=subject,
+                         body=body)
+            mail_queue.enqueue(send_mail, email)
+        # Failure
+        else:
+            current_app.logger.error(
+                'A request error occurred while syncing {}: {}'
+                .format(project.short_name, res.reason))
+            msg = gettext(
+                'The target server returned an error.  '
+                'Check the Target API Key.')
+            flash(msg, 'error')
+    except NotEnabled:
+        msg = gettext(
+            'The target project has not been enabled for syncing.')
+        flash(msg, 'error')
+    except Exception as err:
+        current_app.logger.exception(
+            'An error occurred while syncing {}'
+            .format(project.short_name))
+        msg = gettext(
+            'An error occurred while trying to reach your target.'
+            '  Check the Target URL and Target API Key fields.')
+        flash(msg, 'error')
+
+    return redirect_content_type(
+        url_for('.update', short_name=short_name))

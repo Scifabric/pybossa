@@ -2683,6 +2683,7 @@ class TestWeb(web.Helper):
     def test_18_task_status_wip_json(self, mock):
         """Test WEB Task Status on going works"""
         self.register()
+        self.signin()
         self.new_project()
 
         project = db.session.query(Project).first()
@@ -2690,11 +2691,11 @@ class TestWeb(web.Helper):
         task = Task(project_id=project.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
-        self.signout()
 
         project = db.session.query(Project).first()
 
         res = self.app_get_json('project/%s/tasks/browse' % (project.short_name))
+        print res.data
         data = json.loads(res.data)
         err_msg = 'key missing'
         assert 'n_completed_tasks' in data, err_msg
@@ -2712,9 +2713,11 @@ class TestWeb(web.Helper):
         assert "Sample Project" in data['title'], data
         assert data['tasks'][0]['n_answers'] == 10, data
 
+        ## Disabled for GIGwork - no longer relevant with
+        ## new browse task filtering
         # For a non existing page
-        res = self.app_get_json('project/%s/tasks/browse/5000' % (project.short_name))
-        assert res.status_code == 404, res.status_code
+        #res = self.app_get_json('project/%s/tasks/browse/5000' % (project.short_name))
+        #assert res.status_code == 404, res.status_code
 
     @with_context
     def test_19_app_index_categories(self):
@@ -2890,22 +2893,23 @@ class TestWeb(web.Helper):
                  .filter(Project.id == project.id)\
                  .first()
         res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
-        data = json.loads(res.data)
-        err_msg = 'field missing'
-        assert 'flash' in data, err_msg
-        assert 'owner' in data, err_msg
-        assert 'project' in data, err_msg
-        assert 'status' in data, err_msg
-        assert 'template' in data, err_msg
-        assert 'title' in data, err_msg
-        err_msg = 'wrong field value'
-        assert data['status'] == 'warning', err_msg
-        assert data['template'] == '/projects/presenter.html', err_msg
-        assert 'Contribute' in data['title'], err_msg
-        err_msg = 'private field data exposed'
-        assert 'api_key' not in data['owner'], err_msg
-        assert 'email_addr' not in data['owner'], err_msg
-        assert 'secret_key' not in data['project'], err_msg
+        #commented as anonymous access is disabled for GIGwork
+        #data = json.loads(res.data)
+        #err_msg = 'field missing'
+        #assert 'flash' in data, err_msg
+        #assert 'owner' in data, err_msg
+        #assert 'project' in data, err_msg
+        #assert 'status' in data, err_msg
+        #assert 'template' in data, err_msg
+        #assert 'title' in data, err_msg
+        #err_msg = 'wrong field value'
+        #assert data['status'] == 'warning', err_msg
+        #assert data['template'] == '/projects/presenter.html', err_msg
+        #assert 'Contribute' in data['title'], err_msg
+        #err_msg = 'private field data exposed'
+        #assert 'api_key' not in data['owner'], err_msg
+        #assert 'email_addr' not in data['owner'], err_msg
+        #assert 'secret_key' not in data['project'], err_msg
 
         # Try with only registered users
         project.allow_anonymous_contributors = False
@@ -3028,7 +3032,6 @@ class TestWeb(web.Helper):
         self.signout()
 
         res = self.app_get_json('/project/%s/task/%s' % (project1_short_name, task2_id))
-        print res.data
         data = json.loads(res.data)
         assert 'flash' in data, err_msg
         assert 'owner' in data, err_msg
@@ -3075,6 +3078,7 @@ class TestWeb(web.Helper):
         project1.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         self.register()
+        self.signin()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
@@ -3094,15 +3098,15 @@ class TestWeb(web.Helper):
         err_msg = 'project tutorial missing'
         assert 'My New Project' in data['title'], err_msg
 
+    @nottest
     @with_context
     def test_27_tutorial_anonymous_user(self):
-        """Test WEB tutorials work as an anonymous user"""
+        """Test WEB tutorials work as an anonymous user - Disabled for GIGwork"""
         self.create()
         project = db.session.query(Project).get(1)
         project.info = dict(tutorial="some help", task_presenter="presenter")
         db.session.commit()
         self.register()
-        self.signin()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
         err_msg = "There should be some tutorial for the project"
@@ -3116,9 +3120,10 @@ class TestWeb(web.Helper):
         err_msg = "There should be some tutorial for the project"
         assert "some help" in res.data, err_msg
 
+    @nottest
     @with_context
     def test_27_tutorial_anonymous_user_json(self):
-        """Test WEB tutorials work as an anonymous user"""
+        """Test WEB tutorials work as an anonymous user - Disabled for GIGwork"""
         self.create()
         project = db.session.query(Project).get(1)
         project.info = dict(tutorial="some help", task_presenter="presenter")
@@ -3731,8 +3736,7 @@ class TestWeb(web.Helper):
         err_msg = "Flash message should be included"
         assert data.get('flash'), err_msg
         assert ("We don't have this email in our records. You may have"
-                " signed up with a different email or used Twitter, "
-                "Facebook, or Google to sign-in") in data.get('flash'), err_msg
+                " signed up with a different email") in data.get('flash'), err_msg
 
         self.register()
         self.register(name='janedoe')
@@ -3758,6 +3762,9 @@ class TestWeb(web.Helper):
         resdata = json.loads(res.data)
         signer.dumps.assert_called_with(data, salt='password-reset')
         enqueue_call = queue.enqueue.call_args_list[0]
+        assert resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
+        enqueue_call = queue.enqueue.call_args_list[4]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
@@ -3776,6 +3783,9 @@ class TestWeb(web.Helper):
         resdata = json.loads(res.data)
 
         enqueue_call = queue.enqueue.call_args_list[1]
+        assert resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
+        enqueue_call = queue.enqueue.call_args_list[5]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -3794,6 +3804,9 @@ class TestWeb(web.Helper):
         resdata = json.loads(res.data)
 
         enqueue_call = queue.enqueue.call_args_list[2]
+        assert resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
+        enqueue_call = queue.enqueue.call_args_list[6]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
@@ -3810,6 +3823,9 @@ class TestWeb(web.Helper):
                             headers={'X-CSRFToken': csrf})
 
         enqueue_call = queue.enqueue.call_args_list[3]
+        assert resdata.get('flash'), err_msg
+        assert "sent you an email" in resdata.get('flash'), err_msg
+        enqueue_call = queue.enqueue.call_args_list[7]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
@@ -3840,8 +3856,7 @@ class TestWeb(web.Helper):
                             data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
         assert ("We don&#39;t have this email in our records. You may have"
-                " signed up with a different email or used Twitter, "
-                "Facebook, or Google to sign-in") in res.data
+                " signed up with a different email") in res.data
 
         self.register()
         self.register(name='janedoe')
@@ -3864,6 +3879,9 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='password-reset')
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Account Registration' in enqueue_call[0][1]['html']
+        enqueue_call = queue.enqueue.call_args_list[4]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
 
@@ -3872,6 +3890,9 @@ class TestWeb(web.Helper):
                       data={'email_addr': 'janedoe@example.com'},
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[1]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Account Registration' in enqueue_call[0][1]['html']
+        enqueue_call = queue.enqueue.call_args_list[5]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -3882,6 +3903,9 @@ class TestWeb(web.Helper):
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[2]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Account Registration' in enqueue_call[0][1]['html']
+        enqueue_call = queue.enqueue.call_args_list[6]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
 
@@ -3890,6 +3914,9 @@ class TestWeb(web.Helper):
                       data={'email_addr': 'facebook@example.com'},
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[3]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Account Registration' in enqueue_call[0][1]['html']
+        enqueue_call = queue.enqueue.call_args_list[7]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
@@ -4257,10 +4284,12 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
 
+        ## Modified for GIGwork task export
         # Now get the tasks in JSON format
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=task&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
+        '''
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
@@ -4278,6 +4307,8 @@ class TestWeb(web.Helper):
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_test-app_task_json.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+        '''
+        assert "You will be emailed when your export has been completed." in res.data
 
     @with_context
     def test_export_task_json_support_non_latin1_project_names(self):
@@ -4662,10 +4693,11 @@ class TestWeb(web.Helper):
         content_disposition = 'attachment; filename=%d_test-app_task_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
+    @nottest
     @with_context
     def test_export_result_csv_no_tasks_returns_empty_file(self):
         """Test WEB export Result to CSV returns empty file if no results in
-        project."""
+        project. Disable for GIGwork."""
         project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
@@ -4680,9 +4712,12 @@ class TestWeb(web.Helper):
 
         assert is_empty
 
+    @nottest
     @with_context
     def test_export_task_csv_no_tasks_returns_empty_file(self):
-        """Test WEB export Tasks to CSV returns empty file if no tasks in project"""
+        """Test WEB export Tasks to CSV returns empty file if no tasks in project.
+        Disable for GIGwork.
+        """
         self.register()
         self.signin()
         Fixtures.create()
@@ -4727,9 +4762,12 @@ class TestWeb(web.Helper):
         heading = "Export All Tasks and Task Runs"
         data = res.data.decode('utf-8')
         assert heading in data, "Export page should be available\n %s" % data
+
+        ## Modified for GIGwork task export
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task_run&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        '''
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
@@ -4776,6 +4814,8 @@ class TestWeb(web.Helper):
         # Task runs are exported as an attached file
         content_disposition = 'attachment; filename=%d_test-app_task_run_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+        '''
+        assert "You will be emailed when your export has been completed." in res.data
 
     @with_context
     @patch('pybossa.view.projects.Ckan', autospec=True)
