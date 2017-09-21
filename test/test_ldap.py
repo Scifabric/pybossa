@@ -68,6 +68,15 @@ class TestLDAP(Test):
             assert user.name == 'cn', user
             assert user.email_addr == 'cn', user
 
+            ldap_mock.bind_user.return_value = False
+            res = self.app.post(url, data=json.dumps(payload),
+                                content_type='application/json')
+            data = json.loads(res.data)
+            msg = 'User LDAP credentials are wrong.'
+            assert data['flash'] == msg, data
+            assert data['status'] == 'info', data
+
+
     @with_context
     @patch('pybossa.view.account._create_account')
     @patch('pybossa.view.account.ldap')
