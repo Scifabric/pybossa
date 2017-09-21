@@ -24,11 +24,14 @@ import json
 from pybossa.core import sentinel
 
 
+ONE_WEEK = 60 * 60 * 24 * 7
+
+
 class Syncer(object):
     """Syncs one object with another."""
 
     SYNC_KEY = 'pybossa::sync::{}::target_url:{}::short_name:{}'
-    CACHE_TIMEOUT = 300
+    CACHE_TIMEOUT = ONE_WEEK
 
     def cache_target(self, target, target_url, target_id):
         """Cache target.
@@ -39,8 +42,9 @@ class Syncer(object):
             can be used to create a unique key
         """
         target = json.dumps(target)
-        sentinel.master.set(
+        sentinel.master.setex(
             self._get_key(target_url, target_id),
+            self.CACHE_TIMEOUT,
             target)
 
     def get_target_cache(self, target_url, target_id):
