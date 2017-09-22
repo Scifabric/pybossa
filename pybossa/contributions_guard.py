@@ -85,3 +85,12 @@ class ContributionsGuard(object):
         """
         user_id = user['user_id'] or None
         return self.PRESENTED_KEY_PREFIX.format(user_id, task.id)
+
+    def extend_task_presented_timestamp_expiry(self, task, user):
+        """Extend expiry time for task presented time for user."""
+        key = self._create_presented_time_key(task, user)
+        task_presented = self.conn.get(key)
+        if task_presented is not None:
+            return self.conn.expire(key, self.STAMP_TTL)
+        else:
+            return self.conn.setEx(key, self.STAMP_TTL, make_timestamp())

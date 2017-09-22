@@ -34,8 +34,8 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 import json
 import jwt
-from flask import Blueprint, request, abort, Response, make_response
-from flask.ext.login import current_user
+from flask import Blueprint, request, abort, Response, make_response, current_app
+from flask.ext.login import current_user, login_required
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload
@@ -66,6 +66,7 @@ from werkzeug.exceptions import MethodNotAllowed
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import n_available_tasks
+from pybossa.sched import get_project_scheduler_and_timeout, has_lock, release_lock
 
 blueprint = Blueprint('api', __name__)
 
@@ -138,6 +139,11 @@ def new_task(project_id):
                 guard.stamp(task, get_user_id_or_ip())
                 if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
                     guard.stamp_presented_time(task, get_user_id_or_ip())
+                else:
+                    # user returning back for the same task
+                    # original presented time has not expired yet
+                    # to continue original presented time, extend expiry
+                    guard.extend_task_presented_timestamp_expiry(task, get_user_id_or_ip())
 
             data = [task.dictize() for task in tasks]
             if len(data) == 0:
@@ -290,3 +296,32 @@ def get_disqus_sso_api():
     except MethodNotAllowed as e:
         e.message = "Disqus keys are missing"
         return error.format_exception(e, target='DISQUS_SSO', action='GET')
+
+
+@jsonpify
+@csrf.exempt
+@blueprint.route('/task/<int:taskId>/canceltask', methods=['POST'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def cancel_task(taskId=None):
+    """Unlock task upon cancel so that same task can be presented again."""
+    if not current_user.is_authenticated():
+        return abort(401)
+
+    data = request.json
+    projectname = data.get('projectname', None)
+    project = project_repo.get_by_shortname(projectname)
+    if not project:
+        return abort(400)
+
+    projectId = project.id
+    userId = current_user.id
+    scheduler, timeout = get_project_scheduler_and_timeout(projectId)
+    if scheduler in ('locked_scheduler', 'user_pref_scheduler'):
+        task_locked_by_user = has_lock(projectId, taskId, userId, timeout)
+        if task_locked_by_user:
+            release_lock(projectId, taskId, userId, timeout)
+            current_app.logger.info(
+                'Project {} - user {} cancelled task {}'
+                .format(project.id, current_user.id, taskId))
+
+    return Response(json.dumps({'success':True}), 200, mimetype="application/json")
