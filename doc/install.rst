@@ -66,7 +66,7 @@ has earned it a strong reputation for reliability, data integrity, and correctne
 PYBOSSA uses PostgreSQL_ as the main database for storing all the data, and you
 the required steps for installing it are the following::
 
-    sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2
+    sudo apt-get install postgresql postgresql-server-dev-all libpq-dev python-psycopg2 libsasl2-dev libldap2-dev libssl-dev
 
 .. _PostgreSQL: http://www.postgresql.org/
 
