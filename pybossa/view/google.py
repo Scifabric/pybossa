@@ -39,9 +39,7 @@ def login():  # pragma: no cover
     """Login with Google."""
     if not current_app.config.get('LDAP_HOST', False):
         if request.args.get("next"):
-            request_token_params = {
-                'scope': 'profile email',
-                'response_type': 'code'}
+            request_token_params = {'scope': 'profile email'}
             google.oauth.request_token_params = request_token_params
         callback = url_for('.oauth_authorized',
                            _external=True)
