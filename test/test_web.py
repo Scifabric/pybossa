@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 import copy
 import json
 import os
@@ -211,14 +212,17 @@ class TestWeb(web.Helper):
 
         update_leaderboard()
 
+        for score in range(1, 11):
+            UserFactory.create(info=dict(n=score))
+
+        update_leaderboard(info='n')
+
         res = self.app_get_json('/leaderboard/window/3?api_key=%s' % user.api_key)
         data = json.loads(res.data)
         err_msg = 'Top users missing'
         assert 'top_users' in data, err_msg
         err_msg = 'leaderboard user information missing'
         leaders = data['top_users']
-        for u in leaders:
-            print u['rank'], u['name'], u['score']
         assert len(leaders) == (20+3+1+3), len(leaders)
         assert leaders[23]['name'] == user.name
 
@@ -228,11 +232,40 @@ class TestWeb(web.Helper):
         assert 'top_users' in data, err_msg
         err_msg = 'leaderboard user information missing'
         leaders = data['top_users']
-        for u in leaders:
-            print u['rank'], u['name'], u['score']
         assert len(leaders) == (20+10+1+10), len(leaders)
         assert leaders[30]['name'] == user.name
 
+        res = self.app_get_json('/leaderboard/?info=noleaderboards')
+        assert res.status_code == 404,  res.status_code
+
+        with patch.dict(self.flask_app.config, {'LEADERBOARDS': ['n']}):
+            res = self.app_get_json('/leaderboard/?info=n')
+            data = json.loads(res.data)
+            err_msg = 'Top users missing'
+            assert 'top_users' in data, err_msg
+            err_msg = 'leaderboard user information missing'
+            leaders = data['top_users']
+            assert len(leaders) == (20), len(leaders)
+            score = 10
+            rank = 1
+            for u in leaders[0:10]:
+                assert u['score'] == score, u
+                assert u['rank'] == rank, u
+                score = score - 1
+                rank = rank + 1
+
+            res = self.app_get_json('/leaderboard/window/3?api_key=%s&info=n' % user.api_key)
+            data = json.loads(res.data)
+            err_msg = 'Top users missing'
+            assert 'top_users' in data, err_msg
+            err_msg = 'leaderboard user information missing'
+            leaders = data['top_users']
+            assert len(leaders) == (20+3+1+3), len(leaders)
+            assert leaders[23]['name'] == user.name
+            assert leaders[23]['score'] == 0
+
+            res = self.app_get_json('/leaderboard/?info=new')
+            assert res.status_code == 404,  res.status_code
 
 
     @with_context
@@ -737,7 +770,8 @@ class TestWeb(web.Helper):
         self.update_profile(email_addr="new@mail.com")
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
-                    email_addr="new@mail.com")
+                    email_addr="new@mail.com",
+                    consent=False)
 
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
@@ -766,6 +800,7 @@ class TestWeb(web.Helper):
             data = dict(fullname="John Doe", name="johndoe2",
                         password="p4ssw0rd", confirm="p4ssw0rd",
                         email_addr="johndoe2@example.com")
+                        consent=False)
             signer.dumps.return_value = ''
             render.return_value = ''
             res = self.app.post('/account/register', data=json.dumps(data),
@@ -829,7 +864,8 @@ class TestWeb(web.Helper):
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe", password='daniel',
-                        email_addr="new@mail.com", confirm='daniel')
+                        email_addr="new@mail.com", confirm='daniel',
+                        consent=True)
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
@@ -837,6 +873,10 @@ class TestWeb(web.Helper):
             cookie = self.check_cookie(res, 'remember_token')
             err_msg = "User should be logged in"
             assert "johndoe" in cookie, err_msg
+            user = user_repo.get_by(name='johndoe')
+            assert user.consent, user
+            assert user.name == 'johndoe', user
+            assert user.email_addr == 'new@mail.com', user
 
     @with_context
     def test_register_json_error(self):
@@ -1077,7 +1117,9 @@ class TestWeb(web.Helper):
         """Test WEB register confirmation gets the account data from the key"""
         exp_time = self.flask_app.config.get('ACCOUNT_LINK_EXPIRATION')
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=True)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         fake_signer.loads.assert_called_with('valid-key', max_age=exp_time, salt='account-validation')
@@ -1094,7 +1136,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr=user.email_addr)
+                                              email_addr=user.email_addr,
+                                              consent=False)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
@@ -1116,7 +1159,8 @@ class TestWeb(web.Helper):
 
         fake_signer.loads.return_value = dict(fullname=user.fullname,
                                               name=user.name,
-                                              email_addr='new@email.com')
+                                              email_addr='new@email.com',
+                                              consent=True)
         self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).get(1)
@@ -1178,7 +1222,9 @@ class TestWeb(web.Helper):
     def test_register_confirmation_creates_new_account(self, fake_signer):
         """Test WEB register confirmation creates the new account"""
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
-                                              email_addr='email', password='password')
+                                              email_addr='email',
+                                              password='password',
+                                              consent=False)
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         user = db.session.query(User).filter_by(name='name').first()
@@ -1808,6 +1854,37 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
         data = json.loads(res.data)
         assert data['code'] == 404, data
+
+    @with_context
+    def test_get_project_json(self):
+        """Test WEB JSON get project by short name."""
+        project = ProjectFactory.create()
+        url = '/project/%s/' % project.short_name
+        res = self.app_get_json(url)
+
+        data = json.loads(res.data)['project']
+
+        assert 'id' in data.keys(), data.keys()
+        assert 'description' in data.keys(), data.keys()
+        assert 'info' in data.keys(), data.keys()
+        assert 'long_description' in data.keys(), data.keys()
+        assert 'n_tasks' in data.keys(), data.keys()
+        assert 'n_volunteers' in data.keys(), data.keys()
+        assert 'name' in data.keys(), data.keys()
+        assert 'overall_progress' in data.keys(), data.keys()
+        assert 'short_name' in data.keys(), data.keys()
+        assert 'created' in data.keys(), data.keys()
+        assert 'long_description' in data.keys(), data.keys()
+        assert 'last_activity' in data.keys(), data.keys()
+        assert 'last_activity_raw' in data.keys(), data.keys()
+        assert 'n_task_runs' in data.keys(), data.keys()
+        assert 'n_results' in data.keys(), data.keys()
+        assert 'owner' in data.keys(), data.keys()
+        assert 'updated' in data.keys(), data.keys()
+        assert 'featured' in data.keys(), data.keys()
+        assert 'owner_id' in data.keys(), data.keys()
+        assert 'n_completed_tasks' in data.keys(), data.keys()
+        assert 'n_blogposts' in data.keys(), data.keys()
 
     @with_context
     def test_update_project_json_as_user(self):
@@ -3193,9 +3270,25 @@ class TestWeb(web.Helper):
         newtask_response = self.app.get(newtask_url, follow_redirects=True)
         task_response = self.app.get(task_url, follow_redirects=True)
 
-        # TODO: Do not test this for now. Needs discussion about text or id
-        # assert message in newtask_response.data
-        # assert message in task_response.data
+        assert message in newtask_response.data
+        assert message in task_response.data
+
+    @with_context
+    def test_message_is_flashed_contributing_to_project_without_presenter(self):
+        """Test task_presenter check is not raised."""
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(project=project)
+        newtask_url = '/project/%s/newtask' % project.short_name
+        task_url = '/project/%s/task/%s' % (project.short_name, task.id)
+        message = ("Sorry, but this project is still a draft and does "
+                   "not have a task presenter.")
+        with patch.dict(self.flask_app.config,
+                        {'DISABLE_TASK_PRESENTER': True}):
+            newtask_response = self.app.get(newtask_url)
+            task_response = self.app.get(task_url, follow_redirects=True)
+
+            assert message not in newtask_response.data, newtask_response.data
+            assert message not in task_response.data, task_response.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -3720,9 +3813,10 @@ class TestWeb(web.Helper):
         assert 403 == res.status_code
 
     @with_context
+    @patch('pybossa.view.account.url_for')
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.signer')
-    def test_45_password_reset_link_json(self, signer, queue):
+    def test_45_password_reset_link_json(self, signer, queue, mock_url):
         """Test WEB password reset email form"""
         csrf = self.get_csrf('/account/forgot-password')
         res = self.app.post('/account/forgot-password',
@@ -3761,6 +3855,7 @@ class TestWeb(web.Helper):
                             headers={'X-CSRFToken': csrf})
         resdata = json.loads(res.data)
         signer.dumps.assert_called_with(data, salt='password-reset')
+        key = signer.dumps(data, salt='password-reset')
         enqueue_call = queue.enqueue.call_args_list[0]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
@@ -3768,6 +3863,7 @@ class TestWeb(web.Helper):
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
+        assert mock_url.called_with('.reset_password', key=key, _external=True)
         err_msg = "There should be a flash message"
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
@@ -3845,6 +3941,27 @@ class TestWeb(web.Helper):
         msg = "Something went wrong, please correct the errors"
         assert msg in resdata.get('flash'), res.data
         assert resdata.get('form').get('errors').get('email_addr') is not None, resdata
+
+        with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME':
+                                                'http://local.com'}):
+            data = {'password': user.passwd_hash, 'user': user.name}
+            csrf = self.get_csrf('/account/forgot-password')
+            res = self.app.post('/account/forgot-password',
+                                data=json.dumps({'email_addr': user.email_addr}),
+                                follow_redirects=False,
+                                content_type="application/json",
+                                headers={'X-CSRFToken': csrf})
+            resdata = json.loads(res.data)
+            signer.dumps.assert_called_with(data, salt='password-reset')
+            key = signer.dumps(data, salt='password-reset')
+            enqueue_call = queue.enqueue.call_args_list[0]
+            assert send_mail == enqueue_call[0][0], "send_mail not called"
+            assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+            assert 'To recover your password' in enqueue_call[0][1]['html']
+            assert mock_url.called_with('.reset_password', key=key)
+            err_msg = "There should be a flash message"
+            assert resdata.get('flash'), err_msg
+            assert "sent you an email" in resdata.get('flash'), err_msg
 
 
     @with_context
@@ -4447,7 +4564,7 @@ class TestWeb(web.Helper):
                                   info={'question': task.id},
                                   task=task)
 
-        # Get results and updat them
+        # Get results and update them
         results = result_repo.filter_by(project_id=project.id)
         for result in results:
             result.info = dict(key='value')
@@ -4541,6 +4658,8 @@ class TestWeb(web.Helper):
             TaskFactory.create_batch(5, project=project, info={'question': 'qu',
                                                                'geojson':
                                                                'complexjson'})
+            # Empty task that should be handled as well.
+            TaskFactory.create(project=project, info=None)
             uri = '/project/%s/tasks/export' % project.short_name
             res = self.app.get(uri, follow_redirects=True)
             heading = "Export All Tasks and Task Runs"
@@ -4575,34 +4694,38 @@ class TestWeb(web.Helper):
             for t in project.tasks:
                 err_msg = "All the task column names should be included"
                 d = copy.deepcopy(t.dictize())
-                d['info'].pop('geojson', None)
+                if d['info']:
+                    d['info'].pop('geojson', None)
                 for tk in flatten(d).keys():
                     expected_key = "%s" % tk
                     assert expected_key in keys, (expected_key, err_msg)
                 err_msg = "All the task.info column names should be included except geojson"
-                info_keys = copy.deepcopy(t.info.keys())
-                info_keys.pop(info_keys.index('geojson'))
-                for tk in info_keys:
-                    expected_key = "info_%s" % tk
-                    assert expected_key in keys, (expected_key, err_msg)
+                info_keys = None
+                if t.info:
+                    info_keys = copy.deepcopy(t.info.keys())
+                    info_keys.pop(info_keys.index('geojson'))
+                    for tk in info_keys:
+                        expected_key = "info_%s" % tk
+                        assert expected_key in keys, (expected_key, err_msg)
 
             for et in exported_tasks:
                 task_id = et[keys.index('id')]
                 task = db.session.query(Task).get(task_id)
                 task_dict = copy.deepcopy(task.dictize())
-                task_dict['info'].pop('geojson', None)
-                task_dict_flat = copy.deepcopy(flatten(task_dict))
-                for k in task_dict_flat.keys():
-                    slug = '%s' % k
-                    err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
-                    if task_dict_flat[k] is not None:
-                        assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
-                    else:
-                        assert u'' == et[keys.index(slug)], err_msg
-                for k in task_dict['info'].keys():
-                    slug = 'info_%s' % k
-                    err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
-                    assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                if task_dict['info']:
+                    task_dict['info'].pop('geojson', None)
+                    task_dict_flat = copy.deepcopy(flatten(task_dict))
+                    for k in task_dict_flat.keys():
+                        slug = '%s' % k
+                        err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
+                        if task_dict_flat[k] is not None:
+                            assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                        else:
+                            assert u'' == et[keys.index(slug)], err_msg
+                    for k in task_dict['info'].keys():
+                        slug = 'info_%s' % k
+                        err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                        assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -4628,10 +4751,10 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real project
-        project = db.session.query(Project)\
-            .filter_by(short_name=Fixtures.project_short_name)\
-            .first()
+        project = ProjectFactory.create()
         self.clear_temp_container(project.owner_id)
+        for i in range(0, 5):
+            task = TaskFactory.create(project=project, info={u'eñe': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
@@ -4640,7 +4763,11 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        file_name = '/tmp/task_%s.zip' % project.short_name
+        with open(file_name, 'w') as f:
+            f.write(res.data)
+        zip = zipfile.ZipFile(file_name, 'r')
+        zip.extractall('/tmp')
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
         assert len(zip.namelist()) == 2, err_msg
@@ -4648,7 +4775,8 @@ class TestWeb(web.Helper):
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'test-app_task.csv', zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
+        csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
+
         csvreader = unicode_csv_reader(csv_content)
         project = db.session.query(Project)\
                     .filter_by(short_name=project.short_name)\
@@ -4662,7 +4790,9 @@ class TestWeb(web.Helper):
                 keys = row
             n = n + 1
         err_msg = "The number of exported tasks is different from Project Tasks"
-        assert len(exported_tasks) == len(project.tasks), err_msg
+        assert len(exported_tasks) == len(project.tasks), (err_msg,
+                                                           len(exported_tasks),
+                                                           len(project.tasks))
         for t in project.tasks:
             err_msg = "All the task column names should be included"
             for tk in flatten(t.dictize()).keys():
@@ -4671,7 +4801,7 @@ class TestWeb(web.Helper):
             err_msg = "All the task.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
 
         for et in exported_tasks:
             task_id = et[keys.index('id')]

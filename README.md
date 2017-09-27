@@ -5,25 +5,44 @@
 Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveralls.io/r/Scifabric/pybossa?branch=master)
 [![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Slack](http://slackin.crowdcrafting.org/badge.svg)](http://slackin.crowdcrafting.org) 
 [![DOI](https://zenodo.org/badge/12868/PyBossa/pybossa.svg)](https://zenodo.org/badge/latestdoi/12868/PyBossa/pybossa)
+[![Scifabric's Patreon](https://img.shields.io/badge/support%20us%20on-patreon-orange.svg)](https://www.patreon.com/bePatron?u=4979179)
+
+# What is PYBOSSA?
+
+PYBOSSA is our technology, used for the development of platforms and data collection
+within collaborative environments, analysis and data enrichment.
+
+PYBOSSA is an extremely flexible and versatile technology with a multitude of applications that
+adapt to each specific case facilitating many of the daily tasks that take place in research
+environments such as museums, art galleries, heritage institutions, libraries of any kind, market
+research companies, hospitals, universities and all those organisations that manage data or require
+information from their customers/users -such as airports, shopping malls, banks, hotel chains, etc.
+
+PYBOSSA’s simplicity consists in its easy adjustment to any areas using any of the available
+templates, this way every customer can then adapt it to their own needs.
+
+PYBOSSA integrates with other data collection products such as Amazon S3, Twitter, Youtube,
+Google Spreadsheets, Flickr, Raspberry Pi, etc. Through all these integrations
+PYBOSSA allows data capture for further analysis made by users in a transparent and easy way.
 
 
-PYBOSSA is an open source platform for crowd-sourcing online (volunteer)
-assistance to perform tasks that require human cognition, knowledge or
-intelligence (e.g. image classification, transcription, information location
-etc).
+## Supporting PYBOSSA
+
+PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome 
+[backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out 
+[Scifabric's Patreon campaign](https://www.patreon.com/scifabric).
+
 
 Actividad subvencionada por el Ministerio de Educación, Cultura y Deporte
 
 ![Ministerio de Educación, Cultura y Deporte](http://i.imgur.com/4ShmIt1.jpg)
 
-PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
-python (hence the name!). It can be used for any distributed tasks project
-but was initially developed to help scientists and other researchers
-crowd-source human problem-solving skills!
 
 # See it in Action
 
-PyBossa powers [Crowdcrafting.org](http://crowdcrafting.org/) and [MicroPast](http://crowdsourced.micropasts.org/) a joint project by British Museum and University College of London.
+PYBOSSA powers [Crowdcrafting.org](http://crowdcrafting.org/) and [MicroPast](http://crowdsourced.micropasts.org/), [LibCrowds](https://www.libcrowds.com/) and many more projects.
+
+For a full list of PYBOSSA projects, check our [case studies](https://scifabric.com/) and [blog](https://scifabric.com/blog/).
 
 # Installing and Upgrading
 
@@ -53,7 +72,6 @@ Thanks to the support of [BrowserStack](http://browserstack.com/) we can do real
 # Useful Links
 
 * [Documentation](http://docs.pybossa.com/)
-* [Mailing List](http://lists.okfn.org/mailman/listinfo/open-science-dev)
 
 # Contributing
 
@@ -72,9 +90,14 @@ Special thanks to Shuttleworth Foundations for funding us and their true support
 * [Shuttleworth Foundation](https://www.shuttleworthfoundation.org/)
 ![Shuttleworth Foundation Funded](http://pybossa.com/assets/img/shuttleworth-funded.png)
 
+PYBOSSA was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
+python (hence the name!). It can be used for any distributed tasks project
+but was initially developed to help scientists and other researchers
+crowd-source human problem-solving skills!
+
 ## Copyright / License
 
-Copyright 2015 [SciFabric LTD](http://scifabric.com).
+Copyright 2015 [Scifabric LTD](https://scifabric.com).
 
 Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)
@@ -85,4 +108,3 @@ cooperation with the community in the case of network server software.
 
 Documentation and media is under a Creative Commons Attribution License version
 3.
-

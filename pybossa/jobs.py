@@ -25,7 +25,7 @@ from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
-import pybossa.leaderboard.jobs as leaderboard
+from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
 from datetime import datetime
@@ -125,17 +125,19 @@ def get_periodic_jobs(queue):
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
-            weekly_update_jobs, failed_jobs]
+            weekly_update_jobs, failed_jobs, leaderboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
 def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
     timeout = current_app.config.get('TIMEOUT')
+    unpublish_projects = current_app.config.get('UNPUBLISH_PROJECTS')
     yield dict(name=warm_up_stats, args=[], kwargs={},
                timeout=timeout, queue='high')
-    yield dict(name=warn_old_project_owners, args=[], kwargs={},
-               timeout=timeout, queue='low')
+    if unpublish_projects:
+        yield dict(name=warn_old_project_owners, args=[], kwargs={},
+                   timeout=timeout, queue='low')
     yield dict(name=warm_cache, args=[], kwargs={},
                timeout=timeout, queue='super')
     yield dict(name=news, args=[], kwargs={},
@@ -287,7 +289,12 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
 def get_leaderboard_jobs(queue='super'):  # pragma: no cover
     """Return leaderboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
-    yield dict(name=leaderboard.leaderboard, args=[], kwargs={},
+    leaderboards = current_app.config.get('LEADERBOARDS')
+    if leaderboards:
+        for leaderboard_key in leaderboards:
+            yield dict(name=leaderboard, args=[], kwargs={'info': leaderboard_key},
+                       timeout=timeout, queue=queue)
+    yield dict(name=leaderboard, args=[], kwargs={},
                timeout=timeout, queue=queue)
 
 

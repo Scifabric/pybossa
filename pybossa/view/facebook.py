@@ -18,12 +18,14 @@
 
 """Facebook view for PYBOSSA."""
 from flask import Blueprint, request, url_for, flash, redirect, session, current_app
+from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
+from pybossa.util import url_for_app_type
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -34,10 +36,14 @@ blueprint = Blueprint('facebook', __name__)
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
     """Login using Facebook Oauth."""
-    next_url = request.args.get("next")
-    return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                     next=next_url,
-                                                     _external=True))
+    if not current_app.config.get('LDAP_HOST', False):
+        next_url = request.args.get("next")
+        callback = url_for('.oauth_authorized',
+                           next=next_url,
+                           _external=True)
+        return facebook.oauth.authorize(callback=callback)
+    else:
+        return abort(404)
 
 
 @facebook.oauth.tokengetter
@@ -53,7 +59,7 @@ def get_facebook_token():  # pragma: no cover
 def oauth_authorized():  # pragma: no cover
     """Authorize facebook login."""
     resp = facebook.oauth.authorized_response()
-    next_url = request.args.get('next') or url_for('home.home')
+    next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error_reason'] +
@@ -115,19 +121,21 @@ def manage_user_login(user, user_data, next_url):
             msg, method = get_user_signup_method(user)
             flash(msg, 'info')
             if method == 'local':
-                return redirect(url_for('account.forgot_password'))
+                return redirect(url_for_app_type('account.forgot_password'))
             else:
-                return redirect(url_for('account.signin'))
+                return redirect(url_for_app_type('account.signin'))
         else:
-            return redirect(url_for('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         request_email = (user.email_addr == user.name)
         if request_email:
             flash("Please update your e-mail address in your profile page")
-            return redirect(url_for('account.update_profile', name=user.name))
+            return redirect(url_for_app_type('account.update_profile',
+                                             name=user.name))
         if (not request_email and user.newsletter_prompted is False
                 and newsletter.is_initialized()):
-            return redirect(url_for('account.newsletter_subscribe', next=next_url))
+            return redirect(url_for_app_type('account.newsletter_subscribe',
+                                             next=next_url))
         return redirect(next_url)

@@ -20,6 +20,7 @@ import json
 from flask import (Blueprint, request, url_for, flash, redirect, session,
     current_app, Response)
 from pybossa.core import flickr
+from pybossa.util import url_for_app_type
 from pybossa.flickr_client import FlickrClient
 from flask_oauthlib.client import OAuthException
 
@@ -36,7 +37,7 @@ def login():
 @blueprint.route('/revoke-access')
 def logout():
     """Log out."""
-    next_url = request.args.get('next') or url_for('home.home')
+    next_url = request.args.get('next') or url_for_app_type('home.home')
     _remove_credentials(session)
     return redirect(next_url)
 

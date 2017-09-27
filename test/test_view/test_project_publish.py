@@ -105,3 +105,40 @@ class TestProjectPublicationView(web.Helper):
                              follow_redirects=True)
 
         assert fake_logger.log_event.called, "Auditlog not called"
+
+    @with_context
+    def test_published_get(self):
+        project = ProjectFactory.create(info=dict())
+        url = '/project/%s/publish?api_key=%s' % (project.short_name,
+                                                  project.owner.api_key)
+        # Without tasks should return 403
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+
+        # With a task should return 403 and no task presenter
+        TaskFactory.create(project=project)
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+
+        project.info['task_presenter'] = 'task presenter'
+
+        project_repo.update(project)
+
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_published_disable_task_presenter_get(self):
+        with patch.dict(self.flask_app.config,
+                        {'DISABLE_TASK_PRESENTER': True}):
+            project = ProjectFactory.create(info=dict())
+            url = '/project/%s/publish?api_key=%s' % (project.short_name,
+                                                      project.owner.api_key)
+            # Without tasks should return 403
+            res = self.app.get(url)
+            assert res.status_code == 403, res.status_code
+
+            # With a task should return 200 as task presenter is disabled.
+            TaskFactory.create(project=project)
+            res = self.app.get(url)
+            assert res.status_code == 200, res.status_code

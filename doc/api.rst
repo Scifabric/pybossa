@@ -178,6 +178,42 @@ Finally, you can get a list of users by doing::
 
     GET http://{pybossa-site-url}/api/user
 
+List of project of project IDs
+------------------------------
+
+In PYBOSSA most of the domain objects are related to a project. Therefore, you can
+query (or filter) a list of project IDs directly via the API to reduce the number
+of queries that you need to do. This is specially useful for Single Page Applications
+that only use the PYBOSSA JSON endpoints.
+
+For example, you can get all the tasks for a list of projects like this::
+
+    GET http://{pybossa-site-url}/api/task?project_id=[1,2,3]
+
+That filter will return tasks for project IDs 1, 2 and 3. The same can be done
+for task runs and blogposts.
+
+Created
+-------
+
+If you want, you can use the the domain attribute *created* to get items
+from the DB. Basically, you can specify a year, year-month, year-month-day
+to get all the values for those ranges. For example, if you want all
+the tasks that have been created in 2015, just use::
+
+    GET http://{pybossa-site-url}/api/task?created=2015&all=1
+
+If you want all the task runs from 2015-05::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05&all=1
+
+You can for example get all the task runs that a user has submitted on 
+a given day like this::
+
+    GET http://{pybossa-site-url}/api/taskrun?created=2015-05-03&user_id=3
+
+This filter works for any object that has the *created* attribute.
+
 Order by
 --------
 
@@ -274,8 +310,8 @@ It is possible to limit the number of returned objects::
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&limit=20]
 
 
-It is possible to access first level JSON keys within the **info** field of Projects,
-Tasks, Task Runs and Results::
+It is possible to access first level JSON keys within the **info** field of Categories,
+Projects, Tasks, Task Runs and Results::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&info=foo::bar&limit=20]
 
@@ -313,9 +349,9 @@ When you use the fulltextsearch argument, the API will return the objects enrich
  * **headline**: The matched words of the key1::value1 found, with <b></b> items to highlight them.
  * **rank**: The ranking returned by the database. Ranking attempts to measure how relevant documents are to a particular query, so that when there are many matches the most relevant ones can be shown first.
 
-Here you have an example of the expected output for an api call like this:: 
+Here you have an example of the expected output for an api call like this::
 
-    /api/task?project_id=1&info=name::ipsum%26bravo&fulltextsearch=1 
+    /api/task?project_id=1&info=name::ipsum%26bravo&fulltextsearch=1
 
 .. code-block:: python
 
@@ -349,7 +385,7 @@ Here you have an example of the expected output for an api call like this::
     We use PostgreSQL ts_rank_cd with the following configuration: ts_rank_cd(textsearch, query, 4). For more details check the official documentation of PostgreSQL.
 
 .. note::
-	By default PYBOSSA uses English for the searches. You can customize this behavior using any of the supported languages by PostgreSQL changing the settings_local.py config variable: *FULLTEXTSEARCH_LANGUAGE* = 'spanish'. 
+	By default PYBOSSA uses English for the searches. You can customize this behavior using any of the supported languages by PostgreSQL changing the settings_local.py config variable: *FULLTEXTSEARCH_LANGUAGE* = 'spanish'.
 
 .. note::
     By default all GET queries return a maximum of 20 objects unless the
@@ -359,6 +395,22 @@ Here you have an example of the expected output for an api call like this::
 .. note::
     If the search does not find anything, the server will return an empty JSON
     list []
+
+Excluding contributed tasks from GET queries
+--------------------------------------------
+
+For the Tasks endpoint, you can do also something else, which could be pretty handy
+for PYBOSSA projects that are built using only Javascript (Single Page Applications) and do not want to use
+the /newtask endpoint.
+
+Basically, you can use any of the previous filters for the /api/task endpoint and add
+the following argument: **participated=1** to remove from the results, the tasks that
+the user has participated in. In this way, you will be completely in charge of how
+the tasks are presented to your users. You will design how they will be delivered.
+
+This endpoint now accepts as well the **external_uid** parameter, as by default it identifies
+authenticated users, as well as anonymouse users. If you are using the external UID,
+include it.
 
 
 Create
@@ -443,14 +495,14 @@ Favorites
 ---------
 
 Authenticated users can mark a task as a favorite. This is useful for users when they
-want to see all the tasks they have done to remember them. For example, a user can mark 
+want to see all the tasks they have done to remember them. For example, a user can mark
 as a favorite a picture that's beautiful and that he/she has marked as favorited.
 
 For serving this purpose PYBOSSA provides the following api endpoint::
 
     GET /api/favorites
 
-If the user is authenticated it will return all the tasks the user has marked as favorited. 
+If the user is authenticated it will return all the tasks the user has marked as favorited.
 
 To add a task as a favorite, a POST should be done with a payload of {'task_id': Task.id}::
 
@@ -477,7 +529,7 @@ You can also use **limit** to get more than 1 task for the user like this::
 
     GET http://{pybossa-site-url}/api/{project.id}/newtask?limit=100
 
-That query will return 100 tasks for the user. 
+That query will return 100 tasks for the user.
 
 .. note::
     That's the maximum of tasks that a user can get at once. If you pass an argument of 200,
@@ -594,7 +646,7 @@ User api endpoint
 ----------------
 
 While all the other endpoints behave the same, this one is a bit special as we deal with private information
-like emails. 
+like emails.
 
 Anonymous users
 ~~~~~~~~~~~~~~~
@@ -1039,6 +1091,7 @@ Example of logged in user:
     {
         ...
         "user": {
+            "admin": false,
             "api_key": "aa3ee485-896d-488a-83f7-88a29bf45171",
             "confirmation_email_sent": false,
             "created": "2014-08-11T08:59:32.079599",
@@ -1563,6 +1616,7 @@ for logged in user JohnDoe:
       "n_volunteers": 1,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "akjhfd85-8afd6-48af-f7afg-kjhsfdlkjhf1",
         "confirmation_email_sent": false,
         "created": "2014-08-11T08:59:32.079599",
@@ -2102,32 +2156,46 @@ Shows you PYBOSSA wide announcements
                 "body": "test123",
                 "created": "2017-05-31T15:23:44.858735",
                 "id": 5,
+                "media_url": null,
+                "published": true,
                 "title": "title123",
+                "updated": "2017-05-31T15:23:44.858735",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-05-31T15:23:28.477516",
                 "id": 4,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-05-31T15:23:28.477516",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:42:45.042010",
                 "id": 7,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:42:45.042010",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:45:11.612801",
                 "id": 8,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:45:11.612801",
                 "user_id": 4953
             }
         ],
-        "template": ""
+        "csrf": "1504710446.52##6a7fakjsdhsdflkj",
+        "template": "admin/announcement.html",
+        "title": "Manage global Announcements"
     }
 
 
@@ -2154,34 +2222,46 @@ Shows you PYBOSSA wide announcements
                 "body": "test123",
                 "created": "2017-05-31T15:23:44.858735",
                 "id": 5,
+                "media_url": null,
+                "published": true,
                 "title": "title123",
+                "updated": "2017-05-31T15:23:44.858735",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-05-31T15:23:28.477516",
                 "id": 4,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-05-31T15:23:28.477516",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:42:45.042010",
                 "id": 7,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:42:45.042010",
                 "user_id": 4953
             },
             {
                 "body": "new body",
                 "created": "2017-06-01T23:45:11.612801",
                 "id": 8,
+                "media_url": null,
+                "published": true,
                 "title": "blogpost title",
+                "updated": "2017-06-01T23:45:11.612801",
                 "user_id": 4953
             }
         ],
-      "csrf": "1496394861.12##1bfcbb386bae5d1625c023a23b08865b4176579d",
-      "template": "",
-      "title": "Manage global Announcements"
+        "csrf": "1504710446.52##6a7fakjsdhsdflkj",
+        "template": "admin/announcement.html",
+        "title": "Manage global Announcements"
     }
 
 
@@ -2211,7 +2291,7 @@ Creates a new PYBOSSA wide announcement
         "errors": {},
         "title": null
       },
-      "template": "",
+      "template": "admin/new_announcement.html",
       "title": "Write a new post"
     }
 
@@ -2259,9 +2339,10 @@ Updates a PYBOSSA announcement
         "id": 4,
         "title": "test6"
       },
-      "template": "",
+      "template": "admin/new_announcement.html",
       "title": "Edit a post"
     }
+
 
 **POST**
 
@@ -3574,6 +3655,7 @@ when the project has an empty template, otherwise it will load the template for 
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3660,6 +3742,7 @@ argument: **?template=basic** for the basic or **?template=iamge** for the image
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3715,7 +3798,7 @@ argument: **?template=basic** for the basic or **?template=iamge** for the image
       "title": "Project: asdf1324 &middot; Task Presenter Editor"
     }
 
-Then, you can use that template, or if you prefer you can do a POST directly without that information. As in 
+Then, you can use that template, or if you prefer you can do a POST directly without that information. As in
 any other request involving a POST you will need the CSRFToken to validate it.
 
 **POST**
@@ -3758,6 +3841,7 @@ as the csrf token. As this endpoint does not have any form, the csrf token is no
       "n_tasks": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2016-09-15T11:30:42.660450",
@@ -3863,6 +3947,7 @@ It returns a JSON object with the following information:
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2012-06-06T06:27:18.760254",
@@ -4137,6 +4222,7 @@ It returns a JSON object with the following information:
       "n_volunteers": 0,
       "overall_progress": 0,
       "owner": {
+        "admin": false,
         "api_key": "key",
         "confirmation_email_sent": false,
         "created": "2012-06-06T06:27:18.760254",
@@ -4209,7 +4295,7 @@ Therefore, if you want to import tasks from a CSV link, you will have to do the 
 
     GET server/project/<short_name>/tasks/import?type=csv
 
-That query will return the same output as before, but instead of the available_importers, you will get the the form fields and CSRF token for that importer. 
+That query will return the same output as before, but instead of the available_importers, you will get the the form fields and CSRF token for that importer.
 
 **POST**
 

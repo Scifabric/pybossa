@@ -23,15 +23,23 @@ from pybossa.model.user import User
 u = User()
 
 
-def get_leaderboard(top_users=20, user_id=None, window=0):
+def get_leaderboard(top_users=20, user_id=None, window=0, info=None):
     """Return a list of top_users and if user_id return its position."""
+    materialized_view = "users_rank_%s" % info
     sql = text('''SELECT * from users_rank WHERE rank <= :top_users 
                ORDER BY rank;''')
+    if info:
+        sql = text('''SELECT * from {} WHERE rank <= :top_users 
+                    ORDER BY rank;'''.format(materialized_view))
+
     results = db.session.execute(sql, dict(top_users=top_users))
     top_users = [format_user(user) for user in results]
 
     if user_id:
         sql = text('''SELECT * from users_rank where id=:user_id;''')
+        if info:
+            sql = text('''SELECT * from {} where
+                       id=:user_id;'''.format(materialized_view))
         results = db.session.execute(sql, dict(user_id=user_id))
         user = None
         for row in results:
@@ -40,6 +48,10 @@ def get_leaderboard(top_users=20, user_id=None, window=0):
             sql = text('''SELECT * from users_rank
                        WHERE rank >= :low AND rank <= :top order by rank;
                        ''')
+            if info:
+                sql = text('''SELECT * from {} 
+                           WHERE rank >= :low AND rank <= :top order by rank;
+                           '''.format(materialized_view))
             low = user['rank'] - window
             top = user['rank'] + window
             results = db.session.execute(sql, dict(user_id=user_id,

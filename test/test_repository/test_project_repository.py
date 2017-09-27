@@ -430,13 +430,15 @@ class TestProjectRepositoryForCategories(Test):
     def test_update_category(self):
         """Test update_category persists the changes made to the category"""
 
-        category = CategoryFactory.create(description='this is a category')
-        category.description = 'the description has changed'
+        info = {'key': 'val'}
+        category = CategoryFactory.create(info=info)
+        info_new = {'f': 'v'}
+        category.info = info_new
 
         self.project_repo.update_category(category)
         updated_category = self.project_repo.get_category(category.id)
 
-        assert updated_category.description == 'the description has changed', updated_category
+        assert updated_category.info == info_new, updated_category
 
 
     @with_context
@@ -480,3 +482,49 @@ class TestProjectRepositoryForCategories(Test):
         bad_object = dict()
 
         assert_raises(WrongObjectError, self.project_repo.delete_category, bad_object)
+
+    @with_context
+    def test_fulltext_search_category(self):
+        """Test fulltext search in JSON info works."""
+        category = CategoryFactory.create()
+        text = 'something word you me bar'
+        data = {'foo': text}
+        category.info = data
+        self.project_repo.update_category(category)
+
+        info = 'foo::word'
+        res = self.project_repo.filter_categories_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0][0].info['foo'] == text, res[0]
+
+        res = self.project_repo.filter_categories_by(info=info)
+        assert len(res) == 0, len(res)
+
+    @with_context
+    def test_fulltext_search_category_01(self):
+        """Test fulltext search in JSON info works."""
+        category = CategoryFactory.create()
+        text = 'something word you me bar'
+        data = {'foo': text, 'bar': 'foo'}
+        category.info = data
+        self.project_repo.update_category(category)
+
+        info = 'foo::word&bar|bar::foo'
+        res = self.project_repo.filter_categories_by(info=info, fulltextsearch='1')
+        assert len(res) == 1, len(res)
+        assert res[0][0].info['foo'] == text, res[0]
+
+
+    @with_context
+    def test_info_json_search_category(self):
+        """Test search in JSON info works."""
+        category = CategoryFactory.create()
+        text = 'bar'
+        data = {'foo': text}
+        category.info = data
+        self.project_repo.update_category(category)
+
+        info = 'foo::bar'
+        res = self.project_repo.filter_categories_by(info=info)
+        assert len(res) == 1, len(res)
+        assert res[0].info['foo'] == text, res[0]

@@ -33,6 +33,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
+from pybossa.util import get_user_id_or_ip
 from pybossa.core import ratelimits, uploader
 from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
@@ -40,7 +41,8 @@ from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo, projectcoowner_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
-from pybossa.model import DomainObject
+from pybossa.model import DomainObject, announcement
+from pybossa.model.task import Task
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -83,7 +85,7 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    allowed_classes_upload = ['blogpost', 'helpingmaterial']
+    allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -126,7 +128,8 @@ class APIBase(MethodView):
         for result in query_result:
             # This is for n_favs orderby case
             if not isinstance(result, DomainObject):
-                result = result[0]
+                if 'n_favs' in result.keys():
+                    result = result[0]
             try:
                 if (result.__class__ != self.__class__):
                     (item, headline, rank) = result
@@ -218,15 +221,21 @@ class APIBase(MethodView):
         filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
-                         'fulltextsearch', 'desc', 'orderby', 'related']:
+                         'fulltextsearch', 'desc', 'orderby', 'related',
+                         'participated']:
                 # Raise an error if the k arg is not a column
-                getattr(self.__class__, k)
+                if self.__class__ == Task and k == 'external_uid':
+                    pass
+                else:
+                    getattr(self.__class__, k)
                 filters[k] = request.args[k]
         repo = repo_info['repo']
         filters = self.api_context(all_arg=request.args.get('all'), **filters)
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
         last_id = request.args.get('last_id')
+        if request.args.get('participated'):
+            filters['participated'] = get_user_id_or_ip()
         fulltextsearch = request.args.get('fulltextsearch')
         desc = request.args.get('desc') if request.args.get('desc') else False
         desc = fuzzyboolean(desc)
@@ -462,13 +471,26 @@ class APIBase(MethodView):
             for key in request.form.keys():
                 tmp[key] = request.form[key]
 
-            ensure_authorized_to('create', self.__class__,
-                                 project_id=tmp['project_id'])
-            upload_method = current_app.config.get('UPLOAD_METHOD')
-            if request.files.get('file') is None:
-                raise AttributeError
-            _file = request.files['file']
-            container = "user_%s" % current_user.id
+            if isinstance(self, announcement.Announcement):
+                # don't check project id for announcements
+                ensure_authorized_to('create', self)
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                if request.files.get('file') is None:
+                    raise AttributeError
+                _file = request.files['file']
+                container = "user_%s" % current_user.id
+            else:
+                ensure_authorized_to('create', self.__class__,
+                                    project_id=tmp['project_id'])
+                project = project_repo.get(tmp['project_id'])
+                upload_method = current_app.config.get('UPLOAD_METHOD')
+                if request.files.get('file') is None:
+                    raise AttributeError
+                _file = request.files['file']
+                if current_user.admin:
+                    container = "user_%s" % project.owner.id
+                else:
+                    container = "user_%s" % current_user.id
             uploader.upload_file(_file,
                                  container=container)
             file_url = get_avatar_url(upload_method,

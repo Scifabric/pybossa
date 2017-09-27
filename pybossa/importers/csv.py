@@ -24,9 +24,8 @@ from pybossa.util import unicode_csv_reader
 from .base import BulkTaskImport, BulkImportException
 from flask import request
 from werkzeug.datastructures import FileStorage
-import io
-import time
-import json
+from werkzeug.datastructures import FileStorage
+import io, time, json
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -182,3 +181,4 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         """Get tasks from a given URL."""
         csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
+

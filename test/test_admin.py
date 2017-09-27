@@ -955,6 +955,7 @@ class TestAdmin(web.Helper):
         obj = db.session.query(Category).get(1)
         _name = obj.name
         category = obj.dictize()
+        del category['info']
 
         # Anonymous user GET
         url = '/admin/categories/update/%s' % obj.id
@@ -1076,6 +1077,7 @@ class TestAdmin(web.Helper):
         self.create()
         obj = db.session.query(Category).get(2)
         category = obj.dictize()
+        del category['info']
 
         # Anonymous user GET
         url = '/admin/categories/del/%s' % obj.id
@@ -1122,6 +1124,7 @@ class TestAdmin(web.Helper):
         obj = db.session.query(Category).first()
         url = '/admin/categories/del/%s' % obj.id
         category = obj.dictize()
+        del category['info']
         res = self.app.post(url, data=category, follow_redirects=True)
         print res.data
         err_msg = "Category should not be deleted"
@@ -1331,6 +1334,7 @@ class TestAdmin(web.Helper):
         announcement = AnnouncementFactory.create()
         res = self.app_get_json(url)
         data = json.loads(res.data)
+        assert data['template'] == 'admin/announcement.html'
         announcement0 = data['announcements'][0]
         assert announcement0['body'] == 'Announcement body text'
         assert announcement0['title'] == 'Announcement title'
@@ -1347,6 +1351,8 @@ class TestAdmin(web.Helper):
 
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['template'] == 'admin/new_announcement.html'
 
         csrf = self.get_csrf(url)
         headers = {'X-CSRFToken': csrf}
@@ -1387,6 +1393,8 @@ class TestAdmin(web.Helper):
 
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['template'] == 'admin/new_announcement.html'
 
         res = self.app_get_json('/admin/announcement/2/update')
         assert res.status_code == 404, res.status_code
@@ -1418,6 +1426,8 @@ class TestAdmin(web.Helper):
 
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['template'] == 'admin/new_announcement.html'
 
         res = self.app_get_json('/admin/announcement/2/update')
         assert res.status_code == 404, res.status_code

@@ -179,7 +179,7 @@ def export_users():
                              'timezone', 'type_of_user', 'additional_comments',
                              'total_projects_contributed', 'completed_tasks',
                              'percentage_tasks_completed', 'first_submission_date',
-                             'last_submission_date', 'avg_time_per_task')
+                             'last_submission_date', 'avg_time_per_task', 'consent')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
@@ -408,7 +408,7 @@ def update_category(id):
 def announcement():
     """Manage anncounements."""
     announcements = announcement_repo.get_all_announcements()
-    response = dict(template='', # template='admin/announcement.html',
+    response = dict(template='admin/announcement.html',
                     title=gettext("Manage global Announcements"),
                     announcements=announcements,
                     csrf=generate_csrf())
@@ -421,7 +421,7 @@ def announcement():
 def new_announcement():
     """Create new announcement."""
     def respond():
-        response = dict(template='', # template='admin/new_announcement.html',
+        response = dict(template='admin/new_announcement.html',
                         title=gettext("Write a new post"),
                         form=form)
         return handle_content_type(response)
@@ -461,7 +461,7 @@ def update_announcement(id):
         raise abort(404)
 
     def respond():
-        response = dict(template='',  # template='admin/update_announcement.html',
+        response = dict(template='admin/new_announcement.html',
                         title=gettext("Edit a post"),
                         form=form)
         return handle_content_type(response)

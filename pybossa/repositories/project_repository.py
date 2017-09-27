@@ -32,9 +32,6 @@ from pybossa.cache.helpers import n_available_tasks
 
 class ProjectRepository(Repository):
 
-    def __init__(self, db):
-        self.db = db
-
     # Methods for Project objects
     def get(self, id):
         return self.db.session.query(Project).get(id)

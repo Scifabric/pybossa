@@ -2037,7 +2037,7 @@ def update_blogpost(short_name, id):
     cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
-    flash(Markup('<i class="icon-ok"></i> {}'.format(msg_1)), 'success')
+    flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
 
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
@@ -2107,6 +2107,7 @@ def publish(short_name):
     task_repo.delete_taskruns_from_project(project)
     result_repo.delete_results_from_project(project)
     webhook_repo.delete_entries_from_project(project)
+    cached_projects.delete_project(short_name)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
@@ -2168,11 +2169,27 @@ def webhook_handler(short_name, oid=None):
         else:
             abort(404)
 
+
     ensure_authorized_to('read', Webhook, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
+
+    if request.method == 'GET' and request.args.get('all'):
+        for wh in responses:
+            webhook_queue.enqueue(webhook, project.webhook,
+                                  wh.payload, wh.id)
+        flash('All webhooks enqueued')
+
+    if request.method == 'GET' and request.args.get('failed'):
+        for wh in responses:
+            if wh.response_status_code != 200:
+                webhook_queue.enqueue(webhook, project.webhook,
+                                      wh.payload, wh.id)
+        flash('All webhooks enqueued')
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+
     return render_template('projects/webhook.html', project=project,
                            owner=owner, responses=responses,
                            overall_progress=ps.overall_progress,

@@ -38,8 +38,9 @@ For more complex DB queries, refer to other packages or services within
 PYBOSSA.
 """
 import json
-from pybossa.model.project import Project
-from sqlalchemy.sql import and_
+import re
+from pybossa.model.project import Project, TaskRun, Task
+from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
@@ -54,21 +55,30 @@ class Repository(object):
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
-                       if key != 'info' and key != 'fav_user_ids']
+                       if (key != 'info' and key != 'fav_user_ids'
+                            and key != 'created' and key != 'project_id')]
         queries = []
         headlines = []
         order_by_ranks = []
+        or_clauses = []
+
         if 'info' in kwargs.keys():
-            #clauses = clauses + self.handle_info_json(model, kwargs['info'],
-            #                                          fulltextsearch)
             queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
                                                                        fulltextsearch)
             clauses = clauses + queries
 
-        if len(clauses) != 1:
-            return and_(*clauses), queries, headlines, order_by_ranks
-        else:
-            return (and_(*clauses), ), queries, headlines, order_by_ranks
+        if 'created' in kwargs.keys():
+            like_query = kwargs['created'] + '%'
+            clauses.append(_entity_descriptor(model,'created').like(like_query))
+
+        if 'project_id' in kwargs.keys():
+            tmp = "%s" % kwargs['project_id']
+            project_ids = re.findall(r'\d+', tmp)
+            for project_id in project_ids:
+                or_clauses.append((_entity_descriptor(model, 'project_id') ==
+                                   project_id))
+        all_clauses = and_(and_(*clauses), or_(*or_clauses))
+        return (all_clauses,), queries, headlines, order_by_ranks
 
 
     def handle_info_json(self, model, info, fulltextsearch=None):
@@ -104,18 +114,27 @@ class Repository(object):
         """Return query with context aware query."""
         owner_id = None
         query = None
+        participated = None
 
         if filters.get('owner_id'):
             owner_id = filters.get('owner_id')
             del filters['owner_id']
-        data = self.generate_query_from_keywords(model,
-                         fulltextsearch,
-                         **filters)
+
+        # Prevent external_uid for taks & participated arg
+        if filters.get('participated') and filters.get('external_uid'):
+            del filters['external_uid']
+
+        if filters.get('participated'):
+            participated = filters.get('participated')
+            del filters['participated']
 
         query_args, queries, headlines, orders = self.generate_query_from_keywords(model,
                                                                fulltextsearch,
                                                                **filters)
-        if owner_id:
+
+        project_var_existing = ('Project' in locals() or 'Project' in globals())
+
+        if project_var_existing and owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
@@ -127,9 +146,25 @@ class Repository(object):
                 query = self.db.session.query(model)\
                             .filter(model.id.in_(subquery),
                                     *query_args)
-
         else:
             query = self.db.session.query(model).filter(*query_args)
+
+        if participated and model == Task:
+            if participated['user_id']:
+                subquery = self.db.session.query(TaskRun)\
+                               .with_entities(TaskRun.task_id)\
+                               .filter_by(user_id=participated['user_id']).subquery()
+            if participated['external_uid']:
+                subquery = self.db.session.query(TaskRun)\
+                               .with_entities(TaskRun.task_id)\
+                               .filter_by(external_uid=participated['external_uid']).subquery()
+            if participated['user_ip']:
+                subquery = self.db.session.query(TaskRun)\
+                               .with_entities(TaskRun.task_id)\
+                               .filter_by(user_ip=participated['user_ip']).subquery()
+            query = self.db.session.query(model)\
+                        .filter(~model.id.in_(subquery),
+                                *query_args)
         if len(headlines) > 0:
             query = query.add_column(headlines[0])
         if len(orders) > 0:

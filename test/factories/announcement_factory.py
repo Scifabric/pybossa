@@ -34,3 +34,6 @@ class AnnouncementFactory(BaseFactory):
     title = u'Announcement title'
     body = u'Announcement body text'
     user_id = None
+    media_url = 'https://server.com/img.jpg'
+    info = {'file_name': 'img.jpg',
+            'container': 'user'}

@@ -48,9 +48,10 @@ from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info
 from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
+from pybossa.util import url_for_app_type
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
-from pybossa.core import user_repo
+from pybossa.core import user_repo, ldap
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
 
@@ -101,7 +102,9 @@ def signin():
 
     """
     form = LoginForm(request.body)
-    if request.method == 'POST' and form.validate():
+    isLdap = current_app.config.get('LDAP_HOST', False)
+    if (request.method == 'POST' and form.validate()
+            and isLdap is False):
         password = form.password.data
         email_addr = form.email.data.lower()
         user = user_repo.search_by_email(email_addr=email_addr)
@@ -133,17 +136,39 @@ def signin():
                           did you sign up?")
             flash(msg, 'info')
 
+    if (request.method == 'POST' and form.validate()
+            and isLdap):
+        password = form.password.data
+        cn = form.email.data
+        ldap_user = None
+        if ldap.bind_user(cn, password):
+            ldap_user = ldap.get_object_details(cn)
+            user_db = user_repo.get_by(name=ldap_user['cn'][0])
+            if (user_db is None):
+                user_data = dict(fullname=ldap_user['givenName'][0],
+                                 name=cn,
+                                 email_addr=cn,
+                                 valid_email=True,
+                                 consent=False)
+                create_account(user_data, ldap_disabled=False)
+            else:
+                login_user(user_db, remember=True)
+        else:
+            msg = gettext("User LDAP credentials are wrong.")
+            flash(msg, 'info')
+
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if ('twitter' in current_app.blueprints):  # pragma: no cover
-            auth['twitter'] = True
-        if ('facebook' in current_app.blueprints):  # pragma: no cover
-            auth['facebook'] = True
-        if ('google' in current_app.blueprints):  # pragma: no cover
-            auth['google'] = True
+        if (isLdap is False):
+            if ('twitter' in current_app.blueprints):  # pragma: no cover
+                auth['twitter'] = True
+            if ('facebook' in current_app.blueprints):  # pragma: no cover
+                auth['facebook'] = True
+            if ('google' in current_app.blueprints):  # pragma: no cover
+                auth['google'] = True
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,
@@ -242,8 +267,7 @@ def signout():
 def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
-    confirm_url = url_for('.confirm_account', key=key, _external=True)
-    return confirm_url
+    return url_for_app_type('.confirm_account', key=key, _external=True)
 
 
 @blueprint.route('/confirm-email')
@@ -291,12 +315,17 @@ def register():
     Returns a Jinja2 template
 
     """
+    if current_app.config.get('LDAP_HOST', False):
+        return abort(404)
     form = RegisterForm(request.body)
     form.project_slug.choices = get_project_choices()
+    msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
+    form.consent.label = msg
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,
-                       password=form.password.data)
+                       password=form.password.data,
+                       consent=form.consent.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
@@ -371,12 +400,14 @@ def confirm_account():
     return redirect(url_for("home.home"))
 
 
-def create_account(user_data, project_slugs=None):
+def create_account(user_data, project_slugs=None, ldap_disabled=True):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
-                               valid_email=True)
-    new_user.set_password(user_data['password'])
+                               valid_email=True,
+                               consent=user_data['consent'])
+    if ldap_disabled:
+        new_user.set_password(user_data['password'])
     user_repo.save(new_user)
     user_info = dict(fullname=user_data['fullname'], email_addr=user_data['email_addr'], password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
@@ -788,8 +819,8 @@ def forgot_password():
             else:
                 userdict = {'user': user.name, 'password': user.passwd_hash}
                 key = signer.dumps(userdict, salt='password-reset')
-                recovery_url = url_for('.reset_password',
-                                       key=key, _external=True)
+                recovery_url = url_for_app_type('.reset_password',
+                                                key=key, _external=True)
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)

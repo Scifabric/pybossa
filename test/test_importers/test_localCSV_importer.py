@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2016 SciFabric LTD.
+# Copyright (C) 2017 SciFabric LTD.
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +22,7 @@ from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
 class TestBulkTaskLocalCSVImport(object):
 
     def setUp(self):
-        form_data = {'type': 'localcsv', 'csv_filename': 'fakefile.csv'}
+        form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
         self.importer = BulkTaskLocalCSVImport(**form_data)
 
     def test_importer_type_local_csv(self):
@@ -43,7 +43,7 @@ class TestBulkTaskLocalCSVImport(object):
         with patch('pybossa.importers.csv.open', mock_open(read_data='Foo,Bar\n1,2\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 1, number_of_tasks
-
+            
     def test_count_tasks_returns_2_rows(self):
         with patch('pybossa.importers.csv.open', mock_open(read_data='Foo,Bar\n1,2\naaa,bbb\n'), create=True):
             number_of_tasks = self.importer.count_tasks()

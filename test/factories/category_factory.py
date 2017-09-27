@@ -34,3 +34,4 @@ class CategoryFactory(BaseFactory):
     name = factory.Sequence(lambda n: 'category_name_%d' % n)
     short_name = factory.Sequence(lambda n: 'category_short_name_%d' % n)
     description = 'Category description for testing purposes'
+    info = {'file_name': 'test.jpg', 'container': 'user_1'}
