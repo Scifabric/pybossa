@@ -150,22 +150,24 @@ def pro_features(owner=None):
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List projects in the system"""
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
     if cached_projects.n_count('featured') > 0:
         return project_index(page, cached_projects.get_all_featured,
-                             'featured',
-                             True, False)
+                             'featured', True, False, order_by, desc)
     else:
         categories = cached_cat.get_all()
         cat_short_name = categories[0].short_name
         return redirect_content_type(url_for('.project_cat_index', category=cat_short_name))
 
 
-def project_index(page, lookup, category, fallback, use_count):
+def project_index(page, lookup, category, fallback, use_count, order_by=None,
+                  desc=False):
     """Show projects of a category"""
 
     per_page = current_app.config['APPS_PER_PAGE']
+    ranked_projects = rank(lookup(category), order_by, desc)
 
-    ranked_projects = rank(lookup(category))
     offset = (page - 1) * per_page
     projects = ranked_projects[offset:offset+per_page]
 
@@ -213,15 +215,20 @@ def project_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft projects"""
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
     return project_index(page, cached_projects.get_all_draft, 'draft',
-                     False, True)
+                         False, True, order_by, desc)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
-    return project_index(page, cached_projects.get_all, category, False, True)
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
+    return project_index(page, cached_projects.get_all, category, False, True,
+                         order_by, desc)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
@@ -1003,8 +1010,8 @@ def delete_tasks(short_name):
         n_volunteers = cached_projects.n_volunteers(project.id)
         n_completed_tasks = cached_projects.n_completed_tasks(project.id)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
-        project_sanitized, owner_sanitized = sanitize_project_owner(project, 
-                                                                    owner, 
+        project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
                                                                     current_user,
                                                                     ps)
         response = dict(template='projects/tasks/delete.html',
@@ -1237,7 +1244,7 @@ def show_stats(short_name):
                                                                 current_user,
                                                                 ps)
 
-    # Handle JSON project stats depending of output 
+    # Handle JSON project stats depending of output
     # (needs to be escaped for HTML)
     if request.headers.get('Content-Type') == 'application/json':
         handle_projectStats = projectStats
