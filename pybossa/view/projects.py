@@ -164,7 +164,6 @@ def index(page):
 def project_index(page, lookup, category, fallback, use_count, order_by=None,
                   desc=False):
     """Show projects of a category"""
-
     per_page = current_app.config['APPS_PER_PAGE']
     ranked_projects = rank(lookup(category), order_by, desc)
 
