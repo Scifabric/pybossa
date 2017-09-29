@@ -191,7 +191,7 @@ If you want, you can order them in descending order::
     GET http://{pybossa-site-url}/api/task?orderby=id&desc=true
 
 
-Check all the attritbutes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
+Check all the attributes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
 
 .. note::
     Please, notice that in order to keep users privacy, only their locale and
@@ -863,7 +863,7 @@ the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
 
-* **flash**: A success message, or error indicating if the request was succesful.
+* **flash**: A success message, or error indicating if the request was successful.
 * **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
 
 **Example output**
@@ -1216,7 +1216,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 the following header: "X-CSRFToken".
 
 As this endpoint supports **three** different forms, you must specify which form are
-you targetting adding an extra key: **btn**. The options for this key are:
+you targeting adding an extra key: **btn**. The options for this key are:
 
 * **Profile**: to update the **form**.
   **Upload**: to update the **upload_form**.
@@ -1228,7 +1228,7 @@ you targetting adding an extra key: **btn**. The options for this key are:
 
 It returns a JSON object with the following information:
 
-* **flash**: A success message, or error indicating if the request was succesful.
+* **flash**: A success message, or error indicating if the request was successful.
 * **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
 
 **Example output**
@@ -3375,7 +3375,7 @@ Project Category Featured
 
 Gives you the list of featured projects.
 
-* **pagination**: A pagination object for getting new featured projets from this category.
+* **pagination**: A pagination object for getting new featured projects from this category.
 * **active_cat**: Active category.
 * **projects**: List of projects belonging to this category.
 * **categories**: List of available categories in this server.
@@ -3593,7 +3593,7 @@ Gives you the list of posted blogs by the given project short name.
 * **project**: Info about the project.
 
 
-The project and owner fields will have more information if the onwer of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
+The project and owner fields will have more information if the owner of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
 
 **Example public output**
 
@@ -3845,7 +3845,7 @@ the following header: "X-CSRFToken". You will have to POST the data fields found
 as it contains the information about the fields: specifically **editor** with the HTML/CSS/JS that you want
 to provide.
 
-If the post is successfull, you will get the following output:
+If the post is successful, you will get the following output:
 
 **Example output**
 
@@ -4059,7 +4059,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 the following header: "X-CSRFToken".
 
 As this endpoint supports **two** different forms, you must specify which form are
-you targetting adding an extra key: **btn**. The options for this key are:
+you targeting adding an extra key: **btn**. The options for this key are:
 
   **Upload**: to update the **upload_form**.
 
