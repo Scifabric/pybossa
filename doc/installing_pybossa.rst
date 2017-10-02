@@ -8,7 +8,7 @@ for your company, organization or institution using a GNU/Linux server.
 .. toctree::
    :maxdepth: 1
 
-   juju_pybossa
+   vagrant_pybossa
    install
    nginx
    customizing
