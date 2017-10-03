@@ -90,3 +90,22 @@ class TestProjectTransferOwnership(web.Helper):
 
         err_msg = "The project owner id should be different"
         assert project.owner_id == user.id, err_msg
+
+
+    @with_context
+    def test_transfer_auth_admin_post(self):
+        """Test transfer ownership page post is ok for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
+                                                            admin.api_key)
+
+        assert project.owner_id == owner.id
+        payload = dict(email_addr=user.email_addr)
+        res = self.app_post_json(url, data=payload,
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['next'] is not None, data
+
+        err_msg = "The project owner id should be different"
+        assert project.owner_id == user.id, err_msg
