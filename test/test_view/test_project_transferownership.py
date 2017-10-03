@@ -91,6 +91,23 @@ class TestProjectTransferOwnership(web.Helper):
         err_msg = "The project owner id should be different"
         assert project.owner_id == user.id, err_msg
 
+    @with_context
+    def test_transfer_auth_owner_post_wrong_email(self):
+        """Test transfer ownership page post is ok for wrong email."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
+                                                            owner.api_key)
+
+        assert project.owner_id == owner.id
+        payload = dict(email_addr="wrong@email.com")
+        res = self.app_post_json(url, data=payload,
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['next'] is not None, data
+        assert "project owner not found" in data['flash'], data
+        err_msg = "The project owner id should be the same"
+        assert project.owner_id == owner.id, err_msg
 
     @with_context
     def test_transfer_auth_admin_post(self):
