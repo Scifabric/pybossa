@@ -1822,3 +1822,50 @@ def reset_secret_key(short_name):
     msg = gettext('New secret key generated')
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))
+
+@blueprint.route('/<short_name>/transferownership', methods=['GET', 'POST'])
+@login_required
+def transfer_ownership(short_name):
+    """Transfer project ownership."""
+
+    project, owner, ps = project_by_shortname(short_name)
+
+    pro = pro_features()
+
+    title = project_title(project, "Results")
+
+    ensure_authorized_to('update', project)
+
+    form = TransferOwnershipForm(request.body)
+
+    if request.method == 'POST' and form.validate():
+        new_owner = user_repo.filter_by(email_addr=form.email_addr.data)
+        if len(new_owner) == 1:
+            new_owner = new_owner[0]
+            project.owner_id = new_owner.id
+            project_repo.update(project)
+            msg = gettext("Project owner updated")
+            return redirect_content_type(url_for('.details',
+                                                 short_name=short_name))
+        else:
+            msg = gettext("New project owner not found by email")
+            flash(msg, 'info')
+            return redirect_content_type(url_for('.transfer_ownership',
+                                                 short_name=short_name))
+    else:
+        owner_serialized = cached_users.get_user_summary(owner.name)
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        response = dict(template='/projects/transferownership.html',
+                        project=project,
+                        owner=owner_serialized,
+                        n_tasks=ps.n_tasks,
+                        overall_progress=ps.overall_progress,
+                        n_task_runs=ps.n_task_runs,
+                        last_activity=ps.last_activity,
+                        n_completed_tasks=ps.n_completed_tasks,
+                        n_volunteers=ps.n_volunteers,
+                        title=title,
+                        pro_features=pro,
+                        form=form,
+                        target='.transfer_ownership')
+        return handle_content_type(response)

@@ -475,3 +475,6 @@ class AvatarUploadForm(Form):
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+
+class TransferOwnershipForm(Form):
+    email_addr = EmailField(lazy_gettext('Email of the new owner'))
