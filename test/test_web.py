@@ -6917,3 +6917,41 @@ class TestWeb(web.Helper):
         err_msg = 'OTP should be expired'
         assert data['status'] == ERROR, (err_msg, data)
         assert 'Expired one time password' in data.get('flash'), (err_msg, data)
+
+    @with_context
+    @patch('pybossa.view.projects.rank', autospec=True)
+    def test_project_index_sorting(self, mock_rank):
+        """Test WEB Project index parameters passed for sorting."""
+        self.register()
+        self.create()
+        project = db.session.query(Project).get(1)
+
+        order_by = u'n_volunteers'
+        desc = True
+        query = 'orderby=%s&desc=%s' % (order_by, desc)
+
+        # Test named category
+        url = 'project/category/%s?%s' % (Fixtures.cat_1, query)
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[0][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[0][0][1] == order_by
+        assert mock_rank.call_args_list[0][0][2] == desc
+
+        # Test featured
+        project.featured = True
+        project_repo.save(project)
+        url = 'project/category/featured?%s' % query
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[1][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[1][0][1] == order_by
+        assert mock_rank.call_args_list[1][0][2] == desc
+
+        # Test draft
+        project.featured = False
+        project.published = False
+        project_repo.save(project)
+        url = 'project/category/draft/?%s' % query
+        res = self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[2][0][1] == order_by
+        assert mock_rank.call_args_list[2][0][2] == desc

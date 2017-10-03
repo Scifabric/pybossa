@@ -227,7 +227,7 @@ If you want, you can order them in descending order::
     GET http://{pybossa-site-url}/api/task?orderby=id&desc=true
 
 
-Check all the attritbutes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
+Check all the attributes that you can use to order by in the `Domain Object section <http://docs.pybossa.com/en/latest/model.html>`_.
 
 .. note::
     Please, notice that in order to keep users privacy, only their locale and
@@ -899,7 +899,7 @@ the following header: "X-CSRFToken".
 
 It returns a JSON object with the following information:
 
-* **flash**: A success message, or error indicating if the request was succesful.
+* **flash**: A success message, or error indicating if the request was successful.
 * **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
 
 **Example output**
@@ -1253,7 +1253,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 the following header: "X-CSRFToken".
 
 As this endpoint supports **three** different forms, you must specify which form are
-you targetting adding an extra key: **btn**. The options for this key are:
+you targeting adding an extra key: **btn**. The options for this key are:
 
 * **Profile**: to update the **form**.
   **Upload**: to update the **upload_form**.
@@ -1265,7 +1265,7 @@ you targetting adding an extra key: **btn**. The options for this key are:
 
 It returns a JSON object with the following information:
 
-* **flash**: A success message, or error indicating if the request was succesful.
+* **flash**: A success message, or error indicating if the request was successful.
 * **form**: the form fields with the sent information. It contains the csrf token for validating the post, as well as an errors field in case that something is wrong.
 
 **Example output**
@@ -3339,6 +3339,96 @@ Gives you the global stats of the PYBOSSA server.
       }
     }
 
+Project Category
+~~~~~~~~~~~~~~~~
+**Endpoint: /project/category/<short_name>/**
+
+*Allowed methods*: **GET**
+
+**GET**
+
+Gives you the list of projects in a category.
+
+* **pagination**: A pagination object for getting projects from this category.
+* **active_cat**: Active category.
+* **projects**: List of projects belonging to this category.
+* **categories**: List of available categories in this server.
+* **template**: The Jinja2 template that could be rendered.
+* **title**: the title for the endpoint.
+
+**Example output**
+
+.. code-block:: python
+
+    {
+      "active_cat": {
+        "created": null,
+        "description": "Social projects",
+        "id": 2,
+        "name": "Social",
+        "short_name": "social"
+      },
+      "categories": [
+        {
+          "created": null,
+          "description": "Featured projects",
+          "id": null,
+          "name": "Featured",
+          "short_name": "featured"
+        },
+        {
+          "created": null,
+          "description": "Social projects",
+          "id": 2,
+          "name": "Social",
+          "short_name": "social"
+        },
+        {
+          "created": "2013-06-18T11:13:44.789149",
+          "description": "Art projects",
+          "id": 3,
+          "name": "Art",
+          "short_name": "art"
+        },
+      ],
+      "pagination": {
+        "next": false,
+        "page": 1,
+        "per_page": 20,
+        "prev": false,
+        "total": 1
+      },
+      "projects": [
+        {
+          "created": "2014-02-22T15:09:23.691811",
+          "description": "Image pattern recognition",
+          "id": 1377,
+          "info": {
+            "container": "7",
+            "thumbnail": "58.png"
+          },
+          "last_activity": "2 weeks ago",
+          "last_activity_raw": "2017-01-31T09:18:28.450391",
+          "n_tasks": 169671,
+          "n_volunteers": 17499,
+          "name": "Name",
+          "overall_progress": 80,
+          "owner": "John Doe",
+          "short_name": "name",
+          "updated": "2017-01-31T09:18:28.491496"
+        },
+      ],
+      "template": "/projects/index.html",
+      "title": "Projects"
+    }
+
+.. note::
+    To override the default ranking you pass the **orderby** query parameter to
+    sort projects by any of the attributes listed above, such as *n_volunteers*
+    or *n_tasks*. The **desc** query parameter can also be added to sort in
+    descending order. For example:
+    GET /project/category/<short_name>/?orderby=n_tasks&desc=True
+
 
 Project Category Featured
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3350,7 +3440,7 @@ Project Category Featured
 
 Gives you the list of featured projects.
 
-* **pagination**: A pagination object for getting new featured projets from this category.
+* **pagination**: A pagination object for getting new featured projects from this category.
 * **active_cat**: Active category.
 * **projects**: List of projects belonging to this category.
 * **categories**: List of available categories in this server.
@@ -3422,6 +3512,13 @@ Gives you the list of featured projects.
       "template": "/projects/index.html",
       "title": "Projects"
     }
+
+.. note::
+    To override the default ranking you pass the **orderby** query parameter to
+    sort projects by any of the attributes listed above, such as *n_volunteers*
+    or *n_tasks*. The **desc** query parameter can also be added to sort in
+    descending order. For example:
+    GET /project/category/featured/?orderby=n_tasks&desc=True
 
 Project Category Draft
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -3506,6 +3603,13 @@ Gives you the list of featured projects.
       "title": "Projects"
     }
 
+.. note::
+    To override the default ranking you pass the **orderby** query parameter to
+    sort projects by any of the attributes listed above, such as *n_volunteers*
+    or *n_tasks*. The **desc** query parameter can also be added to sort in
+    descending order. For example:
+    GET /project/category/draft/?orderby=n_tasks&desc=True
+
 Project Creation
 ~~~~~~~~~~~~~~~~~~~~~~
 **Endpoint: /project/new**
@@ -3554,7 +3658,7 @@ Gives you the list of posted blogs by the given project short name.
 * **project**: Info about the project.
 
 
-The project and owner fields will have more information if the onwer of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
+The project and owner fields will have more information if the owner of the project does the request, providing its private information like api_key, password keys, etc. Otherwise it will be removed and only show public info.
 
 **Example public output**
 
@@ -3808,7 +3912,7 @@ the following header: "X-CSRFToken". You will have to POST the data fields found
 as it contains the information about the fields: specifically **editor** with the HTML/CSS/JS that you want
 to provide.
 
-If the post is successfull, you will get the following output:
+If the post is successful, you will get the following output:
 
 **Example output**
 
@@ -4024,7 +4128,7 @@ To send a valid POST request you need to pass the *csrf token* in the headers. U
 the following header: "X-CSRFToken".
 
 As this endpoint supports **two** different forms, you must specify which form are
-you targetting adding an extra key: **btn**. The options for this key are:
+you targeting adding an extra key: **btn**. The options for this key are:
 
   **Upload**: to update the **upload_form**.
 

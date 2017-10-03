@@ -151,28 +151,26 @@ def pro_features(owner=None):
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List projects in the system"""
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
     if cached_projects.n_count('featured') > 0:
         return project_index(page, cached_projects.get_all_featured,
-                             'featured',
-                             True, False)
+                             'featured', True, False, order_by, desc)
     else:
         categories = cached_cat.get_all()
         cat_short_name = categories[0].short_name
         return redirect_content_type(url_for('.project_cat_index', category=cat_short_name))
 
 
-def project_index(page, lookup, category, fallback, use_count):
+def project_index(page, lookup, category, fallback, use_count, order_by=None,
+                  desc=False):
     """Show projects of a category"""
-
     per_page = current_app.config['APPS_PER_PAGE']
+    ranked_projects = rank(lookup(category), order_by, desc)
 
-    ranked_projects = rank(lookup(category))
     offset = (page - 1) * per_page
     projects = ranked_projects[offset:offset+per_page]
-
     count = cached_projects.n_count(category)
-
-    data = []
 
     if fallback and not projects:  # pragma: no cover
         return redirect(url_for('.index'))
@@ -214,15 +212,20 @@ def project_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft projects"""
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
     return project_index(page, cached_projects.get_all_draft, 'draft',
-                     False, True)
+                         False, True, order_by, desc)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
-    return project_index(page, cached_projects.get_all, category, False, True)
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
+    return project_index(page, cached_projects.get_all, category, False, True,
+                         order_by, desc)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
