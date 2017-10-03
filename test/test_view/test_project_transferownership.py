@@ -58,3 +58,17 @@ class TestProjectTransferOwnership(web.Helper):
         assert data['form']['errors'] == {}, data
         assert data['form']['email_addr'] is None, data
         assert data['form']['csrf'] is not None, data
+
+    @with_context
+    def test_transfer_auth_admin_get(self):
+        """Test transfer ownership page is ok for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
+                                                            admin.api_key)
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['form'], data
+        assert data['form']['errors'] == {}, data
+        assert data['form']['email_addr'] is None, data
+        assert data['form']['csrf'] is not None, data
