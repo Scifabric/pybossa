@@ -1,6 +1,6 @@
-======================================
-Testing PYBOSSA with a Virtual Machine
-======================================
+============================
+Testing PYBOSSA with Vagrant
+============================
 
 `Vagrant`_ is an open source solution that allows you to create and configure 
 lightweight, reproducible, and portable development environments.
