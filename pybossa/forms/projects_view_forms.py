@@ -27,4 +27,5 @@ from forms import (
     BlogpostForm,
     PasswordForm,
     GenericBulkTaskImportForm,
-    AvatarUploadForm)
+    AvatarUploadForm,
+    TransferOwnershipForm)
