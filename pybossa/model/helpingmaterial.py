@@ -46,7 +46,7 @@ class HelpingMaterial(db.Model, DomainObject):
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
-        return ['created', 'id', 'info', 'media_url']
+        return ['created', 'id', 'info', 'media_url', 'priority']
 
     @classmethod
     def public_info_keys(self):
