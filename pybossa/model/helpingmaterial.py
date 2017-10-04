@@ -40,6 +40,8 @@ class HelpingMaterial(db.Model, DomainObject):
     #: Info field where it can be stored anything related to it
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     media_url = Column(Text)
+    #: Priority of the helping material from 0.0 to 1.0
+    priority = Column(Float, default=0)
 
     @classmethod
     def public_attributes(self):
