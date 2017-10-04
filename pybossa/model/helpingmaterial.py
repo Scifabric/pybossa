@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text
+from sqlalchemy import Integer, Text, Float
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON
 from pybossa.core import db
