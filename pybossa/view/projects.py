@@ -1550,7 +1550,6 @@ def new_blogpost(short_name):
                         project_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
-    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
@@ -1599,7 +1598,6 @@ def update_blogpost(short_name, id):
                         project_id=project.id,
                         published=form.published.data)
     blog_repo.update(blogpost)
-    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
@@ -1617,7 +1615,6 @@ def delete_blogpost(short_name, id):
 
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
-    cached_projects.delete_project(short_name)
     msg_1 = gettext('Blog post deleted!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
