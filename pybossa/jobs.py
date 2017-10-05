@@ -30,10 +30,11 @@ from pbsonesignal import PybossaOneSignal
 import os
 from datetime import datetime
 from pybossa.core import user_repo
+from rq.timeouts import JobTimeoutException
 
 
 MINUTE = 60
-IMPORT_TASKS_TIMEOUT = (10 * MINUTE)
+IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
 TASK_DELETE_TIMEOUT = (60 * MINUTE)
 EXPORT_TASKS_TIMEOUT = (10 * MINUTE)
 
@@ -648,6 +649,20 @@ def send_email_notifications():
     return True
 
 
+def _num_tasks_imported(project_id):
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    sql = text('''
+        SELECT COUNT(*) FROM task WHERE
+        project_id=:project_id AND
+            clock_timestamp()
+                - to_timestamp(task.created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            < INTERVAL ':seconds seconds'
+        ''')
+    params = dict(seconds=IMPORT_TASKS_TIMEOUT + 10, project_id=project_id)
+    return db.session.execute(sql, params).scalar()
+
+
 def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data):
     """Import tasks for a project."""
     from pybossa.core import project_repo
@@ -660,7 +675,21 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
 
     try:
         report = importer.create_tasks(task_repo, project, **form_data)
-    except:
+    except JobTimeoutException:
+        n_tasks = _num_tasks_imported(project_id)
+        subject = 'Your import task has timed out'
+        body = '\n'.join(
+            ['Hello,\n',
+             'Import task to your project {} by {} failed because the file was too large.',
+             'It was able to process approximately {} tasks.',
+             'Please break up your task upload into smaller CSV files.',
+             'Thank you,\n',
+             'The GIGwork team.']).format(project.name, current_user_fullname,
+                                          n_tasks)
+        mail_dict = dict(recipients=recipients, subject=subject, body=body)
+        send_mail(mail_dict)
+        raise
+    except Exception as e:
         msg = (u'Import tasks to your project {0} by {1} failed'
                .format(project.name, current_user_fullname))
         subject = 'Tasks Import to your project %s' % project.name
@@ -676,6 +705,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         project.set_autoimporter(form_data)
         project_repo.save(project)
     msg = report.message + u' to your project {0} by {1}'.format(project.name, current_user_fullname)
+
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
