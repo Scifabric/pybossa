@@ -73,7 +73,6 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
 
 caching = {'Project': {'refresh': clean_project}}
 
-
 error = ErrorStatus()
 
 
@@ -362,7 +361,7 @@ class APIBase(MethodView):
             data = self._file_upload(request)
             inst = self._update_instance(existing, repo, repos, new_upload=data)
             if caching.get(cls_name):
-                caching.get(cls_name)['refresh']
+                caching.get(cls_name)['refresh'](oid)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
