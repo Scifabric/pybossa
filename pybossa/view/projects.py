@@ -122,7 +122,7 @@ def project_title(project, page_name):
 
 
 def project_by_shortname(short_name):
-    project = cached_projects.get_project(short_name)
+    project = project_repo.get_by(short_name=short_name)
     if project:
         # Get owner
         ps = stats.get_stats(project.id, full=True)
@@ -452,7 +452,6 @@ def update(short_name):
         auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_cat.reset()
         cached_projects.clean_project(new_project.id)
-        cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect_content_type(url_for('.details',
                                      short_name=new_project.short_name))
