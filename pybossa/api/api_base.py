@@ -84,6 +84,11 @@ class APIBase(MethodView):
 
     allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
 
+    def refresh_cache(self, cls_name, oid):
+        """Refresh the cache."""
+        if caching.get(cls_name):
+            caching.get(cls_name)['refresh'](oid)
+
     def valid_args(self):
         """Check if the domain object args are valid."""
         for k in request.args.keys():
@@ -362,8 +367,7 @@ class APIBase(MethodView):
             inst = self._update_instance(existing, repo,
                                          repos,
                                          new_upload=data)
-            if caching.get(cls_name):
-                caching.get(cls_name)['refresh'](oid)
+            self.refresh_cache(cls_name, oid)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
