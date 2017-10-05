@@ -38,8 +38,8 @@ def home():
     per_page = current_app.config.get('APPS_PER_PAGE')
     if per_page is None:  # pragma: no cover
         per_page = 5
-    d = {'top_projects': None,
-         'top_users': None}
+
+    d = dict()
 
     # Get all the categories with projects
     categories = cached_cat.get_used()
