@@ -451,6 +451,7 @@ def update(short_name):
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_cat.reset()
+        cached_projects.clean_project(new_project.id)
         cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect_content_type(url_for('.details',
