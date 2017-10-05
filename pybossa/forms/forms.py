@@ -118,8 +118,6 @@ class TaskSchedulerForm(Form):
 
 
 class AnnouncementForm(Form):
-    msg_url = lazy_gettext("Oops! That's not a valid URL. "
-                           "You must provide a valid URL")
     id = IntegerField(label=None, widget=HiddenInput())
     title = TextField(lazy_gettext('Title'),
                      [validators.Required(message=lazy_gettext(
@@ -127,8 +125,7 @@ class AnnouncementForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
-    media_url = TextField(lazy_gettext('URL'),
-                          [validators.URL(message=msg_url)])
+    media_url = TextField(lazy_gettext('URL'))
     published = BooleanField(lazy_gettext('Publish'))
 
 class BlogpostForm(Form):
