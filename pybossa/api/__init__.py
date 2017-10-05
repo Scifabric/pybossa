@@ -66,7 +66,8 @@ from werkzeug.exceptions import MethodNotAllowed
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import n_available_tasks
-from pybossa.sched import get_project_scheduler_and_timeout, has_lock, release_lock
+from pybossa.sched import (get_project_scheduler_and_timeout, has_lock,
+                           release_lock, Schedulers)
 
 blueprint = Blueprint('api', __name__)
 
@@ -316,7 +317,7 @@ def cancel_task(taskId=None):
     projectId = project.id
     userId = current_user.id
     scheduler, timeout = get_project_scheduler_and_timeout(projectId)
-    if scheduler in ('locked_scheduler', 'user_pref_scheduler'):
+    if scheduler in (Schedulers.locked, Schedulers.user_pref):
         task_locked_by_user = has_lock(projectId, taskId, userId, timeout)
         if task_locked_by_user:
             release_lock(projectId, taskId, userId, timeout)

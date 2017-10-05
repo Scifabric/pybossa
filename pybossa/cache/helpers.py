@@ -24,6 +24,7 @@ from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
 from pybossa.cache import users as cached_users
 from flask import current_app
+from pybossa.sched import get_project_scheduler_and_timeout, Schedulers
 
 session = db.slave_session
 
@@ -164,23 +165,23 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
     n_tasks = 0
     if user_id is None or user_id <= 0:
         return n_tasks
-    user_pref_list = cached_users.get_user_preferences(user_id)
-    if user_pref_list is None:
+    sched, _ = get_project_scheduler_and_timeout(project_id)
+    if sched != Schedulers.user_pref:
         sql = '''
                SELECT COUNT(id) AS n_tasks FROM task
                WHERE NOT EXISTS
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
                AND project_id=:project_id
-               AND (user_pref IS NULL OR user_pref = '{0}')
-               AND state !='completed'; '''.format('{}')
+               AND state !='completed'; '''
     else:
+        user_pref_list = cached_users.get_user_preferences(user_id)
         sql = '''
                SELECT COUNT(id) AS n_tasks FROM task
                WHERE NOT EXISTS
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
-               AND project_id=:project_id AND (user_pref @> {0})
+               AND project_id=:project_id AND (user_pref IS NULL OR {0})
                AND state !='completed' ; '''.format(user_pref_list)
     sqltext = text(sql)
     try:

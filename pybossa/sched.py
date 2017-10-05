@@ -33,7 +33,15 @@ from flask import current_app
 
 session = db.slave_session
 
-DEFAULT_SCHEDULER = 'locked_scheduler'
+
+class Schedulers(object):
+
+    locked = 'locked_scheduler'
+    user_pref = 'user_pref_scheduler'
+
+
+DEFAULT_SCHEDULER = Schedulers.locked
+
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0', desc=True):
@@ -42,16 +50,16 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'default': get_locked_task,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
-        'locked_scheduler': get_locked_task,
+        Schedulers.locked: get_locked_task,
         'incremental': get_incremental_task,
-        'user_pref_scheduler': get_user_pref_task}
+        Schedulers.user_pref: get_user_pref_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
 
 
 def can_post(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
+    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
         allowed = has_lock(project_id, task_id, user_id, timeout)
         current_app.logger.info(
             'Project {} - user {} can submit for task {}: {}'
@@ -64,7 +72,7 @@ def can_post(project_id, task_id, user_id):
 def can_read_task(task, user):
     project_id = task.project_id
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
+    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
         return has_read_access(user) or has_lock(project_id, task.id, user.id,
                                                  timeout)
     else:
@@ -73,7 +81,7 @@ def can_read_task(task, user):
 
 def after_save(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == 'locked_scheduler' or scheduler == 'user_pref_scheduler':
+    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
         release_lock(project_id, task_id, user_id, timeout)
 
 
@@ -246,38 +254,21 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     available tasks before returning to the user.
     """
     user_pref_list = cached_users.get_user_preferences(user_id)
-    if user_pref_list is None:
-        sql = '''
-               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
-                  (SELECT info->'timeout'
-                   FROM project
-                   WHERE id=:project_id) as timeout
-               FROM task
-               LEFT JOIN task_run ON (task.id = task_run.task_id)
-               WHERE NOT EXISTS
-               (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-               user_id=:user_id AND task_id=task.id)
-               AND task.project_id=:project_id
-               AND (task.user_pref IS NULL OR task.user_pref = '{0}')
-               AND task.state !='completed'
-               group by task.id ORDER BY priority_0 DESC, id ASC
-               LIMIT :limit; '''.format('{}')
-    else:
-        sql = '''
-               SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
-                  (SELECT info->'timeout'
-                   FROM project
-                   WHERE id=:project_id) as timeout
-               FROM task
-               LEFT JOIN task_run ON (task.id = task_run.task_id)
-               WHERE NOT EXISTS
-               (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-               user_id=:user_id AND task_id=task.id)
-               AND task.project_id=:project_id
-               AND (task.user_pref @> {0})
-               AND task.state !='completed'
-               group by task.id ORDER BY priority_0 DESC, id ASC
-               LIMIT :limit; '''.format(user_pref_list)
+    sql = '''
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+              (SELECT info->'timeout'
+               FROM project
+               WHERE id=:project_id) as timeout
+           FROM task
+           LEFT JOIN task_run ON (task.id = task_run.task_id)
+           WHERE NOT EXISTS
+           (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+           user_id=:user_id AND task_id=task.id)
+           AND task.project_id=:project_id
+           AND (task.user_pref IS NULL OR {0})
+           AND task.state !='completed'
+           group by task.id ORDER BY priority_0 DESC, id ASC
+           LIMIT :limit; '''.format(user_pref_list)
     return text(sql)
 
 
@@ -325,8 +316,8 @@ def has_read_access(user):
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
-            ('locked_scheduler', 'Locked'),
-            ('user_pref_scheduler', 'User Preference Scheduler')]
+            (Schedulers.locked, 'Locked'),
+            (Schedulers.user_pref, 'User Preference Scheduler')]
 
 
 def _set_orderby_desc(query, orderby, descending):
