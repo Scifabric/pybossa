@@ -24,7 +24,6 @@ from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
 from pybossa.cache import users as cached_users
 from flask import current_app
-from pybossa.sched import get_project_scheduler_and_timeout, Schedulers
 
 session = db.slave_session
 
@@ -157,16 +156,17 @@ def _has_no_tasks(project_id):
     return n_tasks == 0
 
 
-def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
+def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     """Return the number of tasks for a given project a user can contribute to.
     based on the completion of the project tasks, previous task_runs
     submitted by the user and user preference set under user profile.
     """
+    from pybossa.sched import Schedulers
     n_tasks = 0
     if user_id is None or user_id <= 0:
         return n_tasks
-    sched, _ = get_project_scheduler_and_timeout(project_id)
-    if sched != Schedulers.user_pref:
+    scheduler = project.info.get('sched', 'default')
+    if scheduler != Schedulers.user_pref:
         sql = '''
                SELECT COUNT(id) AS n_tasks FROM task
                WHERE NOT EXISTS
@@ -185,7 +185,7 @@ def n_available_tasks_for_user(project_id, user_id=None, user_ip=None):
                AND state !='completed' ; '''.format(user_pref_list)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext, dict(project_id=project_id, user_id=user_id))
+        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None

@@ -192,71 +192,66 @@ class TestSched(sched.Helper):
 class TestNTaskAvailable(sched.Helper):
 
     @with_context
-    @patch('pybossa.cache.helpers.get_project_scheduler_and_timeout')
-    def test_task_0(self, get_sched_and_timeout):
-        get_sched_and_timeout.return_value = (Schedulers.user_pref, 100)
+    def test_task_0(self):
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
         task = TaskFactory.create_batch(1, project=project, n_answers=10)[0]
         task.user_pref = {'languages': ['en', 'zh']}
         task_repo.save(task)
-        assert n_available_tasks_for_user(1, 500) == 0
+        assert n_available_tasks_for_user(project, 500) == 0
 
     @with_context
-    @patch('pybossa.cache.helpers.get_project_scheduler_and_timeout')
-    def test_task_1(self, get_sched_and_timeout):
-        get_sched_and_timeout.return_value = ('default', 100)
+    def test_task_1(self):
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
         task = TaskFactory.create_batch(1, project=project, n_answers=10)[0]
         task.user_pref = {'languages': ['en', 'zh']}
         task_repo.save(task)
-        assert n_available_tasks_for_user(1, 500) == 1
+        assert n_available_tasks_for_user(project, 500) == 1
 
     @with_context
-    @patch('pybossa.cache.helpers.get_project_scheduler_and_timeout')
-    def test_task_2(self, get_sched_and_timeout):
-        get_sched_and_timeout.return_value = (Schedulers.user_pref, 100)
+    def test_task_2(self):
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
         task = TaskFactory.create_batch(1, project=project, n_answers=10)[0]
         task.user_pref = {'languages': ['en', 'zh']}
         task_repo.save(task)
-        assert n_available_tasks_for_user(1, 500) == 1
+        assert n_available_tasks_for_user(project, 500) == 1
 
     @with_context
-    @patch('pybossa.cache.helpers.get_project_scheduler_and_timeout')
-    def test_task_3(self, get_sched_and_timeout):
-        get_sched_and_timeout.return_value = (Schedulers.user_pref, 100)
+    def test_task_3(self):
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
         tasks = TaskFactory.create_batch(2, project=project, n_answers=10)
         tasks[0].user_pref = {'languages': ['en', 'zh']}
         task_repo.save(tasks[0])
         tasks[1].user_pref = {'languages': ['zh']}
         task_repo.save(tasks[0])
-        assert n_available_tasks_for_user(1, 500) == 1
+        assert n_available_tasks_for_user(project, 500) == 1
 
     @with_context
-    @patch('pybossa.cache.helpers.get_project_scheduler_and_timeout')
-    def test_task_4(self, get_sched_and_timeout):
-        get_sched_and_timeout.return_value = (Schedulers.user_pref, 100)
+    def test_task_4(self):
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
         tasks = TaskFactory.create_batch(2, project=project, n_answers=10)
         tasks[0].user_pref = {'languages': ['en', 'zh']}
         task_repo.save(tasks[0])
         tasks[1].user_pref = {'languages': ['de']}
         task_repo.save(tasks[0])
-        assert n_available_tasks_for_user(1, 500) == 2
+        assert n_available_tasks_for_user(project, 500) == 2
 
