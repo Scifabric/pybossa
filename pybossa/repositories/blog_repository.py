@@ -61,8 +61,8 @@ class BlogRepository(Repository):
             raise DBIntegrityError(e)
 
     def delete(self, blogpost):
-        project_id = blogpost.project_id
         self._validate_can_be('deleted', blogpost)
+        project_id = blogpost.project_id
         blog = self.db.session.query(Blogpost).filter(Blogpost.id==blogpost.id).first()
         self.db.session.delete(blog)
         self.db.session.commit()
