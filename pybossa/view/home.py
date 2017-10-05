@@ -38,16 +38,13 @@ def home():
     per_page = current_app.config.get('APPS_PER_PAGE')
     if per_page is None:  # pragma: no cover
         per_page = 5
-    d = {'top_projects': cached_projects.get_top(),
+    d = {'top_projects': None,
          'top_users': None}
 
     # Get all the categories with projects
     categories = cached_cat.get_used()
     d['categories'] = categories
     d['categories_projects'] = {}
-    for c in categories:
-        tmp_projects = cached_projects.get(c['short_name'], page, per_page)
-        d['categories_projects'][c['short_name']] = rank(tmp_projects)
 
     # Add featured
     tmp_projects = cached_projects.get_featured('featured', page, per_page)
@@ -56,12 +53,6 @@ def home():
         d['categories'].insert(0, featured)
         d['categories_projects']['featured'] = rank(tmp_projects)
 
-    if (current_app.config['ENFORCE_PRIVACY']
-            and current_user.is_authenticated()):
-        if current_user.admin:
-            d['top_users'] = cached_users.get_leaderboard(10)
-    if not current_app.config['ENFORCE_PRIVACY']:
-        d['top_users'] = cached_users.get_leaderboard(10)
     response = dict(template='/home/index.html', **d)
     return handle_content_type(response)
 
