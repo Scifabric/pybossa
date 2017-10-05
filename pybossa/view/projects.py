@@ -122,14 +122,13 @@ def project_title(project, page_name):
 
 
 def project_by_shortname(short_name):
-    project = cached_projects.get_project(short_name)
+    project = project_repo.get_by(short_name=short_name)
     if project:
         # Get owner
         ps = stats.get_stats(project.id, full=True)
         owner = user_repo.get(project.owner_id)
         return (project, owner, ps)
     else:
-        cached_projects.delete_project(short_name)
         return abort(404)
 
 
@@ -451,7 +450,7 @@ def update(short_name):
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_cat.reset()
-        cached_projects.get_project(new_project.short_name)
+        cached_projects.clean_project(new_project.id)
         flash(gettext('Project updated!'), 'success')
         return redirect_content_type(url_for('.details',
                                      short_name=new_project.short_name))
@@ -1550,7 +1549,6 @@ def new_blogpost(short_name):
                         project_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
-    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
@@ -1599,7 +1597,6 @@ def update_blogpost(short_name, id):
                         project_id=project.id,
                         published=form.published.data)
     blog_repo.update(blogpost)
-    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
@@ -1617,7 +1614,6 @@ def delete_blogpost(short_name, id):
 
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
-    cached_projects.delete_project(short_name)
     msg_1 = gettext('Blog post deleted!')
     flash(Markup('<i class="icon-ok"></i> {}').format(msg_1), 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
@@ -1671,7 +1667,6 @@ def publish(short_name):
     task_repo.delete_taskruns_from_project(project)
     result_repo.delete_results_from_project(project)
     webhook_repo.delete_entries_from_project(project)
-    cached_projects.delete_project(short_name)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
@@ -1818,7 +1813,6 @@ def reset_secret_key(short_name):
 
     project.secret_key = make_uuid()
     project_repo.update(project)
-    cached_projects.delete_project(short_name)
     msg = gettext('New secret key generated')
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))

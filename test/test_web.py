@@ -1865,7 +1865,8 @@ class TestWeb(web.Helper):
         assert data['code'] == 403, data
 
     @with_context
-    def test_update_project_json_as_admin(self):
+    @patch('pybossa.view.projects.cached_projects.clean_project')
+    def test_update_project_json_as_admin(self, cache_mock):
         """Test WEB JSON update project as admin."""
         admin = UserFactory.create()
         owner = UserFactory.create()
@@ -1894,8 +1895,7 @@ class TestWeb(web.Helper):
 
         u_project = project_repo.get(project.id)
         assert u_project.description == 'foobar', u_project
-
-
+        cache_mock.assert_called_with(project.id)
 
 
     @with_context
