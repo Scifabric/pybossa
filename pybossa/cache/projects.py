@@ -444,9 +444,9 @@ def reset():
     delete_memoized(get_all)
 
 
-def delete_project(short_name):
-    """Reset project values in cache"""
-    delete_memoized(get_project, short_name)
+#def delete_project(short_name):
+#    """Reset project values in cache"""
+#    delete_memoized(get_project, short_name)
 
 
 def delete_browse_tasks(project_id):
