@@ -75,25 +75,13 @@ class TestWeb(web.Helper):
     def test_01_index_json(self):
         """Test WEB JSON home page works"""
         project = ProjectFactory.create(featured=True)
-        user = UserFactory.create()
-        for i in range(0, 31):
-            TaskRunFactory.create(user=user, project=project)
         res = self.app_get_json("/")
         data = json.loads(res.data)
-        keys = ['top_projects', 'categories_projects', 'categories', 'template',
-                'top_users']
+        keys = ['featured', 'template']
         for key in keys:
             assert key in data.keys(), data
-        assert project.category.short_name in data.get('categories_projects').keys(), data
-        projects = data.get('categories_projects').get(project.category.short_name)
-        for cat in data.get('categories_projects').keys():
-            for p in data.get('categories_projects')[cat]:
-                assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-        for p in data.get('top_projects'):
-            assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-
-        for u in data.get('top_users'):
-            assert sorted(u['info'].keys()) == sorted(User().public_info_keys()), u
+        assert len(data['featured']) == 1, data
+        assert data['featured'][0]['short_name'] == project.short_name
 
 
     @with_context
