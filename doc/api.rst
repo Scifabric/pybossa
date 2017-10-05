@@ -2289,6 +2289,8 @@ Creates a new PYBOSSA wide announcement
         "body": null,
         "csrf": "1496394903.81##bb5fb0c527955073ec9ad694ed9097e7c868272a",
         "errors": {},
+	"media_url": null,
+        "published": true,
         "title": null
       },
       "template": "admin/new_announcement.html",
@@ -2337,6 +2339,8 @@ Updates a PYBOSSA announcement
         "csrf": "1496328993.27##aa51e026938129afdfb0e6a5eab8c6b9427f81f6",
         "errors": {},
         "id": 4,
+	"media_url": null,
+        "published": true,
         "title": "test6"
       },
       "template": "admin/new_announcement.html",
