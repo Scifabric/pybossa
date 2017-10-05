@@ -129,7 +129,6 @@ def project_by_shortname(short_name):
         owner = user_repo.get(project.owner_id)
         return (project, owner, ps)
     else:
-        cached_projects.delete_project(short_name)
         return abort(404)
 
 
@@ -1668,7 +1667,6 @@ def publish(short_name):
     task_repo.delete_taskruns_from_project(project)
     result_repo.delete_results_from_project(project)
     webhook_repo.delete_entries_from_project(project)
-    cached_projects.delete_project(short_name)
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
@@ -1815,7 +1813,6 @@ def reset_secret_key(short_name):
 
     project.secret_key = make_uuid()
     project_repo.update(project)
-    cached_projects.delete_project(short_name)
     msg = gettext('New secret key generated')
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))

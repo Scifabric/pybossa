@@ -18,6 +18,7 @@
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
+from pybossa.cache.projects import clean_project
 from pybossa.repositories import Repository
 from pybossa.model.webhook import Webhook
 from pybossa.exc import WrongObjectError, DBIntegrityError
@@ -61,6 +62,7 @@ class WebhookRepository(Repository):
                    ''')
         self.db.session.execute(sql, dict(project_id=project.id))
         self.db.session.commit()
+        clean_project(project.id)
 
     def _validate_can_be(self, action, webhook):
         if not isinstance(webhook, Webhook):
