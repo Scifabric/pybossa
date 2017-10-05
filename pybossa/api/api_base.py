@@ -359,7 +359,9 @@ class APIBase(MethodView):
                 raise NotFound
             ensure_authorized_to('update', existing)
             data = self._file_upload(request)
-            inst = self._update_instance(existing, repo, repos, new_upload=data)
+            inst = self._update_instance(existing, repo,
+                                         repos,
+                                         new_upload=data)
             if caching.get(cls_name):
                 caching.get(cls_name)['refresh'](oid)
             return Response(json.dumps(inst.dictize()), 200,
