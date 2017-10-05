@@ -111,9 +111,9 @@ class Importer(object):
             msg += additional_msg
             return ImportReport(message=msg, metadata=None, total=n)
         metadata = importer.import_metadata()
-        msg = str(n) + " " + gettext('new tasks were imported successfully.')
+        msg = str(n) + " " + gettext('new tasks were imported successfully ')
         if n == 1:
-            msg = str(n) + " " + gettext('new task was imported successfully.')
+            msg = str(n) + " " + gettext('new task was imported successfully ')
         msg += additional_msg
         report = ImportReport(message=msg, metadata=metadata, total=n)
         return report

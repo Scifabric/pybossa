@@ -97,7 +97,7 @@ auditlogger = AuditLogger(auditlog_repo, caller='web')
 mail_queue = Queue('email', connection=sentinel.master)
 importer_queue = Queue('medium',
                        connection=sentinel.master,
-                       default_timeout=TIMEOUT)
+                       default_timeout=IMPORT_TASKS_TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
 task_queue = Queue('medium',
                    connection=sentinel.master,
