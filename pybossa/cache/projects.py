@@ -507,7 +507,6 @@ def clean(project_id):
 
 def clean_project(project_id):
     """Clean cache for a specific project"""
-    delete_project(project_id)
     delete_browse_tasks(project_id)
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
