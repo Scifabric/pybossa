@@ -1014,3 +1014,15 @@ class TestProjectAPI(TestAPI):
         del payload['secret_key']
         res = self.app.put(url, data=json.dumps(payload))
         clean_project_mock.assert_called_with(project.id)
+
+    @with_context
+    @patch('pybossa.api.api_base.caching')
+    def test_project_cache_delete_is_refreshed(self, caching_mock):
+        """Test API project cache is updated after DEL."""
+        clean_project_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_project_mock)
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.delete(url)
+        clean_project_mock.assert_called_with(project.id)

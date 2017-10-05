@@ -321,6 +321,8 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             self._delete_instance(oid)
+            cls_name = self.__class__.__name__
+            self.refresh_cache(cls_name, oid)
             return '', 204
         except Exception as e:
             return error.format_exception(
