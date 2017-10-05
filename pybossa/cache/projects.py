@@ -26,11 +26,11 @@ from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 session = db.slave_session
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project(short_name):
-    """Get project by short_name."""
-    project = session.query(Project).filter_by(short_name=short_name).first()
-    return project
+# @memoize(timeout=timeouts.get('APP_TIMEOUT'))
+# def get_project(short_name):
+#     """Get project by short_name."""
+#     project = session.query(Project).filter_by(short_name=short_name).first()
+#     return project
 
 
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
