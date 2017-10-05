@@ -46,6 +46,7 @@
         - libsasl2-dev
         - libldap2-dev
         - libssl-dev
+        - libldap2-dev
 
     - name: install PostgreSQL
       apt: name={{item}} state=latest
