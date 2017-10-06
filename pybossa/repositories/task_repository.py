@@ -200,7 +200,7 @@ class TaskRepository(Repository):
                 );
                 DELETE FROM result WHERE project_id=:project_id
                        AND task_id in (SELECT id FROM to_delete);
-                DELETE FROM task_run WHERE project_id=:project_id                
+                DELETE FROM task_run WHERE project_id=:project_id
                        AND task_id in (SELECT id FROM to_delete);
                 DELETE FROM task WHERE task.project_id=:project_id
                        AND id in (SELECT id FROM to_delete);
@@ -222,12 +222,19 @@ class TaskRepository(Repository):
         self._delete_zip_files_from_store(project)
 
     def update_tasks_redundancy(self, project, n_answers, filters=None):
-        """update the n_answer of every task from a project and their state.
-        Use raw SQL for performance"""
+        """
+        Update the n_answer of every task from a project and their state.
+        Use raw SQL for performance. Mark tasks as exported = False for
+        tasks with curr redundancy < new redundancy, with state as completed
+        and were marked as exported = True
+        """
+
         filters = filters or {}
         conditions, params = get_task_filters(filters)
         if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
             raise ValueError("Invalid redundancy value: {}".format(n_answers))
+
+        self.update_task_exported_status(project.id, n_answers, conditions, params)
 
         sql = text('''
                    WITH to_update AS (
@@ -248,8 +255,9 @@ class TaskRepository(Repository):
         self.db.session.execute(sql, dict(n_answers=n_answers,
                                           project_id=project.id,
                                           **params))
-        self.db.session.commit()
         self.update_task_state(project.id, n_answers)
+        self.db.session.commit()
+        cached_projects.clean_project(project.id)
 
     def update_task_state(self, project_id, n_answers):
         # Create temp tables for completed tasks
@@ -299,8 +307,6 @@ class TaskRepository(Repository):
                    WHERE result.task_id IN (SELECT id FROM incomplete_tasks);
                    ''')
         self.db.session.execute(sql)
-        self.db.session.commit()
-        cached_projects.clean_project(project_id)
 
     def update_priority(self, project_id, priority, filters):
         priority = min(1.0, priority)
@@ -373,3 +379,30 @@ class TaskRepository(Repository):
         uploader.delete_file(csv_tasks_filename, container)
         uploader.delete_file(json_taskruns_filename, container)
         uploader.delete_file(csv_taskruns_filename, container)
+
+    def update_task_exported_status(self, project_id, n_answers, conditions, params):
+        """
+        Update exported=False for completed tasks that were exported
+        and with new redundancy, they'll be marked as ongoing
+        """
+        sql = text('''
+                   WITH to_update AS (
+                        SELECT task.id as id,
+                        coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                        priority_0, task.created
+                        FROM task LEFT OUTER JOIN
+                        (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                        MAX(finish_time) as ft FROM task_run
+                        WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                        ON task.id=log_counts.task_id
+                        WHERE task.project_id=:project_id
+                        AND task.state='completed'
+                        AND task.n_answers < :n_answers {}
+                   )
+                   UPDATE task SET exported=False
+                   WHERE project_id=:project_id
+                   AND task.id IN (SELECT id FROM to_update);'''
+                   .format(conditions))
+        self.db.session.execute(sql, dict(n_answers=n_answers,
+                                          project_id=project_id,
+                                          **params))
