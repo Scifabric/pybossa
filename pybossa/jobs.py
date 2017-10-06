@@ -684,8 +684,8 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
              'It was able to process approximately {} tasks.',
              'Please break up your task upload into smaller CSV files.',
              'Thank you,\n',
-             'The GIGwork team.']).format(project.name, current_user_fullname,
-                                          n_tasks)
+             'The {} team.']).format(project.name, current_user_fullname,
+                                     n_tasks, current_app.config.get('BRAND'))
         mail_dict = dict(recipients=recipients, subject=subject, body=body)
         send_mail(mail_dict)
         raise
