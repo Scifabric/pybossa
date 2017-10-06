@@ -9,6 +9,8 @@ Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveral
 
 # What is PYBOSSA?
 
+[![Join the chat at https://gitter.im/Scifabric/pybossa](https://badges.gitter.im/Scifabric/pybossa.svg)](https://gitter.im/Scifabric/pybossa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 PYBOSSA is our technology, used for the development of platforms and data collection
 within collaborative environments, analysis and data enrichment.
 
