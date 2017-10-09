@@ -2,6 +2,7 @@ from helper import web
 from default import with_context
 from default import db, Fixtures
 from pybossa.repositories import ProjectRepository
+from pybossa.forms.admin_view_forms import SearchForm
 
 
 class TestCoowners(web.Helper):
@@ -97,6 +98,8 @@ class TestCoowners(web.Helper):
                       password="passwd")
         self.register(name="John3", email="john3@john.com",
                       password="passwd")
+        self.register(name="John4", email="john4@john.com",
+                      password="passwd")
         self.signin(email="john2@john.com", password="passwd")
         self.new_project()
 
@@ -118,6 +121,10 @@ class TestCoowners(web.Helper):
         res = self.app.get('/project/sampleapp/del_coowner/John2',
                            follow_redirects=True)
         assert "Cannot remove project creator" in res.data, res.data
+
+        res = self.app.get('/project/sampleapp/del_coowner/John4',
+                           follow_redirects=True)
+        assert "User is not a project owner" in res.data, res.data
 
     @with_context
     def test_coowner_can(self):
@@ -151,6 +158,28 @@ class TestCoowners(web.Helper):
         res = self.app.post('/project/sampleapp/delete',
                             follow_redirects=True)
         assert 'Project deleted' in res.data, res.data
+
+    @with_context
+    def test_user_search(self):
+        self.register()
+        self.register(name="John2", email="john2@john.com",
+                      password="passwd")
+        self.register(name="John3", email="john3@john.com",
+                      password="passwd")
+        self.signin(email="john2@john.com", password="passwd")
+        self.new_project()
+
+        data = {'user': 'johnny9'}
+        res = self.app.post('/project/sampleapp/coowners',
+                            data=data,
+                            follow_redirects=True)
+        assert "We didn&#39;t find a user matching your query" in res.data, res.data
+
+        data = {'user': 'John3'}
+        res = self.app.post('/project/sampleapp/coowners',
+                            data=data,
+                            follow_redirects=True)
+        assert "/project/sampleapp/add_coowner/John3" in res.data, res.data
 
     @with_context
     def test_coowner_invalid(self):
