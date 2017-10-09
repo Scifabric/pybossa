@@ -97,15 +97,14 @@ class TestTwitter(Test):
                                                         newsletter):
         """Test TWITTER manage_user_login without email with newsletter works."""
         newsletter.app = True
-        next_url = '/'
+        next_url = '/spa/account/profile/update'
         user = UserFactory.create(name='john', email_addr='john')
         user_data = dict(id=user.id, screen_name=user.name)
         user.email_addr = user.name
         user_repo.update(user)
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for_app_type.assert_called_once_with('account.update_profile',
-                                                 name=user.name)
+        redirect.assert_called_once_with(next_url)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
