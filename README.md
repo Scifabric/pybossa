@@ -3,13 +3,11 @@
 [![Build Status](https://travis-ci.org/Scifabric/pybossa.svg?branch=master)](https://travis-ci.org/Scifabric/pybossa) [![Code Health](https://landscape.io/github/Scifabric/pybossa/master/landscape.svg?style=flat)](https://landscape.io/github/Scifabric/pybossa/master) 
  [![Coverage
 Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveralls.io/r/Scifabric/pybossa?branch=master)
-[![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Slack](http://slackin.crowdcrafting.org/badge.svg)](http://slackin.crowdcrafting.org) 
+[![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Join the chat at https://gitter.im/Scifabric/pybossa](https://badges.gitter.im/Scifabric/pybossa.svg)](https://gitter.im/Scifabric/pybossa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 [![DOI](https://zenodo.org/badge/12868/PyBossa/pybossa.svg)](https://zenodo.org/badge/latestdoi/12868/PyBossa/pybossa)
 [![Scifabric's Patreon](https://img.shields.io/badge/support%20us%20on-patreon-orange.svg)](https://www.patreon.com/bePatron?u=4979179)
 
 # What is PYBOSSA?
-
-[![Join the chat at https://gitter.im/Scifabric/pybossa](https://badges.gitter.im/Scifabric/pybossa.svg)](https://gitter.im/Scifabric/pybossa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 PYBOSSA is our technology, used for the development of platforms and data collection
 within collaborative environments, analysis and data enrichment.
