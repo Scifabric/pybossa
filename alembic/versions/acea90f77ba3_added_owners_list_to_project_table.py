@@ -1,14 +1,14 @@
 """added owners list to project table
 
 Revision ID: acea90f77ba3
-Revises: 52209719b79e
+Revises: 8fe68fbf6baa
 Create Date: 2017-10-07 09:10:17.930230
 
 """
 
 # revision identifiers, used by Alembic.
 revision = 'acea90f77ba3'
-down_revision = '52209719b79e'
+down_revision = '8fe68fbf6baa'
 
 from alembic import op
 import sqlalchemy as sa
