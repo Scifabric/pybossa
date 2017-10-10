@@ -47,8 +47,7 @@ class TestAnnouncementAPI(TestAPI):
         # As user
         res = self.app_get_json(url + '?api_key=' + user.api_key)
         data = json.loads(res.data)
-        # TODO: project_id is tried to load with api_key. Do not load it?
-        assert data['exception_cls'] == 'AttributeError', data
+        assert len(data) == 10, data
 
         # Valid field but wrong value
         res = self.app.get(url + "?title=wrongvalue")
