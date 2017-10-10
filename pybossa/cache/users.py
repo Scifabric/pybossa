@@ -157,7 +157,7 @@ def published_projects(user_id):
                project.info
                FROM project
                WHERE project.published=true
-               AND project.owner_id=:user_id;
+               AND :user_id = ANY (project.owners_ids::int[]);
                ''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
@@ -204,8 +204,8 @@ def draft_projects(user_id):
                project.owner_id,
                project.info
                FROM project
-               WHERE project.owner_id=:user_id
-               AND project.published=false;
+               WHERE project.published=false
+               AND :user_id = ANY (project.owners_ids::int[]);
                ''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))

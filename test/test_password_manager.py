@@ -137,7 +137,7 @@ class TestProjectPasswdManager(object):
         mock_user.admin = False
         mock_user.id = 2
         self.project.needs_password.return_value = False
-        self.project.owner_id = 2
+        self.project.owners_ids = [2]
 
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 
@@ -152,7 +152,7 @@ class TestProjectPasswdManager(object):
         mock_user.admin = False
         mock_user.id = 2
         self.project.needs_password.return_value = True
-        self.project.owner_id = 2
+        self.project.owners_ids = [2]
 
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 
@@ -167,7 +167,7 @@ class TestProjectPasswdManager(object):
         mock_user.admin = True
         mock_user.id = 1
         self.project.needs_password.return_value = False
-        self.project.owner_id = 2
+        self.project.owners_ids = [2]
 
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 
@@ -182,7 +182,7 @@ class TestProjectPasswdManager(object):
         mock_user.admin = True
         mock_user.id = 1
         self.project.needs_password.return_value = True
-        self.project.owner_id = 2
+        self.project.owners_ids = [2]
 
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 

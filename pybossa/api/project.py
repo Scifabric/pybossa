@@ -58,6 +58,10 @@ class ProjectAPI(APIBase):
     def _update_object(self, obj):
         if not current_user.is_anonymous():
             obj.owner_id = current_user.id
+            owners = obj.owners_ids or []
+            if current_user.id not in owners:
+                owners.append(current_user.id)
+            obj.owners_ids = owners
 
     def _validate_instance(self, project):
         if project.short_name and is_reserved_name('project', project.short_name):
@@ -92,7 +96,7 @@ class ProjectAPI(APIBase):
             data = self._filter_private_data(data)
             return data
         if (current_user.is_authenticated and
-                (current_user.id == data['owner_id'] or current_user.admin)):
+                (current_user.id in data['owners_ids'] or current_user.admin)):
             return data
         else:
             data = self._filter_private_data(data)
