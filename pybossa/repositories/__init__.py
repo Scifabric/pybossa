@@ -39,6 +39,7 @@ PYBOSSA.
 import json
 import re
 from pybossa.model.project import Project, TaskRun, Task
+from pybossa.model.announcement import Announcement
 from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc
 from sqlalchemy.types import TIMESTAMP
@@ -131,9 +132,7 @@ class Repository(object):
                                                                fulltextsearch,
                                                                **filters)
 
-        project_var_existing = ('Project' in locals() or 'Project' in globals())
-
-        if project_var_existing and owner_id:
+        if model not in [Announcement] and owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
