@@ -83,7 +83,6 @@ from pybossa.error import ErrorStatus
 from pybossa.syncer import NotEnabled
 from pybossa.syncer.project_syncer import ProjectSyncer
 
-
 cors_headers = ['Content-Type', 'Authorization']
 
 
