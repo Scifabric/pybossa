@@ -27,6 +27,8 @@ from werkzeug.datastructures import FileStorage
 import io
 import time
 import json
+from flask import current_app as app
+from pybossa.uploader.s3_uploader import get_file_from_s3, delete_file_from_s3
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -116,7 +118,6 @@ class BulkTaskCSVImport(BulkTaskImport):
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_tasks(csvreader)
 
-
 class BulkTaskGDImport(BulkTaskCSVImport):
 
     """Class to import tasks from Google Drive in bulk."""
@@ -161,14 +162,11 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
         retry = 0
         csv_file = None
-        while retry < 10:
-            try:
-                csv_file = FileStorage(open(csv_filename, 'r'))
-                break
-            except IOError, e:
-                time.sleep(2)
-                retry += 1
+        datafile = self.get_local_csv_import_file_from_s3(csv_filename)
+        if not datafile:
+            return []
 
+        csv_file = FileStorage(open(datafile.name, 'r'))
         if csv_file is None or csv_file.stream is None:
             msg = ("Unable to load csv file for import, file {0}".format(csv_filename))
             raise BulkImportException(gettext(msg), 'error')
@@ -182,3 +180,13 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         """Get tasks from a given URL."""
         csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
+
+    def get_local_csv_import_file_from_s3(self, s3_url):
+        return get_file_from_s3(
+                    app.config.get("S3_IMPORT_BUCKET"),
+                    s3_url)
+
+    def delete_local_csv_import_s3_file(self, s3_url):
+        delete_file_from_s3(
+            app.config.get("S3_IMPORT_BUCKET"),
+            s3_url)

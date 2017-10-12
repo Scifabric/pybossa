@@ -7,7 +7,8 @@ import os
 from werkzeug.exceptions import BadRequest, InternalServerError
 import re
 import io
-
+from urlparse import urlparse
+import tempfile
 
 allowed_mime_types = ['application/pdf',
                       'text/csv',
@@ -123,3 +124,24 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
         key.make_public()
 
     return key.generate_url(0).split('?', 1)[0]
+
+def get_s3_bucket_key(s3_bucket, s3_url):
+    conn = boto.connect_s3()
+    bucket = conn.get_bucket(s3_bucket, validate=False)
+    obj = urlparse(s3_url)
+    path = obj.path
+    key = bucket.get_key(path)
+    return bucket, key
+
+def get_file_from_s3(s3_bucket, s3_url):
+    temp_file = tempfile.NamedTemporaryFile()
+    _ , key = get_s3_bucket_key(s3_bucket, s3_url)
+    key.get_contents_to_filename(temp_file.name)
+    return temp_file
+
+def delete_file_from_s3(s3_bucket, s3_url):
+    try:
+        bucket,key = get_s3_bucket_key(s3_bucket, s3_url)
+        bucket.delete_key(key.name, version_id=key.version_id)
+    except S3ResponseError as e:
+        app.logger.exception('S3: unable to delete file {0}'.format(s3_url))

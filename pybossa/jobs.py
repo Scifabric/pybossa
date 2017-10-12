@@ -32,7 +32,6 @@ from datetime import datetime
 from pybossa.core import user_repo
 from rq.timeouts import JobTimeoutException
 
-
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
 TASK_DELETE_TIMEOUT = (60 * MINUTE)
@@ -711,13 +710,6 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         % current_app.config.get('BRAND')
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
-    # cleanup import file
-    if 'csv_filename' in form_data:
-        try:
-            os.remove(form_data['csv_filename'])
-        except:
-            pass
-
     return msg
 
 
