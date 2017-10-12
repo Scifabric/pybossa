@@ -203,8 +203,7 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
-        url_for_app_type.assert_called_once_with('account.update_profile',
-                                                 name=user.name)
+        redirect.assert_called_once_with('/')
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
