@@ -129,12 +129,7 @@ def manage_user_login(user, user_data, next_url):
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        request_email = (user.email_addr == user.name)
-        if request_email:
-            flash("Please update your e-mail address in your profile page")
-            return redirect(url_for_app_type('account.update_profile',
-                                             name=user.name))
-        if (not request_email and user.newsletter_prompted is False
+        if ((user.email_addr != user.name) and user.newsletter_prompted is False
                 and newsletter.is_initialized()):
             return redirect(url_for_app_type('account.newsletter_subscribe',
                                              next=next_url))
