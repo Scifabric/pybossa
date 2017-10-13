@@ -21,15 +21,58 @@ CSV Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
 import tempfile
-from pybossa.exporter import Exporter
 from pybossa.exporter.csv_export import CsvExporter
-from pybossa.core import uploader, project_repo
+from pybossa.core import uploader, project_repo, user_repo
 from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from pybossa.util import AttrDict
+from pybossa.cache.helpers import n_available_tasks
 
 
 class ProjectCsvExporter(CsvExporter):
+
+    def get_projects_report(self, base_url):
+        results = project_repo.get_projects_report(base_url)
+        projects = []
+
+        for row in results:
+            owners_ids = project_repo.get_by_shortname(row.short_name).owners_ids
+            coowners = (co for co in user_repo.get_users(owners_ids)
+                        if co.name != row.owner_name)
+            num_available_tasks = n_available_tasks(row.id)
+            coowner_names = '|'.join('{};{}'.format(co.name, co.email_addr)
+                                     for co in coowners)
+            if not coowner_names:
+                coowner_names = 'None'
+            has_completed = str(num_available_tasks == 0)
+            project = AttrDict([('id', row.id),
+              ('name', row.name),
+              ('short_name', row.short_name),
+              ('url', base_url + row.short_name),
+              ('description', row.description),
+              ('long_description', row.long_description),
+              ('created', row.created),
+              ('owner_name', row.owner_name),
+              ('owner_email', row.owner_email),
+              ('coowners', coowner_names),
+              ('category_name', row.category_name),
+              ('allow_anonymous_contributors', row.allow_anonymous_contributors),
+              ('password_protected', row.password_protected),
+              ('webhook', row.webhook),
+              ('scheduler', row.scheduler),
+              ('has_completed', has_completed),
+              ('finish_time', row.ft),
+              ('percent_complete', row.percent_complete),
+              ('n_tasks', row.n_tasks),
+              ('pending_tasks', row.pending_tasks),
+              ('n_workers', row.n_workers),
+              ('n_answers', row.n_answers),
+              ('workers', row.workers)
+              ])
+
+            projects.append(project)
+        return projects
 
     def _format_csv_row(self, row, ty):
         tmp = row.keys()
@@ -79,7 +122,7 @@ class ProjectCsvExporter(CsvExporter):
     def _respond_csv(self, ty, base_url, info_only=True):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
-        t = project_repo.get_projects_report(base_url)
+        t = self.get_projects_report(base_url)
 
         if t is not None:
             headers = self._format_headers(next(iter(t), None), ty)

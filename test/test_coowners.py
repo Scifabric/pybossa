@@ -2,9 +2,9 @@ import json
 from helper import web
 from default import with_context
 from mock import patch
-from factories import ProjectFactory
-from default import Test, db
+from default import db, Fixtures
 from pybossa.repositories import ProjectRepository
+
 
 class TestCoowners(web.Helper):
 
@@ -54,19 +54,19 @@ class TestCoowners(web.Helper):
         self.signin(email="john2@john.com", password="passwd")
         self.new_project()
 
-        res = self.app.get('/project/sampleapp/addcoowner/3', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/add_coowner/John3', follow_redirects=True)
         assert "John3" in res.data, res.data
 
-        res = self.app.get('/project/sampleapp/delcoowner/3', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/del_coowner/John3', follow_redirects=True)
         assert "John3" not in res.data, res.data
 
         self.signout()
         self.signin()
 
-        res = self.app.get('/project/sampleapp/addcoowner/3', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/add_coowner/John3', follow_redirects=True)
         assert "John3" in res.data, res.data
 
-        res = self.app.get('/project/sampleapp/delcoowner/3', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/del_coowner/John3', follow_redirects=True)
         assert "John3" not in res.data, res.data
 
     @with_context
@@ -83,12 +83,12 @@ class TestCoowners(web.Helper):
         self.signin()
         self.new_project()
         res = self.app.get("/admin/users/addsubadmin/2", follow_redirects=True)
-        res = self.app.get('/project/sampleapp/addcoowner/2', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/add_coowner/John2', follow_redirects=True)
         self.signout()
         self.signin(email="john3@john.com", password="passwd")
 
-        res = self.app.get('/project/sampleapp/addcoowner/3', follow_redirects=True)
-        res = self.app.get('/project/sampleapp/delcoowner/2', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/add_coowner/John3', follow_redirects=True)
+        res = self.app.get('/project/sampleapp/del_coowner/John2', follow_redirects=True)
 
         self.signout()
         self.signin()
@@ -96,4 +96,135 @@ class TestCoowners(web.Helper):
         res = self.app.get('/project/sampleapp/coowners', follow_redirects=True)
         assert "John2" in res.data, res.data
         assert "John3" not in res.data, res.data
-            
+
+    @with_context
+    def test_03_misc(self):
+        """
+        Test flash messages for add coowner/remove coowner
+        """
+        self.register()
+        self.signin()
+        self.register(name="John2", email="john2@john.com",
+                      password="passwd")
+        self.app.get("/admin/users/addsubadmin/2", follow_redirects=True)
+        self.register(name="John3", email="john3@john.com",
+                      password="passwd")
+        self.app.get("/admin/users/addsubadmin/3", follow_redirects=True)
+        self.register(name="John4", email="john4@john.com",
+                      password="passwd")
+        self.app.get("/admin/users/addsubadmin/4", follow_redirects=True)
+        self.signin(email="john2@john.com", password="passwd")
+        self.new_project()
+
+        res = self.app.get('/project/sampleapp/add_coowner/John2',
+                           follow_redirects=True)
+        assert "User is already an owner" in res.data, res.data
+
+        res = self.app.get('/project/sampleapp/del_coowner/John2',
+                           follow_redirects=True)
+        assert "Cannot remove project creator" in res.data, res.data
+
+        res = self.app.get('/project/sampleapp/add_coowner/John3',
+                           follow_redirects=True)
+        assert "John3" in res.data, res.data
+
+        self.signout()
+        self.signin(email="john3@john.com", password="passwd")
+
+        res = self.app.get('/project/sampleapp/del_coowner/John2',
+                           follow_redirects=True)
+        assert "Cannot remove project creator" in res.data, res.data
+
+        res = self.app.get('/project/sampleapp/del_coowner/John4',
+                           follow_redirects=True)
+        assert "User is not a project owner" in res.data, res.data
+
+    @with_context
+    def test_coowner_can(self):
+        """
+        Coowner can access features
+        """
+        self.register()
+        self.register(name="John2", email="john2@john.com",
+                      password="passwd")
+        self.signin()
+        self.new_project()
+        self.new_task(1)
+        self.app.get("/admin/users/addsubadmin/2", follow_redirects=True)
+        res = self.app.get('/project/sampleapp/add_coowner/John2',
+                           follow_redirects=True)
+        assert "John2" in res.data, res.data
+        self.signout()
+
+        self.signin(email="john2@john.com", password="passwd")
+
+        # coowner can browse tasks in a draft project
+        res = self.app.get('/project/sampleapp/tasks/browse')
+        assert 'Browse tasks' in res.data, res.data
+        # coowner can modify task presenter
+        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor')
+        assert 'Task Presenter Editor' in res.data, res.data
+        # coowner can delete tasks
+        res = self.app.post('/project/sampleapp/tasks/delete',
+                            follow_redirects=True)
+        assert 'Tasks and taskruns with no associated results have been deleted' in res.data, res.data
+        # coowner can delete the project
+        res = self.app.post('/project/sampleapp/delete',
+                            follow_redirects=True)
+        assert 'Project deleted' in res.data, res.data
+
+    @with_context
+    def test_user_search(self):
+        self.register()
+        self.signin()
+        self.register(name="John2", email="john2@john.com",
+                      password="passwd")
+        self.app.get("/admin/users/addsubadmin/2", follow_redirects=True)
+        self.register(name="John3", email="john3@john.com",
+                      password="passwd")
+        self.app.get("/admin/users/addsubadmin/3", follow_redirects=True)
+        self.signin(email="john2@john.com", password="passwd")
+        self.new_project()
+
+        data = {'user': 'johnny9'}
+        res = self.app.post('/project/sampleapp/coowners',
+                            data=data,
+                            follow_redirects=True)
+        assert "We didn&#39;t find a user matching your query" in res.data, res.data
+
+        data = {'user': 'John3'}
+        res = self.app.post('/project/sampleapp/coowners',
+                            data=data,
+                            follow_redirects=True)
+        assert "/project/sampleapp/add_coowner/John3" in res.data, res.data
+
+    @with_context
+    def test_coowner_invalid(self):
+        """
+        Test adding and deleting a non-existing user
+        """
+        self.register()
+        self.signin()
+        self.new_project()
+
+        # add non-existing user.
+        res = self.app.get('/project/sampleapp/add_coowner/John2',
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+        # delete non-existing user.
+        res = self.app.get('/project/sampleapp/del_coowner/John2',
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+    @with_context
+    def test_creator_is_added_as_owner(self):
+        """
+        Test that project_repo.save includes the creator as an owner even if
+        not explicitly specified
+        """
+        from pybossa.core import project_repo
+        self.register()
+        project = Fixtures.create_project(None)
+        project.owner_id = 1
+        project_repo.save(project)
+        assert project.owners_ids == [1]

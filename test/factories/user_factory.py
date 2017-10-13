@@ -44,4 +44,3 @@ class UserFactory(BaseFactory):
     info = dict(foo='bar', container='container',
                 avatar='img.png',
                 avatar_url='http://cdn.com/container/img.png')
-    coowned_projects = []

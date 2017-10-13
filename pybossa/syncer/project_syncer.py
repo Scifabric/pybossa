@@ -202,18 +202,10 @@ class ProjectSyncer(Syncer):
         """
         target = self.get(
             project.short_name, target_url, target_key)
-        owner = target['owner_id']
-        target_id = target['id']
-        url = '{}/api/projectcoowner'.format(target_url)
-        params = dict(api_key=target_key,
-                      project_id=target_id)
-        res = requests.get(url, params=params)
-        coowners = json.loads(res.content)
 
-        owners = [owner] + coowners
         owner_emails = [
-            self.get_user_email(owner, target_url, target_key)
-            for owner in owners]
+            self.get_user_email(owner_id, target_url, target_key)
+            for owner_id in target['owners_ids']]
         return owner_emails
 
     @staticmethod

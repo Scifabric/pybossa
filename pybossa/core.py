@@ -206,7 +206,6 @@ def setup_repositories(app):
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
     from pybossa.repositories import HelpingMaterialRepository
-    from pybossa.repositories import ProjectCoownerRepository
     global user_repo
     global project_repo
     global announcement_repo
@@ -217,7 +216,6 @@ def setup_repositories(app):
     global result_repo
     global helping_repo
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
-    global projectcoowner_repo
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
     announcement_repo = AnnouncementRepository(db)
@@ -227,7 +225,6 @@ def setup_repositories(app):
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
     helping_repo = HelpingMaterialRepository(db)
-    projectcoowner_repo = ProjectCoownerRepository(db)
 
 
 def setup_error_email(app):
@@ -511,10 +508,6 @@ def setup_error_handlers(app):
         return handle_content_type(response)
 
 
-def is_coowner(project_id, user=current_user):
-    return any(project_id == co.project_id for co in user.coowned_projects)
-
-
 def setup_hooks(app):
     """Setup hooks."""
     @app.after_request
@@ -612,7 +605,6 @@ def setup_hooks(app):
             news=news,
             notify_admin=notify_admin,
             plugins=plugins,
-            is_coowner=is_coowner,
             ldap_enabled=ldap_enabled)
 
     @csrf.error_handler

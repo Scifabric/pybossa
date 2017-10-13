@@ -35,7 +35,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, db, is_coowner,
+                          csv_exporter, importer, db,
                           task_json_exporter, task_csv_exporter,
                           project_csv_exporter, project_report_csv_exporter)
 from pybossa.model import make_uuid
@@ -164,7 +164,7 @@ def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
     project, owner, ps = project_by_shortname(project_short_name)
     if not current_user.admin and not current_user.subadmin \
-            and not is_coowner(project.id):
+            and not current_user.id in project.owners_ids:
         return abort(403)
     return project, owner, ps
 
@@ -305,7 +305,8 @@ def new():
                       long_description=form.long_description.data,
                       owner_id=current_user.id,
                       info=info,
-                      category_id=category_by_default.id)
+                      category_id=category_by_default.id,
+                      owners_ids=[current_user.id])
 
     project.set_password(form.password.data)
     project_repo.save(project)
@@ -853,7 +854,7 @@ def task_presenter(short_name, task_id):
     else:
         ensure_authorized_to('read', project)
 
-    if not sched.can_read_task(task, current_user) and not is_coowner(project.id):
+    if not sched.can_read_task(task, current_user) and not current_user.id in project.owners_ids:
         raise abort(403)
 
     if current_user.is_anonymous():
@@ -1026,6 +1027,9 @@ def tasks(short_name):
                                                                 owner,
                                                                 current_user,
                                                                 ps)
+
+    current_app.logger.info(project)
+    current_app.logger.info(current_user)
 
     response = dict(template='/projects/tasks.html',
                     title=title,
@@ -1292,10 +1296,11 @@ def delete_selected_tasks(short_name):
             count = cached_projects.task_count(project.id, args)
             async = count > MAX_NUM_SYNCHRONOUS_TASKS_DELETE
             if async:
+                owners = user_repo.get_users(project.owners_ids)
                 data = {
                     'project_id': project.id, 'project_name': project.name,
                     'curr_user': current_user.email_addr, 'force_reset': True,
-                    'coowners': project.coowners, 'filters': args,
+                    'coowners': owners, 'filters': args,
                     'current_user_fullname': current_user.fullname}
                 task_queue.enqueue(delete_bulk_tasks, data)
             else:
@@ -1354,9 +1359,10 @@ def delete_tasks(short_name):
 
             flash(msg, 'success')
         else:
+            owners = user_repo.get_users(project.owners_ids)
             data = {'project_id': project.id, 'project_name': project.name,
                     'curr_user': current_user.email_addr, 'force_reset': force_reset,
-                    'coowners': project.coowners, 'current_user_fullname': current_user.fullname}
+                    'coowners': owners, 'current_user_fullname': current_user.fullname}
             task_queue.enqueue(delete_bulk_tasks, data)
             flash(gettext("You're trying to delete a large amount of tasks, so please be patient.\
                     You will receive an email when the tasks deletion is complete."))
@@ -2131,7 +2137,7 @@ def project_stream_uri_private(short_name):
     """Returns stream."""
     if current_app.config.get('SSE'):
         project, owner, ps = project_by_shortname(short_name)
-        if (current_user.id == project.owner_id or is_coowner(project.id) or current_user.admin):
+        if (current_user.id in project.owners_ids or current_user.admin):
             return Response(project_event_stream(short_name, 'private'),
                             mimetype="text/event-stream",
                             direct_passthrough=True)
@@ -2261,87 +2267,95 @@ def reset_secret_key(short_name):
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))
 
+
 @blueprint.route('/<short_name>/coowners', methods=['GET', 'POST'])
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
     form = SearchForm(request.form)
     project = project_repo.get_by_shortname(short_name)
-    coowners = project.coowners
+    owners = user_repo.get_users(project.owners_ids)
+    pub_owners = [user.to_public_json() for user in owners]
+    for owner, p_owner in zip(owners, pub_owners):
+        if owner.id == project.owner_id:
+            p_owner['is_creator'] = True
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
+    response = dict(
+        template='/projects/coowners.html',
+        project=project.to_public_json(),
+        coowners=pub_owners,
+        title=gettext("Manage Co-owners"),
+        form=form,
+        pro_features=pro_features()
+    )
+
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
-        found = [type('', (object,), { "user": user, "isCoowner":any(user.id == coowner.id for coowner in coowners)}) for user in found]
-        if not found:
+        users = user_repo.search_by_name(query)
+
+        if not users:
             markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
             flash(markup.format(gettext("Ooops!"),
                                 gettext("We didn't find a user matching your query:"),
                                 form.user.data))
-        return render_template('/projects/coowners.html', project=project, short_name=short_name, found=found, coowners=coowners,
-                               title=gettext("Manage Co-owners"),
-                               form=form, pro_features=pro_features())
-
-    return render_template('/projects/coowners.html', project=project, short_name=short_name, found=[], coowners=coowners,
-                           title=gettext("Manage Co-owners"), form=form, pro_features=pro_features())
-
-@blueprint.route('/<short_name>/addcoowner/<int:user_id>')
-@login_required
-def add_coowner(short_name, user_id=None):
-    """Add coowner."""
-    try:
-        project = project_repo.get_by_shortname(short_name)
-
-        ensure_authorized_to('read', project)
-        ensure_authorized_to('update', project)
-
-        current_app.logger.debug("adding user_id: %d, to project: %s" % (user_id,short_name))
-        if project and user_id:
-            user = user_repo.get(user_id)
-            if user:
-                if all(user.id != x.id for x in project.coowners):
-                    project.coowners.append(user)
-                    project_repo.update(project)
-
-                return redirect(url_for(".coowners", short_name=short_name))
-            else:
-                msg = "User not found"
-                return format_error(msg, 404)
         else:
-            current_app.logger.error("Couldn't find project: %s" % short_name)
-    except Exception as e:  # pragma: no cover
-        current_app.logger.error(e)
-        return abort(500)
+            found = []
+            for user in users:
+                public_user = user.to_public_json()
+                public_user['is_coowner'] = user.id in project.owners_ids
+                public_user['is_creator'] = user.id == project.owner_id
+                found.append(public_user)
+            response['found'] = found
+
+    return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/delcoowner/<int:user_id>')
+@blueprint.route('/<short_name>/add_coowner/<user_name>')
 @login_required
-def del_coowner(short_name, user_id=None):
-    """Del coowner."""
-    try:
-        project = project_repo.get_by_shortname(short_name)
+def add_coowner(short_name, user_name=None):
+    """Add project co-owner."""
+    project = project_repo.get_by_shortname(short_name)
+    user = user_repo.get_by_name(user_name)
 
-        ensure_authorized_to('read', project)
-        ensure_authorized_to('update', project)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
-        if project and user_id:
-            user = user_repo.get(user_id)
-            if user:
-                project.coowners.remove(user)
-                project_repo.update(project)
-                return redirect(url_for('.coowners', short_name=short_name))
-            else:
-                msg = "User.id %d not found" % user_id
-                return format_error(msg, 404)
-        else:  # pragma: no cover
-            msg = "Project: %s or user.id: %d are missing for method del_coowner" % (short_name, user_id)
-            return format_error(msg, 415)
-    except Exception as e:  # pragma: no cover
-        current_app.logger.error(e)
-        return abort(500)
+    if project and user:
+        if user.id in project.owners_ids:
+            flash(gettext('User is already an owner'), 'warning')
+        else:
+            project.owners_ids.append(user.id)
+            project_repo.update(project)
+            flash(gettext('User was added to list of owners'), 'success')
+        return redirect_content_type(url_for(".coowners", short_name=short_name))
+    return abort(404)
+
+
+@blueprint.route('/<short_name>/del_coowner/<user_name>')
+@login_required
+def del_coowner(short_name, user_name=None):
+    """Delete project co-owner."""
+    project = project_repo.get_by_shortname(short_name)
+    user = user_repo.get_by_name(user_name)
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    if project and user:
+        if user.id == project.owner_id:
+            flash(gettext('Cannot remove project creator'), 'error')
+        elif user.id not in project.owners_ids:
+            flash(gettext('User is not a project owner'), 'error')
+        else:
+            project.owners_ids.remove(user.id)
+            project_repo.update(project)
+            flash(gettext('User was deleted from the list of owners'),
+                  'success')
+        return redirect_content_type(url_for('.coowners', short_name=short_name))
+    return abort(404)
 
 
 @blueprint.route('/<short_name>/tasks/projectreport/export')
@@ -2446,7 +2460,7 @@ def sync_project(short_name):
                 subject = 'Your synced project has been reverted'
 
             msg = success_msg.format(
-                sync_msg , synced_url, 'Synced Project Link')
+                sync_msg, synced_url, 'Synced Project Link')
             flash(msg, 'success')
 
             body = success_body.format(
@@ -2473,7 +2487,7 @@ def sync_project(short_name):
         msg = gettext(
             'The target project has not been enabled for syncing.')
         flash(msg, 'error')
-    except Exception as err:
+    except Exception:
         current_app.logger.exception(
             'An error occurred while syncing {}'
             .format(project.short_name))

@@ -308,3 +308,23 @@ class TestUserRepository(Test):
         bad_object = dict()
 
         assert_raises(WrongObjectError, self.user_repo.update, bad_object)
+
+
+    @with_context
+    def test_get_users_no_args(self):
+        """Test get users by id returns empty list
+        """
+        assert self.user_repo.get_users(None) == []
+
+
+    @with_context
+    def test_get_users(self):
+
+        tyrion = UserFactory.create(name='Tyrion Lannister')
+        theon = UserFactory.create(name='reek', fullname='Theon Greyjoy')
+        robb = UserFactory.create(fullname='Robb Stark')
+
+        retrieved_users = self.user_repo.get_users([tyrion.id, theon.id])
+        assert any(user == tyrion for user in retrieved_users)
+        assert any(user == theon for user in retrieved_users)
+        assert all(user != robb for user in retrieved_users)

@@ -28,7 +28,6 @@ from pybossa.repositories import TaskRepository
 from pybossa.repositories import AuditlogRepository
 from pybossa.repositories import WebhookRepository
 from pybossa.repositories import HelpingMaterialRepository
-from pybossa.repositories import ProjectCoownerRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 announcement_repo = AnnouncementRepository(db)
@@ -37,7 +36,6 @@ task_repo = TaskRepository(db)
 auditlog_repo = AuditlogRepository(db)
 webhook_repo = WebhookRepository(db)
 helping_repo = HelpingMaterialRepository(db)
-projectcoowner_repo = ProjectCoownerRepository(db)
 
 
 def reset_all_pk_sequences():
@@ -51,7 +49,6 @@ def reset_all_pk_sequences():
     AuditlogFactory.reset_sequence()
     WebhookFactory.reset_sequence()
     HelpingMaterialFactory.reset_sequence()
-    ProjectCoownerFactory.reset_sequence()
 
 
 class BaseFactory(factory.Factory):
@@ -77,4 +74,3 @@ from user_factory import UserFactory
 from auditlog_factory import AuditlogFactory
 from webhook_factory import WebhookFactory
 from helping_material import HelpingMaterialFactory
-from projectcoowner_factory import ProjectCoownerFactory

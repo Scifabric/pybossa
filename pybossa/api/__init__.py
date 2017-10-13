@@ -28,7 +28,6 @@ This package adds GET, POST, PUT and DELETE methods for:
     * vmcp
     * completedtasks
     * completedtaskruns
-    * projectcoowners
 
 """
 
@@ -58,7 +57,6 @@ from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
 from helpingmaterial import HelpingMaterialAPI
-from project_coowner import ProjectCoownerAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -118,7 +116,6 @@ register_api(FavoritesAPI, 'api_favorites', '/favorites',
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 register_api(CompletedTaskAPI, 'api_completedtask', '/completedtask', pk='oid', pk_type='int')
 register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', pk='oid', pk_type='int')
-register_api(ProjectCoownerAPI, 'api_projectcoowner', '/projectcoowner', pk='oid', pk_type='int')
 
 
 @jsonpify

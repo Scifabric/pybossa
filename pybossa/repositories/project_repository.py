@@ -26,8 +26,6 @@ from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
-from pybossa.util import AttrDict
-from pybossa.cache.helpers import n_available_tasks
 
 
 class ProjectRepository(Repository):
@@ -55,6 +53,7 @@ class ProjectRepository(Repository):
     def save(self, project):
         self._validate_can_be('saved', project)
         self._empty_strings_to_none(project)
+        self._creator_is_owner(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -67,6 +66,7 @@ class ProjectRepository(Repository):
     def update(self, project):
         self._validate_can_be('updated', project)
         self._empty_strings_to_none(project)
+        self._creator_is_owner(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -138,6 +138,12 @@ class ProjectRepository(Repository):
             project.short_name = None
         if project.description == '':
             project.description = None
+
+    def _creator_is_owner(self, project):
+        if project.owners_ids is None:
+            project.owners_ids = []
+        if project.owner_id not in project.owners_ids:
+            project.owners_ids.append(project.owner_id)
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):
@@ -260,44 +266,4 @@ class ProjectRepository(Repository):
                     n_workers 
                     ON project.id = n_workers.project_id;''')
 
-        results = self.db.session.execute(sql)
-        projects = []
-
-        for row in results:
-            coowners = self.get_by_shortname(row.short_name).coowners
-            num_available_tasks = n_available_tasks(row.id)
-            has_completed = "False"
-            coowner_names = "None"
-            if coowners:
-                coowner_names = ""
-                for co in coowners:
-                    coowner_names += co.name + ";" + co.email_addr + "| "
-            if num_available_tasks == 0:
-                has_completed = "True"
-            project = AttrDict([('id', row.id),
-              ('name', row.name),
-              ('short_name', row.short_name),
-              ('url', base_url + row.short_name),
-              ('description', row.description),
-              ('long_description', row.long_description),
-              ('created', row.created),
-              ('owner_name', row.owner_name),
-              ('owner_email', row.owner_email),
-              ('coowners', coowner_names),
-              ('category_name', row.category_name),
-              ('allow_anonymous_contributors', row.allow_anonymous_contributors),
-              ('password_protected', row.password_protected),
-              ('webhook', row.webhook),
-              ('scheduler', row.scheduler),
-              ('has_completed', has_completed),
-              ('finish_time', row.ft),
-              ('percent_complete', row.percent_complete),
-              ('n_tasks', row.n_tasks),
-              ('pending_tasks', row.pending_tasks),
-              ('n_workers', row.n_workers), 
-              ('n_answers', row.n_answers),
-              ('workers', row.workers)
-              ])
-
-            projects.append(project)
-        return projects
+        return self.db.session.execute(sql)

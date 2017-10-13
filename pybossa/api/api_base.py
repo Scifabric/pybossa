@@ -39,7 +39,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-from pybossa.core import project_repo, user_repo, task_repo, result_repo, projectcoowner_repo
+from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
@@ -68,9 +68,7 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                       'update': 'update', 'save': 'save', 'delete': 'delete'},
          'HelpingMaterial': {'repo': helping_repo, 'filter': 'filter_by',
                              'get': 'get', 'update': 'update',
-                             'save': 'save', 'delete': 'delete'},
-        'ProjectCoowner': {'repo': projectcoowner_repo, 'filter': 'filter_by',
-                           'get': 'get', 'update': 'update'}
+                             'save': 'save', 'delete': 'delete'}
         }
 
 

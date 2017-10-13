@@ -29,7 +29,6 @@ These objects are an abstraction layer between the ORM and the application:
     * auditlog_repo
     * webhook_repo
     * result_repo
-    * projectcoowner_repo
 
 The responsibility of these repositories is only fetching one or many objects of
 a kind and/or saving them to the DB by calling the ORM apropriate methods.
@@ -231,7 +230,6 @@ from auditlog_repository import AuditlogRepository
 from webhook_repository import WebhookRepository
 from result_repository import ResultRepository
 from helping_repository import HelpingMaterialRepository
-from project_coowner_repository import ProjectCoownerRepository
 
 assert ProjectRepository
 assert UserRepository
@@ -242,4 +240,3 @@ assert AuditlogRepository
 assert WebhookRepository
 assert ResultRepository
 assert HelpingMaterialRepository
-assert ProjectCoownerRepository

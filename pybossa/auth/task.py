@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import is_coowner
 from werkzeug.exceptions import NotFound
 
 
@@ -54,5 +53,5 @@ class TaskAuth(object):
             project = self.project_repo.get(task.project_id)
             if project is None:
                 raise NotFound("Invalid project ID")
-            return project.owner_id == user.id or user.admin or is_coowner(project.id, user)
+            return user.id in project.owners_ids or user.admin
         return False

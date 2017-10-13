@@ -20,6 +20,7 @@ from mock import patch, call
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
+from helper.subadmin import make_subadmin
 
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
@@ -31,6 +32,7 @@ from pybossa.model.project import Project
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 result_repo = ResultRepository(db)
+
 
 class TestProjectAPI(TestAPI):
 
@@ -335,6 +337,7 @@ class TestProjectAPI(TestAPI):
     def test_project_post(self):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
+        make_subadmin(users[1])
         CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(

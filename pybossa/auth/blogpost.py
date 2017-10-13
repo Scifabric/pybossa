@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import is_coowner
 
 class BlogpostAuth(object):
     _specific_actions = []
@@ -37,8 +36,8 @@ class BlogpostAuth(object):
             return False
         project = self._get_project(blogpost, project_id)
         if blogpost is None:
-            return project.owner_id == user.id or is_coowner(project.id, user)
-        return blogpost.user_id == project.owner_id == user.id or is_coowner(project.id, user)
+            return user.id in project.owners_ids and user.subadmin
+        return blogpost.user_id == project.owner_id == user.id
 
     def _read(self, user, blogpost=None, project_id=None):
         if blogpost or project_id:
@@ -55,7 +54,7 @@ class BlogpostAuth(object):
         if user.is_anonymous():
             return False
 
-        return blogpost.user_id == user.id or (project_id is not None and is_coowner(project_id, user))
+        return blogpost.user_id == user.id or user.admin
 
     def _delete(self, user, blogpost, project_id=None):
         if user.is_anonymous():
@@ -69,4 +68,4 @@ class BlogpostAuth(object):
 
     def _is_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
-                (project.owner_id == user.id or user.admin or is_coowner(project.id, user)))
+                (user.id in project.owners_ids or user.admin))

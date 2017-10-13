@@ -656,6 +656,14 @@ def update_project_stats():
                        VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (project.id)
         db.engine.execute(sql_query)
 
+def migrate_coowners():
+    from pybossa.core import project_repo
+    projects = project_repo.get_all()
+    for project in projects:
+        coowners = [coown.id for coown in project.coowners]
+        project.owners_ids = coowners
+        project_repo.save(project)
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 

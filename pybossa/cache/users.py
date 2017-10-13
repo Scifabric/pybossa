@@ -190,7 +190,7 @@ def published_projects(user_id, args=None):
                project.info
                FROM project
                WHERE project.published=true
-               AND (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))
+               AND :user_id = ANY (project.owners_ids::int[])
                order by {column} {order};
                '''.format(**sort_args))
     projects_published = []
@@ -238,7 +238,7 @@ def draft_projects(user_id):
                project.owner_id,
                project.info
                FROM project
-               WHERE (project.owner_id=:user_id OR project.id IN (SELECT project_id FROM project_coowner WHERE coowner_id=:user_id))
+               WHERE :user_id = ANY (project.owners_ids::int[])
                AND project.published=false;
                ''')
     projects_draft = []

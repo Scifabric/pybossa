@@ -19,8 +19,8 @@
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text, Table
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.dialects.postgresql import JSON, ARRAY
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from flask import current_app
 
 from pybossa.core import db, signer
@@ -29,7 +29,6 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
-from pybossa.model.project_coowner import ProjectCoowner
 import re
 
 
@@ -82,7 +81,9 @@ class Project(db.Model, DomainObject):
                              order_by='TaskRun.finish_time.desc()')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='project')
-    coowners = relationship("User", lazy='subquery', single_parent=True, secondary="project_coowner")
+    coowners = relationship("User", lazy='subquery', single_parent=True,
+                            secondary="project_coowner")                            # TODO: remove this once migrated
+    owners_ids = Column(MutableList.as_mutable(ARRAY(Integer)), default=list())
 
     def needs_password(self):
         return self.get_passwd_hash() is not None
@@ -132,7 +133,7 @@ class Project(db.Model, DomainObject):
                 'overall_progress', 'short_name', 'created',
                 'long_description', 'last_activity', 'last_activity_raw',
                 'n_task_runs', 'n_results', 'owner', 'updated', 'featured',
-                'owner_id', 'n_completed_tasks', 'n_blogposts']
+                'owner_id', 'n_completed_tasks', 'n_blogposts', 'owners_ids']
 
     @classmethod
     def public_info_keys(self):

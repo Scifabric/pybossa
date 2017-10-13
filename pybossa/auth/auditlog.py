@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import is_coowner
 
 class AuditlogAuth(object):
     _specific_actions = []
@@ -39,7 +38,7 @@ class AuditlogAuth(object):
         if user.is_anonymous() or (auditlog is None and project_id is None):
             return False
         project = self._get_project(auditlog, project_id)
-        return user.admin or user.id == project.owner_id or is_coowner(project.id, user)
+        return user.admin or user.id in project.owners_ids
 
     def _update(self, user, auditlog, project_id=None):
         return False

@@ -25,6 +25,7 @@ from factories import UserFactory, BlogpostFactory, ProjectFactory
 
 from pybossa.repositories import BlogRepository
 from mock import patch
+from helper.subadmin import make_subadmin
 blog_repo = BlogRepository(db)
 
 class TestBlogpostAPI(TestAPI):
@@ -211,7 +212,7 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 415, data
 
-        # As owner using reserved key 
+        # As owner using reserved key
         url = '/api/blogpost?api_key=%s' % owner.api_key
         payload['project_id'] = project.id
         payload['user_id'] = owner.id
@@ -351,6 +352,7 @@ class TestBlogpostAPI(TestAPI):
     def test_blogpost_post_file(self):
         """Test API Blogpost file upload creation."""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         project2 = ProjectFactory.create(owner=user)
 
@@ -454,7 +456,7 @@ class TestBlogpostAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 415, data
 
-        # As owner using reserved key 
+        # As owner using reserved key
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,
@@ -473,6 +475,7 @@ class TestBlogpostAPI(TestAPI):
     def test_blogpost_put_file(self):
         """Test API Blogpost file upload update."""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         project2 = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(project=project)
