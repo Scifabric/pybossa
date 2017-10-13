@@ -20,6 +20,7 @@ from sqlalchemy import Integer, Text, Boolean
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.ext.mutable import MutableDict
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
@@ -45,4 +46,4 @@ class Result(db.Model, DomainObject):
     #: Last version
     last_version = Column(Boolean, default=True)
     #: Value of the Result.
-    info = Column(JSON)
+    info = Column(MutableDict.as_mutable(JSON))

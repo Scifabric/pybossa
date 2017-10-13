@@ -22,6 +22,7 @@ from sqlalchemy.schema import Column, ForeignKey
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.ext.mutable import MutableDict
 
 class Webhook(db.Model, DomainObject):
     '''A Table with Categories for Projects.'''
@@ -38,7 +39,7 @@ class Webhook(db.Model, DomainObject):
     project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'),
                         nullable=False)
     #: Webhook payload
-    payload = Column(JSON)
+    payload = Column(MutableDict.as_mutable(JSON))
     #: Webhook response
     response = Column(Text)
     #: Webhook response status code
