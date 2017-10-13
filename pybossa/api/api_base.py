@@ -465,11 +465,15 @@ class APIBase(MethodView):
 
             ensure_authorized_to('create', self.__class__,
                                  project_id=tmp['project_id'])
+            project = project_repo.get(tmp['project_id'])
             upload_method = current_app.config.get('UPLOAD_METHOD')
             if request.files.get('file') is None:
                 raise AttributeError
             _file = request.files['file']
-            container = "user_%s" % current_user.id
+            if current_user.admin:
+                container = "user_%s" % project.owner.id
+            else:
+                container = "user_%s" % current_user.id
             uploader.upload_file(_file,
                                  container=container)
             file_url = get_avatar_url(upload_method,
