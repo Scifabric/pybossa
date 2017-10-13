@@ -1251,17 +1251,21 @@ def bulk_redundancy_update(short_name):
 
 def _update_task_redundancy(project_id, task_ids, n_answers):
     """
-    Update the redundancy for a list of tasks in a given project
+    Update the redundancy for a list of tasks in a given project. Mark tasks
+    exported as False for tasks with curr redundancy < new redundancy
+    and task was already exported
     """
     for task_id in task_ids:
         if task_id:
             t = task_repo.get_task_by(project_id=project_id,
                                       id=int(task_id))
             if t and t.n_answers != n_answers:
+                if len(t.task_runs) < n_answers and t.state == 'completed':
+                    t.exported = False
                 t.n_answers = n_answers
                 t.state = 'ongoing'
                 if len(t.task_runs) >= n_answers:
-                    t.state = 'complete'
+                    t.state = 'completed'
                 task_repo.update(t)
 
 
