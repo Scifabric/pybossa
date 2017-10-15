@@ -39,7 +39,7 @@ class TestAnnouncementAPI(TestAPI):
         announcement = AnnouncementFactory.create()
 
         # As anon
-        url = '/announcements/'
+        url = '/api/announcement'
         res = self.app_get_json(url)
         data = json.loads(res.data)
         assert len(data) == 10, data

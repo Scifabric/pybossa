@@ -142,6 +142,15 @@ def url_for_app_type(endpoint, **values):
     return url_for(endpoint, **values)
 
 
+def url_for_app_type(endpoint, **values):
+    """Generate a URL for an SPA, or otherwise."""
+    spa_server_name = current_app.config.get('SPA_SERVER_NAME')
+    if spa_server_name:
+      values.pop('_external', None)
+      return spa_server_name + url_for(endpoint, **values)
+    return url_for(endpoint, **values)
+
+
 def jsonpify(f):
     """Wrap JSONified output for JSONP."""
     @wraps(f)

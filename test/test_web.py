@@ -235,30 +235,37 @@ class TestWeb(web.Helper):
         assert len(leaders) == (20+10+1+10), len(leaders)
         assert leaders[30]['name'] == user.name
 
-        res = self.app_get_json('/leaderboard/?info=n')
-        data = json.loads(res.data)
-        err_msg = 'Top users missing'
-        assert 'top_users' in data, err_msg
-        err_msg = 'leaderboard user information missing'
-        leaders = data['top_users']
-        assert len(leaders) == (20), len(leaders)
-        score = 10
-        rank = 1
-        for u in leaders[0:10]:
-            assert u['score'] == score, u
-            assert u['rank'] == rank, u
-            score = score - 1
-            rank = rank + 1
+        res = self.app_get_json('/leaderboard/?info=noleaderboards')
+        assert res.status_code == 404,  res.status_code
 
-        res = self.app_get_json('/leaderboard/window/3?api_key=%s&info=n' % user.api_key)
-        data = json.loads(res.data)
-        err_msg = 'Top users missing'
-        assert 'top_users' in data, err_msg
-        err_msg = 'leaderboard user information missing'
-        leaders = data['top_users']
-        assert len(leaders) == (20+3+1+3), len(leaders)
-        assert leaders[23]['name'] == user.name
-        assert leaders[23]['score'] == 0
+        with patch.dict(self.flask_app.config, {'LEADERBOARDS': ['n']}):
+            res = self.app_get_json('/leaderboard/?info=n')
+            data = json.loads(res.data)
+            err_msg = 'Top users missing'
+            assert 'top_users' in data, err_msg
+            err_msg = 'leaderboard user information missing'
+            leaders = data['top_users']
+            assert len(leaders) == (20), len(leaders)
+            score = 10
+            rank = 1
+            for u in leaders[0:10]:
+                assert u['score'] == score, u
+                assert u['rank'] == rank, u
+                score = score - 1
+                rank = rank + 1
+
+            res = self.app_get_json('/leaderboard/window/3?api_key=%s&info=n' % user.api_key)
+            data = json.loads(res.data)
+            err_msg = 'Top users missing'
+            assert 'top_users' in data, err_msg
+            err_msg = 'leaderboard user information missing'
+            leaders = data['top_users']
+            assert len(leaders) == (20+3+1+3), len(leaders)
+            assert leaders[23]['name'] == user.name
+            assert leaders[23]['score'] == 0
+
+            res = self.app_get_json('/leaderboard/?info=new')
+            assert res.status_code == 404,  res.status_code
 
 
     @with_context
@@ -763,7 +770,8 @@ class TestWeb(web.Helper):
         self.update_profile(email_addr="new@mail.com")
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
-                    email_addr="new@mail.com")
+                    email_addr="new@mail.com",
+                    consent=False)
 
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
@@ -4743,9 +4751,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real project
-        project = db.session.query(Project)\
-            .filter_by(short_name=Fixtures.project_short_name)\
-            .first()
+        project = ProjectFactory.create()
         self.clear_temp_container(project.owner_id)
         for i in range(0, 5):
             task = TaskFactory.create(project=project, info={u'eñe': i})

@@ -48,6 +48,7 @@ from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
 from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
+from pybossa.util import url_for_app_type
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo, ldap
@@ -149,7 +150,7 @@ def signin():
                                  email_addr=cn,
                                  valid_email=True,
                                  consent=False)
-                _create_account(user_data, ldap_disabled=False)
+                create_account(user_data, ldap_disabled=False)
             else:
                 login_user(user_db, remember=True)
         else:
