@@ -20,7 +20,7 @@ from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
-from pybossa.util import pretty_date
+from pybossa.util import pretty_date, exists_materialized_view
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
 from pybossa.model.project import Project
@@ -92,6 +92,8 @@ def public_get_user_summary(name):
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
     """Return rank and score for a user."""
+    if exists_materialized_view(db, 'users_rank') is False:
+        lb()
     sql = text('''SELECT * from users_rank WHERE id=:user_id''')
     results = session.execute(sql, dict(user_id=user_id))
     rank_and_score = dict(rank=None, score=None)
