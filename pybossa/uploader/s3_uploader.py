@@ -27,7 +27,7 @@ allowed_mime_types = ['application/pdf',
 
 
 def check_type(filename):
-    mime_type = magic.from_file(filename, mime=True)
+    mime_type = magic.from_file(filename, mime=True, uncompress=True)
     if mime_type not in allowed_mime_types:
         raise BadRequest("File type not supported: {}".format(mime_type))
 
@@ -52,7 +52,8 @@ def tmp_file_from_string(string):
     return tmp_file
 
 
-def s3_upload_from_string(s3_bucket, string, filename, headers=None, directory="", file_type_check=True):
+def s3_upload_from_string(s3_bucket, string, filename, headers=None,
+                          directory="", file_type_check=True):
     """
     Upload a string to s3
     """
@@ -61,7 +62,8 @@ def s3_upload_from_string(s3_bucket, string, filename, headers=None, directory="
             s3_bucket, tmp_file, filename, headers, directory, file_type_check)
 
 
-def s3_upload_file_storage(s3_bucket, source_file, directory="", public=False, file_type_check=True):
+def s3_upload_file_storage(s3_bucket, source_file, directory="", public=False,
+                           file_type_check=True):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -125,6 +127,7 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
 
     return key.generate_url(0).split('?', 1)[0]
 
+
 def get_s3_bucket_key(s3_bucket, s3_url):
     conn = boto.connect_s3()
     bucket = conn.get_bucket(s3_bucket, validate=False)
@@ -133,15 +136,17 @@ def get_s3_bucket_key(s3_bucket, s3_url):
     key = bucket.get_key(path)
     return bucket, key
 
+
 def get_file_from_s3(s3_bucket, s3_url):
     temp_file = tempfile.NamedTemporaryFile()
-    _ , key = get_s3_bucket_key(s3_bucket, s3_url)
+    _, key = get_s3_bucket_key(s3_bucket, s3_url)
     key.get_contents_to_filename(temp_file.name)
     return temp_file
+
 
 def delete_file_from_s3(s3_bucket, s3_url):
     try:
         bucket,key = get_s3_bucket_key(s3_bucket, s3_url)
         bucket.delete_key(key.name, version_id=key.version_id)
-    except S3ResponseError as e:
+    except S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))
