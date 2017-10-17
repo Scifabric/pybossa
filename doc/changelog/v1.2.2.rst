@@ -1,6 +1,0 @@
-================
-Changelog v1.2.2
-================
-
- * Make pro user features extensible to all regular users in the configuration
-   files.
