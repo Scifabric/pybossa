@@ -52,6 +52,7 @@ class ProjectRepository(Repository):
     def save(self, project):
         self._validate_can_be('saved', project)
         self._empty_strings_to_none(project)
+        self._creator_is_owner(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -62,6 +63,7 @@ class ProjectRepository(Repository):
     def update(self, project):
         self._validate_can_be('updated', project)
         self._empty_strings_to_none(project)
+        self._creator_is_owner(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -129,6 +131,12 @@ class ProjectRepository(Repository):
             project.short_name = None
         if project.description == '':
             project.description = None
+
+    def _creator_is_owner(self, project):
+        if project.owners_ids is None:
+            project.owners_ids = []
+        if project.owner_id not in project.owners_ids:
+            project.owners_ids.append(project.owner_id)
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

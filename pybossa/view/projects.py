@@ -60,6 +60,7 @@ from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks, webhook
 from pybossa.forms.projects_view_forms import *
+from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
@@ -269,7 +270,8 @@ def new():
                       long_description=form.long_description.data,
                       owner_id=current_user.id,
                       info=info,
-                      category_id=category_by_default.id)
+                      category_id=category_by_default.id,
+                      owners_ids=[current_user.id])
 
     project_repo.save(project)
 
@@ -1688,7 +1690,7 @@ def project_stream_uri_private(short_name):
     if current_app.config.get('SSE'):
         project, owner, ps = project_by_shortname(short_name)
 
-        if (current_user.id == project.owner_id or current_user.admin):
+        if current_user.id in project.owners_ids or current_user.admin:
             return Response(project_event_stream(short_name, 'private'),
                             mimetype="text/event-stream",
                             direct_passthrough=True)
@@ -1817,6 +1819,7 @@ def reset_secret_key(short_name):
     flash(msg, 'success')
     return redirect_content_type(url_for('.update', short_name=short_name))
 
+
 @blueprint.route('/<short_name>/transferownership', methods=['GET', 'POST'])
 @login_required
 def transfer_ownership(short_name):
@@ -1837,8 +1840,10 @@ def transfer_ownership(short_name):
         if len(new_owner) == 1:
             new_owner = new_owner[0]
             project.owner_id = new_owner.id
+            project.owners_ids = [new_owner.id]
             project_repo.update(project)
             msg = gettext("Project owner updated")
+            flash(msg, 'info')
             return redirect_content_type(url_for('.details',
                                                  short_name=short_name))
         else:
@@ -1863,3 +1868,90 @@ def transfer_ownership(short_name):
                         form=form,
                         target='.transfer_ownership')
         return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/coowners', methods=['GET', 'POST'])
+@login_required
+def coowners(short_name):
+    """Manage coowners of a project."""
+    form = SearchForm(request.form)
+    project = project_repo.get_by_shortname(short_name)
+    owners = user_repo.get_users(project.owners_ids)
+    pub_owners = [user.to_public_json() for user in owners]
+    for owner, p_owner in zip(owners, pub_owners):
+        if owner.id == project.owner_id:
+            p_owner['is_creator'] = True
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    response = dict(
+        template='/projects/coowners.html',
+        project=project.to_public_json(),
+        coowners=pub_owners,
+        title=gettext("Manage Co-owners"),
+        form=form,
+        pro_features=pro_features()
+    )
+
+    if request.method == 'POST' and form.user.data:
+        query = form.user.data
+        user = user_repo.get_by_name(query)
+
+        if not user or user.id == current_user.id:
+            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+            flash(markup.format(gettext("Ooops!"),
+                                gettext("We didn't find a user matching your query:"),
+                                form.user.data))
+        else:
+            found = user.to_public_json()
+            found['is_coowner'] = user.id in project.owners_ids
+            found['is_creator'] = user.id == project.owner_id
+            response['found'] = found
+
+    return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/add_coowner/<user_name>')
+@login_required
+def add_coowner(short_name, user_name=None):
+    """Add project co-owner."""
+    project = project_repo.get_by_shortname(short_name)
+    user = user_repo.get_by_name(user_name)
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    if project and user:
+        if user.id in project.owners_ids:
+            flash(gettext('User is already an owner'), 'warning')
+        else:
+            project.owners_ids.append(user.id)
+            project_repo.update(project)
+            flash(gettext('User was added to list of owners'), 'success')
+        return redirect_content_type(url_for(".coowners", short_name=short_name))
+    return abort(404)
+
+
+@blueprint.route('/<short_name>/del_coowner/<user_name>')
+@login_required
+def del_coowner(short_name, user_name=None):
+    """Delete project co-owner."""
+    project = project_repo.get_by_shortname(short_name)
+    user = user_repo.get_by_name(user_name)
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    if project and user:
+        if user.id == project.owner_id:
+            flash(gettext('Cannot remove project creator'), 'error')
+        elif user.id not in project.owners_ids:
+            flash(gettext('User is not a project owner'), 'error')
+        else:
+            project.owners_ids.remove(user.id)
+            project_repo.update(project)
+            flash(gettext('User was deleted from the list of owners'),
+                  'success')
+        return redirect_content_type(url_for('.coowners', short_name=short_name))
+    return abort(404)

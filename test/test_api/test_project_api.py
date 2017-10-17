@@ -355,6 +355,7 @@ class TestProjectAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'user2')
+        assert_equal(out.owners_ids, [2])
         id_ = out.id
 
         # now a real user with headers auth
