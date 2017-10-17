@@ -48,10 +48,10 @@ For a full list of PYBOSSA projects, check our [case studies](https://scifabric.
 
 **Important: if you are updating a server, please, be sure to check the
 Database Migration scripts, as new changes could introduce new tables,
-columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/en/latest/install.html#updating-pybossa) from the
+columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/install/#updating-pybossa) from the
 documentation**
 
-See [installation instructions](http://docs.pybossa.com/en/latest/installing_pybossa.html).
+See [installation instructions](http://docs.pybossa.com/install/).
 
 # Testing
 
