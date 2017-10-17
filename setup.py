@@ -30,7 +30,6 @@ requirements = [
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
-    "sphinx>=1.2.2, <2.0",
     "coverage",
     "nose-cov",
     "mock",
