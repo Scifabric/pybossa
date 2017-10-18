@@ -19,7 +19,6 @@ allowed_mime_types = ['application/pdf',
                       'application/oda',
                       'text/html',
                       'application/xml',
-                      'application/zip',
                       'image/jpeg',
                       'image/png',
                       'image/bmp',
@@ -53,16 +52,16 @@ def tmp_file_from_string(string):
     return tmp_file
 
 
-def s3_upload_from_string(s3_bucket, string, filename, headers=None, directory=""):
+def s3_upload_from_string(s3_bucket, string, filename, headers=None, directory="", file_type_check=True):
     """
     Upload a string to s3
     """
     tmp_file = tmp_file_from_string(string)
     return s3_upload_tmp_file(
-            s3_bucket, tmp_file, filename, headers, directory)
+            s3_bucket, tmp_file, filename, headers, directory, file_type_check)
 
 
-def s3_upload_file_storage(s3_bucket, source_file, directory="", public=False):
+def s3_upload_file_storage(s3_bucket, source_file, directory="", public=False, file_type_check=True):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -71,16 +70,17 @@ def s3_upload_file_storage(s3_bucket, source_file, directory="", public=False):
     tmp_file = NamedTemporaryFile(delete=False)
     source_file.save(tmp_file.name)
     return s3_upload_tmp_file(
-            s3_bucket, tmp_file, filename, headers, directory, public)
+            s3_bucket, tmp_file, filename, headers, directory, public, file_type_check)
 
 
 def s3_upload_tmp_file(s3_bucket, tmp_file, filename,
-                       headers, directory="", public=False):
+                       headers, directory="", public=False, file_type_check=True):
     """
     Upload the content of a temporary file to s3 and delete the file
     """
     try:
-        check_type(tmp_file.name)
+        if file_type_check:
+            check_type(tmp_file.name)
         url = s3_upload_file(s3_bucket,
                              tmp_file.name,
                              filename,

@@ -41,15 +41,6 @@ from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
 from pybossa.uploader.s3_uploader import s3_upload_file_storage
-import settings_local as settings
-
-from flask import request
-from werkzeug.utils import secure_filename
-from pybossa.core import uploader
-from pybossa.uploader import local
-from flask import safe_join
-from flask.ext.login import current_user
-import os
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -255,7 +246,8 @@ class BulkTaskLocalCSVImportForm(Form):
                 s3_url = s3_upload_file_storage(
                             current_app.config.get("S3_IMPORT_BUCKET"),
                             csv_file,
-                            directory=path)
+                            directory=path,
+                            file_type_check=False)
                 return {'type': 'localCSV', 'csv_filename': s3_url}
         return {'type': 'localCSV', 'csv_filename': None}
 
@@ -320,7 +312,6 @@ class BulkTaskYoutubeImportForm(Form):
           'playlist_url': self.playlist_url.data
         }
 
-
 class BulkTaskS3ImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='s3')
     files = FieldList(TextField(label=None, widget=HiddenInput()))
@@ -333,44 +324,6 @@ class BulkTaskS3ImportForm(Form):
             'files': self.files.data,
             'bucket': self.bucket.data
         }
-
-
-class BulkTaskLocalCSVImportForm(Form):
-    form_name = TextField(label=None, widget=HiddenInput(), default='localCSV')
-    _allowed_extensions = set(['csv'])
-    def _allowed_file(self, filename):
-        return '.' in filename and \
-            filename.rsplit('.', 1)[1] in self._allowed_extensions
-
-    def _container(self):
-        return "user_%d" % current_user.id
-
-    def _upload_path(self):
-        container = self._container()
-        filepath = None
-        if isinstance(uploader, local.LocalUploader):
-            filepath = safe_join(uploader.upload_folder, container)
-            if not os.path.isdir(filepath):
-                os.makedirs(filepath)
-            return filepath
-
-        current_app.logger.error('Failed to generate upload path {0}'.format(filepath))
-        raise IOError('Local Upload folder is missing: {0}'.format(filepath))
-
-    def get_import_data(self):
-        if request.method == 'POST':
-            if 'file' not in request.files:
-                return {'type': 'localCSV', 'csv_filename': None}
-            csv_file = request.files['file']
-            if csv_file.filename == '':
-                return {'type': 'localCSV', 'csv_filename': None}
-            if csv_file and self._allowed_file(csv_file.filename):
-                filename = secure_filename(csv_file.filename)
-                filepath = self._upload_path()
-                tmpfile = safe_join(filepath, filename)
-                csv_file.save(tmpfile)
-                return {'type': 'localCSV', 'csv_filename': tmpfile}
-        return {'type': 'localCSV', 'csv_filename': None}
 
 
 class GenericBulkTaskImportForm(object):

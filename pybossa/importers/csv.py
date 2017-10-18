@@ -24,10 +24,9 @@ from pybossa.util import unicode_csv_reader
 from .base import BulkTaskImport, BulkImportException
 from flask import request
 from werkzeug.datastructures import FileStorage
+import io, time, json
 from flask import current_app as app
 from pybossa.uploader.s3_uploader import get_file_from_s3, delete_file_from_s3
-from werkzeug.datastructures import FileStorage
-import io, time, json
 
 class BulkTaskCSVImport(BulkTaskImport):
 
