@@ -106,7 +106,6 @@ class Importer(object):
 
         additional_msg = ' {} task import failed due to invalid S3 bucket.'\
                             .format(s3_bucket_failures) if s3_bucket_failures else ''
-
         if form_data.get('type') == 'localCSV':
             s3_url = form_data.get('csv_filename')
             importer.delete_local_csv_import_s3_file(s3_url)

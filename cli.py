@@ -610,26 +610,6 @@ def create_results():
         db.session.commit()
         print "Project %s completed!" % project.short_name
 
-def update_project_stats():
-    """Update project stats for draft projects."""
-    from pybossa.core import db
-    from pybossa.core import project_repo, task_repo, result_repo
-    from pybossa.model.task import Task
-    from pybossa.model.task_run import TaskRun
-    from pybossa.model.counter import Counter
-    import pybossa.cache.project_stats as stats
-
-    projects = project_repo.filter_by(published=False)
-
-    for project in projects:
-        print "Working on project: %s" % project.short_name
-        sql_query = """INSERT INTO project_stats 
-                       (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
-                       n_completed_tasks, overall_progress, average_time,
-                       n_blogposts, last_activity, info)
-                       VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (project.id)
-        db.engine.execute(sql_query)
-
 def update_counters():
     """Populates the counters table."""
     from pybossa.core import db
@@ -669,7 +649,7 @@ def update_project_stats():
 
     for project in projects:
         print "Working on project: %s" % project.short_name
-        sql_query = """INSERT INTO project_stats 
+        sql_query = """INSERT INTO project_stats
                        (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
                        n_completed_tasks, overall_progress, average_time,
                        n_blogposts, last_activity, info)
