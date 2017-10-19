@@ -678,13 +678,13 @@ class TestAuditlogWEB(web.Helper):
         short_name = 'sampleapp'
 
         url = "/project/%s/tasks/autoimporter" % short_name
-        data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
+        data = {'form_name': 'localCSV', 'csv_filename': 'http://fakeurl.com'}
 
         self.app.post(url, data=data, follow_redirects=True)
 
         attribute = 'autoimporter'
 
-        new_value = '{"type": "csv", "csv_url": "http://fakeurl.com"}'
+        new_value = '{"type": "localCSV", "csv_filename": null}'
 
         old_value = 'Nothing'
 

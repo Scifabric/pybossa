@@ -333,8 +333,8 @@ class TestAutoimporterBehaviour(web.Helper):
 
         assert expected_text in res.data
         assert 'CSV' in res.data
-        assert 'Google Drive Spreadsheet' in res.data
-        assert 'EpiCollect Plus Project' in res.data
+        #assert 'Google Drive Spreadsheet' in res.data
+        #assert 'EpiCollect Plus Project' in res.data
         assert 'Flickr' in res.data
         assert 'Twitter' in res.data
         assert 'Dropbox' not in res.data
@@ -363,29 +363,29 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = user_repo.get(1)
         project = ProjectFactory.create(owner=owner)
 
-        # CSV
-        url = "/project/%s/tasks/autoimporter?type=csv" % project.short_name
-        res = self.app.get(url, follow_redirects=True)
-        data = res.data.decode('utf-8')
-
-        assert "From a CSV file" in data
-        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
-
-        # Google Docs
-        url = "/project/%s/tasks/autoimporter?type=gdocs" % project.short_name
-        res = self.app.get(url, follow_redirects=True)
-        data = res.data.decode('utf-8')
-
-        assert "From a Google Docs Spreadsheet" in data
-        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
-
-        # Epicollect Plus
-        url = "/project/%s/tasks/autoimporter?type=epicollect" % project.short_name
-        res = self.app.get(url, follow_redirects=True)
-        data = res.data.decode('utf-8')
-
-        assert "From an EpiCollect Plus project" in data
-        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
+        # # CSV
+        # url = "/project/%s/tasks/autoimporter?type=csv" % project.short_name
+        # res = self.app.get(url, follow_redirects=True)
+        # data = res.data.decode('utf-8')
+        #
+        # assert "From a CSV file" in data
+        # assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
+        #
+        # # Google Docs
+        # url = "/project/%s/tasks/autoimporter?type=gdocs" % project.short_name
+        # res = self.app.get(url, follow_redirects=True)
+        # data = res.data.decode('utf-8')
+        #
+        # assert "From a Google Docs Spreadsheet" in data
+        # assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
+        #
+        # # Epicollect Plus
+        # url = "/project/%s/tasks/autoimporter?type=epicollect" % project.short_name
+        # res = self.app.get(url, follow_redirects=True)
+        # data = res.data.decode('utf-8')
+        #
+        # assert "From an EpiCollect Plus project" in data
+        # assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Flickr
         url = "/project/%s/tasks/autoimporter?type=flickr" % project.short_name
@@ -439,10 +439,10 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         self.signin()
         owner = user_repo.get(1)
-        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        autoimporter = {'type': 'localCSV', 'csv_filename': None}
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % project.short_name
-        data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
+        data = {'form_name': 'localCSV', 'csv_filename': 'http://fakeurl.com'}
 
         self.app.post(url, data=data, follow_redirects=True)
 
