@@ -60,7 +60,7 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
-        assert result.message == '2 new tasks were imported successfully.', result
+        assert result.message == '2 new tasks were imported successfully ', result
         importer_factory.assert_called_with(**form_data)
 
     @with_context
@@ -91,7 +91,7 @@ class TestImporterPublicMethods(Test):
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
 
-        assert result.message == '1 new task was imported successfully.', result.message
+        assert result.message == '1 new task was imported successfully ', result.message
         assert result.total == 1, result.total
         assert result.metadata == metadata, result.metadata
 
@@ -111,7 +111,7 @@ class TestImporterPublicMethods(Test):
     @with_context
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect', 's3', 'localCSV']
+        expected_importers = ['localCSV']
 
         assert set(importers) == set(expected_importers)
 
@@ -134,7 +134,7 @@ class TestImporterPublicMethods(Test):
     @with_context
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
         importers = self.importer.get_autoimporter_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect', 'localCSV']
+        expected_importers = ['localCSV']
 
         assert set(importers) == set(expected_importers)
 
