@@ -296,7 +296,7 @@ def new():
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
-    info = {}
+    info = {'sync': {'enabled': False}}
     category_by_default = cached_cat.get_all()[0]
 
     project = Project(name=form.name.data,

@@ -36,7 +36,7 @@ class BlogRepository(Repository):
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   **filters):
-        return self._filter_by(Blogpost, limit, offset, yielded, 
+        return self._filter_by(Blogpost, limit, offset, yielded,
                                last_id, **filters)
 
     def save(self, blogpost):

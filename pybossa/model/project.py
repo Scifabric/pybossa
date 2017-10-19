@@ -81,8 +81,8 @@ class Project(db.Model, DomainObject):
                              order_by='TaskRun.finish_time.desc()')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='project')
-    coowners = relationship("User", lazy='subquery', single_parent=True,
-                            secondary="project_coowner")                            # TODO: remove this once migrated
+    # TODO: remove this once migrated
+    coowners = relationship("User", secondary="project_coowner")
     owners_ids = Column(MutableList.as_mutable(ARRAY(Integer)), default=list())
 
     def needs_password(self):
