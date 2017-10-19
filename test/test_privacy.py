@@ -368,9 +368,8 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
         # As Anonymou user
         url = '/leaderboard'
         res = self.app.get(url, follow_redirects=True)
-        dom = BeautifulSoup(res.data)
         err_msg = 'Leaderboard page should not be shown to anonymous users'
-        assert dom.find(id='enforce_privacy') is not None, err_msg
+        assert 'This feature requires being logged in' in res.data, err_msg
         # As Authenticated user but NOT ADMIN
         res = self.app.get(url + '?api_key=%s' % user.api_key, follow_redirects=True)
         dom = BeautifulSoup(res.data)

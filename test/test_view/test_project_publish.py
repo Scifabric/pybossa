@@ -20,6 +20,7 @@ from mock import patch
 from default import db, with_context
 from factories import ProjectFactory, TaskFactory, UserFactory, TaskRunFactory
 from helper import web
+from helper.subadmin import make_subadmin
 from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository, WebhookRepository, ResultRepository
 from pybossa.view.projects import render_template
 
@@ -109,6 +110,7 @@ class TestProjectPublicationView(web.Helper):
     @with_context
     def test_published_get(self):
         project = ProjectFactory.create(info=dict())
+        make_subadmin(project.owner)
         url = '/project/%s/publish?api_key=%s' % (project.short_name,
                                                   project.owner.api_key)
         # Without tasks should return 403
@@ -132,6 +134,8 @@ class TestProjectPublicationView(web.Helper):
         with patch.dict(self.flask_app.config,
                         {'DISABLE_TASK_PRESENTER': True}):
             project = ProjectFactory.create(info=dict())
+            make_subadmin(project.owner)
+
             url = '/project/%s/publish?api_key=%s' % (project.short_name,
                                                       project.owner.api_key)
             # Without tasks should return 403

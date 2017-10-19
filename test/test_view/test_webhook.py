@@ -196,6 +196,7 @@ class TestWebhookView(web.Helper):
     def test_webhook_handler_failed(self, q):
         """Test WEBHOOK requeing failed works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user, webhook='server')
         task = TaskFactory.create(project=project, n_answers=1)
@@ -223,6 +224,7 @@ class TestWebhookView(web.Helper):
     def test_webhook_handler_all(self, q):
         """Test WEBHOOK requeing all works."""
         self.register()
+        self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user, webhook='server')
         task = TaskFactory.create(project=project, n_answers=1)

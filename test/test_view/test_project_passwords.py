@@ -120,7 +120,7 @@ class TestProjectPassword(Helper):
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
-        res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
+        res = self.app.get('/project/%s/newtask?api_key=%s' % (project.short_name, user.api_key), follow_redirects=True)
         assert 'Enter the password to contribute' in res.data
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
