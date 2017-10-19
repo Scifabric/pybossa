@@ -222,8 +222,9 @@ class TestRegisterForm(Test):
         form = RegisterForm(**self.fill_in_data)
         assert form.validate()
 
+
 class TestBulkTaskLocalCSVForm(Test):
-    
+
     def setUp(self):
         super(TestBulkTaskLocalCSVForm, self).setUp()
         self.form_data = {'csv_filename': 'sample.csv'}
@@ -231,7 +232,6 @@ class TestBulkTaskLocalCSVForm(Test):
     @with_context
     @patch('pybossa.forms.forms.request')
     def test_import_request_with_no_file_returns_none(self, mock_request):
-        from flask import flash
         mock_request.method = 'POST'
         mock_request.files = dict(somekey='somevalue')
         form = BulkTaskLocalCSVImportForm(**self.form_data)
@@ -261,9 +261,13 @@ class TestBulkTaskLocalCSVForm(Test):
         assert return_value['type'] is 'localCSV' and return_value['csv_filename'] is None
 
     @with_context
+    @patch('pybossa.forms.forms.s3_upload_file_storage')
     @patch('pybossa.forms.forms.request')
     @patch('pybossa.forms.forms.current_user')
-    def test_import_upload_path_works(self, mock_user, mock_request):
+    def test_import_upload_path_works(self, mock_user, mock_request,
+                                      mock_upload):
+        url = 'https://s3.amazonaws.com/bucket/hello.csv'
+        mock_upload.return_value = url
         mock_user.id = 1
         mock_request.method = 'POST'
         mock_file = MagicMock()
@@ -272,18 +276,4 @@ class TestBulkTaskLocalCSVForm(Test):
         form = BulkTaskLocalCSVImportForm(**self.form_data)
         return_value = form.get_import_data()
         assert return_value['type'] is 'localCSV', return_value
-        assert 'user_1/sample.csv' in return_value['csv_filename'], return_value
-
-    @with_context
-    @patch('pybossa.forms.forms.uploader')
-    @patch('pybossa.forms.forms.request')
-    @patch('pybossa.forms.forms.current_user')
-    def test_import_upload_path_ioerror(self, mock_user, mock_request,
-                                        mock_uploader):
-        mock_user.id = 1
-        mock_request.method = 'POST'
-        mock_file = MagicMock()
-        mock_file.filename = 'sample.csv'
-        mock_request.files = dict(file=mock_file)
-        form = BulkTaskLocalCSVImportForm(**self.form_data)
-        assert_raises(IOError, form.get_import_data)
+        assert return_value['csv_filename'] == url, return_value
