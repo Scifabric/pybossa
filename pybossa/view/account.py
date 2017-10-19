@@ -149,7 +149,7 @@ def signin():
                                  name=cn,
                                  email_addr=cn,
                                  valid_email=True,
-                                 consent=False)
+                                 consent=True)
                 create_account(user_data, ldap_disabled=False)
             else:
                 login_user(user_db, remember=True)
@@ -405,7 +405,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
                                valid_email=True,
-                               consent=user_data['consent'])
+                               consent=user_data.get('consent', True))
     if ldap_disabled:
         new_user.set_password(user_data['password'])
     user_repo.save(new_user)
