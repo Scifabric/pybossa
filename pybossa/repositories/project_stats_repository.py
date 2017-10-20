@@ -32,9 +32,6 @@ class ProjectStatsRepository(Repository):
     def get(self, id):
         return self.db.session.query(ProjectStats).get(id)
 
-    def get_by_project_id(self, **attributes):
-        return self.db.session.query(ProjectStats).filter_by(project_id=id).first()
-
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
