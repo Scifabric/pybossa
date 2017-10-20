@@ -31,9 +31,9 @@ class ProjectStatsAPI(APIBase):
     __class__ = ProjectStats
 
     def _select_attributes(self, stats_data):
-      if request.args.get('full'):
+        if request.args.get('full'):
+            return stats_data
+        del stats_data['info']['hours_stats']
+        del stats_data['info']['dates_stats']
+        del stats_data['info']['users_stats']
         return stats_data
-      del stats_data['info']['hours_stats']
-      del stats_data['info']['dates_stats']
-      del stats_data['info']['users_stats']
-      return stats_data
