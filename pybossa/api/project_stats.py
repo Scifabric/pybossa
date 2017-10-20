@@ -32,7 +32,7 @@ class ProjectStatsAPI(APIBase):
     def _select_attributes(self, stats_data):
         if request.args.get('full'):
             return stats_data
-        del stats_data['info']['hours_stats']
-        del stats_data['info']['dates_stats']
-        del stats_data['info']['users_stats']
+        stats_data['info'].pop('hours_stats', None)
+        stats_data['info'].pop('dates_stats', None)
+        stats_data['info'].pop('users_stats', None)
         return stats_data
