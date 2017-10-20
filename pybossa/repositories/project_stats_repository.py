@@ -33,8 +33,8 @@ class ProjectStatsRepository(Repository):
         return self.db.session.query(ProjectStats).get(id)
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  fulltextsearch=None, desc=False, **filters):
+                  desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
         return self._filter_by(ProjectStats, limit, offset, yielded,
-                               last_id, fulltextsearch, desc, **filters)
+                               last_id, **filters)
