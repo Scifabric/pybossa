@@ -33,6 +33,8 @@ class ProjectStatsRepository(Repository):
         return self.db.session.query(ProjectStats).get(id)
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  desc=False, **filters):
+                  fulltextsearch=None, desc=False, orderby='id',
+                  **filters):
         return self._filter_by(ProjectStats, limit, offset, yielded,
-                               last_id, **filters)
+                               last_id, fulltextsearch, desc, orderby,
+                               **filters)
