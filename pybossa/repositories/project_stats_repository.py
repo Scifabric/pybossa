@@ -34,7 +34,5 @@ class ProjectStatsRepository(Repository):
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   desc=False, **filters):
-        if filters.get('owner_id'):
-            del filters['owner_id']
         return self._filter_by(ProjectStats, limit, offset, yielded,
                                last_id, **filters)
