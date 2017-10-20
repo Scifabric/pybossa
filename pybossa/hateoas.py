@@ -89,6 +89,13 @@ class Hateoas(object):
                 links = [self.create_link(item.project_id,
                                           title='project', rel='parent')]
             return links, link
+        elif cls == 'projectstats':
+            link = self.create_link(item.id, title='projectstats')
+            if item.project_id is not None:
+                links = [self.create_link(item.project_id,
+                                          title='project', rel='parent')]
+            print links, link
+            return links, link
         else:  # pragma: no cover
             return False
 

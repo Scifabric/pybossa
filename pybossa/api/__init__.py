@@ -55,6 +55,7 @@ from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
+from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
@@ -93,6 +94,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
 register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
+register_api(ProjectStatsAPI, 'api_projectstats', '/projectstats', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')

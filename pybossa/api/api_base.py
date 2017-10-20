@@ -41,6 +41,7 @@ from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
+from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 from pybossa.cache.projects import clean_project
@@ -56,6 +57,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
          'Project': {'repo': project_repo, 'filter': 'filter_by',
                      'context': 'filter_owner_by', 'get': 'get',
                      'save': 'save', 'update': 'update', 'delete': 'delete'},
+         'ProjectStats': {'repo': project_stats_repo, 'filter': 'filter_by',
+                          'get': 'get'},
          'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                       'get': 'get_category', 'save': 'save_category',
                       'update': 'update_category',
