@@ -18,6 +18,7 @@
 """
 PYBOSSA api module for exposing domain object ProjectStats via an API.
 """
+import copy
 from flask import request
 from pybossa.model.project_stats import ProjectStats
 from api_base import APIBase
@@ -30,9 +31,10 @@ class ProjectStatsAPI(APIBase):
     __class__ = ProjectStats
 
     def _select_attributes(self, stats_data):
-        if request.args.get('full'):
-            return stats_data
-        stats_data['info'].pop('hours_stats', None)
-        stats_data['info'].pop('dates_stats', None)
-        stats_data['info'].pop('users_stats', None)
+        if not request.args.get('full'):
+            tmp = copy.deepcopy(stats_data)
+            tmp['info'].pop('hours_stats', None)
+            tmp['info'].pop('dates_stats', None)
+            tmp['info'].pop('users_stats', None)
+            return tmp
         return stats_data
