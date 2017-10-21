@@ -27,7 +27,7 @@ allowed_mime_types = ['application/pdf',
 
 
 def check_type(filename):
-    mime_type = magic.from_file(filename, mime=True, uncompress=True)
+    mime_type = magic.from_file(filename, mime=True)
     if mime_type not in allowed_mime_types:
         raise BadRequest("File type not supported: {}".format(mime_type))
 
