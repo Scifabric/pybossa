@@ -175,6 +175,31 @@ class TestRegisterForm(Test):
         assert "Email is already taken" in form.errors['email_addr'], form.errors
 
     @with_context
+    def test_register_form_email_unicode(self):
+        self.fill_in_data['email_addr'] = u'tyrion@casterly.rock'
+        form = RegisterForm(**self.fill_in_data)
+
+        assert form.validate()
+
+    @with_context
+    def test_register_form_unique_email_case_insensitive(self):
+        self.fill_in_data['email_addr'] = 'TYRION@CASTERLY.ROCK'
+        form = RegisterForm(**self.fill_in_data)
+        user = UserFactory.create(email_addr='tyrion@casterly.rock')
+
+        assert not form.validate()
+        assert "Email is already taken" in form.errors['email_addr'], form.errors
+
+    @with_context
+    def test_register_form_unique_email_case_insensitive_unicode(self):
+        self.fill_in_data['email_addr'] = u'TYRION@CASTERLY.ROCK'
+        form = RegisterForm(**self.fill_in_data)
+        user = UserFactory.create(email_addr='tyrion@casterly.rock')
+
+        assert not form.validate()
+        assert "Email is already taken" in form.errors['email_addr'], form.errors
+
+    @with_context
     def test_register_email_length(self):
         self.fill_in_data['email_addr'] = ''
         form = RegisterForm(**self.fill_in_data)

@@ -276,7 +276,7 @@ def get_users_page(page, per_page=24):
     sql = text('''SELECT "user".id, "user".name,
                "user".fullname, "user".email_addr,
                "user".created, "user".info, COUNT(task_run.id) AS task_runs
-               FROM task_run, "user" 
+               FROM task_run, "user"
                WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = session.execute(sql, dict(limit=per_page, offset=offset))
@@ -319,7 +319,6 @@ def delete_user_metadata(name):
 @memoize(timeout=ONE_DAY)
 def get_user_preferences(user_id):
     assert user_id is not None or user_id > 0
-
     user_pref = User.query.get(user_id).user_pref or {}
 
     # expand user preferences as per sql format for jsonb datatype
@@ -330,7 +329,7 @@ def get_user_preferences(user_id):
                   for item in pref_list]
 
     if not user_prefs:
-        return 'false'
+        return 'task.user_pref = \'{}\''
 
     sql_strings = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
                    for up in user_prefs)

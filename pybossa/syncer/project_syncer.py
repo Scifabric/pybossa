@@ -50,7 +50,8 @@ class ProjectSyncer(Syncer):
         """
         url = '{}/api/project'.format(url)
         params = dict(short_name=short_name,
-                      api_key=api_key)
+                      api_key=api_key,
+                      all=1)
         res = requests.get(url, params=params)
         if res.ok:
             res = json.loads(res.content)
@@ -184,7 +185,7 @@ class ProjectSyncer(Syncer):
 
     def _merge_github_keys(self, project_dict, payload):
         for key in self.GITHUB_KEYS:
-            value = payload['info'].pop(key, None)
+            value = project_dict['info'].pop(key, None)
             if key in ('ref', 'ref_url') and value:
                 payload['info']['sync'][key] = value
 

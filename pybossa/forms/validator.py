@@ -57,7 +57,7 @@ class UniqueCaseInsensitive(Unique):
             message=message)
 
     def __call__(self, form, form_field):
-        if not isinstance(form_field.data, str):
+        if not isinstance(form_field.data, basestring):
             return False
         form_field.data = form_field.data.lower()
         super(UniqueCaseInsensitive, self).__call__(form, form_field)
