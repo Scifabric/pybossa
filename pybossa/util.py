@@ -62,7 +62,6 @@ def user_to_json(user):
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
-    from pybossa.model.project import Project
     mimetypes = ['application/json', 'text/html']
     best = request.accept_mimetypes.best_match(mimetypes, default='text/html')
     if best == 'application/json':
