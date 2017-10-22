@@ -63,7 +63,9 @@ def user_to_json(user):
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     from pybossa.model.project import Project
-    if request.headers.get('Content-Type') == 'application/json':
+    mimetypes = ['application/json', 'text/html']
+    best = request.accept_mimetypes.best_match(mimetypes, default='text/html')
+    if best == 'application/json':
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
