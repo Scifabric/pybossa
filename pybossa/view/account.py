@@ -133,14 +133,16 @@ def signin():
         ldap_user = None
         if ldap.bind_user(cn, password):
             ldap_user = ldap.get_object_details(cn)
-            key = current_app.config.get('LDAP_FILTER_KEY')
+            key = current_app.config.get('LDAP_USER_FILTER_FIELD')
             value = ldap_user[key][0]
-            user_db = user_repo.get_by(name=value)
+            print value
+            user_db = user_repo.get_by(ldap=value)
             if (user_db is None):
                 user_data = dict(fullname=value,
                                  name=value,
                                  email_addr=value,
                                  valid_email=True,
+                                 ldap=value,
                                  consent=False)
                 _create_account(user_data, ldap_disabled=False)
             else:
@@ -382,6 +384,9 @@ def _create_account(user_data, ldap_disabled=True):
                                consent=user_data['consent'])
     if ldap_disabled:
         new_user.set_password(user_data['password'])
+    else:
+        if user_data.get('ldap'):
+            new_user.ldap = user_data['ldap']
     user_repo.save(new_user)
     flash(gettext('Thanks for signing-up'), 'success')
     return _sign_in_user(new_user)
