@@ -133,12 +133,16 @@ def signin():
         ldap_user = None
         if ldap.bind_user(cn, password):
             ldap_user = ldap.get_object_details(cn)
-            user_db = user_repo.get_by(name=ldap_user['cn'][0])
+            key = current_app.config.get('LDAP_USER_FILTER_FIELD')
+            value = ldap_user[key][0]
+            user_db = user_repo.get_by(ldap=value)
             if (user_db is None):
-                user_data = dict(fullname=ldap_user['givenName'][0],
-                                 name=cn,
-                                 email_addr=cn,
+                keyfields = current_app.config.get('LDAP_PYBOSSA_FIELDS')
+                user_data = dict(fullname=ldap_user[keyfields['fullname']][0],
+                                 name=ldap_user[keyfields['name']][0],
+                                 email_addr=ldap_user[keyfields['email_addr']][0],
                                  valid_email=True,
+                                 ldap=value,
                                  consent=False)
                 _create_account(user_data, ldap_disabled=False)
             else:
@@ -371,7 +375,6 @@ def confirm_account():
         return _update_user_with_valid_email(user, userdict['email_addr'])
     return _create_account(userdict)
 
-
 def _create_account(user_data, ldap_disabled=True):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
@@ -380,6 +383,9 @@ def _create_account(user_data, ldap_disabled=True):
                                consent=user_data['consent'])
     if ldap_disabled:
         new_user.set_password(user_data['password'])
+    else:
+        if user_data.get('ldap'):
+            new_user.ldap = user_data['ldap']
     user_repo.save(new_user)
     flash(gettext('Thanks for signing-up'), 'success')
     return _sign_in_user(new_user)
