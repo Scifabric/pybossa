@@ -349,90 +349,121 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         project = ProjectFactory.create(info=dict(sched='depth_first_all'),
                                         owner=UserFactory.create(id=500))
+        user = UserFactory.create()
 
-        TaskFactory.create_batch(1, project=project, n_answers=10)
-        # Get Task until scheduler returns None
-        url = 'api/project/%s/newtask?external_uid=%s' % (project.id, '1xa')
-        headers = self.get_headers_jwt(project)
+        task = TaskFactory.create(project=project, n_answers=10)
+
+        uid = '1xa'
+        tasks = get_depth_first_all_task(project.id, external_uid=uid)
+        assert len(tasks) == 1, len(tasks)
+        assert tasks[0].id == task.id, tasks
+        assert tasks[0].state == 'ongoing', tasks
+
+        # Add taskruns
         for i in range(10):
-            res = self.app.get(url, headers=headers)
-            data = json.loads(res.data)
+            tr = TaskRun(project_id=project.id,
+                         task_id=task.id,
+                         user_ip='127.0.0.%s' % i)
+            db.session.add(tr)
+            db.session.commit()
 
-            while data.get('id') is not None:
-                # Check that we received a Task
-                assert data.get('id'),  data
+        tasks = get_depth_first_all_task(project.id, external_uid=uid)
+        assert len(tasks) == 1, len(tasks)
+        assert tasks[0].id == task.id, tasks
+        assert tasks[0].state == 'completed', tasks
+        assert len(tasks[0].task_runs) == 10, tasks
 
-                # Save the assigned task
-                assigned_tasks.append(data)
+        url = 'api/project/%s/newtask?external_uid=%s' % (project.id,
+                                                          uid)
+        headers = self.get_headers_jwt(project)
 
-                # Submit an Answer for the assigned task
-                tr = TaskRun(project_id=data['project_id'], task_id=data['id'],
-                             user_ip="127.0.0.1",
-                             external_uid='newUser' + str(i),
-                             info={'answer': 'Yes'})
-                db.session.add(tr)
-                db.session.commit()
-                res = self.app.get(url, headers=headers)
-                data = json.loads(res.data)
+        res = self.app.get(url, headers=headers)
+        data = json.loads(res.data)
 
-        # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(project_id=1).all()
-        for t in tasks:
-            assert len(t.task_runs) == 10, len(t.task_runs)
-        # Check that all the answers are from different IPs
-        err_msg = "There are two or more Answers from same IP"
-        for t in tasks:
-            for tr in t.task_runs:
-                assert self.is_unique(tr.external_uid, t.task_runs), err_msg
+        assert data['id'] == task.id
+        assert data['state'] == 'completed'
+
+        tr = TaskRun(project_id=project.id,
+                     task_id=task.id,
+                     external_uid=uid)
+
+        db.session.add(tr)
+        db.session.commit()
+
+        tasks = get_depth_first_all_task(project.id, external_uid=uid)
+        assert len(tasks) == 0, len(tasks)
+
+        res = self.app.get(url, headers=headers)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
 
     @with_context
     def test_external_uid_03_respects_limit_tasks_limits(self):
         """ Test SCHED newtask external uid limits respects the limit of 30 TaskRuns per list of Tasks for
         external user id"""
-
-
-        assigned_tasks = []
         # Get Task until scheduler returns None
         project = ProjectFactory.create(info=dict(sched='depth_first_all'))
 
         tasks = TaskFactory.create_batch(2, project=project, n_answers=5)
-        url = 'api/project/%s/newtask?external_uid=%s&limit=2' % (project.id, '1xa')
+        headers = self.get_headers_jwt(project)
+        uid = '1xa'
+        url = 'api/project/%s/newtask?external_uid=%s&limit=2' % (project.id,
+                                                                  uid)
+        tasks = get_depth_first_all_task(project.id, external_uid=uid, limit=2)
+        assert len(tasks) == 2, len(tasks)
+        assert tasks[0].id == tasks[0].id, tasks
+        assert tasks[0].state == 'ongoing', tasks
+        assert tasks[1].id == tasks[1].id, tasks
+        assert tasks[1].state == 'ongoing', tasks
 
+        # Add taskruns
+        for i in range(5):
+            tr = TaskRun(project_id=project.id,
+                         task_id=tasks[0].id,
+                         user_ip='127.0.0.%s' % i)
+            db.session.add(tr)
+            db.session.commit()
+
+        tasks = get_depth_first_all_task(project.id, external_uid=uid, limit=2,
+                                         orderby='id', desc=False)
+        assert len(tasks) == 2, len(tasks)
+        assert tasks[0].id == tasks[0].id, tasks
+        assert tasks[0].state == 'completed', tasks
+        assert len(tasks[0].task_runs) == 5, tasks
+        assert tasks[1].id == tasks[1].id, tasks
+        assert tasks[1].state == 'ongoing', tasks
+        assert len(tasks[1].task_runs) == 0, tasks
+
+        url = 'api/project/%s/newtask?external_uid=%s&limit=2&orderby=id&desc=False' % (project.id,uid)
         headers = self.get_headers_jwt(project)
 
+        res = self.app.get(url, headers=headers)
+        data = json.loads(res.data)
 
-        for i in range(5):
-            res = self.app.get(url, headers=headers)
-            data = json.loads(res.data)
-            print data
+        assert data[0]['id'] == tasks[0].id
+        assert data[0]['state'] == 'completed'
+        assert data[1]['id'] == tasks[1].id
+        assert data[1]['state'] == 'ongoing'
 
-            while len(data) > 0:
-                # Check that we received a Task
-                for t in data:
-                    assert t.get('id'), t
-                    # Save the assigned task
-                    assigned_tasks.append(t)
+        tr = TaskRun(project_id=project.id,
+                     task_id=tasks[0].id,
+                     external_uid=uid)
 
-                    # Submit an Answer for the assigned task
-                    tr = TaskRun(project_id=t['project_id'], task_id=t['id'],
-                                 user_ip="127.0.0.1",
-                                 external_uid='newUser' + str(i),
-                                 info={'answer': 'Yes'})
-                    db.session.add(tr)
-                    db.session.commit()
-                    res = self.app.get(url, headers=headers)
-                    data = json.loads(res.data)
-                    print data
+        db.session.add(tr)
+        db.session.commit()
 
-        # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(project_id=1).all()
-        for t in tasks:
-            assert len(t.task_runs) == 5, len(t.task_runs)
-        # Check that all the answers are from different IPs
-        err_msg = "There are two or more Answers from same IP"
-        for t in tasks:
-            for tr in t.task_runs:
-                assert self.is_unique(tr.external_uid, t.task_runs), err_msg
+        tasks = get_depth_first_all_task(project.id, external_uid=uid,
+                                         limit=2, orderby='id', desc=False)
+        assert len(tasks) == 1, len(tasks)
+        assert tasks[0].id == orig_tasks[1].id
+        assert tasks[0].state == 'ongoing'
+
+        res = self.app.get(url, headers=headers)
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert data['id'] == orig_tasks[1].id
+        assert data['state'] == 'ongoing'
 
 
     @with_context
