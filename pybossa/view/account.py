@@ -135,12 +135,13 @@ def signin():
             ldap_user = ldap.get_object_details(cn)
             key = current_app.config.get('LDAP_USER_FILTER_FIELD')
             value = ldap_user[key][0]
-            print value
             user_db = user_repo.get_by(ldap=value)
             if (user_db is None):
-                user_data = dict(fullname=value,
-                                 name=value,
-                                 email_addr=value,
+                keyfields = current_app.config.get('LDAP_PYBOSSA_FIELDS')
+                print ldap_user
+                user_data = dict(fullname=ldap_user[keyfields['fullname']][0],
+                                 name=ldap_user[keyfields['name']][0],
+                                 email_addr=ldap_user[keyfields['email_addr']][0],
                                  valid_email=True,
                                  ldap=value,
                                  consent=False)
