@@ -138,7 +138,6 @@ def signin():
             user_db = user_repo.get_by(ldap=value)
             if (user_db is None):
                 keyfields = current_app.config.get('LDAP_PYBOSSA_FIELDS')
-                print ldap_user
                 user_data = dict(fullname=ldap_user[keyfields['fullname']][0],
                                  name=ldap_user[keyfields['name']][0],
                                  email_addr=ldap_user[keyfields['email_addr']][0],
@@ -375,7 +374,6 @@ def confirm_account():
     if user is not None:
         return _update_user_with_valid_email(user, userdict['email_addr'])
     return _create_account(userdict)
-
 
 def _create_account(user_data, ldap_disabled=True):
     new_user = model.user.User(fullname=user_data['fullname'],
