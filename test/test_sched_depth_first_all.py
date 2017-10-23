@@ -405,16 +405,16 @@ class TestSched(sched.Helper):
         # Get Task until scheduler returns None
         project = ProjectFactory.create(info=dict(sched='depth_first_all'))
 
-        tasks = TaskFactory.create_batch(2, project=project, n_answers=5)
+        orig_tasks = TaskFactory.create_batch(2, project=project, n_answers=5)
         headers = self.get_headers_jwt(project)
         uid = '1xa'
         url = 'api/project/%s/newtask?external_uid=%s&limit=2' % (project.id,
                                                                   uid)
         tasks = get_depth_first_all_task(project.id, external_uid=uid, limit=2)
         assert len(tasks) == 2, len(tasks)
-        assert tasks[0].id == tasks[0].id, tasks
+        assert tasks[0].id == orig_tasks[0].id, tasks
         assert tasks[0].state == 'ongoing', tasks
-        assert tasks[1].id == tasks[1].id, tasks
+        assert tasks[1].id == orig_tasks[1].id, tasks
         assert tasks[1].state == 'ongoing', tasks
 
         # Add taskruns
@@ -428,10 +428,10 @@ class TestSched(sched.Helper):
         tasks = get_depth_first_all_task(project.id, external_uid=uid, limit=2,
                                          orderby='id', desc=False)
         assert len(tasks) == 2, len(tasks)
-        assert tasks[0].id == tasks[0].id, tasks
+        assert tasks[0].id == orig_tasks[0].id, tasks
         assert tasks[0].state == 'completed', tasks
         assert len(tasks[0].task_runs) == 5, tasks
-        assert tasks[1].id == tasks[1].id, tasks
+        assert tasks[1].id == orig_tasks[1].id, tasks
         assert tasks[1].state == 'ongoing', tasks
         assert len(tasks[1].task_runs) == 0, tasks
 
@@ -441,9 +441,9 @@ class TestSched(sched.Helper):
         res = self.app.get(url, headers=headers)
         data = json.loads(res.data)
 
-        assert data[0]['id'] == tasks[0].id
+        assert data[0]['id'] == orig_tasks[0].id
         assert data[0]['state'] == 'completed'
-        assert data[1]['id'] == tasks[1].id
+        assert data[1]['id'] == orig_tasks[1].id
         assert data[1]['state'] == 'ongoing'
 
         tr = TaskRun(project_id=project.id,
@@ -461,7 +461,6 @@ class TestSched(sched.Helper):
 
         res = self.app.get(url, headers=headers)
         data = json.loads(res.data)
-        assert len(data) == 1, data
         assert data['id'] == orig_tasks[1].id
         assert data['state'] == 'ongoing'
 
@@ -650,50 +649,36 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         project = ProjectFactory.create(info=dict(sched='depth_first_all'),
                                         owner=UserFactory.create(id=500))
+        orig_tasks = TaskFactory.create_batch(1, project=project, n_answers=10)
+        user = UserFactory.create()
 
-        TaskFactory.create_batch(1, project=project, n_answers=10)
+        tasks = get_depth_first_all_task(project.id, user.id)
+        assert len(tasks) == 1, len(tasks)
+        assert tasks[0].id == orig_tasks[0].id, tasks
+        assert tasks[0].state == 'ongoing', tasks
 
-        url = 'api/project/%s/newtask' % project.id
-        assigned_tasks = []
-        # We need one extra loop to allow the scheduler to mark a task as completed
-        for i in range(11):
-            self.register(fullname="John Doe" + str(i),
-                          name="johndoe" + str(i),
-                          password="1234" + str(i))
-            self.signin()
-            # Get Task until scheduler returns None
-            res = self.app.get(url)
-            data = json.loads(res.data)
+        for i in range(10):
+            tr = TaskRun(project_id=project.id,
+                         task_id=orig_tasks[0].id,
+                         user_ip='127.0.0.%s' % i)
+            db.session.add(tr)
+            db.session.commit()
 
-            # Check that we received a Task
-            if data.get('id'):
-                assert data.get('id'),  data
+        tasks = get_depth_first_all_task(project.id, user.id)
+        assert len(tasks) == 1, len(tasks)
+        assert tasks[0].id == orig_tasks[0].id, tasks
+        assert tasks[0].state == 'completed', tasks
+        assert len(tasks[0].task_runs) == 10, tasks
 
-                # Save the assigned task
-                assigned_tasks.append(data)
+        tr = TaskRun(project_id=project.id,
+                     task_id=orig_tasks[0].id,
+                     user_id=user.id)
+        db.session.add(tr)
+        db.session.commit()
 
-                # Submit an Answer for the assigned task
-                tr = dict(project_id=data['project_id'], task_id=data['id'],
-                          info={'answer': 'No'})
-                tr = json.dumps(tr)
-                self.app.post('/api/taskrun', data=tr)
-                #self.redis_flushall()
-                #res = self.app.get(url)
-                #data = json.loads(res.data)
-            self.signout()
+        tasks = get_depth_first_all_task(project.id, user.id)
 
-        # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(project_id=1).all()
-        for t in tasks:
-            assert len(t.task_runs) == 10, t.task_runs
-        # Check that all the answers are from different IPs
-        err_msg = "There are two or more Answers from same User"
-        for t in tasks:
-            for tr in t.task_runs:
-                assert self.is_unique(tr.user_id, t.task_runs), err_msg
-        # Check that task.state is updated to completed
-        for t in tasks:
-            assert t.state == "completed", t.state
+        assert len(tasks) == 0, tasks
 
 
     @with_context
@@ -704,44 +689,51 @@ class TestSched(sched.Helper):
         project = ProjectFactory.create(info=dict(sched='depth_first_all'),
                                         owner=UserFactory.create(id=500))
 
-        TaskFactory.create_batch(2, project=project, n_answers=10)
-        # We need one extra loop to allow the scheduler to mark a task as completed
-        url = 'api/project/%s/newtask?limit=2' % project.id
-        for i in range(11):
-            self.register(fullname="John Doe" + str(i),
-                          name="johndoe" + str(i),
-                          password="1234" + str(i))
-            self.signin()
-            # Get Task until scheduler returns None
-            res = self.app.get(url)
-            data = json.loads(res.data)
-            
-            # Check that we received a Task
-            for t in data:
-                assert t.get('id'),  data
+        user = UserFactory.create()
 
-                # Save the assigned task
-                assigned_tasks.append(t)
+        orig_tasks = TaskFactory.create_batch(2, project=project, n_answers=10)
 
-                # Submit an Answer for the assigned task
-                tr = dict(project_id=t['project_id'], task_id=t['id'],
-                          info={'answer': 'No'})
-                tr = json.dumps(tr)
-                self.app.post('/api/taskrun', data=tr)
-            self.signout()
+        tasks = get_depth_first_all_task(project.id, user.id,
+                                         limit=2, orderby='id',
+                                         desc=False)
+        assert len(tasks) == 2, len(tasks)
+        assert tasks[0].id == orig_tasks[0].id, tasks
+        assert tasks[0].state == 'ongoing', tasks
+        assert tasks[1].id == orig_tasks[1].id, tasks
+        assert tasks[1].state == 'ongoing', tasks
 
-        # Check if there are 30 TaskRuns per Task
-        tasks = db.session.query(Task).filter_by(project_id=1).all()
-        for t in tasks:
-            assert len(t.task_runs) == 10, t.task_runs
-        # Check that all the answers are from different IPs
-        err_msg = "There are two or more Answers from same User"
-        for t in tasks:
-            for tr in t.task_runs:
-                assert self.is_unique(tr.user_id, t.task_runs), err_msg
-        # Check that task.state is updated to completed
-        for t in tasks:
-            assert t.state == "completed", t.state
+        for i in range(10):
+            tr = TaskRun(project_id=project.id,
+                         task_id=tasks[0].id,
+                         user_ip='127.0.0.%s' % i)
+            db.session.add(tr)
+            db.session.commit()
+
+        tasks = get_depth_first_all_task(project.id, user.id,
+                                         limit=2, orderby='id',
+                                         desc=False)
+        assert len(tasks) == 2, len(tasks)
+        assert tasks[0].id == orig_tasks[0].id, tasks
+        assert tasks[0].state == 'completed', tasks
+        assert len(tasks[0].task_runs) == 10, tasks
+        assert tasks[1].id == orig_tasks[1].id, tasks
+        assert tasks[1].state == 'ongoing', tasks
+        assert len(tasks[1].task_runs) == 0, tasks
+
+        tr = TaskRun(project_id=project.id,
+                     task_id=tasks[0].id,
+                     user_id=user.id)
+        db.session.add(tr)
+        db.session.commit()
+
+        tasks = get_depth_first_all_task(project.id, user.id,
+                                         limit=2, orderby='id',
+                                         desc=False)
+
+        assert len(tasks) == 1, tasks
+        assert tasks[0].id == orig_tasks[1].id
+        assert tasks[0].state == 'ongoing'
+
 
 
     @with_context
@@ -1141,9 +1133,9 @@ class TestSched(sched.Helper):
 
         project_id = project.id
 
-        tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
+        all_tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
 
-        for t in tasks[0:10]:
+        for t in all_tasks[0:10]:
             TaskRunFactory.create_batch(10, task=t, project=project)
 
         tasks = db.session.query(Task).filter_by(project_id=project.id, state='ongoing').all()
@@ -1156,7 +1148,8 @@ class TestSched(sched.Helper):
         err_msg = "User should get a task"
         assert 'project_id' in data.keys(), err_msg
         assert data['project_id'] == project_id, err_msg
-        assert data['id'] == tasks[0].id, err_msg
+        assert data['id'] == all_tasks[0].id, err_msg
+        assert data['state'] == 'completed', err_msg
 
     @with_context
     def test_no_more_tasks_limit(self):
@@ -1171,9 +1164,9 @@ class TestSched(sched.Helper):
 
         project_id = project.id
 
-        tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
+        all_tasks = TaskFactory.create_batch(20, project=project, n_answers=10)
 
-        for t in tasks[0:10]:
+        for t in all_tasks[0:10]:
             TaskRunFactory.create_batch(10, task=t, project=project)
 
         tasks = db.session.query(Task).filter_by(project_id=project.id, state='ongoing').all()
@@ -1189,5 +1182,6 @@ class TestSched(sched.Helper):
             print t['id']
             assert 'project_id' in t.keys(), err_msg
             assert t['project_id'] == project_id, err_msg
-            assert t['id'] == tasks[i].id, (err_msg, t, tasks[i].id)
+            assert t['id'] == all_tasks[i].id, (err_msg, t, all_tasks[i].id)
+            assert t['state'] == 'completed', err_msg
             i += 1
