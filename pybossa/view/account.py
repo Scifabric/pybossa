@@ -133,11 +133,13 @@ def signin():
         ldap_user = None
         if ldap.bind_user(cn, password):
             ldap_user = ldap.get_object_details(cn)
-            user_db = user_repo.get_by(name=ldap_user['cn'][0])
+            key = current_app.config.get('LDAP_FILTER_KEY')
+            value = ldap_user[key][0]
+            user_db = user_repo.get_by(name=value)
             if (user_db is None):
-                user_data = dict(fullname=ldap_user['givenName'][0],
-                                 name=cn,
-                                 email_addr=cn,
+                user_data = dict(fullname=value,
+                                 name=value,
+                                 email_addr=value,
                                  valid_email=True,
                                  consent=False)
                 _create_account(user_data, ldap_disabled=False)
