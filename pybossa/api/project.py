@@ -96,7 +96,7 @@ class ProjectAPI(APIBase):
             data = self._filter_private_data(data)
             return data
         if (current_user.is_authenticated() and
-                (current_user.id == data['owner_id'] or current_user.admin)):
+                (current_user.id in data['owners_ids'] or current_user.admin)):
             return data
         else:
             data = self._filter_private_data(data)

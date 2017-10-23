@@ -329,7 +329,7 @@ def get_user_preferences(user_id):
                   for item in pref_list]
 
     if not user_prefs:
-        return 'task.user_pref = \'{}\''
+        return 'task.user_pref IS NULL OR task.user_pref = \'{}\''
 
     sql_strings = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
                    for up in user_prefs)
