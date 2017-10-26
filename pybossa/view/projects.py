@@ -701,7 +701,15 @@ def import_task(short_name):
 
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
-            return _import_tasks(project, **form.get_import_data())
+	    try:
+                return _import_tasks(project, **form.get_import_data())
+            except BulkImportException as e:
+                flash(gettext(unicode(e)), 'error')
+                current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
+            except Exception as e:
+                msg = 'Oops! Looks like there was an error!'
+                flash(gettext(msg), 'error')
+                current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
         return handle_content_type(template_args)
 
