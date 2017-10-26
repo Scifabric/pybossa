@@ -1021,9 +1021,6 @@ def tasks(short_name):
                                                                 current_user,
                                                                 ps)
 
-    current_app.logger.info(project)
-    current_app.logger.info(current_user)
-
     response = dict(template='/projects/tasks.html',
                     title=title,
                     project=project_sanitized,
