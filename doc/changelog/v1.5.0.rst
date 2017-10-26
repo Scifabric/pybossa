@@ -1,5 +1,0 @@
-================
-Changelog v1.5.0
-================
-
- * Added Amazon S3 importer

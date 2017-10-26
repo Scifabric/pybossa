@@ -30,7 +30,6 @@ requirements = [
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
-    "sphinx>=1.2.2, <2.0",
     "coverage",
     "nose-cov",
     "mock",
@@ -66,7 +65,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '2.7.2',
+    version = '2.8.1',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

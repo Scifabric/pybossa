@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,36 +17,29 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class AuditlogAuth(object):
+class ProjectStatsAuth(object):
+
     _specific_actions = []
 
-    def __init__(self, project_repo):
-        self.project_repo = project_repo
+    def __init__(self):
+        pass
 
     @property
     def specific_actions(self):
         return self._specific_actions
 
-    def can(self, user, action, auditlog=None, project_id=None):
+    def can(self, user, action, webhook=None, project_id=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, auditlog, project_id)
+        return getattr(self, action)(user, webhook, project_id)
 
-    def _create(self, user, auditlog, project_id=None):
+    def _create(self, user, webhook, project_id=None):
         return False
 
-    def _read(self, user, auditlog=None, project_id=None):
-        if user.is_anonymous() or (auditlog is None and project_id is None):
-            return False
-        project = self._get_project(auditlog, project_id)
-        return user.admin or user.id in project.owners_ids
+    def _read(self, user, webhook=None, project_id=None):
+        return True
 
-    def _update(self, user, auditlog, project_id=None):
+    def _update(self, user, webhook, project_id=None):
         return False
 
-    def _delete(self, user, auditlog, project_id=None):
+    def _delete(self, user, webhook, project_id=None):
         return False
-
-    def _get_project(self, auditlog, project_id):
-        if auditlog is not None:
-            return self.project_repo.get(auditlog.project_id)
-        return self.project_repo.get(project_id)

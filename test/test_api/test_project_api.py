@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from mock import patch, call
+from mock import patch, call, MagicMock
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
@@ -355,6 +355,7 @@ class TestProjectAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'user2')
+        assert_equal(out.owners_ids, [2])
         id_ = out.id
 
         # now a real user with headers auth
@@ -993,3 +994,36 @@ class TestProjectAPI(TestAPI):
                                               root.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    @patch('pybossa.api.api_base.caching')
+    def test_project_cache_put_is_refreshed(self, caching_mock):
+        """Test API project cache is updated after PUT."""
+        clean_project_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_project_mock)
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        payload = project.dictize()
+        payload['info'] = {'foo': 'bar'}
+        del payload['id']
+        del payload['created']
+        del payload['updated']
+        del payload['contacted']
+        del payload['published']
+        del payload['owner_id']
+        del payload['secret_key']
+        res = self.app.put(url, data=json.dumps(payload))
+        clean_project_mock.assert_called_with(project.id)
+
+    @with_context
+    @patch('pybossa.api.api_base.caching')
+    def test_project_cache_delete_is_refreshed(self, caching_mock):
+        """Test API project cache is updated after DEL."""
+        clean_project_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_project_mock)
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.delete(url)
+        clean_project_mock.assert_called_with(project.id)

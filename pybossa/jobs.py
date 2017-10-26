@@ -355,7 +355,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     import pybossa.cache.project_stats as stats
     from flask import current_app
 
-    cached_projects.get_project(short_name)
+    # cached_projects.get_project(short_name)
     stats.update_stats(_id, current_app.config.get('GEO'))
 
 
@@ -395,7 +395,7 @@ def warm_cache():  # pragma: no cover
 
     def warm_project(_id, short_name, featured=False):
         if _id not in projects_cached:
-            cached_projects.get_project(short_name)
+            #cached_projects.get_project(short_name)
             #cached_projects.n_tasks(_id)
             #n_task_runs = cached_projects.n_task_runs(_id)
             #cached_projects.overall_progress(_id)

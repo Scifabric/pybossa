@@ -125,6 +125,8 @@ class AnnouncementForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
+    media_url = TextField(lazy_gettext('URL'))
+    published = BooleanField(lazy_gettext('Publish'))
 
 class BlogpostForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())

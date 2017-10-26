@@ -23,6 +23,7 @@ These objects are an abstraction layer between the ORM and the application:
 
     * user_repo
     * project_repo
+    * project_stats_repo
     * announcement_repo
     * blog_repo
     * task_repo
@@ -39,6 +40,8 @@ PYBOSSA.
 import json
 import re
 from pybossa.model.project import Project, TaskRun, Task
+from pybossa.model.announcement import Announcement
+from pybossa.model.project_stats import ProjectStats
 from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc
 from sqlalchemy.types import TIMESTAMP
@@ -131,9 +134,7 @@ class Repository(object):
                                                                fulltextsearch,
                                                                **filters)
 
-        project_var_existing = ('Project' in locals() or 'Project' in globals())
-
-        if project_var_existing and owner_id:
+        if model not in [Announcement, ProjectStats] and owner_id:
             subquery = self.db.session.query(Project)\
                            .with_entities(Project.id)\
                            .filter_by(owner_id=owner_id).subquery()
@@ -222,6 +223,7 @@ class Repository(object):
 
 
 from project_repository import ProjectRepository
+from project_stats_repository import ProjectStatsRepository
 from user_repository import UserRepository
 from announcement_repository import AnnouncementRepository
 from blog_repository import BlogRepository
@@ -232,6 +234,7 @@ from result_repository import ResultRepository
 from helping_repository import HelpingMaterialRepository
 
 assert ProjectRepository
+assert ProjectStatsRepository
 assert UserRepository
 assert AnnouncementRepository
 assert BlogRepository

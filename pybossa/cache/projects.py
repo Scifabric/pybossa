@@ -26,13 +26,6 @@ from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 session = db.slave_session
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project(short_name):
-    """Get project by short_name."""
-    project = session.query(Project).filter_by(short_name=short_name).first()
-    return project
-
-
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_projects")
 def get_top(n=4):
@@ -58,7 +51,6 @@ def get_top(n=4):
     return top_projects
 
 
-#@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 def browse_tasks(project_id, limit=10, offset=0):
     """Cache browse tasks view for a project."""
     sql = text('''
@@ -442,11 +434,6 @@ def reset():
     delete_memoized(get_all_draft)
     delete_memoized(n_count)
     delete_memoized(get_all)
-
-
-def delete_project(short_name):
-    """Reset project values in cache"""
-    delete_memoized(get_project, short_name)
 
 
 def delete_browse_tasks(project_id):

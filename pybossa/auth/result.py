@@ -41,7 +41,7 @@ class ResultAuth(object):
         if user.is_anonymous():
             return False
         project = self._get_project(result, result.project_id)
-        return (project.owner_id == user.id)
+        return user.id in project.owners_ids
 
     def _delete(self, user, result):
         return False
