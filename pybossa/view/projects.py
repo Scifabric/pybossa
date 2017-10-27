@@ -701,7 +701,7 @@ def import_task(short_name):
 
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
-	    try:
+            try:
                 return _import_tasks(project, **form.get_import_data())
             except BulkImportException as e:
                 flash(gettext(unicode(e)), 'error')
