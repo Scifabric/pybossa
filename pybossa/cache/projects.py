@@ -506,5 +506,5 @@ def clean_project(project_id, category=None):
     delete_n_task_runs(project_id)
     delete_overall_progress(project_id)
     delete_memoized(get_all, project.category.short_name)
-    delete_memoized(get_n_count, project.category.short_name)
+    delete_memoized(n_count, project.category.short_name)
     delete_memoized(get_all_draft, None)
