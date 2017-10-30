@@ -283,6 +283,7 @@ class APIBase(MethodView):
 
         """
         try:
+            cls_name = self.__class__.__name__
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
