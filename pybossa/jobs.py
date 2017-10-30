@@ -142,6 +142,11 @@ def get_default_jobs():  # pragma: no cover
                timeout=timeout, queue='super')
     yield dict(name=news, args=[], kwargs={},
                timeout=timeout, queue='low')
+    yield dict(name=disable_users_job, args=[],kwargs={},
+               timeout=timeout, queue='low')
+    yield dict(name=send_email_notifications, args=[], kwargs={},
+               timeout=timeout, queue='super')
+
 
 def get_maintenance_jobs():
     """Return mantainance jobs."""
@@ -505,13 +510,18 @@ def disable_users_job():
                   AND enabled = true AND admin = false;
                ''')
     results = db.slave_session.execute(sql)
+    users_disabled = []
     for row in results:
         user = User.query.get(row.id)
         user.enabled = False
         user_repo.update(user)
-        msg = generate_manage_user_email(user, "disable")
-        if msg:
-            send_mail(msg)
+        user_info = 'name: {}, id: {}, email: {}, last_login: {}'.format(
+                        user.name, user.id, user.email_addr, user.last_login)
+        users_disabled.append(user_info)
+
+    if users_disabled:
+        current_app.logger.info('disable_users_job has disabled following {} users\n{}'
+            .format(len(users_disabled), ', '.join(users_disabled)))
     return True
 
 

@@ -35,7 +35,7 @@ from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
 from datetime import timedelta
-
+import pybossa.model as model
 
 def create_app(run_as_server=True):
     """Create web app."""
@@ -530,6 +530,8 @@ def setup_hooks(app):
         if apikey:
             user = user_repo.get_by(api_key=apikey)
             if user and user.enabled:
+                user.last_login = model.make_timestamp()
+                user_repo.update(user)
                 _request_ctx_stack.top.user = user
         # Handle forms
         request.body = request.form
