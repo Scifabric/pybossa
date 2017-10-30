@@ -293,6 +293,7 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
+            self.refresh_cache(cls_name, inst.id)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
