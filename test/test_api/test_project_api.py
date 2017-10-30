@@ -1002,13 +1002,13 @@ class TestProjectAPI(TestAPI):
         clean_project_mock = MagicMock()
         caching_mock.get.return_value = dict(refresh=clean_project_mock)
         owner = UserFactory.create()
-        project = ProjectFactory.build()
-        url = '/api/project?api_key=%s' % (project.id, owner.api_key)
+        category = CategoryFactory.create()
+        url = '/api/project?api_key=%s' % owner.api_key
         payload = dict(name='foo', short_name='foo', description='foo')
-        payload['info'] = {'foo': 'bar'}
         res = self.app.post(url, data=json.dumps(payload))
+        print res.data
         project_id = json.loads(res.data)['id']
-        clean_project_mock.assert_called_with(project_id)
+        clean_project_mock.assert_called_with(project_id), res.data
 
 
     @with_context
