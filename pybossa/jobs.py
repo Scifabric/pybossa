@@ -676,12 +676,12 @@ def _num_tasks_imported(project_id):
 
 def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data):
     """Import tasks for a project."""
-    from pybossa.core import project_repo
+    from pybossa.core import project_repo, user_repo
     import pybossa.cache.projects as cached_projects
 
     project = project_repo.get(project_id)
     recipients = [project.owner.email_addr]
-    for user in project.coowners:
+    for user in user_repo.get_users(project.owners_ids):
         recipients.append(user.email_addr)
 
     try:
