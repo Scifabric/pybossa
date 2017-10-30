@@ -283,6 +283,7 @@ class APIBase(MethodView):
 
         """
         try:
+            cls_name = self.__class__.__name__
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -293,6 +294,7 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
+            self.refresh_cache(cls_name, inst.id)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
