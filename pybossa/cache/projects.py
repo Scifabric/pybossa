@@ -494,7 +494,7 @@ def clean(project_id):
 
 def clean_project(project_id, category=None):
     """Clean cache for a specific project"""
-    project = project_repo.get(oid)
+    project = db.session.query(Project).get(oid)
     delete_browse_tasks(project_id)
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
