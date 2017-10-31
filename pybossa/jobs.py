@@ -507,7 +507,7 @@ def disable_users_job():
     sql = text('''Select id
                   FROM public.user
                   WHERE current_timestamp - to_timestamp(last_login, 'YYYY-MM-DD"T"HH24:MI:SS.US') > interval '3 month'
-                  AND enabled = true AND admin = false;
+                  AND enabled = true;
                ''')
     results = db.slave_session.execute(sql)
     users_disabled = []
