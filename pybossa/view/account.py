@@ -176,7 +176,8 @@ def signin():
 
 def _sign_in_user(user):
     login_user(user, remember=True)
-    if newsletter.ask_user_to_subscribe(user):
+    if (current_app.config.get('MAILCHIMP_API_KEY') and
+            newsletter.ask_user_to_subscribe(user)):
         return redirect_content_type(url_for('account.newsletter_subscribe',
                                              next=request.args.get('next')))
     return redirect_content_type(request.args.get("next") or

@@ -74,6 +74,7 @@ def create_app(run_as_server=True):
     setup_sse(app)
     setup_json_serializer(app)
     setup_cors(app)
+    setup_profiler(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -708,3 +709,9 @@ def setup_strong_password(app):
 def setup_ldap(app):
     if app.config.get('LDAP_HOST'):
         ldap.init_app(app)
+
+def setup_profiler(app):
+    #if app.config.get('flask_profiler'):
+    print app.config.get('FLASK_PROFILER')
+    flask_profiler.init_app(app)
+    print "HOLA"
