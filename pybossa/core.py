@@ -711,7 +711,5 @@ def setup_ldap(app):
         ldap.init_app(app)
 
 def setup_profiler(app):
-    #if app.config.get('flask_profiler'):
-    print app.config.get('FLASK_PROFILER')
-    flask_profiler.init_app(app)
-    print "HOLA"
+    if app.config.get('FLASK_PROFILER'):
+        flask_profiler.init_app(app)
