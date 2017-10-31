@@ -1131,20 +1131,21 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = False
-        db.session.commit()
-        fake_signer.loads.return_value = dict(fullname=user.fullname,
-                                              name=user.name,
-                                              email_addr=user.email_addr)
-        self.app.get('/account/register/confirmation?key=valid-key')
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = False
+            db.session.commit()
+            fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                                  name=user.name,
+                                                  email_addr=user.email_addr)
+            self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe', next=None)
+            url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.ask_user_to_subscribe.return_value = False
-        self.app.get('/account/register/confirmation?key=valid-key')
-        url_for.assert_called_with('home.home')
+            newsletter.ask_user_to_subscribe.return_value = False
+            self.app.get('/account/register/confirmation?key=valid-key')
+            url_for.assert_called_with('home.home')
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
@@ -1153,20 +1154,21 @@ class TestWeb(web.Helper):
     def test_newsletter_json(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home with JSON."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = True
-        url = '/account/newsletter'
-        res = self.app_get_json(url)
-        data = json.loads(res.data)
-        assert data.get('title') == 'Subscribe to our Newsletter', data
-        assert data.get('template') == 'account/newsletter.html', data
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = True
+            url = '/account/newsletter'
+            res = self.app_get_json(url)
+            data = json.loads(res.data)
+            assert data.get('title') == 'Subscribe to our Newsletter', data
+            assert data.get('template') == 'account/newsletter.html', data
 
 
-        res = self.app_get_json(url + "?subscribe=True")
-        data = json.loads(res.data)
-        assert data.get('flash') == 'You are subscribed to our newsletter!', data
-        assert data.get('status') == SUCCESS, data
+            res = self.app_get_json(url + "?subscribe=True")
+            data = json.loads(res.data)
+            assert data.get('flash') == 'You are subscribed to our newsletter!', data
+            assert data.get('status') == SUCCESS, data
 
 
     @with_context
