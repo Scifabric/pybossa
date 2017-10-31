@@ -1745,6 +1745,16 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
+    def test_05e_get_nonexistant_app_result_status_json(self):
+        """Test WEB get non existant project result status json should return 404"""
+        self.register()
+        self.signin()
+        res = self.app.get(
+                '/project/noapp/24/result_status',
+                follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+    @with_context
     def test_delete_project(self):
         """Test WEB JSON delete project."""
         owner = UserFactory.create()
@@ -2725,6 +2735,54 @@ class TestWeb(web.Helper):
         # Check with correct project but wrong task id
         res = self.app.get('project/%s/%s/results.json' % (project.short_name, 5000),
                            follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+    @with_context
+    @patch('pybossa.view.projects._get_locks', return_value={'2': 100})
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_export_task_run_statuses(self, upload, locks):
+        """Test WEB TaskRun statuses export works"""
+        self.register()
+        self.signin()
+        self.new_project()
+
+        UserFactory.create(id=2)
+
+        project = db.session.query(Project).first()
+        task = Task(project_id=project.id, n_answers=2)
+        db.session.add(task)
+        db.session.commit()
+
+        task_run = TaskRun(project_id=project.id,
+                           task_id=1,
+                           info={'answer': 1},
+                           user_id=1)
+        db.session.add(task_run)
+        db.session.commit()
+
+        project = db.session.query(Project).first()
+        res = self.app.get(
+                'project/{}/{}/result_status'.format(
+                    project.short_name, 1),
+                follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data['user_details']) == 2, data
+        assert data['redundancy'] == 2, data
+
+        for user_detail in data['user_details']:
+            if user_detail['status'] == 'Completed':
+                completed = user_detail
+            if user_detail['status'] == 'Locked':
+                locked = user_detail
+
+        assert not completed['lock_ttl'], data
+        assert locked['lock_ttl'], data
+
+        # Check with correct project but wrong task id
+        res = self.app.get(
+                'project/{}/{}/result_status'.format(
+                    project.short_name, 5000),
+                follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
     @with_context

@@ -26,7 +26,7 @@ from StringIO import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
-from flask import Markup
+from flask import Markup, jsonify
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
@@ -1004,6 +1004,63 @@ def export(short_name, task_id):
         return Response(json.dumps(results), mimetype='application/json')
     else:
         return abort(404)
+
+
+@blueprint.route('/<short_name>/<int:task_id>/result_status')
+@login_required
+def export_statuses(short_name, task_id):
+    """Return a file with all TaskRun statuses for a given Task"""
+    project, owner, ps = allow_deny_project_info(short_name)
+
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
+
+    task = task_repo.get_task(task_id)
+
+    if task:
+        results = [tr.dictize() for tr in task.task_runs]
+        locks = _get_locks(task_id)
+
+        users_completed = [tr['user_id'] for tr in results]
+        users_locked = [key for key in locks.keys()]
+        users = user_repo.get_users(
+                set(users_completed + users_locked))
+        user_details = [dict(user_id=user.id,
+                             lock_ttl=locks.get(user.id),
+                             user_email=user.email_addr)
+                        for user in users]
+
+        for user_detail in user_details:
+            if user_detail['user_id'] in users_completed:
+                user_detail['status'] = 'Completed'
+            elif user_detail['lock_ttl']:
+                user_detail['status'] = 'Locked'
+
+        tr_statuses = dict(redundancy=task.n_answers,
+                           user_details=user_details)
+
+        return jsonify(tr_statuses)
+    else:
+        return abort(404)
+
+
+def _get_locks(task_id):
+    conn = sentinel.master
+    key = ContributionsGuard.KEY_PREFIX
+
+    lock_keys = conn.keys(key.format('*', task_id))
+    lock_ttls = [conn.ttl(lock_key)
+                 for lock_key in lock_keys]
+
+    regex = 'user:([0-9]+):'
+    user_ids = [int(re.search(regex, lock_key).group(1))
+                for lock_key in lock_keys]
+
+    return dict(zip(user_ids, lock_ttls))
 
 
 @blueprint.route('/<short_name>/tasks/')
