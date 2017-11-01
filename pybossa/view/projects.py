@@ -1024,9 +1024,8 @@ def export_statuses(short_name, task_id):
     if not task:
         return abort(404)
 
-    results = [tr.dictize() for tr in task.task_runs]
     locks = _get_locks(project.id, task_id)
-    users_completed = [tr['user_id'] for tr in results]
+    users_completed = [tr.user_id for tr in task.task_runs]
     users = user_repo.get_users(
             set(users_completed + locks.keys()))
     user_details = [dict(user_id=user.id,

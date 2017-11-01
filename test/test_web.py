@@ -2769,9 +2769,7 @@ class TestWeb(web.Helper):
         assert len(data['user_details']) == 2, data
         assert data['redundancy'] == 2, data
 
-        print data
         for user_detail in data['user_details']:
-            print user_detail
             if user_detail['status'] == 'Completed':
                 completed = user_detail
             if user_detail['status'] == 'Locked':
