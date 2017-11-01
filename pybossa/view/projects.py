@@ -1021,46 +1021,39 @@ def export_statuses(short_name, task_id):
 
     task = task_repo.get_task(task_id)
 
-    if task:
-        results = [tr.dictize() for tr in task.task_runs]
-        locks = _get_locks(task_id)
-
-        users_completed = [tr['user_id'] for tr in results]
-        users_locked = [key for key in locks.keys()]
-        users = user_repo.get_users(
-                set(users_completed + users_locked))
-        user_details = [dict(user_id=user.id,
-                             lock_ttl=locks.get(user.id),
-                             user_email=user.email_addr)
-                        for user in users]
-
-        for user_detail in user_details:
-            if user_detail['user_id'] in users_completed:
-                user_detail['status'] = 'Completed'
-            elif user_detail['lock_ttl']:
-                user_detail['status'] = 'Locked'
-
-        tr_statuses = dict(redundancy=task.n_answers,
-                           user_details=user_details)
-
-        return jsonify(tr_statuses)
-    else:
+    if not task:
         return abort(404)
 
+    results = [tr.dictize() for tr in task.task_runs]
+    locks = _get_locks(project.id, task_id)
+    users_completed = [tr['user_id'] for tr in results]
+    users = user_repo.get_users(
+            set(users_completed + locks.keys()))
+    user_details = [dict(user_id=user.id,
+                         lock_ttl=locks.get(user.id),
+                         user_email=user.email_addr)
+                    for user in users]
 
-def _get_locks(task_id):
-    conn = sentinel.master
-    key = ContributionsGuard.KEY_PREFIX
+    for user_detail in user_details:
+        if user_detail['user_id'] in users_completed:
+            user_detail['status'] = 'Completed'
+        elif user_detail['lock_ttl']:
+            user_detail['status'] = 'Locked'
 
-    lock_keys = conn.keys(key.format('*', task_id))
-    lock_ttls = [conn.ttl(lock_key)
-                 for lock_key in lock_keys]
+    tr_statuses = dict(redundancy=task.n_answers,
+                       user_details=user_details)
 
-    regex = 'user:([0-9]+):'
-    user_ids = [int(re.search(regex, lock_key).group(1))
-                for lock_key in lock_keys]
+    return jsonify(tr_statuses)
 
-    return dict(zip(user_ids, lock_ttls))
+
+def _get_locks(project_id, task_id):
+    _sched, timeout = sched.get_project_scheduler_and_timeout(
+            project_id)
+    locks = sched.get_locks(project_id, task_id, timeout)
+    now = time.time()
+    lock_ttls = {int(k): float(v) - now
+                 for k, v in locks.iteritems()}
+    return lock_ttls
 
 
 @blueprint.route('/<short_name>/tasks/')

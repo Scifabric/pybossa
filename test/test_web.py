@@ -1745,8 +1745,8 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
-    def test_05e_get_nonexistant_app_result_status_json(self):
-        """Test WEB get non existant project result status json should return 404"""
+    def test_05e_get_nonexistant_app_result_status(self):
+        """Test WEB get non existant project result status should return 404"""
         self.register()
         self.signin()
         res = self.app.get(
@@ -2738,7 +2738,7 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, res.status_code
 
     @with_context
-    @patch('pybossa.view.projects._get_locks', return_value={'2': 100})
+    @patch('pybossa.view.projects._get_locks', return_value={2: 100})
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_export_task_run_statuses(self, upload, locks):
         """Test WEB TaskRun statuses export works"""
@@ -2769,7 +2769,9 @@ class TestWeb(web.Helper):
         assert len(data['user_details']) == 2, data
         assert data['redundancy'] == 2, data
 
+        print data
         for user_detail in data['user_details']:
+            print user_detail
             if user_detail['status'] == 'Completed':
                 completed = user_detail
             if user_detail['status'] == 'Locked':

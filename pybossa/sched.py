@@ -294,6 +294,12 @@ def release_lock(project_id, task_id, user_id, timeout):
     lock_manager.release_lock(key, user_id)
 
 
+def get_locks(project_id, task_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
+    key = get_key(project_id, task_id)
+    return lock_manager.get_locks(key)
+
+
 def get_key(project_id, task_id):
     return KEY_PREFIX.format(project_id, task_id)
 
