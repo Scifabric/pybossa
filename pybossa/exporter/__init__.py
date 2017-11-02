@@ -51,6 +51,10 @@ class Exporter(object):
                     if inf and type(inf) == dict:
                         tmp.append(flatten(inf,
                                            root_keys_to_ignore=ignore_keys))
+                    elif inf and type(inf) == list:
+                        for datum in inf:
+                            tmp.append(flatten(datum,
+                                               root_keys_to_ignore=ignore_keys))
                     else:
                         tmp.append({'info': inf})
             else:
