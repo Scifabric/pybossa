@@ -85,8 +85,15 @@ class LockManager(object):
         """
         self._cache.hset(resource_id, client_id, time() + 5)
 
+    def get_locks(self, resource_id):
+        """
+        Get all locks associated with a particular resource.
+        :param resource_id: resource on which lock is being held
+        """
+        return self._cache.hgetall(resource_id)
+
     def _release_expired_locks(self, resource_id, now):
-        locks = self._cache.hgetall(resource_id)
+        locks = self.get_locks(resource_id)
         to_delete = []
         for key, expiration in locks.iteritems():
             expiration = float(expiration)
