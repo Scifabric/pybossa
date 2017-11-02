@@ -515,7 +515,7 @@ def disable_users_job():
         user = User.query.get(row.id)
         user.enabled = False
         user_repo.update(user)
-        user_info = 'name: {}, id: {}, email: {}, last_login: {}'.format(
+        user_info = u'name: {}, id: {}, email: {}, last_login: {}'.format(
                         user.name, user.id, user.email_addr, user.last_login)
         users_disabled.append(user_info)
 
