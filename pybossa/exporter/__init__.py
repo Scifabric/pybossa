@@ -65,15 +65,24 @@ class Exporter(object):
                 tmp = []
                 for row in data:
                     cleaned = row.dictize()
+                    fav_user_ids = None
+                    task_run_ids = None
                     if cleaned.get('fav_user_ids'):
                         fav_user_ids = cleaned['fav_user_ids']
                         cleaned.pop('fav_user_ids')
-                        cleaned = flatten(cleaned,
-                                          root_keys_to_ignore=ignore_keys)
+                    if cleaned.get('task_run_ids'):
+                        task_run_ids = cleaned['task_run_ids']
+                        cleaned.pop('task_run_ids')
+
+                    cleaned = flatten(cleaned,
+                                      root_keys_to_ignore=ignore_keys)
+
+                    if fav_user_ids:
                         cleaned['fav_user_ids'] = fav_user_ids
-                        tmp.append(cleaned)
-                    else:
-                        tmp.append(flatten(cleaned))
+                    if task_run_ids:
+                        cleaned['task_run_ids'] = task_run_ids
+
+                    tmp.append(cleaned)
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
