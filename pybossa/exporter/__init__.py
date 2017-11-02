@@ -42,18 +42,15 @@ class Exporter(object):
         """Get the data for a given table."""
         repo, query = self.repositories[table]
         data = getattr(repo, query)(project_id=project_id)
-        ignore_keys = current_app.config.get('IGNORE_FLAT_KEYS')
+        ignore_keys = current_app.config.get('IGNORE_FLAT_KEYS') or []
         if info_only:
             if flat:
                 tmp = []
                 for row in data:
                     inf = row.dictize()['info']
-                    inf = self._clean_ignore_keys(inf,
-                                                  ignore_keys,
-                                                  info_only)
-
                     if inf and type(inf) == dict:
-                        tmp.append(flatten(inf))
+                        tmp.append(flatten(inf,
+                                           root_keys_to_ignore=ignore_keys))
                     else:
                         tmp.append({'info': inf})
             else:
@@ -67,25 +64,19 @@ class Exporter(object):
             if flat:
                 tmp = []
                 for row in data:
-                    cleaned = self._clean_ignore_keys(row.dictize(),
-                                                      ignore_keys,
-                                                      info_only)
-                    tmp.append(flatten(cleaned))
+                    cleaned = row.dictize()
+                    if cleaned.get('fav_user_ids'):
+                        fav_user_ids = cleaned['fav_user_ids']
+                        cleaned.pop('fav_user_ids')
+                        cleaned = flatten(cleaned,
+                                          root_keys_to_ignore=ignore_keys)
+                        cleaned['fav_user_ids'] = fav_user_ids
+                        tmp.append(cleaned)
+                    else:
+                        tmp.append(flatten(cleaned))
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
-
-    def _clean_ignore_keys(self, data, ignore_keys, info_only):
-        """Remove key/value pairs so flatten can work fast."""
-        data = copy.deepcopy(data)
-        if ignore_keys and data != None:
-            for key in ignore_keys:
-                if info_only:
-                    data.pop(key, None)
-                else:
-                    if data['info']:
-                        data['info'].pop(key, None)
-        return data
 
     def _project_name_latin_encoded(self, project):
         """project short name for later HTML header usage"""
