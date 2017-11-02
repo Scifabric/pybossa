@@ -70,7 +70,14 @@ class Exporter(object):
                     cleaned = self._clean_ignore_keys(row.dictize(),
                                                       ignore_keys,
                                                       info_only)
-                    tmp.append(flatten(cleaned))
+                    if cleaned.get('fav_user_ids'):
+                        fav_user_ids = cleaned['fav_user_ids']
+                        cleaned.pop('fav_user_ids')
+                        cleaned = flatten(cleaned)
+                        cleaned['fav_user_ids'] = fav_user_ids
+                        tmp.append(cleaned)
+                    else:
+                        tmp.append(flatten(cleaned))
             else:
                 tmp = [row.dictize() for row in data]
         return tmp
