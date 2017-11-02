@@ -4440,9 +4440,13 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            for tk in flatten(t.dictize()).keys():
+            d = t.dictize()
+            task_run_ids = d['task_run_ids']
+            fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
+            fl['task_run_ids'] = task_run_ids
+            for tk in fl.keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
@@ -4451,8 +4455,11 @@ class TestWeb(web.Helper):
         for et in exported_results:
             result_id = et[keys.index('id')]
             result = db.session.query(Result).get(result_id)
-            result_dict_flat = flatten(result.dictize())
             result_dict = result.dictize()
+            task_run_ids = result_dict['task_run_ids']
+            result_dict_flat = flatten(result_dict,
+                                       root_keys_to_ignore='task_run_ids')
+            result_dict_flat['task_run_ids'] = task_run_ids
             for k in result_dict_flat.keys():
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
