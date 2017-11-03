@@ -3,13 +3,19 @@
 {
 isProcRunning=`pgrep supervisor`
 if [[ -n  $isProcRunning ]]; then
+    # reset cache
+    echo "$(date) clear cache"
+    cd /home/ubuntu/pybossa
+    source env/bin/activate
+    python clear_cache.py
+
     service supervisor stop &
-    echo "command service supervisor stop, exit code: $?"
+    echo "$(date) command service supervisor stop, exit code: $?"
 fi
 isProcRunning=`pgrep nginx`
 if [[ -n  $isProcRunning ]]; then
     service nginx stop &
-    echo "executed command service nginx stop, exit code: $?"
+    echo "$(date) executed command service nginx stop, exit code: $?"
 fi
 # add delay of 10 seconds for supervisor to shut down completely before next installation steps runs
 sleep 10
@@ -19,10 +25,10 @@ datetimeval=$(date +%m%d%Y%H%M%S)
 targetpath=/home/ubuntu/pybossa/pybossa
 mv $targetpath $targetpath.$datetimeval
 rc=$?; if [[ $rc != 0 ]]; then
-echo "error renaming $targetpath to $targetpath.$datetimeval"
+echo "$(date) error renaming $targetpath to $targetpath.$datetimeval"
 exit $rc;
 else
-echo "renamed folder from $targetpath to $targetpath.$datetimeval"
+echo "$(date) renamed folder from $targetpath to $targetpath.$datetimeval"
 fi
 
 } >> /var/log/codedeploy-pre-install.log
