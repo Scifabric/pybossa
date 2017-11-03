@@ -1,5 +1,0 @@
-================
-Changelog v1.4.1
-================
-
- * Fix bug in Google Spreadsheet importer (#1248)

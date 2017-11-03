@@ -78,25 +78,13 @@ class TestWeb(web.Helper):
     def test_01_index_json(self):
         """Test WEB JSON home page works"""
         project = ProjectFactory.create(featured=True)
-        user = UserFactory.create()
-        for i in range(0, 31):
-            TaskRunFactory.create(user=user, project=project)
         res = self.app_get_json("/")
         data = json.loads(res.data)
-        keys = ['top_projects', 'categories_projects', 'categories', 'template',
-                'top_users']
+        keys = ['featured', 'template']
         for key in keys:
             assert key in data.keys(), data
-        assert project.category.short_name in data.get('categories_projects').keys(), data
-        projects = data.get('categories_projects').get(project.category.short_name)
-        for cat in data.get('categories_projects').keys():
-            for p in data.get('categories_projects')[cat]:
-                assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-        for p in data.get('top_projects'):
-            assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-
-        for u in data.get('top_users'):
-            assert sorted(u['info'].keys()) == sorted(User().public_info_keys()), u
+        assert len(data['featured']) == 1, data
+        assert data['featured'][0]['short_name'] == project.short_name
 
 
     @with_context
@@ -1179,20 +1167,21 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = False
-        db.session.commit()
-        fake_signer.loads.return_value = dict(fullname=user.fullname,
-                                              name=user.name,
-                                              email_addr=user.email_addr)
-        self.app.get('/account/register/confirmation?key=valid-key')
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = False
+            db.session.commit()
+            fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                                  name=user.name,
+                                                  email_addr=user.email_addr)
+            self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe', next=None)
+            url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.ask_user_to_subscribe.return_value = False
-        self.app.get('/account/register/confirmation?key=valid-key')
-        url_for.assert_called_with('home.home')
+            newsletter.ask_user_to_subscribe.return_value = False
+            self.app.get('/account/register/confirmation?key=valid-key')
+            url_for.assert_called_with('home.home')
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
@@ -1201,20 +1190,21 @@ class TestWeb(web.Helper):
     def test_newsletter_json(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home with JSON."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = True
-        url = '/account/newsletter'
-        res = self.app_get_json(url)
-        data = json.loads(res.data)
-        assert data.get('title') == 'Subscribe to our Newsletter', data
-        assert data.get('template') == 'account/newsletter.html', data
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = True
+            url = '/account/newsletter'
+            res = self.app_get_json(url)
+            data = json.loads(res.data)
+            assert data.get('title') == 'Subscribe to our Newsletter', data
+            assert data.get('template') == 'account/newsletter.html', data
 
 
-        res = self.app_get_json(url + "?subscribe=True")
-        data = json.loads(res.data)
-        assert data.get('flash') == 'You are subscribed to our newsletter!', data
-        assert data.get('status') == SUCCESS, data
+            res = self.app_get_json(url + "?subscribe=True")
+            data = json.loads(res.data)
+            assert data.get('flash') == 'You are subscribed to our newsletter!', data
+            assert data.get('status') == SUCCESS, data
 
 
     @with_context
@@ -1923,7 +1913,8 @@ class TestWeb(web.Helper):
         assert data['code'] == 403, data
 
     @with_context
-    def test_update_project_json_as_admin(self):
+    @patch('pybossa.view.projects.cached_projects.clean_project')
+    def test_update_project_json_as_admin(self, cache_mock):
         """Test WEB JSON update project as admin."""
         admin = UserFactory.create()
         owner = UserFactory.create()
@@ -1953,8 +1944,7 @@ class TestWeb(web.Helper):
 
         u_project = project_repo.get(project.id)
         assert u_project.description == 'foobar', u_project
-
-
+        cache_mock.assert_called_with(project.id)
 
 
     @with_context
@@ -4663,9 +4653,13 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            for tk in flatten(t.dictize()).keys():
+            d = t.dictize()
+            task_run_ids = d['task_run_ids']
+            fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
+            fl['task_run_ids'] = task_run_ids
+            for tk in fl.keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
@@ -4674,8 +4668,11 @@ class TestWeb(web.Helper):
         for et in exported_results:
             result_id = et[keys.index('id')]
             result = db.session.query(Result).get(result_id)
-            result_dict_flat = flatten(result.dictize())
             result_dict = result.dictize()
+            task_run_ids = result_dict['task_run_ids']
+            result_dict_flat = flatten(result_dict,
+                                       root_keys_to_ignore='task_run_ids')
+            result_dict_flat['task_run_ids'] = task_run_ids
             for k in result_dict_flat.keys():
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
@@ -7193,3 +7190,41 @@ class TestWeb(web.Helper):
         err_msg = 'OTP should be expired'
         assert data['status'] == ERROR, (err_msg, data)
         assert 'Expired one time password' in data.get('flash'), (err_msg, data)
+
+    @with_context
+    @patch('pybossa.view.projects.rank', autospec=True)
+    def test_project_index_sorting(self, mock_rank):
+        """Test WEB Project index parameters passed for sorting."""
+        self.register()
+        self.create()
+        project = db.session.query(Project).get(1)
+
+        order_by = u'n_volunteers'
+        desc = True
+        query = 'orderby=%s&desc=%s' % (order_by, desc)
+
+        # Test named category
+        url = 'project/category/%s?%s' % (Fixtures.cat_1, query)
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[0][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[0][0][1] == order_by
+        assert mock_rank.call_args_list[0][0][2] == desc
+
+        # Test featured
+        project.featured = True
+        project_repo.save(project)
+        url = 'project/category/featured?%s' % query
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[1][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[1][0][1] == order_by
+        assert mock_rank.call_args_list[1][0][2] == desc
+
+        # Test draft
+        project.featured = False
+        project.published = False
+        project_repo.save(project)
+        url = 'project/category/draft/?%s' % query
+        res = self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[2][0][1] == order_by
+        assert mock_rank.call_args_list[2][0][2] == desc

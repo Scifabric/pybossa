@@ -27,13 +27,6 @@ from pybossa.cache.task_browse_helpers import get_task_filters, allowed_fields
 session = db.slave_session
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project(short_name):
-    """Get project by short_name."""
-    project = session.query(Project).filter_by(short_name=short_name).first()
-    return project
-
-
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_projects")
 def get_top(n=4):
@@ -556,11 +549,6 @@ def reset():
     delete_memoized(get_all)
 
 
-def delete_project(short_name):
-    """Reset project values in cache"""
-    delete_memoized(get_project, short_name)
-
-
 def delete_browse_tasks(project_id):
     """Reset browse_tasks value in cache"""
     delete_memoized_essential(browse_tasks, project_id)
@@ -617,8 +605,9 @@ def clean(project_id):
     clean_project(project_id)
 
 
-def clean_project(project_id):
+def clean_project(project_id, category=None):
     """Clean cache for a specific project"""
+    project = db.session.query(Project).get(project_id)
     delete_browse_tasks(project_id)
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
@@ -629,3 +618,7 @@ def clean_project(project_id):
     delete_last_activity(project_id)
     delete_n_task_runs(project_id)
     delete_overall_progress(project_id)
+    if project:
+        delete_memoized(get_all, project.category.short_name)
+        delete_memoized(n_count, project.category.short_name)
+        delete_memoized(get_all_draft, None)

@@ -15,19 +15,26 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+"""
+PYBOSSA api module for exposing domain object ProjectStats via an API.
+"""
+import copy
+from flask import request
+from pybossa.model.project_stats import ProjectStats
+from api_base import APIBase
 
 
-from forms import (
-    ProjectForm,
-    ProjectUpdateForm,
-    ProjectSyncForm,
-    TaskPresenterForm,
-    TaskRedundancyForm,
-    TaskPriorityForm,
-    TaskTimeoutForm,
-    TaskSchedulerForm,
-    BlogpostForm,
-    PasswordForm,
-    GenericBulkTaskImportForm,
-    AvatarUploadForm,
-    TransferOwnershipForm)
+class ProjectStatsAPI(APIBase):
+
+    """Class for domain object ProjectStats."""
+
+    __class__ = ProjectStats
+
+    def _select_attributes(self, stats_data):
+        if not request.args.get('full'):
+            tmp = copy.deepcopy(stats_data)
+            tmp['info'].pop('hours_stats', None)
+            tmp['info'].pop('dates_stats', None)
+            tmp['info'].pop('users_stats', None)
+            return tmp
+        return stats_data

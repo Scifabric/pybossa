@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
+from mock import patch
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import BlogpostFactory
@@ -129,9 +130,11 @@ class TestBlogRepository(Test):
         assert len(retrieved_blogposts) == 1, retrieved_blogposts
         assert blogpost in retrieved_blogposts, retrieved_blogposts
 
+    @with_context
 
     @with_context
-    def test_save(self):
+    @patch('pybossa.repositories.blog_repository.clean_project')
+    def test_save(self, clean_project_mock):
         """Test save persist the blogpost"""
 
         blogpost = BlogpostFactory.build()
@@ -140,7 +143,7 @@ class TestBlogRepository(Test):
         self.blog_repo.save(blogpost)
 
         assert self.blog_repo.get(blogpost.id) == blogpost, "Blogpost not saved"
-
+        clean_project_mock.assert_called_with(blogpost.project_id)
 
     @with_context
     def test_save_fails_if_integrity_error(self):
@@ -163,7 +166,8 @@ class TestBlogRepository(Test):
 
 
     @with_context
-    def test_update(self):
+    @patch('pybossa.repositories.blog_repository.clean_project')
+    def test_update(self, clean_project_mock):
         """Test update persists the changes made to the blogpost"""
 
         blogpost = BlogpostFactory.create(body='this is a blogpost')
@@ -173,6 +177,7 @@ class TestBlogRepository(Test):
         updated_blogpost = self.blog_repo.get(blogpost.id)
 
         assert updated_blogpost.body == 'new content', updated_blogpost
+        clean_project_mock.assert_called_with(blogpost.project_id)
 
 
     @with_context
@@ -197,7 +202,8 @@ class TestBlogRepository(Test):
 
 
     @with_context
-    def test_delete(self):
+    @patch('pybossa.repositories.blog_repository.clean_project')
+    def test_delete(self, clean_project_mock):
         """Test delete removes the blogpost instance"""
 
         blogpost = BlogpostFactory.create()
@@ -206,7 +212,7 @@ class TestBlogRepository(Test):
         deleted = self.blog_repo.get(blogpost.id)
 
         assert deleted is None, deleted
-
+        clean_project_mock.assert_called_with(blogpost.project_id)
 
     @with_context
     def test_delete_only_deletes_blogposts(self):

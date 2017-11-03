@@ -26,8 +26,8 @@ from factories import UserFactory
 
 class TestLDAP(Test):
 
-
-    ldap_user = dict(cn=['cn'], givenName=['John Doe'])
+    ldap_user = dict(cn=['cn'], givenName=['John Doe'],
+                     uid=['johndoe'])
 
     @with_context
     def test_register_404(self):
@@ -61,12 +61,12 @@ class TestLDAP(Test):
             ldap_mock.get_object_details.return_value = self.ldap_user
             res = self.app.post(url, data=json.dumps(payload),
                                 content_type='application/json')
-            user = user_repo.get_by(name='cn')
+            user = user_repo.get_by(ldap='cn')
             data = json.loads(res.data)
             assert data['status'] == SUCCESS, data
             assert data['next'] == '/', data
-            assert user.name == 'cn', user
-            assert user.email_addr == 'cn', user
+            assert user.name == self.ldap_user['uid'][0], user
+            assert user.email_addr == self.ldap_user['cn'][0], user
 
             ldap_mock.bind_user.return_value = False
             res = self.app.post(url, data=json.dumps(payload),
@@ -82,7 +82,7 @@ class TestLDAP(Test):
     @patch('pybossa.view.account.ldap')
     def test_signin_existing(self, ldap_mock, create_mock):
         """Test signin logs in an LDAP existing PYBOSSA user."""
-        user = UserFactory.create(name='cn', email_addr='cn')
+        user = UserFactory.create(name='cn', email_addr='cn', ldap='cn')
         with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
             url = '/account/signin'
             payload = {'email': 'cn', 'password': 'password'}
@@ -90,7 +90,7 @@ class TestLDAP(Test):
             ldap_mock.get_object_details.return_value = self.ldap_user
             res = self.app.post(url, data=json.dumps(payload),
                                 content_type='application/json')
-            user = user_repo.get_by(name='cn')
+            user = user_repo.get_by(ldap='cn')
             data = json.loads(res.data)
             assert data['next'] == '/', data
             assert create_mock.called is False
@@ -130,4 +130,3 @@ class TestLDAP(Test):
         with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
             res = self.app.get(url)
             assert res.status_code == 404, res.status_code
-

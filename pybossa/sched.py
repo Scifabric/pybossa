@@ -52,7 +52,8 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'depth_first': get_depth_first_task,
         Schedulers.locked: get_locked_task,
         'incremental': get_incremental_task,
-        Schedulers.user_pref: get_user_pref_task}
+        Schedulers.user_pref: get_user_pref_task,
+        'depth_first_all': get_depth_first_all_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
 
@@ -125,6 +126,16 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
     return tasks
 
 
+def get_depth_first_all_task(project_id, user_id=None, user_ip=None,
+                             external_uid=None, offset=0, limit=1,
+                             orderby='priority_0', desc=True):
+    """Get a new task for a given project."""
+    tasks = get_candidate_task_ids(project_id, user_id,
+                                   user_ip, external_uid, limit, offset,
+                                   orderby=orderby, desc=desc, completed=False)
+    return tasks
+
+
 def get_incremental_task(project_id, user_id=None, user_ip=None,
                          external_uid=None, offset=0, limit=1, orderby='id', desc=False):
     """Get a new task for a given project with its last given answer.
@@ -154,7 +165,7 @@ def get_incremental_task(project_id, user_id=None, user_ip=None,
 
 def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
                            external_uid=None, limit=1, offset=0,
-                           orderby='priority_0', desc=True):
+                           orderby='priority_0', desc=True, completed=True):
     """Get all available tasks for a given project and user."""
     data = None
     if user_id and not user_ip and not external_uid:
@@ -170,6 +181,10 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
     query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
                                             Task.project_id == project_id,
                                             Task.state != 'completed'))
+    if completed is False:
+        query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
+                                                Task.project_id == project_id))
+
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
     return _handle_tuples(data)
@@ -323,7 +338,9 @@ def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
             (Schedulers.locked, 'Locked'),
-            (Schedulers.user_pref, 'User Preference Scheduler')]
+            (Schedulers.user_pref, 'User Preference Scheduler'),
+            ('depth_first_all', 'Depth First All'),
+            ]
 
 
 def _set_orderby_desc(query, orderby, descending):

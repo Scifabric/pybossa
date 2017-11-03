@@ -143,12 +143,16 @@ def signin():
         ldap_user = None
         if ldap.bind_user(cn, password):
             ldap_user = ldap.get_object_details(cn)
-            user_db = user_repo.get_by(name=ldap_user['cn'][0])
+            key = current_app.config.get('LDAP_USER_FILTER_FIELD')
+            value = ldap_user[key][0]
+            user_db = user_repo.get_by(ldap=value)
             if (user_db is None):
-                user_data = dict(fullname=ldap_user['givenName'][0],
-                                 name=cn,
-                                 email_addr=cn,
+                keyfields = current_app.config.get('LDAP_PYBOSSA_FIELDS')
+                user_data = dict(fullname=ldap_user[keyfields['fullname']][0],
+                                 name=ldap_user[keyfields['name']][0],
+                                 email_addr=ldap_user[keyfields['email_addr']][0],
                                  valid_email=True,
+                                 ldap=value,
                                  consent=True)
                 create_account(user_data, ldap_disabled=False)
             else:
@@ -184,7 +188,8 @@ def _sign_in_user(user):
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
     user_repo.update(user)
-    if newsletter.ask_user_to_subscribe(user):
+    if (current_app.config.get('MAILCHIMP_API_KEY') and
+            newsletter.ask_user_to_subscribe(user)):
         return redirect_content_type(url_for('account.newsletter_subscribe',
                                              next=request.args.get('next')))
     return redirect_content_type(request.args.get("next") or
@@ -408,6 +413,9 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
                                consent=user_data.get('consent', True))
     if ldap_disabled:
         new_user.set_password(user_data['password'])
+    else:
+        if user_data.get('ldap'):
+            new_user.ldap = user_data['ldap']
     user_repo.save(new_user)
     user_info = dict(fullname=user_data['fullname'], email_addr=user_data['email_addr'], password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)

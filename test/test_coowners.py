@@ -1,7 +1,5 @@
-import json
 from helper import web
 from default import with_context
-from mock import patch
 from default import db, Fixtures
 from pybossa.repositories import ProjectRepository
 

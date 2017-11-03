@@ -8,10 +8,7 @@ Create Date: 2017-10-07 09:10:17.930230
 
 # revision identifiers, used by Alembic.
 revision = 'acea90f77ba3'
-# To the guy merging this in the future: yes, this is a conflict! Please take
-# commented revision id. Remove the other. Thank you!
-# down_revision = '8fe68fbf6baa'  TODO: uncomment when merged
-down_revision = 'b56c34fc4beb'  # TODO: temporary to sit on top of our revisions
+down_revision = '8fe68fbf6baa'
 
 from alembic import op
 import sqlalchemy as sa

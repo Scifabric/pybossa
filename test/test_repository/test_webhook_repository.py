@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
+from mock import patch
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from factories import TaskRunFactory, ProjectFactory
@@ -95,7 +96,8 @@ class TestWebhookRepository(Test):
         assert_raises(WrongObjectError, self.webhook_repo.save, bad_object)
 
     @with_context
-    def test_delete_entries_from_project(self):
+    @patch('pybossa.repositories.webhook_repository.clean_project')
+    def test_delete_entries_from_project(self, clean_project_mock):
         """Test delete entries from project works."""
         project = ProjectFactory.create()
         wh = Webhook(project_id=project.id)
@@ -103,5 +105,4 @@ class TestWebhookRepository(Test):
         self.webhook_repo.delete_entries_from_project(project)
         res = self.webhook_repo.get_by(project_id=project.id)
         assert res is None
-
-
+        clean_project_mock.assert_called_with(project.id)

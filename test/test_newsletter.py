@@ -214,40 +214,40 @@ class TestNewsletterViewFunctions(web.Helper):
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_new_user_gets_newsletter(self, newsletter):
         """Test NEWSLETTER new user works."""
-        newsletter.is_initialized.return_value = True
-        newsletter.ask_user_to_subscribe.return_value = True
-        res = self.register()
-        res = self.signin()
-        dom = BeautifulSoup(res.data)
-        err_msg = "There should be a newsletter page."
-        assert dom.find(id='newsletter') is not None, err_msg
-        assert dom.find(id='signmeup') is not None, err_msg
-        assert dom.find(id='notinterested') is not None, err_msg
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            newsletter.ask_user_to_subscribe.return_value = True
+            res = self.register()
+            res = self.signin()
+            dom = BeautifulSoup(res.data)
+            err_msg = "There should be a newsletter page."
+            assert dom.find(id='newsletter') is not None, err_msg
+            assert dom.find(id='signmeup') is not None, err_msg
+            assert dom.find(id='notinterested') is not None, err_msg
 
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_new_user_gets_newsletter_only_once(self, newsletter):
         """Test NEWSLETTER user gets newsletter only once works."""
-        newsletter.is_initialized.return_value = True
-        newsletter.ask_user_to_subscribe.return_value = True
-        res = self.register()
-        res = self.signin()
-        dom = BeautifulSoup(res.data)
-        user = user_repo.get(1)
-        err_msg = "There should be a newsletter page."
-        assert dom.find(id='newsletter') is not None, err_msg
-        assert dom.find(id='signmeup') is not None, err_msg
-        assert dom.find(id='notinterested') is not None, err_msg
-        assert user.newsletter_prompted is True, err_msg
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            newsletter.ask_user_to_subscribe.return_value = True
+            res = self.register()
+            res = self.signin()
+            dom = BeautifulSoup(res.data)
+            user = user_repo.get(1)
+            err_msg = "There should be a newsletter page."
+            assert dom.find(id='newsletter') is not None, err_msg
+            assert dom.find(id='signmeup') is not None, err_msg
+            assert dom.find(id='notinterested') is not None, err_msg
+            assert user.newsletter_prompted is True, err_msg
 
-        self.signout()
-        newsletter.ask_user_to_subscribe.return_value = False
-        res = self.signin()
-        dom = BeautifulSoup(res.data)
-        assert dom.find(id='newsletter') is None, err_msg
-        assert dom.find(id='signmeup') is None, err_msg
-        assert dom.find(id='notinterested') is None, err_msg
+            self.signout()
+            newsletter.ask_user_to_subscribe.return_value = False
+            res = self.signin()
+            dom = BeautifulSoup(res.data)
+            assert dom.find(id='newsletter') is None, err_msg
+            assert dom.find(id='signmeup') is None, err_msg
+            assert dom.find(id='notinterested') is None, err_msg
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)

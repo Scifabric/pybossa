@@ -43,6 +43,10 @@
         - dbus
         - libdbus-1-dev
         - libdbus-glib-1-dev
+        - libsasl2-dev
+        - libldap2-dev
+        - libssl-dev
+        - libldap2-dev
 
     - name: install PostgreSQL
       apt: name={{item}} state=latest

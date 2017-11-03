@@ -1,8 +1,0 @@
-================
-Changelog v1.2.1
-================
-
- * Get latest news about PYBOSSA and SciFabric for admins. The admin page will
-   feature the latest releases of PYBOSSA and news about SciFabric. You can customize
-   more news sites if you want.
-
