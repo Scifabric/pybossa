@@ -45,6 +45,7 @@ from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 from pybossa.cache.projects import clean_project
+from pybossa.cache.users import delete_user_summary_id
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -74,7 +75,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                              'get': 'get', 'update': 'update',
                              'save': 'save', 'delete': 'delete'}}
 
-caching = {'Project': {'refresh': clean_project}}
+caching = {'Project': {'refresh': clean_project},
+           'User': {'refresh': delete_user_summary_id}}
 
 error = ErrorStatus()
 
