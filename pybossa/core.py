@@ -67,6 +67,7 @@ def create_app(run_as_server=True):
     setup_error_handlers(app)
     setup_ldap(app)
     setup_external_services(app)
+    setup_importers(app)
     setup_jinja(app)
     setup_geocoding(app)
     setup_csrf_protection(app)
@@ -454,6 +455,13 @@ def setup_youtube_importer(app):
         print "Youtube importer not available"
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
+
+
+def setup_importers(app):
+    importers = app.config.get('AVAILABLE_IMPORTERS')
+    if importers:
+        importer.set_importers(importers)
+
 
 def setup_geocoding(app):
     """Setup geocoding."""

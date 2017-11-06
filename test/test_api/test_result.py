@@ -21,6 +21,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
 from pybossa.core import project_repo, task_repo, result_repo
+from helper.gig_helper import make_subadmin
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
@@ -357,6 +358,7 @@ class TestResultAPI(TestAPI):
         """Test API result update"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         data = dict(info=dict(foo='bar'))
         datajson = json.dumps(data)

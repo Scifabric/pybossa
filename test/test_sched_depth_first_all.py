@@ -65,11 +65,12 @@ class TestSched(sched.Helper):
 
         taskrun = dict(project_id=data['project_id'], task_id=data['id'], info="hola")
         res = self.app.post('api/taskrun', data=json.dumps(taskrun))
+        assert res.status_code == 403, res
 
         res = self.app.get('api/project/%s/newtask' %project.id)
         data = json.loads(res.data)
         assert data['info'] == 'hola', data
-        assert data['id'] != task_id, data
+        assert data['id'] == task_id, data
 
     @with_context
     def test_anonymous_01_newtask_limits(self):
@@ -528,7 +529,7 @@ class TestSched(sched.Helper):
         data = json.loads(res.data)
         assert data['id'], data
         assert data['id'] != task_id, data
-        
+
         self.signout()
 
     @with_context
@@ -613,7 +614,7 @@ class TestSched(sched.Helper):
         url = 'api/project/%s/newtask?limit=5' % project.id
         res = self.app.get(url)
         data = json.loads(res.data)
-        while len(data) > 0: 
+        while len(data) > 0:
             # Check that we received a Task
             for t in data:
                 assert t.get('id'), t
@@ -890,6 +891,7 @@ class TestSched(sched.Helper):
 
             res = self.app.post('/api/taskrun?external_uid=2xb',
                                 data=tr, headers=headers)
+            assert res.status_code == 403
         # Get two tasks again
         res = self.app.get(url, headers=headers)
         task3 = json.loads(res.data)
@@ -902,8 +904,8 @@ class TestSched(sched.Helper):
         assert task4.get('id'),  task2
         # Check that both tasks are different
         assert task3.get('id') != task4.get('id'), "Tasks should be different"
-        assert task1.get('id') != task3.get('id'), "Tasks should be different"
-        assert task2.get('id') != task4.get('id'), "Tasks should be different"
+        assert task1.get('id') == task3.get('id'), "Tasks should be same"
+        assert task2.get('id') == task4.get('id'), "Tasks should be same"
         # Check that a big offset returns None
         res = self.app.get(url + '&offset=11', headers=headers)
         assert json.loads(res.data) == {}, res.data

@@ -20,6 +20,7 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
+from helper.gig_helper import make_subadmin
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
@@ -187,7 +188,7 @@ class TestTaskAPI(TestAPI):
         ExternalUidTaskRunFactory.create(task=tasks[1])
         ExternalUidTaskRunFactory.create(task=tasks[2])
 
-        url = '/api/task?participated=1&all=1&external_uid=1xa' 
+        url = '/api/task?participated=1&all=1&external_uid=1xa'
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -615,6 +616,7 @@ class TestTaskAPI(TestAPI):
         """Test API Task creation"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         data = dict(project_id=project.id, info='my task data')
@@ -749,6 +751,7 @@ class TestTaskAPI(TestAPI):
         """Test API task update"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
@@ -857,6 +860,7 @@ class TestTaskAPI(TestAPI):
         """Test API task delete"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)

@@ -680,7 +680,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
     import pybossa.cache.projects as cached_projects
 
     project = project_repo.get(project_id)
-    recipients = [project.owner.email_addr]
+    recipients = []
     for user in user_repo.get_users(project.owners_ids):
         recipients.append(user.email_addr)
 
@@ -730,10 +730,10 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
 def export_tasks(current_user_email_addr, short_name,
                  ty, expanded, filetype, **filters):
     """Export tasks/taskruns from a project."""
-    from pybossa.core import task_csv_exporter, task_json_exporter
-    from pybossa.cache import projects as cached_projects
+    from pybossa.core import (task_csv_exporter, task_json_exporter,
+                              project_repo)
 
-    project = cached_projects.get_project(short_name)
+    project = project_repo.get_by_shortname(short_name)
 
     try:
         # Export data and upload .zip file locally

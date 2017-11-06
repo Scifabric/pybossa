@@ -208,6 +208,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         TaskRunFactory.create_batch(30, project=project)
         TaskRunFactory.create(user=owner)
         update_stats(project.id)
+        self.signin_user(user)
         url = '/account/%s' % owner.name
         # Use a full url to avoid redirection on API access.
         full_url = 'http://localhost%s/' % url
@@ -275,10 +276,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         # Use a full url to avoid redirection on API access.
         full_url = 'http://localhost%s/' % url
         res = self.app.get(full_url, content_type='application/json')
-        data = json.loads(res.data)
-        err_msg = 'no information should be shown here'
-        assert 'user' not in data, err_msg
-        assert 'projects' not in data, err_msg
+        assert res.status_code == 302, 'Should redirect to login page'
 
 
 class TestPrivacyWebPrivacy(web_helper.Helper):

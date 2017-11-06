@@ -25,7 +25,7 @@ from factories import UserFactory, BlogpostFactory, ProjectFactory
 
 from pybossa.repositories import BlogRepository
 from mock import patch
-from helper.subadmin import make_subadmin
+from helper.gig_helper import make_subadmin
 blog_repo = BlogRepository(db)
 
 class TestBlogpostAPI(TestAPI):

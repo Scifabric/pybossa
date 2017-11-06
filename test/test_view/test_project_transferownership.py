@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2017 Scifabric 
+# Copyright (C) 2017 Scifabric
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,6 +20,7 @@ from factories import ProjectFactory, UserFactory
 from helper import web
 from pybossa.repositories import UserRepository, ProjectRepository
 import json
+from helper.gig_helper import make_subadmin
 
 project_repo = ProjectRepository(db)
 user_repo = UserRepository(db)
@@ -49,6 +50,7 @@ class TestProjectTransferOwnership(web.Helper):
     def test_transfer_auth_owner_get(self):
         """Test transfer ownership page is ok for owner."""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
                                                             owner.api_key)
@@ -77,6 +79,7 @@ class TestProjectTransferOwnership(web.Helper):
     def test_transfer_auth_owner_post(self):
         """Test transfer ownership page post is ok for owner."""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
                                                             owner.api_key)
@@ -95,6 +98,7 @@ class TestProjectTransferOwnership(web.Helper):
     def test_transfer_auth_owner_post_wrong_email(self):
         """Test transfer ownership page post is ok for wrong email."""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         url = '/project/%s/transferownership?api_key=%s' % (project.short_name,
                                                             owner.api_key)

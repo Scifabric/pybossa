@@ -35,8 +35,7 @@ class TestLDAP(Test):
         with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
             url = '/account/register'
             res = self.app_get_json(url)
-            data = json.loads(res.data)
-            assert data['code'] == 404, data
+            assert res.status_code == 302, res.data  # redirect to login
 
     @with_context
     def test_account_signin(self):
@@ -78,7 +77,7 @@ class TestLDAP(Test):
 
 
     @with_context
-    @patch('pybossa.view.account._create_account')
+    @patch('pybossa.view.account.create_account')
     @patch('pybossa.view.account.ldap')
     def test_signin_existing(self, ldap_mock, create_mock):
         """Test signin logs in an LDAP existing PYBOSSA user."""

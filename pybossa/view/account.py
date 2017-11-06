@@ -312,6 +312,7 @@ def get_project_choices():
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def register():
     """
@@ -417,10 +418,14 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
     user_repo.save(new_user)
-    user_info = dict(fullname=user_data['fullname'], email_addr=user_data['email_addr'], password=user_data['password'])
+    if not ldap_disabled:
+        flash(gettext('Thanks for signing-up'), 'success')
+        return _sign_in_user(new_user)
+    user_info = dict(fullname=user_data['fullname'],
+                     email_addr=user_data['email_addr'],
+                     password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
-
 
 
 def _update_user_with_valid_email(user, email_addr):
@@ -466,8 +471,8 @@ def _show_public_profile(user):
     user_dict = cached_users.public_get_user_summary(user.name)
     md = cached_users.get_metadata(user.name)
     form = MetadataForm(**md)
-    projects_contributed = cached_users.projects_contributed_cached(user.id)
-    projects_created = cached_users.published_projects_cached(user.id)
+    projects_contributed = cached_users.public_projects_contributed_cached(user.id)
+    projects_created = cached_users.public_published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
     percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
 
@@ -564,11 +569,12 @@ def projects(name):
         }
     }
 
-    return render_template('account/projects.html',
-                           title=gettext("Projects"),
-                           projects_published=projects_published,
-                           projects_draft=projects_draft,
-                           sort_options=sort_options)
+    response = dict(template='account/projects.html',
+                    title=gettext("Projects"),
+                    projects_published=projects_published,
+                    projects_draft=projects_draft,
+                    sort_options=sort_options)
+    return handle_content_type(response)
 
 
 def _get_user_projects(user_id, opts=None):

@@ -20,7 +20,7 @@ from mock import patch, call, MagicMock
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
-from helper.subadmin import make_subadmin
+from helper.gig_helper import make_subadmin
 
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
