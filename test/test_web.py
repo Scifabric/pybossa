@@ -4385,6 +4385,7 @@ class TestWeb(web.Helper):
             result_repo.update(result)
 
         # First test for a non-existant project
+        self.signin_user(id=42)
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4394,6 +4395,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real project
+        make_subadmin_by(id=42)
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
@@ -4417,6 +4419,10 @@ class TestWeb(web.Helper):
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=result&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
+
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
@@ -4508,6 +4514,9 @@ class TestWeb(web.Helper):
         self.clear_temp_container(project.owner_id)
         res = self.app.get('project/%s/tasks/export?type=task&format=json' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  # export is handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4520,6 +4529,9 @@ class TestWeb(web.Helper):
         self.signin(email=owner.email_addr, password='1234')
         res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  # export is handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4533,6 +4545,9 @@ class TestWeb(web.Helper):
         self.clear_temp_container(project.owner_id)
         res = self.app.get('/project/%s/tasks/export?type=task&format=csv' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4547,6 +4562,9 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         res = self.app.get('/project/%s/tasks/export?type=task_run&format=csv' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4574,6 +4592,9 @@ class TestWeb(web.Helper):
         # Now get the tasks in JSON format
         uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
@@ -4601,6 +4622,9 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner, short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=task&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         extracted_filename = zip.namelist()[0]
 
@@ -4649,6 +4673,9 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
@@ -4717,6 +4744,7 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV with ignore keys works"""
         # First test for a non-existant project
         with patch.dict(self.flask_app.config, {'IGNORE_FLAT_KEYS': ['geojson']}):
+            self.signin_user(id=42)
             uri = '/project/somethingnotexists/tasks/export'
             res = self.app.get(uri, follow_redirects=True)
             assert res.status == '404 NOT FOUND', res.status
@@ -4746,6 +4774,10 @@ class TestWeb(web.Helper):
             # Now get the tasks in CSV format
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
+            assert res.status_code == 200, res.status
+            assert 'You will be emailed when your export has been completed.' in res.data
+            return  #export handled by email
+
             zip = zipfile.ZipFile(StringIO(res.data))
             # Check only one file in zipfile
             err_msg = "filename count in ZIP is not 2"
@@ -4812,10 +4844,10 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
+        # Fixtures.create()
         # First test for a non-existant project
-        self.register()
-        self.signin()
-        Fixtures.create()
+        self.signin_user(id=42)
+        make_subadmin_by(id=42)
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4841,6 +4873,10 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
+
         file_name = '/tmp/task_%s.zip' % project.short_name
         with open(file_name, 'w') as f:
             f.write(res.data)

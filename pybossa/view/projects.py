@@ -1450,7 +1450,7 @@ def export_to(short_name):
                                overall_progress=ps.overall_progress,
                                pro_features=pro)
     def respond_json(ty, expanded):
-        if ty not in ('task', 'task_run'):
+        if ty not in supported_tables:
             return abort(404)
 
         try:
@@ -1472,7 +1472,7 @@ def export_to(short_name):
         return respond()
 
     def respond_csv(ty, expanded):
-        if ty not in ('task', 'task_run'):
+        if ty not in supported_tables:
             return abort(404)
 
         try:
