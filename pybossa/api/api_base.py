@@ -45,6 +45,7 @@ from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 from pybossa.cache.projects import clean_project
+from pybossa.cache.users import delete_user_summary_id
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -74,7 +75,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                              'get': 'get', 'update': 'update',
                              'save': 'save', 'delete': 'delete'}}
 
-caching = {'Project': {'refresh': clean_project}}
+caching = {'Project': {'refresh': clean_project},
+           'User': {'refresh': delete_user_summary_id}}
 
 error = ErrorStatus()
 
@@ -283,6 +285,7 @@ class APIBase(MethodView):
 
         """
         try:
+            cls_name = self.__class__.__name__
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -293,6 +296,7 @@ class APIBase(MethodView):
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
+            self.refresh_cache(cls_name, inst.id)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(

@@ -379,9 +379,13 @@ class TestResultAPI(TestAPI):
         assert result.id == out['id'], out
 
         ### root
+        data = dict(info=dict(foo='root'))
+        datajson = json.dumps(data)
         res = self.app.put('/api/result/%s?api_key=%s' % (result.id, admin.api_key),
                            data=datajson)
-        assert_equal(res.status, '403 FORBIDDEN', res.status)
+        assert_equal(res.status, '200 OK', res.status)
+        assert_equal(result.info['foo'], data['info']['foo'])
+        assert result.id == out['id'], out
 
         # PUT with not JSON data
         res = self.app.put(url, data=None)

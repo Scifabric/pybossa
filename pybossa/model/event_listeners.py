@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
+from flask import current_app
 
 from rq import Queue
 from sqlalchemy import event
@@ -61,25 +62,26 @@ def add_blog_event(mapper, conn, target):
     obj.update(tmp)
     update_feed(obj)
     # Notify volunteers
-    mail_queue.enqueue(notify_blog_users,
-                       blog_id=target.id,
-                       project_id=target.project_id)
-    contents = {"en": "New update!"}
-    headings = {"en": target.title}
-    launch_url = url_for('project.show_blogpost',
-                         short_name=tmp['short_name'],
-                         id=target.id,
-                         _external=True)
-    web_buttons = [{"id": "read-more-button",
-                    "text": "Read more",
-                    "icon": "http://i.imgur.com/MIxJp1L.png",
-                    "url": launch_url }]
-    webpush_queue.enqueue(push_notification,
-                          project_id=target.project_id,
-                          contents=contents,
-                          headings=headings,
-                          web_buttons=web_buttons,
-                          launch_url=launch_url)
+    if current_app.config.get('DISABLE_EMAIL_NOTIFICATIONS') is None:
+        mail_queue.enqueue(notify_blog_users,
+                           blog_id=target.id,
+                           project_id=target.project_id)
+        contents = {"en": "New update!"}
+        headings = {"en": target.title}
+        launch_url = url_for('project.show_blogpost',
+                             short_name=tmp['short_name'],
+                             id=target.id,
+                             _external=True)
+        web_buttons = [{"id": "read-more-button",
+                        "text": "Read more",
+                        "icon": "http://i.imgur.com/MIxJp1L.png",
+                        "url": launch_url }]
+        webpush_queue.enqueue(push_notification,
+                              project_id=target.project_id,
+                              contents=contents,
+                              headings=headings,
+                              web_buttons=web_buttons,
+                              launch_url=launch_url)
 
 
 @event.listens_for(Project, 'after_insert')

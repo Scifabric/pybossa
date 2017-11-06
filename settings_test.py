@@ -58,3 +58,17 @@ LDAP_USER_FILTER_FIELD = 'cn'
 LDAP_PYBOSSA_FIELDS = {'fullname': 'givenName',
                        'name': 'uid',
                        'email_addr': 'cn'}
+FLASK_PROFILER = {
+    "enabled": True,
+    "storage": {
+        "engine": "sqlite"
+    },
+    "basicAuth":{
+        "enabled": True,
+        "username": "admin",
+        "password": "admin"
+    },
+    "ignore": [
+	    "^/static/.*"
+	]
+}

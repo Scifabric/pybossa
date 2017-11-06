@@ -22,6 +22,7 @@ from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
 from test_api import TestAPI
 from pybossa.core import db
+from mock import patch, MagicMock
 
 from factories import UserFactory
 
@@ -119,9 +120,12 @@ class TestUserAPI(Test):
         assert res.status_code == 405, res.status_code
 
     @with_context
-    def test_user_not_allowed_actions_user(self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_user(self, caching_mock):
         """Test POST, PUT and DELETE for USER actions are not allowed for user
         in the API"""
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -148,11 +152,17 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
+        clean_user_mock.assert_called_with(data['id'])
 
     @with_context
-    def test_user_not_allowed_actions_admin (self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_admin(self, caching_mock):
         """Test POST, PUT and DELETE for ADMIN actions are not allowed for user
         in the API"""
+
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
+
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -173,6 +183,7 @@ class TestUserAPI(Test):
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
         assert data['info']['foo'] == 'bar', data
+        clean_user_mock.assert_called_with(data['id'])
 
         res = self.app.delete(url + '?apikey=%s' % auth.api_key)
         assert res.status_code == 405, res.status_code
@@ -184,6 +195,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'newadmin', data
+        clean_user_mock.assert_called_with(data['id'])
 
 
     @with_context
