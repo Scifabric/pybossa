@@ -45,7 +45,6 @@ import pycountry
 from flask.ext.babel import lazy_gettext
 import re
 
-
 def last_flashed_message():
     """Return last flashed message by flask."""
     messages = get_flashed_messages(with_categories=True)
@@ -904,3 +903,24 @@ def can_update_user_info(current_user, user_to_update):
     if not current_user.subadmin:
         return False
     return not (user_to_update.admin or user_to_update.subadmin)
+
+
+def get_enabled_users(user_emails):
+    from pybossa.core import user_repo
+
+    enabled_users = []
+    for ue in user_emails:
+        user = user_repo.get_by(email_addr=ue)
+        if user and user.enabled:
+            enabled_users.append(ue)
+    return enabled_users
+
+
+def mail_with_enabled_users(message):
+    recipients = message.get('recipients')
+    bcc = message.get('bcc')
+
+    if recipients:
+        message['recipients'] = get_enabled_users(user_emails=recipients)
+    if bcc:
+        message['bcc'] = get_enabled_users(user_emails=bcc)

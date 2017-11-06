@@ -2341,12 +2341,14 @@ def coowners(short_name):
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        users = user_repo.search_by_name(query)
+
+        filters = {'enabled': True}
+        users = user_repo.search_by_name(query, **filters)
 
         if not users:
             markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
             flash(markup.format(gettext("Ooops!"),
-                                gettext("We didn't find a user matching your query:"),
+                                gettext("We didn't find any enabled user matching your query:"),
                                 form.user.data))
         else:
             found = []

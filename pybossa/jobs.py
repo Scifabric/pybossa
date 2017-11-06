@@ -23,7 +23,7 @@ from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
-from pybossa.util import with_cache_disabled, publish_channel
+from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users
 import pybossa.dashboard.jobs as dashboard
 from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
@@ -527,6 +527,7 @@ def disable_users_job():
 
 def send_mail(message_dict):
     """Send email."""
+    mail_with_enabled_users(message_dict)
     message = Message(**message_dict)
     mail.send(message)
 
