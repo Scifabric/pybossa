@@ -261,6 +261,10 @@ def get_users_page(page, per_page=24):
         accounts.append(tmp)
     return accounts
 
+def delete_user_summary_id(oid):
+    """Delete from cache the user summary."""
+    user = db.session.query(User).get(oid)
+    delete_memoized(get_user_summary, user.name)
 
 def delete_user_summary(name):
     """Delete from cache the user summary."""

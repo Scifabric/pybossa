@@ -547,6 +547,7 @@ def update_profile(name):
         else:
             return abort(415)
         if succeed:
+            cached_users.delete_user_summary(user.name)
             return redirect_content_type(url_for('.update_profile',
                                                  name=user.name),
                                          status=SUCCESS)
