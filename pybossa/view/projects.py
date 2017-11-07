@@ -1053,6 +1053,15 @@ def export_to(short_name):
     else:
         ensure_authorized_to('read', project)
 
+    print current_user.id not in project.owners_ids
+    if project.zip_download is False:
+        if current_user.is_anonymous():
+            return abort(401)
+        if (current_user.is_authenticated() and
+            (current_user.id not in project.owners_ids and
+                current_user.admin is False)):
+            return abort(403)
+
     def respond():
         return render_template('/projects/export.html',
                                title=title,
