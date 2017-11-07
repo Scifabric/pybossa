@@ -113,6 +113,16 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
         project_sanitized['overall_progress'] = ps.overall_progress
     return project_sanitized, owner_sanitized
 
+def zip_enabled(project, user):
+    """Return if the user can download a ZIP file."""
+    if project.zip_download is False:
+        if user.is_anonymous():
+            return abort(401)
+        if (user.is_authenticated() and
+            (user.id not in project.owners_ids and
+                user.admin is False)):
+            return abort(403)
+
 
 def project_title(project, page_name):
     if not project:  # pragma: no cover
@@ -1053,14 +1063,7 @@ def export_to(short_name):
     else:
         ensure_authorized_to('read', project)
 
-    print current_user.id not in project.owners_ids
-    if project.zip_download is False:
-        if current_user.is_anonymous():
-            return abort(401)
-        if (current_user.is_authenticated() and
-            (current_user.id not in project.owners_ids and
-                current_user.admin is False)):
-            return abort(403)
+    zip_enabled(project, current_user)
 
     def respond():
         return render_template('/projects/export.html',
