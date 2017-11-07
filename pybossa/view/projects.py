@@ -47,7 +47,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url)
+                          get_avatar_url, fuzzyboolean)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -451,12 +451,13 @@ def update(short_name):
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
-            new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
+            new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
+            new_project.zip_download = fuzzyboolean(form.zip_download.data)
 
-        if form.protect.data and form.password.data:
+        if fuzzyboolean(form.protect.data) and form.password.data:
             new_project.set_password(form.password.data)
-        if not form.protect.data:
+        if not fuzzyboolean(form.protect.data):
             new_project.set_password("")
 
         project_repo.update(new_project)
