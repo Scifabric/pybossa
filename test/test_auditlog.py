@@ -294,6 +294,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/%s/update" % short_name
 
         self.data['name'] = 'New'
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -317,6 +318,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/sampleapp/update"
 
         self.data['short_name'] = 'newshort_name'
+        self.data['zip_download'] = True
 
         res = self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -346,6 +348,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = self.data[attribute]
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -441,6 +444,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = self.data[attribute]
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -471,6 +475,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.data[attribute] = new_string
         self.data['protect'] = True
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -505,6 +510,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = ''
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
