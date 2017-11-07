@@ -72,6 +72,7 @@ class ProjectUpdateForm(ProjectForm):
                              validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
+    zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     protect = BooleanField(lazy_gettext('Protect with a password?'))
     password = TextField(lazy_gettext('Password'))

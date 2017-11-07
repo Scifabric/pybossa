@@ -47,7 +47,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url)
+                          get_avatar_url, fuzzyboolean)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -112,6 +112,16 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
         project_sanitized['last_activity'] = ps.last_activity
         project_sanitized['overall_progress'] = ps.overall_progress
     return project_sanitized, owner_sanitized
+
+def zip_enabled(project, user):
+    """Return if the user can download a ZIP file."""
+    if project.zip_download is False:
+        if user.is_anonymous():
+            return abort(401)
+        if (user.is_authenticated() and
+            (user.id not in project.owners_ids and
+                user.admin is False)):
+            return abort(403)
 
 
 def project_title(project, page_name):
@@ -441,12 +451,13 @@ def update(short_name):
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
-            new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
+            new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
+            new_project.zip_download = fuzzyboolean(form.zip_download.data)
 
-        if form.protect.data and form.password.data:
+        if fuzzyboolean(form.protect.data) and form.password.data:
             new_project.set_password(form.password.data)
-        if not form.protect.data:
+        if not fuzzyboolean(form.protect.data):
             new_project.set_password("")
 
         project_repo.update(new_project)
@@ -995,6 +1006,9 @@ def tasks_browse(short_name, page=1):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
+
+    zip_enabled(project, current_user)
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
@@ -1052,6 +1066,8 @@ def export_to(short_name):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
+
+    zip_enabled(project, current_user)
 
     def respond():
         return render_template('/projects/export.html',

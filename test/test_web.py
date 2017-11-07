@@ -6952,3 +6952,83 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
         assert mock_rank.call_args_list[2][0][1] == order_by
         assert mock_rank.call_args_list[2][0][2] == desc
+
+    @with_context
+    def test_export_task_zip_download_anon(self):
+        """Test export task with zip download disabled for anon."""
+        project = ProjectFactory.create(zip_download=False)
+        url = '/project/%s/tasks/export' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 401
+
+    @with_context
+    def test_export_task_zip_download_not_owner(self):
+        """Test export task with zip download disabled for not owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        url = '/project/%s/tasks/export?api_key=%s' % (project.short_name,
+                                                       user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403
+
+    @with_context
+    def test_export_task_zip_download_owner(self):
+        """Test export task with zip download disabled for owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(3, project=project)
+        url = '/project/%s/tasks/export?api_key=%s&type=task&format=csv' % (project.short_name,
+                                                       owner.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_export_task_zip_download_admin(self):
+        """Test export task with zip download disabled for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(3, project=project)
+        url = '/project/%s/tasks/export?api_key=%s&type=task&format=csv' % (project.short_name,
+                                                       admin.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_browse_task_zip_download_anon(self):
+        """Test browse task with zip download disabled for anon."""
+        project = ProjectFactory.create(zip_download=False)
+        url = '/project/%s/tasks/browse' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 401
+
+    @with_context
+    def test_browse_task_zip_download_not_owner(self):
+        """Test browse task with zip download disabled for not owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403
+
+    @with_context
+    def test_browse_task_zip_download_owner(self):
+        """Test browse task with zip download disabled for owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(20, project=project)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       owner.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_browse_task_zip_download_admin(self):
+        """Test browse task with zip download disabled for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(20, project=project)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       admin.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
