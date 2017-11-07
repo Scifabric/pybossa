@@ -1005,6 +1005,9 @@ def tasks_browse(short_name, page=1):
             return redirect_to_password
     else:
         ensure_authorized_to('read', project)
+
+    zip_enabled(project, current_user)
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
