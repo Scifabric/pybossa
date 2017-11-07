@@ -23,7 +23,7 @@ from sqlalchemy import text
 from pybossa.model.user import User
 from pybossa.util import AttrDict
 from pybossa.exc import WrongObjectError, DBIntegrityError
-
+from sqlalchemy.orm.base import _entity_descriptor
 
 class UserRepository(Repository):
 
@@ -57,6 +57,19 @@ class UserRepository(Repository):
                                   func.lower(User.fullname).like(keyword)))
         if filters:
             query = query.filter_by(**filters)
+        return query.all()
+
+    def search_by_name_orfilters(self, keyword, **filters):
+        if len(keyword) == 0:
+            return []
+        keyword = '%' + keyword.lower() + '%'
+        query = self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
+                                  func.lower(User.fullname).like(keyword)))
+        if filters:
+            or_clauses = []
+            for k in filters.keys():
+                or_clauses.append(_entity_descriptor(User, k) == filters[k])
+            query = query.filter(or_(*or_clauses))
         return query.all()
 
     def total_users(self):

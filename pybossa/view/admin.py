@@ -150,14 +150,16 @@ def users(user_id=None):
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query)
+        filters = {'admin': True, 'enabled': True}
+        found = [user for user in user_repo.search_by_name_orfilters(query, **filters)
                  if user.id != current_user.id]
         [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
             markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
             flash(markup.format(gettext("Ooops!"),
-                                gettext("We didn't find a user matching your query:"),
+                                gettext("We didn't find any enabled user matching your query:"),
                                 form.user.data))
+
         response = dict(template='/admin/users.html', found=found, users=users,
                         title=gettext("Manage Admin Users"),
                         form=form)
@@ -238,17 +240,24 @@ def add_admin(user_id=None):
     try:
         if user_id:
             user = user_repo.get(user_id)
-            if user:
-                ensure_authorized_to('update', user)
-                user.admin = True
-                user_repo.update(user)
-                msg = generate_invitation_email_for_admins_subadmins(user, "Admin")
-                if msg:
-                    mail_queue.enqueue(send_mail, msg)
+            if not user:
+                return format_error('User not found', 404)
+
+            if not user.enabled:
+                markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+                flash(markup.format(gettext('User account '),
+                                    user.fullname,
+                                    gettext(' is disabled')))
                 return redirect_content_type(url_for(".users"))
-            else:
-                msg = "User not found"
-                return format_error(msg, 404)
+
+            ensure_authorized_to('update', user)
+            user.admin = True
+            user_repo.update(user)
+            msg = generate_invitation_email_for_admins_subadmins(user, "Admin")
+            if msg:
+                mail_queue.enqueue(send_mail, msg)
+            return redirect_content_type(url_for(".users"))
+
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
@@ -610,14 +619,17 @@ def subadminusers():
 
     if request.method == 'POST' and form.user.data:
         query = form.user.data
-        found = [user for user in user_repo.search_by_name(query)
+
+        filters = {'subadmin': True, 'enabled': True}
+        found = [user for user in user_repo.search_by_name_orfilters(query, **filters)
                  if user.id != current_user.id]
         [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
             markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
             flash(markup.format(gettext('Ooops!'),
-                                gettext("We didn't find a user matching your query:"),
+                                gettext("We didn't find any enabled user matching your query:"),
                                 form.user.data))
+
         return render_template('/admin/subadminusers.html', found=found,
                                users=users,
                                title=gettext("Manage Subadmin Users"),
@@ -635,17 +647,24 @@ def add_subadmin(user_id=None):
     try:
         if user_id:
             user = user_repo.get(user_id)
-            if user:
-                ensure_authorized_to('update', user)
-                user.subadmin = True
-                user_repo.update(user)
-                msg = generate_invitation_email_for_admins_subadmins(user, "Subadmin")
-                if msg:
-                    mail_queue.enqueue(send_mail, msg)
+            if not user:
+                return format_error('User not found', 404)
+
+            if not user.enabled:
+                markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+                flash(markup.format(gettext('User account '),
+                                    user.fullname,
+                                    gettext(' is disabled')))
                 return redirect(url_for(".subadminusers"))
-            else:
-                msg = "User not found"
-                return format_error(msg, 404)
+
+            ensure_authorized_to('update', user)
+            user.subadmin = True
+            user_repo.update(user)
+            msg = generate_invitation_email_for_admins_subadmins(user, "Subadmin")
+            if msg:
+                mail_queue.enqueue(send_mail, msg)
+            return redirect(url_for(".subadminusers"))
+
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
