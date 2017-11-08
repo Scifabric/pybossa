@@ -43,6 +43,7 @@ from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from pybossa.cache.project_stats import update_stats
+from pybossa.syncer import NotEnabled
 from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -2014,6 +2015,33 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
 
         assert data['status'] == SUCCESS, data
+
+    @with_context
+    def test_update_project_json_as_subadmin(self):
+        """Test WEB JSON update project as subadmin/non-owner."""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        user = UserFactory.create()
+        make_subadmin(user)
+
+        project = ProjectFactory.create(owner=owner)
+
+        url = '/project/%s/update?api_key=%s' % (project.short_name, user.api_key)
+
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+        old_data = dict()
+
+        old_data['description'] = 'foobar'
+        old_data['password'] = 'P4ssw0rd!'
+
+        res = self.app_post_json(url, data=old_data)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
 
 
 
@@ -7309,3 +7337,284 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
         assert mock_rank.call_args_list[2][0][1] == order_by
         assert mock_rank.call_args_list[2][0][2] == desc
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync',
+           return_value=FakeResponse(reason='UNAUTHORIZED'))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           return_value=None)
+    def test_project_sync_unauthorized_by_target(self, mock_get, sync_res):
+        """Test project sync unauthorized by target server."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name='test', short_name='test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        expected_flash = ('The API key entered is not authorized to '
+                          'perform this action. Please ensure you '
+                          'have entered the appropriate API key.')
+
+        assert data['flash'] == expected_flash, data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'error', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    def test_project_sync_as_admin(self, mock_owners, mock_get, mock_sync):
+        """Test project sync as admin passes."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith('Project sync completed!'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'success', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    def test_project_sync_as_subadmin_owner(self, mock_owners, mock_get, mock_sync):
+        """Test project sync as subadmin/co-owner passes."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+
+        subadmin = UserFactory.create(subadmin=True)
+        subadmin.set_password('1234')
+        user_repo.save(subadmin)
+        self.signin(email=subadmin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test',
+                                        owners_ids=[subadmin.id])
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith('Project sync completed!'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'success', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    def test_project_sync_as_subadmin_nonowner(self, mock_owners, mock_get, mock_sync):
+        """Test project sync as subadmin/non-co-owner fails."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+
+        subadmin = UserFactory.create(subadmin=True)
+        subadmin.set_password('1234')
+        user_repo.save(subadmin)
+        self.signin(email=subadmin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    def test_project_sync_as_worker(self, mock_owners, mock_get, mock_sync):
+        """Test project sync as worker fails."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+
+        worker = UserFactory.create()
+        worker.set_password('1234')
+        user_repo.save(worker)
+        self.signin(email=worker.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+
+        assert data['code'] == 403, data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           side_effect=NotEnabled)
+    def test_project_sync_not_enabled(self, mock_sync):
+        """Test project sync not enabled."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith(
+                'The target project is not enabled for syncing.'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'error', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           side_effect=Exception)
+    def test_project_sync_exception(self, mock_sync):
+        """Test project sync exception."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'] == 'An unexpected error occurred while trying to reach your target.', data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'error', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+            return_value={'id': 1, 'info': {'sync': {'enabled': True}}})
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    def test_project_unsync(self, mock_owners, mock_get, mock_sync):
+        """Test project unsync."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'undo'},
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith('Last sync has been reverted!'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'success', data
+
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'undo'},
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'] == 'There is nothing to revert.', data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'warning', data

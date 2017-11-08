@@ -29,18 +29,14 @@ class TestSyncer(Test):
 
     def setUp(self):
         super(TestSyncer, self).setUp()
-        self.syncer = Syncer()
+        self.syncer = Syncer(self.TARGET_URL)
 
     @with_context
     def test_cache_target(self):
-        self.syncer.cache_target(
-            self.TARGET, self.TARGET_URL, self.TARGET_ID)
-        cache = self.syncer.get_target_cache(
-            self.TARGET_URL, self.TARGET_ID)
+        self.syncer.cache_target(self.TARGET, self.TARGET_ID)
+        cache = self.syncer.get_target_cache(self.TARGET_ID)
         assert cache == self.TARGET
 
-        self.syncer.delete_target_cache(
-            self.TARGET_URL, self.TARGET_ID)
-        cache = self.syncer.get_target_cache(
-            self.TARGET_URL, self.TARGET_ID)
+        self.syncer.delete_target_cache(self.TARGET_ID)
+        cache = self.syncer.get_target_cache(self.TARGET_ID)
         assert cache == None

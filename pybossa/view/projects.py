@@ -92,6 +92,7 @@ blueprint = Blueprint('project', __name__)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
+DEFAULT_SYNC_TARGET = 'https://gigwork.net'
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 mail_queue = Queue('email', connection=sentinel.master)
@@ -591,7 +592,9 @@ def update(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     title=title,
-                    pro_features=pro)
+                    pro_features=pro,
+                    target_url=DEFAULT_SYNC_TARGET,
+                    server_url=current_app.config.get('SERVER_URL'))
     return handle_content_type(response)
 
 
@@ -2508,11 +2511,8 @@ def sync_project(short_name):
     title = project_title(project, "Sync")
 
     sync_form = ProjectSyncForm()
-    target_url = sync_form.target_url.data
     target_key = sync_form.target_key.data
 
-    synced_url = '{}/project/{}'.format(
-        target_url, project.short_name)
     success_msg = Markup(
         '{} <strong><a href="{}" target="_blank">{}</a></strong>')
     success_body = (
@@ -2523,27 +2523,36 @@ def sync_project(short_name):
         '    User who performed sync: {syncer}')
 
     try:
-        project_syncer = ProjectSyncer()
+        project_syncer = ProjectSyncer(DEFAULT_SYNC_TARGET)
         source_url = current_app.config.get('SERVER_URL')
+        synced_url = '{}/project/{}'.format(
+            project_syncer.target_url, project.short_name)
 
-        # Ensure fields are passed
-        if not target_url or not target_key:
-            msg = Markup('Enter a <strong>Target URL</strong> and'
-                         ' an <strong>API Key</strong> to sync'
-                         ' your project')
+        # Validate the ability to sync
+        able_to_sync = True
+        auth_to_sync = (current_user.admin or
+                (current_user.subadmin and
+                    current_user.id in project.owners_ids))
+        if able_to_sync and source_url == project_syncer.target_url:
+            able_to_sync = False
+            msg = Markup('Cannot sync a project with itself')
+        if able_to_sync and not auth_to_sync:
+            able_to_sync = False
+            msg = Markup('Only admins and subadmin/co-owners '
+                         'can sync projects')
+        if not able_to_sync:
             flash(msg, 'error')
-
             return redirect_content_type(
                 url_for('.update', short_name=short_name))
 
-        if request.form.get('btn') == 'sync':
+        if request.body.get('btn') == 'sync':
             action = 'sync'
             res = project_syncer.sync(
-                project, target_url, target_key, current_user)
-        elif request.form.get('btn') == 'undo':
+                project, target_key, current_user)
+        elif request.body.get('btn') == 'undo':
             action = 'unsync'
             res = project_syncer.undo_sync(
-                project, target_url, target_key)
+                project, target_key)
 
         # Nothing to revert
         if not res and action == 'unsync':
@@ -2568,31 +2577,38 @@ def sync_project(short_name):
                 source_url=source_url,
                 syncer=current_user.email_addr)
             owners = project_syncer.get_target_owners(
-                project, target_url, target_key)
+                project, target_key)
             email = dict(recipients=owners,
                          subject=subject,
                          body=body)
             mail_queue.enqueue(send_mail, email)
-        # Failure
+        # Unauthorized
+        elif res.reason == 'UNAUTHORIZED':
+            msg = gettext('The API key entered is not authorized to '
+                          'perform this action. Please ensure you '
+                          'have entered the appropriate API key.')
+            flash(msg, 'error')
+        # Unknown failure
         else:
             current_app.logger.error(
                 'A request error occurred while syncing {}: {}'
-                .format(project.short_name, res.reason))
+                .format(project.short_name, str(res.__dict__)))
             msg = gettext(
                 'The target server returned an error.  '
                 'Check the Target API Key.')
             flash(msg, 'error')
     except NotEnabled:
-        msg = gettext(
-            'The target project has not been enabled for syncing.')
-        flash(msg, 'error')
+        msg = 'The target project is not enabled for syncing. '
+        enable_msg = Markup('{} <strong><a href="{}/update" '
+                            'target="_blank">{}</a></strong>')
+        flash(enable_msg.format(msg, synced_url, 'Enable Here'),
+              'error')
     except Exception:
         current_app.logger.exception(
             'An error occurred while syncing {}'
             .format(project.short_name))
-        msg = gettext(
-            'An error occurred while trying to reach your target.'
-            '  Check the Target URL and Target API Key fields.')
+        msg = gettext('An unexpected error occurred while trying to '
+                      'reach your target.')
         flash(msg, 'error')
 
     return redirect_content_type(
