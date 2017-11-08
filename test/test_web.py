@@ -4440,10 +4440,13 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
+            print t
             d = t.dictize()
             task_run_ids = d['task_run_ids']
             fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
             fl['task_run_ids'] = task_run_ids
+            # keys.append('result_id')
+            print fl
             for tk in fl.keys():
                 expected_key = "%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)

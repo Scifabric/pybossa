@@ -43,20 +43,31 @@ class Exporter(object):
         repo, query = self.repositories[table]
         data = getattr(repo, query)(project_id=project_id)
         ignore_keys = current_app.config.get('IGNORE_FLAT_KEYS') or []
+        if table == 'task':
+            csv_export_key = current_app.config.get('TASK_CSV_EXPORT_INFO_KEY')
+        if table == 'task_run':
+            csv_export_key = current_app.config.get('TASK_RUN_CSV_EXPORT_INFO_KEY')
+        if table == 'result':
+            csv_export_key = current_app.config.get('RESULT_CSV_EXPORT_INFO_KEY')
         if info_only:
             if flat:
                 tmp = []
                 for row in data:
-                    inf = row.dictize()['info']
+                    inf = copy.deepcopy(row.dictize()['info'])
+                    if inf and csv_export_key and inf.get(csv_export_key):
+                        inf = inf[csv_export_key]
+                    new_key = '%s_id' % table
                     if inf and type(inf) == dict:
+                        inf[new_key] = row.id
                         tmp.append(flatten(inf,
                                            root_keys_to_ignore=ignore_keys))
                     elif inf and type(inf) == list:
                         for datum in inf:
+                            datum[new_key] = row.id
                             tmp.append(flatten(datum,
                                                root_keys_to_ignore=ignore_keys))
-                    else:
-                        tmp.append({'info': inf})
+                    # else:
+                    #     tmp.append({'info': inf})
             else:
                 tmp = []
                 for row in data:
