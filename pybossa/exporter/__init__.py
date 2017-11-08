@@ -66,8 +66,6 @@ class Exporter(object):
                             datum[new_key] = row.id
                             tmp.append(flatten(datum,
                                                root_keys_to_ignore=ignore_keys))
-                    # else:
-                    #     tmp.append({'info': inf})
             else:
                 tmp = []
                 for row in data:
@@ -104,7 +102,6 @@ class Exporter(object):
 
     def _project_name_latin_encoded(self, project):
         """project short name for later HTML header usage"""
-        # name = project.short_name.encode('utf-8', 'ignore').decode('latin-1')
         name = unidecode(project.short_name)
         return name
 
