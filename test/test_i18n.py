@@ -55,7 +55,8 @@ class TestI18n(web.Helper):
         # First default 'en' locale
         err_msg = "The page should be in English"
         res = self.app.get('/', follow_redirects=True)
-        assert "Community" in res.data, err_msg
+        print res.data
+        assert "Sign in" in res.data, err_msg
         self.register()
         self.signin()
         # After signing in it should be in English
