@@ -923,10 +923,14 @@ def get_enabled_users(user_emails):
 
 
 def mail_with_enabled_users(message):
-    recipients = message.get('recipients')
-    bcc = message.get('bcc')
+    recipients = message.get('recipients', [])
+    bcc = message.get('bcc', [])
 
-    if recipients:
-        message['recipients'] = get_enabled_users(user_emails=recipients)
-    if bcc:
-        message['bcc'] = get_enabled_users(user_emails=bcc)
+    recipients = get_enabled_users(user_emails=recipients)
+    bcc = get_enabled_users(user_emails=bcc)
+    if not recipients and not bcc:
+        return False
+
+    message['recipients'] = recipients
+    message['bcc'] = bcc
+    return True

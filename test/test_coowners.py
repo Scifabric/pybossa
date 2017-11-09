@@ -188,7 +188,7 @@ class TestCoowners(web.Helper):
         res = self.app.post('/project/sampleapp/coowners',
                             data=data,
                             follow_redirects=True)
-        assert "We didn&#39;t find a user matching your query" in res.data, res.data
+        assert "We didn&#39;t find any enabled user matching your query" in res.data, res.data
 
         data = {'user': 'John3'}
         res = self.app.post('/project/sampleapp/coowners',

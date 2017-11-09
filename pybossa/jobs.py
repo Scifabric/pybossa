@@ -527,9 +527,9 @@ def disable_users_job():
 
 def send_mail(message_dict):
     """Send email."""
-    mail_with_enabled_users(message_dict)
-    message = Message(**message_dict)
-    mail.send(message)
+    if mail_with_enabled_users(message_dict):
+        message = Message(**message_dict)
+        mail.send(message)
 
 
 def delete_bulk_tasks(data):
