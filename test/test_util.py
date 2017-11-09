@@ -826,6 +826,56 @@ class TestRankProjects(object):
         assert ranked[3]['name'] == 'fourth', ranked[3]['name']
         assert ranked[4]['name'] == 'last', ranked[4]['name']
 
+    def test_rank_by_chosen_attribute(self):
+        projects = [
+            {'info': {},
+             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'overall_progress': 0, 'n_volunteers': 10},
+            {'info': {},
+             'n_tasks': 11, 'name': u'fourth', 'short_name': u'b',
+             'overall_progress': 0, 'n_volunteers': 25},
+            {'info': {},
+             'n_tasks': 21, 'name': u'third', 'short_name': u'c',
+             'overall_progress': 0, 'n_volunteers': 15},
+            {'info': {},
+             'n_tasks': 51, 'name': u'second', 'short_name': u'd',
+             'overall_progress': 0, 'n_volunteers': 1},
+            {'info': {},
+             'n_tasks': 101, 'name': u'first', 'short_name': u'e',
+             'overall_progress': 0, 'n_volunteers': 5}]
+        ranked = util.rank(projects, order_by='n_volunteers')
+
+        assert ranked[0]['name'] == 'second'
+        assert ranked[1]['name'] == 'first'
+        assert ranked[2]['name'] == 'last'
+        assert ranked[3]['name'] == 'third'
+        assert ranked[4]['name'] == 'fourth'
+
+    def test_rank_by_chosen_attribute_reversed(self):
+        projects = [
+            {'info': {},
+             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'overall_progress': 0, 'n_volunteers': 1},
+            {'info': {},
+             'n_tasks': 11, 'name': u'fourth', 'short_name': u'b',
+             'overall_progress': 0, 'n_volunteers': 5},
+            {'info': {},
+             'n_tasks': 21, 'name': u'third', 'short_name': u'c',
+             'overall_progress': 0, 'n_volunteers': 10},
+            {'info': {},
+             'n_tasks': 51, 'name': u'second', 'short_name': u'd',
+             'overall_progress': 0, 'n_volunteers': 20},
+            {'info': {},
+             'n_tasks': 101, 'name': u'first', 'short_name': u'e',
+             'overall_progress': 0, 'n_volunteers': 30}]
+        ranked = util.rank(projects, order_by='n_volunteers', desc=True)
+
+        assert ranked[0]['name'] == 'first'
+        assert ranked[1]['name'] == 'second'
+        assert ranked[2]['name'] == 'third'
+        assert ranked[3]['name'] == 'fourth'
+        assert ranked[4]['name'] == 'last'
+
     @patch('pybossa.util.url_for')
     def test_get_avatar_url(self, mock_url_for):
         """Test get_avatar_url works."""

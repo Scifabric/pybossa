@@ -56,10 +56,10 @@ class TestJobs(Test):
         """Test JOB get_default_jobs works."""
         from pybossa.jobs import warm_up_stats, warn_old_project_owners
         from pybossa.jobs import warm_cache, news, get_default_jobs
-        from pybossa.jobs import disable_users_job
+        from pybossa.jobs import disable_users_job, send_email_notifications
         timeout = self.flask_app.config.get('TIMEOUT')
         job_names = [warm_up_stats, warn_old_project_owners, warm_cache, news,
-                     disable_users_job]
+                     disable_users_job, send_email_notifications]
         for job in get_default_jobs():
             assert job['timeout'] == timeout, job
             assert job['name'] in job_names, job

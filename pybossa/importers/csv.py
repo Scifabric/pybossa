@@ -158,8 +158,6 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
 
-        retry = 0
-        csv_file = None
         datafile = self.get_local_csv_import_file_from_s3(csv_filename)
         if not datafile:
             return []

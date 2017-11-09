@@ -558,7 +558,7 @@ password for your project is:
 You will be able to change it on your project settings page.
 
 You can find more information about passwords in the documentation
-(http://docs.pybossa.com/en/latest/user/tutorial.html#protecting-the-project-with-a-password).
+(http://docs.pybossa.com/user/tutorial/#protecting-the-project-with-a-password).
 
 If you have any doubts, please contact us and we will be pleased to help you!
 

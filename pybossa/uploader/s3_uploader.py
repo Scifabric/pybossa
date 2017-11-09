@@ -146,7 +146,7 @@ def get_file_from_s3(s3_bucket, s3_url):
 
 def delete_file_from_s3(s3_bucket, s3_url):
     try:
-        bucket,key = get_s3_bucket_key(s3_bucket, s3_url)
+        bucket, key = get_s3_bucket_key(s3_bucket, s3_url)
         bucket.delete_key(key.name, version_id=key.version_id)
-    except S3ResponseError:
+    except boto.exception.S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))

@@ -24,3 +24,9 @@ def make_subadmin(user):
     user_repo = UserRepository(db)
     user.subadmin = True
     user_repo.save(user)
+
+
+def make_subadmin_by(**attributes):
+    user_repo = UserRepository(db)
+    user = user_repo.get_by(**attributes)
+    make_subadmin(user)

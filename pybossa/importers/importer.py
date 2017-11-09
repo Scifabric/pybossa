@@ -36,7 +36,11 @@ class Importer(object):
 
     def __init__(self):
         """Init method."""
-        self._importers = dict(localCSV=BulkTaskLocalCSVImport)
+        self._importers = dict(csv=BulkTaskCSVImport,
+                               gdocs=BulkTaskGDImport,
+                               epicollect=BulkTaskEpiCollectPlusImport,
+                               s3=BulkTaskS3Import,
+                               localCSV=BulkTaskLocalCSVImport)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
@@ -143,6 +147,11 @@ class Importer(object):
         """Get autoimporter names."""
         no_autoimporters = ('dropbox', 's3')
         return [name for name in self._importers.keys() if name not in no_autoimporters]
+
+    def set_importers(self, importers):
+        self._importers = \
+            {key: val for key, val in self._importers.iteritems()
+             if key in importers}
 
 
 class ImportReport(object):

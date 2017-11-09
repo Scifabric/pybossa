@@ -48,6 +48,7 @@ class User(db.Model, DomainObject, UserMixin):
     locale = Column(Unicode(length=254), default=u'en', nullable=False)
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
+    ldap = Column(Unicode, unique=True)
     admin = Column(Boolean, default=False)
     pro = Column(Boolean, default=False)
     privacy_mode = Column(Boolean, default=True, nullable=False)

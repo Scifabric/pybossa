@@ -140,12 +140,7 @@ def manage_user_login(user, user_data, next_url):
             and newsletter.is_initialized()):
         return redirect(url_for_app_type('account.newsletter_subscribe',
                                          next=next_url))
-    if user.email_addr != user.name:
-        return redirect(next_url)
-    else:
-        flash("Please update your e-mail address in your profile page")
-        return redirect(url_for_app_type('account.update_profile',
-                                         name=user.name))
+    return redirect(next_url)
 
 
 def manage_user_no_login(access_token, next_url):

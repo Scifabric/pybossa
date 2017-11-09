@@ -41,7 +41,8 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'announcement_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
-           'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'userimporter', 'ldap']
+           'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'userimporter', 'ldap',
+           'flask_profiler']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -155,3 +156,6 @@ userimporter = UserImporter()
 # LDAP
 from flask_simpleldap import LDAP
 ldap = LDAP()
+
+# Flask Profiler
+import flask_profiler

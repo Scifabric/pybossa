@@ -49,6 +49,7 @@ from werkzeug.utils import secure_filename
 from nose.tools import assert_raises
 from flatten_json import flatten
 from nose.tools import nottest
+from helper.gig_helper import make_subadmin, make_subadmin_by
 
 
 class TestWeb(web.Helper):
@@ -78,25 +79,13 @@ class TestWeb(web.Helper):
     def test_01_index_json(self):
         """Test WEB JSON home page works"""
         project = ProjectFactory.create(featured=True)
-        user = UserFactory.create()
-        for i in range(0, 31):
-            TaskRunFactory.create(user=user, project=project)
         res = self.app_get_json("/")
         data = json.loads(res.data)
-        keys = ['top_projects', 'categories_projects', 'categories', 'template',
-                'top_users']
+        keys = ['featured', 'template']
         for key in keys:
             assert key in data.keys(), data
-        assert project.category.short_name in data.get('categories_projects').keys(), data
-        projects = data.get('categories_projects').get(project.category.short_name)
-        for cat in data.get('categories_projects').keys():
-            for p in data.get('categories_projects')[cat]:
-                assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-        for p in data.get('top_projects'):
-            assert sorted(p['info'].keys()) == sorted(Project().public_info_keys())
-
-        for u in data.get('top_users'):
-            assert sorted(u['info'].keys()) == sorted(User().public_info_keys()), u
+        assert len(data['featured']) == 1, data
+        assert data['featured'][0]['short_name'] == project.short_name
 
 
     @with_context
@@ -160,6 +149,7 @@ class TestWeb(web.Helper):
     def test_leaderboard(self):
         """Test WEB leaderboard works"""
         user = UserFactory.create()
+        self.signin_user(user)
         TaskRunFactory.create(user=user)
         update_leaderboard()
         res = self.app.get('/leaderboard', follow_redirects=True)
@@ -171,6 +161,7 @@ class TestWeb(web.Helper):
     def test_leaderboard_json(self):
         """Test leaderboard json works"""
         user = UserFactory.create()
+        self.signin_user(user)
         TaskRunFactory.create(user=user)
         TaskRunFactory.create(user=user)
         update_leaderboard()
@@ -245,7 +236,7 @@ class TestWeb(web.Helper):
             assert 'top_users' in data, err_msg
             err_msg = 'leaderboard user information missing'
             leaders = data['top_users']
-            assert len(leaders) == (20), len(leaders)
+            assert len(leaders) == (21), len(leaders)
             score = 10
             rank = 1
             for u in leaders[0:10]:
@@ -500,6 +491,7 @@ class TestWeb(web.Helper):
         update_stats(task.project.id)
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
 
+        self.signin_user()
         res = self.app_get_json(pro_url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
@@ -533,6 +525,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
+        self.signin_user()
         url = '/project/%s/stats' % project.short_name
 
         update_stats(project.id)
@@ -733,6 +726,7 @@ class TestWeb(web.Helper):
     def test_register_json_errors_get(self):
         """Test WEB register errors JSON works"""
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
 
             userdict = {'fullname': 'a', 'name': 'name',
@@ -770,8 +764,7 @@ class TestWeb(web.Helper):
         self.update_profile(email_addr="new@mail.com")
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
-                    email_addr="new@mail.com",
-                    consent=False)
+                    email_addr="new@mail.com")
 
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
@@ -794,8 +787,7 @@ class TestWeb(web.Helper):
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
-            self.register()
-            self.signin()
+            self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe",
                         password="p4ssw0rd", confirm="p4ssw0rd",
@@ -861,28 +853,25 @@ class TestWeb(web.Helper):
     @with_context
     def test_register_json(self):
         """Test WEB register JSON creates a new user and logs in."""
+        self.register()
+        self.signin()
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             csrf = self.get_csrf('/account/register')
-            data = dict(fullname="John Doe", name="johndoe", password='daniel',
+            data = dict(fullname="John Doe", name="johndoe1", password='daniel',
                         email_addr="new@mail.com", confirm='daniel',
                         consent=True)
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
                                 follow_redirects=False)
-            cookie = self.check_cookie(res, 'remember_token')
-            err_msg = "User should be logged in"
-            assert "johndoe" in cookie, err_msg
-            user = user_repo.get_by(name='johndoe')
-            assert user.consent, user
-            assert user.name == 'johndoe', user
-            assert user.email_addr == 'new@mail.com', user
+            assert res.status_code == 200
 
     @with_context
     def test_register_json_error(self):
         """Test WEB register JSON does not create a new user
         and does not log in."""
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
+            self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe", password='daniel',
                         email_addr="new@mailcom", confirm='')
@@ -900,7 +889,8 @@ class TestWeb(web.Helper):
     @with_context
     def test_confirm_email_returns_404(self):
         """Test WEB confirm_email returns 404 when disabled."""
-        res = self.app.get('/account/confir-email', follow_redirects=True)
+        self.signin_user()
+        res = self.app.get('/account/confirim-email', follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
     @with_context
@@ -1179,20 +1169,21 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = False
-        db.session.commit()
-        fake_signer.loads.return_value = dict(fullname=user.fullname,
-                                              name=user.name,
-                                              email_addr=user.email_addr)
-        self.app.get('/account/register/confirmation?key=valid-key')
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = False
+            db.session.commit()
+            fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                                  name=user.name,
+                                                  email_addr=user.email_addr)
+            self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe', next=None)
+            url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.ask_user_to_subscribe.return_value = False
-        self.app.get('/account/register/confirmation?key=valid-key')
-        url_for.assert_called_with('home.home')
+            newsletter.ask_user_to_subscribe.return_value = False
+            self.app.get('/account/register/confirmation?key=valid-key')
+            url_for.assert_called_with('home.home')
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
@@ -1201,20 +1192,22 @@ class TestWeb(web.Helper):
     def test_newsletter_json(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home with JSON."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = True
-        url = '/account/newsletter'
-        res = self.app_get_json(url)
-        data = json.loads(res.data)
-        assert data.get('title') == 'Subscribe to our Newsletter', data
-        assert data.get('template') == 'account/newsletter.html', data
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            self.signin()
+            user = db.session.query(User).get(1)
+            user.valid_email = True
+            url = '/account/newsletter'
+            res = self.app_get_json(url)
+            data = json.loads(res.data)
+            assert data.get('title') == 'Subscribe to our Newsletter', data
+            assert data.get('template') == 'account/newsletter.html', data
 
 
-        res = self.app_get_json(url + "?subscribe=True")
-        data = json.loads(res.data)
-        assert data.get('flash') == 'You are subscribed to our newsletter!', data
-        assert data.get('status') == SUCCESS, data
+            res = self.app_get_json(url + "?subscribe=True")
+            data = json.loads(res.data)
+            assert data.get('flash') == 'You are subscribed to our newsletter!', data
+            assert data.get('status') == SUCCESS, data
 
 
     @with_context
@@ -1483,6 +1476,7 @@ class TestWeb(web.Helper):
     def test_profile_projects_json(self, mock):
         """Test WEB user profile project page works."""
         self.create()
+        make_subadmin_by(email_addr=Fixtures.email_addr)
         self.signin(email=Fixtures.email_addr, password=Fixtures.password)
         self.new_project()
         url = '/account/%s/projects' % Fixtures.name
@@ -1869,6 +1863,7 @@ class TestWeb(web.Helper):
     def test_get_project_json(self):
         """Test WEB JSON get project by short name."""
         project = ProjectFactory.create()
+        self.signin_user()
         url = '/project/%s/' % project.short_name
         res = self.app_get_json(url)
 
@@ -1923,7 +1918,8 @@ class TestWeb(web.Helper):
         assert data['code'] == 403, data
 
     @with_context
-    def test_update_project_json_as_admin(self):
+    @patch('pybossa.view.projects.cached_projects.clean_project')
+    def test_update_project_json_as_admin(self, cache_mock):
         """Test WEB JSON update project as admin."""
         admin = UserFactory.create()
         owner = UserFactory.create()
@@ -1953,8 +1949,7 @@ class TestWeb(web.Helper):
 
         u_project = project_repo.get(project.id)
         assert u_project.description == 'foobar', u_project
-
-
+        cache_mock.assert_called_with(project.id)
 
 
     @with_context
@@ -1995,6 +1990,7 @@ class TestWeb(web.Helper):
         """Test WEB JSON update project."""
         admin = UserFactory.create()
         owner = UserFactory.create()
+        make_subadmin(owner)
         user = UserFactory.create()
 
         project = ProjectFactory.create(owner=owner)
@@ -2280,8 +2276,10 @@ class TestWeb(web.Helper):
         # Now with a different user
         self.register(fullname="Perico Palotes", name="perico")
         self.signin(email="perico@example.com")
+        self.app.post('/project/sampleapp/password', data={
+            'password': 'Abc01$'
+        });
         res = self.app_get_json('/project/sampleapp/', follow_redirects=True)
-        print res.data
         data = json.loads(res.data)
         assert 'last_activity' in data, res.data
         assert 'n_completed_tasks' in data, res.data
@@ -2558,9 +2556,9 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner)
 
         self.update_project(id=project.id, short_name=project.short_name,
-                            new_protect='true', new_password='mysecret')
-
+                            new_protect='true', new_password='Mysecret1@')
         assert project.needs_password(), 'Password not set'
+
 
     @with_context
     @patch('pybossa.forms.validator.requests.get')
@@ -2641,6 +2639,7 @@ class TestWeb(web.Helper):
     def test_delete_project_deletes_task_zip_files_too(self, uploader):
         """Test WEB delete project also deletes zip files for task and taskruns"""
         Fixtures.create()
+        make_subadmin_by(email_addr=u'tester@tester.com')
         self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.post('/project/test-app/delete', follow_redirects=True)
         expected = [call('1_test-app_task_json.zip', 'user_2'),
@@ -2699,7 +2698,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = 'Task <span class="label label-success">#1</span>'
+        msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1">#1</a>'
         assert msg in res.data, res.data
         assert '10 of 10' in res.data, res.data
         dom = BeautifulSoup(res.data)
@@ -2804,14 +2803,14 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = 'Task <span class="label label-info">#1</span>'
+        msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1">#1</a>'
         assert msg in res.data, res.data
         assert '0 of 10' in res.data, res.data
 
         # For a non existing page
         res = self.app.get('project/%s/tasks/browse/5000' % (project.short_name),
                            follow_redirects=True)
-        assert res.status_code == 404, res.status_code
+        assert 'Displaying 0  of 0' in res.data, res.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -2893,9 +2892,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/" rel="nofollow">' in page1.data
+        assert '<a href="/project/category/cat/page/2/" class="pagination-tasks-browse" rel="nofollow">2</a>' in page1.data
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/" rel="nofollow">' in page2.data
+        assert '<a href="/project/category/cat/" class="pagination-tasks-browse" rel="nofollow">1</a>' in page2.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -2921,6 +2920,7 @@ class TestWeb(web.Helper):
         """Test WEB JSON Project Index draft works"""
         # Create root
         self.register()
+        self.signin()
         self.new_project()
         self.signout()
         # Create a user
@@ -3060,6 +3060,7 @@ class TestWeb(web.Helper):
         self.delete_task_runs()
         self.register()
         self.signin()
+        make_subadmin_by(email_addr='johndoe@example.com')
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
@@ -3072,6 +3073,7 @@ class TestWeb(web.Helper):
         self.create()
         self.delete_task_runs()
         self.register()
+        make_subadmin_by(email_addr='johndoe@example.com')
         self.signin()
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
@@ -3099,8 +3101,8 @@ class TestWeb(web.Helper):
         fake_guard_instance = mock_contributions_guard()
         guard.return_value = fake_guard_instance
         self.create()
-        self.register()
-        self.signin()
+        user = user_repo.get(1)
+        self.signin_user(user)
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
@@ -3115,6 +3117,8 @@ class TestWeb(web.Helper):
         guard.return_value = fake_guard_instance
         self.create()
         self.register()
+        make_subadmin_by(email_addr='johndoe@example.com')
+        self.signin()
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
@@ -3159,23 +3163,22 @@ class TestWeb(web.Helper):
         db.session.query(Task).filter(Task.project_id == 1).first()
 
         self.register()
+        make_subadmin_by(email_addr='johndoe@example.com')
+        self.signin()
         self.new_project()
         app2 = db.session.query(Project).get(2)
         self.new_task(app2.id)
         task2 = db.session.query(Task).filter(Task.project_id == 2).first()
         task2_id = task2.id
-        self.signout()
 
         res = self.app_get_json('/project/%s/task/%s' % (project1_short_name, task2_id))
         data = json.loads(res.data)
-        assert 'flash' in data, err_msg
+        err_msg = 'expected field is missing'
         assert 'owner' in data, err_msg
         assert 'project' in data, err_msg
-        assert 'status' in data, err_msg
         assert 'template' in data, err_msg
         assert 'title' in data, err_msg
         err_msg = 'wrong field value'
-        assert data['status'] == 'warning', err_msg
         assert data['template'] == '/projects/task/wrong.html', err_msg
         assert 'Contribute' in data['title'], err_msg
         err_msg = 'private field data exposed'
@@ -3600,6 +3603,7 @@ class TestWeb(web.Helper):
         """Test WEB password JSON changing"""
         password = "mehpassword"
         self.register(password=password)
+        self.signin(password=password)
         url = '/account/johndoe/update'
         csrf = self.get_csrf(url)
         payload = {'current_password': password,
@@ -3647,6 +3651,7 @@ class TestWeb(web.Helper):
         """Test WEB avatar JSON changing"""
         import io
         self.register()
+        self.signin()
         user = user_repo.get_by(name='johndoe')
         print user
         url = '/account/johndoe/update'
@@ -3726,6 +3731,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
+        self.signin_user()
         res = self.app.get('account/register', follow_redirects=True)
         assert "http://okfn.org/terms-of-use/" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
@@ -4012,7 +4018,7 @@ class TestWeb(web.Helper):
             resdata = json.loads(res.data)
             signer.dumps.assert_called_with(data, salt='password-reset')
             key = signer.dumps(data, salt='password-reset')
-            enqueue_call = queue.enqueue.call_args_list[0]
+            enqueue_call = queue.enqueue.call_args_list[-1]
             assert send_mail == enqueue_call[0][0], "send_mail not called"
             assert 'Click here to recover your account' in enqueue_call[0][1]['body']
             assert 'To recover your password' in enqueue_call[0][1]['html']
@@ -4120,6 +4126,7 @@ class TestWeb(web.Helper):
     def test_46_tasks_exists_json(self, mock):
         """Test WEB tasks json works."""
         self.register()
+        self.signin()
         self.new_project()
         res = self.app_get_json('/project/sampleapp/tasks/')
         data = json.loads(res.data)
@@ -4144,12 +4151,17 @@ class TestWeb(web.Helper):
     def test_46_tasks_exists_json_other_user(self, mock):
         """Test WEB tasks json works."""
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         project.published = True
         db.session.commit()
         TaskFactory.create(project=project)
         self.signout()
+        self.signin_user(id=2)
+        self.app.post('/project/sampleapp/password', data={
+            'password': 'Abc01$'
+        })
         res = self.app_get_json('/project/sampleapp/tasks/')
         data = json.loads(res.data)
         print res.data
@@ -4198,6 +4210,7 @@ class TestWeb(web.Helper):
     def test_47_task_presenter_editor_loads_json(self, mock):
         """Test WEB task presenter editor JSON loads"""
         self.register()
+        self.signin()
         self.new_project()
         res = self.app_get_json('/project/sampleapp/tasks/taskpresentereditor')
         data = json.loads(res.data)
@@ -4245,6 +4258,7 @@ class TestWeb(web.Helper):
     def test_48_task_presenter_editor_works_json(self, mock):
         """Test WEB task presenter editor works JSON"""
         self.register()
+        self.signin()
         self.new_project()
         project = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
@@ -4371,6 +4385,7 @@ class TestWeb(web.Helper):
             result_repo.update(result)
 
         # First test for a non-existant project
+        self.signin_user(id=42)
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4380,6 +4395,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real project
+        make_subadmin_by(id=42)
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
@@ -4403,6 +4419,10 @@ class TestWeb(web.Helper):
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=result&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
+
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
@@ -4494,6 +4514,9 @@ class TestWeb(web.Helper):
         self.clear_temp_container(project.owner_id)
         res = self.app.get('project/%s/tasks/export?type=task&format=json' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  # export is handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4506,6 +4529,9 @@ class TestWeb(web.Helper):
         self.signin(email=owner.email_addr, password='1234')
         res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  # export is handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4519,6 +4545,9 @@ class TestWeb(web.Helper):
         self.clear_temp_container(project.owner_id)
         res = self.app.get('/project/%s/tasks/export?type=task&format=csv' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4533,6 +4562,9 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         res = self.app.get('/project/%s/tasks/export?type=task_run&format=csv' % project.short_name,
                            follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
@@ -4560,6 +4592,9 @@ class TestWeb(web.Helper):
         # Now get the tasks in JSON format
         uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
@@ -4587,6 +4622,9 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner, short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=task&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         extracted_filename = zip.namelist()[0]
 
@@ -4598,8 +4636,7 @@ class TestWeb(web.Helper):
     def test_export_result_csv(self):
         """Test WEB export Results to CSV works"""
         # First test for a non-existant project
-        self.register()
-        self.signin()
+        self.signin_user(id=42)
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4636,6 +4673,9 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
@@ -4663,9 +4703,13 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            for tk in flatten(t.dictize()).keys():
+            d = t.dictize()
+            task_run_ids = d['task_run_ids']
+            fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
+            fl['task_run_ids'] = task_run_ids
+            for tk in fl.keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
@@ -4674,8 +4718,11 @@ class TestWeb(web.Helper):
         for et in exported_results:
             result_id = et[keys.index('id')]
             result = db.session.query(Result).get(result_id)
-            result_dict_flat = flatten(result.dictize())
             result_dict = result.dictize()
+            task_run_ids = result_dict['task_run_ids']
+            result_dict_flat = flatten(result_dict,
+                                       root_keys_to_ignore='task_run_ids')
+            result_dict_flat['task_run_ids'] = task_run_ids
             for k in result_dict_flat.keys():
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
@@ -4697,6 +4744,7 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV with ignore keys works"""
         # First test for a non-existant project
         with patch.dict(self.flask_app.config, {'IGNORE_FLAT_KEYS': ['geojson']}):
+            self.signin_user(id=42)
             uri = '/project/somethingnotexists/tasks/export'
             res = self.app.get(uri, follow_redirects=True)
             assert res.status == '404 NOT FOUND', res.status
@@ -4726,6 +4774,10 @@ class TestWeb(web.Helper):
             # Now get the tasks in CSV format
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
+            assert res.status_code == 200, res.status
+            assert 'You will be emailed when your export has been completed.' in res.data
+            return  #export handled by email
+
             zip = zipfile.ZipFile(StringIO(res.data))
             # Check only one file in zipfile
             err_msg = "filename count in ZIP is not 2"
@@ -4792,10 +4844,10 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
+        # Fixtures.create()
         # First test for a non-existant project
-        self.register()
-        self.signin()
-        Fixtures.create()
+        self.signin_user(id=42)
+        make_subadmin_by(id=42)
         uri = '/project/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -4821,6 +4873,10 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert res.status_code == 200, res.status
+        assert 'You will be emailed when your export has been completed.' in res.data
+        return  #export handled by email
+
         file_name = '/tmp/task_%s.zip' % project.short_name
         with open(file_name, 'w') as f:
             f.write(res.data)
@@ -5313,6 +5369,7 @@ class TestWeb(web.Helper):
     def test_get_import_tasks_no_params_shows_options_and_templates_json_owner(self, mock, importer_count, importer_tasks):
         """Test WEB import tasks JSON returns tasks's templates """
         admin, user, owner = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         report = MagicMock()
         report.message = "SUCCESS"
@@ -5714,6 +5771,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.importers.epicollect.requests.get')
     def test_bulk_epicollect_import_works(self, Mock, mock):
         """Test WEB bulk Epicollect import works"""
+        from pybossa.core import importer
         data = [dict(DeviceID=23)]
         fake_response = FakeResponse(text=json.dumps(data), status_code=200,
                                      headers={'content-type': 'application/json'},
@@ -5965,6 +6023,7 @@ class TestWeb(web.Helper):
 
         # Owner
         tasks = db.session.query(Task).filter_by(project_id=1).all()
+        make_subadmin_by(email_addr=u'tester@tester.com')
         res = self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner user should get 200 in GET"
@@ -5989,6 +6048,7 @@ class TestWeb(web.Helper):
     def test_56_delete_tasks_json(self):
         """Test WEB delete tasks JSON works"""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         TaskFactory.create(project=project)
         url = '/project/%s/tasks/delete' % project.short_name
@@ -6036,6 +6096,7 @@ class TestWeb(web.Helper):
     def test_delete_tasks_removes_existing_zip_files(self, uploader):
         """Test WEB delete tasks also deletes zip files for task and taskruns"""
         Fixtures.create()
+        make_subadmin_by(email_addr=u'tester@tester.com')
         self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         expected = [call('1_test-app_task_json.zip', 'user_2'),
@@ -6094,6 +6155,7 @@ class TestWeb(web.Helper):
         assert "This feature requires being logged in." in res.data, res.data
         # Authenticated user
         self.register()
+        self.signin()
         user = db.session.query(User).get(1)
         url = "/account/%s/update" % user.name
         api_key = user.api_key
@@ -6120,6 +6182,8 @@ class TestWeb(web.Helper):
             self.signout()
 
             self.register(fullname="new", name="new")
+            csrf = self.get_csrf('/account/signin')
+            self.signin(email='new@example.com', csrf=csrf)
             res = self.app_post_json(url, headers=headers)
             assert res.status_code == 403, res.status_code
             data = json.loads(res.data)
@@ -6137,6 +6201,8 @@ class TestWeb(web.Helper):
     def test_58_global_stats(self, mock1):
         """Test WEB global stats of the site works"""
         Fixtures.create()
+        user = user_repo.get(1)
+        self.signin_user(user)
 
         url = "/stats"
         res = self.app.get(url, follow_redirects=True)
@@ -6152,6 +6218,8 @@ class TestWeb(web.Helper):
     def test_58_global_stats_json(self, mock1):
         """Test WEB global stats JSON of the site works"""
         Fixtures.create()
+        user = user_repo.get(1)
+        self.signin_user(user)
 
         url = "/stats/"
         res = self.app_get_json(url)
@@ -6264,6 +6332,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_59_help_privacy(self):
         """Test WEB help privacy page exists."""
+        self.signin_user()
         url = "/help/privacy"
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a privacy policy page"
@@ -6273,6 +6342,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_60_help_privacy_json(self):
         """Test privacy json endpoint"""
+        self.signin_user()
         url = "/help/privacy"
         res = self.app_get_json(url)
         data = json.loads(res.data)
@@ -6313,7 +6383,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
         project = db.session.query(Project).first()
-        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % project.name
+        msg = "This feature requires being logged in"
         assert msg in res.data, err_msg
 
         # As registered user
@@ -6336,14 +6406,15 @@ class TestWeb(web.Helper):
         """Test WEB public user profile works"""
         Fixtures.create()
 
-        # Should work as an anonymous user
+        # Should not work as an anonymous user
         url = '/account/%s/' % Fixtures.name
         res = self.app.get(url, follow_redirects=True)
-        err_msg = "There should be a public profile page for the user"
-        assert Fixtures.fullname in res.data, err_msg
+        err_msg = "Profile requires being logged in"
+        assert 'This feature requires being logged in.' in res.data, err_msg
 
         # Should work as an authenticated user
-        self.signin()
+        user = user_repo.get(2)
+        self.signin_user(user)
         res = self.app.get(url, follow_redirects=True)
         assert Fixtures.fullname in res.data, err_msg
 
@@ -6359,14 +6430,16 @@ class TestWeb(web.Helper):
 
         res = self.app.get('/account/nonexistent/',
                            content_type='application/json')
-        assert res.status_code == 404, res.status_code
-        data = json.loads(res.data)
-        assert data['code'] == 404, res.status_code
+        assert res.status_code == 302, res.status_code
 
         Fixtures.create()
 
-        # Should work as an anonymous user
+        # Should not work as an anonymous user
         url = '/account/%s/' % Fixtures.name
+        res = self.app.get(url, content_type='application/json')
+        assert res.status_code == 302, res.status_code
+
+        self.signin_user(id=4)
         res = self.app.get(url, content_type='application/json')
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
@@ -6383,10 +6456,8 @@ class TestWeb(web.Helper):
 
         res = self.app.get('/account/profile',
                            content_type='application/json')
-        assert res.status_code == 200, res.status_code
-        data = json.loads(res.data)
-        assert data['next'] == '/account/signin'
-        assert data['status'] == 'not_signed_in'
+        # should redirect to login
+        assert res.status_code == 302, res.status_code
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -6488,6 +6559,7 @@ class TestWeb(web.Helper):
     def test_75_task_settings_scheduler_json(self, mock):
         """Test WEB TASK SETTINGS JSON scheduler page works"""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/scheduler" % project.short_name
         form_id = 'task_scheduler'
@@ -6598,6 +6670,7 @@ class TestWeb(web.Helper):
     def test_76_task_settings_redundancy_json(self, mock):
         """Test WEB TASK SETTINGS redundancy JSON page works"""
         admin, owner, user = UserFactory.create_batch(3)
+        make_subadmin(owner)
         project = ProjectFactory.create(owner=owner)
 
         url = "/project/%s/tasks/redundancy" % project.short_name
@@ -6777,6 +6850,10 @@ class TestWeb(web.Helper):
                 new_url = url + '?api_key=%s' % admin.api_key
                 task_ids = "1"
                 priority_0 = 0.5
+            res = self.app_get_json(new_url)
+            assert res.status_code == 403, 'non subadminowner cannot do it'
+            make_subadmin(owner)
+
             res = self.app_get_json(new_url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
@@ -7193,3 +7270,42 @@ class TestWeb(web.Helper):
         err_msg = 'OTP should be expired'
         assert data['status'] == ERROR, (err_msg, data)
         assert 'Expired one time password' in data.get('flash'), (err_msg, data)
+
+    @with_context
+    @patch('pybossa.view.projects.rank', autospec=True)
+    def test_project_index_sorting(self, mock_rank):
+        """Test WEB Project index parameters passed for sorting."""
+        self.register()
+        self.signin()
+        self.create()
+        project = db.session.query(Project).get(1)
+
+        order_by = u'n_volunteers'
+        desc = True
+        query = 'orderby=%s&desc=%s' % (order_by, desc)
+
+        # Test named category
+        url = 'project/category/%s?%s' % (Fixtures.cat_1, query)
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[0][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[0][0][1] == order_by
+        assert mock_rank.call_args_list[0][0][2] == desc
+
+        # Test featured
+        project.featured = True
+        project_repo.save(project)
+        url = 'project/category/featured?%s' % query
+        self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[1][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[1][0][1] == order_by
+        assert mock_rank.call_args_list[1][0][2] == desc
+
+        # Test draft
+        project.featured = False
+        project.published = False
+        project_repo.save(project)
+        url = 'project/category/draft/?%s' % query
+        res = self.app.get(url, follow_redirects=True)
+        assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
+        assert mock_rank.call_args_list[2][0][1] == order_by
+        assert mock_rank.call_args_list[2][0][2] == desc

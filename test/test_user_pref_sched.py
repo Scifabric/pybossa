@@ -49,7 +49,7 @@ class TestSched(sched.Helper):
         project = ProjectFactory.create(owner=owner)
         TaskFactory.create_batch(1, project=project, n_answers=10)
         tasks = get_user_pref_task(1, 500)
-        assert tasks
+        assert not tasks
 
     @with_context
     def test_no_user_pref(self):

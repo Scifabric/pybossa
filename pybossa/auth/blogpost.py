@@ -68,4 +68,4 @@ class BlogpostAuth(object):
 
     def _is_admin_or_owner(self, user, project):
         return (not user.is_anonymous() and
-                (user.id in project.owners_ids or user.admin))
+                (user.admin or user.id in project.owners_ids))

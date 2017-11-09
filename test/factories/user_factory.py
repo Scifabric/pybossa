@@ -37,6 +37,7 @@ class UserFactory(BaseFactory):
     locale = u'en'
     admin = False
     pro = False
+    ldap = None
     subscribed = True
     privacy_mode = True
     consent = False

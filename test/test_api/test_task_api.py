@@ -20,6 +20,7 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
+from helper.gig_helper import make_subadmin
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
@@ -187,7 +188,7 @@ class TestTaskAPI(TestAPI):
         ExternalUidTaskRunFactory.create(task=tasks[1])
         ExternalUidTaskRunFactory.create(task=tasks[2])
 
-        url = '/api/task?participated=1&all=1&external_uid=1xa' 
+        url = '/api/task?participated=1&all=1&external_uid=1xa'
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -338,12 +339,17 @@ class TestTaskAPI(TestAPI):
                                 info={'question': 'answer'},
                                 fav_user_ids=[1,2,3,4])
 
+        t3 = TaskFactory.create(created='2018-01-01T14:37:30.642119',
+                                info={'question': 'answer'},
+                                fav_user_ids=[1,2])
+
         tasks.insert(0, t1)
         tasks.append(t2)
+        tasks.append(t3)
 
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
-        assert len(tasks) == 10, tasks
+        assert len(tasks) == 11, tasks
         task = tasks[0]
         assert task['info']['question'] == 'answer', task
 
@@ -394,8 +400,20 @@ class TestTaskAPI(TestAPI):
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
-        print data
+        # print data
         assert data[0]['id'] == t2.id, err_msg
+
+        # fav_user_ids
+        url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=1"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['id'] == t3.id, err_msg
+        url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=2"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        assert data[0]['id'] == tasks[1]['id'], err_msg
 
 
         # Related
@@ -598,6 +616,7 @@ class TestTaskAPI(TestAPI):
         """Test API Task creation"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         data = dict(project_id=project.id, info='my task data')
@@ -732,6 +751,7 @@ class TestTaskAPI(TestAPI):
         """Test API task update"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)
@@ -840,6 +860,7 @@ class TestTaskAPI(TestAPI):
         """Test API task delete"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(project=project)

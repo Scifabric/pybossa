@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test, with_context
-from pybossa.view.google import manage_user, manage_user_login
+from pybossa.view.google import manage_user, manage_user_login, google
 from mock import patch
 from factories import UserFactory
 
@@ -170,3 +170,12 @@ class TestGoogle(Test):
         manage_user_login(None, user_data, next_url=next_url)
         assert login_user.called is False
         url_for_app_type.assert_called_with('account.signin')
+
+    @with_context
+    @patch('pybossa.view.google.url_for', return_value=True)
+    def test_request_token_params_set_correctly_with_next(self, url_for):
+        self.app.get('/google/?next=somewhere')
+        assert google.oauth.request_token_params == {
+            'scope': 'profile email'
+        }
+        url_for.assert_called_with('.oauth_authorized', _external=True)

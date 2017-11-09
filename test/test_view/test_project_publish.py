@@ -20,7 +20,7 @@ from mock import patch
 from default import db, with_context
 from factories import ProjectFactory, TaskFactory, UserFactory, TaskRunFactory
 from helper import web
-from helper.subadmin import make_subadmin
+from helper.gig_helper import make_subadmin
 from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository, WebhookRepository, ResultRepository
 from pybossa.view.projects import render_template
 

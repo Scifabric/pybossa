@@ -67,6 +67,7 @@ def create_app(run_as_server=True):
     setup_error_handlers(app)
     setup_ldap(app)
     setup_external_services(app)
+    setup_importers(app)
     setup_jinja(app)
     setup_geocoding(app)
     setup_csrf_protection(app)
@@ -76,6 +77,7 @@ def create_app(run_as_server=True):
     setup_sse(app)
     setup_json_serializer(app)
     setup_cors(app)
+    setup_profiler(app)
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
@@ -199,6 +201,7 @@ def setup_repositories(app):
     """Setup repositories."""
     from pybossa.repositories import UserRepository
     from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import ProjectStatsRepository
     from pybossa.repositories import AnnouncementRepository
     from pybossa.repositories import BlogRepository
     from pybossa.repositories import TaskRepository
@@ -208,6 +211,7 @@ def setup_repositories(app):
     from pybossa.repositories import HelpingMaterialRepository
     global user_repo
     global project_repo
+    global project_stats_repo
     global announcement_repo
     global blog_repo
     global task_repo
@@ -218,6 +222,7 @@ def setup_repositories(app):
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
+    project_stats_repo = ProjectStatsRepository(db)
     announcement_repo = AnnouncementRepository(db)
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db, language)
@@ -450,6 +455,13 @@ def setup_youtube_importer(app):
         print "Youtube importer not available"
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
+
+
+def setup_importers(app):
+    importers = app.config.get('AVAILABLE_IMPORTERS')
+    if importers:
+        importer.set_importers(importers)
+
 
 def setup_geocoding(app):
     """Setup geocoding."""
@@ -728,3 +740,7 @@ def setup_strong_password(app):
 def setup_ldap(app):
     if app.config.get('LDAP_HOST'):
         ldap.init_app(app)
+
+def setup_profiler(app):
+    if app.config.get('FLASK_PROFILER'):
+        flask_profiler.init_app(app)

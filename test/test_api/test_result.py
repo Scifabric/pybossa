@@ -21,6 +21,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch, call
 from pybossa.core import project_repo, task_repo, result_repo
+from helper.gig_helper import make_subadmin
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
@@ -357,6 +358,7 @@ class TestResultAPI(TestAPI):
         """Test API result update"""
         admin = UserFactory.create()
         user = UserFactory.create()
+        make_subadmin(user)
         non_owner = UserFactory.create()
         data = dict(info=dict(foo='bar'))
         datajson = json.dumps(data)
@@ -379,9 +381,13 @@ class TestResultAPI(TestAPI):
         assert result.id == out['id'], out
 
         ### root
+        data = dict(info=dict(foo='root'))
+        datajson = json.dumps(data)
         res = self.app.put('/api/result/%s?api_key=%s' % (result.id, admin.api_key),
                            data=datajson)
-        assert_equal(res.status, '403 FORBIDDEN', res.status)
+        assert_equal(res.status, '200 OK', res.status)
+        assert_equal(result.info['foo'], data['info']['foo'])
+        assert result.id == out['id'], out
 
         # PUT with not JSON data
         res = self.app.put(url, data=None)

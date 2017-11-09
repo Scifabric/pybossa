@@ -119,6 +119,22 @@ class TestHelpingMaterialAPI(TestAPI):
         for i in range(len(helpingmaterials)):
             assert helpingmaterials_by_id[i].id == data[i]['id']
 
+        # Test priority filtering
+        helpingmaterials.append(HelpingMaterialFactory.create(priority=1.0,
+                                                              project_id=project.id))
+        helpingmaterials.append(HelpingMaterialFactory.create(priority=0.5,
+                                                              project_id=project.id))
+        helpingmaterials.append(HelpingMaterialFactory.create(priority=0.1,
+                                                              project_id=project.id))
+
+        url = "/api/helpingmaterial?orderby=priority&desc=true"
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        err_msg = "It should get the last item first."
+        helpingmaterials_by_priority = sorted(helpingmaterials, key=lambda x: x.priority, reverse=True)
+        for i in range(3):
+            assert helpingmaterials_by_priority[i].id == data[i]['id'], (helpingmaterials_by_priority[i].id, data[i]['id'])
+
     @with_context
     def test_helpingmaterial_post(self):
         """Test API HelpingMaterialpost creation."""

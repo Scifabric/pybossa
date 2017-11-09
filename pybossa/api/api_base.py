@@ -41,8 +41,10 @@ from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 from pybossa.core import project_repo, user_repo, task_repo, result_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo
+from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
+from pybossa.cache.projects import clean_project
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -55,6 +57,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
          'Project': {'repo': project_repo, 'filter': 'filter_by',
                      'context': 'filter_owner_by', 'get': 'get',
                      'save': 'save', 'update': 'update', 'delete': 'delete'},
+         'ProjectStats': {'repo': project_stats_repo, 'filter': 'filter_by',
+                          'get': 'get'},
          'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                       'get': 'get_category', 'save': 'save_category',
                       'update': 'update_category',
@@ -71,6 +75,7 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                              'save': 'save', 'delete': 'delete'}
         }
 
+caching = {'Project': {'refresh': clean_project}}
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -84,6 +89,11 @@ class APIBase(MethodView):
     hateoas = Hateoas()
 
     allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
+
+    def refresh_cache(self, cls_name, oid):
+        """Refresh the cache."""
+        if caching.get(cls_name):
+            caching.get(cls_name)['refresh'](oid)
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -220,7 +230,7 @@ class APIBase(MethodView):
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
-                         'participated']:
+                         'participated', 'full']:
                 # Raise an error if the k arg is not a column
                 if self.__class__ == Task and k == 'external_uid':
                     pass
@@ -276,6 +286,7 @@ class APIBase(MethodView):
 
         """
         try:
+            cls_name = self.__class__.__name__
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -288,6 +299,7 @@ class APIBase(MethodView):
             getattr(repo, save_func)(inst)
             self._after_save(inst)
             self._log_changes(None, inst)
+            self.refresh_cache(cls_name, inst.id)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -331,6 +343,8 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             self._delete_instance(oid)
+            cls_name = self.__class__.__name__
+            self.refresh_cache(cls_name, oid)
             return '', 204
         except Exception as e:
             return error.format_exception(
@@ -366,14 +380,18 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            repo = repos[self.__class__.__name__]['repo']
-            query_func = repos[self.__class__.__name__]['get']
+            cls_name = self.__class__.__name__
+            repo = repos[cls_name]['repo']
+            query_func = repos[cls_name]['get']
             existing = getattr(repo, query_func)(oid)
             if existing is None:
                 raise NotFound
             ensure_authorized_to('update', existing)
             data = self._file_upload(request)
-            inst = self._update_instance(existing, repo, repos, new_upload=data)
+            inst = self._update_instance(existing, repo,
+                                         repos,
+                                         new_upload=data)
+            self.refresh_cache(cls_name, oid)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:

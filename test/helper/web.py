@@ -24,6 +24,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from werkzeug.http import parse_cookie
+from factories import UserFactory
 
 
 class Helper(Test):
@@ -73,6 +74,24 @@ class Helper(Test):
         else:
             return self.app.get(url, follow_redirects=follow_redirects,
                                 content_type=content_type, headers=headers)
+
+    def gig_account_creator_register_signin(self, fullname="John Gig", name="gig",
+                 password="p4ssw0rd", email=None, consent=False, with_csrf=False):
+        if email is None:
+            email = name + '@example.com'
+        self.register(fullname=fullname, name=name, password=password,
+                      email=email, consent=consent)
+        csrf = None
+        if with_csrf:
+            csrf = self.get_csrf('/account/signin')
+        self.signin(email=email, password=password, csrf=csrf)
+
+    def signin_user(self, user=None, **kwargs):
+        if not user:
+            user = UserFactory.create(**kwargs)
+        pwd = '123'
+        user.set_password(pwd)
+        self.signin(email=user.email_addr, password=pwd)
 
     def otpvalidation(self, method="POST", token='invalid', otp='-1',
                       content_type="multipart/form-data", follow_redirects=True,

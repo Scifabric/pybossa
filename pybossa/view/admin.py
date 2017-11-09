@@ -450,6 +450,8 @@ def new_announcement():
 
     announcement = Announcement(title=form.title.data,
                                 body=form.body.data,
+                                published=form.published.data,
+                                media_url=form.media_url.data,
                                 user_id=current_user.id)
     ensure_authorized_to('create', announcement)
     announcement_repo.save(announcement)
@@ -490,6 +492,8 @@ def update_announcement(id):
     announcement = Announcement(id=form.id.data,
                                 title=form.title.data,
                                 body=form.body.data,
+                                published=form.published.data,
+                                media_url=form.media_url.data,
                                 user_id=current_user.id)
     announcement_repo.update(announcement)
 

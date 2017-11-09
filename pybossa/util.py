@@ -513,9 +513,12 @@ def username_from_full_name(username):
     return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')
 
 
-def rank(projects):
-    """Takes a list of (published) projects (as dicts) and orders them by
-    activity, number of volunteers, number of tasks and other criteria."""
+def rank(projects, order_by=None, desc=False):
+    """By default, takes a list of (published) projects (as dicts) and orders
+    them by activity, number of volunteers, number of tasks and other criteria.
+
+    Alternatively ranks by order_by and desc.
+    """
     def earned_points(project):
         points = 0
         if project['overall_progress'] != 100L:
@@ -525,7 +528,10 @@ def rank(projects):
         points += _last_activity_points(project) * 10
         return points
 
-    projects.sort(key=earned_points, reverse=True)
+    if order_by:
+      projects.sort(key=lambda x: x[str(order_by)], reverse=desc)
+    else:
+      projects.sort(key=earned_points, reverse=True)
     return projects
 
 

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text
+from sqlalchemy import Integer, Text, Float
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON
 from pybossa.core import db
@@ -40,11 +40,13 @@ class HelpingMaterial(db.Model, DomainObject):
     #: Info field where it can be stored anything related to it
     info = Column(MutableDict.as_mutable(JSON), default=dict())
     media_url = Column(Text)
+    #: Priority of the helping material from 0.0 to 1.0
+    priority = Column(Float, default=0)
 
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
-        return ['created', 'id', 'info', 'media_url']
+        return ['created', 'id', 'info', 'media_url', 'priority']
 
     @classmethod
     def public_info_keys(self):

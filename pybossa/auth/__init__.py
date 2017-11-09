@@ -20,6 +20,7 @@ import inspect
 from flask import abort
 from flask.ext.login import current_user
 from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
+from pybossa.core import project_stats_repo
 from pybossa.auth.errcodes import *
 
 import jwt
@@ -27,6 +28,7 @@ from flask import jsonify
 from jwt import exceptions
 
 import project
+import projectstats
 import task
 import taskrun
 import category
@@ -39,6 +41,7 @@ import webhook
 import result
 import helpingmaterial
 assert project
+assert projectstats
 assert task
 assert taskrun
 assert category
@@ -53,6 +56,7 @@ assert result
 
 _actions = ['create', 'read', 'update', 'delete']
 _auth_classes = {'project': project.ProjectAuth,
+                 'projectstats': projectstats.ProjectStatsAuth,
                  'auditlog': auditlog.AuditlogAuth,
                  'announcement': announcement.AnnouncementAuth,
                  'blogpost': blogpost.BlogpostAuth,
