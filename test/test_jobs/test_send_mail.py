@@ -23,16 +23,22 @@ from mock import patch
 @patch('pybossa.jobs.Message')
 class TestSendMailJob(object):
 
-    def test_send_mail_craetes_message(self, Message, mail):
+    @patch('pybossa.jobs.mail_with_enabled_users',return_value=True)
+    def test_send_mail_creates_message(self, enabled_user, Message, mail):
         mail_dict = dict(subject='Hello', recipients=['pepito@hotmail.con'],
                          body='Hello Pepito!')
         send_mail(mail_dict)
         Message.assert_called_once_with(**mail_dict)
 
-
-    def test_send_mail_sends_mail(self, Message, mail):
+    @patch('pybossa.jobs.mail_with_enabled_users',return_value=True)
+    def test_send_mail_sends_mail(self, enabled_user, Message, mail):
         mail_dict = dict(subject='Hello', recipients=['pepito@hotmail.con'],
                          body='Hello Pepito!')
         send_mail(mail_dict)
 
         mail.send.assert_called_once_with(Message())
+
+    def test_no_mail_with_blank_recipients(self, Message, mail):
+        mail_dict = dict(subject='Hello', recipients=[],
+                         body='Hello Pepito!')
+        send_mail(mail_dict)
