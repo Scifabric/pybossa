@@ -162,13 +162,13 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         if not datafile:
             return []
 
-        csv_file = FileStorage(open(datafile.name, 'r'))
+        csv_file = FileStorage(io.open(datafile.name, encoding='utf-8-sig'))    #utf-8-sig to ignore BOM
         if csv_file is None or csv_file.stream is None:
             msg = ("Unable to load csv file for import, file {0}".format(csv_filename))
             raise BulkImportException(gettext(msg), 'error')
 
         csv_file.stream.seek(0)
-        csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))
+        csvcontent = io.StringIO(csv_file.stream.read())
         csvreader = unicode_csv_reader(csvcontent)
         return list(self._import_csv_tasks(csvreader))
 
