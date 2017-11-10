@@ -50,10 +50,13 @@ class UserAPI(APIBase):
     allowed_attributes = ('name', 'locale', 'fullname', 'created')
 
     def _select_attributes(self, user_data):
-        if current_user.is_authenticated() and current_user.admin:
+        if current_user.is_authenticated() and (current_user.admin or
+                                                current_user.id ==
+                                                user_data['id']):
             tmp = User().to_public_json(user_data)
             tmp['id'] = user_data['id']
             tmp['email_addr'] = user_data['email_addr']
+            tmp['info'] = user_data['info']
             return tmp
         else:
             privacy = self._is_user_private(user_data)
