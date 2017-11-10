@@ -38,6 +38,6 @@ script:
 #  slack:
 #    secure: lgJj/SealCb3hZsMvclA9VQGwx9TJrtK6ccOZiiHZpJa5in0UkRwE6ymrZ5wqwUagAVwOLYVKHdmrtPMPsaOqavnzq9ItJFqSRo8T5ZgKK+m+X9l88ROn7+QfJyPUkpblhSXMm6+s7duBjdM/no80lA4GEoNWD5G5uQwjJWQSWk=
 #  email: false
-#after_success:
-#- pip install coveralls
-#- coveralls
+after_success:
+- pip install coveralls
+- coveralls
