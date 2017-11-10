@@ -722,25 +722,24 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
 
 
 def generate_manage_user_email(user, operation):
-    if not user or not operation:
-        return None
+    assert user
+    assert operation in ['enable', 'disable']
 
     brand = current_app.config.get('BRAND')
     server_url = current_app.config.get('SERVER_URL')
 
     if operation == 'enable':
+        msg_to = user.fullname
         msg_header = '{} Account Enabled'.format(brand)
         msg_text = 'Your account {0} with {1} at {2} has been enabled. '\
                    'You can now login with your account credentials.'\
                    .format(user.email_addr, brand, server_url)
 
     elif operation == 'disable':
+        msg_to = current_user.fullname
         msg_header = '{} Account Disabled'.format(brand)
-        msg_text = 'Your account {0} with {1} at {2} has been disabled. '\
-                   'Please contact your {1} administrator about reinstating your account.'\
+        msg_text = 'Account {0} with {1} at {2} has been disabled. '\
                    .format(user.email_addr, brand, server_url)
-    else:
-        return None
 
     if current_app.config.get('IS_QA'):
         msg_header = msg_header + ' (QA Version)'
@@ -749,7 +748,7 @@ def generate_manage_user_email(user, operation):
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/manageuser.html',
-                                  username=user.fullname,
+                                  username=msg_to,
                                   msgHeader=msg_header,
                                   msgText=msg_text)
     return msg
@@ -931,6 +930,6 @@ def mail_with_enabled_users(message):
     if not recipients and not bcc:
         return False
 
-    message['recipients'] = recipients
-    message['bcc'] = bcc
+    message['recipients'] = recipients or None
+    message['bcc'] = bcc or None
     return True

@@ -37,18 +37,18 @@ class TestBulkTaskLocalCSVImport(object):
 
     @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
     def test_count_tasks_returns_0_row(self, s3_get):
-        with patch('pybossa.importers.csv.open', mock_open(read_data='Foo,Bar\n'), create=True):
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 0, number_of_tasks
 
     @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
     def test_count_tasks_returns_1_row(self, s3_mock):
-        with patch('pybossa.importers.csv.open', mock_open(read_data='Foo,Bar\n1,2\n'), create=True):
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n1,2\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 1, number_of_tasks
 
     @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
     def test_count_tasks_returns_2_rows(self, s3_mock):
-        with patch('pybossa.importers.csv.open', mock_open(read_data='Foo,Bar\n1,2\naaa,bbb\n'), create=True):
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n1,2\naaa,bbb\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 2, number_of_tasks
