@@ -734,19 +734,20 @@ def generate_manage_user_email(user, operation):
         msg_text = 'Your account {0} with {1} at {2} has been enabled. '\
                    'You can now login with your account credentials.'\
                    .format(user.email_addr, brand, server_url)
-
+        msg = dict(subject='Account update on {}'.format(brand),
+                   recipients=[user.email_addr],
+                   bcc=[current_user.email_addr])
     elif operation == 'disable':
         msg_to = current_user.fullname
         msg_header = '{} Account Disabled'.format(brand)
         msg_text = 'Account {0} with {1} at {2} has been disabled. '\
                    .format(user.email_addr, brand, server_url)
+        msg = dict(subject='Account update on {}'.format(brand),
+                   recipients=[current_user.email_addr])
 
     if current_app.config.get('IS_QA'):
         msg_header = msg_header + ' (QA Version)'
 
-    msg = dict(subject='Account update on {}'.format(brand),
-               recipients=[user.email_addr],
-               bcc=[current_user.email_addr])
     msg['html'] = render_template('/account/email/manageuser.html',
                                   username=msg_to,
                                   msgHeader=msg_header,
