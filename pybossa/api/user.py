@@ -50,7 +50,8 @@ class UserAPI(APIBase):
     allowed_attributes = public_attributes + ('fullname', 'created')
 
     def _select_attributes(self, user_data):
-        if current_user.is_authenticated() and current_user.admin:
+        if (current_user.is_authenticated() and
+                (current_user.admin or current_user.subadmin)):
             tmp = User().to_public_json(user_data)
             tmp['id'] = user_data['id']
             tmp['email_addr'] = user_data['email_addr']
