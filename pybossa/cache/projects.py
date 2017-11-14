@@ -509,3 +509,28 @@ def clean_project(project_id, category=None):
         delete_memoized(get_all, project.category.short_name)
         delete_memoized(n_count, project.category.short_name)
         delete_memoized(get_all_draft, None)
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_report_projectdata(project_id):
+    """Return data to build project report"""
+    sql = text(
+            '''
+            SELECT id, name, short_name,
+            (SELECT COUNT(id) FROM task WHERE project_id = p.id) AS total_tasks,
+            (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id) AS first_task_submission,
+            (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id) AS last_task_submission,
+            (SELECT MAX(n_answers) FROM task WHERE project_id = p.id) AS redundancy,
+            (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s') FROM task_run WHERE project_id=p.id)
+            AS average_time
+            FROM project p
+            WHERE p.id=:project_id;
+            ''')
+    results = session.execute(sql, dict(project_id=project_id))
+    project_data = []
+    for row in results:
+        project_data.extend((project_id, row.name, row.short_name, row.total_tasks,
+            row.first_task_submission, row.last_task_submission,
+            round(row.average_time.total_seconds()/60,2), row.redundancy))
+    return project_data
