@@ -115,7 +115,8 @@ def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
         data['status'] = status
-    if request.headers.get('Content-Type') == 'application/json':
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
         return handle_content_type(data)
     else:
         return redirect(url)
