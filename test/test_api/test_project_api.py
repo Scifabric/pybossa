@@ -593,7 +593,7 @@ class TestProjectAPI(TestAPI):
     def test_project_post_invalid_short_name(self):
         """Test API project POST returns error if short_name is invalid (i.e. is
             a name used by the Flask app as a URL endpoint"""
-        users = UserFactory.create_batch(2)
+        users = UserFactory.create_batch(2, subadmin=True)
         CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(
