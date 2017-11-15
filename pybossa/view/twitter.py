@@ -17,11 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 """Twitter view for PYBOSSA."""
-from flask import Blueprint, request, url_for, flash, redirect, current_app
+from flask import Blueprint, request, url_for, flash, current_app
 from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
+from pybossa.util import redirect_content_type
 from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, url_for_app_type
@@ -77,11 +78,11 @@ def oauth_authorized():  # pragma: no cover
     next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
-        return redirect(next_url)
+        return redirect_content_type(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        return redirect(next_url)
+        return redirect_content_type(next_url)
 
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
@@ -130,17 +131,17 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for_app_type('account.forgot_password'))
+            return redirect_content_type(url_for_app_type('account.forgot_password'))
         else:
-            return redirect(url_for_app_type('account.signin'))
+            return redirect_content_type(url_for_app_type('account.signin'))
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
             and newsletter.is_initialized()):
-        return redirect(url_for_app_type('account.newsletter_subscribe',
-                                         next=next_url))
-    return redirect(next_url)
+        return redirect_content_type(url_for_app_type('account.newsletter_subscribe',
+                                                      next=next_url))
+    return redirect_content_type(next_url)
 
 
 def manage_user_no_login(access_token, next_url):
@@ -148,4 +149,4 @@ def manage_user_no_login(access_token, next_url):
         user = user_repo.get(current_user.id)
         user.info['twitter_token'] = access_token
         user_repo.save(user)
-    return redirect(next_url)
+    return redirect_content_type(next_url)
