@@ -154,7 +154,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         csv_file = None
         while retry < 10:
             try:
-                csv_file = FileStorage(open(csv_filename, 'r'))
+                csv_file = FileStorage(io.open(csv_filename, encoding='utf-8-sig'))
                 break
             except IOError, e:
                 time.sleep(2)
@@ -165,7 +165,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
             raise BulkImportException(gettext(msg), 'error')
 
         csv_file.stream.seek(0)
-        csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))
+        csvcontent = io.StringIO(csv_file.stream.read())
         csvreader = unicode_csv_reader(csvcontent)
         return list(self._import_csv_tasks(csvreader))
 
@@ -173,4 +173,3 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         """Get tasks from a given URL."""
         csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
-
