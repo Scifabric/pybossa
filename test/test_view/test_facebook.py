@@ -132,7 +132,8 @@ class TestFacebook(Test):
         user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for_app_type.assert_called_once_with('account.forgot_password')
+        url_for_app_type.assert_called_once_with('account.forgot_password',
+                                                 _spa_hash_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -150,7 +151,8 @@ class TestFacebook(Test):
         user_data = dict(name=user.name, email=user.email_addr)
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for_app_type.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin',
+                                                 _spa_hash_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -167,7 +169,8 @@ class TestFacebook(Test):
         user_data = dict(name='algo', email='email')
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for_app_type.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin',
+                                                 _spa_hash_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -176,7 +179,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_empty_no_email(self, redirect,
-                                              url_for, flash,
+                                              url_for_app_type, flash,
                                               login_user,
                                               newsletter):
         """Test manage login user new user with no email from facebook"""
@@ -184,7 +187,8 @@ class TestFacebook(Test):
         user_data = dict(name='algo')
         next_url = '/'
         manage_user_login(None, user_data, next_url)
-        url_for.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin',
+                                                 _spa_hash_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -223,7 +227,8 @@ class TestFacebook(Test):
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
         url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
-                                                 next=next_url)
+                                                 next=next_url,
+                                                 _spa_hash_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
