@@ -17,12 +17,11 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 """Google view for PYBOSSA."""
-from flask import Blueprint, request, url_for, flash, session, current_app
+from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
-from pybossa.util import redirect_content_type
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
@@ -69,12 +68,12 @@ def oauth_authorized():  # pragma: no cover
         flash(u'Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
             current_app.logger.error(resp)
-            return redirect_content_type(url_for_app_type('account.signin'))
-        return redirect_content_type(next_url)
+            return redirect(url_for_app_type('account.signin'))
+        return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        return redirect_content_type(next_url)
+        return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
     try:
@@ -82,7 +81,7 @@ def oauth_authorized():  # pragma: no cover
     except requests.exceptions.http_error:
         # Unauthorized - bad token
         if r.status_code == 401:
-            return redirect_content_type(url_for_app_type('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
         return r.content
 
     access_token = resp['access_token']
@@ -141,13 +140,13 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect_content_type(url_for_app_type('account.forgot_password'))
+            return redirect(url_for_app_type('account.forgot_password'))
         else:
-            return redirect_content_type(url_for_app_type('account.signin'))
+            return redirect(url_for_app_type('account.signin'))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         if user.newsletter_prompted is False and newsletter.is_initialized():
-            return redirect_content_type(url_for_app_type('account.newsletter_subscribe',
+            return redirect(url_for_app_type('account.newsletter_subscribe',
                                                           next=next_url))
-        return redirect_content_type(next_url)
+        return redirect(next_url)

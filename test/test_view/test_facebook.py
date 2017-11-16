@@ -121,7 +121,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_local(self, redirect,
                                      url_for_app_type, flash,
                                      login_user,
@@ -139,7 +139,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_google_token(self, redirect,
                                             url_for_app_type, flash,
                                             login_user,
@@ -157,7 +157,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_empty(self, redirect,
                                      url_for_app_type, flash,
                                      login_user,
@@ -174,7 +174,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_empty_no_email(self, redirect,
                                               url_for, flash,
                                               login_user,
@@ -191,7 +191,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_update_email(self, redirect,
                                             url_for_app_type, flash,
                                             login_user,
@@ -210,7 +210,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_good_email(self, redirect,
                                           url_for_app_type, flash,
                                           login_user,
@@ -230,7 +230,7 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.login_user', return_value=True)
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for_app_type', return_value=True)
-    @patch('pybossa.view.facebook.redirect_content_type', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
     def test_manage_login_user_already_asked(self, redirect,
                                              url_for_app_type, flash,
                                              login_user,
