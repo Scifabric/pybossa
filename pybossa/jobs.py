@@ -1047,3 +1047,40 @@ def push_notification(project_id, **kwargs):
                                launch_url=kwargs['launch_url'],
                                web_buttons=kwargs['web_buttons'],
                                filters=filters)
+
+
+def mail_project_report(info, current_user_email_addr):
+    from pybossa.core import project_csv_exporter
+    from pybossa.core import uploader
+
+    try:
+        project_csv_exporter.pregenerate_zip_files(info)
+        filename = project_csv_exporter.zip_name(info)
+        subject = 'GIGwork project report'
+        msg = 'Your exported data is attached.'
+
+        body = 'Hello,\n\n{}\n\nThe {} team.'
+        body = body.format(msg, current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr],
+                         subject=subject,
+                         body=body)
+        message = Message(**mail_dict)
+
+        container = 'user_{}'.format(info['user_id'])
+        path = uploader.get_file_path(container, filename)
+        with current_app.open_resource(path) as fp:
+            message.attach(path.split('/')[-1], "application/zip", fp.read())
+        uploader.delete_file(filename, container)
+    except Exception:
+        current_app.logger.exception('Error in mail_project_report')
+        subject = 'Error in GIGwork project report'
+        msg = 'An error occurred while exporting your report.'
+
+        body = 'Hello,\n\n{}\n\nThe {} team.'
+        body = body.format(msg, current_app.config.get('BRAND'))
+        mail_dict = dict(recipients=[current_user_email_addr],
+                         subject=subject,
+                         body=body)
+        message = Message(**mail_dict)
+
+    send_mail(message)

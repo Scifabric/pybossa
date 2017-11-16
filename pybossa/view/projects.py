@@ -37,7 +37,7 @@ import pybossa.sched as sched
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
                           csv_exporter, importer, db,
                           task_json_exporter, task_csv_exporter,
-                          project_csv_exporter, project_report_csv_exporter)
+                          project_report_csv_exporter)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -65,7 +65,8 @@ from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import (webhook, send_mail,
                           import_tasks, IMPORT_TASKS_TIMEOUT,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
-                          export_tasks, EXPORT_TASKS_TIMEOUT)
+                          export_tasks, EXPORT_TASKS_TIMEOUT,
+                          mail_project_report)
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException
@@ -1597,23 +1598,14 @@ def export_to(short_name):
 @admin_required
 def export_projects():
     """Export projects list, only for admins."""
-
-    def respond_csv():
-        import datetime
-        info = AttrDict(id=0, short_name=datetime.datetime.now().isoformat(),
-                        owner_id=current_user.id,
-                        base_url=request.url_root+'project/')
-
-        return project_csv_exporter.response_zip(info, 'projects')
-
-    export_formats = ["csv"]
-
-    fmt = request.args.get('format')
-    if not fmt:
-        return redirect(url_for('.index'))
-    if fmt not in export_formats:
-        abort(415)
-    return {"csv": respond_csv}[fmt]()
+    import datetime
+    info = dict(timestamp=datetime.datetime.now().isoformat(),
+                user_id=current_user.id,
+                base_url=request.url_root+'project/')
+    export_queue.enqueue(mail_project_report, info, current_user.email_addr)
+    flash(gettext('You will be emailed when your export has been'
+                  ' completed.'), 'success')
+    return redirect_content_type(url_for('.index'))
 
 
 @blueprint.route('/<short_name>/stats')
