@@ -111,7 +111,7 @@ class TestGoogle(Test):
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is False
         url_for_app_type.assert_called_with('account.newsletter_subscribe',
-                                            next=next_url, _spa_hash_flash=True)
+                                            next=next_url, _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
@@ -151,7 +151,7 @@ class TestGoogle(Test):
         manage_user_login(None, user_data, next_url=next_url)
         assert login_user.called is False
         url_for_app_type.assert_called_with('account.forgot_password',
-                                            _spa_hash_flash=True)
+                                            _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.google.newsletter', autospec=True)
@@ -171,7 +171,7 @@ class TestGoogle(Test):
         manage_user_login(None, user_data, next_url=next_url)
         assert login_user.called is False
         url_for_app_type.assert_called_with('account.signin',
-                                            _spa_hash_flash=True)
+                                            _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.google.url_for', return_value=True)

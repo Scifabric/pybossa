@@ -65,12 +65,12 @@ def oauth_authorized():  # pragma: no cover
         flash(u'Reason: ' + request.args['error_reason'] +
               ' ' + request.args['error_description'], 'error')
         next_url = (request.args.get('next') or
-                    url_for_app_type('home.home', _spa_hash_flash=True))
+                    url_for_app_type('home.home', _hash_last_flash=True))
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        return redirect(url_for_app_type('home.home', _spa_hash_flash=True))
+        return redirect(url_for_app_type('home.home', _hash_last_flash=True))
     # We have to store the oauth_token in the session to get the USER fields
     access_token = resp['access_token']
     session['oauth_token'] = (resp['access_token'], '')
@@ -124,13 +124,13 @@ def manage_user_login(user, user_data, next_url):
             flash(msg, 'info')
             if method == 'local':
                 return redirect(url_for_app_type('account.forgot_password',
-                                                 _spa_hash_flash=True))
+                                                 _hash_last_flash=True))
             else:
                 return redirect(url_for_app_type('account.signin',
-                                                 _spa_hash_flash=True))
+                                                 _hash_last_flash=True))
         else:
             return redirect(url_for_app_type('account.signin',
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
@@ -138,5 +138,5 @@ def manage_user_login(user, user_data, next_url):
                 and newsletter.is_initialized()):
             return redirect(url_for_app_type('account.newsletter_subscribe',
                                              next=next_url,
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
         return redirect(next_url)

@@ -66,13 +66,13 @@ def oauth_authorized():  # pragma: no cover
         if request.args.get('error'):
             current_app.logger.error(resp)
             return redirect(url_for_app_type('account.signin',
-                            _spa_hash_flash=True))
-        next_url = url_for_app_type('home.home', _spa_hash_flash=True)
+                            _hash_last_flash=True))
+        next_url = url_for_app_type('home.home', _hash_last_flash=True)
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        next_url = url_for_app_type('home.home', _spa_hash_flash=True)
+        next_url = url_for_app_type('home.home', _hash_last_flash=True)
         return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
@@ -141,15 +141,15 @@ def manage_user_login(user, user_data, next_url):
         flash(msg, 'info')
         if method == 'local':
             return redirect(url_for_app_type('account.forgot_password',
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
         else:
             return redirect(url_for_app_type('account.signin',
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         if user.newsletter_prompted is False and newsletter.is_initialized():
             return redirect(url_for_app_type('account.newsletter_subscribe',
                                              next=next_url,
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
         return redirect(next_url)

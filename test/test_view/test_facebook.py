@@ -133,7 +133,7 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for_app_type.assert_called_once_with('account.forgot_password',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -152,7 +152,7 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for_app_type.assert_called_once_with('account.signin',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -170,7 +170,7 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for_app_type.assert_called_once_with('account.signin',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -188,7 +188,7 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for_app_type.assert_called_once_with('account.signin',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)
@@ -228,7 +228,7 @@ class TestFacebook(Test):
         login_user.assert_called_once_with(user, remember=True)
         url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
                                                  next=next_url,
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.facebook.newsletter', autospec=True)

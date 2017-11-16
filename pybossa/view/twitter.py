@@ -81,7 +81,7 @@ def oauth_authorized():  # pragma: no cover
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        return redirect(url_for_app_type('home.home', _spa_hash_flash=True))
+        return redirect(url_for_app_type('home.home', _hash_last_flash=True))
 
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
@@ -131,17 +131,17 @@ def manage_user_login(user, user_data, next_url):
         flash(msg, 'info')
         if method == 'local':
             return redirect(url_for_app_type('account.forgot_password',
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
         else:
             return redirect(url_for_app_type('account.signin',
-                                             _spa_hash_flash=True))
+                                             _hash_last_flash=True))
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
             and newsletter.is_initialized()):
         return redirect(url_for_app_type('account.newsletter_subscribe',
-                                         next=next_url, _spa_hash_flash=True))
+                                         next=next_url, _hash_last_flash=True))
     return redirect(next_url)
 
 

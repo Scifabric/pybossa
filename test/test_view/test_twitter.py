@@ -83,7 +83,7 @@ class TestTwitter(Test):
         login_user.assert_called_once_with(user, remember=True)
         url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
                                                  next=next_url,
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
@@ -128,7 +128,7 @@ class TestTwitter(Test):
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
         url_for_app_type.assert_called_once_with('account.forgot_password',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
@@ -151,7 +151,7 @@ class TestTwitter(Test):
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
         url_for_app_type.assert_called_once_with('account.signin',
-                                                 _spa_hash_flash=True)
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
