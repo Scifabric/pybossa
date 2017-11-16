@@ -213,12 +213,15 @@ class TestTwitter(Test):
 
     @with_context
     @patch('pybossa.view.twitter.current_user')
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
-        self, current_user):
+        self, redirect, current_user):
         user = UserFactory.create(info={})
         current_user.id = user.id
         token_and_secret = {'oauth_token_secret': 'secret', 'oauth_token': 'token'}
+        next_url = '/'
 
-        manage_user_no_login(token_and_secret, '/')
+        manage_user_no_login(token_and_secret, next_url)
 
+        redirect.assert_called_once_with(next_url)
         assert user.info == {'twitter_token': token_and_secret}, user.info
