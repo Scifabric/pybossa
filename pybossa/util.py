@@ -133,14 +133,14 @@ def redirect_content_type(url, status=None):
         return redirect(url)
 
 
-def url_for_app_type(endpoint, _spa_hash_flash=False, **values):
+def url_for_app_type(endpoint, _hash_last_flash=False, **values):
     """Generate a URL for an SPA, or otherwise."""
     spa_server_name = current_app.config.get('SPA_SERVER_NAME')
     if spa_server_name:
       values.pop('_external', None)
-      if _spa_hash_flash:
-          _hash = hash_last_flash_message()
-          return spa_server_name + url_for(endpoint, _anchor=_hash, **values)
+      if _hash_last_flash:
+          values['flash'] = hash_last_flash_message()
+          return spa_server_name + url_for(endpoint, **values)
       return spa_server_name + url_for(endpoint, **values)
     return url_for(endpoint, **values)
 
