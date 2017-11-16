@@ -68,7 +68,7 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
-    @patch('pybossa.view.twitter.redirect', return_value=True)
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_login_with_newsletter(self, redirect,
                                                url_for_app_type,
                                                flash,
@@ -89,7 +89,7 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
-    @patch('pybossa.view.twitter.redirect', return_value=True)
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_login_with_newsletter_no_email(self, redirect,
                                                         url_for_app_type,
                                                         flash,
@@ -111,7 +111,7 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
-    @patch('pybossa.view.twitter.redirect', return_value=True)
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_login_without_user_local(self, redirect,
                                                   url_for_app_type,
                                                   flash,
@@ -133,7 +133,7 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
-    @patch('pybossa.view.twitter.redirect', return_value=True)
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_login_without_user(self, redirect,
                                             url_for_app_type,
                                             flash,
@@ -155,7 +155,7 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.login_user', return_value=True)
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for_app_type', return_value=True)
-    @patch('pybossa.view.twitter.redirect', return_value=True)
+    @patch('pybossa.view.twitter.redirect_content_type', return_value=True)
     def test_manage_user_login_with_newsletter_twice(self, redirect,
                                                      url_for_app_type,
                                                      flash,

@@ -97,7 +97,7 @@ class TestGoogle(Test):
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
     @patch('pybossa.view.google.url_for_app_type', return_value=True)
-    @patch('pybossa.view.google.redirect', return_value=True)
+    @patch('pybossa.view.google.redirect_content_type', return_value=True)
     def test_manage_user_with_oauth_newsletter(self, redirect,
                                                url_for_app_type, flash,
                                                login_user,
@@ -118,7 +118,7 @@ class TestGoogle(Test):
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
     @patch('pybossa.view.google.url_for_app_type', return_value=True)
-    @patch('pybossa.view.google.redirect', return_value=True)
+    @patch('pybossa.view.google.redirect_content_type', return_value=True)
     def test_manage_user_is_not_asked_twice(self, redirect,
                                             url_for_app_type, flash,
                                             login_user,
@@ -139,7 +139,7 @@ class TestGoogle(Test):
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
     @patch('pybossa.view.google.url_for_app_type', return_value=True)
-    @patch('pybossa.view.google.redirect', return_value=True)
+    @patch('pybossa.view.google.redirect_content_type', return_value=True)
     def test_manage_login_without_user(self, redirect,
                                        url_for_app_type, flash,
                                        login_user,
@@ -157,7 +157,7 @@ class TestGoogle(Test):
     @patch('pybossa.view.google.login_user', return_value=True)
     @patch('pybossa.view.google.flash', return_value=True)
     @patch('pybossa.view.google.url_for_app_type', return_value=True)
-    @patch('pybossa.view.google.redirect', return_value=True)
+    @patch('pybossa.view.google.redirect_content_type', return_value=True)
     def test_manage_login_without_user_facebook(self, redirect,
                                                 url_for_app_type, flash,
                                                 login_user,
