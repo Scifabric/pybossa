@@ -748,17 +748,17 @@ def export_tasks(current_user_email_addr, short_name,
         # Construct message
         if path is not None:
             # Success email
-            subject = 'Data exported for your project: {0}'.format(project.name)
-            msg = 'Your exported data is attached.'
+            subject = u'Data exported for your project: {0}'.format(project.name)
+            msg = u'Your exported data is attached.'
         else:
             # Failure email
-            subject = 'Data export failed for your project: {0}'.format(project.name)
-            msg = 'There was an issue with your export. ' + \
-                  'Please try again or report this issue ' + \
-                  'to a {0} administrator.'
+            subject = u'Data export failed for your project: {0}'.format(project.name)
+            msg = u'There was an issue with your export. ' + \
+                  u'Please try again or report this issue ' + \
+                  u'to a {0} administrator.'
             msg = msg.format(current_app.config.get('BRAND'))
 
-        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        body = u'Hello,\n\n' + msg + '\n\nThe {0} team.'
         body = body.format(current_app.config.get('BRAND'))
         mail_dict = dict(recipients=[current_user_email_addr],
                          subject=subject,
@@ -771,16 +771,16 @@ def export_tasks(current_user_email_addr, short_name,
                 message.attach(path.split('/')[-1], "application/zip", fp.read())
 
         mail.send(message)
-        job_response = '{0} {1} file was successfully exported for: {2}'
+        job_response = u'{0} {1} file was successfully exported for: {2}'
         return job_response.format(
                 ty.capitalize(), filetype.upper(), project.name)
     except:
         current_app.logger.exception(
-                'Export email failed - Project: {0}'
+                u'Export email failed - Project: {0}'
                 .format(project.name))
-        subject = 'Email delivery failed for your project: {0}'.format(project.name)
-        msg = 'There was an error when attempting to deliver your data export via email.'
-        body = 'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        subject = u'Email delivery failed for your project: {0}'.format(project.name)
+        msg = u'There was an error when attempting to deliver your data export via email.'
+        body = u'Hello,\n\n' + msg + u'\n\nThe {0} team.'
         body = body.format(current_app.config.get('BRAND'))
         mail_dict = dict(recipients=[current_user_email_addr],
                          subject=subject,
