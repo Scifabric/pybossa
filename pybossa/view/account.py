@@ -532,16 +532,17 @@ def update_profile(name):
     if request.method == 'POST':
         # Update user avatar
         succeed = False
-        if request.body.get('btn') == 'Upload':
+        btn = request.body.get('btn', 'None').capitalize()
+        if btn == 'Upload':
             succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
-        elif request.body.get('btn') == 'Profile':
+        elif btn == 'Profile':
             succeed = _handle_profile_update(user, update_form)
         # Update user password
-        elif request.body.get('btn') == 'Password':
+        elif btn == 'Password':
             succeed = _handle_password_update(user, password_form)
         # Update user external services
-        elif request.body.get('btn') == 'External':
+        elif btn == 'External':
             succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
