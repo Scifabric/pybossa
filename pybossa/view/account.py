@@ -519,7 +519,8 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    if request.body.get('btn') != 'Profile':
+    btn = request.body.get('btn', 'None').capitalize()
+    if btn != 'Profile':
         update_form = UpdateProfileForm(formdata=None, obj=user)
     else:
         update_form = UpdateProfileForm(obj=user)
