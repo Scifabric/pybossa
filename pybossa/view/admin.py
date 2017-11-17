@@ -33,6 +33,7 @@ from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
 
+from pybossa.model import make_timestamp
 from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
@@ -814,25 +815,22 @@ def manageusers():
 @admin_or_subadmin_required
 def enable_user(user_id=None):
     """Set enabled flag to True for user_id."""
-    try:
-        if user_id:
-            user = user_repo.get(user_id)
-            if user:
-                # avoid enabling admin/subadmin user by subadmin with direct url
-                if not can_update_user_info(current_user, user):
-                    return abort(403)
+    if user_id:
+        user = user_repo.get(user_id)
+        if user:
+            # avoid enabling admin/subadmin user by subadmin with direct url
+            if not can_update_user_info(current_user, user):
+                return abort(403)
 
-                user.enabled = True
-                user_repo.update(user)
-                msg = generate_manage_user_email(user, "enable")
-                if msg:
-                    mail_queue.enqueue(send_mail, msg)
-                return redirect(url_for(".manageusers"))
-        msg = "User not found"
-        return format_error(msg, 404)
-    except Exception as e:  # pragma: no cover
-        current_app.logger.error(e)
-        return abort(500)
+            user.enabled = True
+            user.last_login = make_timestamp()
+            user_repo.update(user)
+            msg = generate_manage_user_email(user, "enable")
+            if msg:
+                mail_queue.enqueue(send_mail, msg)
+            return redirect(url_for(".manageusers"))
+    msg = "User not found"
+    return format_error(msg, 404)
 
 
 @blueprint.route('/users/disable_user/<int:user_id>')
@@ -840,22 +838,18 @@ def enable_user(user_id=None):
 @admin_or_subadmin_required
 def disable_user(user_id=None):
     """Set enabled flag to False for user_id."""
-    try:
-        if user_id:
-            user = user_repo.get(user_id)
-            if user:
-                # avoid disabling admin/subadmin user by subadmin with direct url
-                if not can_update_user_info(current_user, user):
-                    return abort(403)
+    if user_id:
+        user = user_repo.get(user_id)
+        if user:
+            # avoid disabling admin/subadmin user by subadmin with direct url
+            if not can_update_user_info(current_user, user):
+                return abort(403)
 
-                user.enabled = False
-                user_repo.update(user)
-                msg = generate_manage_user_email(user, "disable")
-                if msg:
-                    mail_queue.enqueue(send_mail, msg)
-                return redirect(url_for('.manageusers'))
-        msg = "User not found"
-        return format_error(msg, 404)
-    except Exception as e:  # pragma: no cover
-        current_app.logger.error(e)
-        return abort(500)
+            user.enabled = False
+            user_repo.update(user)
+            msg = generate_manage_user_email(user, "disable")
+            if msg:
+                mail_queue.enqueue(send_mail, msg)
+            return redirect(url_for('.manageusers'))
+    msg = "User not found"
+    return format_error(msg, 404)
