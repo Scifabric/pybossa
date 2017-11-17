@@ -464,9 +464,17 @@ class ChangePasswordForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
+    if enable_strong_password:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            pb_validator.CheckPasswordStrength(),
+                            validators.EqualTo('confirm', err_msg_2)])
+    else:
+        new_password = PasswordField(
+                        lazy_gettext('New password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
     confirm = PasswordField(lazy_gettext('Repeat password'))
 
 
@@ -476,9 +484,17 @@ class ResetPasswordForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New Password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
+    if enable_strong_password:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            pb_validator.CheckPasswordStrength(),
+                            validators.EqualTo('confirm', err_msg_2)])
+    else:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
 
