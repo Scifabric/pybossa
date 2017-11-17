@@ -42,8 +42,9 @@ EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
 
+BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-### Forms for projects view
+# Forms for projects view
 
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
