@@ -36,9 +36,9 @@ def test_report(mail):
     mail_project_report(info, 'tyrion@casterlyrock.com')
     args, _ = mail.call_args
     message = args[0]
-    assert 'tyrion@casterlyrock.com' in message.recipients
-    assert 'Your exported data is attached.' in message.body, message.body
-    assert message.attachments, 'no data was attached'
+    assert 'tyrion@casterlyrock.com' in message['recipients']
+    assert 'Your exported data is attached.' in message['body'], message['body']
+    assert message['attachments'], 'no data was attached'
 
 
 @with_context
@@ -55,8 +55,8 @@ def test_report_fails(exporter, mail):
     mail_project_report(info, 'tyrion@casterlyrock.com')
     args, _ = mail.call_args
     message = args[0]
-    assert 'tyrion@casterlyrock.com' in message.recipients
-    assert 'An error occurred while exporting your report.' in message.body, message.body
+    assert 'tyrion@casterlyrock.com' in message['recipients']
+    assert 'An error occurred while exporting your report.' in message['body'], message['body']
 
 
 class TestAllProjectsReport(web.Helper):

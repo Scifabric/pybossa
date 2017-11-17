@@ -20,7 +20,7 @@ from datetime import datetime
 import math
 import requests
 from flask import current_app, render_template
-from flask.ext.mail import Message
+from flask.ext.mail import Message, Attachment
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users
@@ -1064,12 +1064,13 @@ def mail_project_report(info, current_user_email_addr):
         mail_dict = dict(recipients=[current_user_email_addr],
                          subject=subject,
                          body=body)
-        message = Message(**mail_dict)
 
         container = 'user_{}'.format(info['user_id'])
         path = uploader.get_file_path(container, filename)
         with current_app.open_resource(path) as fp:
-            message.attach(path.split('/')[-1], "application/zip", fp.read())
+            attachment = Attachment(path.split('/')[-1], "application/zip",
+                                    fp.read())
+            mail_dict['attachments'] = [attachment]
         uploader.delete_file(filename, container)
     except Exception:
         current_app.logger.exception('Error in mail_project_report')
@@ -1081,6 +1082,5 @@ def mail_project_report(info, current_user_email_addr):
         mail_dict = dict(recipients=[current_user_email_addr],
                          subject=subject,
                          body=body)
-        message = Message(**mail_dict)
 
-    send_mail(message)
+    send_mail(mail_dict)
