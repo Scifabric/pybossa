@@ -160,7 +160,7 @@ class ProjectRepository(Repository):
         uploader.delete_file(json_taskruns_filename, container)
         uploader.delete_file(csv_taskruns_filename, container)
 
-    def get_projects_report(self, base_url):
+    def get_projects_report(self):
         sql = text(
             '''WITH completed_tasks AS 
               (
