@@ -391,6 +391,17 @@ class TestPybossaUtil(Test):
         spa_url = util.url_for_app_type('home.home')
         assert spa_url == fake_endpoint, spa_url
 
+    @with_context
+    @patch('pybossa.util.url_for')
+    @patch('pybossa.util.hash_last_flash_message')
+    def test_url_for_app_type_mvc_with_hashed_flash(self, mock_hash_last_flash, mock_url_for):
+        """Test that the hashed flash is not returned with the MVC URL"""
+        endpoint = 'bar'
+        util.url_for_app_type(endpoint, _hash_last_flash=True)
+        mock_url_for.assert_called_with(endpoint)
+        err = "Hashed flash should not be called"
+        assert not mock_hash_last_flash.called, err
+
     @patch('pybossa.util.last_flashed_message')
     def test_last_flashed_message_hashed(self, last_flash):
         """Test the last flash message is hashed."""
