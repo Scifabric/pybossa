@@ -918,7 +918,9 @@ class TestRankProjects(object):
         mock_url_for.assert_called_with('rackspace', container='1', filename='1.png')
 
         util.get_avatar_url('local', '1.png', '1')
-        mock_url_for.assert_called_with('uploads.uploaded_file', filename='1/1.png')
+        mock_url_for.assert_called_with('uploads.uploaded_file',
+                                        _external=True,
+                                        filename='1/1.png')
 
 
 class TestJSONEncoder(object):
