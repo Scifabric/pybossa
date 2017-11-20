@@ -60,10 +60,21 @@ def user_to_json(user):
     """Return a user in JSON format."""
     return user.dictize()
 
+def hash_last_flash_message():
+    """Base64 encode the last flash message"""
+    data = {}
+    message_and_status = last_flashed_message()
+    if message_and_status:
+        data['flash'] = message_and_status[1]
+        data['status'] = message_and_status[0]
+    json_data = json.dumps(data)
+    return base64.b64encode(json_data)
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     from pybossa.model.project import Project
-    if request.headers.get('Content-Type') == 'application/json':
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
@@ -115,17 +126,21 @@ def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
         data['status'] = status
-    if request.headers.get('Content-Type') == 'application/json':
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
         return handle_content_type(data)
     else:
         return redirect(url)
 
 
-def url_for_app_type(endpoint, **values):
+def url_for_app_type(endpoint, _hash_last_flash=False, **values):
     """Generate a URL for an SPA, or otherwise."""
     spa_server_name = current_app.config.get('SPA_SERVER_NAME')
     if spa_server_name:
       values.pop('_external', None)
+      if _hash_last_flash:
+          values['flash'] = hash_last_flash_message()
+          return spa_server_name + url_for(endpoint, **values)
       return spa_server_name + url_for(endpoint, **values)
     return url_for(endpoint, **values)
 
