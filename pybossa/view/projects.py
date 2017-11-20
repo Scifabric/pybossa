@@ -69,6 +69,7 @@ from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
+from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 
 blueprint = Blueprint('project', __name__)
 
@@ -1971,3 +1972,68 @@ def del_coowner(short_name, user_name=None):
                   'success')
         return redirect_content_type(url_for('.coowners', short_name=short_name))
     return abort(404)
+
+
+@blueprint.route('/<short_name>/projectreport/export')
+@login_required
+def export_project_report(short_name):
+    """Export individual project information in the given format"""
+
+    project, owner, ps = project_by_shortname(short_name)
+    if not current_user.admin and not current_user.id in project.owners_ids:
+        return abort(403)
+
+    project_report_csv_exporter = ProjectReportCsvExporter()
+
+    def respond():
+        project, owner, ps = project_by_shortname(short_name)
+        title = project_title(project, "Settings")
+        pro = pro_features()
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        owner_serialized = cached_users.get_user_summary(owner.name)
+        response = dict(template='/projects/settings.html',
+                        project=project,
+                        owner=owner_serialized,
+                        n_tasks=ps.n_tasks,
+                        overall_progress=ps.overall_progress,
+                        n_task_runs=ps.n_task_runs,
+                        last_activity=ps.last_activity,
+                        n_completed_tasks=ps.n_completed_tasks,
+                        n_volunteers=ps.n_volunteers,
+                        title=title,
+                        pro_features=pro)
+        return handle_content_type(response)
+
+
+    def respond_csv(ty):
+        if ty not in ('project',):
+            return abort(404)
+
+        try:
+            res = project_report_csv_exporter.response_zip(project, ty)
+            return res
+        except Exception as e:
+            current_app.logger.exception(
+                    u'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    .format(project.short_name, ty, e))
+            flash(gettext('Error generating project report.'), 'error')
+        return abort(500)
+
+    export_formats = ['csv']
+    ty = request.args.get('type')
+    fmt = request.args.get('format')
+
+    if not (fmt and ty):
+        if len(request.args) >= 1:
+            return abort(404)
+        return respond()
+
+    if fmt not in export_formats:
+        abort(415)
+
+    if ty == 'project':
+        project = project_repo.get(project.id)
+        if project:
+            ensure_authorized_to('read', project)
+
+    return {'csv': respond_csv}[fmt](ty)
