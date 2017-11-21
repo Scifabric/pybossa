@@ -1759,7 +1759,7 @@ class TestWeb(web.Helper):
         p = project_repo.get(project.id)
         assert p.info['thumbnail'] is not None
         assert p.info['container'] is not None
-        thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
+        thumbnail_url = 'http://localhost/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
         assert p.info['thumbnail_url'] == thumbnail_url
 
     @with_context
