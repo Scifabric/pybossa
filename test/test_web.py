@@ -7618,3 +7618,84 @@ class TestWeb(web.Helper):
         assert data['flash'] == 'There is nothing to revert.', data
         assert data['next'] == csrf_url, data
         assert data['status'] == 'warning', data
+
+    @with_context
+    def test_fetch_lock(self):
+        """Test fetch lock works."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        # Test locked_scheduler
+        project = ProjectFactory.create(owner=admin, short_name='test')
+        url = '/project/{}/tasks/scheduler'.format(project.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
+        task = TaskFactory.create(project=project)
+        url = '/project/{}/tasks/timeout'.format(project.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(timeout='99'))
+
+        self.app.get('/project/{}/newtask'.format(project.short_name),
+                     follow_redirects=True)
+        res = self.app_get_json('/api/task/{}/lock'.format(task.id))
+        data = json.loads(res.data)
+
+        assert res.status_code == 200
+        assert isinstance(data['expires'], float)
+        assert data['success'] == True
+
+        # Test user_pref_scheduler
+        project2 = ProjectFactory.create(owner=admin, short_name='test2')
+        url = '/project/{}/tasks/scheduler'.format(project2.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(sched='user_pref_scheduler'))
+        task = TaskFactory.create(project=project2)
+        url = '/project/{}/tasks/timeout'.format(project2.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(timeout='99'))
+
+        self.app.get('/project/{}/newtask'.format(project2.short_name),
+                     follow_redirects=True)
+        res = self.app_get_json('/api/task/{}/lock'.format(task.id))
+        data = json.loads(res.data)
+
+        assert res.status_code == 200
+        assert isinstance(data['expires'], float)
+        assert data['success'] == True
+
+    @with_context
+    def test_fetch_lock_not_found(self):
+        """Test fetch lock not found."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(owner=admin, short_name='test')
+        project2 = ProjectFactory.create(owner=admin, short_name='test2')
+        url = '/project/{}/tasks/scheduler'.format(project.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
+        task = TaskFactory.create(project=project2)
+        url = '/project/{}/tasks/timeout'.format(project.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        self.app_post_json(new_url, data=dict(timeout='99'))
+
+        self.app.get('/project/{}/newtask'.format(project.short_name),
+                     follow_redirects=True)
+        res = self.app_get_json('/api/task/{}/lock'.format(task.id))
+        data = json.loads(res.data)
+
+        assert res.status_code == 404
+
+    @with_context
+    def test_fetch_lock_without_task(self):
+        """Test fetch lock fails for a non-existent task."""
+        self.register()
+        self.signin()
+
+        res = self.app_get_json('/api/task/{}/lock'.format(999))
+
+        assert res.status_code == 400
