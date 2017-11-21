@@ -107,7 +107,7 @@ class TestGoogle(Test):
                                   google_user_id='1')
         user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
         next_url = '/'
-        manage_user_login(user, user_data, next_url=next_url)
+        manage_user_login(user, user_data)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is False
         url_for_app_type.assert_called_with('account.newsletter_subscribe',
@@ -148,7 +148,7 @@ class TestGoogle(Test):
         user = UserFactory.create(fullname='john', name='john')
         user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
         next_url = '/'
-        manage_user_login(None, user_data, next_url=next_url)
+        manage_user_login(None, user_data)
         assert login_user.called is False
         url_for_app_type.assert_called_with('account.forgot_password',
                                             _hash_last_flash=True)
@@ -168,7 +168,7 @@ class TestGoogle(Test):
                                   info={'facebook_token': 't'})
         user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
         next_url = '/'
-        manage_user_login(None, user_data, next_url=next_url)
+        manage_user_login(None, user_data)
         assert login_user.called is False
         url_for_app_type.assert_called_with('account.signin',
                                             _hash_last_flash=True)
