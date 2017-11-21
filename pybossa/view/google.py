@@ -91,7 +91,8 @@ def oauth_authorized():  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data)
-    return manage_user_login(user, user_data)
+    next_url = request.args.get('next') or url_for_app_type('home.home')
+    return manage_user_login(user, user_data, next_url)
 
 
 def manage_user(access_token, user_data):
@@ -130,7 +131,7 @@ def manage_user(access_token, user_data):
         return user
 
 
-def manage_user_login(user, user_data):
+def manage_user_login(user, user_data, next_url):
     """Manage user login."""
     if user is None:
         # Give a hint for the user
@@ -150,8 +151,6 @@ def manage_user_login(user, user_data):
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        next_url = (request.args.get('next') or
-                    url_for_app_type('home.home', _hash_last_flash=True))
         if user.newsletter_prompted is False and newsletter.is_initialized():
             return redirect(url_for_app_type('account.newsletter_subscribe',
                                              next=next_url,
