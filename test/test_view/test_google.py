@@ -129,7 +129,7 @@ class TestGoogle(Test):
                                   newsletter_prompted=True)
         next_url = '/'
         user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
-        manage_user_login(user, user_data, next_url=next_url)
+        manage_user_login(user, user_data)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is True
         assert url_for_app_type.called is False
