@@ -365,6 +365,8 @@ class TestApiCommon(TestAPI):
             res = self.app.options('/api/project/1', headers=headers)
             assert res.headers['Access-Control-Allow-Headers'] == header, err_msg
 
+
+    '''
     @with_context
     def test_secure_app_access(self):
         """Test APP access with SECURE_APP_ACCESS"""
@@ -384,12 +386,11 @@ class TestApiCommon(TestAPI):
             data = json.loads(res.data)
             assert len(data) == 20, len(data)
 
-            import pdb; pdb.set_trace()
             res = self.app.get('/project/category/featured/')
             data = json.loads(res.data)
             import pdb; pdb.set_trace()
-            
-        '''
+
+
         res = self.app.get('/api/project?limit=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
@@ -420,4 +421,4 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
-        '''
+    '''
