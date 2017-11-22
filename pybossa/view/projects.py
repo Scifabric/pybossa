@@ -2510,6 +2510,7 @@ def sync_project(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Sync")
 
+    source_url = current_app.config.get('SERVER_URL')
     sync_form = ProjectSyncForm()
     target_key = sync_form.target_key.data
 
@@ -2523,28 +2524,25 @@ def sync_project(short_name):
         '    User who performed sync: {syncer}')
 
     try:
-        project_syncer = ProjectSyncer(DEFAULT_SYNC_TARGET)
-        source_url = current_app.config.get('SERVER_URL')
-        synced_url = '{}/project/{}'.format(
-            project_syncer.target_url, project.short_name)
-
         # Validate the ability to sync
-        able_to_sync = True
+        able_to_sync = source_url != DEFAULT_SYNC_TARGET
         auth_to_sync = (current_user.admin or
                 (current_user.subadmin and
                     current_user.id in project.owners_ids))
-        if able_to_sync and source_url == project_syncer.target_url:
-            able_to_sync = False
+        if not able_to_sync:
             msg = Markup('Cannot sync a project with itself')
         if able_to_sync and not auth_to_sync:
-            able_to_sync = False
             msg = Markup('Only admins and subadmin/co-owners '
                          'can sync projects')
-        if not able_to_sync:
+        if not able_to_sync or not auth_to_sync:
             flash(msg, 'error')
             return redirect_content_type(
                 url_for('.update', short_name=short_name))
 
+        # Perform sync
+        project_syncer = ProjectSyncer(DEFAULT_SYNC_TARGET)
+        synced_url = '{}/project/{}'.format(
+            project_syncer.target_url, project.short_name)
         if request.body.get('btn') == 'sync':
             action = 'sync'
             res = project_syncer.sync(
