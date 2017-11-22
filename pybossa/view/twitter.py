@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 """Twitter view for PYBOSSA."""
-from flask import Blueprint, request, url_for, flash, redirect, current_app
+from flask import Blueprint, request, url_for, redirect, flash, current_app
 from flask import abort
 from flask.ext.login import login_user, current_user
 from flask_oauthlib.client import OAuthException
@@ -81,7 +81,7 @@ def oauth_authorized():  # pragma: no cover
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        return redirect(next_url)
+        return redirect(url_for_app_type('home.home', _hash_last_flash=True))
 
     access_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
@@ -130,16 +130,18 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for_app_type('account.forgot_password'))
+            return redirect(url_for_app_type('account.forgot_password',
+                                             _hash_last_flash=True))
         else:
-            return redirect(url_for_app_type('account.signin'))
+            return redirect(url_for_app_type('account.signin',
+                                             _hash_last_flash=True))
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
     if ((user.email_addr != user.name) and user.newsletter_prompted is False
             and newsletter.is_initialized()):
         return redirect(url_for_app_type('account.newsletter_subscribe',
-                                         next=next_url))
+                                         next=next_url, _hash_last_flash=True))
     return redirect(next_url)
 
 

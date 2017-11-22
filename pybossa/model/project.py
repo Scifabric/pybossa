@@ -61,6 +61,8 @@ class Project(db.Model, DomainObject):
     featured = Column(Boolean, nullable=False, default=False)
     # Secret key for project
     secret_key = Column(Text, default=make_uuid)
+    # Zip download
+    zip_download = Column(Boolean, default=True)
     # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id

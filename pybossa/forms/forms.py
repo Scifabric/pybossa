@@ -42,8 +42,9 @@ EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
 
+BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-### Forms for projects view
+# Forms for projects view
 
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
@@ -72,6 +73,7 @@ class ProjectUpdateForm(ProjectForm):
                              validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
+    zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     protect = BooleanField(lazy_gettext('Protect with a password?'))
     password = TextField(lazy_gettext('Password'))
@@ -416,9 +418,19 @@ class ChangePasswordForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
+    if enable_strong_password:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            pb_validator.CheckPasswordStrength(),
+                            validators.EqualTo('confirm', err_msg_2)
+                            ])
+    else:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
+
     confirm = PasswordField(lazy_gettext('Repeat password'))
 
 
@@ -428,9 +440,18 @@ class ResetPasswordForm(Form):
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New Password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
+    if enable_strong_password:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            pb_validator.CheckPasswordStrength(),
+                            validators.EqualTo('confirm', err_msg_2)])
+    else:
+        new_password = PasswordField(
+                        lazy_gettext('New Password'),
+                        [validators.Required(err_msg),
+                            validators.EqualTo('confirm', err_msg_2)])
+
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
 

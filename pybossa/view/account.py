@@ -46,6 +46,7 @@ from pybossa.util import get_user_signup_method
 from pybossa.util import redirect_content_type
 from pybossa.util import get_avatar_url
 from pybossa.util import url_for_app_type
+from pybossa.util import fuzzyboolean
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
@@ -519,7 +520,8 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    if request.body.get('btn') != 'Profile':
+    btn = request.body.get('btn', 'None').capitalize()
+    if btn != 'Profile':
         update_form = UpdateProfileForm(formdata=None, obj=user)
     else:
         update_form = UpdateProfileForm(obj=user)
@@ -532,16 +534,17 @@ def update_profile(name):
     if request.method == 'POST':
         # Update user avatar
         succeed = False
-        if request.body.get('btn') == 'Upload':
+        btn = request.body.get('btn', 'None').capitalize()
+        if btn == 'Upload':
             succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
-        elif request.body.get('btn') == 'Profile':
+        elif btn == 'Profile':
             succeed = _handle_profile_update(user, update_form)
         # Update user password
-        elif request.body.get('btn') == 'Password':
+        elif btn == 'Password':
             succeed = _handle_password_update(user, password_form)
         # Update user external services
-        elif request.body.get('btn') == 'External':
+        elif btn == 'External':
             succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
@@ -630,9 +633,9 @@ def _handle_profile_update(user, update_form):
             return True
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
-        user.privacy_mode = update_form.privacy_mode.data
+        user.privacy_mode = fuzzyboolean(update_form.privacy_mode.data)
         user.locale = update_form.locale.data
-        user.subscribed = update_form.subscribed.data
+        user.subscribed = fuzzyboolean(update_form.subscribed.data)
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
