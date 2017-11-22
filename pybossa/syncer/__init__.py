@@ -33,50 +33,52 @@ class Syncer(object):
     SYNC_KEY = 'pybossa::sync::{}::target_url:{}::short_name:{}'
     CACHE_TIMEOUT = ONE_WEEK
 
-    def cache_target(self, target, target_url, target_id):
+    def __init__(self, target_url):
+        """Initialize a Syncer.
+
+        :param target_url: the target URL to sync with
+        """
+        self.target_url = target_url
+
+    def cache_target(self, target, target_id):
         """Cache target.
 
         :param target: a domain object dict
-        :param target_url: the target URL
         :param target_id: any identifier that
             can be used to create a unique key
         """
         target = json.dumps(target)
         sentinel.master.setex(
-            self._get_key(target_url, target_id),
+            self._get_key(target_id),
             self.CACHE_TIMEOUT,
             target)
 
-    def get_target_cache(self, target_url, target_id):
+    def get_target_cache(self, target_id):
         """Get cached target value.
 
-        :param target_url: the target URL
         :param target_id: the identifier used
             to create a unique key
         :return: a dict of the target
         """
-        target = sentinel.master.get(
-            self._get_key(target_url, target_id))
+        target = sentinel.master.get(self._get_key(target_id))
         if target:
             return json.loads(target)
         else:
             return
 
-    def delete_target_cache(self, target_url, target_id):
+    def delete_target_cache(self,  target_id):
         """Delete cached target value.
 
-        :param target_url: the target URL
         :param target_id: the identifier used
             to create a unique key
         """
-        sentinel.master.delete(
-            self._get_key(target_url, target_id))
+        sentinel.master.delete(self._get_key(target_id))
 
-    def _get_key(self, target_url, target_id):
+    def _get_key(self, target_id):
         target_id = target_id.encode('utf-8')
         return self.SYNC_KEY.format(
             self.__class__.__name__,
-            target_url,
+            self.target_url,
             target_id)
 
 

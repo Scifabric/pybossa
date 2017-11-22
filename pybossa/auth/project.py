@@ -28,33 +28,41 @@ class ProjectAuth(object):
     def specific_actions(self):
         return self._specific_actions
 
+    @staticmethod
+    def only_admin_or_subadminowner(user, project):
+        return (user.is_authenticated() and
+                (user.admin or
+                    (user.subadmin and
+                        user.id in project.owners_ids)))
+
+    @staticmethod
+    def only_admin_or_subadmin(user):
+        return (user.is_authenticated() and
+                (user.admin or user.subadmin))
+
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, project=None):
-        if project is not None and user.is_authenticated():
+        if project is not None and self.only_admin_or_subadmin(user):
             return project.published != True
-        return user.is_authenticated()
+        return self.only_admin_or_subadmin(user)
 
     def _read(self, user, project=None):
         if project is not None and project.published is False:
-            return self._only_admin_or_owner(user, project)
+            return self.only_admin_or_subadminowner(user, project)
         return True
 
     def _update(self, user, project):
-        return self._only_admin_or_owner(user, project)
+        return self.only_admin_or_subadminowner(user, project)
 
     def _delete(self, user, project):
         if self.result_repo.get_by(project_id=project.id):
             return False
-        return self._only_admin_or_owner(user, project)
+        return self.only_admin_or_subadminowner(user, project)
 
     def _publish(self, user, project):
         return (project.has_presenter() and
             len(self.task_repo.filter_tasks_by(project_id=project.id)) > 0 and
-            self._only_admin_or_owner(user, project))
-
-    def _only_admin_or_owner(self, user, project):
-        return (not user.is_anonymous() and
-                (user.admin or (user.subadmin and user.id in project.owners_ids)))
+            self.only_admin_or_subadminowner(user, project))
