@@ -67,12 +67,14 @@ def oauth_authorized():  # pragma: no cover
             current_app.logger.error(resp)
             return redirect(url_for_app_type('account.signin',
                             _hash_last_flash=True))
-        next_url = url_for_app_type('home.home', _hash_last_flash=True)
+        next_url = (request.args.get('next') or
+                    url_for_app_type('home.home', _hash_last_flash=True))
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
-        next_url = url_for_app_type('home.home', _hash_last_flash=True)
+        next_url = (request.args.get('next') or
+                    url_for_app_type('home.home', _hash_last_flash=True))
         return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
@@ -89,6 +91,7 @@ def oauth_authorized():  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data)
+    next_url = request.args.get('next') or url_for_app_type('home.home')
     return manage_user_login(user, user_data, next_url)
 
 

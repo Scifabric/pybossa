@@ -74,7 +74,7 @@ def oauth_authorized():  # pragma: no cover
     # We have to store the oauth_token in the session to get the USER fields
     access_token = resp['access_token']
     session['oauth_token'] = (resp['access_token'], '')
-    user_data = facebook.oauth.get('/me').data
+    user_data = facebook.oauth.get('/me?fields=id,email,name').data
 
     user = manage_user(access_token, user_data)
     return manage_user_login(user, user_data, next_url)
