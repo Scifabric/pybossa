@@ -36,6 +36,7 @@ import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask import current_app
 from flask.ext.login import current_user
+from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload
@@ -67,7 +68,7 @@ from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import n_available_tasks
 from pybossa.sched import (get_project_scheduler_and_timeout, has_lock,
-                           release_lock, Schedulers)
+                           release_lock, Schedulers, get_locks)
 
 blueprint = Blueprint('api', __name__)
 
@@ -326,3 +327,39 @@ def cancel_task(taskId=None):
                 .format(project.id, current_user.id, taskId))
 
     return Response(json.dumps({'success':True}), 200, mimetype="application/json")
+
+
+@jsonpify
+@blueprint.route('/task/<int:task_id>/lock', methods=['GET'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def fetch_lock(task_id):
+    """Fetch the time (in seconds) until the current user's
+    lock on a task expires.
+    """
+    if not current_user.is_authenticated():
+        return abort(401)
+
+    task = task_repo.get_task(task_id)
+
+    if not task:
+        return abort(400)
+
+    scheduler, timeout = get_project_scheduler_and_timeout(
+            task.project_id)
+
+    ttl = None
+    if scheduler in (Schedulers.locked, Schedulers.user_pref):
+        task_locked_by_user = has_lock(
+                task.project_id, task.id, current_user.id, timeout)
+        if task_locked_by_user:
+            locks = get_locks(task.project_id, task.id, timeout)
+            ttl = locks.get(str(current_user.id))
+
+    if not ttl:
+        return abort(404)
+
+    seconds_to_expire = float(ttl) - time()
+    res = json.dumps({'success': True,
+                      'expires': seconds_to_expire})
+
+    return Response(res, 200, mimetype='application/json')
