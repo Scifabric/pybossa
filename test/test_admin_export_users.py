@@ -84,7 +84,7 @@ class TestExportUsers(web.Helper):
         assert "Juan Jose" in data, data
         assert "Manolita" in data, data
         assert "Juan Jose2" in data, data
-        assert len(json_data) == 3
+        assert len(json_data) == 4 # all users report returns user_1@test.com
 
     @with_context
     def test_csv_contains_all_attributes(self):
@@ -124,10 +124,9 @@ class TestExportUsers(web.Helper):
         data = res.data
         csv_content = StringIO.StringIO(data)
         csvreader = unicode_csv_reader(csv_content)
-
         # number of users is -1 because the first row in csv are the headers
         number_of_users = -1
         for row in csvreader:
             number_of_users += 1
 
-        assert number_of_users == 3, number_of_users
+        assert number_of_users == 4, number_of_users # user report returning all users also returns user1@test.com

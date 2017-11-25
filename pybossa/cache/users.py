@@ -353,7 +353,7 @@ def get_users_for_report():
                 (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
                 to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
                 FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent
-                FROM task_run t JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
+                FROM task_run t RIGHT JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
                """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
@@ -366,7 +366,8 @@ def get_users_for_report():
                     last_submission_date=row.last_submission_date,
                     completed_tasks=row.completed_tasks, avg_time_per_task=str(round(row.avg_time_per_task.total_seconds() / 60, 2)),
                     total_projects_contributed=n_projects_contributed(row.u_id),
-                    percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2), consent=row.consent)
+                    percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2) if n_total_tasks() else 0,
+                    consent=row.consent)
                     for row in results]
     return users_report
 
