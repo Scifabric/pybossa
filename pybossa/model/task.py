@@ -32,7 +32,6 @@ class Task(db.Model, DomainObject):
     '''
     __tablename__ = 'task'
 
-
     #: Task.ID
     id = Column(Integer, primary_key=True)
     #: UTC timestamp when the task was created.
@@ -54,7 +53,6 @@ class Task(db.Model, DomainObject):
     fav_user_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
-
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
