@@ -24,7 +24,6 @@ from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 
 
-
 class TaskRun(db.Model, DomainObject):
     '''A run of a given task by a specific user.
     '''
@@ -51,7 +50,7 @@ class TaskRun(db.Model, DomainObject):
     external_uid = Column(Text)
     #: Value of the answer.
     info = Column(JSON)
-    '''General writable field that should be used by clients to record results\
+    '''General writable field that should be used by clients to record results
     of a TaskRun. Usually a template for this will be provided by Task
     For example::
         result: {
