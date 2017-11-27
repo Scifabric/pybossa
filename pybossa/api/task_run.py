@@ -75,7 +75,7 @@ class TaskRunAPI(APIBase):
             raise Forbidden('You must request a task first!')
 
     def _add_user_info(self, taskrun):
-        if current_user.is_anonymous():
+        if current_user.is_anonymous() and taskrun.user_ip is None:
             taskrun.user_ip = request.remote_addr
             if taskrun.user_ip is None:
                 taskrun.user_ip = '127.0.0.1'
