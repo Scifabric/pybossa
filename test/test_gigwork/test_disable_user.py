@@ -27,7 +27,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_disable_user(self):
-        """Test WEB home page works"""
+        """Test disable enable user works"""
         self.register()
         self.signin()
         self.register(name='tyrion')
@@ -45,7 +45,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_disable_user_does_not_exist(self):
-        """Test WEB home page works"""
+        """Test disable non existing user returns 404"""
         self.register()
         self.signin()
         res = self.app.get('/admin/users/disable_user/3')
@@ -56,7 +56,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_subadmin_cannot_disable_admin(self):
-        """Test WEB home page works"""
+        """Test subadmin cannot disable admin user"""
         self.register(name='tyrion')
         self.signin()
         self.register(name='tywin')
@@ -74,6 +74,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_user_cannot_disable_users(self):
+        """Test user cannot disable users"""
         self.register()
         self.signin()
         self.register(name='tyrion')
@@ -91,6 +92,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_subadmin_can_disable_users(self):
+        """Test subadmin can disable users"""
         self.register()
         self.signin()
         self.register(name='tyrion')
@@ -111,6 +113,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_enable_changes_last_login(self):
+        """Test enabling user changes last login"""
         self.register()
         self.signin()
         self.register(name='tyrion')

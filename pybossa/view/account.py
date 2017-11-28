@@ -459,9 +459,11 @@ def profile(name):
 
     """
     user = user_repo.get_by_name(name=name)
-    if user is None:
+    if user is None or current_user.is_anonymous():
         raise abort(404)
-    if current_user.is_anonymous() or (user.id != current_user.id):
+    if (current_user.admin or
+        (current_user.subadmin and user.id == current_user.id) or
+        user.id != current_user.id):
         return _show_public_profile(user)
     if current_user.is_authenticated() and user.id == current_user.id:
         return _show_own_profile(user)
