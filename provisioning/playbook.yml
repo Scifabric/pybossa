@@ -72,7 +72,7 @@
       copy: src={{pybossa_path}}/contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
 
     - name: start Sentinel and enable it at boot
-      service: name=redis-sentinel state=started enabled=yes
+      service: name=redis-server args=--sentinel state=started enabled=yes
 
     - name: "upgrade pip itself"
       sudo_user: "{{pybossa_user}}"
