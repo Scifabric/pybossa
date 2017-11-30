@@ -470,7 +470,10 @@ def profile(name):
 
 
 def _show_public_profile(user):
-    user_dict = cached_users.public_get_user_summary(user.name)
+    if current_user.id == user.id:
+        user_dict = cached_users.get_user_summary(user.name)
+    else:
+        user_dict = cached_users.public_get_user_summary(user.name)
     md = cached_users.get_metadata(user.name)
     form = MetadataForm(**md)
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
