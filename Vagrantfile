@@ -21,7 +21,11 @@ $ansible_local_provisioning_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 export PYTHONUNBUFFERED=1
 echo PyBossa provisioning with Ansible...
-ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
+cp /vagrant/provisioning/ansible_hosts /home/vagrant/
+echo Making sure ansible_hosts is executable...
+chmod 666 /home/vagrant/ansible_hosts
+echo Running playbook...
+ansible-playbook /vagrant/provisioning/playbook.yml -i /home/vagrant/ansible_hosts -c local
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
