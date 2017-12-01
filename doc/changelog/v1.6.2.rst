@@ -1,6 +1,0 @@
-================
-Changelog v1.6.2
-================
-
- * PYBOSSA supports webassets: SASS, LESS, Coffee Script, etc.
-

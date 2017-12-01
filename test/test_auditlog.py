@@ -44,6 +44,7 @@ class TestAuditlogAPI(Test):
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
+                'zip_download': 'True'
                 }
         url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
@@ -293,6 +294,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/%s/update" % short_name
 
         self.data['name'] = 'New'
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -316,6 +318,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/sampleapp/update"
 
         self.data['short_name'] = 'newshort_name'
+        self.data['zip_download'] = True
 
         res = self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -345,6 +348,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = self.data[attribute]
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -375,9 +379,13 @@ class TestAuditlogWEB(web.Helper):
 
         self.data[attribute] = new_value
 
+        self.data['zip_download'] = True
+
         self.app.post(url, data=self.data, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
+        for log in logs:
+            print log
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -436,6 +444,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = self.data[attribute]
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -466,6 +475,7 @@ class TestAuditlogWEB(web.Helper):
 
         self.data[attribute] = new_string
         self.data['protect'] = True
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 
@@ -500,6 +510,7 @@ class TestAuditlogWEB(web.Helper):
         old_value = ''
 
         self.data[attribute] = new_string
+        self.data['zip_download'] = True
 
         self.app.post(url, data=self.data, follow_redirects=True)
 

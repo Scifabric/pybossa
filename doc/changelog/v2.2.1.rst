@@ -1,5 +1,0 @@
-================
-Changelog v2.2.1
-================
-
- * Add a global results page. This can be fully customized in each theme.

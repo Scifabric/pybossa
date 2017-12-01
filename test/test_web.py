@@ -1131,20 +1131,21 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = False
-        db.session.commit()
-        fake_signer.loads.return_value = dict(fullname=user.fullname,
-                                              name=user.name,
-                                              email_addr=user.email_addr)
-        self.app.get('/account/register/confirmation?key=valid-key')
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = False
+            db.session.commit()
+            fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                                  name=user.name,
+                                                  email_addr=user.email_addr)
+            self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe', next=None)
+            url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.ask_user_to_subscribe.return_value = False
-        self.app.get('/account/register/confirmation?key=valid-key')
-        url_for.assert_called_with('home.home')
+            newsletter.ask_user_to_subscribe.return_value = False
+            self.app.get('/account/register/confirmation?key=valid-key')
+            url_for.assert_called_with('home.home')
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
@@ -1153,20 +1154,21 @@ class TestWeb(web.Helper):
     def test_newsletter_json(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home with JSON."""
         newsletter.ask_user_to_subscribe.return_value = True
-        self.register()
-        user = db.session.query(User).get(1)
-        user.valid_email = True
-        url = '/account/newsletter'
-        res = self.app_get_json(url)
-        data = json.loads(res.data)
-        assert data.get('title') == 'Subscribe to our Newsletter', data
-        assert data.get('template') == 'account/newsletter.html', data
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
+            self.register()
+            user = db.session.query(User).get(1)
+            user.valid_email = True
+            url = '/account/newsletter'
+            res = self.app_get_json(url)
+            data = json.loads(res.data)
+            assert data.get('title') == 'Subscribe to our Newsletter', data
+            assert data.get('template') == 'account/newsletter.html', data
 
 
-        res = self.app_get_json(url + "?subscribe=True")
-        data = json.loads(res.data)
-        assert data.get('flash') == 'You are subscribed to our newsletter!', data
-        assert data.get('status') == SUCCESS, data
+            res = self.app_get_json(url + "?subscribe=True")
+            data = json.loads(res.data)
+            assert data.get('flash') == 'You are subscribed to our newsletter!', data
+            assert data.get('status') == SUCCESS, data
 
 
     @with_context
@@ -1757,7 +1759,7 @@ class TestWeb(web.Helper):
         p = project_repo.get(project.id)
         assert p.info['thumbnail'] is not None
         assert p.info['container'] is not None
-        thumbnail_url = '/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
+        thumbnail_url = 'http://localhost/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
         assert p.info['thumbnail_url'] == thumbnail_url
 
     @with_context
@@ -1777,8 +1779,8 @@ class TestWeb(web.Helper):
         u = user_repo.get(owner.id)
         assert u.info['avatar'] is not None
         assert u.info['container'] is not None
-        avatar_url = '/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
-        assert u.info['avatar_url'] == avatar_url
+        avatar_url = 'http://localhost/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
+        assert u.info['avatar_url'] == avatar_url, u.info['avatar_url']
 
     @with_context
     def test_05d_get_nonexistant_project_update_json(self):
@@ -4438,9 +4440,16 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            for tk in flatten(t.dictize()).keys():
+            print t
+            d = t.dictize()
+            task_run_ids = d['task_run_ids']
+            fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
+            fl['task_run_ids'] = task_run_ids
+            # keys.append('result_id')
+            print fl
+            for tk in fl.keys():
                 expected_key = "%s" % tk
-                assert expected_key in keys, err_msg
+                assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
             for tk in t.info.keys():
                 expected_key = "info_%s" % tk
@@ -4449,8 +4458,11 @@ class TestWeb(web.Helper):
         for et in exported_results:
             result_id = et[keys.index('id')]
             result = db.session.query(Result).get(result_id)
-            result_dict_flat = flatten(result.dictize())
             result_dict = result.dictize()
+            task_run_ids = result_dict['task_run_ids']
+            result_dict_flat = flatten(result_dict,
+                                       root_keys_to_ignore='task_run_ids')
+            result_dict_flat['task_run_ids'] = task_run_ids
             for k in result_dict_flat.keys():
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
@@ -4558,6 +4570,95 @@ class TestWeb(web.Helper):
                     for k in task_dict['info'].keys():
                         slug = 'info_%s' % k
                         err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                        assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+            # Tasks are exported as an attached file
+            content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
+            assert res.headers.get('Content-Disposition') == content_disposition, res.headers
+
+    @with_context
+    def test_export_task_csv_new_root_key(self):
+        """Test WEB export Tasks to CSV new root key works"""
+        # Fixtures.create()
+        # First test for a non-existant project
+        with patch.dict(self.flask_app.config, {'TASK_CSV_EXPORT_INFO_KEY':'answer'}):
+            uri = '/project/somethingnotexists/tasks/export'
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+            # Now get the tasks in CSV format
+            uri = "/project/somethingnotexists/tasks/export?type=task&format=csv"
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+            # Now get the wrong table name in CSV format
+            uri = "/project/%s/tasks/export?type=wrong&format=csv" % Fixtures.project_short_name
+            res = self.app.get(uri, follow_redirects=True)
+            assert res.status == '404 NOT FOUND', res.status
+
+            # Now with a real project
+            project = ProjectFactory.create()
+            self.clear_temp_container(project.owner_id)
+            for i in range(0, 5):
+                task = TaskFactory.create(project=project,
+                                          info={u'answer':[{u'eñe': i}]})
+            uri = '/project/%s/tasks/export' % project.short_name
+
+            res = self.app.get(uri, follow_redirects=True)
+            heading = "Export All Tasks and Task Runs"
+            data = res.data.decode('utf-8')
+            assert heading in data, "Export page should be available\n %s" % data
+            # Now get the tasks in CSV format
+            uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
+            res = self.app.get(uri, follow_redirects=True)
+            file_name = '/tmp/task_%s.zip' % project.short_name
+            with open(file_name, 'w') as f:
+                f.write(res.data)
+            zip = zipfile.ZipFile(file_name, 'r')
+            zip.extractall('/tmp')
+            # Check only one file in zipfile
+            err_msg = "filename count in ZIP is not 2"
+            assert len(zip.namelist()) == 2, err_msg
+            # Check ZIP filename
+            extracted_filename = zip.namelist()[1]
+            assert extracted_filename == 'project1_task_info_only.csv', zip.namelist()[1]
+
+            csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
+
+            csvreader = unicode_csv_reader(csv_content)
+            project = db.session.query(Project)\
+                        .filter_by(short_name=project.short_name)\
+                        .first()
+            exported_tasks = []
+            n = 0
+            for row in csvreader:
+                if n != 0:
+                    exported_tasks.append(row)
+                else:
+                    keys = row
+                n = n + 1
+            err_msg = "The number of exported tasks is different from Project Tasks"
+            assert len(exported_tasks) == len(project.tasks), (err_msg,
+                                                               len(exported_tasks),
+                                                               len(project.tasks))
+            for t in project.tasks:
+                err_msg = "All the task column names should be included"
+                for tk in flatten(t.info['answer'][0]).keys():
+                    expected_key = "%s" % tk
+                    assert expected_key in keys, (expected_key, err_msg)
+
+            for et in exported_tasks:
+                task_id = et[keys.index('task_id')]
+                task = db.session.query(Task).get(task_id)
+                task_dict_flat = flatten(task.info['answer'][0])
+                task_dict = task.dictize()
+                for k in task_dict_flat.keys():
+                    slug = '%s' % k
+                    err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
+                    if task_dict_flat[k] is not None:
+                        assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    else:
+                        assert u'' == et[keys.index(slug)], err_msg
+                for datum in task_dict['info']['answer']:
+                    for k in datum.keys():
+                        slug = '%s' % k
                         assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
@@ -6943,3 +7044,83 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
         assert mock_rank.call_args_list[2][0][1] == order_by
         assert mock_rank.call_args_list[2][0][2] == desc
+
+    @with_context
+    def test_export_task_zip_download_anon(self):
+        """Test export task with zip download disabled for anon."""
+        project = ProjectFactory.create(zip_download=False)
+        url = '/project/%s/tasks/export' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 401
+
+    @with_context
+    def test_export_task_zip_download_not_owner(self):
+        """Test export task with zip download disabled for not owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        url = '/project/%s/tasks/export?api_key=%s' % (project.short_name,
+                                                       user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403
+
+    @with_context
+    def test_export_task_zip_download_owner(self):
+        """Test export task with zip download disabled for owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(3, project=project)
+        url = '/project/%s/tasks/export?api_key=%s&type=task&format=csv' % (project.short_name,
+                                                       owner.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_export_task_zip_download_admin(self):
+        """Test export task with zip download disabled for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(3, project=project)
+        url = '/project/%s/tasks/export?api_key=%s&type=task&format=csv' % (project.short_name,
+                                                       admin.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_browse_task_zip_download_anon(self):
+        """Test browse task with zip download disabled for anon."""
+        project = ProjectFactory.create(zip_download=False)
+        url = '/project/%s/tasks/browse' % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 401
+
+    @with_context
+    def test_browse_task_zip_download_not_owner(self):
+        """Test browse task with zip download disabled for not owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403
+
+    @with_context
+    def test_browse_task_zip_download_owner(self):
+        """Test browse task with zip download disabled for owner."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(20, project=project)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       owner.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_browse_task_zip_download_admin(self):
+        """Test browse task with zip download disabled for admin."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(zip_download=False, owner=owner)
+        task = TaskFactory.create_batch(20, project=project)
+        url = '/project/%s/tasks/browse?api_key=%s' % (project.short_name,
+                                                       admin.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code

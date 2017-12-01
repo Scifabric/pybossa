@@ -997,6 +997,22 @@ class TestProjectAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.api_base.caching')
+    def test_project_cache_post_is_refreshed(self, caching_mock):
+        """Test API project cache is updated after POST."""
+        clean_project_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_project_mock)
+        owner = UserFactory.create()
+        category = CategoryFactory.create()
+        url = '/api/project?api_key=%s' % owner.api_key
+        payload = dict(name='foo', short_name='foo', description='foo')
+        res = self.app.post(url, data=json.dumps(payload))
+        print res.data
+        project_id = json.loads(res.data)['id']
+        clean_project_mock.assert_called_with(project_id), res.data
+
+
+    @with_context
+    @patch('pybossa.api.api_base.caching')
     def test_project_cache_put_is_refreshed(self, caching_mock):
         """Test API project cache is updated after PUT."""
         clean_project_mock = MagicMock()

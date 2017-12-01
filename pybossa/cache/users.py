@@ -20,7 +20,7 @@ from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
-from pybossa.util import pretty_date
+from pybossa.util import pretty_date, exists_materialized_view
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
 from pybossa.model.project import Project
@@ -48,6 +48,7 @@ def get_user_summary(name):
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
                "user".google_user_id, "user".info, "user".admin,
+               "user".locale,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
                "user".valid_email, "user".confirmation_email_sent
                FROM "user"
@@ -64,6 +65,7 @@ def get_user_summary(name):
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
                     info=row.info, admin=row.admin,
+                    locale=row.locale,
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
@@ -92,6 +94,8 @@ def public_get_user_summary(name):
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
     """Return rank and score for a user."""
+    if exists_materialized_view(db, 'users_rank') is False:
+        lb()
     sql = text('''SELECT * from users_rank WHERE id=:user_id''')
     results = session.execute(sql, dict(user_id=user_id))
     rank_and_score = dict(rank=None, score=None)
@@ -259,7 +263,40 @@ def get_users_page(page, per_page=24):
         accounts.append(tmp)
     return accounts
 
+def delete_user_summary_id(oid):
+    """Delete from cache the user summary."""
+    user = db.session.query(User).get(oid)
+    delete_memoized(get_user_summary, user.name)
 
 def delete_user_summary(name):
     """Delete from cache the user summary."""
     delete_memoized(get_user_summary, name)
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_report_userdata(project_id):
+    """Return users details who contributed to a particular project."""
+    if project_id is None:
+        return None
+
+    total_tasks = n_tasks(project_id)
+    sql = text(
+            '''
+            SELECT id as u_id, name, fullname,
+            (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS completed_tasks,
+            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id) * 100 / :total_tasks) AS percent_completed_tasks,
+            (SELECT min(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS first_submission_date,
+            (SELECT max(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS last_submission_date,
+            (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
+            FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS avg_time_per_task
+            FROM public.user u WHERE id IN
+            (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
+            ''')
+    results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
+    users_report = [
+        [row.u_id, row.name, row.fullname,
+         row.completed_tasks, row.percent_completed_tasks,
+         row.first_submission_date, row.last_submission_date,
+         round(row.avg_time_per_task.total_seconds() / 60, 2)]
+         for row in results]
+    return users_report

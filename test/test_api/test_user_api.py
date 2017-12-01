@@ -22,6 +22,7 @@ from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
 from test_api import TestAPI
 from pybossa.core import db
+from mock import patch, MagicMock
 
 from factories import UserFactory
 
@@ -31,22 +32,58 @@ class TestUserAPI(Test):
     @with_context
     def test_user_get(self):
         """Test API User GET"""
-        expected_user = UserFactory.create()
+        admin, expected_user, someone = UserFactory.create_batch(3, info=dict(extra='foo',
+                                                                 badges=[1,2,3]))
         # Test GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         user = data[0]
-        assert len(data) == 1, data
-        assert user['name'] == expected_user.name, data
+        assert len(data) == 3, data
+        for datum in data:
+            assert [u'locale', u'name'] == datum.keys(), datum.keys()
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
         # Test GETting a specific user by ID
-        res = self.app.get('/api/user/1')
+        res = self.app.get('/api/user/%s' % expected_user.id)
+        data = json.loads(res.data)
+        user = data
+        assert user['name'] == expected_user.name, (user['name'],
+                                                    expected_user.name)
+        assert 'info' not in user.keys(), user.keys()
+
+        # Test GETting a specific user by ID as owner
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           expected_user.api_key)
+        res = self.app.get(url)
         data = json.loads(res.data)
         user = data
         assert user['name'] == expected_user.name, data
+        assert 'info' in user.keys(), user.keys()
+        assert user['info']['extra'] == 'foo'
+        assert user['info']['badges'] == [1,2,3]
+
+        # Test GETting a specific user by ID as admin
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           admin.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        user = data
+        assert user['name'] == expected_user.name, data
+        assert 'info' in user.keys(), user.keys()
+        assert user['info']['extra'] == 'foo'
+        assert user['info']['badges'] == [1,2,3]
+
+        # Test GETting a specific user by ID as non owner non admin 
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           someone.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        user = data
+        assert user['name'] == expected_user.name, data
+        assert 'info' not in user.keys(), user.keys()
+
 
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209')
@@ -119,9 +156,12 @@ class TestUserAPI(Test):
         assert res.status_code == 405, res.status_code
 
     @with_context
-    def test_user_not_allowed_actions_user(self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_user(self, caching_mock):
         """Test POST, PUT and DELETE for USER actions are not allowed for user
         in the API"""
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -148,11 +188,17 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
+        clean_user_mock.assert_called_with(data['id'])
 
     @with_context
-    def test_user_not_allowed_actions_admin (self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_admin(self, caching_mock):
         """Test POST, PUT and DELETE for ADMIN actions are not allowed for user
         in the API"""
+
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
+
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -173,6 +219,7 @@ class TestUserAPI(Test):
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
         assert data['info']['foo'] == 'bar', data
+        clean_user_mock.assert_called_with(data['id'])
 
         res = self.app.delete(url + '?apikey=%s' % auth.api_key)
         assert res.status_code == 405, res.status_code
@@ -184,6 +231,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'newadmin', data
+        clean_user_mock.assert_called_with(data['id'])
 
 
     @with_context

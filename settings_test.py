@@ -53,5 +53,25 @@ LIMIT = 25
 PER = 15 * 60
 SSE = True
 TIMEOUT = 5 * 60
+
 TASK_REDUNDANCY = 30
 
+LDAP_USER_OBJECT_FILTER = '(&(objectclass=inetOrgPerson)(cn=%s))'
+LDAP_USER_FILTER_FIELD = 'cn'
+LDAP_PYBOSSA_FIELDS = {'fullname': 'givenName',
+                       'name': 'uid',
+                       'email_addr': 'cn'}
+FLASK_PROFILER = {
+    "enabled": True,
+    "storage": {
+        "engine": "sqlite"
+    },
+    "basicAuth":{
+        "enabled": True,
+        "username": "admin",
+        "password": "admin"
+    },
+    "ignore": [
+	    "^/static/.*"
+	]
+}

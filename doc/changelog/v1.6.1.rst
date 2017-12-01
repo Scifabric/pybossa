@@ -1,6 +1,0 @@
-================
-Changelog v1.6.1
-================
-
- * PYBOSSA security improvement for tasks and task runs.
-

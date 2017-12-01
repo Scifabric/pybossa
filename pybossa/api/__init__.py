@@ -32,6 +32,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
+from flask import current_app
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
@@ -54,6 +55,7 @@ from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
+from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
@@ -69,7 +71,7 @@ error = ErrorStatus()
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def index():  # pragma: no cover
     """Return dummy text for welcome page."""
-    return 'The PYBOSSA API'
+    return 'The %s API' % current_app.config.get('BRAND')
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
@@ -92,6 +94,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
 register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
+register_api(ProjectStatsAPI, 'api_projectstats', '/projectstats', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
@@ -181,7 +184,7 @@ def _retrieve_new_task(project_id):
         desc = fuzzyboolean(request.args.get('desc'))
     else:
         desc = False
-   
+
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')

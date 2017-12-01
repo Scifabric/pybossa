@@ -28,6 +28,7 @@ import csv
 import tempfile
 import os
 import json
+import base64
 import hashlib
 
 
@@ -370,12 +371,48 @@ class TestPybossaUtil(Test):
 
     @with_context
     @patch('pybossa.util.url_for')
+    @patch('pybossa.util.hash_last_flash_message')
+    def test_url_for_app_type_spa_with_hashed_flash(self, mock_hash_last_flash, mock_url_for):
+        """Test that the hashed flash is returned with the SPA URL"""
+        flash = 'foo'
+        endpoint = 'bar'
+        mock_hash_last_flash.return_value = flash
+        with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME': 'example.com'}):
+            util.url_for_app_type(endpoint, _hash_last_flash=True)
+            err = "Hashed flash should be included"
+            mock_url_for.assert_called_with(endpoint, flash=flash), err
+
+    @with_context
+    @patch('pybossa.util.url_for')
     def test_url_for_app_type_mvc(self, mock_url_for):
         """Test that the correct MVC URL is returned"""
         fake_endpoint = '/example'
         mock_url_for.return_value = fake_endpoint
         spa_url = util.url_for_app_type('home.home')
         assert spa_url == fake_endpoint, spa_url
+
+    @with_context
+    @patch('pybossa.util.url_for')
+    @patch('pybossa.util.hash_last_flash_message')
+    def test_url_for_app_type_mvc_with_hashed_flash(self, mock_hash_last_flash, mock_url_for):
+        """Test that the hashed flash is not returned with the MVC URL"""
+        endpoint = 'bar'
+        util.url_for_app_type(endpoint, _hash_last_flash=True)
+        mock_url_for.assert_called_with(endpoint)
+        err = "Hashed flash should not be called"
+        assert not mock_hash_last_flash.called, err
+
+    @patch('pybossa.util.last_flashed_message')
+    def test_last_flashed_message_hashed(self, last_flash):
+        """Test the last flash message is hashed."""
+        message_and_status = [ 'foo', 'bar' ]
+        last_flash.return_value = message_and_status
+        expected = base64.b64encode(json.dumps({
+            'flash': message_and_status[1],
+            'status': message_and_status[0]
+        }))
+        hashed_flash = util.hash_last_flash_message()
+        assert hashed_flash == expected
 
     def test_pretty_date(self):
         """Test pretty_date works."""
@@ -881,7 +918,9 @@ class TestRankProjects(object):
         mock_url_for.assert_called_with('rackspace', container='1', filename='1.png')
 
         util.get_avatar_url('local', '1.png', '1')
-        mock_url_for.assert_called_with('uploads.uploaded_file', filename='1/1.png')
+        mock_url_for.assert_called_with('uploads.uploaded_file',
+                                        _external=True,
+                                        filename='1/1.png')
 
 
 class TestJSONEncoder(object):
