@@ -513,7 +513,8 @@ def get_avatar_url(upload_method, avatar, container):
                        container=container)
     else:
         filename = container + '/' + avatar
-        return url_for('uploads.uploaded_file', filename=filename)
+        return url_for('uploads.uploaded_file', filename=filename,
+                       _external=True)
 
 
 def get_disqus_sso(user): # pragma: no cover
