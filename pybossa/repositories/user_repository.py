@@ -21,9 +21,11 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.repositories import Repository
 from sqlalchemy import text
 from pybossa.model.user import User
-from pybossa.util import AttrDict
+from pybossa.util import AttrDict, can_have_super_user_access
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from sqlalchemy.orm.base import _entity_descriptor
+from flask import current_app
+import re
 
 class UserRepository(Repository):
 
@@ -78,6 +80,7 @@ class UserRepository(Repository):
     def save(self, user):
         self._validate_can_be('saved', user)
         try:
+            can_have_super_user_access(user)
             self.db.session.add(user)
             self.db.session.commit()
         except IntegrityError as e:
@@ -87,6 +90,7 @@ class UserRepository(Repository):
     def update(self, new_user):
         self._validate_can_be('updated', new_user)
         try:
+            can_have_super_user_access(new_user)
             self.db.session.merge(new_user)
             self.db.session.commit()
         except IntegrityError as e:

@@ -187,6 +187,7 @@ def pro_features(owner=None):
 
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
+@login_required
 def index(page):
     """List projects in the system"""
     order_by = request.args.get('orderby', None)
