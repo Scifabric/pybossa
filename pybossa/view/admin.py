@@ -41,7 +41,7 @@ from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.util import generate_manage_user_email, countries, languages, timezones, user_types
-from pybossa.util import can_update_user_info
+from pybossa.util import can_update_user_info, can_have_super_user_access
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import site_stats
@@ -249,6 +249,14 @@ def add_admin(user_id=None):
                 flash(markup.format(gettext('User account '),
                                     user.fullname,
                                     gettext(' is disabled')))
+                return redirect_content_type(url_for(".users"))
+
+            if not can_have_super_user_access(user):
+                markup = Markup('<strong>{} {}</strong> {} {}')
+                flash(markup.format(gettext('Denied admin privileges to'),
+                                    user.fullname,
+                                    user.email_addr,
+                                    'disqualify for admin access.'))
                 return redirect_content_type(url_for(".users"))
 
             ensure_authorized_to('update', user)
@@ -661,6 +669,14 @@ def add_subadmin(user_id=None):
                                     user.fullname,
                                     gettext(' is disabled')))
                 return redirect(url_for(".subadminusers"))
+
+            if not can_have_super_user_access(user):
+                markup = Markup('<strong>{} {}</strong> {} {}')
+                flash(markup.format(gettext('Denied subadmin privileges to'),
+                                    user.fullname,
+                                    user.email_addr,
+                                    'disqualify for subadmin access.'))
+                return redirect_content_type(url_for(".subadminusers"))
 
             ensure_authorized_to('update', user)
             user.subadmin = True

@@ -953,6 +953,7 @@ def grant_access_with_api_key():
             user_repo.update(user)
             _request_ctx_stack.top.user = user
 
+
 def can_have_super_user_access(user):
     assert(user)
     wlist_admins = current_app.config.get('SUPERUSER_WHITELIST_EMAILS', None)

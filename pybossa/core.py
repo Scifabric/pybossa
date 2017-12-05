@@ -30,7 +30,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
-from pybossa.util import pretty_date, datetime_filter
+from pybossa.util import pretty_date, datetime_filter, grant_access_with_api_key
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
@@ -535,16 +535,10 @@ def setup_hooks(app):
     @app.before_request
     def _api_authentication():
         """ Attempt API authentication on a per-request basis."""
-        apikey = request.args.get('api_key', None)
-        from flask import _request_ctx_stack
-        if 'Authorization' in request.headers:
-            apikey = request.headers.get('Authorization')
-        if apikey:
-            user = user_repo.get_by(api_key=apikey)
-            if user and user.enabled:
-                user.last_login = model.make_timestamp()
-                user_repo.update(user)
-                _request_ctx_stack.top.user = user
+
+        if not app.config.get('SECURE_APP_ACCESS', False):
+            grant_access_with_api_key()
+
         # Handle forms
         request.body = request.form
         if (request.method == 'POST' and

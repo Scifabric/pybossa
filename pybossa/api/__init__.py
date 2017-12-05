@@ -39,7 +39,7 @@ from flask.ext.login import current_user
 from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
-from pybossa.util import get_disqus_sso_payload
+from pybossa.util import get_disqus_sso_payload, grant_access_with_api_key
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -81,6 +81,11 @@ def index():  # pragma: no cover
     """Return dummy text for welcome page."""
     return 'The %s API' % current_app.config.get('BRAND')
 
+@blueprint.before_request
+def _api_authentication_with_api_key():
+    """ Allow API access with valid api_key."""
+    if current_app.config.get('SECURE_APP_ACCESS', False):
+        grant_access_with_api_key()
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     """Register API endpoints.
