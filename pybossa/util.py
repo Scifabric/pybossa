@@ -936,3 +936,31 @@ def mail_with_enabled_users(message):
     message['recipients'] = recipients or None
     message['bcc'] = bcc or None
     return True
+
+
+def grant_access_with_api_key():
+    from pybossa.core import user_repo
+    import pybossa.model as model
+    from flask import _request_ctx_stack
+
+    apikey = request.args.get('api_key', None)
+    if 'Authorization' in request.headers:
+        apikey = request.headers.get('Authorization')
+    if apikey:
+        user = user_repo.get_by(api_key=apikey)
+        if user and user.enabled:
+            user.last_login = model.make_timestamp()
+            user_repo.update(user)
+            _request_ctx_stack.top.user = user
+
+def can_have_super_user_access(user):
+    assert(user)
+    wlist_admins = current_app.config.get('SUPERUSER_WHITELIST_EMAILS', None)
+    if (wlist_admins and
+        not any(re.search(wl, user.email_addr)
+            for wl in wlist_admins)):
+        user.admin = user.subadmin = False
+        current_app.logger.info(u'User {} {} cannot have admin/subadmin access'.
+            format(user.fullname, user.email_addr))
+        return False
+    return True

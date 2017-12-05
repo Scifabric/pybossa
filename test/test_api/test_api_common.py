@@ -24,6 +24,9 @@ from pybossa.core import project_repo
 
 from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
+from mock import patch
+from pybossa.repositories import TaskRepository
+from default import db
 
 
 class TestApiCommon(TestAPI):
@@ -365,3 +368,87 @@ class TestApiCommon(TestAPI):
             res = self.app.options('/api/project/1', headers=headers)
             assert res.headers['Access-Control-Allow-Headers'] == header, err_msg
 
+
+    @with_context
+    def test_api_app_access_with_secure_app_access_enabled(self):
+        """Test API and APP access with SECURE_APP_ACCESS enabled"""
+
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2,
+                                  state='ongoing')
+        task_repo = TaskRepository(db)
+
+        admin = UserFactory.create()
+        with patch.dict(self.flask_app.config,
+            {'SECURE_APP_ACCESS': True}):
+            # no completedtask yet, should return zero
+            url = '/api/completedtask?project_id=1&api_key=api-key1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+            assert len(data) == 0, data
+
+            #  task is completed
+            task_runs = TaskRunFactory.create_batch(2, task=task)
+            task.state = 'completed'
+            task_repo.update(task)
+            url = '/api/completedtask?project_id=1&api_key=api-key1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            # correct result
+            assert data[0]['project_id'] == 1, data
+            assert data[0]['state'] == u'completed', data
+
+            # test api with incorrect api_key
+            url = '/api/completedtask?project_id=1&api_key=BAD-api-key'
+            res = self.app.get(url)
+            err_msg = 'Status code should be 400'
+            assert res.status_code == 400, err_msg
+
+            url = "/project/%s?api_key=api-key1" % project.short_name
+            res = self.app.get(url, follow_redirects=True)
+            err_msg = 'app access should not be allowed with SECURE_APP_ACCESS enabled'
+            assert "Sign in" in res.data, err_msg
+
+
+    @with_context
+    def test_api_app_access_with_secure_app_access_disabled(self):
+        """Test API and APP access with SECURE_APP_ACCESS disabled"""
+
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2,
+                                  state='ongoing')
+        task_repo = TaskRepository(db)
+
+        with patch.dict(self.flask_app.config,
+            {'SECURE_APP_ACCESS': False}):
+            # Test no completedtask yet
+            url = '/api/completedtask?project_id=1&api_key=api-key1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+            assert len(data) == 0, data
+
+            #  test task is completed
+            task_runs = TaskRunFactory.create_batch(2, task=task)
+            task.state = 'completed'
+            task_repo.update(task)
+            url = '/api/completedtask?project_id=1&api_key=api-key1'
+            res = self.app.get(url)
+            data = json.loads(res.data)
+
+            # correct result
+            assert data[0]['project_id'] == 1, data
+            assert data[0]['state'] == u'completed', data
+
+            # test api with incorrect api_key
+            url = '/api/completedtask?project_id=1&api_key=bad-api-key'
+            res = self.app.get(url)
+            err_msg = 'Status code should be 400'
+            assert res.status_code == 400, err_msg
+
+            url = "/project/%s?api_key=api-key1" % project.short_name
+            res = self.app.get(url, follow_redirects=True)
+            err_msg = 'app access should be allowed with SECURE_APP_ACCESS disabled'
+            assert not "Sign in" in res.data, err_msg
+            assert "Statistics" in res.data
+            assert "100% completed" in res.data

@@ -2091,6 +2091,8 @@ class TestWeb(web.Helper):
     def test_06_applications_without_apps(self):
         """Test WEB projects index without projects works"""
         # Check first without apps
+        self.register()
+        self.signin()
         self.create_categories()
         res = self.app.get('/project/category/featured', follow_redirects=True)
         assert "Projects" in res.data, res.data
@@ -2112,6 +2114,8 @@ class TestWeb(web.Helper):
     def test_06_featured_project_json(self):
         """Test WEB JSON projects index shows featured projects in all the pages works"""
         self.create()
+        self.register()
+        self.signin()
 
         project = db.session.query(Project).get(1)
         project.featured = True
@@ -2149,6 +2153,8 @@ class TestWeb(web.Helper):
         db.session.add(project)
         db.session.commit()
 
+        self.register()
+        self.signin()
         res = self.app.get('/project/category/featured', follow_redirects=True)
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
