@@ -40,14 +40,14 @@ from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_invitation_email_for_admins_subadmins
-from pybossa.util import generate_manage_user_email, countries, languages, timezones, user_types
+from pybossa.util import generate_manage_user_email, countries, languages, timezones
 from pybossa.util import can_update_user_info, can_have_super_user_access
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import site_stats
 from pybossa.cache import task_browse_helpers as helper
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
+from pybossa.core import announcement_repo, project_repo, user_repo, sentinel, user_types
 from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
@@ -766,7 +766,7 @@ def manageusers():
     found = []
     locs = countries()
     langs = languages()
-    utypes = user_types()
+    utypes = user_types
     timezone = [time[0] for time in timezones()]
     args = request.args
     form = SearchForm(request.form)
