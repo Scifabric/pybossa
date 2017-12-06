@@ -398,12 +398,12 @@ def get_project_report_userdata(project_id):
             ''')
     results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
     users_report = [
-        [str(row.u_id), row.name, row.fullname, row.email_addr,
-         str(row.admin), str(row.subadmin), str(row.enabled), str(row.languages),
-         str(row.locations), str(row.start_time), str(row.end_time),
-         str(row.timezone), row.type_of_user, row.additional_comments,
-         str(row.completed_tasks), str(row.percent_completed_tasks),
+        [row.u_id, row.name, row.fullname, row.email_addr,
+         row.admin, row.subadmin, row.enabled, row.languages,
+         row.locations, row.start_time, row.end_time,
+         row.timezone, row.type_of_user, row.additional_comments,
+         row.completed_tasks, row.percent_completed_tasks,
          row.first_submission_date, row.last_submission_date,
-         str(round(row.avg_time_per_task.total_seconds() / 60, 2))]
+         round(row.avg_time_per_task.total_seconds() / 60, 2)]
          for row in results]
     return users_report

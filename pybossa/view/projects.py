@@ -36,8 +36,7 @@ import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
                           csv_exporter, importer, db,
-                          task_json_exporter, task_csv_exporter,
-                          project_report_csv_exporter)
+                          task_json_exporter, task_csv_exporter)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -84,6 +83,7 @@ from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
 from pybossa.syncer import NotEnabled
 from pybossa.syncer.project_syncer import ProjectSyncer
+from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -2458,6 +2458,26 @@ def del_coowner(short_name, user_name=None):
 def export_project_report(short_name):
     """Export individual project information in the given format"""
     project, owner, ps = allow_deny_project_info(short_name)
+    project_report_csv_exporter = ProjectReportCsvExporter()
+
+    def respond():
+        project, owner, ps = project_by_shortname(short_name)
+        title = project_title(project, "Settings")
+        pro = pro_features()
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        owner_serialized = cached_users.get_user_summary(owner.name)
+        response = dict(template='/projects/settings.html',
+                        project=project,
+                        owner=owner_serialized,
+                        n_tasks=ps.n_tasks,
+                        overall_progress=ps.overall_progress,
+                        n_task_runs=ps.n_task_runs,
+                        last_activity=ps.last_activity,
+                        n_completed_tasks=ps.n_completed_tasks,
+                        n_volunteers=ps.n_volunteers,
+                        title=title,
+                        pro_features=pro)
+        return handle_content_type(response)
 
     def respond_csv(ty):
         if ty not in ('project',):
@@ -2468,9 +2488,9 @@ def export_project_report(short_name):
             return res
         except Exception as e:
             current_app.logger.exception(
-                    'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    u'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
                     .format(project.short_name, ty, e))
-            flash(gettext('There was an error while exporting your data.'),
+            flash(gettext('Error generating project report.'),
                   'error')
         return abort(500)
 

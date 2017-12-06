@@ -35,10 +35,6 @@ class ProjectReportCsvExporter(CsvExporter):
     def download_name(self, project, ty):
         """Get the filename (without) path of the file which should be downloaded.
            This function does not check if this filename actually exists!"""
-        valid_reports = ('project',)
-
-        if ty not in valid_reports:
-            return abort(404)
 
         name = self._project_name_latin_encoded(project)
         filename = '%s_%s_%s_report.zip' % (str(project.id), name, ty)  # Example: 123_feynman_project_report_csv.zip
@@ -70,29 +66,21 @@ class ProjectReportCsvExporter(CsvExporter):
                            'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed',
                            'First Task Submission', 'Last Task Submission', 'Average Time Per Task']
             writer.writerow(user_section)
-            try:
-                users_project_data = get_project_report_userdata(id)
-                if users_project_data:
-                    writer.writerow(user_header)
-                else:
-                    writer.writerow(['No user data'])
-            except Exception:
-                current_app.logger.exception('Error in get_project_report_userdata. project_id: {}'.format(id))
-                raise BadRequest("Failed to obtain user Statistics")
-            for user_data in users_project_data:
-                writer.writerow(user_data)
+            users_project_data = get_project_report_userdata(id)
+            if users_project_data:
+                writer.writerow(user_header)
+                for user_data in users_project_data:
+                    writer.writerow(user_data)
+
+            else:
+                writer.writerow(['No user data'])
 
             return self._get_csv(out, writer)
-        else:
-            def empty_csv(out):
-                yield out.read()
-            return empty_csv(out)
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
         csv_task_generator = self._respond_csv(ty, project.id)
         if csv_task_generator is not None:
-            # TODO: use temp file from csv generation directly
             datafile = tempfile.NamedTemporaryFile()
             try:
                 for line in csv_task_generator:
@@ -115,6 +103,3 @@ class ProjectReportCsvExporter(CsvExporter):
                     zipped_datafile.close()
             finally:
                 datafile.close()
-
-    def pregenerate_zip_files(self, project):
-        self._make_zip(project, "project")
