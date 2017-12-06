@@ -30,7 +30,7 @@ from wtforms.widgets import HiddenInput
 
 import validator as pb_validator
 from pybossa import util
-from pybossa.core import project_repo, user_repo, task_repo
+from pybossa.core import project_repo, user_repo, task_repo, user_types
 from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
@@ -590,7 +590,7 @@ class MetadataForm(Form):
         [TimeFieldsValidator(["start_time", "end_time"],
         message="Start time, End time, and Timezone must be filled out for submission")],
         choices=util.timezones())
-    user_type = SelectField(lazy_gettext('Type of user'), choices=util.user_types())
+    user_type = SelectField(lazy_gettext('Type of user'), choices=user_types)
     review = TextAreaField(lazy_gettext('Additional comments'))
 
 

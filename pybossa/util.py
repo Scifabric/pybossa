@@ -807,18 +807,6 @@ def timezones():
     return tz
 
 
-def user_types():
-    types = [("", ""),
-        ("Temporary Employee", "Temporary Employee"),
-        ("Intern", "Intern"),
-        ("Full-time Employee", "Full-time Employee"),
-        ("Part-time Employee", "Part-time Employee"),
-        ("Vendor", "Vendor"),
-        ("Freelancer", "Freelancer"),
-        ("Subcontractor", "Subcontractor")]
-    return types
-
-
 def languages():
     langs = [("English", "English"),
         ("Arabic", "Arabic"),

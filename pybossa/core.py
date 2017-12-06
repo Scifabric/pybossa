@@ -55,6 +55,7 @@ def create_app(run_as_server=True):
     setup_repositories(app)
     setup_exporter(app)
     setup_strong_password(app)
+    setup_config_globals(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -735,3 +736,8 @@ def setup_ldap(app):
 def setup_profiler(app):
     if app.config.get('FLASK_PROFILER'):
         flask_profiler.init_app(app)
+
+def setup_config_globals(app):
+    """Setup globals from config."""
+    global user_types
+    user_types = app.config.get('USER_TYPES', [('', '')])
