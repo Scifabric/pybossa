@@ -44,6 +44,8 @@ import time
 import pycountry
 from flask.ext.babel import lazy_gettext
 import re
+import boto
+
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -953,3 +955,22 @@ def can_have_super_user_access(user):
             format(user.fullname, user.email_addr))
         return False
     return True
+
+
+def s3_get_file_contents(s3_bucket, s3_path,
+                         headers=None, encoding='utf-8'):
+    """Get the conents of a file from S3.
+
+    :param s3_bucket: AWS S3 bucket
+    :param s3_path: Path to an S3 object
+    :param headers: Additional headers to send
+        in the request to S3
+    :param encoding: The text encoding to use
+    :return: File contents as a string with the
+        specified encoding
+    """
+    conn = boto.connect_s3()
+    bucket = conn.get_bucket(s3_bucket, validate=False)
+    key = bucket.get_key(s3_path)
+    return key.get_contents_as_string(
+            headers=headers, encoding=encoding)

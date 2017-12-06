@@ -25,7 +25,7 @@ import requests
 from StringIO import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
-from flask import render_template, make_response, session
+from flask import render_template, render_template_string, make_response, session
 from flask import Markup, jsonify
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
@@ -48,7 +48,8 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url, admin_or_subadmin_required, AttrDict)
+                          get_avatar_url, admin_or_subadmin_required, AttrDict,
+                          s3_get_file_contents)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -414,9 +415,17 @@ def task_presenter_editor(short_name):
                             pro_features=pro)
             return handle_content_type(response)
 
-        tmpl_uri = "projects/snippets/%s.html" \
-            % request.args.get('template')
-        tmpl = render_template(tmpl_uri, project=project)
+        tmpl_name = request.args.get('template')
+        s3_presenters = current_app.config.get('S3_PRESENTERS')
+        if s3_presenters and tmpl_name in s3_presenters.keys():
+            s3_bucket = current_app.config.get('S3_PRESENTER_BUCKET')
+            s3_presenter = s3_presenters[tmpl_name]
+            tmpl_string = s3_get_file_contents(s3_bucket, s3_presenter)
+            tmpl = render_template_string(tmpl_string, project=project)
+        else:
+            tmpl_uri = 'projects/snippets/{}.html'.format(tmpl_name)
+            tmpl = render_template(tmpl_uri, project=project)
+
         form.editor.data = tmpl
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
