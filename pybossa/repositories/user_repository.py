@@ -26,6 +26,7 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from sqlalchemy.orm.base import _entity_descriptor
 from flask import current_app
 import re
+from pybossa.util import get_unique_user_preferences
 
 class UserRepository(Repository):
 
@@ -136,3 +137,53 @@ class UserRepository(Repository):
                     ''')
         results = self.db.session.execute(sql, dict(project_id=project_id))
         return [row.email_addr for row in results]
+
+    def get_user_pref_recent_contributor_emails(self, project_id, task_create_timestamp):
+        # ongoing tasks user preferences
+        sql = text('''
+                    SELECT DISTINCT user_pref FROM task
+                    WHERE project_id = :project_id
+                    AND state = 'ongoing'
+                    AND created >= :task_create_timestamp
+                    AND user_pref::TEXT NOT IN ('null', '{}')
+                    ''')
+        results = self.db.session.execute(sql,
+                    dict(project_id=project_id, task_create_timestamp=task_create_timestamp))
+        task_prefs = [row.user_pref for row in results]
+        dtask_prefs = get_unique_user_preferences(task_prefs) # distinct user prefs
+
+        # user prefs for any ongoing tasks before task_create_timestamp that are to be excluded
+        sql = text('''
+                    SELECT DISTINCT user_pref FROM task
+                    WHERE project_id = :project_id
+                    AND state = 'ongoing'
+                    AND created < :task_create_timestamp
+                    AND user_pref::TEXT NOT IN ('null', '{}')
+                    ''')
+        results = self.db.session.execute(sql,
+                    dict(project_id=project_id, task_create_timestamp=task_create_timestamp))
+        exclude_task_prefs = [row.user_pref for row in results]
+        dexclude_task_prefs = get_unique_user_preferences(exclude_task_prefs)   # distinct user prefs to exclude
+        distinct_task_prefs = dtask_prefs - dexclude_task_prefs
+        if not distinct_task_prefs:
+            return []
+
+        clauses = ('lower(user_pref::text)::jsonb @> lower({})::jsonb'.format(up) for up in distinct_task_prefs)
+        user_prefs = ' AND ({})'.format(' OR '.join(clauses))
+
+        sql = text('''
+                    SELECT DISTINCT email_addr
+                    FROM public.user INNER JOIN task_run
+                    ON (task_run.user_id = public.user.id)
+                    WHERE project_id = :project_id {};
+                    '''.format(user_prefs))
+        current_app.logger.info(
+            'get_user_pref_recent_contributor_emails Project {}: \
+            task_pref {}, exclude_task_prefs {}, distinct_task_prefs {} \
+            \n sql {}'.format(project_id, dtask_prefs, dexclude_task_prefs,
+            distinct_task_prefs, str(sql)))
+
+        results = self.db.session.execute(sql, dict(project_id=project_id))
+        contributors = [ row.email_addr for row in results]
+        current_app.logger.info('contributors {}'.format(contributors))
+        return contributors

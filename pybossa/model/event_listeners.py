@@ -39,6 +39,7 @@ from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
 
 from pybossa.core import sentinel
+from pybossa.sched import Schedulers
 
 webhook_queue = Queue('high', connection=sentinel.master)
 mail_queue = Queue('email', connection=sentinel.master)
@@ -95,7 +96,7 @@ def add_project_event(mapper, conn, target):
     obj.update(tmp)
     update_feed(obj)
     # Create a clean projectstats object for it
-    sql_query = """INSERT INTO project_stats 
+    sql_query = """INSERT INTO project_stats
                    (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
                    n_completed_tasks, overall_progress, average_time,
                    n_blogposts, last_activity, info)
@@ -106,8 +107,12 @@ def add_project_event(mapper, conn, target):
 @event.listens_for(Task, 'before_insert')
 def before_add_task_event(mapper, conn, target):
     redis_conn = sentinel.master
-    if cached_projects.overall_progress(target.project_id) == 100:
-        redis_conn.sadd('updated_project_ids', target.project_id)
+    if cached_projects.get_project_scheduler(target.project_id) == Schedulers.user_pref:
+        if not redis_conn.hget('updated_project_ids', target.project_id):
+            redis_conn.hset('updated_project_ids', target.project_id, make_timestamp())
+    else:
+        if cached_projects.overall_progress(target.project_id) == 100:
+            redis_conn.hset('updated_project_ids', target.project_id, make_timestamp())
 
 
 @event.listens_for(Task, 'after_insert')

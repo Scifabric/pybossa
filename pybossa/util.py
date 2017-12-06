@@ -974,3 +974,13 @@ def s3_get_file_contents(s3_bucket, s3_path,
     key = bucket.get_key(s3_path)
     return key.get_contents_as_string(
             headers=headers, encoding=encoding)
+
+def get_unique_user_preferences(user_prefs):
+    duser_prefs = set()
+    for user_pref in user_prefs:
+        for k, values in user_pref.iteritems():
+            if isinstance(values, list):
+                for v in values:
+                    pref = '\'{}\''.format(json.dumps({k: [v]}))
+                    duser_prefs.add(pref)
+    return duser_prefs
