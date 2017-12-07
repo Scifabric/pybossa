@@ -946,7 +946,7 @@ def can_have_super_user_access(user):
     assert(user)
     wlist_admins = current_app.config.get('SUPERUSER_WHITELIST_EMAILS', None)
     if (wlist_admins and
-        not any(re.search(wl, user.email_addr)
+        not any(re.search(wl, user.email_addr, re.IGNORECASE)
             for wl in wlist_admins)):
         user.admin = user.subadmin = False
         current_app.logger.info(u'User {} {} cannot have admin/subadmin access'.
