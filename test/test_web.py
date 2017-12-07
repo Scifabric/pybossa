@@ -1390,7 +1390,7 @@ class TestWeb(web.Helper):
         res = self.profile()
         #assert self.html_title("Profile") in res.data, res
         assert "John Doe" in res.data, res
-        #assert "johndoe@example.com" in res.data, res
+        assert "johndoe@example.com" in res.data, res
 
         # Log out
         res = self.signout()
@@ -1585,7 +1585,7 @@ class TestWeb(web.Helper):
         assert "Welcome back John Doe 2" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe2" in res.data, res
-        #assert "johndoe2@example.com" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
 
         res = self.app.get('/', follow_redirects=False)
         assert "::logged-in::johndoe2" in res.data, res.data
@@ -1657,7 +1657,7 @@ class TestWeb(web.Helper):
         assert "John Doe 2" == user.fullname, user.fullname
         assert "johndoe" in res.data, res
         assert "johndoe" == user.name, user.name
-        #assert "johndoe2@example.com" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
         assert "johndoe2@example.com" == user.email_addr, user.email_addr
         assert user.subscribed is False, user.subscribed
 
@@ -1675,7 +1675,7 @@ class TestWeb(web.Helper):
         assert "Welcome back John Doe 2" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe2" in res.data, res
-        #assert "johndoe2@example.com" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
 
         res = self.signout()
         assert self.html_title() in res.data, res
