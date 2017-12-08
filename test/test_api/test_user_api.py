@@ -333,3 +333,38 @@ class TestUserAPI(Test):
         assert private_user['id'] == user_with_privacy_enabled.id, private_user
         assert private_user['info'] == user_with_privacy_enabled.info, private_user
 
+    @with_context
+    def test_admin_update_metadata(self):
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        url = 'api/user'
+
+        url += '/%s' % user.id
+        new_info = user.info
+        new_info['metadata'] = 'hello'
+        res = self.app.put(url + '?api_key=%s' % admin.api_key,
+                           data=json.dumps(dict(info=new_info)))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
+        assert data['info']['metadata'] == 'hello', data
+
+        res = self.app.get(url + '?api_key=%s' % admin.api_key)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert data['info']['metadata'] == 'hello', data
+
+    @with_context
+    def test_user_not_allowed_to_change_info_or_pref(self):
+        admin = UserFactory.create()
+        auth = UserFactory.create()
+
+        url = 'api/user/%s' % auth.id
+        res = self.app.put(url + '?api_key=%s' % auth.api_key,
+                           data=json.dumps(dict(name='new', info='hello')))
+        assert res.status_code == 403, res.data
+
+        res = self.app.put(url + '?api_key=%s' % auth.api_key,
+                           data=json.dumps(dict(user_pref='new')))
+        assert res.status_code == 403, res.data
+
+

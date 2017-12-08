@@ -24,7 +24,7 @@ This package adds GET method for:
 """
 from api_base import APIBase, error, jsonpify, ratelimits, ratelimit
 from pybossa.model.user import User
-from werkzeug.exceptions import MethodNotAllowed
+from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from flask import request
 from flask.ext.login import current_user
 
@@ -58,6 +58,10 @@ class UserAPI(APIBase):
             tmp['admin'] = user_data['admin']
             tmp['subadmin'] = user_data['subadmin']
             tmp['pro'] = user_data['pro']
+            tmp['enabled'] = user_data['enabled']
+            metadata = user_data['info'].get('metadata')
+            if metadata:
+                tmp['info']['metadata'] = metadata
             return tmp
         else:
             privacy = self._is_user_private(user_data)
@@ -112,3 +116,8 @@ class UserAPI(APIBase):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DEL')
+
+    def _forbidden_attributes(self, data):
+        forbidden = ('info', 'user_pref')
+        if not current_user.admin and any(attr in data for attr in forbidden):
+            raise Forbidden
