@@ -1674,11 +1674,12 @@ def auditlog(short_name):
 def publish(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
-
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     pro = pro_features()
     ensure_authorized_to('publish', project)
     if request.method == 'GET':
-        project_sanitized = project.dictize()
         template_args = {"project": project_sanitized,
                          "pro_features": pro,
                          "csrf": generate_csrf()}
