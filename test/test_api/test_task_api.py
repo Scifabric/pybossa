@@ -27,6 +27,7 @@ from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.counter import Counter
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -981,3 +982,23 @@ class TestTaskAPI(TestAPI):
                                            admin.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_counter_table(self):
+        """Test API Counter table is updated accordingly."""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 1
+
+        TaskFactory.create_batch(9, project=project)
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 10
+
+        task_id = task.id
+        task_repo.delete(task)
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 9
+        items = db.session.query(Counter).filter_by(task_id=task_id).all()
+        assert len(items) == 0

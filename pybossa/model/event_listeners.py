@@ -281,8 +281,8 @@ def create_zero_counter(mapper, conn, target):
 
 @event.listens_for(Task, 'after_delete')
 def delete_task_counter(mapper, conn, target):
-    sql_query = ("delete from counter project_id=%s and task_id=%s"
-                 % (make_timestamp(), target.project_id, target.id))
+    sql_query = ("delete from counter where project_id=%s and task_id=%s"
+                 % (target.project_id, target.id))
     conn.execute(sql_query)
 
 
@@ -292,6 +292,7 @@ def increase_task_counter(mapper, conn, target):
                  VALUES (TIMESTAMP '%s', %s, %s, 1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
+
 
 @event.listens_for(TaskRun, 'after_delete')
 def decrease_task_counter(mapper, conn, target):
