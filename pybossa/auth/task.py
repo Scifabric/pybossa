@@ -42,13 +42,12 @@ class TaskAuth(object):
         return self._only_admin_or_owner(user, task)
 
     def _delete(self, user, task):
-        if user.admin:
+        if user.is_authenticated() and user.admin:
             return True
-        else:
-            if self.result_repo.get_by(task_id=task.id,
-                                       project_id=task.project_id):
-                return False
-            return self._only_admin_or_owner(user, task)
+        if self.result_repo.get_by(task_id=task.id,
+                                   project_id=task.project_id):
+            return False
+        return self._only_admin_or_owner(user, task)
 
     def _only_admin_or_owner(self, user, task):
         if not user.is_anonymous():
