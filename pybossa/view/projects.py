@@ -1678,9 +1678,13 @@ def publish(short_name):
     pro = pro_features()
     ensure_authorized_to('publish', project)
     if request.method == 'GET':
-        return render_template('projects/publish.html',
-                                project=project,
-                                pro_features=pro)
+        project_sanitized = project.dictize()
+        template_args = {"project": project_sanitized,
+                         "pro_features": pro,
+                         "csrf": generate_csrf()}
+        response = dict(template = '/projects/publish.html', **template_args)
+        return handle_content_type(response)
+
     project.published = True
     project_repo.save(project)
     task_repo.delete_taskruns_from_project(project)
