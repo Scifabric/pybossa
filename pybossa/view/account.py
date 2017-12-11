@@ -589,9 +589,9 @@ def _handle_avatar_update(user, avatar_form):
         upload_method = current_app.config.get('UPLOAD_METHOD')
         avatar_url = get_avatar_url(upload_method,
                                     _file.filename, container)
-        user.info = {'avatar': _file.filename,
-                     'container': container,
-                     'avatar_url': avatar_url}
+        user.info['avatar'] = _file.filename
+        user.info['container'] = container
+        user.info['avatar_url'] = avatar_url
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your avatar has been updated! It may \
