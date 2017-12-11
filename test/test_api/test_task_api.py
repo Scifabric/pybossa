@@ -40,7 +40,7 @@ class TestTaskAPI(TestAPI):
         if owner:
             owner = owner
         else:
-            owner = UserFactory.create()
+            admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         tasks = []
         for i in range(n_results):
@@ -863,7 +863,8 @@ class TestTaskAPI(TestAPI):
 
         ## anonymous
         res = self.app.delete('/api/task/%s' % task.id)
-        error_msg = 'Anonymous should not be allowed to update'
+        error_msg = 'Anonymous should not be allowed to delete'
+        print res.status
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
@@ -951,3 +952,32 @@ class TestTaskAPI(TestAPI):
                                            project.owner.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    def test_delete_task_when_result_associated_admin(self):
+        """Test API delete task works when a result is associated as admin."""
+        admin = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+
+        url = '/api/task/%s?api_key=%s' % (result.task_id,
+                                           admin.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_delete_task_when_result_associated_variation(self):
+        """Test API delete task fails when a result is associated after
+        increasing the n_answers changing its state from completed to
+        ongoing."""
+        admin = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        task = task_repo.get_task(result.task_id)
+        task.n_answers = 100
+        task_repo.update(task)
+
+        url = '/api/task/%s?api_key=%s' % (result.task_id,
+                                           admin.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
