@@ -59,7 +59,8 @@ class UserAPI(APIBase):
             tmp['subadmin'] = user_data['subadmin']
             tmp['pro'] = user_data['pro']
             tmp['enabled'] = user_data['enabled']
-            metadata = user_data.get('info', {}).get('metadata')
+            user_info = user_data['info'] or {}
+            metadata = user_info.get('metadata')
             if metadata:
                 tmp['info']['metadata'] = metadata
             return tmp
