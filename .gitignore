@@ -20,6 +20,7 @@ dat/GeoLiteCity.dat
 .ropeproject/
 .idea/
 *.sublime-*
+sftp-config.json
 .vagrant/
 vagrant_env/
 keys/*
