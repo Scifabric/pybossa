@@ -1674,13 +1674,18 @@ def auditlog(short_name):
 def publish(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
-
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     pro = pro_features()
     ensure_authorized_to('publish', project)
     if request.method == 'GET':
-        return render_template('projects/publish.html',
-                                project=project,
-                                pro_features=pro)
+        template_args = {"project": project_sanitized,
+                         "pro_features": pro,
+                         "csrf": generate_csrf()}
+        response = dict(template = '/projects/publish.html', **template_args)
+        return handle_content_type(response)
+
     project.published = True
     project_repo.save(project)
     task_repo.delete_taskruns_from_project(project)
