@@ -16,7 +16,7 @@
       assert:
         that:
           - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_release == 'xenial'
+          - ansible_distribution_release == 'artful'
 
     - name: update apt cache
       apt: update_cache=yes
