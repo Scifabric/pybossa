@@ -11,11 +11,11 @@
     redis_port: "6379"
     schedule_interval: "60"
   tasks:
-    - name: Check Ubuntu 14.04 running
+    - name: Check Ubuntu 16.04 running
       assert:
         that:
           - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_release == 'trusty'
+          - ansible_distribution_release == 'xenial'
 
     - name: update apt cache
       apt: update_cache=yes
