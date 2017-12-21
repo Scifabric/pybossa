@@ -66,12 +66,6 @@
     - name: start PostgreSQL service
       service: name=postgresql state=started
 
-    - name: install dos2unix
-      apt: name=dos2unix
-
-    - name: ensure Unix line endings
-      command: echo dos2unix {{pybossa_path}}/contrib/redis/redis-sentinel
-
     - name: install Redis
       apt: name=redis-server state=latest
 
@@ -79,10 +73,13 @@
       service: name=redis-server state=started
 
     - name: install Redis Sentinel
-      copy: src={{pybossa_path}}/contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
+      apt: name=redis-sentinel state=latest
 
-    - name: copy Sentinel config
+    - name: copy Redis Sentinel config
       copy: src={{pybossa_path}}/contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
+
+    - name: copy Redis Sentinel systemd config
+      copy: src={{pybossa_path}}/contrib/redis/redis-sentinel.service dest=/etc/systemd/system/redis-sentinel.service owner=root group=root mode=755
 
     - name: start Sentinel and enable it at boot
       service: name=redis-sentinel state=started enabled=yes
