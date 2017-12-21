@@ -1,7 +1,8 @@
 ---
 # Installation steps for every Ubuntu 14.04
 - hosts: all
-  sudo: yes
+  become: true
+  become_method: sudo
   vars:
     pybossa_user: "vagrant"
     pybossa_path: "/vagrant"
@@ -75,11 +76,11 @@
       service: name=redis-sentinel state=started enabled=yes
 
     - name: "upgrade pip itself"
-      sudo_user: "{{pybossa_user}}"
+      become_user: "{{pybossa_user}}"
       pip: name=pip state=latest chdir={{pybossa_path}} virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
 
     - name: "install PyBossa virtualenv packages, can take some time..."
-      sudo_user: "{{pybossa_user}}"
+      become_user: "{{pybossa_user}}"
       pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
 
     - name: check alembic.ini existing
@@ -101,18 +102,18 @@
     # http://stackoverflow.com/a/16783253
     # psql -lqt | cut -d \| -f 1 | grep -w <db_name>
     - name: check if pybossa DB already existing
-      sudo_user: postgres
+      become_user: postgres
       shell: "psql -lqt | cut -d \\| -f 1 | grep -w pybossa"
       register: pybossa_db_exists
       changed_when: False
       failed_when: not (pybossa_db_exists.rc == 0 or pybossa_db_exists.rc == 1)
 
     - name: create DB user pybossa
-      sudo_user: postgres
+      become_user: postgres
       postgresql_user: name=pybossa password=tester role_attr_flags=CREATEDB,NOSUPERUSER
 
     - name: create PyBossa DB
-      sudo_user: postgres
+      become_user: postgres
       postgresql_db: name=pybossa
                      owner=pybossa
                      encoding='UTF-8'
@@ -122,18 +123,18 @@
 
     # Populate DB (create tables) only when not existing.
     - name: populate PyBossa DB
-      sudo_user: "{{pybossa_user}}"
+      become_user: "{{pybossa_user}}"
       command: "{{virtualenv_path}}/bin/python cli.py db_create"
       args:
         chdir: "{{pybossa_path}}"
       when: pybossa_db_exists.rc != 0
 
     - name: create PyBossa DB test user
-      sudo_user: postgres
+      become_user: postgres
       postgresql_user: name=rtester password=rtester role_attr_flags=CREATEDB,NOSUPERUSER
 
     - name: create PyBossa Test DB
-      sudo_user: postgres
+      become_user: postgres
       postgresql_db: name=pybossa_test
                      owner=rtester
                      encoding='UTF-8'
@@ -159,7 +160,7 @@
 
     # activate virtualenv always in .bashrc
     - name: virtualenv usage by default on bash login
-      sudo_user: "{{pybossa_user}}"
+      become_user: "{{pybossa_user}}"
       lineinfile:
         dest={{vagrant_home}}/.bashrc
         line=". {{virtualenv_path}}/bin/activate"
