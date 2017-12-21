@@ -5,6 +5,7 @@
   become_method: sudo
   vars:
     pybossa_user: "vagrant"
+    pybossa_pass: "vagrant"
     pybossa_path: "/vagrant"
     vagrant_home: "/home/vagrant"
     virtualenv_path: "/home/vagrant/pybossa-env"
@@ -16,7 +17,12 @@
       assert:
         that:
           - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_release == 'artful'
+          - ansible_distribution_release == 'xenial'
+
+    - name: creating {{pybossa_user}} user
+      user:
+        name: "{{pybossa_user}}"
+        password: "{{pybossa_pass | password_hash('sha512')}}"
 
     - name: update apt cache
       apt: update_cache=yes
