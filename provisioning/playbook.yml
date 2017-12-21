@@ -2,7 +2,7 @@
 # Installation steps for every Ubuntu 14.04
 - hosts: all
   become: true
-  become_method: sudo
+  become_method: su
   vars:
     pybossa_user: "vagrant"
     pybossa_path: "/vagrant"
