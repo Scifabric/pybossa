@@ -21,12 +21,12 @@ $ansible_local_provisioning_script = <<SCRIPT
 export DEBIAN_FRONTEND=noninteractive
 export PYTHONUNBUFFERED=1
 echo PyBossa provisioning with Ansible...
-ansible-playbook /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
+ansible-playbook -u vagrant /vagrant/provisioning/playbook.yml -i /vagrant/provisioning/ansible_hosts -c local
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "ubuntu/xenial64"
-  config.vm.box_url = "https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-vagrant.box"
+  config.vm.box = "ubuntu/artful64"
+  config.vm.box_url = "https://cloud-images.ubuntu.com/artful/current/artful-server-cloudimg-amd64-vagrant.box"
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
   end
