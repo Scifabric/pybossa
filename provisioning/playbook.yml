@@ -60,6 +60,12 @@
     - name: start PostgreSQL service
       service: name=postgresql state=started
 
+    - name: install dos2unix
+      apt: name=dos2unix
+
+    - name: ensure Unix line endings
+      command: echo dos2unix {{pybossa_path}}/contrib/redis/redis-sentinel
+
     - name: install Redis
       apt: name=redis-server state=latest
 
