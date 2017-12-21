@@ -25,8 +25,7 @@ ansible-playbook -u vagrant /vagrant/provisioning/playbook.yml -i /vagrant/provi
 SCRIPT
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "ubuntu/artful64"
-  config.vm.box_url = "https://cloud-images.ubuntu.com/xenial/current/artful-server-cloudimg-amd64-vagrant.box"
+  config.vm.box = "bento/ubuntu-16.04"
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
   end
