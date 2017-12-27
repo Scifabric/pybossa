@@ -27,6 +27,7 @@ from pybossa.model.result import Result
 from api_base import APIBase
 from pybossa.core import task_repo, result_repo
 from pybossa.model import make_timestamp
+from pybossa.auth import ensure_authorized_to
 
 
 class ResultAPI(APIBase):
@@ -43,6 +44,7 @@ class ResultAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _update_object(self, inst):
+        ensure_authorized_to('create', Result)
         if not inst.task_id:
             raise BadRequest('Invalid task id')
         task_id = inst.task_id
