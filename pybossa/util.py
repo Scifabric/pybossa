@@ -818,7 +818,6 @@ def languages():
         ("Bosnian", "Bosnian"),
         ("Bulgarian", "Bulgarian"),
         ("Catalan", "Catalan"),
-        ("Chinese", "Chinese"),
         ("Croatian", "Croatian"),
         ("Czech", "Czech"),
         ("Danish", "Danish"),
