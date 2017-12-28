@@ -534,6 +534,16 @@ def n_total_tasks():
     return n_total_tasks
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_scheduler(project_id):
+    """Return type of scheduler for a given project"""
+    sql = text('''SELECT info->'sched' FROM project
+                WHERE id=:project_id;
+                ''')
+
+    return session.scalar(sql, dict(project_id=project_id)) or 'default'
+
+
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")

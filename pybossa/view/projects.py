@@ -487,7 +487,6 @@ def delete(short_name):
 @login_required
 def update(short_name):
     project, owner, ps = project_by_shortname(short_name)
-
     def handle_valid_form(form):
         project, owner, ps = project_by_shortname(short_name)
 

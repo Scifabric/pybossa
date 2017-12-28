@@ -20,9 +20,10 @@ from mock import patch
 from helper import sched
 from default import with_context
 from pybossa.core import project_repo, task_repo, user_repo
-from factories import TaskFactory, ProjectFactory, UserFactory
+from factories import TaskFactory, ProjectFactory, UserFactory, TaskRunFactory
 from pybossa.sched import get_user_pref_task, Schedulers
 from pybossa.cache.helpers import n_available_tasks_for_user
+import datetime
 
 
 class TestSched(sched.Helper):
@@ -188,6 +189,200 @@ class TestSched(sched.Helper):
         tasks = get_user_pref_task(1, 500)
         assert not tasks
 
+    @with_context
+    def test_get_unique_user_pref(self):
+        """
+        Test get_unique_user_preferences returns unique user preferences
+        upon flattening input user preferences
+        """
+
+        from pybossa.util import get_unique_user_preferences
+
+        user_prefs = [{'languages': ['en'], 'locations': ['us']}, {'languages': ['en', 'ru']}]
+        duser_prefs = get_unique_user_preferences(user_prefs)
+        err_msg = 'There should be 3 unique user_prefs after dropping 1 duplicate user_pref'
+        assert len(duser_prefs) == 3, err_msg
+
+        err_msg = 'user_pref mismatch; duplicate user_pref languages as en should be dropped'
+        expected_user_pref = set(['\'{"languages": ["en"]}\'', '\'{"languages": ["ru"]}\'', '\'{"locations": ["us"]}\''])
+        assert duser_prefs == expected_user_pref, err_msg
+
+    @with_context
+    def test_recent_contributors_list_as_per_user_pref(self):
+        """
+        Notify users about new tasks imported based on user preference and those who were not notified previously
+        """
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['en']}         # owner is english user
+        user_repo.save(owner)
+        ch_user = UserFactory.create(id=501)
+        ch_user.user_pref = {'languages': ['ch']}       # chinese language user
+        user_repo.save(ch_user)
+        ru_user = UserFactory.create(id=502)
+        ru_user.user_pref = {'languages': ['ru']}       # russian language user
+        user_repo.save(ru_user)
+
+        # Stage 1 :
+        # Create 4 tasks - 3 english, 1 chinese.
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(4, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['en']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['en']}
+        task_repo.save(tasks[1])
+        tasks[2].user_pref = {'languages': ['ru']}
+        task_repo.save(tasks[2])
+        tasks[3].user_pref = {'languages': ['ch']}
+        task_repo.save(tasks[3])
+
+        # Complete 2 english and 1 russian tasks
+        # completing 1 russian task will mark all russian tasks completed
+        # and such users to be notified about new task imported
+        taskrun1 = TaskRunFactory.create(task=tasks[0], user=owner)
+        taskrun2 = TaskRunFactory.create(task=tasks[1], user=owner)
+        taskrun3 = TaskRunFactory.create(task=tasks[2], user=ru_user)
+
+        # Stage 2 :
+        # create 3 more tasks; 2 russian and 1 chinese
+
+        # at this stage, record current time.
+        # chinese user has existing ongoing task, hence won't be notified
+        # russian user has all tasks completed, hence will be notified
+        now = datetime.datetime.utcnow().isoformat()
+
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['ru']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['ru']}
+        task_repo.save(tasks[1])
+        tasks[2].user_pref = {'languages': ['ch']}
+        task_repo.save(tasks[2])
+
+        recent_contributors = user_repo.get_user_pref_recent_contributor_emails(project.id, now)
+        # with russian task completed, russian user will be notified about new task imported
+        err_msg = 'There should be 1 contributors'
+        assert len(recent_contributors) == 1, err_msg
+
+        err_msg = 'only user3 that has language preference russian should be notified'
+        assert recent_contributors[0] == 'user3@test.com', err_msg
+
+    @with_context
+    def test_recent_contributors_list_with_multiple_user_pref(self):
+        """
+        User with multiple user pref to be excluded from notifying when there are
+        existing ongoing tasks matching any one of same user pref
+        """
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['en']}                 # owner is english user
+        user_repo.save(owner)
+        sp_fr_user = UserFactory.create(id=501)
+        sp_fr_user.user_pref = {'languages': ['sp', 'fr']}      # spanish french language user
+        user_repo.save(sp_fr_user)
+        ch_user = UserFactory.create(id=502)
+        ch_user.user_pref = {'languages': ['ch']}               # russian language user
+        user_repo.save(ch_user)
+
+        # Stage 1 :
+        # Create 4 tasks - 3 english, 1 chinese.
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(6, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['en']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['sp']}
+        task_repo.save(tasks[1])
+        tasks[2].user_pref = {'languages': ['sp']}
+        task_repo.save(tasks[2])
+        tasks[3].user_pref = {'languages': ['fr']}
+        task_repo.save(tasks[3])
+        tasks[4].user_pref = {'languages': ['fr']}
+        task_repo.save(tasks[4])
+        tasks[5].user_pref = {'languages': ['ch']}
+        task_repo.save(tasks[5])
+
+        # Submit 1 english and chinese task runs. this will complete
+        # such tasks and assoicated users to be notified about new task imported
+        taskrun1 = TaskRunFactory.create(task=tasks[0], user=owner)
+        taskrun2 = TaskRunFactory.create(task=tasks[5], user=ch_user)
+        # Submit 1 spanish and 1 french task runs. since there are 1 each onging
+        # tasks, assoicated users wont be notified about new task imported
+        taskrun1 = TaskRunFactory.create(task=tasks[1], user=sp_fr_user)
+        taskrun2 = TaskRunFactory.create(task=tasks[3], user=sp_fr_user)
+
+        # Stage 2 :
+        # create 3 more tasks; 1 spanish, 1 french and 1 chinese
+
+        # at this stage, record current time.
+        # spanish and french user has existing ongoing task, hence won't be notified
+        # chinese and english user has all tasks completed, hence will be notified
+        now = datetime.datetime.utcnow().isoformat()
+
+        tasks = TaskFactory.create_batch(4, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['en']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['sp']}
+        task_repo.save(tasks[1])
+        tasks[2].user_pref = {'languages': ['fr']}
+        task_repo.save(tasks[2])
+        tasks[3].user_pref = {'languages': ['ch']}
+        task_repo.save(tasks[3])
+
+        recent_contributors = user_repo.get_user_pref_recent_contributor_emails(project.id, now)
+        # with english and chinese task completed, two such user will be notified about new task imported
+        err_msg = 'There should be 2 contributors'
+        assert len(recent_contributors) == 2, err_msg
+        err_msg = 'user1 and user3 with english and chinese language preference should be notified'
+        assert ('user1@test.com' in recent_contributors and
+                'user3@test.com' in recent_contributors and
+                'user2@test.com' not in recent_contributors), err_msg
+
+    @with_context
+    def test_recent_contributor_with_multiple_user_pref_notified(self):
+        """
+        User with multiple user pref to be notified when one of his/her
+        user pref matches any new task user pref
+        """
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['en']}                 # owner is english user
+        user_repo.save(owner)
+        sp_fr_user = UserFactory.create(id=501)
+        sp_fr_user.user_pref = {'languages': ['sp', 'fr']}      # spanish french language user
+        user_repo.save(sp_fr_user)
+
+        # Stage 1 :
+        # Create 3 tasks - 1 english, 1 spanish, 1 french.
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(6, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['en']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['sp']}
+        task_repo.save(tasks[1])
+        tasks[2].user_pref = {'languages': ['fr']}
+        task_repo.save(tasks[2])
+
+        # Submit 1 english and spanish tasks. this will complete
+        # such tasks and assoicated users to be notified about new task imported
+        taskrun1 = TaskRunFactory.create(task=tasks[0], user=owner)
+        taskrun2 = TaskRunFactory.create(task=tasks[1], user=sp_fr_user)
+
+        # Stage 2 :
+        # create 1 spanish task
+        # at this stage, record current time.
+        # there is french ongoing task, but since spanish task is complete
+        # sp_fr_user will be notified
+        now = datetime.datetime.utcnow().isoformat()
+
+        tasks = TaskFactory.create_batch(1, project=project, n_answers=1)
+        tasks[0].user_pref = {'languages': ['sp']}
+        task_repo.save(tasks[0])
+        recent_contributors = user_repo.get_user_pref_recent_contributor_emails(project.id, now)
+        # with one spanish task completed, user2 will be notified about new spanish task imported
+        err_msg = 'There should be 1 contributors'
+        assert len(recent_contributors) == 1, err_msg
+        err_msg = 'user1 and user3 with english and chinese language preference should be notified'
+        assert 'user2@test.com' in recent_contributors, err_msg
 
 class TestNTaskAvailable(sched.Helper):
 
@@ -254,4 +449,3 @@ class TestNTaskAvailable(sched.Helper):
         tasks[1].user_pref = {'languages': ['de']}
         task_repo.save(tasks[0])
         assert n_available_tasks_for_user(project, 500) == 2
-
