@@ -49,7 +49,7 @@ def flatten(obj, level=1, prefix=None, sep='__', ignore=tuple()):
             if _prefix is None:
                 new_prefix = k
             else:
-                new_prefix = '{}{}{}'.format(_prefix, sep, k)
+                new_prefix = u'{}{}{}'.format(_prefix, sep, k)
             _flatten(v, current_level + 1, new_prefix)
 
     _flatten(obj, 0, prefix)
