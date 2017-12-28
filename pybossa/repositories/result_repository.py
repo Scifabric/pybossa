@@ -45,6 +45,15 @@ class ResultRepository(Repository):
                               fulltextsearch,
                               desc, **filters)
 
+    def save(self, result):
+        self._validate_can_be('saved', result)
+        try:
+            self.db.session.add(result)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
     def update(self, result):
         self._validate_can_be('updated', result)
         try:

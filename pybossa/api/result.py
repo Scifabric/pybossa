@@ -25,6 +25,9 @@ This package adds GET, POST, PUT and DELETE methods for:
 from werkzeug.exceptions import BadRequest
 from pybossa.model.result import Result
 from api_base import APIBase
+from pybossa.core import task_repo, result_repo
+from pybossa.model import make_timestamp
+from pybossa.auth import ensure_authorized_to
 
 
 class ResultAPI(APIBase):
@@ -33,9 +36,25 @@ class ResultAPI(APIBase):
 
     __class__ = Result
     reserved_keys = set(['id', 'created', 'project_id',
-                         'task_id', 'task_run_ids', 'last_version'])
+                         'task_run_ids', 'last_version'])
 
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
+
+    def _update_object(self, inst):
+        ensure_authorized_to('create', Result)
+        if not inst.task_id:
+            raise BadRequest('Invalid task id')
+        task_id = inst.task_id
+        results = result_repo.get_by(task_id=task_id)
+        if results:
+            raise BadRequest('Record is already present')
+        task = task_repo.get_task(task_id)
+        if not task or task.state != 'completed':
+            raise BadRequest('Invalid task')
+        inst.created = make_timestamp()
+        inst.project_id = task.project_id
+        inst.task_run_ids = [tr.id for tr in task.task_runs]
+        inst.last_version = True

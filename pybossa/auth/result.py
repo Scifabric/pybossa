@@ -32,7 +32,7 @@ class ResultAuth(object):
         return getattr(self, action)(user, result)
 
     def _create(self, user, result):
-        return False
+        return not user.is_anonymous() and user.admin
 
     def _read(self, user, result=None):
         return True

@@ -292,7 +292,7 @@ class TestResultAPI(TestAPI):
         # now the root user
         res = self.app.post('/api/result?api_key=' + admin.api_key,
                             data=json.dumps(data))
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '400 BAD REQUEST', error_msg)
 
         # POST with not JSON data
         url = '/api/result?api_key=%s' % user.api_key
@@ -479,3 +479,46 @@ class TestResultAPI(TestAPI):
                 assert r.last_version is True, r.last_version
             else:
                 assert r.last_version is False, r.last_version
+
+    @with_context
+    def test_result_admin_post(self):
+        """Test API Result creation"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        data = dict(info='final result')
+
+        # now the root user
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                            data=json.dumps(data))
+        assert res.status == '400 BAD REQUEST', res.status
+        assert json.loads(res.data)['exception_msg'] == 'Invalid task id'
+
+        task = TaskFactory.create(project=project, n_answers=1)
+        data['task_id'] = task.id
+
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                    data=json.dumps(data))
+        assert res.status == '400 BAD REQUEST', res.status
+        assert json.loads(res.data)['exception_msg'] == 'Invalid task'
+
+        taskrun = TaskRunFactory.create(task=task)
+
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                    data=json.dumps(data))
+        assert res.status == '400 BAD REQUEST', res.status
+        assert json.loads(res.data)['exception_msg'] == 'Record is already present'
+
+        from pybossa.core import result_repo
+        result_repo.delete_results_from_project(project)
+
+        res = self.app.post('/api/result?api_key=' + admin.api_key,
+                    data=json.dumps(data))
+        assert res.status == '200 OK', res.status
+        res_data = json.loads(res.data)
+
+        assert res_data['task_id'] == task.id
+        assert res_data['project_id'] == project.id
+        assert res_data['info'] == data['info']
+        assert res_data['last_version']
+        assert res_data['task_run_ids'] == [taskrun.id]

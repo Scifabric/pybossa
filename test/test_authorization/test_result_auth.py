@@ -98,12 +98,12 @@ class TestResultAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
-    def test_admin_user_cannot_save_results(self):
+    def test_admin_user_can_save_results(self):
         """Test admin users cannot save results of a specific project"""
 
         result = Result()
 
-        assert_raises(Forbidden, ensure_authorized_to, 'create', result)
+        assert ensure_authorized_to('create', result)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
