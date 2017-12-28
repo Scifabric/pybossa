@@ -1124,7 +1124,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
 
     try:
         columns = get_searchable_columns(project.id)
-    except:
+    except Exception:
         current_app.logger.exception('Error getting columns')
         columns = []
 
@@ -1191,23 +1191,18 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         return handle_content_type(data)
 
     def respond_export(download_type, args):
-        try:
-            download_specs = download_type.split('-')
-            download_obj = download_specs[0]
-            download_format = download_specs[1]
+        download_specs = download_type.split('-')
+        download_obj = download_specs[0]
+        download_format = download_specs[1]
+        if len(download_specs) > 2:
+            metadata = bool(download_specs[2])
+        else:
+            metadata = False
 
-            try:
-                metadata = bool(download_specs[2])
-            except:
-                metadata = False
-
-            assert download_obj in ('task', 'task_run')
-            assert download_format in ('csv', 'json')
-        except:
-            current_app.logger.exception('Invalid download type {0} for project {1}.'
-                                         .format(download_type, project.short_name))
+        if download_obj not in ('task', 'task_run', 'consensus') or \
+           download_format not in ('csv', 'json'):
             flash(gettext('Invalid download type. Please try again.'), 'error')
-
+            return respond()
         try:
             export_queue.enqueue(export_tasks,
                                  current_user.email_addr,
@@ -1215,13 +1210,13 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                                  ty=download_obj,
                                  expanded=metadata,
                                  filetype=download_format,
-                                 **args)
+                                 filters=args)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
-        except:
+        except Exception:
             current_app.logger.exception(
                     '{0} Export Failed - Project: {1}, Type: {2}'
-                    .format(download_type.upper(), project.short_name, ty))
+                    .format(download_type.upper(), project.short_name, download_obj))
             flash(gettext('There was an error while exporting your data.'),
                   'error')
 
@@ -1438,7 +1433,7 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = allow_deny_project_info(short_name)
-    supported_tables = ['task', 'task_run', 'result']
+    supported_tables = ['task', 'task_run', 'result', 'consensus']
 
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")

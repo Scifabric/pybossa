@@ -736,19 +736,22 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
 
 
 def export_tasks(current_user_email_addr, short_name,
-                 ty, expanded, filetype, **filters):
+                 ty, expanded, filetype, filters=None):
     """Export tasks/taskruns from a project."""
     from pybossa.core import (task_csv_exporter, task_json_exporter,
                               project_repo)
+    from pybossa.exporter.consensus_exporter import export_consensus
 
     project = project_repo.get_by_shortname(short_name)
 
     try:
         # Export data and upload .zip file locally
-        if filetype == 'json':
-            path = task_json_exporter.make_zip(project, ty, expanded, **filters)
+        if ty == 'consensus':
+            path = export_consensus(project, ty, filetype, expanded, filters)
+        elif filetype == 'json':
+            path = task_json_exporter.make_zip(project, ty, expanded, filters)
         elif filetype == 'csv':
-            path = task_csv_exporter.make_zip(project, ty, expanded, **filters)
+            path = task_csv_exporter.make_zip(project, ty, expanded, filters)
         else:
             path = None
 

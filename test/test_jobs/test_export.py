@@ -116,5 +116,5 @@ class TestExport(Test):
         export_tasks(user.email_addr, project.short_name, 'task', False, 'csv')
         export_tasks(user.email_addr, project.short_name, 'task', False, 'json')
 
-        task_csv_exporter.make_zip.assert_called_once_with(project, 'task', False)
-        task_json_exporter.make_zip.assert_called_once_with(project, 'task', False)
+        task_csv_exporter.make_zip.assert_called_once_with(project, 'task', False, None)
+        task_json_exporter.make_zip.assert_called_once_with(project, 'task', False, None)

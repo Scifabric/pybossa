@@ -101,22 +101,22 @@ class TaskCsvExporter(CsvExporter):
 
         try:
             obj_dict = t.dictize()
-        except:
+        except Exception:
             pass
 
         try:
             task = t.task.dictize()
             obj_dict['task'] = task
-        except:
+        except Exception:
             pass
 
         try:
             user = t.user.dictize()
             allowed_attributes = ['name', 'fullname', 'created',
                                   'email_addr', 'admin', 'subadmin']
-            user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
+            user = {a: user.get(a) for a in allowed_attributes}
             obj_dict['user'] = user
-        except:
+        except Exception:
             pass
 
         return obj_dict
@@ -167,8 +167,8 @@ class TaskCsvExporter(CsvExporter):
         yield out.read()
 
     def _get_csv_with_filters(self, out, writer, table, project_id,
-                              expanded=False, **filters):
-        objs = browse_tasks_export(table, project_id, expanded, **filters)
+                              expanded, filters):
+        objs = browse_tasks_export(table, project_id, expanded, filters)
         rows = [obj for obj in objs]
 
         headers = self._get_all_headers(objs=rows,
@@ -220,21 +220,16 @@ class TaskCsvExporter(CsvExporter):
         headers = self.get_keys(obj_dict, obj_name)
         return headers
 
-    def _respond_csv(self, ty, project_id, expanded=False, **filters):
+    def _respond_csv(self, ty, project_id, expanded=False, filters=None):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
 
-        try:
-            if filters:
-                return self._get_csv_with_filters(
-                        out, writer, ty, project_id, expanded, **filters)
-            else:
-                return self._get_csv(
-                        out, writer, ty, project_id, expanded)
-        except:
-            def empty_csv(out):
-                yield out.read()
-            return empty_csv(out)
+        if filters:
+            return self._get_csv_with_filters(
+                    out, writer, ty, project_id, expanded, filters)
+        else:
+            return self._get_csv(
+                    out, writer, ty, project_id, expanded)
 
     def response_zip(self, project, ty, expanded=False):
         return self.get_zip(project, ty, expanded)
@@ -262,11 +257,11 @@ class TaskCsvExporter(CsvExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False, **filters):
+    def make_zip(self, project, obj, expanded=False, filters=None):
         file_format = 'csv'
-        obj_generator = self._respond_csv(obj, project.id, expanded, **filters)
+        obj_generator = self._respond_csv(obj, project.id, expanded, filters)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 
-    def _make_zip(self, project, obj, expanded=False, **filters):
-        self.make_zip(self, project, obj, expanded, **filters)
+    def _make_zip(self, project, obj, expanded=False, filters=None):
+        self.make_zip(self, project, obj, expanded, filters)

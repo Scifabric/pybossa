@@ -18,7 +18,6 @@
 """Exporter module helper functions."""
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.model.project import Project
 from pybossa.cache.task_browse_helpers import get_task_filters
 
 
@@ -66,12 +65,12 @@ def _field_mapreducer(fields, prefix=''):
     return ',\n'.join(field.format(prefix) for field in fields)
 
 
-def browse_tasks_export(obj, project_id, expanded, **kwargs):
+def browse_tasks_export(obj, project_id, expanded, filters):
     """Export tasks from the browse tasks view for a project
     using the same filters that are selected by the user
     in the UI.
     """
-    filters, filter_params = get_task_filters(kwargs)
+    conditions, filter_params = get_task_filters(filters)
     if obj == 'task':
         sql = text('''
                    SELECT {0}
@@ -88,7 +87,7 @@ def browse_tasks_export(obj, project_id, expanded, **kwargs):
                      WHERE project_id = :project_id
                      {1}
                    '''.format(_field_mapreducer(TASK_FIELDS, ''),
-                              filters)
+                              conditions)
                   )
     elif obj == 'task_run':
         if expanded:
@@ -115,7 +114,7 @@ def browse_tasks_export(obj, project_id, expanded, **kwargs):
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
                                  _field_mapreducer(TASK_FIELDS, 'task__'),
                                  _field_mapreducer(USER_FIELDS, 'user__'),
-                                 filters)
+                                 conditions)
                      )
         else:
            sql = text('''
@@ -135,7 +134,7 @@ def browse_tasks_export(obj, project_id, expanded, **kwargs):
                         WHERE task_run.project_id = :project_id
                         {1}
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
-                                 filters)
+                                 conditions)
                      )
     else:
         return
@@ -143,12 +142,12 @@ def browse_tasks_export(obj, project_id, expanded, **kwargs):
     return session.execute(sql, dict(project_id=project_id, **filter_params))
 
 
-def browse_tasks_export_count(obj, project_id, expanded, **kwargs):
+def browse_tasks_export_count(obj, project_id, expanded, filters):
     """Returns the count of the tasks from the browse tasks view
     for a project using the same filters that are selected by
     the user in the UI.
     """
-    filters, filter_params = get_task_filters(kwargs)
+    conditions, filter_params = get_task_filters(filters)
     if obj == 'task':
         sql = text('''
                    SELECT COUNT(task.id)
@@ -164,7 +163,7 @@ def browse_tasks_export_count(obj, project_id, expanded, **kwargs):
                        ON task.id = log_counts.task_id
                      WHERE project_id = :project_id
                      {0}
-                   '''.format(filters)
+                   '''.format(conditions)
                   )
     elif obj == 'task_run':
        sql = text('''
@@ -183,7 +182,7 @@ def browse_tasks_export_count(obj, project_id, expanded, **kwargs):
                       ON task.id = log_counts.task_id
                     WHERE task_run.project_id = :project_id
                     {0}
-                  '''.format(filters)
+                  '''.format(conditions)
                  )
     else:
         return

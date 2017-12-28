@@ -103,9 +103,9 @@ class TaskJsonExporter(JsonExporter):
             yield item + sep
         yield "]"
 
-    def gen_json_with_filters(self, obj, project_id, expanded=False, **filters):
-        objs = browse_tasks_export(obj, project_id, expanded, **filters)
-        n = browse_tasks_export_count(obj, project_id, expanded, **filters)
+    def gen_json_with_filters(self, obj, project_id, expanded, filters):
+        objs = browse_tasks_export(obj, project_id, expanded, filters)
+        n = browse_tasks_export_count(obj, project_id, expanded, filters)
 
         sep = ", "
         yield "["
@@ -115,16 +115,15 @@ class TaskJsonExporter(JsonExporter):
             item = json.dumps(self.process_filtered_row(dict(obj)))
             count += 1
 
-            if (count == n):
+            if count == n:
                 sep = ""
             yield item + sep
         yield "]"
 
-
-    def _respond_json(self, ty, project_id, expanded=False, **filters):
+    def _respond_json(self, ty, project_id, expanded=False, filters=None):
         if filters:
             return self.gen_json_with_filters(
-                    ty, project_id, expanded, **filters)
+                    ty, project_id, expanded, filters)
         else:
             return self.gen_json(ty, project_id, expanded)
 
@@ -153,9 +152,9 @@ class TaskJsonExporter(JsonExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False, **filters):
+    def make_zip(self, project, obj, expanded=False, filters=None):
         file_format = 'json'
-        obj_generator = self._respond_json(obj, project.id, expanded, **filters)
+        obj_generator = self._respond_json(obj, project.id, expanded, filters)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 
