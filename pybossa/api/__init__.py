@@ -355,9 +355,9 @@ def fetch_lock(task_id):
     ttl = None
     if scheduler in (Schedulers.locked, Schedulers.user_pref):
         task_locked_by_user = has_lock(
-                task.project_id, task.id, current_user.id, timeout)
+                task.id, current_user.id, timeout)
         if task_locked_by_user:
-            locks = get_locks(task.project_id, task.id, timeout)
+            locks = get_locks(task.id, timeout)
             ttl = locks.get(str(current_user.id))
 
     if not ttl:
