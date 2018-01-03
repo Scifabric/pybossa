@@ -7151,3 +7151,13 @@ class TestWeb(web.Helper):
         tmp = data['projects_created'][0]
         for key in info.keys():
             assert key not in tmp['info'].keys()
+
+        url = '/account/%s/?api_key=%s' % (owner.name,
+                                           owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert 'projects_published' in data.keys(), data.keys()
+        assert len(data['projects_published']) == 1, len(data['projects_published'])
+        tmp = data['projects_published'][0]
+        for key in info.keys():
+            assert key not in tmp['info'].keys()
