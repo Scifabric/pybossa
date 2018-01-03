@@ -111,20 +111,15 @@ def projects_contributed(user_id):
                WITH projects_contributed as
                     (SELECT DISTINCT(project_id) FROM task_run
                      WHERE user_id=:user_id)
-               SELECT project.id, project.name, project.short_name, project.owner_id,
-               project.description, project.info FROM project, projects_contributed
+               SELECT * FROM project, projects_contributed
                WHERE project.id=projects_contributed.project_id ORDER BY project.name DESC;
                ''')
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
     for row in results:
-        project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       owner_id=row.owner_id,
-                       description=row.description,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=row.info)
+        project = dict(row)
+        project['n_tasks'] = n_tasks(row.id)
+        project['n_volunteers'] = n_volunteers(row.id)
         projects_contributed.append(project)
     return projects_contributed
 
