@@ -7124,3 +7124,30 @@ class TestWeb(web.Helper):
                                                        admin.api_key)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_projects_account(self):
+        """Test projecs on profiles are good."""
+        owner, contributor = UserFactory.create_batch(2)
+        info = dict(passwd_hash='foo', foo='bar')
+        project = ProjectFactory.create(owner=owner, info=info)
+        TaskRunFactory.create(project=project, user=contributor)
+
+        url = '/account/%s/' % contributor.name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert 'projects' in data.keys(), data.keys()
+        assert len(data['projects']) == 1, len(data['projects'])
+        tmp = data['projects'][0]
+        for key in info.keys():
+            assert key not in tmp['info'].keys()
+
+        url = '/account/%s/' % owner.name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert len(data['projects']) == 0, len(data['projects'])
+        assert 'projects_created' in data.keys(), data.keys()
+        assert len(data['projects_created']) == 1, len(data['projects_created'])
+        tmp = data['projects_created'][0]
+        for key in info.keys():
+            assert key not in tmp['info'].keys()
