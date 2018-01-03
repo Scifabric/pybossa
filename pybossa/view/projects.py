@@ -90,6 +90,7 @@ cors_headers = ['Content-Type', 'Authorization']
 
 
 blueprint = Blueprint('project', __name__)
+blueprint_project_id = Blueprint('project_id', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
@@ -108,6 +109,16 @@ task_queue = Queue('medium',
 export_queue = Queue('low',
                      connection=sentinel.master,
                      default_timeout=EXPORT_TASKS_TIMEOUT)
+
+
+@blueprint_project_id.route('/<int:project_id>/', defaults={'path': ''})
+@blueprint_project_id.route('/<int:project_id>/<path:path>/')
+def project_id_route_converter(project_id, path):
+    project = project_repo.get(project_id)
+    if not project:
+        return abort(404)
+    new_path = '/project/{}/{}'.format(project.short_name, path)
+    return redirect_content_type(new_path)
 
 
 def sanitize_project_owner(project, owner, current_user, ps=None):
