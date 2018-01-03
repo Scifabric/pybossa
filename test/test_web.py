@@ -7160,4 +7160,4 @@ class TestWeb(web.Helper):
         assert len(data['projects_published']) == 1, len(data['projects_published'])
         tmp = data['projects_published'][0]
         for key in info.keys():
-            assert key not in tmp['info'].keys()
+            assert key in tmp['info'].keys()
