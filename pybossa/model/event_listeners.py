@@ -270,6 +270,7 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
 
+
 @event.listens_for(Task, 'after_insert')
 def create_zero_counter(mapper, conn, target):
     sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
@@ -277,12 +278,21 @@ def create_zero_counter(mapper, conn, target):
                  % (make_timestamp(), target.project_id, target.id))
     conn.execute(sql_query)
 
+
+@event.listens_for(Task, 'after_delete')
+def delete_task_counter(mapper, conn, target):
+    sql_query = ("delete from counter where project_id=%s and task_id=%s"
+                 % (target.project_id, target.id))
+    conn.execute(sql_query)
+
+
 @event.listens_for(TaskRun, 'after_insert')
 def increase_task_counter(mapper, conn, target):
     sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
                  VALUES (TIMESTAMP '%s', %s, %s, 1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
+
 
 @event.listens_for(TaskRun, 'after_delete')
 def decrease_task_counter(mapper, conn, target):
