@@ -111,20 +111,16 @@ def projects_contributed(user_id):
                WITH projects_contributed as
                     (SELECT DISTINCT(project_id) FROM task_run
                      WHERE user_id=:user_id)
-               SELECT project.id, project.name, project.short_name, project.owner_id,
-               project.description, project.info FROM project, projects_contributed
+               SELECT * FROM project, projects_contributed
                WHERE project.id=projects_contributed.project_id ORDER BY project.name DESC;
                ''')
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
     for row in results:
-        project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       owner_id=row.owner_id,
-                       description=row.description,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=row.info)
+        project = dict(row)
+        project['n_tasks'] = n_tasks(row.id)
+        project['n_volunteers'] = n_volunteers(row.id)
+        project['overall_progress'] = overall_progress(row.id),
         projects_contributed.append(project)
     return projects_contributed
 
@@ -156,9 +152,7 @@ def public_projects_contributed_cached(user_id):
 def published_projects(user_id):
     """Return published projects for user_id."""
     sql = text('''
-               SELECT project.id, project.name, project.short_name, project.description,
-               project.owner_id,
-               project.info
+               SELECT * 
                FROM project
                WHERE project.published=true
                AND :user_id = ANY (project.owners_ids::int[]);
@@ -166,13 +160,10 @@ def published_projects(user_id):
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
-        project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       owner_id=row.owner_id,
-                       description=row.description,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=row.info)
+        project = dict(row)
+        project['n_tasks'] = n_tasks(row.id)
+        project['n_volunteers'] = n_volunteers(row.id)
+        project['overall_progress'] = overall_progress(row.id),
         projects_published.append(project)
     return projects_published
 
@@ -204,9 +195,7 @@ def public_published_projects_cached(user_id):
 def draft_projects(user_id):
     """Return draft projects for user_id."""
     sql = text('''
-               SELECT project.id, project.name, project.short_name, project.description,
-               project.owner_id,
-               project.info
+               SELECT *
                FROM project
                WHERE project.published=false
                AND :user_id = ANY (project.owners_ids::int[]);
@@ -214,13 +203,10 @@ def draft_projects(user_id):
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
-        project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       owner_id=row.owner_id,
-                       description=row.description,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=row.info)
+        project = dict(row)
+        project['n_tasks'] = n_tasks(row.id)
+        project['n_volunteers'] = n_volunteers(row.id)
+        project['overall_progress'] = overall_progress(row.id),
         projects_draft.append(project)
     return projects_draft
 

@@ -101,7 +101,7 @@ def handle_content_type(data):
                 data[item] = cat
             if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
-            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
+            if (item == 'users' or item == 'projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
                 data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
