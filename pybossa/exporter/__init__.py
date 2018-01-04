@@ -54,7 +54,7 @@ class Exporter(object):
                 tmp = []
                 for row in data:
                     inf = copy.deepcopy(row.dictize()['info'])
-                    if inf and csv_export_key and inf.get(csv_export_key):
+                    if inf and type(inf) == dict and csv_export_key and inf.get(csv_export_key):
                         inf = inf[csv_export_key]
                     new_key = '%s_id' % table
                     if inf and type(inf) == dict:
@@ -63,9 +63,10 @@ class Exporter(object):
                                            root_keys_to_ignore=ignore_keys))
                     elif inf and type(inf) == list:
                         for datum in inf:
-                            datum[new_key] = row.id
-                            tmp.append(flatten(datum,
-                                               root_keys_to_ignore=ignore_keys))
+                            if type(datum) == dict:
+                                datum[new_key] = row.id
+                                tmp.append(flatten(datum,
+                                                   root_keys_to_ignore=ignore_keys))
             else:
                 tmp = []
                 for row in data:
