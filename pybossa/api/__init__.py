@@ -307,7 +307,7 @@ def get_disqus_sso_api():
 
 @jsonpify
 @csrf.exempt
-@blueprint.route('/task/<int:taskId>/canceltask', methods=['POST'])
+@blueprint.route('/task/<int:task_id>/canceltask', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def cancel_task(task_id=None):
     """Unlock task upon cancel so that same task can be presented again."""
