@@ -57,8 +57,8 @@ class TestEngageUsers(Test):
         today = datetime.datetime.today()
         old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        # substract one year and take care of leap years
-        one_year = today + relativedelta(years=-1, leapdays=1)
+        # substract six months and take care of leap years
+        one_year = today + relativedelta(months=-6, leapdays=1)
         one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
         user = UserFactory.create()
         user_recent = UserFactory.create()
