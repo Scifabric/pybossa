@@ -67,8 +67,8 @@ from werkzeug.exceptions import MethodNotAllowed
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import n_available_tasks
-from pybossa.sched import (get_project_scheduler_and_timeout, has_lock,
-                           release_lock, Schedulers, get_locks)
+from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
+                           has_lock, release_lock, Schedulers, get_locks)
 
 blueprint = Blueprint('api', __name__)
 
@@ -309,7 +309,7 @@ def get_disqus_sso_api():
 @csrf.exempt
 @blueprint.route('/task/<int:taskId>/canceltask', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def cancel_task(taskId=None):
+def cancel_task(task_id=None):
     """Unlock task upon cancel so that same task can be presented again."""
     if not current_user.is_authenticated():
         return abort(401)
@@ -320,18 +320,17 @@ def cancel_task(taskId=None):
     if not project:
         return abort(400)
 
-    projectId = project.id
-    userId = current_user.id
-    scheduler, timeout = get_project_scheduler_and_timeout(projectId)
+    user_id = current_user.id
+    scheduler, timeout = get_scheduler_and_timeout(project)
     if scheduler in (Schedulers.locked, Schedulers.user_pref):
-        task_locked_by_user = has_lock(projectId, taskId, userId, timeout)
+        task_locked_by_user = has_lock(task_id, user_id, timeout)
         if task_locked_by_user:
-            release_lock(projectId, taskId, userId, timeout)
+            release_lock(task_id, user_id, timeout)
             current_app.logger.info(
                 'Project {} - user {} cancelled task {}'
-                .format(project.id, current_user.id, taskId))
+                .format(project.id, current_user.id, task_id))
 
-    return Response(json.dumps({'success':True}), 200, mimetype="application/json")
+    return Response(json.dumps({'success': True}), 200, mimetype="application/json")
 
 
 @jsonpify

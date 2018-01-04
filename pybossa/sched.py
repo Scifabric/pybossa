@@ -83,7 +83,7 @@ def can_read_task(task, user):
 def after_save(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
-        release_lock(project_id, task_id, user_id, timeout)
+        release_lock(task_id, user_id, timeout)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -318,6 +318,7 @@ def get_locks(task_id, timeout):
 def get_key(task_id):
     return KEY_PREFIX.format(task_id)
 
+
 def release_user_locks(user_id):
     redis_conn = sentinel.master
     lock_manager = LockManager(sentinel.master, TIMEOUT)
@@ -336,10 +337,15 @@ def release_user_locks(user_id):
                 resource_id = get_key(task_id)
                 lock_manager.release_lock(resource_id, user_id)
 
+
 def get_project_scheduler_and_timeout(project_id):
     project = project_repo.get(project_id)
     if not project:
         raise Forbidden('Invalid project_id')
+    return get_scheduler_and_timeout(project)
+
+
+def get_scheduler_and_timeout(project):
     scheduler = project.info.get('sched', 'default')
     timeout = project.info.get('timeout', TIMEOUT)
     if scheduler == 'default':
