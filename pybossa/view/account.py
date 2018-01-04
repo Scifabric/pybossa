@@ -60,6 +60,7 @@ from pybossa.forms.account_view_forms import *
 from pybossa import otp
 import time
 from pybossa.cache.users import get_user_preferences
+from pybossa.sched import release_user_locks
 
 
 blueprint = Blueprint('account', __name__)
@@ -264,6 +265,8 @@ def signout():
     Returns a redirection to PYBOSSA home page.
 
     """
+    if current_user.is_authenticated():
+        release_user_locks(current_user.id)
     logout_user()
     flash(gettext('You are now signed out'), SUCCESS)
     return redirect_content_type(url_for('home.home'), status=SUCCESS)

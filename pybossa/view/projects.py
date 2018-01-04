@@ -1065,7 +1065,7 @@ def export_statuses(short_name, task_id):
 def _get_locks(project_id, task_id):
     _sched, timeout = sched.get_project_scheduler_and_timeout(
             project_id)
-    locks = sched.get_locks(project_id, task_id, timeout)
+    locks = sched.get_locks(task_id, timeout)
     now = time.time()
     lock_ttls = {int(k): float(v) - now
                  for k, v in locks.iteritems()}

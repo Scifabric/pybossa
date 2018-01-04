@@ -61,7 +61,7 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 def can_post(project_id, task_id, user_id):
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
-        allowed = has_lock(project_id, task_id, user_id, timeout)
+        allowed = has_lock(task_id, user_id, timeout)
         current_app.logger.info(
             'Project {} - user {} can submit for task {}: {}'
             .format(project_id, user_id, task_id, allowed))
@@ -74,7 +74,7 @@ def can_read_task(task, user):
     project_id = task.project_id
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
     if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
-        return has_read_access(user) or has_lock(project_id, task.id, user.id,
+        return has_read_access(user) or has_lock(task.id, user.id,
                                                  timeout)
     else:
         return True
@@ -214,7 +214,7 @@ def locked_scheduler(query_factory):
         for task_id, taskcount, n_answers, timeout in rows:
             timeout = timeout or TIMEOUT
             remaining = n_answers - taskcount
-            if acquire_lock(project_id, task_id, user_id, remaining, timeout):
+            if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
                 register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
                 current_app.logger.info(
@@ -287,37 +287,54 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     return text(sql)
 
 
-KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}:{1}'
+KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
 TIMEOUT = ContributionsGuard.STAMP_TTL
 
 
-def has_lock(project_id, task_id, user_id, timeout):
+def has_lock(task_id, user_id, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(project_id, task_id)
+    key = get_key(task_id)
     return lock_manager.has_lock(key, user_id)
 
 
-def acquire_lock(project_id, task_id, user_id, limit, timeout):
+def acquire_lock(task_id, user_id, limit, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(project_id, task_id)
+    key = get_key(task_id)
     return lock_manager.acquire_lock(key, user_id, limit)
 
 
-def release_lock(project_id, task_id, user_id, timeout):
+def release_lock(task_id, user_id, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(project_id, task_id)
+    key = get_key(task_id)
     lock_manager.release_lock(key, user_id)
 
 
-def get_locks(project_id, task_id, timeout):
+def get_locks(task_id, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(project_id, task_id)
+    key = get_key(task_id)
     return lock_manager.get_locks(key)
 
 
-def get_key(project_id, task_id):
-    return KEY_PREFIX.format(project_id, task_id)
+def get_key(task_id):
+    return KEY_PREFIX.format(task_id)
 
+def release_user_locks(user_id):
+    redis_conn = sentinel.master
+    lock_manager = LockManager(sentinel.master, TIMEOUT)
+    cguard_prefix = ContributionsGuard.PRESENTED_KEY_PREFIX
+    task_presented_key = cguard_prefix.replace('{1}', '*')
+    task_presented_key = task_presented_key.format(user_id)
+    pattern = task_presented_key.replace('*', '')
+    cursor = 0
+    while cursor != '0':
+        cursor, keys = redis_conn.scan(cursor=cursor, match=task_presented_key)
+        # extract task id to build resource_id for release/expire lock
+        for key in keys:
+            tid = key.split(pattern)
+            if len(tid) == 2:
+                task_id = tid[1]
+                resource_id = get_key(task_id)
+                lock_manager.release_lock(resource_id, user_id)
 
 def get_project_scheduler_and_timeout(project_id):
     project = project_repo.get(project_id)
