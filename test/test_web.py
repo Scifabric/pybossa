@@ -1011,7 +1011,7 @@ class TestWeb(web.Helper):
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)
-        assert data['status'] == 'info'
+        assert data['status'] == 'announcement'
         assert data['template'] == 'account/account_validation.html'
         assert data['title'] == 'Account validation'
 

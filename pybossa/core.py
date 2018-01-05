@@ -572,12 +572,10 @@ def setup_hooks(app):
             announcement = app.config['ANNOUNCEMENT']
             if current_user and current_user.is_authenticated():
                 for key in announcement.keys():
-                    if key == 'admin' and current_user.admin:
-                        flash(announcement[key], 'info')
-                    if key == 'owner' and len(current_user.projects) != 0:
-                        flash(announcement[key], 'info')
-                    if key == 'user':
-                        flash(announcement[key], 'info')
+                    if key == 'admin' and current_user.admin or \
+                       key == 'owner' and len(current_user.projects) != 0 or \
+                       key == 'user':
+                        flash(announcement[key], 'announcement')
 
         if app.config.get('CONTACT_EMAIL'):  # pragma: no cover
             contact_email = app.config.get('CONTACT_EMAIL')
