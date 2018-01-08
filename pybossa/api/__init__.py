@@ -69,6 +69,7 @@ from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import n_available_tasks
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
+from pybossa.api.project_by_name import ProjectByNameAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -81,11 +82,13 @@ def index():  # pragma: no cover
     """Return dummy text for welcome page."""
     return 'The %s API' % current_app.config.get('BRAND')
 
+
 @blueprint.before_request
 def _api_authentication_with_api_key():
     """ Allow API access with valid api_key."""
     if current_app.config.get('SECURE_APP_ACCESS', False):
         grant_access_with_api_key()
+
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     """Register API endpoints.
@@ -125,6 +128,7 @@ register_api(FavoritesAPI, 'api_favorites', '/favorites',
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 register_api(CompletedTaskAPI, 'api_completedtask', '/completedtask', pk='oid', pk_type='int')
 register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', pk='oid', pk_type='int')
+register_api(ProjectByNameAPI, 'api_projectbyname', '/projectbyname', pk='key', pk_type='string')
 
 
 @jsonpify
