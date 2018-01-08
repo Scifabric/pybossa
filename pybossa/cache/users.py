@@ -123,16 +123,16 @@ def rank_and_score(user_id):
     return rank_and_score
 
 
-def projects_contributed(user_id):
+def projects_contributed(user_id, order_by='name'):
     """Return projects that user_id has contributed to."""
     sql = text('''
                WITH projects_contributed as
-                    (SELECT DISTINCT(project_id) FROM task_run
-                     WHERE user_id=:user_id)
-               SELECT project.id, project.name, project.short_name, project.owner_id,
+                    (SELECT project_id, MAX(finish_time) as last_contribution  FROM task_run
+                     WHERE user_id=:user_id GROUP BY project_id)
+               SELECT project.id, project.name as name, project.short_name, project.owner_id,
                project.description, project.info FROM project, projects_contributed
-               WHERE project.id=projects_contributed.project_id ORDER BY project.name DESC;
-               ''')
+               WHERE project.id=projects_contributed.project_id ORDER BY {} DESC;
+               '''.format(order_by))
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
     for row in results:
@@ -148,9 +148,9 @@ def projects_contributed(user_id):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def projects_contributed_cached(user_id):
+def projects_contributed_cached(user_id, order_by='name'):
     """Return projects contributed too (cached version)."""
-    return projects_contributed(user_id)
+    return projects_contributed(user_id, order_by=order_by)
 
 
 def public_projects_contributed(user_id):

@@ -47,7 +47,7 @@ def home():
     historical_projects = []
     if current_user.is_authenticated():
         user_id = current_user.id
-        historical_projects = cached_users.projects_contributed(user_id)[:3]
+        historical_projects = cached_users.projects_contributed(user_id, order_by='last_contribution')[:3]
     data['historical_contributions'] = historical_projects
     response = dict(template='/home/index.html', **data)
     return handle_content_type(response)

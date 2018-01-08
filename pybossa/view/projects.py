@@ -285,7 +285,7 @@ def historical_contributions(page):
     desc = bool(request.args.get('desc', False))
     user_id = current_user.id
     def lookup(*args, **kwargs):
-        return cached_users.projects_contributed(user_id)
+        return cached_users.projects_contributed(user_id, order_by='last_contribution')
     return project_index(page, lookup, 'historical_contributions', False, True, order_by,
                          desc)
 
