@@ -51,8 +51,9 @@ class ProjectAPI(APIBase):
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
-        default_category = get_categories()[0]
-        inst.category_id = default_category.id
+        if not inst.category_id:
+            default_category = get_categories()[0]
+            inst.category_id = default_category.id
         return inst
 
     def _update_object(self, obj):

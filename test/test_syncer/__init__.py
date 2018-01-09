@@ -19,24 +19,35 @@
 from mock import patch, Mock
 from pybossa.syncer import Syncer
 from default import Test, with_context
+from factories import ProjectFactory
 
 
 class TestSyncer(Test):
 
-    TARGET = {'x': 'I am a target', 'id': 1}
-    TARGET_URL = 'http://test.com'
-    TARGET_ID = 'some_target_id'
+    target = {'short_name': 'some_project', 'id': 1}
+    target_url = 'http://test.com'
+    target_key = 'super-secret-key'
+    target_id = 'some_target_id'
 
     def setUp(self):
         super(TestSyncer, self).setUp()
-        self.syncer = Syncer(self.TARGET_URL)
+        self.syncer = Syncer(self.target_url, self.target_key)
 
     @with_context
     def test_cache_target(self):
-        self.syncer.cache_target(self.TARGET, self.TARGET_ID)
-        cache = self.syncer.get_target_cache(self.TARGET_ID)
-        assert cache == self.TARGET
+        self.syncer.cache_target(self.target, self.target_id)
+        cache = self.syncer.get_target_cache(self.target_id)
+        assert cache == self.target
 
-        self.syncer.delete_target_cache(self.TARGET_ID)
-        cache = self.syncer.get_target_cache(self.TARGET_ID)
+        self.syncer.delete_target_cache(self.target_id)
+        cache = self.syncer.get_target_cache(self.target_id)
         assert cache == None
+
+    def test_is_sync_enabled(self):
+        project_enabled = ProjectFactory.build(info={'sync': {'enabled': True}})
+        project_enabled = project_enabled.__dict__
+        project_disabled = ProjectFactory.build(info={'sync': {'enabled': False}})
+        project_disabled = project_disabled.__dict__
+
+        assert self.syncer.is_sync_enabled(project_enabled) == True
+        assert self.syncer.is_sync_enabled(project_disabled) == False

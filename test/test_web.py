@@ -43,7 +43,7 @@ from pybossa.core import user_repo, project_repo, result_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from pybossa.cache.project_stats import update_stats
-from pybossa.syncer import NotEnabled
+from pybossa.syncer import NotEnabled, SyncUnauthorized
 from factories import AnnouncementFactory, ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -7345,11 +7345,13 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][2] == desc
 
     @with_context
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync',
-           return_value=FakeResponse(reason='UNAUTHORIZED'))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           side_effect=SyncUnauthorized('ProjectSyncer'))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
-    def test_project_sync_unauthorized_by_target(self, mock_get, sync_res):
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_sync_unauthorized_by_target(self, mock_cat, mock_get, sync_res):
         """Test project sync unauthorized by target server."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
@@ -7382,12 +7384,15 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
            return_value=FakeResponse(ok=True))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
            return_value=None)
-    def test_project_sync_as_admin(self, mock_owners, mock_get, mock_sync):
-        """Test project sync as admin passes."""
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_sync_existing_category_as_admin(self, mock_cat, mock_owners,
+                                                     mock_get, mock_sync):
+        """Test project sync as admin passes with existing category."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
         user_repo.save(admin)
@@ -7417,12 +7422,55 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
            return_value=FakeResponse(ok=True))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
            return_value=None)
-    def test_project_sync_as_subadmin_owner(self, mock_owners, mock_get, mock_sync):
-        """Test project sync as subadmin/co-owner passes."""
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.sync',
+            return_value=FakeResponse(ok=True, content='{"id":1}'))
+    def test_project_sync_new_category_as_admin(self, mock_cat_sync, mock_cat,
+                                                mock_owners, mock_get, mock_sync):
+        """Test project sync as admin passes with new category."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test')
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith('Project sync completed!'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'success', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_sync_existing_category_as_subadmin_owner(self, mock_cat, mock_owners,
+                                                              mock_get, mock_sync):
+        """Test project sync as subadmin/co-owner passes with existing category."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
         user_repo.save(admin)
@@ -7456,12 +7504,57 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
-           return_value=FakeResponse(ok=True))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+           side_effect=SyncUnauthorized('CategorySyncer'))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
            return_value=None)
-    def test_project_sync_as_subadmin_nonowner(self, mock_owners, mock_get, mock_sync):
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+           return_value=None)
+    def test_project_sync_new_category_as_subadmin_owner(self, mock_cat, mock_owners,
+                                                         mock_get, mock_sync):
+        """Test project sync as subadmin/co-owner fails with new category."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+
+        subadmin = UserFactory.create(subadmin=True)
+        subadmin.set_password('1234')
+        user_repo.save(subadmin)
+        self.signin(email=subadmin.email_addr, password='1234')
+
+        project = ProjectFactory.create(name=u'test',
+                                        short_name=u'test',
+                                        description=u'test',
+                                        owners_ids=[subadmin.id])
+        project_repo.save(project)
+
+        csrf_url = '/project/{}/update'.format(project.short_name)
+        res = self.app_get_json(csrf_url)
+        data = json.loads(res.data)
+        csrf = data['upload_form']['csrf']
+
+        url = '/project/{}/syncproject'.format(project.short_name)
+        res = self.app_post_json(url=url,
+                                 headers={'X-CSRFToken': csrf},
+                                 data={'target_key': '1234', 'btn': 'sync' },
+                                 follow_redirects=True)
+        data = json.loads(res.data)
+
+        assert data['flash'].startswith('You are not authorized to create a new category.'), data
+        assert data['next'] == csrf_url, data
+        assert data['status'] == 'error', data
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
+           return_value=FakeResponse(ok=True))
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
+           return_value=None)
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_sync_as_subadmin_nonowner(self, mock_cat, mock_owners, mock_get, mock_sync):
         """Test project sync as subadmin/non-co-owner fails."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
@@ -7486,11 +7579,13 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
            return_value=FakeResponse(ok=True))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
            return_value=None)
-    def test_project_sync_as_worker(self, mock_owners, mock_get, mock_sync):
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_sync_as_worker(self, mock_cat, mock_owners, mock_get, mock_sync):
         """Test project sync as worker fails."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')
@@ -7578,11 +7673,13 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync',
            return_value=FakeResponse(ok=True))
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get',
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
             return_value={'id': 1, 'info': {'sync': {'enabled': True}}})
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
            return_value=None)
-    def test_project_unsync(self, mock_owners, mock_get, mock_sync):
+    @patch('pybossa.syncer.project_syncer.CategorySyncer.get_target',
+            return_value={'id': 1})
+    def test_project_unsync(self, mock_cat, mock_owners, mock_get, mock_sync):
         """Test project unsync."""
         admin = UserFactory.create(admin=True)
         admin.set_password('1234')

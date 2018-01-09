@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Admin view for PYBOSSA."""
 from rq import Queue
+from sqlalchemy.exc import IntegrityError
 from flask import Blueprint
 from flask import render_template
 from flask import request
@@ -321,6 +322,8 @@ def categories():
             else:
                 flash(gettext('Please correct the errors'), 'error')
         categories = cached_cat.get_all()
+        categories = sorted(categories,
+                            key=lambda category: category.name)
         n_projects_per_category = dict()
         for c in categories:
             n_projects_per_category[c.short_name] = \
@@ -367,6 +370,11 @@ def del_category(id):
                 return redirect_content_type(url_for('.categories'))
         else:
             abort(404)
+    except IntegrityError:
+        msg = gettext('Sorry, it is not possible to delete a category'
+                      ' if there are projects assigned to it.')
+        flash(msg, 'error')
+        return redirect_content_type(url_for('.categories'))
     except HTTPException:
         raise
     except Exception as e:  # pragma: no cover

@@ -82,7 +82,7 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
 from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
-from pybossa.syncer import NotEnabled
+from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 
@@ -228,6 +228,8 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
 
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_all()
+    categories = sorted(categories,
+                        key=lambda category: category.name)
     # Check for pre-defined categories featured and draft
     featured_cat = Category(name='Featured',
                             short_name='featured',
@@ -572,6 +574,8 @@ def update(short_name):
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
+        categories = sorted(categories,
+                            key=lambda category: category.name)
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if project.category_id is None:
             project.category_id = categories[0].id
@@ -582,6 +586,8 @@ def update(short_name):
         sync_form = ProjectSyncForm()
         form = ProjectUpdateForm(request.body)
         categories = cached_cat.get_all()
+        categories = sorted(categories,
+                            key=lambda category: category.name)
         form.category_id.choices = [(c.id, c.name) for c in categories]
 
         if request.form.get('btn') != 'Upload':
@@ -2588,17 +2594,16 @@ def sync_project(short_name):
                 url_for('.update', short_name=short_name))
 
         # Perform sync
-        project_syncer = ProjectSyncer(DEFAULT_SYNC_TARGET)
+        project_syncer = ProjectSyncer(
+            DEFAULT_SYNC_TARGET, target_key)
         synced_url = '{}/project/{}'.format(
             project_syncer.target_url, project.short_name)
         if request.body.get('btn') == 'sync':
             action = 'sync'
-            res = project_syncer.sync(
-                project, target_key, current_user)
+            res = project_syncer.sync(project)
         elif request.body.get('btn') == 'undo':
             action = 'unsync'
-            res = project_syncer.undo_sync(
-                project, target_key)
+            res = project_syncer.undo_sync(project)
 
         # Nothing to revert
         if not res and action == 'unsync':
@@ -2622,26 +2627,37 @@ def sync_project(short_name):
                 short_name=project.short_name,
                 source_url=source_url,
                 syncer=current_user.email_addr)
-            owners = project_syncer.get_target_owners(
-                project, target_key)
+            owners = project_syncer.get_target_owners(project)
             email = dict(recipients=owners,
                          subject=subject,
                          body=body)
             mail_queue.enqueue(send_mail, email)
-        # Unauthorized
-        elif res.reason == 'UNAUTHORIZED':
-            msg = gettext('The API key entered is not authorized to '
-                          'perform this action. Please ensure you '
-                          'have entered the appropriate API key.')
+        elif res.status_code == 415:
+            current_app.logger.error(
+                'A request error occurred while syncing {}: {}'
+                .format(project.short_name, str(res.__dict__)))
+            msg = gettext(
+                'This project already exists on the target server, '
+                'but you are not an owner.')
             flash(msg, 'error')
-        # Unknown failure
         else:
             current_app.logger.error(
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, str(res.__dict__)))
             msg = gettext(
-                'The target server returned an error.  '
-                'Check the Target API Key.')
+                'The target server returned an unexpected error.')
+            flash(msg, 'error')
+    except SyncUnauthorized as err:
+        if err.sync_type == 'ProjectSyncer':
+            msg = gettext('The API key entered is not authorized to '
+                          'perform this action. Please ensure you '
+                          'have entered the appropriate API key.')
+            flash(msg, 'error')
+        elif err.sync_type == 'CategorySyncer':
+            msg = gettext('You are not authorized to create a new '
+                          'category. Please change the category to '
+                          'one that already exists on the target server '
+                          'or contact an admin.')
             flash(msg, 'error')
     except NotEnabled:
         msg = 'The target project is not enabled for syncing. '
