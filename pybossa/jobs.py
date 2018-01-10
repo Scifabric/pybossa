@@ -659,8 +659,8 @@ def send_email_notifications():
                 if email_addr not in recipients:
                     recipients.append(email_addr)
             subject = (u'New Tasks have been imported to {}'.format(project.name))
-            body = u"Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
-                   u"\nLog on to {1} to complete any available tasks." \
+            body = u'Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. ' \
+                   u'\nLog on to {1} to complete any available tasks.' \
                 .format(project.name, current_app.config.get('BRAND'))
             mail_dict = dict(recipients=recipients, subject=subject, body=body)
             send_mail(mail_dict)

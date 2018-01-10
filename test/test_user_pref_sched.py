@@ -386,7 +386,7 @@ class TestSched(sched.Helper):
         assert 'user2@test.com' in recent_contributors, err_msg
 
     @with_context
-    @patch('pybossa.core.user_repo.get_user_pref_recent_contributor_emails')
+    @patch('pybossa.jobs.user_repo.get_user_pref_recent_contributor_emails')
     def test_no_email_notif(self, get_contrib_emails):
         """
         if the project is not configured, email notifications won't be sent
@@ -407,7 +407,7 @@ class TestSched(sched.Helper):
         get_contrib_emails.assert_not_called()
 
     @with_context
-    @patch('pybossa.core.user_repo.get_user_pref_recent_contributor_emails')
+    @patch('pybossa.jobs.user_repo.get_user_pref_recent_contributor_emails')
     def test_email_notif(self, get_contrib_emails):
         """
         if the project is configured, email notifications will be sent
