@@ -640,31 +640,30 @@ def send_email_notifications():
     from pybossa.sched import Schedulers
 
     redis_conn = sentinel.master
-    project_set = redis_conn.hgetall('updated_project_ids')
-    if project_set:
-        for project_id in project_set:
-            project = project_repo.get(project_id)
-            user_emails = []
-            if cached_projects.get_project_scheduler(project_id) == Schedulers.user_pref:
-                task_create_timestamp = redis_conn.hget('updated_project_ids', project_id)
-                if task_create_timestamp:
-                    user_emails = user_repo.get_user_pref_recent_contributor_emails(project_id, task_create_timestamp)
-            else:
-                if cached_projects.overall_progress(project_id) != 100 and project.email_notif:
-                    user_emails = user_repo.get_recent_contributor_emails(project_id)
+    project_set = redis_conn.hgetall('updated_project_ids') or {}
+    for project_id, timestamp in project_set.iteritems():
+        project = project_repo.get(project_id)
+        if not project.email_notif:
+            continue
+        user_emails = []
+        if cached_projects.get_project_scheduler(project_id) == Schedulers.user_pref:
+            user_emails = user_repo.get_user_pref_recent_contributor_emails(project_id, timestamp)
+        else:
+            if cached_projects.overall_progress(project_id) != 100:
+                user_emails = user_repo.get_recent_contributor_emails(project_id)
 
-            if user_emails:
-                recipients = []
-                for email_addr in user_emails:
-                    if email_addr not in recipients:
-                        recipients.append(email_addr)
-                subject = ('New Tasks have been imported to {}'.format(project.name))
-                body = "Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
-                       "\nLog on to {1} to complete any available tasks." \
-                    .format(project.name, current_app.config.get('BRAND'))
-                mail_dict = dict(recipients=recipients, subject=subject, body=body)
-                send_mail(mail_dict)
-            redis_conn.hdel('updated_project_ids', project_id)
+        if user_emails:
+            recipients = []
+            for email_addr in user_emails:
+                if email_addr not in recipients:
+                    recipients.append(email_addr)
+            subject = ('New Tasks have been imported to {}'.format(project.name))
+            body = "Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
+                   "\nLog on to {1} to complete any available tasks." \
+                .format(project.name, current_app.config.get('BRAND'))
+            mail_dict = dict(recipients=recipients, subject=subject, body=body)
+            send_mail(mail_dict)
+        redis_conn.hdel('updated_project_ids', project_id)
     return True
 
 
