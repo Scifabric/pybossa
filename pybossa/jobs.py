@@ -643,6 +643,7 @@ def send_email_notifications():
     project_set = redis_conn.hgetall('updated_project_ids') or {}
     for project_id, timestamp in project_set.iteritems():
         project = project_repo.get(project_id)
+        redis_conn.hdel('updated_project_ids', project_id)
         if not project.email_notif:
             continue
         user_emails = []
@@ -657,13 +658,12 @@ def send_email_notifications():
             for email_addr in user_emails:
                 if email_addr not in recipients:
                     recipients.append(email_addr)
-            subject = ('New Tasks have been imported to {}'.format(project.name))
-            body = "Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
-                   "\nLog on to {1} to complete any available tasks." \
+            subject = (u'New Tasks have been imported to {}'.format(project.name))
+            body = u"Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. " \
+                   u"\nLog on to {1} to complete any available tasks." \
                 .format(project.name, current_app.config.get('BRAND'))
             mail_dict = dict(recipients=recipients, subject=subject, body=body)
             send_mail(mail_dict)
-        redis_conn.hdel('updated_project_ids', project_id)
     return True
 
 

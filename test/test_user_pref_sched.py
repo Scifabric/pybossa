@@ -20,6 +20,7 @@ from mock import patch
 from helper import sched
 from default import with_context
 from pybossa.core import project_repo, task_repo, user_repo
+from pybossa.jobs import send_email_notifications
 from factories import TaskFactory, ProjectFactory, UserFactory, TaskRunFactory
 from pybossa.sched import get_user_pref_task, Schedulers
 from pybossa.cache.helpers import n_available_tasks_for_user
@@ -383,6 +384,49 @@ class TestSched(sched.Helper):
         assert len(recent_contributors) == 1, err_msg
         err_msg = 'user1 and user3 with english and chinese language preference should be notified'
         assert 'user2@test.com' in recent_contributors, err_msg
+
+    @with_context
+    @patch('pybossa.core.user_repo.get_user_pref_recent_contributor_emails')
+    def test_no_email_notif(self, get_contrib_emails):
+        """
+        if the project is not configured, email notifications won't be sent
+        """
+        owner = UserFactory.create(id=500, user_pref={'languages': ['en']})
+
+        project = ProjectFactory.create(owner=owner, email_notif=False)
+        project.info['sched'] = Schedulers.user_pref
+        project_repo.save(project)
+        tasks = TaskFactory.create_batch(1, project=project, n_answers=1,
+                                         user_pref={'languages': ['en']})
+
+        TaskRunFactory.create(task=tasks[0], user=owner)
+
+        TaskFactory.create_batch(1, project=project, n_answers=1,
+                                 user_pref={'languages': ['en']})
+        send_email_notifications()
+        get_contrib_emails.assert_not_called()
+
+    @with_context
+    @patch('pybossa.core.user_repo.get_user_pref_recent_contributor_emails')
+    def test_email_notif(self, get_contrib_emails):
+        """
+        if the project is configured, email notifications will be sent
+        """
+        owner = UserFactory.create(id=500, user_pref={'languages': ['en']})
+
+        project = ProjectFactory.create(owner=owner, email_notif=True)
+        project.info['sched'] = Schedulers.user_pref
+        project_repo.save(project)
+        tasks = TaskFactory.create_batch(1, project=project, n_answers=1,
+                                         user_pref={'languages': ['en']})
+
+        TaskRunFactory.create(task=tasks[0], user=owner)
+
+        TaskFactory.create_batch(1, project=project, n_answers=1,
+                                 user_pref={'languages': ['en']})
+        send_email_notifications()
+        get_contrib_emails.assert_called()
+
 
 class TestNTaskAvailable(sched.Helper):
 
