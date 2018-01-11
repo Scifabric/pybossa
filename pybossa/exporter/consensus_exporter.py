@@ -11,6 +11,7 @@ from werkzeug.datastructures import FileStorage
 from pybossa.exporter import Exporter
 from pybossa.core import db, uploader
 from pybossa.cache.task_browse_helpers import get_task_filters
+from pybossa.cache.users import get_user_info
 
 
 def export_consensus(project, obj, filetype, expanded, filters):
@@ -58,11 +59,22 @@ def flatten(obj, level=1, prefix=None, sep='__', ignore=tuple()):
 
 def format_consensus(rows):
     rv = []
+    local_user_cache = {}
     for row in rows:
         data = OrderedDict(row)
         consensus = data.pop('consensus') or OrderedDict()
         consensus = flatten(consensus, level=2,
                             ignore=['contributorsMetConsensus'])
+
+        for k, v in consensus.items():
+            if k.endswith('contributorsPercentages'):
+                for user_pct in v:
+                    user_id = user_pct.pop('user_id')
+                    if user_id not in local_user_cache:
+                        user_info = get_user_info(user_id) or {'user_id': user_id}
+                        local_user_cache[user_id] = user_info
+                    user_pct.update(local_user_cache[user_id])
+
         consensus.update(data)
         rv.append(consensus)
     return rv
@@ -89,8 +101,10 @@ def get_consensus_data(project_id, filters):
                 array_agg(tr.created) as task_run__created,
                 array_agg(tr.finish_time) as task_run__finish_time,
                 array_agg(tr.user_id) as task_run__user_id,
-                array_agg(tr.info) as task_run__info
+                json_object_agg(u.name, tr.info) as task_run__info
             FROM task_run tr
+            JOIN public.user u
+            ON tr.user_id = u.id
             WHERE project_id = :project_id
             GROUP BY task_id
             ) AS taskruns
@@ -121,7 +135,6 @@ def get_consensus_data_metadata(project_id, filters):
             taskruns.task_run__finish_time as task_run__finish_time,
             taskruns.task_run__user_id as task_run__user_id,
             taskruns.task_run__info as task_run__info,
-            taskruns.name as name,
             taskruns.email_addr as email_addr,
             taskruns.fullname as fullname
 
@@ -132,9 +145,8 @@ def get_consensus_data_metadata(project_id, filters):
                 array_agg(tr.id) as task_run__id,
                 array_agg(tr.created) as task_run__created,
                 array_agg(tr.finish_time) as task_run__finish_time,
+                json_object_agg(u.name, tr.info) as task_run__info,
                 array_agg(tr.user_id) as task_run__user_id,
-                array_agg(tr.info) as task_run__info,
-                array_agg(u.name) as name,
                 array_agg(u.email_addr) as email_addr,
                 array_agg(u.fullname) as fullname
             FROM task_run tr
