@@ -290,6 +290,25 @@ class TaskRepository(Repository):
                    ''')
         self.db.session.execute(sql)
 
+        sql = text('''
+                   INSERT INTO result
+                   (created, project_id, task_id, task_run_ids, last_version) (
+                   SELECT :ts, :project_id, completed_no_results.id,
+                          completed_no_results.task_runs, true
+                   FROM ( SELECT task.id as id,
+                          array_agg(task_run.id) as task_runs
+                          FROM task, task_run
+                          WHERE task.state = 'completed'
+                          AND task_run.task_id = task.id
+                          AND NOT EXISTS (SELECT 1 FROM result
+                                          WHERE result.task_id = task.id)
+                          AND task.project_id=:project_id
+                          GROUP BY task.id
+                        ) as completed_no_results
+                   );''')
+        self.db.session.execute(sql, dict(project_id=project_id,
+                                          ts=make_timestamp()))
+
     def update_priority(self, project_id, priority, filters):
         priority = min(1.0, priority)
         priority = max(0.0, priority)
