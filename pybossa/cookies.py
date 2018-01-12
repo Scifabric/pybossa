@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cookie module for PYBOSSA."""
+from itsdangerous import SignatureExpired
 
 
 class CookieHandler(object):
@@ -32,7 +33,10 @@ class CookieHandler(object):
         """Create or update cookie."""
         cookie_name = '%spswd' % project.short_name
         cookie = self.request.cookies.get(cookie_name)
-        cookie = self.signer.loads(cookie) if cookie else []
+        try:
+            cookie = self.signer.loads(cookie, max_age=self.expiration) if cookie else []
+        except SignatureExpired:
+            cookie = []
         cookie.append(user)
         cookie = self.signer.dumps(cookie)
         return cookie
@@ -48,5 +52,8 @@ class CookieHandler(object):
         """Get cookie from a project."""
         cookie_name = '%spswd' % project.short_name
         signed_cookie = self.request.cookies.get(cookie_name)
-        cookie = self.signer.loads(signed_cookie) if signed_cookie else []
+        try:
+            cookie = self.signer.loads(signed_cookie, max_age=self.expiration) if signed_cookie else []
+        except SignatureExpired:
+            cookie = []
         return cookie

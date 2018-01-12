@@ -48,7 +48,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
-                          get_avatar_url, admin_or_subadmin_required, AttrDict,
+                          get_avatar_url, admin_or_subadmin_required,
                           s3_get_file_contents)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects

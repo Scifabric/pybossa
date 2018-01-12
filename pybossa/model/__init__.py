@@ -89,6 +89,7 @@ class DomainObject(object):
         repr += '>'
         return repr
 
+
 def make_timestamp():
     now = datetime.datetime.utcnow()
     return now.isoformat()

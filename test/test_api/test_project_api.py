@@ -799,23 +799,13 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_newtask_allow_anonymous_contributors(self):
-        """Test API get a newtask - allow anonymous contributors"""
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
+    def test_newtask_allow_anonymous_contributors(self, passwd_needed):
+        """Test API get a newtask - do not allow anonymous contributors"""
         project = ProjectFactory.create()
         user = UserFactory.create()
         tasks = TaskFactory.create_batch(2, project=project, info={'question': 'answer'})
-
-        # All users are allowed to participate by default
-        # As Anonymous user
-        url = '/api/project/%s/newtask' % project.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.project_id is different from the project.id"
-        assert task['project_id'] == project.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'answer', err_msg
+        passwd_needed.return_value = False
 
         # As registered user
         url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
@@ -868,7 +858,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.get('/api/project/%s/newtask' % project.id)
         assert res, res
         task = json.loads(res.data)
-        assert_equal(task['project_id'], project.id)
+        assert 'error' in task['info'], 'No anonymous contributors'
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -891,7 +881,7 @@ class TestProjectAPI(TestAPI):
         assert err['target'] == 'project', err_msg
 
         # Get an empty task
-        url = '/api/project/%s/newtask?offset=1000' % project.id
+        url = '/api/project/%s/newtask?offset=1000&api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url)
         assert res.data == '{}', res.data
 
