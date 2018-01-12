@@ -19,7 +19,7 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
-from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY
+from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_WEEK
 from pybossa.util import pretty_date, exists_materialized_view
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
@@ -407,3 +407,11 @@ def get_project_report_userdata(project_id):
          round(row.avg_time_per_task.total_seconds() / 60, 2)]
          for row in results]
     return users_report
+
+
+@memoize(timeout=ONE_WEEK)
+def get_user_info(user_id):
+    sql = text('''select name, email_addr from "user" where
+                  id=:user_id''')
+    user = session.execute(sql, dict(user_id=user_id)).first()
+    return dict(user) if user else None

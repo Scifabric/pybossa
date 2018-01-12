@@ -289,34 +289,25 @@ class TaskRepository(Repository):
                    WHERE complete_tasks.id=task.id;
                    ''')
         self.db.session.execute(sql)
-        # Deactivate previous tasks' results (if available)
-        # (redundancy was decreased)
-        sql = text('''UPDATE result set last_version=false
-                   WHERE task_id IN (SELECT id FROM complete_tasks);''')
-        self.db.session.execute(sql)
-        # Insert result rows (last_version=true)
+
         sql = text('''
                    INSERT INTO result
                    (created, project_id, task_id, task_run_ids, last_version) (
-                    SELECT :ts, :project_id, complete_tasks.id,
-                            complete_tasks.task_runs, true
-                    FROM complete_tasks);''')
+                   SELECT :ts, :project_id, completed_no_results.id,
+                          completed_no_results.task_runs, true
+                   FROM ( SELECT task.id as id,
+                          array_agg(task_run.id) as task_runs
+                          FROM task, task_run
+                          WHERE task.state = 'completed'
+                          AND task_run.task_id = task.id
+                          AND NOT EXISTS (SELECT 1 FROM result
+                                          WHERE result.task_id = task.id)
+                          AND task.project_id=:project_id
+                          GROUP BY task.id
+                        ) as completed_no_results
+                   );''')
         self.db.session.execute(sql, dict(project_id=project_id,
                                           ts=make_timestamp()))
-        # Create temp table for incomplete tasks
-        sql = text('''
-                   CREATE TEMP TABLE incomplete_tasks ON COMMIT DROP AS (
-                   SELECT task.id
-                   FROM task
-                   WHERE task.project_id=:project_id
-                   AND task.id not IN (SELECT id FROM complete_tasks));
-                   ''')
-        self.db.session.execute(sql, dict(project_id=project_id))
-        # Delete results for incomplete tasks (Redundancy Increased)
-        sql = text('''DELETE FROM result
-                   WHERE result.task_id IN (SELECT id FROM incomplete_tasks);
-                   ''')
-        self.db.session.execute(sql)
 
     def update_priority(self, project_id, priority, filters):
         priority = min(1.0, priority)
