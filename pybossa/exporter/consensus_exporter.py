@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import json
+import re
 import tempfile
 
 import pandas as pd
@@ -12,6 +13,9 @@ from pybossa.exporter import Exporter
 from pybossa.core import db, uploader
 from pybossa.cache.task_browse_helpers import get_task_filters
 from pybossa.cache.users import get_user_info
+
+
+__KEY_RE = re.compile('^consensus__(?P<ans_key>.+)__contributorsPercentages$')
 
 
 def export_consensus(project, obj, filetype, expanded, filters):
@@ -65,15 +69,22 @@ def format_consensus(rows):
         consensus = data.pop('consensus') or OrderedDict()
         consensus = flatten(consensus, level=2,
                             ignore=['contributorsMetConsensus'])
+        task_runs = data['task_run__info']
 
         for k, v in consensus.items():
             if k.endswith('contributorsPercentages'):
+                ans_key = re.match(__KEY_RE, k).group('ans_key')
                 for user_pct in v:
                     user_id = user_pct.pop('user_id')
                     if user_id not in local_user_cache:
                         user_info = get_user_info(user_id) or {'user_id': user_id}
                         local_user_cache[user_id] = user_info
-                    user_pct.update(local_user_cache[user_id])
+                    user_info = local_user_cache[user_id]
+                    user_name = user_info.get('name')
+                    tr = task_runs.get(user_name, {})
+                    user_pct['contributor_name'] = user_name
+                    user_pct['contributor_answer'] = tr.get(ans_key)
+                    user_pct['answer_percentage'] = user_pct.pop('percentage', None)
 
         consensus.update(data)
         rv.append(consensus)
