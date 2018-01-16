@@ -93,6 +93,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
+
 register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
 register_api(ProjectStatsAPI, 'api_projectstats', '/projectstats', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
