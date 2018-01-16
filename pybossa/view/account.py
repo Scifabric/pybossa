@@ -55,7 +55,7 @@ from pybossa.core import user_repo, ldap
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
 
-from pybossa.forms.forms import MetadataForm
+from pybossa.forms.forms import UserPrefMetadataForm, RegisterFormWithUserPrefMetadata
 from pybossa.forms.account_view_forms import *
 from pybossa import otp
 import time
@@ -326,18 +326,24 @@ def register():
     """
     if current_app.config.get('LDAP_HOST', False):
         return abort(404)
-    form = RegisterForm(request.body)
+    form = RegisterFormWithUserPrefMetadata(request.body)
     form.project_slug.choices = get_project_choices()
+    form.user_type.choices = current_app.config.get('USER_TYPES', [('','')])
     msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
     form.consent.label = msg
     if request.method == 'POST' and form.validate():
+        user_name = form.name.data
+        user_pref, metadata = get_user_pref_and_metadata(user_name, form)
         account = dict(fullname=form.fullname.data, name=form.name.data,
                        email_addr=form.email_addr.data,
                        password=form.password.data,
-                       consent=form.consent.data)
+                       consent=form.consent.data,
+                       user_type=form.user_type.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
+            account['user_pref'] = user_pref
+            account['metadata'] = metadata
             create_account(account, project_slugs=project_slugs)
             flash(gettext('Created user succesfully!'), 'success')
             return redirect_content_type(url_for("home.home"))
@@ -410,11 +416,19 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True):
+
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data.get('consent', True))
+
+    if user_data.get('user_pref'):
+        new_user.user_pref = user_data['user_pref']
+
+    if user_data.get('metadata'):
+        new_user.info = dict(metadata=user_data['metadata'])
+
     if ldap_disabled:
         new_user.set_password(user_data['password'])
     else:
@@ -464,21 +478,23 @@ def profile(name):
     user = user_repo.get_by_name(name=name)
     if user is None or current_user.is_anonymous():
         raise abort(404)
-    if (current_user.admin or
-        (current_user.subadmin and user.id == current_user.id) or
-        user.id != current_user.id):
-        return _show_public_profile(user)
-    if current_user.is_authenticated() and user.id == current_user.id:
-        return _show_own_profile(user)
+
+    upref_mdata = cached_users.get_user_pref_metadata(user.name)
+    upref_mdata_form = UserPrefMetadataForm(**upref_mdata)
+    upref_mdata_form.user_type.choices = current_app.config.get('USER_TYPES', [('','')])
+    can_update = can_update_user_info(current_user, user)
+
+    if user.id != current_user.id:
+        return _show_public_profile(user, upref_mdata, upref_mdata_form, can_update)
+    else:
+        return _show_own_profile(user, upref_mdata, upref_mdata_form, can_update)
 
 
-def _show_public_profile(user):
+def _show_public_profile(user, upref_mdata, upref_mdata_form, can_update):
     if current_user.id == user.id:
         user_dict = cached_users.get_user_summary(user.name)
     else:
         user_dict = cached_users.public_get_user_summary(user.name)
-    md = cached_users.get_metadata(user.name)
-    form = MetadataForm(**md)
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_created = cached_users.public_published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
@@ -493,17 +509,17 @@ def _show_public_profile(user):
                     title=title,
                     user=user_dict,
                     projects=projects_contributed,
-                    form=form,
                     projects_created=projects_created,
-                    metadata=md,
-                    can_update=can_update_user_info(current_user, user),
                     total_projects_contributed=total_projects_contributed,
-                    percentage_tasks_completed=percentage_tasks_completed)
+                    percentage_tasks_completed=percentage_tasks_completed,
+                    upref_mdata=upref_mdata,
+                    upref_mdata_form=upref_mdata_form,
+                    can_update=can_update)
 
     return handle_content_type(response)
 
 
-def _show_own_profile(user):
+def _show_own_profile(user, upref_mdata, upref_mdata_form, can_update):
     user_dict = cached_users.get_user_summary(user.name)
     rank_and_score = cached_users.rank_and_score(user.id)
     user.rank = rank_and_score['rank']
@@ -517,7 +533,10 @@ def _show_own_profile(user):
                     projects_contrib=projects_contributed,
                     projects_published=projects_published,
                     projects_draft=projects_draft,
-                    user=user_dict)
+                    user=user_dict,
+                    upref_mdata=upref_mdata,
+                    upref_mdata_form=upref_mdata_form,
+                    can_update=can_update)
 
     return handle_content_type(response)
 
@@ -895,7 +914,7 @@ def reset_api_key(name):
 @login_required
 def add_metadata(name):
     """
-    Admin can add metadata for selected user
+    Admin can save metadata for selected user
 
     Redirects to public profile page for selected user.
 
@@ -903,39 +922,39 @@ def add_metadata(name):
     user = user_repo.get_by_name(name=name)
     if not can_update_user_info(current_user, user):
         abort(403)
-    form = MetadataForm(request.form)
-    if not any(value for value in form.data.values()):
-        user.info['metadata'] = {}
-        user.user_pref = {}
-    elif form.validate():
-        metadata = dict(admin=current_user.name, time_stamp=time.ctime(),
-                        user_type=form.user_type.data, start_time=form.start_time.data,
-                        end_time=form.end_time.data, review=form.review.data,
-                        timezone=form.timezone.data, profile_name=user.name)
-        user.info['metadata'] = metadata
-        user_pref = {}
-        if form.languages.data:
-            user_pref["languages"] = form.languages.data
-        if form.locations.data:
-            user_pref["locations"] = form.locations.data
-
-        user.user_pref = user_pref
-    else:
+    upref_mdata_form = UserPrefMetadataForm(request.form)
+    upref_mdata_form.user_type.choices = current_app.config.get('USER_TYPES', [('','')])
+    can_update = can_update_user_info(current_user, user)
+    if not upref_mdata_form.validate():
+        if current_user.id == user.id:
+            user_dict = cached_users.get_user_summary(user.name)
+        else:
+            user_dict = cached_users.public_get_user_summary(user.name)
         projects_contributed = cached_users.projects_contributed_cached(user.id)
         projects_created = cached_users.published_projects_cached(user.id)
-        metadata = cached_users.get_metadata(user.name)
+        total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
+        percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
         if current_user.is_authenticated() and current_user.admin:
             draft_projects = cached_users.draft_projects(user.id)
             projects_created.extend(draft_projects)
         title = "%s &middot; User Profile" % user.name
         flash("Please fix the errors", 'message')
         return render_template('/account/public_profile.html',
-                               title=title, user=user, metadata=metadata,
-                               projects=projects_contributed, form=form,
+                               title=title, user=user,
+                               projects=projects_contributed,
                                projects_created=projects_created,
-                               input_form=True)
+                               total_projects_contributed=total_projects_contributed,
+                               percentage_tasks_completed=percentage_tasks_completed,
+                               upref_mdata=upref_mdata_form.data,
+                               upref_mdata_form=upref_mdata_form,
+                               input_form=True,
+                               can_update=can_update)
+
+    user_pref, metadata = get_user_pref_and_metadata(name, upref_mdata_form)
+    user.info['metadata'] = metadata
+    user.user_pref = user_pref
     user_repo.update(user)
-    cached_users.delete_user_metadata(user.name)
+    cached_users.delete_user_pref_metadata(user.name)
     delete_memoized(get_user_preferences, user.id)
     flash("Input saved successfully", "info")
     return redirect(url_for('account.profile', name=name))
@@ -948,3 +967,20 @@ def ldap_protected():
         return "HOLA"
     else:
         return "INvalid"
+
+def get_user_pref_and_metadata(user_name, form):
+    user_pref = {}
+    metadata = {}
+    if not any(value for value in form.data.values()):
+        return user_pref, metadata
+
+    if form.validate():
+        metadata = dict(admin=current_user.name, time_stamp=time.ctime(),
+                        user_type=form.user_type.data, start_time=form.start_time.data,
+                        end_time=form.end_time.data, review=form.review.data,
+                        timezone=form.timezone.data, profile_name=user_name)
+        if form.languages.data:
+            user_pref['languages'] = form.languages.data
+        if form.locations.data:
+            user_pref['locations'] = form.locations.data
+        return user_pref, metadata

@@ -308,20 +308,20 @@ def delete_user_summary(name):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_metadata(name):
+def get_user_pref_metadata(name):
     sql = text("""
     SELECT info->'metadata', user_pref FROM public.user WHERE name=:name;
     """)
 
     cursor = session.execute(sql, dict(name=name))
     row = cursor.fetchone()
-    metadata = row[0] or {}
-    metadata.update(row[1] or {})
-    return metadata
+    upref_mdata = row[0] or {}
+    upref_mdata.update(row[1] or {})
+    return upref_mdata
 
 
-def delete_user_metadata(name):
-    delete_memoized(get_metadata, name)
+def delete_user_pref_metadata(name):
+    delete_memoized(get_user_pref_metadata, name)
 
 
 @memoize(timeout=ONE_DAY)

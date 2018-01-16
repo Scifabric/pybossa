@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import json
 
 class BulkImportException(Exception):
 
@@ -63,7 +64,8 @@ class BulkUserImport(object):
         return None
 
     def _check_valid_headers(self, headers):
-        valid_headers = ["name", "fullname", "email_addr", "password", "project_slugs"]
+        valid_headers = ["name", "fullname", "email_addr", "password",
+                         "project_slugs", "user_pref", "metadata"]
         res = [h in valid_headers for h in headers]
         if False in res:
             invalid_headers = []
@@ -91,12 +93,19 @@ class BulkUserImport(object):
             else:
                 row_number += 1
                 self._check_valid_row_length(row, row_number, headers)
-                user_data = {}
+                user_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
-                        user_data[headers[idx]] = cell
+                        if headers[idx] in ('user_pref', 'metadata', 'project_slugs'):
+                            if len(cell) > 0:
+                                user_data[headers[idx]] = json.loads(cell)
+                            else:
+                                user_data[headers[idx]] = {}
+                        else:
+                            user_data[headers[idx]] = cell
                     else:
-                        user_data[headers[idx]] = cell
+                        user_data["info"][headers[idx]] = cell
+
                 yield user_data
 
     def _check_no_duplicated_headers(self, headers):
