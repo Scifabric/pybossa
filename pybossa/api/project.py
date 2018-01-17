@@ -102,4 +102,3 @@ class ProjectAPI(APIBase):
         else:
             data = self._filter_private_data(data)
             return data
-

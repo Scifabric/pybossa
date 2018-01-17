@@ -78,4 +78,3 @@ def result():
 @blueprint.route("app")
 def default_app():
     return project_index(1)
-

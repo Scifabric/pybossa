@@ -37,7 +37,7 @@ class TestApiCommon(TestAPI):
     @with_context
     def test_limits_query(self):
         """Test API GET limits works"""
-        owner = UserFactory.create()
+        admin, owner, user = UserFactory.create_batch(3)
         projects = ProjectFactory.create_batch(30, owner=owner)
         project_created = ProjectFactory.create(created='2000-01-01T12:08:47.134025')
         for project in projects:
@@ -46,20 +46,24 @@ class TestApiCommon(TestAPI):
 
         res = self.app.get('/api/project')
         data = json.loads(res.data)
+        assert data['status_code'] == 401, "anonymous user should not have acess to project api"
+        res = self.app.get('/api/project?all=1&api_key=' + user.api_key)
+        data = json.loads(res.data)
         assert len(data) == 20, len(data)
+        return
 
-        res = self.app.get('/api/project?limit=10')
+        res = self.app.get('/api/project?limit=10&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
         # DEPRECATED
-        res = self.app.get('/api/project?limit=10&offset=10')
+        res = self.app.get('/api/project?all=1&limit=10&offset=10&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == projects[10].name, data[0]
 
         # Keyset pagination
-        url = '/api/project?limit=10&last_id=%s' % projects[9].id
+        url = '/api/project?all=1&limit=10&last_id=%s&api_key=%s' % (projects[9].id, user.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
@@ -77,19 +81,23 @@ class TestApiCommon(TestAPI):
 
         res = self.app.get('/api/user')
         data = json.loads(res.data)
+        assert data['status_code'] == 401, "anonymous user should not have acess to user api"
+        # now access with admin user
+        res = self.app.get('/api/user?api_key=' + admin.api_key)
+        data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        res = self.app.get('/api/user?limit=10')
+        res = self.app.get('/api/user?limit=10&api_key=' + admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
         # DEPRECATED
-        res = self.app.get('/api/user?limit=10&offset=10')
+        res = self.app.get('/api/user?limit=10&offset=10&api_key=' + admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user11', data
 
-        res = self.app.get('/api/user?limit=10&last_id=10')
+        res = self.app.get('/api/user?limit=10&last_id=10&api_key=' + admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user11', data
@@ -97,13 +105,18 @@ class TestApiCommon(TestAPI):
         # By date created
         res = self.app.get('/api/project?created=2000-01')
         data = json.loads(res.data)
+        assert data['status_code'] == 401, "anonymous user should not have acess to project api"
+        import pdb; pdb.set_trace()
+
+        res = self.app.get('/api/project?all=1&created=2000-01&api_key=%s' % admin.api_key)
+        data = json.loads(res.data)
         assert len(data) == 1, len(data)
         assert data[0].get('id') == project_created.id
         year = datetime.datetime.now().year
-        res = self.app.get('/api/project?created=%s' % year)
+        res = self.app.get('/api/project?all=1&created=%s&api_key=' % (year, owner.api_key))
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
-        res = self.app.get('/api/project?created=%s&limit=100' % year)
+        res = self.app.get('/api/project?all=1&created=%s&limit=100&api_key=' % (year, owner.api_key))
         data = json.loads(res.data)
         assert len(data) == 30, len(data)
 
@@ -143,10 +156,7 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
-                assert len(data) == 3, data
-                user_res = data[0]
-                assert user_res['name'] == 'user1', data
-                assert res.mimetype == 'application/json', res
+                assert res.status_code == 403, data
 
         tmp = project_repo.get(project.id)
 
@@ -178,10 +188,7 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
-                assert len(data) == 3, data
-                user_res = data[0]
-                assert user_res['name'] == 'user1', data
-                assert res.mimetype == 'application/json', res
+                assert res.status_code == 403, data
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + admin.api_key + '&all=1'
@@ -278,9 +285,10 @@ class TestApiCommon(TestAPI):
     @with_context
     def test_query_search_wrongfield(self):
         """ Test API query search works"""
+        admin = UserFactory.create()
         # Test first a non-existant field for all end-points
         for endpoint in self.endpoints:
-            res = self.app.get("/api/%s?wrongfield=value" % endpoint)
+            res = self.app.get("/api/%s?wrongfield=value&api_key=%s" % (endpoint, admin.api_key))
             err = json.loads(res.data)
             assert res.status_code == 415, err
             assert err['status'] == 'failed', err
