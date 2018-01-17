@@ -7346,7 +7346,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.projects.rank', autospec=True)
-    def test_project_index_historical_contributions(self, mock_rank, mock_project_index):
+    def test_project_index_historical_contributions(self, mock_rank):
         url = 'project/category/historical_contributions'
         self.app.get(url, follow_redirects=True)
         assert not mock_rank.called
