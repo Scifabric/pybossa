@@ -15,7 +15,8 @@ from pybossa.cache.task_browse_helpers import get_task_filters
 from pybossa.cache.users import get_user_info
 
 
-__KEY_RE = re.compile('^consensus__(?P<ans_key>.+)__contributorsPercentages$')
+__KEY_RE = re.compile(
+    '^consensus__(?P<ans_key>.+)__contributorsConsensusPercentage$')
 
 
 def export_consensus(project, obj, filetype, expanded, filters):
@@ -72,8 +73,9 @@ def format_consensus(rows):
         task_runs = data['task_run__info']
 
         for k, v in consensus.items():
-            if k.endswith('contributorsPercentages'):
-                ans_key = re.match(__KEY_RE, k).group('ans_key')
+            match = re.match(__KEY_RE, k)
+            if match:
+                ans_key = match.group('ans_key')
                 for user_pct in v:
                     user_id = user_pct.pop('user_id')
                     if user_id not in local_user_cache:
