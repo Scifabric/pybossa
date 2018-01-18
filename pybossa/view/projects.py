@@ -174,10 +174,13 @@ def index(page):
 
 
 def project_index(page, lookup, category, fallback, use_count, order_by=None,
-                  desc=False):
+                  desc=False, pre_ranked=False):
     """Show projects of a category"""
     per_page = current_app.config['APPS_PER_PAGE']
-    ranked_projects = rank(lookup(category), order_by, desc)
+    ranked_projects = lookup(category)
+
+    if not pre_ranked:
+        ranked_projects = rank(ranked_projects, order_by, desc)
 
     offset = (page - 1) * per_page
     projects = ranked_projects[offset:offset+per_page]
@@ -192,15 +195,22 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
     featured_cat = Category(name='Featured',
                             short_name='featured',
                             description='Featured projects')
+    historical_contributions_cat = Category(name='Historical Contributions',
+                                            short_name='historical_contributions',
+                                            description='Projects previously contributed to')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
         active_cat = Category(name='Draft',
                               short_name='draft',
                               description='Draft projects')
+    elif category == 'historical_contributions':
+        active_cat = historical_contributions_cat
     else:
         active_cat = project_repo.get_category_by(short_name=category)
 
+    if current_app.config.get('HISTORICAL_CONTRIBUTIONS_AS_CATEGORY'):
+        categories.insert(0, historical_contributions_cat)
     # Check if we have to add the section Featured to local nav
     if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
@@ -227,6 +237,21 @@ def draft(page):
     desc = bool(request.args.get('desc', False))
     return project_index(page, cached_projects.get_all_draft, 'draft',
                          False, True, order_by, desc)
+
+
+@blueprint.route('/category/historical_contributions/', defaults={'page': 1})
+@blueprint.route('/category/historical_contributions/page/<int:page>/')
+@login_required
+def historical_contributions(page):
+    """Show the projects a user has previously worked on"""
+    order_by = request.args.get('orderby', None)
+    desc = bool(request.args.get('desc', False))
+    pre_ranked = True
+    user_id = current_user.id
+    def lookup(*args, **kwargs):
+        return cached_users.projects_contributed(user_id, order_by='last_contribution')
+    return project_index(page, lookup, 'historical_contributions', False, True, order_by,
+                         desc, pre_ranked)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})

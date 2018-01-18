@@ -105,15 +105,15 @@ def rank_and_score(user_id):
     return rank_and_score
 
 
-def projects_contributed(user_id):
+def projects_contributed(user_id, order_by='name'):
     """Return projects that user_id has contributed to."""
     sql = text('''
                WITH projects_contributed as
-                    (SELECT DISTINCT(project_id) FROM task_run
-                     WHERE user_id=:user_id)
+                    (SELECT project_id, MAX(finish_time) as last_contribution  FROM task_run
+                     WHERE user_id=:user_id GROUP BY project_id)
                SELECT * FROM project, projects_contributed
-               WHERE project.id=projects_contributed.project_id ORDER BY project.name DESC;
-               ''')
+               WHERE project.id=projects_contributed.project_id ORDER BY {} DESC;
+               '''.format(order_by))
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
     for row in results:
@@ -126,9 +126,9 @@ def projects_contributed(user_id):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def projects_contributed_cached(user_id):
+def projects_contributed_cached(user_id, order_by='name'):
     """Return projects contributed too (cached version)."""
-    return projects_contributed(user_id)
+    return projects_contributed(user_id, order_by='name')
 
 
 def public_projects_contributed(user_id):
@@ -152,7 +152,7 @@ def public_projects_contributed_cached(user_id):
 def published_projects(user_id):
     """Return published projects for user_id."""
     sql = text('''
-               SELECT * 
+               SELECT *
                FROM project
                WHERE project.published=true
                AND :user_id = ANY (project.owners_ids::int[]);
