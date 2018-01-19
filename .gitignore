@@ -4,6 +4,7 @@
 *.pyc
 *.db
 settings_local.py
+settings_test.py
 env/
 doc/_build
 *.un~
