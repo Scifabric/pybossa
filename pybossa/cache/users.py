@@ -130,7 +130,8 @@ def projects_contributed(user_id, order_by='name'):
                     (SELECT project_id, MAX(finish_time) as last_contribution  FROM task_run
                      WHERE user_id=:user_id GROUP BY project_id)
                SELECT project.id, project.name as name, project.short_name, project.owner_id,
-               project.description, project.info FROM project, projects_contributed
+               project.description, project.info, project.owners_ids
+               FROM project, projects_contributed
                WHERE project.id=projects_contributed.project_id ORDER BY {} DESC;
                '''.format(order_by))
     results = session.execute(sql, dict(user_id=user_id))
@@ -138,6 +139,7 @@ def projects_contributed(user_id, order_by='name'):
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
+                       owners_ids=row.owners_ids,
                        description=row.description,
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
@@ -189,6 +191,7 @@ def published_projects(user_id, args=None):
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
+               project.owners_ids,
                project.info
                FROM project
                WHERE project.published=true
@@ -200,6 +203,7 @@ def published_projects(user_id, args=None):
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
+                       owners_ids=row.owners_ids,
                        description=row.description,
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
@@ -238,6 +242,7 @@ def draft_projects(user_id):
     sql = text('''
                SELECT project.id, project.name, project.short_name, project.description,
                project.owner_id,
+               project.owners_ids,
                project.info
                FROM project
                WHERE project.published=false
@@ -248,6 +253,7 @@ def draft_projects(user_id):
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
+                       owners_ids=row.owners_ids,
                        description=row.description,
                        overall_progress=overall_progress(row.id),
                        n_tasks=n_tasks(row.id),
