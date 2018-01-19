@@ -680,6 +680,7 @@ def refresh_materialized_view(db, view):
 
 def generate_invitation_email_for_new_user(user, project_slugs=None):
     project_slugs = project_slugs or []
+    is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     user_manual_label = current_app.config.get('USER_MANUAL_LABEL')
     user_manual_url = current_app.config.get('USER_MANUAL_URL')
@@ -699,7 +700,7 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
                                   user=user, project_urls=project_urls,
                                   user_manual_label=user_manual_label,
                                   user_manual_url=user_manual_url,
-                                  server_url=server_url)
+                                  server_url=server_url, is_qa=is_qa)
     return msg
 
 
@@ -707,6 +708,7 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
     if not user or not access_type:
         return None
 
+    is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     admin_manual_label = current_app.config.get('ADMIN_MANUAL_LABEL')
     admin_manual_url = current_app.config.get('ADMIN_MANUAL_URL')
@@ -719,7 +721,8 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
                                   access_type=access_type,
                                   admin_manual_label=admin_manual_label,
                                   admin_manual_url=admin_manual_url,
-                                  server_url=server_url)
+                                  server_url=server_url,
+                                  is_qa=is_qa)
     return msg
 
 
