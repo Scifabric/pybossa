@@ -7358,6 +7358,13 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][2] == desc
 
     @with_context
+    @patch('pybossa.view.projects.rank', autospec=True)
+    def test_project_index_historical_contributions(self, mock_rank):
+        url = 'project/category/historical_contributions'
+        self.app.get(url, follow_redirects=True)
+        assert not mock_rank.called
+
+    @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
            side_effect=SyncUnauthorized('ProjectSyncer'))
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',

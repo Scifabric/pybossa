@@ -214,10 +214,13 @@ def index(page):
 
 
 def project_index(page, lookup, category, fallback, use_count, order_by=None,
-                  desc=False):
+                  desc=False, pre_ranked=False):
     """Show projects of a category"""
     per_page = current_app.config['APPS_PER_PAGE']
-    ranked_projects = rank(lookup(category), order_by, desc)
+    ranked_projects = lookup(category)
+
+    if not pre_ranked:
+        ranked_projects = rank(ranked_projects, order_by, desc)
 
     offset = (page - 1) * per_page
     projects = ranked_projects[offset:offset+per_page]
@@ -285,11 +288,12 @@ def historical_contributions(page):
     """Show the projects a user has previously worked on"""
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))
+    pre_ranked = True
     user_id = current_user.id
     def lookup(*args, **kwargs):
         return cached_users.projects_contributed(user_id, order_by='last_contribution')
     return project_index(page, lookup, 'historical_contributions', False, True, order_by,
-                         desc)
+                         desc, pre_ranked)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
