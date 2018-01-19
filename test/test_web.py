@@ -1690,6 +1690,19 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
+    def test_project_by_id(self):
+        project = ProjectFactory.create(short_name="test")
+        url = '/projectid/{}'.format(project.id)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200
+
+    @with_context
+    def test_project_by_id_nonexistant(self):
+        url = '/projectid/{}'.format(0)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404
+
+    @with_context
     def test_delete_project(self):
         """Test WEB JSON delete project."""
         owner = UserFactory.create()
