@@ -90,7 +90,7 @@ cors_headers = ['Content-Type', 'Authorization']
 
 
 blueprint = Blueprint('project', __name__)
-blueprint_project_id = Blueprint('project_id', __name__)
+blueprint_projectid = Blueprint('projectid', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
@@ -111,10 +111,10 @@ export_queue = Queue('low',
                      default_timeout=EXPORT_TASKS_TIMEOUT)
 
 
-@blueprint_project_id.route('/<int:project_id>/', defaults={'path': ''})
-@blueprint_project_id.route('/<int:project_id>/<path:path>/')
-def project_id_route_converter(project_id, path):
-    project = project_repo.get(project_id)
+@blueprint_projectid.route('/<int:projectid>/', defaults={'path': ''})
+@blueprint_projectid.route('/<int:projectid>/<path:path>/')
+def project_id_route_converter(projectid, path):
+    project = project_repo.get(projectid)
     if not project:
         return abort(404)
     new_path = '/project/{}/{}'.format(project.short_name, path)
