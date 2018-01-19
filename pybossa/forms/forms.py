@@ -30,7 +30,7 @@ from wtforms.widgets import HiddenInput
 
 import validator as pb_validator
 from pybossa import util
-from pybossa.core import project_repo, user_repo, task_repo, user_types
+from pybossa.core import project_repo, user_repo, task_repo
 from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
@@ -576,23 +576,28 @@ class GenericUserImportForm(object):
         return self._forms[form_name](*form_args, **form_kwargs)
 
 
-class MetadataForm(Form):
+class UserPrefMetadataForm(Form):
     """Form for admins to add metadata for users."""
-    languages = SelectMultipleField(lazy_gettext('Language(s)'), choices=util.languages())
-    locations = SelectMultipleField(lazy_gettext('Location(s)'), choices=util.countries())
+    languages = SelectMultipleField(lazy_gettext('Language(s)'), choices=util.languages(),default="")
+    locations = SelectMultipleField(lazy_gettext('Location(s)'), choices=util.countries(), default="")
     start_time = TimeField(lazy_gettext('Start Time'),
         [TimeFieldsValidator(["end_time", "timezone"],
-        message="Start time, End time, and Timezone must be filled out for submission")])
+        message="Start time, End time, and Timezone must be filled out for submission")], default=None)
     end_time = TimeField(lazy_gettext('End Time'),
         [TimeFieldsValidator(["start_time", "timezone"],
-        message="Start time, End time, and Timezone must be filled out for submission")])
+        message="Start time, End time, and Timezone must be filled out for submission")], default=None)
     timezone = SelectField(lazy_gettext('Timezone'),
         [TimeFieldsValidator(["start_time", "end_time"],
         message="Start time, End time, and Timezone must be filled out for submission")],
-        choices=util.timezones())
-    user_type = SelectField(lazy_gettext('Type of user'), choices=user_types)
-    review = TextAreaField(lazy_gettext('Additional comments'))
+        choices=util.timezones(), default="")
+    user_type = SelectField(lazy_gettext('Type of user'), [validators.Required()], choices=[], default="")
+    review = TextAreaField(lazy_gettext('Additional comments'), default="")
 
 
 class TransferOwnershipForm(Form):
     email_addr = EmailField(lazy_gettext('Email of the new owner'))
+
+
+class RegisterFormWithUserPrefMetadata(RegisterForm, UserPrefMetadataForm):
+    """Create User Form that has ability to set user preferences and metadata"""
+    consent = BooleanField(default='checked', false_values=("False", "false", '', '0', 0))

@@ -787,13 +787,14 @@ class TestWeb(web.Helper):
         account validation is enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        current_app.config['USER_TYPES'] = [('', ''),('temp', 'temp')]
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe",
                         password="p4ssw0rd", confirm="p4ssw0rd",
                         email_addr="johndoe@example.com",
-                        consent=False)
+                        consent=False, user_type="temp")
             signer.dumps.return_value = ''
             render.return_value = ''
             res = self.app.post('/account/register', data=json.dumps(data),
@@ -856,11 +857,13 @@ class TestWeb(web.Helper):
         """Test WEB register JSON creates a new user and logs in."""
         self.register()
         self.signin()
+        from flask import current_app
+        current_app.config['USER_TYPES'] = [('', ''),('temp', 'temp')]
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             csrf = self.get_csrf('/account/register')
             data = dict(fullname="John Doe", name="johndoe1", password='daniel',
                         email_addr="new@mail.com", confirm='daniel',
-                        consent=True)
+                        consent=True, user_type="temp")
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
@@ -984,16 +987,18 @@ class TestWeb(web.Helper):
         enabled"""
         from flask import current_app
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
-        data = dict(fullname="John Doe", name="johndoe",
+        current_app.config['USER_TYPES'] = [('', ''),('temp', 'temp')]
+        data = dict(fullname="John Doe2", name="johndoe2",
                     password="p4ssw0rd", confirm="p4ssw0rd",
-                    email_addr="johndoe@example.com")
+                    email_addr="johndoe2@example.com", user_type="temp")
         self.register()
         self.signin()
         res = self.app.post('/account/register', data=data)
-        res = self.signin(email="johndoe@example.com",password="p4ssw0rd")
-        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert "Account validation" in res.data, res
         assert "Just one more step, please" in res.data, res.data
+        res = self.signin(email="johndoe2@example.com",password="p4ssw0rd")
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+
         assert_raises(ValueError, json.loads, res.data)
 
     @with_context
@@ -1005,9 +1010,10 @@ class TestWeb(web.Helper):
         self.register(name="jd", email=email)
         self.signin(email=email)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        current_app.config['USER_TYPES'] = [('', ''),('temp', 'temp')]
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
-                    email_addr="johndoe@example.com")
+                    email_addr="johndoe@example.com", user_type="temp")
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)

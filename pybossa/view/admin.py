@@ -48,7 +48,7 @@ from pybossa.cache import categories as cached_cat
 from pybossa.cache import site_stats
 from pybossa.cache import task_browse_helpers as helper
 from pybossa.auth import ensure_authorized_to
-from pybossa.core import announcement_repo, project_repo, user_repo, sentinel, user_types
+from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
@@ -774,7 +774,7 @@ def manageusers():
     found = []
     locs = countries()
     langs = languages()
-    utypes = user_types
+    utypes = current_app.config.get('USER_TYPES', [('','')])
     timezone = [time[0] for time in timezones()]
     args = request.args
     form = SearchForm(request.form)

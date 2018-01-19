@@ -29,6 +29,10 @@ from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
 from flask import current_app
 from pybossa.util import check_password_strength, valid_or_no_s3_bucket
+from flask.ext.login import current_user
+from werkzeug.datastructures import MultiDict
+import copy
+import json
 
 class Importer(object):
 
@@ -199,35 +203,65 @@ class UserImporter(object):
         """Get all importer names."""
         return self._importers.keys()
 
+    def _valid_user_data(self, user_data):
+        from pybossa.view.account import get_project_choices
+        from pybossa.forms.forms import RegisterFormWithUserPrefMetadata
+
+        form_data = copy.deepcopy(user_data)
+        upref = form_data.pop('user_pref', None)
+        if upref:
+            form_data['languages'] = upref.get('languages', [])
+            form_data['locations'] = upref.get('locations', [])
+        mdata = form_data.pop('metadata', None)
+        if mdata:
+            form_data['user_type'] = mdata.get('user_type')
+        form_data.pop('info', None)
+        form_data['confirm'] = user_data['password']
+        form_data['project_slug'] = form_data.pop('project_slugs', [])
+
+        form = RegisterFormWithUserPrefMetadata(MultiDict(form_data))
+        form.project_slug.choices = get_project_choices()
+        form.user_type.choices = current_app.config.get('USER_TYPES')
+        return form.validate(), json.dumps(form.errors)
+
     def create_users(self, user_repo, **form_data):
         """Create users from a remote source using an importer object and
         avoiding the creation of repeated users"""
 
         from pybossa.view.account import create_account
+
         n = 0
-        failcount = 0
+        failed_user_import_count = 0
+
         importer = self._create_importer_for(**form_data)
         failed_user_imports =[]
+        user_types = current_app.config.get('USER_TYPES')
         for user_data in importer.users():
+            fail_user_import = False
             try:
                 found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
                 if not found:
+                    full_name = user_data['fullname']
                     password = user_data['password']
-                    is_password_valid, message = check_password_strength(password)
-                    if not is_password_valid:
-                        failed_user_imports.append(user_data['fullname'])
-                        failcount += 1
-                    else:
-                        project_slugs = user_data['project_slugs'].split()
-                        create_account(user_data, project_slugs=project_slugs)
-                        n += 1
+                    valid_form_data, err_msg = self._valid_user_data(user_data)
+                    if not valid_form_data:
+                        failed_user_import_count += 1
+                        failed_user_imports.append(u'user: {}, error: {}'.format(full_name, err_msg))
+                        continue
+
+                    user_data['metadata']['admin'] = current_user.name
+                    create_account(user_data, project_slugs=user_data['project_slugs'])
+                    n += 1
             except Exception:
                 current_app.logger.exception('Error in create_user')
         if n > 0:
             msg = str(n) + " " + gettext('new users were imported successfully.')
         else:
             msg = gettext('It looks like there were no new users created.')
-        if failcount > 0:
-            msg += str(failcount) + gettext(' user(s) could not be imported due to weak password.')
-            current_app.logger.error('Failed to import users due to password mismatch: {0}'.format(",".join(failed_user_imports)))
+
+        if failed_user_import_count:
+            msg += str(failed_user_import_count) + gettext(' user(s) could not be imported due to invalid data.')
+            current_app.logger.error(
+                u'Failed to import users\n{0}'
+                .format(",".join(failed_user_imports)))
         return msg
