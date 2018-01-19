@@ -20,6 +20,7 @@ before_install:
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
+- cp settings_test.py.tmpl settings_test.py
 install:
 - pip install -U pip
 - pip install -r requirements.txt
