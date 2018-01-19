@@ -300,7 +300,7 @@ def setup_blueprints(app):
     from pybossa.api import blueprint as api
     from pybossa.view.account import blueprint as account
     from pybossa.view.projects import blueprint as projects
-    from pybossa.view.projects import blueprint_project_id as project_ids
+    from pybossa.view.projects import blueprint_projectid as projectids
     from pybossa.view.admin import blueprint as admin
     from pybossa.view.announcements import blueprint as announcements
     from pybossa.view.leaderboard import blueprint as leaderboard
@@ -314,7 +314,7 @@ def setup_blueprints(app):
                   {'handler': api,  'url_prefix': '/api'},
                   {'handler': account, 'url_prefix': '/account'},
                   {'handler': projects, 'url_prefix': '/project'},
-                  {'handler': project_ids, 'url_prefix': '/project_id'},
+                  {'handler': projectids, 'url_prefix': '/projectid'},
                   {'handler': admin, 'url_prefix': '/admin'},
                   {'handler': announcements, 'url_prefix': '/announcements'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},
