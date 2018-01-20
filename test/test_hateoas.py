@@ -20,8 +20,8 @@ import json
 
 from default import Test, with_context
 from pybossa.hateoas import Hateoas
-from factories import ProjectFactory, TaskRunFactory, TaskFactory
-
+from factories import (ProjectFactory, TaskRunFactory, TaskFactory,
+    UserFactory)
 
 class TestHateoas(Test):
 
@@ -38,8 +38,9 @@ class TestHateoas(Test):
     @with_context
     def test_00_link_object(self):
         """Test HATEOAS object link is created"""
+        user = UserFactory.create()
         # For project
-        res = self.app.get("/api/project/1", follow_redirects=True)
+        res = self.app.get('/api/project/1?api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -129,7 +130,8 @@ class TestHateoas(Test):
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For project
-        res = self.app.get("/api/project", follow_redirects=True)
+        user = UserFactory.create()
+        res = self.app.get('/api/project?all=1&api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg

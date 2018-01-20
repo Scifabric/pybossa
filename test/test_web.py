@@ -7045,7 +7045,8 @@ class TestWeb(web.Helper):
         """Test WEB results shows no data as no template and no data."""
         tr = TaskRunFactory.create()
         project = project_repo.get(tr.project_id)
-        url = '/project/%s/results' % project.short_name
+        user = UserFactory.create()
+        url = '/project/%s/results?api_key=%s' % (project.short_name, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert dom.find(id="noresult") is not None, res.data
@@ -7055,7 +7056,8 @@ class TestWeb(web.Helper):
         """Test WEB results shows no data as no template and no data."""
         tr = TaskRunFactory.create()
         project = project_repo.get(tr.project_id)
-        url = '/project/%s/results' % project.short_name
+        user = UserFactory.create()
+        url = '/project/%s/results?api_key=%s' % (project.short_name, user.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg='data entry missing'
@@ -7105,7 +7107,8 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(n_answers=1)
         tr = TaskRunFactory.create(task=task)
         project = project_repo.get(tr.project_id)
-        url = '/project/%s/results' % project.short_name
+        user = UserFactory.create()
+        url = '/project/%s/results?api_key=%s' % (project.short_name, user.api_key)
         result = result_repo.get_by(project_id=project.id)
         result.info = dict(foo='bar')
         result_repo.update(result)
@@ -7121,7 +7124,8 @@ class TestWeb(web.Helper):
         project = project_repo.get(tr.project_id)
         project.info['results'] = "The results"
         project_repo.update(project)
-        url = '/project/%s/results' % project.short_name
+        user = UserFactory.create()
+        url = '/project/%s/results?api_key=%s' % (project.short_name, user.api_key)
         result = result_repo.get_by(project_id=project.id)
         result.info = dict(foo='bar')
         result_repo.update(result)

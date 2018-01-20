@@ -236,8 +236,9 @@ class TestProjectAPI(TestAPI):
     def test_query_project(self):
         """Test API query for project endpoint works"""
         ProjectFactory.create(short_name='test-app', name='My New Project')
+        user = UserFactory.create()
         # Test for real field
-        res = self.app.get("/api/project?short_name=test-app", follow_redirects=True)
+        res = self.app.get('/api/project?short_name=test-app&all=1&api_key=' + user.api_key, follow_redirects=True)
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 1, data
@@ -245,12 +246,12 @@ class TestProjectAPI(TestAPI):
         assert data[0]['short_name'] == 'test-app', data
 
         # Valid field but wrong value
-        res = self.app.get("/api/project?short_name=wrongvalue")
+        res = self.app.get('/api/project?short_name=wrongvalue&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/project?short_name=test-app&name=My New Project')
+        res = self.app.get('/api/project?short_name=test-app&name=My New Project&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
@@ -332,7 +333,7 @@ class TestProjectAPI(TestAPI):
         assert data[0]['owner_id'] == user.id, data
 
         # fulltextsearch
-        url = '/api/project?&info=foo::fox&fulltextsearch=1'
+        url = '/api/project?&info=foo::fox&fulltextsearch=1&all=1&api_key=' + user_two.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 1, len(data)
