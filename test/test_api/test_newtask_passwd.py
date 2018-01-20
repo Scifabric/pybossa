@@ -17,10 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
 
+from itsdangerous import SignatureExpired
 from default import db, with_context
 from test_api import TestAPI, get_pwd_cookie
 from factories import (ProjectFactory, TaskFactory, UserFactory)
 from datetime import datetime, timedelta
+from mock import patch
 
 
 from pybossa.repositories import ProjectRepository
@@ -141,3 +143,31 @@ class TestNewtaskPasswd(TestAPI):
         c, v, new_exp = get_pwd_cookie(project.short_name, res)
         assert new_exp - now > timedelta(minutes=115)
         assert new_exp - now < timedelta(minutes=125)
+
+    @with_context
+    def test_newtask_expired_cookie(self):
+        """Test API project new_task expired cookie"""
+        project = ProjectFactory.create(info={'timeout': 60})
+        project.set_password('the_password')
+        project_repo.save(project)
+        TaskFactory.create_batch(2, project=project, info={'question': 'answer'})
+        user = UserFactory.create()
+
+        # simulate sending expired cookies
+        with patch.dict(self.flask_app.config, {'PASSWD_COOKIE_TIMEOUT': -1}):
+            url = '/project/%s/password?api_key=%s' % (project.short_name, user.api_key)
+            data = dict(password='the_password')
+            res = self.app.post(url, data=data)
+
+            c, v, e = get_pwd_cookie(project.short_name, res)
+
+            assert c
+            self.app.set_cookie('/', c, v)
+            res = self.app.post(url, data=data)
+            c, v, e = get_pwd_cookie(project.short_name, res)
+
+            assert c
+
+            url = '/project/%s/newtask?api_key=%s' % (project.short_name, user.api_key)
+            res = self.app.get(url, follow_redirects=True)
+            assert 'Enter the password to contribute to this project' in res.data, res.data
