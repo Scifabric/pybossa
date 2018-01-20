@@ -67,9 +67,15 @@ class TestProjectAPI(TestAPI):
         projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
 
         project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        user = UserFactory.create()
+
         projects.insert(0, project1)
         projects.append(project2)
         res = self.app.get('/api/project')
+        data = json.loads(res.data)
+        assert data['status_code'] == 401, "anonymous user should not have acess to project api"
+
+        res = self.app.get('/api/project?all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         dataNoDesc = data
         assert len(data) == 10, data
@@ -81,21 +87,20 @@ class TestProjectAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
         # Test a non-existant ID
-        res = self.app.get('/api/project/0')
+        res = self.app.get('/api/project/0?api_key=' + user.api_key)
         err = json.loads(res.data)
         assert res.status_code == 404, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'project', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
-
         # Limits
-        res = self.app.get("/api/project?limit=5")
+        res = self.app.get('/api/project?all=1&limit=5&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 5, data
 
         # Related
-        res = self.app.get("/api/project?limit=1&related=True")
+        res = self.app.get('/api/project?all=1&limit=1&related=True&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, data
         keys = ['tasks', 'task_runs', 'results']
@@ -103,28 +108,28 @@ class TestProjectAPI(TestAPI):
             assert key not in data[0].keys()
 
         # Keyset pagination
-        url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
+        url = "/api/project?all=1&limit=5&last_id=%s&api_key=%s" % (projects[4].id, user.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 5, len(data)
         assert data[0]['id'] == projects[5].id, (data[0]['id'], projects[5].id)
 
         # Desc filter
-        url = "/api/project?orderby=updated&desc=true"
+        url = '/api/project?all=1&orderby=updated&desc=true&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['updated'] == projects[len(projects)-1].updated, err_msg
 
         # Orderby filter
-        url = "/api/project?orderby=id&desc=true"
+        url = '/api/project?all=1&orderby=id&desc=true&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['id'] == projects[len(projects)-1].id, err_msg
 
         # Orderby filter non attribute
-        url = "/api/project?orderby=wrongattribute&desc=true"
+        url = '/api/project?all=1&orderby=wrongattribute&desc=true&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should return 415."
@@ -133,7 +138,7 @@ class TestProjectAPI(TestAPI):
         assert 'has no attribute' in data['exception_msg'], data
 
         # Desc filter
-        url = "/api/project?orderby=id"
+        url = '/api/project?all=1&orderby=id&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -141,7 +146,7 @@ class TestProjectAPI(TestAPI):
         for i in range(len(projects_by_id)):
             assert projects_by_id[i].id == data[i]['id'], (projects_by_id[i].id, data[i]['id'])
 
-        url = "/api/project?orderby=id&desc=true"
+        url = '/api/project?all=1&orderby=id&desc=true&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
