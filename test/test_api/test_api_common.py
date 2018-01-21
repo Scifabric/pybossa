@@ -106,8 +106,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/project?created=2000-01')
         data = json.loads(res.data)
         assert data['status_code'] == 401, "anonymous user should not have acess to project api"
-        import pdb; pdb.set_trace()
-
+        
         res = self.app.get('/api/project?all=1&created=2000-01&api_key=%s' % admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, len(data)
@@ -301,7 +300,8 @@ class TestApiCommon(TestAPI):
         # Test first a non-existant field for all end-points
         TaskFactory.create(info={'foo': 'fox'})
         TaskFactory.create(info={'foo': 'foxes something'})
-        res = self.app.get('/api/task?all=1&info=foo::fox&fulltextsearch=1')
+        user = UserFactory.create()
+        res = self.app.get('/api/task?all=1&info=foo::fox&fulltextsearch=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 2, res.data
         for d in data:
@@ -310,7 +310,7 @@ class TestApiCommon(TestAPI):
             assert 'headline' in d.keys()
 
         # Without the fulltextsearch
-        res = self.app.get('/api/task?all=1&info=foo::fox')
+        res = self.app.get('/api/task?all=1&info=foo::fox&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, res.data
         for d in data:
@@ -323,8 +323,9 @@ class TestApiCommon(TestAPI):
     def test_query_sql_injection(self):
         """Test API SQL Injection is not allowed works"""
 
+        user = UserFactory.create()
         q = '1%3D1;SELECT%20*%20FROM%20task%20WHERE%201=1'
-        res = self.app.get('/api/task?' + q)
+        res = self.app.get('/api/task?%s&api_key=%s' % (q, user.api_key))
         error = json.loads(res.data)
         assert res.status_code == 415, error
         assert error['action'] == 'GET', error
@@ -410,8 +411,8 @@ class TestApiCommon(TestAPI):
             # test api with incorrect api_key
             url = '/api/completedtask?project_id=1&api_key=BAD-api-key'
             res = self.app.get(url)
-            err_msg = 'Status code should be 400'
-            assert res.status_code == 400, err_msg
+            err_msg = 'Status code should be 401'
+            assert res.status_code == 401, err_msg
 
             url = "/project/%s?api_key=api-key1" % project.short_name
             res = self.app.get(url, follow_redirects=True)
@@ -451,8 +452,8 @@ class TestApiCommon(TestAPI):
             # test api with incorrect api_key
             url = '/api/completedtask?project_id=1&api_key=bad-api-key'
             res = self.app.get(url)
-            err_msg = 'Status code should be 400'
-            assert res.status_code == 400, err_msg
+            err_msg = 'Status code should be 401'
+            assert res.status_code == 401, err_msg
 
             url = "/project/%s?api_key=api-key1" % project.short_name
             res = self.app.get(url, follow_redirects=True)

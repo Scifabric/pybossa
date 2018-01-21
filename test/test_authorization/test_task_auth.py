@@ -44,8 +44,7 @@ class TestTaskAuthorization(Test):
         task = TaskFactory.create(project=project)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', task)
-        assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
-        assert_not_raises(Forbidden, ensure_authorized_to, 'read', Task)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', task)
         assert_raises(Unauthorized, ensure_authorized_to, 'update', task)
         assert_raises(Unauthorized, ensure_authorized_to, 'delete', task)
 

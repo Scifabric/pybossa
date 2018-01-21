@@ -58,7 +58,7 @@ class TestHateoas(Test):
         assert project_link == output['link'], err_msg
 
         # For task
-        res = self.app.get("/api/task/1", follow_redirects=True)
+        res = self.app.get('/api/task/1?api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -149,7 +149,7 @@ class TestHateoas(Test):
         assert project_link == output['links'][0], err_msg
 
         # For task
-        res = self.app.get("/api/task", follow_redirects=True)
+        res = self.app.get('/api/task?all=1&api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg

@@ -58,6 +58,8 @@ class TestResultAPI(TestAPI):
     @with_context
     def test_result_query_without_params(self):
         """ Test API Result query"""
+
+        user = UserFactory.create()
         result = self.create_result(n_answers=10)
         res = self.app.get('/api/result')
         results = json.loads(res.data)
@@ -90,7 +92,7 @@ class TestResultAPI(TestAPI):
             taskrun = json.loads(taskrun.data)[0]
             assert taskrun['result']['id'] == result['id'], taskrun['result']
             assert taskrun['task']['id'] == result['task_id'], taskrun['task']
-        url = '/api/task?id=%s&related=True' % result['task_id']
+        url = '/api/task?&all=1&id=%s&related=True&api_key=%s' % (result['task_id'], user.api_key)
         task = self.app.get(url)
         task = json.loads(task.data)[0]
         assert task['result']['id'] == result['id'], task['result']

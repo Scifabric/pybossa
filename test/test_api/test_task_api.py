@@ -65,8 +65,9 @@ class TestTaskAPI(TestAPI):
             for t in tmp:
                 tasks.append(t)
 
+        user = UserFactory.create()
         project_ids = [project.id for project in projects]
-        url = '/api/task?project_id=%s&limit=100' % project_ids
+        url = '/api/task?all=1&project_id=%s&limit=100&api_key=%s' % (project_ids, user.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 3 * 2, len(data)
@@ -80,7 +81,6 @@ class TestTaskAPI(TestAPI):
         data = json.loads(res.data)
         assert data[0]['id'] == tasks[-1].id
 
-        user = UserFactory.create()
         task_orig = tasks[0]
         task_run = TaskRunFactory.create(task=task_orig, user=user)
 
@@ -107,15 +107,14 @@ class TestTaskAPI(TestAPI):
         tasks2 = TaskFactory.create_batch(10, project=project,
                                          info=dict(foo='dog'))
         tasks = tasks1 + tasks2
-        AnonymousTaskRunFactory.create(task=tasks[0])
-        AnonymousTaskRunFactory.create(task=tasks[1])
-        AnonymousTaskRunFactory.create(task=tasks[2])
+        TaskRunFactory.create(task=tasks[0], user=user)
+        TaskRunFactory.create(task=tasks[1], user=user)
+        TaskRunFactory.create(task=tasks[2], user=user)
 
-        url = '/api/task?participated=1&all=1'
+        url = '/api/task?participated=1&api_key=' + user.api_key
 
         res = self.app.get(url)
         data = json.loads(res.data)
-
         assert len(data) == 17, len(data)
         participated_tasks = [tasks[0].id, tasks[1].id, tasks[2].id]
 
@@ -123,7 +122,7 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
         # limit & offset
-        url = '/api/task?participated=1&all=1&limit=10&offset=10'
+        url = '/api/task?participated=1&all=1&limit=10&offset=10&api_key=' + user.api_key
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -135,7 +134,7 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
         # last_id
-        url = '/api/task?participated=1&all=1&last_id=%s' % (tasks[0].id)
+        url = '/api/task?participated=1&all=1&last_id=%s&api_key=%s' % (tasks[0].id, user.api_key)
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -147,7 +146,7 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
         # orderby & desc
-        url = '/api/task?participated=1&all=1&orderby=created&desc=1'
+        url = '/api/task?participated=1&all=1&orderby=created&desc=1&api_key=' + user.api_key
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -161,7 +160,7 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
         # info & fulltextsearch
-        url = '/api/task?participated=1&all=1&orderby=created&desc=1&info=foo::fox&fulltextsearch=1'
+        url = '/api/task?participated=1&all=1&orderby=created&desc=1&info=foo::fox&fulltextsearch=1&api_key=' + user.api_key
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -191,6 +190,8 @@ class TestTaskAPI(TestAPI):
         url = '/api/task?participated=1&all=1&external_uid=1xa'
 
         res = self.app.get(url)
+        res.status_code == 401, "unauthenticated users are not authorized to access task"
+        return
         data = json.loads(res.data)
 
         assert len(data) == 17, data
@@ -342,12 +343,13 @@ class TestTaskAPI(TestAPI):
         t3 = TaskFactory.create(created='2018-01-01T14:37:30.642119',
                                 info={'question': 'answer'},
                                 fav_user_ids=[1,2])
+        user = UserFactory.create()
 
         tasks.insert(0, t1)
         tasks.append(t2)
         tasks.append(t3)
 
-        res = self.app.get('/api/task')
+        res = self.app.get('/api/task?all=1&api_key=' + user.api_key)
         tasks = json.loads(res.data)
         assert len(tasks) == 11, tasks
         task = tasks[0]
@@ -358,14 +360,14 @@ class TestTaskAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
         # Desc filter
-        url = "/api/task?desc=true"
+        url = '/api/task?desc=true&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['created'] == tasks[len(tasks)-1]['created'], err_msg
 
         # Desc filter
-        url = "/api/task?orderby=wrongattribute"
+        url = '/api/task?orderby=wrongattribute&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should be 415."
@@ -374,7 +376,7 @@ class TestTaskAPI(TestAPI):
         assert 'has no attribute' in data['exception_msg'], data
 
         # Desc filter
-        url = "/api/task?orderby=id"
+        url = '/api/task?orderby=id&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -385,7 +387,7 @@ class TestTaskAPI(TestAPI):
             i += 1
 
         # Desc filter
-        url = "/api/task?orderby=id&desc=true"
+        url = '/api/task?orderby=id&desc=true&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -396,7 +398,7 @@ class TestTaskAPI(TestAPI):
             i += 1
 
         # fav_user_ids
-        url = "/api/task?orderby=fav_user_ids&desc=true"
+        url = '/api/task?orderby=fav_user_ids&desc=true&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -404,12 +406,12 @@ class TestTaskAPI(TestAPI):
         assert data[0]['id'] == t2.id, err_msg
 
         # fav_user_ids
-        url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=1"
+        url = '/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=1&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['id'] == t3.id, err_msg
-        url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=2"
+        url = '/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=2&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -418,7 +420,7 @@ class TestTaskAPI(TestAPI):
 
         # Related
         taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
-        res = self.app.get('/api/task?id=' + str(t2.id) + '&related=True')
+        res = self.app.get('/api/task?id=' + str(t2.id) + '&related=True&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         task = data[0]
         assert task['info']['question'] == 'answer', task
@@ -453,9 +455,10 @@ class TestTaskAPI(TestAPI):
     def test_task_query_with_params(self):
         """Test API query for task with params works"""
         project = ProjectFactory.create()
+        user = UserFactory.create()
         tasks = TaskFactory.create_batch(10, project=project)
         # Test for real field
-        res = self.app.get("/api/task?project_id=1")
+        res = self.app.get('/api/task?project_id=1&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 10, data
@@ -463,12 +466,12 @@ class TestTaskAPI(TestAPI):
         assert data[0]['project_id'] == 1, data
 
         # Valid field but wrong value
-        res = self.app.get("/api/task?project_id=99999999")
+        res = self.app.get('/api/task?project_id=99999999&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/task?project_id=1&state=ongoing')
+        res = self.app.get('/api/task?project_id=1&state=ongoing&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         # One result
         assert len(data) == 10, data
@@ -477,14 +480,14 @@ class TestTaskAPI(TestAPI):
         assert data[0]['state'] == u'ongoing', data
 
         # Limits
-        res = self.app.get("/api/task?project_id=1&limit=5")
+        res = self.app.get('/api/task?project_id=1&limit=5&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
 
         # Keyset pagination
-        url = "/api/task?project_id=1&limit=5&last_id=%s" % tasks[4].id
+        url = "/api/task?project_id=1&limit=5&last_id=%s&all=1&api_key=%s" % (tasks[4].id, user.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         for item in data:

@@ -38,7 +38,7 @@ class TaskAuth(object):
         return self._only_admin_or_subadminowners(user, task)
 
     def _read(self, user, task=None):
-        return True
+        return user.is_authenticated()
 
     def _update(self, user, task):
         return self._only_admin_or_subadminowners(user, task)
