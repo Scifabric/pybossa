@@ -72,6 +72,7 @@ from pybossa.default_settings import TIMEOUT
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 
 blueprint = Blueprint('project', __name__)
+blueprint_projectid = Blueprint('projectid', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 auditlogger = AuditLogger(auditlog_repo, caller='web')
@@ -79,6 +80,16 @@ importer_queue = Queue('medium',
                        connection=sentinel.master,
                        default_timeout=TIMEOUT)
 webhook_queue = Queue('high', connection=sentinel.master)
+
+
+@blueprint_projectid.route('/<int:projectid>/', defaults={'path': ''})
+@blueprint_projectid.route('/<int:projectid>/<path:path>/')
+def project_id_route_converter(projectid, path):
+    project = project_repo.get(projectid)
+    if not project:
+        return abort(404)
+    new_path = '/project/{}/{}'.format(project.short_name, path)
+    return redirect_content_type(new_path)
 
 
 def sanitize_project_owner(project, owner, current_user, ps=None):

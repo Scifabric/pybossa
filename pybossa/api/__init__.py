@@ -61,6 +61,7 @@ from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed
+from pybossa.api.project_by_name import ProjectByNameAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -110,6 +111,7 @@ register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
              pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
+register_api(ProjectByNameAPI, 'api_projectbyname', '/projectbyname', pk='key', pk_type='string')
 
 
 @jsonpify
