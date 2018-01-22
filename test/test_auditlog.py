@@ -745,7 +745,6 @@ class TestAuditlogWEB(web.Helper):
 
     @with_context
     def test_project_auditlog_access_owner(self):
-        """Test case disabled: Non admin cannot create projects in GIGwork"""
         '''
         # Admin
         self.register()
@@ -764,7 +763,6 @@ class TestAuditlogWEB(web.Helper):
 
     @with_context
     def test_project_auditlog_access_pro(self):
-        """Test case disabled: Non admin cannot create projects in GIGwork"""
         '''
         # Admin
         self.register()
@@ -787,7 +785,6 @@ class TestAuditlogWEB(web.Helper):
 
     @with_context
     def test_project_auditlog_access_admin(self):
-        """Test case disabled: Non admin cannot create projects in GIGwork"""
         '''
         # Admin
         self.register()

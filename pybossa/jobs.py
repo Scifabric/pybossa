@@ -1065,7 +1065,7 @@ def mail_project_report(info, current_user_email_addr):
     try:
         project_csv_exporter.pregenerate_zip_files(info)
         filename = project_csv_exporter.zip_name(info)
-        subject = 'GIGwork project report'
+        subject = '{} project report'.format(current_app.config['BRAND'])
         msg = 'Your exported data is attached.'
 
         body = 'Hello,\n\n{}\n\nThe {} team.'
@@ -1083,7 +1083,7 @@ def mail_project_report(info, current_user_email_addr):
         uploader.delete_file(filename, container)
     except Exception:
         current_app.logger.exception('Error in mail_project_report')
-        subject = 'Error in GIGwork project report'
+        subject = 'Error in {} project report'.format(current_app.config['BRAND'])
         msg = 'An error occurred while exporting your report.'
 
         body = 'Hello,\n\n{}\n\nThe {} team.'

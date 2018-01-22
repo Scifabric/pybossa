@@ -2,7 +2,7 @@ from time import time
 from datetime import timedelta
 
 
-ACTIVE_USER_KEY = 'gigwork:active_users_in_project:{}'
+ACTIVE_USER_KEY = 'pybossa:active_users_in_project:{}'
 
 
 def get_active_user_key(project_id):
