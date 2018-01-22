@@ -66,7 +66,7 @@ from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
-from pybossa.cache.helpers import n_available_tasks
+from pybossa.cache.helpers import n_available_tasks, n_available_tasks_for_user
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.api.project_by_name import ProjectByNameAPI
@@ -235,13 +235,15 @@ def _retrieve_new_task_with_timeout(project_id):
 def user_progress(project_id=None, short_name=None):
     """API endpoint for user progress.
 
-    Return a JSON object with two fields regarding the tasks for the user:
+    Return a JSON object with four fields regarding the tasks for the user:
         { 'done': 10,
           'total: 100,
-          'remaining': 90
+          'remaining': 90,
+          'remaining_for_user': 45
         }
-       This will mean that the user has done a 10% of the available tasks for
-       him and 90 tasks are yet to be submitted
+       This will mean that the user has done 10% of the available tasks for the
+       project, 90 tasks are yet to be submitted and the user can access 45 of
+       them based on user preferences.
 
     """
     if current_user.is_anonymous():
@@ -258,7 +260,9 @@ def user_progress(project_id=None, short_name=None):
             query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             num_available_tasks = n_available_tasks(project.id, current_user.id)
-            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks)
+            num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
+            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks,
+                       remaining_for_user=num_available_tasks_for_user)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
