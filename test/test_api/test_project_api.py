@@ -778,6 +778,9 @@ class TestProjectAPI(TestAPI):
         error_msg = "Number of done tasks is wrong: %s" % len(taskruns)
         assert len(taskruns) + 1 == data['done'], error_msg
 
+        assert 'remaining' in data
+        assert 'remaining_for_user' in data
+
 
     @with_context
     def test_delete_project_cascade(self):
