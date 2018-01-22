@@ -155,29 +155,28 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
-        """Test anonymous user can read any taskrun"""
+        """Test anonymous user cannot read any taskrun"""
         anonymous_taskrun = AnonymousTaskRunFactory.create()
         user_taskrun = TaskRunFactory.create()
 
-        assert_not_raises(Exception,
+        assert_raises(Unauthorized,
                           ensure_authorized_to, 'read', anonymous_taskrun)
-        assert_not_raises(Exception, ensure_authorized_to, 'read', user_taskrun)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', user_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_read(self):
-        """Test authenticated user can read any taskrun"""
+        """Test authenticated user cannot read any taskrun"""
         own_taskrun = TaskRunFactory.create()
         anonymous_taskrun = AnonymousTaskRunFactory.create()
         other_users_taskrun = TaskRunFactory.create()
 
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
-        assert_not_raises(Exception,
+        assert_raises(Forbidden,
                           ensure_authorized_to, 'read', anonymous_taskrun)
-        assert_not_raises(Exception,
-                          ensure_authorized_to, 'read', other_users_taskrun)
-        assert_not_raises(Exception, ensure_authorized_to, 'read', own_taskrun)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', other_users_taskrun)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', own_taskrun) # regular owner cannot read taskrun
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)

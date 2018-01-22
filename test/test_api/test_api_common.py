@@ -106,7 +106,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/project?created=2000-01')
         data = json.loads(res.data)
         assert data['status_code'] == 401, "anonymous user should not have acess to project api"
-        
+
         res = self.app.get('/api/project?all=1&created=2000-01&api_key=%s' % admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, len(data)
@@ -149,10 +149,8 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'taskrun':
-                assert len(data) == 1, data
-                taskrun = data[0]
-                assert taskrun['info']['answer'] == 'annakarenina', data
-                assert res.mimetype == 'application/json', res
+                assert res.status_code == 200
+                assert len(data) == 0, "No taskrun to be returned for regular user"
 
             if endpoint == 'user':
                 assert res.status_code == 403, data
@@ -181,10 +179,8 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'taskrun':
-                assert len(data) == 1, data
-                taskrun = data[0]
-                assert taskrun['info']['answer'] == 'annakarenina', data
-                assert res.mimetype == 'application/json', res
+                assert res.status_code == 200
+                assert len(data) == 0, "No taskrun to be returned for regular owner"
 
             if endpoint == 'user':
                 assert res.status_code == 403, data
@@ -277,8 +273,8 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'taskrun':
-                assert len(data) == 0, data
-                assert res.mimetype == 'application/json', res
+                assert res.status_code == 200
+                assert len(data) == 0, "No taskrun to be returned for regular user"
 
 
     @with_context

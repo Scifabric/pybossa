@@ -75,13 +75,19 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert data['status_code'] == 401, "anonymous user should not have acess to project api"
 
-        res = self.app.get('/api/project?all=1&api_key=' + user.api_key)
+        res = self.app.get('/api/project?&all=1&api_key=' + user.api_key)
+        data = json.loads(res.data)
+        project = data[0]
+        err_msg = 'Task presenter should not be returned for regular user'
+        assert 'task_presenter' not in project['info'], err_msg
+
+        admin = UserFactory.create(admin=True)
+        res = self.app.get('/api/project?all=1&api_key=' + admin.api_key)
         data = json.loads(res.data)
         dataNoDesc = data
         assert len(data) == 10, data
         project = data[0]
         assert project['info']['task_presenter'] == 'foo', data
-        assert 'total' not in project['info'].keys(), data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res

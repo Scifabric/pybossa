@@ -93,11 +93,9 @@ class ProjectAPI(APIBase):
         return tmp
 
     def _select_attributes(self, data):
-        if current_user.is_anonymous():
-            data = self._filter_private_data(data)
-            return data
         if (current_user.is_authenticated() and
-                (current_user.id in data['owners_ids'] or current_user.admin)):
+                (current_user.id in data['owners_ids'] or
+                    current_user.admin or current_user.subadmin)):
             return data
         else:
             data = self._filter_private_data(data)

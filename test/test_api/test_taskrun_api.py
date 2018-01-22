@@ -63,6 +63,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_query_list_project_ids(self):
         """Get a list of tasks runs using a list of project_ids."""
+        admin = UserFactory.create()
         projects = ProjectFactory.create_batch(3)
         task_runs = []
         for project in projects:
@@ -71,7 +72,7 @@ class TestTaskrunAPI(TestAPI):
                 task_runs.append(t)
 
         project_ids = [project.id for project in projects]
-        url = '/api/taskrun?project_id=%s&limit=100' % project_ids
+        url = '/api/taskrun?project_id=%s&limit=100&all=1&api_key=%s' % (project_ids, admin.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         assert len(data) == 3 * 2, len(data)
@@ -104,24 +105,11 @@ class TestTaskrunAPI(TestAPI):
         project_ids = [project.id, project_two.id]
         # As anon, it sould return everything
         res = self.app.get('/api/taskrun')
-        taskruns = json.loads(res.data)
-        assert len(taskruns) == 20, taskruns
-        for tr in taskruns:
-            assert tr['project_id'] in project_ids, tr
-            assert tr['info']['answer'] == 'annakarenina', tr
+        assert res.status_code == 401
 
         # Related
         res = self.app.get('/api/taskrun?related=True')
-        taskruns = json.loads(res.data)
-        assert len(taskruns) == 20, taskruns
-        for tr in taskruns:
-            assert tr['project_id'] in project_ids, tr
-            assert tr['info']['answer'] == 'annakarenina', tr
-            assert tr['task']['id'] == tr['task_id'], tr
-            assert tr['result'] == None, tr
-
-        # The output should have a mime-type: application/json
-        assert res.mimetype == 'application/json', res
+        assert res.status_code == 401
 
         # User context should return 0 taskruns as none of them belong to this
         # user.
@@ -137,14 +125,10 @@ class TestTaskrunAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
-        # User context with all=1 should return everything in the DB, even
-        # those task runs that do not belong to the user
+        # User context with all=1 should not return everything in the DB
         res = self.app.get('/api/taskrun?all=1&api_key=' + user.api_key)
         taskruns = json.loads(res.data)
-        assert len(taskruns) == 20, taskruns
-        for tr in taskruns:
-            assert tr['project_id'] in project_ids, tr
-            assert tr['info']['answer'] == 'annakarenina', tr
+        assert len(taskruns) == 0, taskruns
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -170,14 +154,14 @@ class TestTaskrunAPI(TestAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
-        url = "/api/taskrun?desc=true&orderby=created"
+        url = '/api/taskrun?desc=true&orderby=created&all=1&api_key=' + owner.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['created'] == date_new, err_msg
 
         # Desc filter
-        url = "/api/taskrun?orderby=wrongattribute"
+        url = '/api/taskrun?orderby=wrongattribute&api_key=' + owner.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should be 415."
@@ -189,7 +173,7 @@ class TestTaskrunAPI(TestAPI):
         taskruns.append(t22.dictize())
 
         # Desc filter
-        url = "/api/taskrun?orderby=id"
+        url = '/api/taskrun?orderby=id&all=1&api_key=' + owner.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -199,7 +183,7 @@ class TestTaskrunAPI(TestAPI):
             assert taskruns_by_id[i]['id'] == data[i]['id']
 
         # Desc filter
-        url = "/api/taskrun?orderby=id&desc=true"
+        url = '/api/taskrun?orderby=id&desc=true&all=1&api_key=' + owner.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
@@ -211,10 +195,14 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_query_taskrun(self):
         """Test API query for taskrun with params works"""
-        project = ProjectFactory.create()
+        admin, owner, user = UserFactory.create_batch(3)
+        owner.subadmin = True
+        project = ProjectFactory.create(owner=owner)
         task_runs = TaskRunFactory.create_batch(10, project=project)
+        user = UserFactory.create()
+
         # Test for real field
-        res = self.app.get("/api/taskrun?project_id=1")
+        res = self.app.get('/api/taskrun?project_id=1&all=1&api_key=' + owner.api_key)
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 10, data
@@ -222,12 +210,12 @@ class TestTaskrunAPI(TestAPI):
         assert data[0]['project_id'] == 1, data
 
         # Valid field but wrong value
-        res = self.app.get("/api/taskrun?project_id=99999999")
+        res = self.app.get('/api/taskrun?project_id=99999999&api_key=' + owner.api_key)
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/taskrun?project_id=1&task_id=1')
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1&api_key=' + owner.api_key)
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
@@ -236,14 +224,14 @@ class TestTaskrunAPI(TestAPI):
         assert data[0]['task_id'] == 1, data
 
         # Limits
-        res = self.app.get("/api/taskrun?project_id=1&limit=5")
+        res = self.app.get('/api/taskrun?project_id=1&limit=5&api_key=' + owner.api_key)
         data = json.loads(res.data)
         for item in data:
             assert item['project_id'] == 1, item
         assert len(data) == 5, data
 
         # Keyset pagination
-        url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
+        url = '/api/taskrun?project_id=1&limit=5&last_id=%s&all=1&api_key=%s' % (task_runs[4].id, owner.api_key)
         res = self.app.get(url)
         data = json.loads(res.data)
         for item in data:
@@ -263,13 +251,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Test for real field as anon
         res = self.app.get("/api/taskrun?project_id=" + str(project_two.id))
-        data = json.loads(res.data)
-        # Should return one result
-        assert len(data) == 10, data
-        # Correct result
-        for tr in data:
-            assert tr['project_id'] == project_two.id, tr
-
+        assert res.status_code == 401
 
         # Test for real field as auth user but not owner
         res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project_two.id))
@@ -285,7 +267,6 @@ class TestTaskrunAPI(TestAPI):
         # Correct result
         for tr in data:
             assert tr['project_id'] == project_two.id, tr
-
 
         # Test for real field as owner
         res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project.id))
@@ -307,8 +288,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Valid field but wrong value
         res = self.app.get("/api/taskrun?project_id=99999999")
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 401
 
         res = self.app.get("/api/taskrun?project_id=99999999&api_key=" + owner.api_key)
         data = json.loads(res.data)
@@ -320,12 +300,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Multiple fields
         res = self.app.get('/api/taskrun?project_id=1&task_id=1')
-        data = json.loads(res.data)
-        # One result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['project_id'] == 1, data
-        assert data[0]['task_id'] == 1, data
+        assert res.status_code == 401
 
         res = self.app.get('/api/taskrun?project_id=1&task_id=1&api_key=' + owner.api_key)
         data = json.loads(res.data)
@@ -366,10 +341,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Limits
         res = self.app.get("/api/taskrun?project_id=1&limit=5")
-        data = json.loads(res.data)
-        for item in data:
-            assert item['project_id'] == 1, item
-        assert len(data) == 5, data
+        assert res.status_code == 401
 
         # Limits
         res = self.app.get("/api/taskrun?project_id=" + str(project.id) + "&limit=5&api_key=" + owner.api_key)
@@ -391,11 +363,7 @@ class TestTaskrunAPI(TestAPI):
         # Keyset pagination
         url = "/api/taskrun?project_id=1&limit=5&last_id=%s" % task_runs[4].id
         res = self.app.get(url)
-        data = json.loads(res.data)
-        for item in data:
-            assert item['project_id'] == 1, item
-        assert len(data) == 5, data
-        assert data[0]['id'] == task_runs[5].id, data[0]['id']
+        assert res.status_code == 401
 
         # Keyset pagination
         url = "/api/taskrun?project_id=%s&limit=5&last_id=%s&api_key=%s" % (project.id,
@@ -800,6 +768,7 @@ class TestTaskrunAPI(TestAPI):
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # real user
+        owner.subadmin = True # user to be admin or subadmin owner to pull taskrun info
         url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
         out = self.app.get(url, follow_redirects=True)
         task = json.loads(out.data)

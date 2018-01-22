@@ -87,7 +87,7 @@ class TestResultAPI(TestAPI):
         assert len(result['task_runs']) == 10, result
         for tr in result['task_runs']:
             assert tr['task_id'] == result['task_id'], tr
-            url = '/api/taskrun?id=%s&related=True' % tr['id']
+            url = '/api/taskrun?id=%s&related=True&all=1&api_key=%s' % (tr['id'], user.api_key)
             taskrun = self.app.get(url)
             taskrun = json.loads(taskrun.data)[0]
             assert taskrun['result']['id'] == result['id'], taskrun['result']
