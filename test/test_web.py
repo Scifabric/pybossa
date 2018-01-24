@@ -2900,7 +2900,6 @@ class TestWeb(web.Helper):
         assert "Sample Project" in data['title'], data
         assert data['tasks'][0]['n_answers'] == 10, data
 
-        ## Disabled for GIGwork - no longer relevant with
         ## new browse task filtering
         # For a non existing page
         #res = self.app_get_json('project/%s/tasks/browse/5000' % (project.short_name))
@@ -3057,7 +3056,6 @@ class TestWeb(web.Helper):
                  .first()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        #commented as anonymous access is disabled for GIGwork
         #assert 'TaskPresenter' in res.data, res.data
         #msg = "?next=%2Fproject%2F" + project.short_name + "%2Ftask%2F" + str(task.id)
         #assert msg in res.data, res.data
@@ -3081,7 +3079,6 @@ class TestWeb(web.Helper):
                  .filter(Project.id == project.id)\
                  .first()
         res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
-        #commented as anonymous access is disabled for GIGwork
         #data = json.loads(res.data)
         #err_msg = 'field missing'
         #assert 'flash' in data, err_msg
@@ -3292,7 +3289,7 @@ class TestWeb(web.Helper):
     @nottest
     @with_context
     def test_27_tutorial_anonymous_user(self):
-        """Test WEB tutorials work as an anonymous user - Disabled for GIGwork"""
+        """Test WEB tutorials work as an anonymous user"""
         self.create()
         project = db.session.query(Project).get(1)
         project.info = dict(tutorial="some help", task_presenter="presenter")
@@ -3314,7 +3311,7 @@ class TestWeb(web.Helper):
     @nottest
     @with_context
     def test_27_tutorial_anonymous_user_json(self):
-        """Test WEB tutorials work as an anonymous user - Disabled for GIGwork"""
+        """Test WEB tutorials work as an anonymous user"""
         self.create()
         project = db.session.query(Project).get(1)
         project.info = dict(tutorial="some help", task_presenter="presenter")
@@ -3357,7 +3354,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_29_non_tutorial_anonymous_user(self):
-        """Test WEB project without tutorials work as an anonymous user. Disabled for GIGwork"""
+        """Test WEB project without tutorials work as an anonymous user."""
         '''
         self.create()
         project = db.session.query(Project).get(1)
@@ -4532,7 +4529,6 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
 
-        ## Modified for GIGwork task export
         # Now get the tasks in JSON format
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=task&format=json" % Fixtures.project_short_name
@@ -4994,7 +4990,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_result_csv_no_tasks_returns_empty_file(self):
         """Test WEB export Result to CSV returns empty file if no results in
-        project. Disable for GIGwork."""
+        project."""
         project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
@@ -5013,7 +5009,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_export_task_csv_no_tasks_returns_empty_file(self):
         """Test WEB export Tasks to CSV returns empty file if no tasks in project.
-        Disable for GIGwork.
         """
         self.register()
         self.signin()
@@ -5060,7 +5055,6 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
         assert heading in data, "Export page should be available\n %s" % data
 
-        ## Modified for GIGwork task export
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task_run&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)

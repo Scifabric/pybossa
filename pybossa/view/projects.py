@@ -95,7 +95,6 @@ blueprint_projectid = Blueprint('projectid', __name__)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
-DEFAULT_SYNC_TARGET = 'https://gigwork.net'
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 mail_queue = Queue('email', connection=sentinel.master)
@@ -645,7 +644,7 @@ def update(short_name):
                     n_volunteers=ps.n_volunteers,
                     title=title,
                     pro_features=pro,
-                    target_url=DEFAULT_SYNC_TARGET,
+                    target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
                     server_url=current_app.config.get('SERVER_URL'))
     return handle_content_type(response)
 
@@ -2580,10 +2579,11 @@ def sync_project(short_name):
         '    Project Short Name: {short_name}\n'
         '    Source URL: {source_url}\n'
         '    User who performed sync: {syncer}')
+    default_sync_target = current_app.config.get('DEFAULT_SYNC_TARGET')
 
     try:
         # Validate the ability to sync
-        able_to_sync = source_url != DEFAULT_SYNC_TARGET
+        able_to_sync = source_url != default_sync_target
         auth_to_sync = (current_user.admin or
                 (current_user.subadmin and
                     current_user.id in project.owners_ids))
@@ -2599,7 +2599,7 @@ def sync_project(short_name):
 
         # Perform sync
         project_syncer = ProjectSyncer(
-            DEFAULT_SYNC_TARGET, target_key)
+            default_sync_target, target_key)
         synced_url = '{}/project/{}'.format(
             project_syncer.target_url, project.short_name)
         if request.body.get('btn') == 'sync':

@@ -672,7 +672,7 @@ class TestAdmin(web.Helper):
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
     def test_19_admin_update_app(self, Mock, Mock2, mock_webhook):
-        """Test ADMIN can update a project that belongs to another user: Disabled for GIGwork"""
+        """Test ADMIN can update a project that belongs to another user"""
         '''
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
@@ -713,7 +713,7 @@ class TestAdmin(web.Helper):
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_20_admin_delete_app(self, mock):
-        """Test ADMIN can delete a project that belongs to another user: Disabled for GIGwork"""
+        """Test ADMIN can delete a project that belongs to another user"""
         '''
         self.register()
         self.signout()
