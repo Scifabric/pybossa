@@ -163,3 +163,17 @@ class CheckPasswordStrength(object):
             return 'Password must contain at least {} character.'\
                 .format(', '.join(message))
         return None
+
+
+class TimeFieldsValidator(object):
+    def __init__(self, fields, message=None):
+        if not message:
+            message = "Fill out empty field(s)"
+        self.message = message
+        self.fields = fields
+
+    def __call__(self, form, field):
+        values = [form.data[fld] for fld in self.fields]
+        values.append(field.data)
+        if any(values) and not all(values):
+            raise ValidationError(self.message)

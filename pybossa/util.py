@@ -38,6 +38,7 @@ import simplejson
 import time
 from flask.ext.babel import lazy_gettext
 import re
+import pycountry
 
 
 def last_flashed_message():

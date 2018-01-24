@@ -7340,3 +7340,109 @@ class TestWeb(web.Helper):
         tmp = data['projects_published'][0]
         for key in info.keys():
             assert key in tmp['info'].keys()
+
+    @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_with_upref_mdata(self, signer, render, queue):
+        """Test WEB register user with user preferences set"""
+        from flask import current_app
+        import pybossa.core
+        current_app.config.upref_mdata = True
+
+        pybossa.core.upref_mdata_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+                                    locations=[("us", "us"), ("uk", "uk")],
+                                    timezones=[("", ""), ("ACT", "Australia Central Time")],
+                                    user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = dict(fullname="AJohn Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com",
+                    consent=True, user_type="Analyst",
+                    languages="sp", locations="uk",
+                    timezone="")
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        res = self.app.post('/account/register', data=data, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'text/html', res
+        user = user_repo.get_by(name='johndoe')
+        assert user.consent, user
+        assert user.name == 'johndoe', user
+        assert user.email_addr == 'johndoe@example.com', user
+        expected_upref = dict(languages=['sp'], locations=['uk'])
+
+        assert user.user_pref == expected_upref, "User preferences did not matched"
+
+        upref_data = dict(languages="en", locations="us",
+                        user_type="Researcher", timezone="ACT",
+                        work_hours_from="10:00", work_hours_to="17:00",
+                        review="user with research experience")
+        res = self.app.post('/account/save_metadata/johndoe',
+                data=upref_data, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        user = user_repo.get_by(name='johndoe')
+        expected_upref = dict(languages=['en'], locations=['us'])
+        assert user.user_pref == expected_upref, "User preferences did not matched"
+
+        metadata = user.info['metadata']
+        timezone = metadata['timezone']
+        work_hours_from = metadata['work_hours_from']
+        work_hours_to = metadata['work_hours_to']
+        review = metadata['review']
+        assert metadata['timezone'] == upref_data['timezone'], "timezone not updated"
+        assert metadata['work_hours_from'] == upref_data['work_hours_from'], "work hours from not updated"
+        assert metadata['work_hours_to'] == upref_data['work_hours_to'], "work hours to not updated"
+        assert metadata['review'] == upref_data['review'], "review not updated"
+
+
+    @with_context
+    @patch('pybossa.view.account.current_user')
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_with_invalid_upref_mdata(self, signer, render, queue, current_user):
+        """Test WEB register user - invalid user preferences cannot be set"""
+        from flask import current_app
+        import pybossa.core
+        current_app.config.upref_mdata = True
+
+        pybossa.core.upref_mdata_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+                                    locations=[("us", "us"), ("uk", "uk")],
+                                    timezones=[("", ""), ("ACT", "Australia Central Time")],
+                                    user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = dict(fullname="AJohn Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com",
+                    consent=True, user_type="Analyst",
+                    languages="sp", locations="uk",
+                    timezone="")
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        res = self.app.post('/account/register', data=data, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'text/html', res
+        user = user_repo.get_by(name='johndoe')
+        assert user.consent, user
+        assert user.name == 'johndoe', user
+        assert user.email_addr == 'johndoe@example.com', user
+        expected_upref = dict(languages=['sp'], locations=['uk'])
+        assert user.user_pref == expected_upref, "User preferences did not matched"
+
+        # update invalid user preferences
+        current_user.admin = True
+        current_user.id = 999
+        upref_invalid_data = dict(languages="ch", locations="jp",
+            user_type="Researcher", timezone="ACT",
+            work_hours_from="10:00", work_hours_to="17:00",
+            review="user with research experience")
+        res = self.app.post('/account/save_metadata/johndoe',
+                data=upref_invalid_data, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        user = user_repo.get_by(name='johndoe')
+        invalid_upref = dict(languages=['ch'], locations=['jp'])
+        assert user.user_pref != invalid_upref, "Invalid preferences should not be updated"

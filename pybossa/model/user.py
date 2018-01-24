@@ -64,6 +64,7 @@ class User(db.Model, DomainObject, UserMixin):
     subscribed = Column(Boolean, default=True)
     consent = Column(Boolean, default=False)
     info = Column(MutableDict.as_mutable(JSONB), default=dict())
+    user_pref = Column(JSONB)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
