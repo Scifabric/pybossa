@@ -105,20 +105,21 @@ class TestProjectAPI(TestAPI):
     def test_query_project(self):
         """Test API query for project endpoint works"""
         ProjectFactory.create(short_name='test-app', name='My New Project')
+        user = UserFactory.create()
         # Test for real field
-        res = self.app.get("/api/projectbyname/test-app", follow_redirects=True)
+        res = self.app.get('/api/projectbyname/test-app?api_key=' + user.api_key, follow_redirects=True)
         data = json.loads(res.data)
         # Should return one result
         # Correct result
         assert data['short_name'] == 'test-app', data
 
         # Valid field but wrong value
-        res = self.app.get("/api/projectbyname/wrongvalue")
+        res = self.app.get('/api/projectbyname/wrongvalue?api_key=' + user.api_key)
         data = json.loads(res.data)
         assert data['status_code'] == 404, data
 
         # Multiple fields
-        res = self.app.get('/api/projectbyname/test-app?name=My New Project')
+        res = self.app.get('/api/projectbyname/test-app?name=My New Project&api_key=' + user.api_key)
         data = json.loads(res.data)
         # Correct result
         assert data['short_name'] == 'test-app', data

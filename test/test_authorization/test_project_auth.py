@@ -54,9 +54,9 @@ class TestProjectAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read_all_projects(self):
-        """Test anonymous users can read projects"""
-        assert_not_raises(Exception, ensure_authorized_to, 'read', Project)
+    def test_anonymous_user_cannot_read_all_projects(self):
+        """Test anonymous users cannot read projects"""
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', Project)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -66,11 +66,11 @@ class TestProjectAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read_given_published(self):
-        """Test anonymous users can read a given published project"""
+    def test_anonymous_user_cannot_read_given_published(self):
+        """Test anonymous users cannot read a given published project"""
         project = ProjectFactory.create(published=True)
 
-        assert_not_raises(Exception, ensure_authorized_to, 'read', project)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', project)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)

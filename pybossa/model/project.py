@@ -137,7 +137,7 @@ class Project(db.Model, DomainObject):
     def public_info_keys(self):
         """Return a list of public info keys."""
         default = ['container', 'thumbnail', 'thumbnail_url',
-                   'task_presenter', 'tutorial', 'sched']
+                   'tutorial', 'sched']
         extra = current_app.config.get('PROJECT_INFO_PUBLIC_FIELDS')
         if extra:
             return list(set(default).union(set(extra)))

@@ -57,9 +57,9 @@ class TestUserAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read(self):
-        """Test anonymous users can read users"""
-        assert_not_raises(Exception, ensure_authorized_to, 'read', User)
+    def test_anonymous_user_cannot_read(self):
+        """Test anonymous users cannot read users"""
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', User)
 
 
     @with_context
@@ -78,10 +78,10 @@ class TestUserAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read_given_user(self):
-        """Test anonymous users can read a given user"""
+    def test_anonymous_user_cannot_read_given_user(self):
+        """Test anonymous users cannot read a given user"""
         user = UserFactory.create()
-        assert_not_raises(Exception, ensure_authorized_to, 'read', user)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', user)
 
 
     @with_context

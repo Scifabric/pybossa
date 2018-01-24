@@ -59,6 +59,7 @@ class TestResultAPI(TestAPI):
     @patch('pybossa.api.task.TaskAPI._verify_auth')
     def test_result_query_without_params(self, auth):
         """ Test API Result query"""
+        user = UserFactory.create()
         auth.return_value = True
         result = self.create_result(n_answers=10)
         res = self.app.get('/api/result')
@@ -87,12 +88,12 @@ class TestResultAPI(TestAPI):
         assert len(result['task_runs']) == 10, result
         for tr in result['task_runs']:
             assert tr['task_id'] == result['task_id'], tr
-            url = '/api/taskrun?id=%s&related=True' % tr['id']
+            url = '/api/taskrun?id=%s&related=True&all=1&api_key=%s' % (tr['id'], user.api_key)
             taskrun = self.app.get(url)
             taskrun = json.loads(taskrun.data)[0]
             assert taskrun['result']['id'] == result['id'], taskrun['result']
             assert taskrun['task']['id'] == result['task_id'], taskrun['task']
-        url = '/api/task?id=%s&related=True' % result['task_id']
+        url = '/api/task?&all=1&id=%s&related=True&api_key=%s' % (result['task_id'], user.api_key)
         task = self.app.get(url)
         task = json.loads(task.data)[0]
         assert task['result']['id'] == result['id'], task['result']

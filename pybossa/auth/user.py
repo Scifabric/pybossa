@@ -32,7 +32,7 @@ class UserAuth(object):
         return user.is_authenticated() and user.admin is True
 
     def _read(self, user, resource_user=None):
-        return True
+        return user.is_authenticated() and (user.admin or user.subadmin)
 
     def _update(self, user, resource_user):
         if user.is_anonymous():

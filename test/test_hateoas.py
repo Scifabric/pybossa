@@ -21,8 +21,8 @@ import json
 from mock import patch
 from default import Test, with_context
 from pybossa.hateoas import Hateoas
-from factories import ProjectFactory, TaskRunFactory, TaskFactory
-
+from factories import (ProjectFactory, TaskRunFactory, TaskFactory,
+    UserFactory)
 
 class TestHateoas(Test):
 
@@ -40,9 +40,10 @@ class TestHateoas(Test):
     @patch('pybossa.api.task.TaskAPI._verify_auth')
     def test_00_link_object(self, auth):
         """Test HATEOAS object link is created"""
+        user = UserFactory.create(admin=True)
         auth.return_value = True
         # For project
-        res = self.app.get("/api/project/1", follow_redirects=True)
+        res = self.app.get('/api/project/1?api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -60,7 +61,7 @@ class TestHateoas(Test):
         assert project_link == output['link'], err_msg
 
         # For task
-        res = self.app.get("/api/task/1", follow_redirects=True)
+        res = self.app.get('/api/task/1?api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -77,7 +78,7 @@ class TestHateoas(Test):
         assert output.get('links')[0] == project_link, err_msg
 
         # For taskrun
-        res = self.app.get("/api/taskrun/1", follow_redirects=True)
+        res = self.app.get('/api/taskrun/1?api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -133,8 +134,10 @@ class TestHateoas(Test):
     def test_01_link_object(self, auth):
         """Test HATEOAS object link is created"""
         # For project
+        user = UserFactory.create(admin=True)
         auth.return_value = True
-        res = self.app.get("/api/project", follow_redirects=True)
+
+        res = self.app.get('/api/project?all=1&api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -152,7 +155,7 @@ class TestHateoas(Test):
         assert project_link == output['links'][0], err_msg
 
         # For task
-        res = self.app.get("/api/task", follow_redirects=True)
+        res = self.app.get('/api/task?all=1&api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -169,7 +172,7 @@ class TestHateoas(Test):
         assert output.get('links')[0] == project_link, project_link
 
         # For taskrun
-        res = self.app.get("/api/taskrun", follow_redirects=True)
+        res = self.app.get('/api/taskrun?all=1&api_key=' + user.api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
