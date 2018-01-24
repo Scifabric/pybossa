@@ -29,9 +29,11 @@ class TestSched(sched.Helper):
 
     # Tests
     @with_context
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
     @patch('pybossa.api.task_run.request')
-    def test_incremental_tasks(self, mock_request):
+    def test_incremental_tasks(self, mock_request, passwd_needed):
         """ Test incremental SCHED strategy - second TaskRun receives first given answer"""
+        passwd_needed.return_value = False
         self.create_2(sched='incremental')
         mock_request.remote_addr = '127.0.0.0'
 
@@ -42,6 +44,8 @@ class TestSched(sched.Helper):
         self.register(fullname="John Doe", name="johndoe", password="p4ssw0rd")
         self.signout()
         self.register(fullname="Marie Doe", name="mariedoe", password="dr0wss4p")
+        self.signout()
+        self.register(fullname="Mario Doe", name="mariodoe", password="dr0wss4p")
         self.signout()
         self.signin()
 
@@ -64,8 +68,9 @@ class TestSched(sched.Helper):
         data = json.loads(res.data)
         assert not data, data
 
-        #### Get the only task now with an answer as Anonimous!
+        #### Get the only task now with an answer as Mario!
         self.signout()
+        self.signin(email="mariodoe@example.com", password="dr0wss4p")
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
 
@@ -73,14 +78,15 @@ class TestSched(sched.Helper):
         assert data.get('info'), data
         assert data.get('info').get('last_answer').get('answer') == 'No'
 
-        # Submit a second Answer as Anonimous
+        # Submit a second Answer as Mario
         tr = dict(project_id=data['project_id'], task_id=data['id'],
                   info={'answer': 'No No'})
         tr = json.dumps(tr)
 
         res = self.app.post('/api/taskrun', data=tr)
         # no anonymous contributions
-        assert res.status_code != 200
+        assert res.status_code == 200
+        self.signout()
 
         #### Get the only task now with an answer as User2!
         self.signin(email="mariedoe@example.com", password="dr0wss4p")
@@ -89,4 +95,4 @@ class TestSched(sched.Helper):
 
         # Check that we received a Task with answer
         assert data.get('info'), data
-        assert data.get('info').get('last_answer').get('answer') == 'No'
+        assert data.get('info').get('last_answer').get('answer') == 'No No'

@@ -23,11 +23,16 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 from flask import abort
+from flask.ext.login import current_user
 from werkzeug.exceptions import BadRequest, Conflict
 from pybossa.model.task import Task
+from pybossa.model.project import Project
 from pybossa.core import result_repo
 from api_base import APIBase
+from pybossa.api.pwd_manager import get_pwd_manager
+from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo
+from pybossa.cache.projects import get_project_data
 import json
 
 
@@ -57,3 +62,12 @@ class TaskAPI(APIBase):
                 'task_id': duplicate
             }
             raise Conflict(json.dumps(message))
+
+    def _verify_auth(self, item):
+        if not current_user.is_authenticated():
+            return False
+        if current_user.admin or current_user.subadmin:
+            return True
+        project = Project(**get_project_data(item.project_id))
+        pwd_manager = get_pwd_manager(project)
+        return not pwd_manager.password_needed(project, get_user_id_or_ip())

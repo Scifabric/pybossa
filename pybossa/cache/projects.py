@@ -544,6 +544,15 @@ def get_project_scheduler(project_id):
     return session.scalar(sql, dict(project_id=project_id)) or 'default'
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_data(project_id):
+    """Return the short_name for a given project"""
+    sql = text('''SELECT id, short_name, info, owners_ids FROM project
+                WHERE id=:project_id;''')
+
+    return session.execute(sql, dict(project_id=project_id)).first()
+
+
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")

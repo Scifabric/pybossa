@@ -18,6 +18,7 @@
 
 import json
 
+from mock import patch
 from default import Test, with_context
 from pybossa.hateoas import Hateoas
 from factories import ProjectFactory, TaskRunFactory, TaskFactory
@@ -36,8 +37,10 @@ class TestHateoas(Test):
 
     # Tests
     @with_context
-    def test_00_link_object(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_00_link_object(self, auth):
         """Test HATEOAS object link is created"""
+        auth.return_value = True
         # For project
         res = self.app.get("/api/project/1", follow_redirects=True)
         output = json.loads(res.data)
@@ -126,9 +129,11 @@ class TestHateoas(Test):
 
 
     @with_context
-    def test_01_link_object(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_01_link_object(self, auth):
         """Test HATEOAS object link is created"""
         # For project
+        auth.return_value = True
         res = self.app.get("/api/project", follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
