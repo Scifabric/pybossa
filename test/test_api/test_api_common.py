@@ -35,11 +35,13 @@ class TestApiCommon(TestAPI):
         super(TestApiCommon, self).setUp()
 
     @with_context
-    def test_limits_query(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_limits_query(self, auth):
         """Test API GET limits works"""
         admin, owner, user = UserFactory.create_batch(3)
         projects = ProjectFactory.create_batch(30, owner=owner)
         project_created = ProjectFactory.create(created='2000-01-01T12:08:47.134025')
+        auth.return_value = True
         for project in projects:
             task = TaskFactory.create(project=project)
             TaskRunFactory.create(task=task)
@@ -291,13 +293,15 @@ class TestApiCommon(TestAPI):
             assert err['exception_cls'] == 'AttributeError', err
 
     @with_context
-    def test_query_search_fulltext(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_query_search_fulltext(self, auth):
         """ Test API query search fulltext works"""
         # Test first a non-existant field for all end-points
         TaskFactory.create(info={'foo': 'fox'})
         TaskFactory.create(info={'foo': 'foxes something'})
         user = UserFactory.create()
         res = self.app.get('/api/task?all=1&info=foo::fox&fulltextsearch=1&api_key=' + user.api_key)
+        auth.return_value = True
         data = json.loads(res.data)
         assert len(data) == 2, res.data
         for d in data:

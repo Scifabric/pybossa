@@ -59,7 +59,7 @@ class TestCkanWeb(web_helper.Helper):
         assert dom.find(id="ckan") is not None, err_msg
 
         self.signout()
-        
+
         self.signin(email=self.email_addr2, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         err_msg = "The CKAN exporter should be ONLY available for the admins"
@@ -78,7 +78,6 @@ class TestCkanWeb(web_helper.Helper):
         u.ckan_api = "ckan-api-key"
         db.session.add(u)
         db.session.commit()
-        # ckan not enabled/configured for GIGwork. disable following case
         '''
         # Request again the page
         res = self.app.get(self.url, follow_redirects=True)
@@ -87,7 +86,7 @@ class TestCkanWeb(web_helper.Helper):
         assert dom.find(id="ckan_task") is not None, err_msg
         assert dom.find(id="ckan_task_run") is not None, err_msg
         '''
- 
+
 
 class TestCkanModule(Test, object):
 

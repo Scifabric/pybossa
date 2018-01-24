@@ -56,8 +56,10 @@ class TestTaskAPI(TestAPI):
             return result_repo.get_by(project_id=1)
 
     @with_context
-    def test_task_query_list_project_ids(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_task_query_list_project_ids(self, auth):
         """Get a list of tasks using a list of project_ids."""
+        auth.return_value = True
         projects = ProjectFactory.create_batch(3)
         tasks = []
         for project in projects:
@@ -98,8 +100,10 @@ class TestTaskAPI(TestAPI):
         assert task_orig.id not in task_ids, err_msg
 
     @with_context
-    def test_task_query_participated_user_ip(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_task_query_participated_user_ip(self, auth):
         """Test API Task query with participated arg user_ip."""
+        auth.return_value = True
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         tasks1 = TaskFactory.create_batch(10, project=project,
@@ -174,8 +178,10 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
     @with_context
-    def test_task_query_participated_external_uid(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_task_query_participated_external_uid(self, auth):
         """Test API Task query with participated arg external_uid."""
+        auth.return_value = True
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         tasks1 = TaskFactory.create_batch(10, project=project,
@@ -331,8 +337,10 @@ class TestTaskAPI(TestAPI):
             assert task['id'] not in participated_tasks, task['id']
 
     @with_context
-    def test_task_query_without_params(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_task_query_without_params(self, auth):
         """ Test API Task query"""
+        auth.return_value = True
         project = ProjectFactory.create()
         t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
         tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
@@ -452,8 +460,10 @@ class TestTaskAPI(TestAPI):
 
 
     @with_context
-    def test_task_query_with_params(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_task_query_with_params(self, auth):
         """Test API query for task with params works"""
+        auth.return_value = True
         project = ProjectFactory.create()
         user = UserFactory.create()
         tasks = TaskFactory.create_batch(10, project=project)

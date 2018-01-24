@@ -16,8 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
+from itsdangerous import SignatureExpired
 
 from mock import patch, MagicMock
 
@@ -43,7 +45,7 @@ class TestProjectPasswdManager(object):
         a project with password, if the cookie does not contain the user IP"""
         mock_user.is_anonymous.return_value = True
         mock_user.admin = False
-        self.cookie_handler.get_cookie_from.return_value = []
+        self.cookie_handler.get_cookie_from.return_value = {}
         self.project.needs_password.return_value = True
         user_ip = '127.0.0.1'
 
@@ -91,7 +93,7 @@ class TestProjectPasswdManager(object):
         mock_user.admin = False
         mock_user.subadmin = False
         mock_user.id = 2
-        self.cookie_handler.get_cookie_from.return_value = []
+        self.cookie_handler.get_cookie_from.return_value = {}
         self.project.needs_password.return_value = True
 
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)

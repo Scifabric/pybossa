@@ -399,7 +399,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.request')
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_anonymous_post(self, guard, mock_request):
-        """Test API TaskRun creation and auth for anonymous users. Disabled for GIGwork"""
+        """Test API TaskRun creation and auth for anonymous users."""
         '''
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
@@ -612,7 +612,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_post_requires_newtask_first_external_uid(self):
         """Test API TaskRun post fails if task was not previously requested for
-        external user: Disabled for GIGwork"""
+        external user"""
         '''
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name

@@ -18,6 +18,23 @@
 
 from default import Test, with_context
 from factories import reset_all_pk_sequences
+from werkzeug.utils import parse_cookie
+from datetime import datetime
+
+
+def get_pwd_cookie(short_name, res):
+    cookie = (None, None, None)
+    raw_cookie = None
+    cookies = res.headers.get_all('Set-Cookie')
+    for c in cookies:
+        for k, v in parse_cookie(c).iteritems():
+            if k == u'%spswd' % short_name:
+                cookie = k, v
+                raw_cookie = c
+    params = (v.strip().split('=') for v in raw_cookie.split(';'))
+    expires = dict(params)['Expires']
+    expires = datetime.strptime(expires, '%a, %d-%b-%Y %H:%M:%S GMT')
+    return cookie[0], cookie[1], expires
 
 
 class TestAPI(Test):

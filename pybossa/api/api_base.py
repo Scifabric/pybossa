@@ -145,6 +145,8 @@ class APIBase(MethodView):
                     item = result
                     headline = None
                     rank = None
+                if not self._verify_auth(item):
+                    continue
                 datum = self._create_dict_from_model(item)
                 if headline:
                     datum['headline'] = headline
@@ -159,6 +161,8 @@ class APIBase(MethodView):
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
+            if not items:
+                raise Forbidden('Forbidden')
             ensure_authorized_to('read', query_result[0])
             items = items[0]
         return json.dumps(items)
@@ -529,3 +533,9 @@ class APIBase(MethodView):
                 ensure_authorized_to('delete', obj)
                 uploader.delete_file(obj.info['file_name'],
                                      obj.info['container'])
+
+    def _verify_auth(self, item):
+        """Method to be overriden in inheriting classes for additional checks
+        on the items to return
+        """
+        return True

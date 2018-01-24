@@ -56,10 +56,11 @@ class TestResultAPI(TestAPI):
 
 
     @with_context
-    def test_result_query_without_params(self):
+    @patch('pybossa.api.task.TaskAPI._verify_auth')
+    def test_result_query_without_params(self, auth):
         """ Test API Result query"""
-
         user = UserFactory.create()
+        auth.return_value = True
         result = self.create_result(n_answers=10)
         res = self.app.get('/api/result')
         results = json.loads(res.data)

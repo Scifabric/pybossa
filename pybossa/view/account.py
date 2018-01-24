@@ -110,8 +110,9 @@ def signin():
         email_addr = form.email.data.lower()
         user = user_repo.search_by_email(email_addr=email_addr)
         if user and not user.enabled:
+            brand = current_app.config['BRAND']
             flash(gettext('Your account is disabled. '
-                          'Please contact your GIGwork administrator.'),
+                          'Please contact your {} administrator.'.format(brand)),
                   'error')
             return redirect(url_for('home.home'))
         if user and user.check_password(password):

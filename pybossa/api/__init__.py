@@ -31,6 +31,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 
+from functools import partial
 import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
@@ -41,7 +42,7 @@ from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload, grant_access_with_api_key
 import pybossa.model as model
-from pybossa.core import csrf, ratelimits, sentinel
+from pybossa.core import csrf, ratelimits, sentinel, signer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
@@ -63,13 +64,14 @@ from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
-from werkzeug.exceptions import MethodNotAllowed
+from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
-from pybossa.cache.helpers import n_available_tasks
+from pybossa.cache.helpers import n_available_tasks, n_available_tasks_for_user
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.api.project_by_name import ProjectByNameAPI
+from pybossa.api.pwd_manager import get_pwd_manager
 
 blueprint = Blueprint('api', __name__)
 
@@ -138,23 +140,24 @@ def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        tasks, timeout = _retrieve_new_task_with_timeout(project_id)
+        tasks, timeout, cookie_handler = _retrieve_new_task(project_id)
 
         if type(tasks) is Response:
             return tasks
 
+        user_id_or_ip = get_user_id_or_ip()
         # If there is a task for the user, return it
         if tasks is not None:
             guard = ContributionsGuard(sentinel.master, timeout=timeout)
             for task in tasks:
-                guard.stamp(task, get_user_id_or_ip())
-                if not guard.check_task_presented_timestamp(task, get_user_id_or_ip()):
-                    guard.stamp_presented_time(task, get_user_id_or_ip())
+                guard.stamp(task, user_id_or_ip)
+                if not guard.check_task_presented_timestamp(task, user_id_or_ip):
+                    guard.stamp_presented_time(task, user_id_or_ip)
                 else:
                     # user returning back for the same task
                     # original presented time has not expired yet
                     # to continue original presented time, extend expiry
-                    guard.extend_task_presented_timestamp_expiry(task, get_user_id_or_ip())
+                    guard.extend_task_presented_timestamp_expiry(task, user_id_or_ip)
 
             data = [task.dictize() for task in tasks]
             if len(data) == 0:
@@ -164,30 +167,37 @@ def new_task(project_id):
             else:
                 response = make_response(json.dumps(data))
             response.mimetype = "application/json"
+            cookie_handler(response)
             return response
         return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
         return error.format_exception(e, target='project', action='GET')
 
 
-def _retrieve_new_task_with_timeout(project_id):
+def _retrieve_new_task(project_id):
 
     project = project_repo.get(project_id)
 
     if project is None:
         raise NotFound
 
-    if not project.allow_anonymous_contributors and current_user.is_anonymous():
+    if current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
         error = [model.task.Task(info=info)]
-        return error, None
+        return error, None, lambda x: x
+
+    # check cookie
+    pwd_manager = get_pwd_manager(project)
+    user_id_or_ip = get_user_id_or_ip()
+    if pwd_manager.password_needed(project, user_id_or_ip):
+        raise Forbidden("No project password provided")
 
     if request.args.get('external_uid'):
         resp = jwt_authorize_project(project,
                                      request.headers.get('Authorization'))
         if resp != True:
-            return resp, None
+            return resp, lambda x: x
 
     if request.args.get('limit'):
         limit = int(request.args.get('limit'))
@@ -215,7 +225,7 @@ def _retrieve_new_task_with_timeout(project_id):
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
-    task = sched.new_task(project_id, project.info.get('sched'),
+    task = sched.new_task(project.id, project.info.get('sched'),
                           user_id,
                           user_ip,
                           external_uid,
@@ -223,7 +233,10 @@ def _retrieve_new_task_with_timeout(project_id):
                           limit,
                           orderby=orderby,
                           desc=desc)
-    return task, project.info.get('timeout')
+
+    handler = partial(pwd_manager.update_response, project=project,
+                      user=user_id_or_ip)
+    return task, project.info.get('timeout'), handler
 
 
 @jsonpify
@@ -235,13 +248,15 @@ def _retrieve_new_task_with_timeout(project_id):
 def user_progress(project_id=None, short_name=None):
     """API endpoint for user progress.
 
-    Return a JSON object with two fields regarding the tasks for the user:
+    Return a JSON object with four fields regarding the tasks for the user:
         { 'done': 10,
           'total: 100,
-          'remaining': 90
+          'remaining': 90,
+          'remaining_for_user': 45
         }
-       This will mean that the user has done a 10% of the available tasks for
-       him and 90 tasks are yet to be submitted
+       This will mean that the user has done 10% of the available tasks for the
+       project, 90 tasks are yet to be submitted and the user can access 45 of
+       them based on user preferences.
 
     """
     if current_user.is_anonymous():
@@ -258,7 +273,9 @@ def user_progress(project_id=None, short_name=None):
             query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             num_available_tasks = n_available_tasks(project.id, current_user.id)
-            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks)
+            num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
+            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks,
+                       remaining_for_user=num_available_tasks_for_user)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
