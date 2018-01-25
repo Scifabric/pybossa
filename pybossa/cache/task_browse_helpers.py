@@ -199,6 +199,11 @@ def parse_tasks_browse_args(args):
     if not isinstance(parsed_args.get("display_columns"), list):
         parsed_args["display_columns"] = ['task_id', 'priority', 'pcomplete',
                                           'created', 'finish_time', 'actions']
+    if 'display_info_columns' in args:
+        display_info_columns = json.loads(args['display_info_columns'])
+        if not isinstance(display_info_columns, list):
+            display_info_columns = []
+        parsed_args['display_info_columns'] = display_info_columns
 
     parsed_args["order_by_dict"] = dict()
     if args.get('order_by'):
