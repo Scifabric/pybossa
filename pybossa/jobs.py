@@ -709,7 +709,8 @@ def news():
     for url in urls:
         d = feedparser.parse(url)
         tmp = get_news(score)
-        if (len(tmp) == 0) or (tmp[0]['updated'] != d.entries[0]['updated']):
+        if (d.entries and (len(tmp) == 0)
+           or (tmp[0]['updated'] != d.entries[0]['updated'])):
             sentinel.master.zadd(FEED_KEY, float(score),
                                  pickle.dumps(d.entries[0]))
             notify = True
