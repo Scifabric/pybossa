@@ -182,7 +182,10 @@ class TestApiCommon(TestAPI):
 
             if endpoint == 'taskrun':
                 assert res.status_code == 200
-                assert len(data) == 0, "No taskrun to be returned for regular owner"
+                assert len(data) == 1, data
+                taskrun = data[0]
+                assert taskrun['info']['answer'] == 'annakarenina', data
+                assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
                 assert res.status_code == 403, data
