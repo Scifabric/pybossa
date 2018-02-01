@@ -51,12 +51,12 @@ class TestResultAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read_result(self):
-        """Test anonymous users can read results"""
+    def test_anonymous_user_cannot_read_result(self):
+        """Test anonymous users cannot read results"""
 
         result = self.create_result()
 
-        assert ensure_authorized_to('read', result)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', result)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)

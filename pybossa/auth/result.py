@@ -27,6 +27,16 @@ class ResultAuth(object):
     def specific_actions(self):
         return self._specific_actions
 
+    def admin_subadmin_proj_owners(self, user, result=None):
+        if user.is_anonymous():
+            return False
+        if user.admin or user.subadmin:
+            return True
+        if result is None:
+            return False
+        project = self.project_repo.get(result.project_id)
+        return user.id in project.owners_ids
+
     def can(self, user, action, result=None):
         action = ''.join(['_', action])
         return getattr(self, action)(user, result)
@@ -35,7 +45,7 @@ class ResultAuth(object):
         return not user.is_anonymous() and user.admin
 
     def _read(self, user, result=None):
-        return True
+        return self.admin_subadmin_proj_owners(user, result)
 
     def _update(self, user, result):
         if user.is_anonymous():

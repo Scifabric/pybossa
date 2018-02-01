@@ -62,7 +62,7 @@ class TestResultAPI(TestAPI):
         user = UserFactory.create()
         auth.return_value = True
         result = self.create_result(n_answers=10)
-        res = self.app.get('/api/result')
+        res = self.app.get('/api/result?all=1&api_key=' + user.api_key)
         results = json.loads(res.data)
         assert len(results) == 1, results
         result = results[0]
@@ -74,7 +74,7 @@ class TestResultAPI(TestAPI):
         assert result['created'] is not None, result
 
         # Related
-        res = self.app.get('/api/result?related=True')
+        res = self.app.get('/api/result?related=True&all=1&api_key=' + user.api_key)
         results = json.loads(res.data)
         assert len(results) == 1, results
         result = results[0]
@@ -105,20 +105,20 @@ class TestResultAPI(TestAPI):
         result.created = '2119-01-01T14:37:30.642119'
         result_repo.update(result)
 
-        url = '/api/result?orderby=created&desc=true'
+        url = '/api/result?orderby=created&desc=true&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         print data
         err_msg = "It should get the last item first."
         assert data[0]['created'] == '2119-01-01T14:37:30.642119', err_msg
 
-        url = '/api/result?orderby=id&desc=false'
+        url = '/api/result?orderby=id&desc=false&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should be sorted by id."
         assert data[1]['id'] == result.id, err_msg
 
-        url = '/api/result?orderby=wrongattribute'
+        url = '/api/result?orderby=wrongattribute&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should be 415."
@@ -127,7 +127,7 @@ class TestResultAPI(TestAPI):
         assert 'has no attribute' in data['exception_msg'], data
 
 
-        url = '/api/result'
+        url = '/api/result?&all=1&api_key=' + user.api_key
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get not the last item first."
@@ -139,8 +139,9 @@ class TestResultAPI(TestAPI):
     @with_context
     def test_result_query_without_params_with_context(self):
         """ Test API Result query with context."""
+        user = UserFactory.create()
         result = self.create_result(n_answers=10)
-        res = self.app.get('/api/result')
+        res = self.app.get('/api/result?&all=1&api_key=' + user.api_key)
         results = json.loads(res.data)
         assert len(results) == 1, results
         result = results[0]
@@ -176,15 +177,13 @@ class TestResultAPI(TestAPI):
         owner_two = UserFactory.create()
         res = self.app.get("/api/result?api_key=" + owner_two.api_key)
         data = json.loads(res.data)
-        # Should return zero results
-        assert len(data) == 0, data
+        err_403 = "Regular user should be Forbidden from accessing results"
+        assert res.status_code == 403, err_403
 
         owner_two = UserFactory.create()
         res = self.app.get("/api/result?all=1&api_key=" + owner_two.api_key)
         data = json.loads(res.data)
-        # Should return ten results
-        assert len(data) == 10, data
-        assert data[0]['project_id'] == 1, data
+        assert res.status_code == 403, err_403
 
         # Valid field but wrong value
         url = "/api/result?project_id=99999999&api_key=" + owner.api_key
@@ -205,17 +204,10 @@ class TestResultAPI(TestAPI):
         # Multiple fields
         url = '/api/result?project_id=1&task_id=1&api_key=' + owner_two.api_key
         res = self.app.get(url)
-        data = json.loads(res.data)
-        # Zero result
-        assert len(data) == 0, data
+        assert res.status_code == 403, err_403
         url = '/api/result?all=1&project_id=1&task_id=1&api_key=' + owner_two.api_key
         res = self.app.get(url)
-        data = json.loads(res.data)
-        # One result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['project_id'] == 1, data
-        assert data[0]['task_id'] == 1, data
+        assert res.status_code == 403, err_403
 
 
         # Limits
@@ -229,17 +221,12 @@ class TestResultAPI(TestAPI):
         # Limits
         url = "/api/result?project_id=1&limit=5&api_key=" + owner_two.api_key
         res = self.app.get(url)
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 403, err_403
 
         # Limits
         url = "/api/result?all=1&project_id=1&limit=5&api_key=" + owner_two.api_key
         res = self.app.get(url)
-        data = json.loads(res.data)
-        for item in data:
-            assert item['project_id'] == 1, item
-        assert len(data) == 5, len(data)
-
+        assert res.status_code == 403, err_403
 
         # Keyset pagination
         url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
@@ -253,8 +240,7 @@ class TestResultAPI(TestAPI):
         # Keyset pagination
         url = "/api/result?project_id=1&limit=5&last_id=1&api_key=" + owner_two.api_key
         res = self.app.get(url)
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 403, err_403
 
         # Keyset pagination
         url = "/api/result?all=1&project_id=1&limit=5&last_id=1&api_key=" + owner.api_key
