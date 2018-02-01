@@ -1250,6 +1250,13 @@ def tasks_browse(short_name, page=1, records_per_page=10):
             flash(gettext('Invalid download type. Please try again.'), 'error')
             return respond()
         try:
+            if download_obj == 'task':
+                task = Task(project_id=project.get('id'))
+                ensure_authorized_to('read', task)
+            if download_obj == 'task_run':
+                task_run = TaskRun(project_id=project.get('id'))
+                ensure_authorized_to('read', task_run)
+
             export_queue.enqueue(export_tasks,
                                  current_user.email_addr,
                                  short_name,
@@ -1272,8 +1279,6 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
