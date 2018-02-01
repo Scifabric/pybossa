@@ -7213,6 +7213,17 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][2] == desc
 
     @with_context
+    @patch('pybossa.view.projects.rank', autospec=True)
+    def test_project_index_historical_contributions(self, mock_rank):
+        self.create()
+        user = user_repo.get(2)
+        url = 'project/category/historical_contributions?api_key={}'.format(user.api_key)
+        with patch.dict(self.flask_app.config, {'HISTORICAL_CONTRIBUTIONS_AS_CATEGORY': True}):
+            res = self.app.get(url, follow_redirects=True)
+            assert '<h1>Historical Contributions Projects</h1>' in res.data
+            assert not mock_rank.called
+
+    @with_context
     def test_export_task_zip_download_anon(self):
         """Test export task with zip download disabled for anon."""
         project = ProjectFactory.create(zip_download=False)
