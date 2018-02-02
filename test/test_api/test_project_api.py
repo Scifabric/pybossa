@@ -1053,3 +1053,45 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
         res = self.app.delete(url)
         clean_project_mock.assert_called_with(project.id)
+
+    @with_context
+    def put_project_does_not_change_password(self):
+        """Test password is not changed after PUT."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        project.set_password('hello_world')
+        project_repo.save(project)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        payload = project.dictize()
+        payload['info'] = {'foo': 'bar'}
+        del payload['id']
+        del payload['created']
+        del payload['updated']
+        del payload['contacted']
+        del payload['published']
+        del payload['owner_id']
+        del payload['secret_key']
+        res = self.app.put(url, data=json.dumps(payload))
+        project = project_repo.get(project.id)
+        assert project.check_password('hello_world')
+
+    @with_context
+    def put_project_does_not_remove_password(self):
+        """Test password is not removed after PUT."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        project.set_password('hello_world')
+        project_repo.save(project)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        payload = project.dictize()
+        payload['info'] = {'foo': 'bar', 'passwd_hash': None}
+        del payload['id']
+        del payload['created']
+        del payload['updated']
+        del payload['contacted']
+        del payload['published']
+        del payload['owner_id']
+        del payload['secret_key']
+        res = self.app.put(url, data=json.dumps(payload))
+        project = project_repo.get(project.id)
+        assert project.check_password('hello_world')
