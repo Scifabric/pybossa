@@ -64,6 +64,10 @@ class ProjectAPI(APIBase):
                 owners.append(current_user.id)
             obj.owners_ids = owners
 
+    def _update_attribute(self, new, old):
+        if not new.info.get('passwd_hash'):
+            new.info['passwd_hash'] = old.info.get('passwd_hash')
+
     def _validate_instance(self, project):
         if project.short_name and is_reserved_name('project', project.short_name):
             msg = "Project short_name is not valid, as it's used by the system."
