@@ -31,11 +31,13 @@ class TaskRunAuth(object):
     def specific_actions(self):
         return self._specific_actions
 
-    @staticmethod
-    def admin_subadmin_proj_owners(user, project):
-        return (user.is_authenticated() and
-                    (user.admin or user.subadmin or
-                     user.id in project.owners_ids))
+    def admin_subadmin_proj_owners(self, user, taskrun):
+        if user.is_anonymous():
+            return False
+        if user.admin or user.subadmin:
+            return True
+        project = self.project_repo.get(taskrun.project_id)
+        return user.id in project.owners_ids
 
     def can(self, user, action, taskrun=None):
         action = ''.join(['_', action])
@@ -58,8 +60,7 @@ class TaskRunAuth(object):
 
     def _read(self, user, taskrun=None):
         if taskrun is not None:
-            project = self.project_repo.get(taskrun.project_id)
-            return self.admin_subadmin_proj_owners(user, project)
+            return self.admin_subadmin_proj_owners(user, taskrun)
         return user.is_authenticated()
 
     def _update(self, user, taskrun):

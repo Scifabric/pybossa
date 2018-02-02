@@ -1117,6 +1117,7 @@ def _get_locks(project_id, task_id):
 @login_required
 def tasks(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
     title = project_title(project, "Tasks")
 
     if project.needs_password():
@@ -1279,6 +1280,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
+    else:
+        ensure_authorized_to('read', project)
 
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
