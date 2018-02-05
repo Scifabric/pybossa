@@ -88,7 +88,7 @@ class Repository(object):
         clauses = []
         headlines = []
         order_by_ranks = []
-        if '::' in info:
+        if info and '::' in info:
             pairs = info.split('|')
             for pair in pairs:
                 if pair != '':
