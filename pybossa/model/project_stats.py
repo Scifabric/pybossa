@@ -21,7 +21,7 @@ from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 
 
@@ -54,4 +54,4 @@ class ProjectStats(db.Model, DomainObject):
     #: Last Activity
     last_activity = Column(Text, default=make_timestamp)
     #: Stats payload
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())

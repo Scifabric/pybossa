@@ -13,14 +13,20 @@ down_revision = 'a7e8a70b1772'
 from alembic import op
 import sqlalchemy as sa
 
-tables = ['user', 'task', 'task_run', 'result']
+tables = ['user', 'task', 'task_run', 'result', 'blogpost',
+          'category', 'helpingmaterial', 'project', 'project_stats',
+          'webhook']
+
 
 def upgrade():
     for table in tables:
         if table == 'user':
             query = 'DROP MATERIALIZED VIEW users_rank'
             op.execute(query)
-        query = '''ALTER TABLE "%s" ALTER COLUMN info SET DATA TYPE jsonb USING info::jsonb;''' % table
+        if table != 'webhook':
+            query = '''ALTER TABLE "%s" ALTER COLUMN info SET DATA TYPE jsonb USING info::jsonb;''' % table
+        else:
+            query = '''ALTER TABLE "%s" ALTER COLUMN payload SET DATA TYPE jsonb USING payload::jsonb;''' % table
         op.execute(query)
 
 
