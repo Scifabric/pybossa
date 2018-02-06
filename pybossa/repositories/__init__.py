@@ -88,29 +88,6 @@ class Repository(object):
         clauses = []
         headlines = []
         order_by_ranks = []
-        # if '->>' in info:
-        #     pairs = info.split('|')
-        #     for pair in pairs:
-        #         if pair != '':
-        #             k, v = pair.split("::")
-        #             if fulltextsearch == '1':
-        #                 first_key, second_key = k.split('->>')
-        #                 print first_key, second_key
-        #                 vector = _entity_descriptor(model,
-        #                                             'info')[(first_key,
-        #                                                      second_key)].astext
-        #                 # vector = _entity_descriptor(model, 'info')[k]
-        #                 clause = func.to_tsvector(vector).match(v)
-        #                 clauses.append(clause)
-        #                 if len(headlines) == 0:
-        #                     headline = func.ts_headline(self.language, vector, func.to_tsquery(v))
-        #                     headlines.append(headline)
-        #                     order = func.ts_rank_cd(func.to_tsvector(vector), func.to_tsquery(v), 4).label('rank')
-        #                     order_by_ranks.append(order)
-        #             else:
-        #                 clauses.append(_entity_descriptor(model,
-        #                                                   'info')[k].astext == v)
-        #     return clauses, headlines, order_by_ranks
 
         if info and '::' in info:
             pairs = info.split('|')
@@ -130,11 +107,15 @@ class Repository(object):
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
         else:
+            print type(info)
+            print info
             if type(info) == dict:
                 clauses.append(_entity_descriptor(model, 'info') == info)
             if type(info) == str or type(info) == unicode:
                 try:
                     info = json.loads(info)
+                    if type(info) == int or type(info) == float:
+                        info = '"%s"' % info
                 except ValueError:
                     info = '"%s"' % info
                 clauses.append(_entity_descriptor(model,
