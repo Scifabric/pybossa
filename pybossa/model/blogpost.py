@@ -21,7 +21,7 @@ from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 
 
@@ -47,7 +47,7 @@ class Blogpost(db.Model, DomainObject):
     #: Body of the Blogpost
     body = Column(UnicodeText, nullable=False)
     #: media_url Heading picture or cover for blogpost
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())
     #: Media URL with cover photo for the blog post
     media_url = Column(Text)
     #: Published flag

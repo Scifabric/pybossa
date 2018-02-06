@@ -36,6 +36,7 @@ class TaskRepository(Repository):
 
     def get_task_by(self, **attributes):
         filters, _, _, _ = self.generate_query_from_keywords(Task, **attributes)
+        print self.db.session.query(Task).filter(*filters)
         return self.db.session.query(Task).filter(*filters).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
