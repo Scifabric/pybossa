@@ -107,8 +107,6 @@ class Repository(object):
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
         else:
-            print type(info)
-            print info
             if type(info) == dict:
                 clauses.append(_entity_descriptor(model, 'info') == info)
             if type(info) == str or type(info) == unicode:
