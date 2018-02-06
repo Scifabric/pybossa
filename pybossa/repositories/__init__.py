@@ -106,7 +106,11 @@ class Repository(object):
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
         else:
-            clauses.append(_entity_descriptor(model, 'info') == info)
+            if type(info) == dict:
+                clauses.append(_entity_descriptor(model, 'info') == info)
+            if type(info) == str:
+                fmt_str = '"%s"' % info
+                clauses.append(_entity_descriptor(model, 'info') == fmt_str)
         return clauses, headlines, order_by_ranks
 
 
