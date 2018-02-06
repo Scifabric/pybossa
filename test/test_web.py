@@ -5645,7 +5645,8 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         project = db.session.query(Project).first()
-        assert len(project.tasks) == 2, "There should be only 2 tasks"
+        err_msg = "There should be only 2 tasks"
+        assert len(project.tasks) == 2, (err_msg, project.tasks)
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
         for t in project.tasks:
