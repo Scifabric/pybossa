@@ -106,9 +106,7 @@ class Repository(object):
                         clauses.append(_entity_descriptor(model,
                                                           'info')[k].astext == v)
         else:
-            info = json.dumps(info)
-            clauses.append(cast(_entity_descriptor(model, 'info'),
-                                Text) == info)
+            clauses.append(_entity_descriptor(model, 'info') == info)
         return clauses, headlines, order_by_ranks
 
 
