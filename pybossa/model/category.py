@@ -18,7 +18,7 @@
 
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from flask import current_app
 
@@ -42,7 +42,7 @@ class Category(db.Model, DomainObject):
     #: UTC timestamp when the Category was created
     created = Column(Text, default=make_timestamp)
     #: Info field formatted as JSON for storing additional data
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())
 
     @classmethod
     def public_attributes(self):

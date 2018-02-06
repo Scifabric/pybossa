@@ -18,7 +18,7 @@
 
 from sqlalchemy import Integer, Text, Boolean
 from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from pybossa.core import db
@@ -45,4 +45,4 @@ class Result(db.Model, DomainObject):
     #: Last version
     last_version = Column(Boolean, default=True)
     #: Value of the Result.
-    info = Column(JSON)
+    info = Column(JSONB)
