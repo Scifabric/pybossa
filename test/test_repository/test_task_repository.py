@@ -86,10 +86,10 @@ class TestTaskRepositoryForTaskQueries(Test):
     @with_context
     def test_handle_info_json_float(self):
         """Test handle info in JSON as floattext works."""
-        TaskFactory.create(info=9.5)
-        res = self.task_repo.filter_tasks_by(info='"9.5"')
+        TaskFactory.create(info='9.5')
+        res = self.task_repo.filter_tasks_by(info='9.5')
         assert len(res) == 1
-        assert res[0].info == 9.5, res[0]
+        assert res[0].info == '9.5', res[0]
 
     @with_context
     def test_handle_info_json(self):
