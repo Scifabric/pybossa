@@ -88,6 +88,7 @@ class Repository(object):
         clauses = []
         headlines = []
         order_by_ranks = []
+
         if info and '::' in info:
             pairs = info.split('|')
             for pair in pairs:
@@ -108,9 +109,15 @@ class Repository(object):
         else:
             if type(info) == dict:
                 clauses.append(_entity_descriptor(model, 'info') == info)
-            if type(info) == str:
-                fmt_str = '"%s"' % info
-                clauses.append(_entity_descriptor(model, 'info') == fmt_str)
+            if type(info) == str or type(info) == unicode:
+                try:
+                    info = json.loads(info)
+                    if type(info) == int or type(info) == float:
+                        info = '"%s"' % info
+                except ValueError:
+                    info = '"%s"' % info
+                clauses.append(_entity_descriptor(model,
+                                                  'info').contains(info))
         return clauses, headlines, order_by_ranks
 
 
