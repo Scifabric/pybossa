@@ -116,7 +116,7 @@ def get_consensus_data(project_id, filters):
                 array_agg(tr.user_id) as task_run__user_id,
                 json_object_agg(u.name, tr.info) as task_run__info
             FROM task_run tr
-            JOIN public.user u
+            JOIN "user" u
             ON tr.user_id = u.id
             WHERE project_id = :project_id
             GROUP BY task_id
@@ -163,7 +163,7 @@ def get_consensus_data_metadata(project_id, filters):
                 array_agg(u.email_addr) as email_addr,
                 array_agg(u.fullname) as fullname
             FROM task_run tr
-            JOIN public.user u
+            JOIN "user" u
             ON tr.user_id = u.id
             WHERE project_id = :project_id
             GROUP BY task_id

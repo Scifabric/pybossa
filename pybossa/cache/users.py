@@ -310,7 +310,7 @@ def delete_user_summary(name):
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_user_pref_metadata(name):
     sql = text("""
-    SELECT info->'metadata', user_pref FROM public.user WHERE name=:name;
+    SELECT info->'metadata', user_pref FROM "user" WHERE name=:name;
     """)
 
     cursor = session.execute(sql, dict(name=name))
@@ -359,7 +359,7 @@ def get_users_for_report():
                 (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
                 to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
                 FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent
-                FROM task_run t RIGHT JOIN public.user u ON t.user_id = u.id group by user_id, u.id;
+                FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id group by user_id, u.id;
                """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
@@ -399,7 +399,7 @@ def get_project_report_userdata(project_id):
             (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
             to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
             FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS avg_time_per_task
-            FROM public.user u WHERE id IN
+            FROM "user" u WHERE id IN
             (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
             ''')
     results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
