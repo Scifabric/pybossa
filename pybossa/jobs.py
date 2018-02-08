@@ -505,7 +505,7 @@ def disable_users_job():
     from pybossa.core import db, user_repo
     from pybossa.util import generate_manage_user_email
     sql = text('''Select id
-                  FROM public.user
+                  FROM "user"
                   WHERE current_timestamp - to_timestamp(last_login, 'YYYY-MM-DD"T"HH24:MI:SS.US') > interval '3 month'
                   AND enabled = true;
                ''')

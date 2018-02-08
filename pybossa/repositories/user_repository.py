@@ -118,7 +118,7 @@ class UserRepository(Repository):
     def smart_search(self, current_user_is_admin, where, query_params):
         sql = text('''
                     SELECT id, name, fullname, info, enabled
-                    FROM public.user
+                    FROM "user"
                     WHERE {where}
                     AND (:is_admin OR (NOT admin AND NOT subadmin));
                     '''.format(where=where))
@@ -129,8 +129,8 @@ class UserRepository(Repository):
     def get_recent_contributor_emails(self, project_id):
         sql = text('''
                     SELECT DISTINCT email_addr
-                    FROM public.user INNER JOIN task_run
-                    ON (task_run.user_id = public.user.id)
+                    FROM "user" INNER JOIN task_run
+                    ON (task_run.user_id = "user".id)
                     WHERE project_id = :project_id
                     AND current_timestamp - to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                         < interval '1 month';
@@ -173,8 +173,8 @@ class UserRepository(Repository):
 
         sql = text('''
                     SELECT DISTINCT email_addr
-                    FROM public.user INNER JOIN task_run
-                    ON (task_run.user_id = public.user.id)
+                    FROM "user" INNER JOIN task_run
+                    ON (task_run.user_id = "user".id)
                     WHERE project_id = :project_id {};
                     '''.format(user_prefs))
         current_app.logger.info(

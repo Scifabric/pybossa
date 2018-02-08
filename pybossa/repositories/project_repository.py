@@ -183,9 +183,9 @@ class ProjectRepository(Repository):
                  SELECT DISTINCT
                     project_id,
                     user_id,
-                    public.user.fullname,
-                    public.user.email_addr 
-                 FROM task_run INNER JOIN public.user ON task_run.user_id = public.user.id 
+                    "user".fullname,
+                    "user".email_addr 
+                 FROM task_run INNER JOIN "user" ON task_run.user_id = "user".id 
               ), n_workers AS 
               (
                  SELECT
@@ -245,7 +245,7 @@ class ProjectRepository(Repository):
               FROM
                  project 
                  INNER JOIN
-                    public.user as u 
+                    "user" as u 
                     on project.owner_id = u.id 
                  INNER JOIN
                     category 
