@@ -16,15 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from redis import StrictRedis
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model.task import Task
 from mock import patch
+import settings_test
+from redis.sentinel import Sentinel
+
 
 class TestContributionsGuard(object):
 
     def setUp(self):
-        self.connection = StrictRedis()
+        sentinel = Sentinel(settings_test.REDIS_SENTINEL)
+        db = getattr(settings_test, 'REDIS_DB', 0)
+        self.connection = sentinel.master_for('mymaster', db=db)
         self.connection.flushall()
         self.guard = ContributionsGuard(self.connection)
         self.anon_user = {'user_id': None, 'user_ip': '127.0.0.1'}
