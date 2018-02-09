@@ -22,7 +22,6 @@ from pybossa.jobs import news
 from pybossa.news import get_news
 from default import Test, with_context, FakeResponse, db
 from factories import UserFactory
-from redis import StrictRedis
 from mock import patch, MagicMock, call
 
 
