@@ -30,7 +30,7 @@ import json
 from flask import request, abort, Response, current_app
 from flask.ext.login import current_user
 from flask.views import MethodView
-from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, BadRequest
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.util import jsonpify, fuzzyboolean, get_avatar_url
 from pybossa.util import get_user_id_or_ip
@@ -494,6 +494,11 @@ class APIBase(MethodView):
             if isinstance(self, announcement.Announcement):
                 # don't check project id for announcements
                 ensure_authorized_to('create', self)
+                if tmp.get('info') is not None:
+                    try:
+                        tmp['info'] = json.loads(tmp['info'])
+                    except ValueError:
+                        raise BadRequest
                 upload_method = current_app.config.get('UPLOAD_METHOD')
                 if request.files.get('file') is None:
                     raise AttributeError

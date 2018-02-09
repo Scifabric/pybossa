@@ -6,11 +6,12 @@ phases:
       - echo Install started on `date`
   pre_build:
     commands:
-      - echo Nothing to do in the pre_build phase...
+      - echo Pre-build started on `date`
   build:
     commands:
       - echo Build started on `date`
       - git submodule update --init --recursive
+      - cd pybossa/themes/default/static/src && yarn && webpack
   post_build:
     commands:
       - echo Build completed on `date`

@@ -24,6 +24,15 @@ MAIL_FAIL_SILENTLY = False
 MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
 ADMINS = ['admin@broken.com']
 ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
+ANNOUNCEMENT_LEVELS = {
+    'admin': {'display': 'Admin', 'level': 0},
+    'owner': {'display': 'Project Creator', 'level': 10},
+    'subadmin': {'display': 'Subadmin', 'level': 20},
+    'user': {'display': 'User', 'level': 30}
+}
+ANNOUNCEMENT_LEVEL_OPTIONS = [
+    {'text': v['display'], 'value': v['level']} for k, v in ANNOUNCEMENT_LEVELS.iteritems()
+]
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
            ('ja', u'日本語'), ('el', u'ελληνικά')]

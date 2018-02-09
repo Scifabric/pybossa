@@ -24,7 +24,6 @@ from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
 from pybossa.cache import users as cached_users
-from flask import current_app
 
 session = db.slave_session
 

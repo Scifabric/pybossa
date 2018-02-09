@@ -449,6 +449,7 @@ def new_announcement():
     def respond():
         response = dict(template='admin/new_announcement.html',
                         title=gettext("Write a new post"),
+                        levelOptions=json.dumps(current_app.config['ANNOUNCEMENT_LEVEL_OPTIONS']),
                         form=form)
         return handle_content_type(response)
 
@@ -465,8 +466,10 @@ def new_announcement():
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
+
     announcement = Announcement(title=form.title.data,
                                 body=form.body.data,
+                                info=json.loads(form.info.data),
                                 published=form.published.data,
                                 media_url=form.media_url.data,
                                 user_id=current_user.id)
@@ -491,6 +494,7 @@ def update_announcement(id):
     def respond():
         response = dict(template='admin/new_announcement.html',
                         title=gettext("Edit a post"),
+                        levelOptions=json.dumps(current_app.config['ANNOUNCEMENT_LEVEL_OPTIONS']),
                         form=form)
         return handle_content_type(response)
 
@@ -509,6 +513,7 @@ def update_announcement(id):
     announcement = Announcement(id=form.id.data,
                                 title=form.title.data,
                                 body=form.body.data,
+                                info=json.loads(form.info.data),
                                 published=form.published.data,
                                 media_url=form.media_url.data,
                                 user_id=current_user.id)

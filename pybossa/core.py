@@ -53,6 +53,7 @@ def create_app(run_as_server=True):
     setup_markdown(app)
     setup_db(app)
     setup_repositories(app)
+    setup_cache(app)
     setup_exporter(app)
     setup_strong_password(app)
     mail.init_app(app)
@@ -227,6 +228,12 @@ def setup_repositories(app):
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
     helping_repo = HelpingMaterialRepository(db)
+
+
+def setup_cache(app):
+    from pybossa.cache import users
+    global cache_users
+    cache_users = users
 
 
 def setup_error_email(app):
@@ -567,14 +574,11 @@ def setup_hooks(app):
             show_cookies_warning = True
 
         # Announcement sections
-        if app.config.get('ANNOUNCEMENT'):
-            announcement = app.config['ANNOUNCEMENT']
-            if current_user and current_user.is_authenticated():
-                for key in announcement.keys():
-                    if key == 'admin' and current_user.admin or \
-                       key == 'owner' and len(current_user.projects) != 0 or \
-                       key == 'user':
-                        flash(announcement[key], 'announcement')
+        announcement_levels = app.config.get('ANNOUNCEMENT_LEVELS')
+        if announcement_levels:
+            announcements = cache_users.get_announcements_cached(current_user, announcement_levels)
+            for announcement in announcements:
+                flash(announcement, 'announcement')
 
         if app.config.get('CONTACT_EMAIL'):  # pragma: no cover
             contact_email = app.config.get('CONTACT_EMAIL')

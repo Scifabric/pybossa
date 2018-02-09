@@ -47,6 +47,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
+user_cache = None
 
 # DB
 from flask.ext.sqlalchemy import SQLAlchemy

@@ -39,40 +39,44 @@ class TestProjectPublicationView(web.Helper):
         self.owner = UserFactory.create(email_addr='a@a.com')
         self.owner.set_password('1234')
         user_repo.save(self.owner)
-        self.project = ProjectFactory.create(owner=self.owner, published=False)
+        project = ProjectFactory.create(owner=self.owner, published=False)
+        self.project_id = project.id
         self.signin(email='a@a.com', password='1234')
 
     @with_context
     @patch('pybossa.view.projects.ensure_authorized_to')
     def test_it_checks_permissions_over_project(self, fake_auth):
-        post_resp = self.app.get('/project/%s/publish' % self.project.short_name)
-        get_resp = self.app.post('/project/%s/publish' % self.project.short_name)
+        project = project_repo.get(self.project_id)
+        post_resp = self.app.get('/project/%s/publish' % project.short_name)
+        get_resp = self.app.post('/project/%s/publish' % project.short_name)
 
         call_args = fake_auth.call_args_list
 
         assert fake_auth.call_count == 2, fake_auth.call_count
         assert call_args[0][0][0] == 'publish', call_args[0]
-        assert call_args[0][0][1].id == self.project.id, call_args[0]
+        assert call_args[0][0][1].id == project.id, call_args[0]
         assert call_args[1][0][0] == 'publish', call_args[1]
-        assert call_args[1][0][1].id == self.project.id, call_args[1]
+        assert call_args[1][0][1].id == project.id, call_args[1]
 
     @with_context
     @patch('pybossa.view.projects.render_template', wraps=render_template)
     def test_it_renders_template_when_get(self, fake_render):
-        TaskFactory.create(project=self.project)
-        resp = self.app.get('/project/%s/publish' % self.project.short_name)
+        project = project_repo.get(self.project_id)
+        TaskFactory.create(project=project)
+        resp = self.app.get('/project/%s/publish' % project.short_name)
 
         call_args = fake_render.call_args_list
         assert call_args[0][0][0] == 'projects/publish.html', call_args[0]
-        assert call_args[0][1]['project'].id == self.project.id, call_args[0]
+        assert call_args[0][1]['project'].id == project.id, call_args[0]
 
     @with_context
     def test_it_changes_project_to_published_after_post(self):
-        TaskFactory.create(project=self.project)
-        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+        project = project_repo.get(self.project_id)
+        TaskFactory.create(project=project)
+        resp = self.app.post('/project/%s/publish' % project.short_name,
                              follow_redirects=True)
 
-        project = project_repo.get(self.project.id)
+        project = project_repo.get(project.id)
         assert resp.status_code == 200, resp.status_code
         assert project.published == True, project
 
@@ -83,26 +87,28 @@ class TestProjectPublicationView(web.Helper):
     def test_it_deletes_project_taskruns_before_publishing(self, mock_task_repo,
                                                            mock_result_repo,
                                                            mock_webhook_repo):
-        task = TaskFactory.create(project=self.project, n_answers=1)
+        project = project_repo.get(self.project_id)
+        task = TaskFactory.create(project=project, n_answers=1)
         TaskRunFactory.create(task=task)
         result = result_repo.get_by(project_id=task.project_id)
         assert not result, "There should not be a result"
-        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+        resp = self.app.post('/project/%s/publish' % project.short_name,
                              follow_redirects=True)
 
-        taskruns = task_repo.filter_task_runs_by(project_id=self.project.id)
+        taskruns = task_repo.filter_task_runs_by(project_id=project.id)
 
         repo_call = mock_task_repo.delete_taskruns_from_project.call_args_list[0][0][0]
-        assert repo_call.id == self.project.id, repo_call
+        assert repo_call.id == project.id, repo_call
 
-        mock_webhook_repo.assert_called_with(self.project)
-        mock_result_repo.assert_called_with(self.project)
+        mock_webhook_repo.assert_called_with(project)
+        mock_result_repo.assert_called_with(project)
 
     @with_context
     @patch('pybossa.view.projects.auditlogger')
     def test_it_logs_the_event_in_auditlog(self, fake_logger):
-        TaskFactory.create(project=self.project)
-        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+        project = project_repo.get(self.project_id)
+        TaskFactory.create(project=project)
+        resp = self.app.post('/project/%s/publish' % project.short_name,
                              follow_redirects=True)
 
         assert fake_logger.log_event.called, "Auditlog not called"
