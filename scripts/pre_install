@@ -20,6 +20,8 @@ fi
 # add delay of 10 seconds for supervisor to shut down completely before next installation steps runs
 sleep 10
 
+# remove the oldest backup directories, keep most recent 3
+ls -t pybossa.* -d | egrep "pybossa.[0-9]+" | tail -n +3 | xargs rm -rm
 #rename target folder by appending current datetime to it
 datetimeval=$(date +%m%d%Y%H%M%S)
 targetpath=/home/ubuntu/pybossa/pybossa
