@@ -19,7 +19,6 @@ from default import Test, with_context
 from pybossa.news import get_news, notify_news_admins
 from pybossa.core import sentinel
 from factories import UserFactory
-from redis import StrictRedis
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover
@@ -27,11 +26,12 @@ except ImportError:  # pragma: no cover
 
 myset = 'scifabricnews'
 
+
 class TestNews(Test):
 
     def setUp(self):
         super(TestNews, self).setUp()
-        self.connection = StrictRedis()
+        self.connection = sentinel.master
         self.connection.flushall()
 
     news = dict(updated='2015-01-01')

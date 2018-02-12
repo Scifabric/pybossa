@@ -16,13 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 from pybossa.core import sentinel
 from pybossa.jobs import news
 from pybossa.news import get_news
 from default import Test, with_context, FakeResponse, db
 from factories import UserFactory
-from redis import StrictRedis
 from mock import patch, MagicMock, call
 
 

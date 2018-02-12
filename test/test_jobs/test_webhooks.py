@@ -24,10 +24,10 @@ from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from factories import WebhookFactory
-from redis import StrictRedis
 from mock import patch, MagicMock
 from datetime import datetime
 from pybossa.repositories import ResultRepository
+from pybossa.core import sentinel
 
 queue = MagicMock()
 queue.enqueue.return_value = True
@@ -40,12 +40,11 @@ class TestWebHooks(Test):
     @with_context
     def setUp(self):
         super(TestWebHooks, self).setUp()
-        self.connection = StrictRedis()
+        self.connection = sentinel.master
         self.connection.flushall()
         self.project = ProjectFactory.create()
         self.webhook_payload = dict(project_id=self.project.id,
                                     project_short_name=self.project.short_name)
-
 
     @with_context
     @patch('pybossa.jobs.requests.post')
@@ -105,7 +104,6 @@ class TestWebHooks(Test):
         assert queue.enqueue.called is False, queue.enqueue.called
         assert task.state != 'completed'
         queue.reset_mock()
-
 
     @with_context
     @patch('pybossa.model.event_listeners.webhook_queue', new=queue)

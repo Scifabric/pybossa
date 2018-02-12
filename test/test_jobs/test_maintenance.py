@@ -16,19 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 from pybossa.core import sentinel
 from pybossa.jobs import check_failed, get_maintenance_jobs
 from default import Test, with_context, FakeResponse, db
-from redis import StrictRedis
-from mock import patch, MagicMock, call
+from mock import patch, MagicMock
 
 
 class TestMaintenance(Test):
 
     def setUp(self):
         super(TestMaintenance, self).setUp()
-        self.connection = StrictRedis()
+        self.connection = sentinel.master
         self.connection.flushall()
 
     @with_context
