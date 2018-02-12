@@ -24,9 +24,9 @@ from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from factories import WebhookFactory
-from redis import StrictRedis
 from mock import patch, MagicMock
 from datetime import datetime
+from pybossa.core import sentinel
 from pybossa.repositories import ResultRepository
 
 queue = MagicMock()
@@ -40,7 +40,7 @@ class TestWebHooks(Test):
     @with_context
     def setUp(self):
         super(TestWebHooks, self).setUp()
-        self.connection = StrictRedis()
+        self.connection = sentinel.master
         self.connection.flushall()
         self.project = ProjectFactory.create()
         self.webhook_payload = dict(project_id=self.project.id,
