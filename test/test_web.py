@@ -39,7 +39,7 @@ from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.messages import *
 from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
-from pybossa.core import user_repo, project_repo, result_repo, signer
+from pybossa.core import user_repo, project_repo, result_repo, announcement_repo, signer
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from pybossa.cache.project_stats import update_stats
@@ -1017,7 +1017,8 @@ class TestWeb(web.Helper):
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)
-        assert data['status'] == 'announcement'
+        print(data)
+        assert data['status'] == 'sent'
         assert data['template'] == 'account/account_validation.html'
         assert data['title'] == 'Account validation'
 
@@ -4377,50 +4378,36 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
-    def test_49_announcement_messages(self, mock):
+    def test_49_announcement_messages_levels(self, mock):
         """Test WEB announcement messages works"""
-        self.register()
+        announcement = AnnouncementFactory.create(published=True, info={'level': 0})
+        self.register(admin=True)
         self.signin()
         res = self.app.get("/", follow_redirects=True)
-        error_msg = "There should be a message for the root user"
+        error_msg = "There should be a message for admin"
         print res.data
-        assert "Root Message" in res.data, error_msg
-        error_msg = "There should be a message for the user"
-        assert "User Message" in res.data, error_msg
-        error_msg = "There should not be an owner message"
-        assert "Owner Message" not in res.data, error_msg
-        # Now make the user a project owner
-        self.new_project()
-        res = self.app.get("/", follow_redirects=True)
-        error_msg = "There should be a message for the root user"
-        assert "Root Message" in res.data, error_msg
-        error_msg = "There should be a message for the user"
-        assert "User Message" in res.data, error_msg
-        error_msg = "There should be an owner message"
-        assert "Owner Message" in res.data, error_msg
+        assert announcement.title in res.data, error_msg
+        assert announcement.body in res.data, error_msg
         self.signout()
 
-        # Register another user
-        self.register(fullname="Jane Doe", name="janedoe",
-                      password="janedoe", email="jane@jane.com")
-        self.signin(email="jane@jane.com", password="janedoe")
+        self.register(subadmin=True)
+        self.signin()
         res = self.app.get("/", follow_redirects=True)
-        error_msg = "There should not be a message for the root user"
-        assert "Root Message" not in res.data, error_msg
-        error_msg = "There should be a message for the user"
-        assert "User Message" in res.data, error_msg
-        error_msg = "There should not be an owner message"
-        assert "Owner Message" not in res.data, error_msg
-        self.signout()
+        error_msg = "There should not be a message for subadmin"
+        print res.data
+        assert announcement.title in res.data, error_msg
+        assert announcement.body in res.data, error_msg
 
-        # Now as an anonymous user
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_49_announcement_messages_anonymoususers(self, mock):
+        """Test WEB announcement messages works"""
+        announcement = AnnouncementFactory.create(published=True, info={'level': 30})
         res = self.app.get("/", follow_redirects=True)
-        error_msg = "There should not be a message for the root user"
-        assert "Root Message" not in res.data, error_msg
-        error_msg = "There should not be a message for the user"
-        assert "User Message" not in res.data, error_msg
-        error_msg = "There should not be an owner message"
-        assert "Owner Message" not in res.data, error_msg
+        error_msg = "There should not be a message for anonymous user"
+        print res.data
+        assert announcement.title not in res.data, error_msg
+        assert announcement.body not in res.data, error_msg
 
     @with_context
     def test_export_result_json(self):

@@ -40,13 +40,15 @@ class Helper(Test):
 
     @patch('pybossa.view.account.signer')
     def register(self, mock, fullname="John Doe", name="johndoe",
-                 password="p4ssw0rd", email=None, consent=False):
+                 password="p4ssw0rd", email=None, consent=False, subadmin=False,
+                 admin=False):
         """Helper function to register and sign in a user"""
         if email is None:
             email = name + '@example.com'
         userdict = {'fullname': fullname, 'name': name,
                     'email_addr': email, 'password': password,
-                    'consent': consent}
+                    'consent': consent, 'subadmin': subadmin,
+                    'admin': admin}
         mock.loads.return_value = userdict
         return self.app.get('/account/register/confirmation?key=fake-key',
                             follow_redirects=True)

@@ -219,6 +219,12 @@ def published_projects_cached(user_id):
     return published_projects(user_id)
 
 
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def published_projects_cached(user_id):
+    """Return published projects (cached version)."""
+    return published_projects(user_id)
+
+
 def public_published_projects(user_id):
     """Return projects that user_id has contributed to. Public information only"""
     unsanitized_projects = published_projects(user_id)
@@ -421,3 +427,26 @@ def get_user_info(user_id):
                   id=:user_id''')
     user = session.execute(sql, dict(user_id=user_id)).first()
     return dict(user) if user else None
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def get_announcements_by_level_cached(level):
+    sql = text('''
+        SELECT id, title, body
+        FROM announcement
+        WHERE (published = TRUE AND ((info->>'level')::int >= :level))''')
+    results = session.execute(sql, dict(level=level))
+    return [dict(row) for row in results]
+
+
+def get_announcements_cached(user, announcement_levels):
+    if not (announcement_levels and user and user.is_authenticated()):
+        return []
+    level = announcement_levels['user']['level']
+    if user.admin:
+        level = announcement_levels['admin']['level']
+    elif published_projects_cached(user.id):
+        level = announcement_levels['owner']['level']
+    elif user.subadmin:
+        level = announcement_levels['subadmin']['level']
+    return get_announcements_by_level_cached(level)

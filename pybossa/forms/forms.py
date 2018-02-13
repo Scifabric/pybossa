@@ -36,6 +36,7 @@ from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
 import os
+import json
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
@@ -46,6 +47,17 @@ EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
 PROJECT_PWD_MIN_LEN = 5
+
+
+### Custom Validators
+
+def is_json(json_type):
+    def v(form, field):
+        try:
+            assert isinstance(json.loads(field.data), json_type)
+        except Exception:
+            raise validators.ValidationError('Field must be JSON object.')
+    return v
 
 
 ### Forms for projects view
@@ -165,8 +177,13 @@ class AnnouncementForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
+    info = TextField(lazy_gettext('Info'),
+                       [validators.Required(message=lazy_gettext(
+                                "You must enter a level for the post.")),
+                       is_json(dict)])
     media_url = TextField(lazy_gettext('URL'))
     published = BooleanField(lazy_gettext('Publish'))
+
 
 class BlogpostForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())

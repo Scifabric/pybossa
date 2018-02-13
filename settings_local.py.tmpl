@@ -94,6 +94,15 @@ MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
 ## Announcement messages
 ## Use any combination of the next type of messages: root, user, and app owners
 ## ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
+ANNOUNCEMENT_LEVELS = {
+    'admin': {'display': 'Admin', 'level': 0},
+    'owner': {'display': 'Project Creator', 'level': 10},
+    'subadmin': {'display': 'Subadmin', 'level': 20},
+    'user': {'display': 'User', 'level': 30}
+}
+ANNOUNCEMENT_LEVEL_OPTIONS = [
+    {'text': v['display'], 'value': v['level']} for k, v in ANNOUNCEMENT_LEVELS.iteritems()
+]
 
 ## Enforce Privacy Mode, by default is disabled
 ## This config variable will disable all related user pages except for admins

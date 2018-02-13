@@ -1357,7 +1357,7 @@ class TestAdmin(web.Helper):
         csrf = self.get_csrf(url)
         headers = {'X-CSRFToken': csrf}
         res = self.app_post_json(url,
-                                 data={'title':'announcement title', 'body':'body text'},
+                                 data={'title':'announcement title', 'body':'body text', 'info': '{"level": 0}'},
                                  headers=headers, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
@@ -1403,7 +1403,7 @@ class TestAdmin(web.Helper):
         headers = {'X-CSRFToken': csrf}
         res = self.app_post_json(url,
                                  data={'id': announcement.id,
-                                       'title': 'updated title', 'body': 'updated body'},
+                                       'title': 'updated title', 'body': 'updated body', 'info': '{"level": 0}'},
                                  headers=headers, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
