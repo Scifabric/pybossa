@@ -417,6 +417,7 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert 'This feature requires being logged in' in res.data, res.data
         # As Authenticated user but NOT ADMIN
+        self.set_proj_passwd_cookie(task.project, user)
         res = self.app.get(url + '?api_key=%s' % user.api_key,
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)

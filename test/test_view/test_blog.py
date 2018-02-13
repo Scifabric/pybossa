@@ -47,7 +47,7 @@ class TestBlogpostView(web.Helper):
                                             title='titlethree',
                                             published=False)
 
-
+        self.set_proj_passwd_cookie(project)
         url = "/project/%s/blog" % project.short_name
 
         # As anonymous
@@ -79,6 +79,7 @@ class TestBlogpostView(web.Helper):
         url = "/project/%s/blog" % project.short_name
 
         # As anonymous
+        self.set_proj_passwd_cookie(project)
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)

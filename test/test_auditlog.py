@@ -44,6 +44,7 @@ class TestAuditlogAPI(Test):
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
+                'info': dict(passwd_hash="hello")
                 }
         url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))

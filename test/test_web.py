@@ -493,6 +493,7 @@ class TestWeb(web.Helper):
         pro_url = '/project/%s/stats' % pro_owned_project.short_name
 
         self.signin_user()
+        self.set_proj_passwd_cookie(pro_owned_project, username='user3')
         res = self.app_get_json(pro_url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
@@ -527,12 +528,14 @@ class TestWeb(web.Helper):
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         self.signin_user()
+        self.set_proj_passwd_cookie(project, username='user3')
         url = '/project/%s/stats' % project.short_name
 
         update_stats(project.id)
 
         res = self.app_get_json(url)
         data = json.loads(res.data)
+        print data
         err_msg = 'Field missing in JSON response'
         assert 'avg_contrib_time' in data, err_msg
         assert 'n_completed_tasks' in data, err_msg
@@ -1885,6 +1888,7 @@ class TestWeb(web.Helper):
         """Test WEB JSON get project by short name."""
         project = ProjectFactory.create()
         self.signin_user()
+        self.set_proj_passwd_cookie(project, username='user2')
         url = '/project/%s/' % project.short_name
         res = self.app_get_json(url)
 
@@ -7317,6 +7321,7 @@ class TestWeb(web.Helper):
         self.signin()
         self.create()
         project = db.session.query(Project).get(1)
+        project.set_password('hello')
 
         order_by = u'n_volunteers'
         desc = True

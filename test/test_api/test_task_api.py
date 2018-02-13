@@ -275,6 +275,7 @@ class TestTaskAPI(TestAPI):
 
         url = '/api/task?api_key=%s&participated=1&all=1' % user.api_key
 
+        self.set_proj_passwd_cookie(project, user)
         res = self.app.get(url)
         data = json.loads(res.data)
 
@@ -567,6 +568,7 @@ class TestTaskAPI(TestAPI):
         # Should return then results
         assert len(data) == 0, data
         # Test for real field with user_two
+        self.set_proj_passwd_cookie(project_oc, user_two)
         res = self.app.get("/api/task?all=1&project_id="+ str(project_oc.id) + "&api_key=" + user_two.api_key)
         data = json.loads(res.data)
         # Should return then results
@@ -575,6 +577,8 @@ class TestTaskAPI(TestAPI):
         for t in data:
             assert t['project_id'] == project_oc.id, t
 
+        self.set_proj_passwd_cookie(project_oc, user_two)
+        self.set_proj_passwd_cookie(project_two, user_two)
         res = self.app.get("/api/task?api_key=" + user_two.api_key + "&all=1")
         data = json.loads(res.data)
         # Should return one result

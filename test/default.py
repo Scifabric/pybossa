@@ -19,7 +19,8 @@
 import json
 from sqlalchemy import text
 from pybossa.core import db
-from pybossa.core import create_app, sentinel
+from pybossa.core import create_app, sentinel, signer
+from pybossa.cookies import CookieHandler
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -292,6 +293,20 @@ class Test(object):
 
     def redis_flushall(self):
         sentinel.connection.master_for('mymaster').flushall()
+
+    def set_proj_passwd_cookie(self, project, user=None, username=None):
+        from pybossa.core import user_repo
+        if username:
+            user = user_repo.get_by_name(username)
+        cookie = signer.dumps([get_user_id_or_ip(user)])
+        self.app.set_cookie('/', '%spswd' % project.short_name, cookie)
+
+
+def get_user_id_or_ip(user):
+    if not user:
+        return dict(user_id=None, user_ip='127.0.0.1', external_uid=None)
+    return dict(user_id=user.id, user_ip=None, external_uid=None)
+
 
 class Fixtures:
     fullname = u'T Tester'

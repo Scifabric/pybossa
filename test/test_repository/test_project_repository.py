@@ -22,6 +22,7 @@ from nose.tools import assert_raises
 from factories import ProjectFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from werkzeug.exceptions import BadRequest
 
 
 class TestProjectRepositoryForProjects(Test):
@@ -171,6 +172,7 @@ class TestProjectRepositoryForProjects(Test):
         """Test save persist the project"""
 
         project = ProjectFactory.build()
+        project.set_password('hello')
         assert self.project_repo.get(project.id) is None
 
         self.project_repo.save(project)
@@ -179,11 +181,22 @@ class TestProjectRepositoryForProjects(Test):
 
 
     @with_context
+    def test_save(self):
+        """Test save fails if the project has no password"""
+
+        project = ProjectFactory.build()
+        assert self.project_repo.get(project.id) is None
+
+        assert_raises(BadRequest, self.project_repo.save, project)
+
+
+    @with_context
     def test_save_fails_if_integrity_error(self):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
         project = ProjectFactory.build(name=None)
+        project.set_password('hello')
 
         assert_raises(DBIntegrityError, self.project_repo.save, project)
 

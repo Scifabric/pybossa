@@ -43,12 +43,13 @@ class TestLockedSched(sched.Helper):
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
         task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
 
+        self.set_proj_passwd_cookie(project, user)
         res = self.app.get('api/project/{}/newtask?api_key={}'
-                           .format(project.id, owner.api_key))
+                           .format(project.id, user.api_key))
         rec_task1 = json.loads(res.data)
 
         res = self.app.get('api/project/{}/newtask?api_key={}'
-                           .format(project.id, user.api_key))
+                           .format(project.id, owner.api_key))
         rec_task2 = json.loads(res.data)
 
         # users get different tasks
@@ -57,11 +58,11 @@ class TestLockedSched(sched.Helper):
         # submit answer for the wrong task
         # stamp contribution guard first
         guard = ContributionsGuard(sentinel.master)
-        guard.stamp(task2, {'user_id': owner.id})
+        guard.stamp(task1, {'user_id': owner.id})
 
         tr = {
             'project_id': project.id,
-            'task_id': task2.id,
+            'task_id': task1.id,
             'info': 'hello'
         }
         res = self.app.post('api/taskrun?api_key={}'.format(owner.api_key),
@@ -69,12 +70,12 @@ class TestLockedSched(sched.Helper):
         assert res.status_code == 403, res.status_code
 
         # submit answer for the right task
-        tr['task_id'] = task1.id
+        tr['task_id'] = task2.id
         res = self.app.post('api/taskrun?api_key={}'.format(owner.api_key),
                             data=json.dumps(tr))
         assert res.status_code == 200, res.status_code
 
-        tr['task_id'] = task2.id
+        tr['task_id'] = task1.id
         res = self.app.post('api/taskrun?api_key={}'.format(user.api_key),
                             data=json.dumps(tr))
         assert res.status_code == 200, res.status_code
@@ -98,10 +99,12 @@ class TestLockedSched(sched.Helper):
         self.register(name='johndoe')
         self.signin(email='johndoe@example.com')
 
+        self.set_proj_passwd_cookie(project, user=None, username='johndoe')
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
         assert data.get('info'), data
 
+        self.set_proj_passwd_cookie(project2, user=None, username='johndoe')
         res = self.app.get('api/project/2/newtask')
         data = json.loads(res.data)
         assert data.get('info'), data

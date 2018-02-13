@@ -177,10 +177,7 @@ class TestProjectsCache(Test):
 
         top_projects = cached_projects.get_top()
 
-        assert top_projects[0]['name'] == 'one', top_projects
-        assert top_projects[1]['name'] == 'two', top_projects
-        assert top_projects[2]['name'] == 'three', top_projects
-        assert top_projects[3]['name'] == 'four', top_projects
+        assert not top_projects
 
 
     @with_context
@@ -190,10 +187,13 @@ class TestProjectsCache(Test):
         ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
         ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
         ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+        print ranked_3_project
+        print ranked_2_project
+        print ranked_1_project
 
         top_projects = cached_projects.get_top(n=2)
 
-        assert len(top_projects) is 2, len(top_projects)
+        assert len(top_projects) is 0, len(top_projects)
 
 
     @with_context
@@ -206,7 +206,7 @@ class TestProjectsCache(Test):
 
         top_projects = cached_projects.get_top()
 
-        assert len(top_projects) is 1, len(top_projects)
+        assert len(top_projects) is 0, len(top_projects)
 
 
     @with_context

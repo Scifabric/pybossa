@@ -37,7 +37,8 @@ class CookieHandler(object):
             cookie = self.signer.loads(cookie, max_age=self.expiration) if cookie else []
         except SignatureExpired:
             cookie = []
-        cookie.append(user)
+        if user not in cookie:
+            cookie.append(user)
         cookie = self.signer.dumps(cookie)
         return cookie
 
