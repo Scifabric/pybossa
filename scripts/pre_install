@@ -21,7 +21,7 @@ fi
 sleep 10
 
 # remove the oldest backup directories, keep most recent 3
-ls -t pybossa.* -d | egrep "pybossa.[0-9]+" | tail -n +3 | xargs rm -rf
+ls -t pybossa.* -d | egrep "pybossa\.[0-9]+" | tail -n +3 | xargs rm -rf
 #rename target folder by appending current datetime to it
 datetimeval=$(date +%m%d%Y%H%M%S)
 targetpath=/home/ubuntu/pybossa/pybossa
