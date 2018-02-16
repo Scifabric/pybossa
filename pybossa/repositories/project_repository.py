@@ -26,6 +26,7 @@ from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
+from werkzeug.exceptions import BadRequest
 
 
 class ProjectRepository(Repository):
@@ -54,6 +55,7 @@ class ProjectRepository(Repository):
         self._validate_can_be('saved', project)
         self._empty_strings_to_none(project)
         self._creator_is_owner(project)
+        self._verify_has_password(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -65,6 +67,7 @@ class ProjectRepository(Repository):
         self._validate_can_be('updated', project)
         self._empty_strings_to_none(project)
         self._creator_is_owner(project)
+        self._verify_has_password(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -138,6 +141,10 @@ class ProjectRepository(Repository):
             project.owners_ids = []
         if project.owner_id not in project.owners_ids:
             project.owners_ids.append(project.owner_id)
+
+    def _verify_has_password(self, project):
+        if not project.info.get('passwd_hash'):
+            raise BadRequest('Project must have a password')
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

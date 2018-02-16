@@ -22,6 +22,7 @@ from default import with_context
 from pybossa.util import unicode_csv_reader
 from helper import web
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
+from mock import patch
 
 
 class TestExportUsers(web.Helper):
@@ -58,7 +59,9 @@ class TestExportUsers(web.Helper):
             assert attribute in data[0], data
 
     @with_context
-    def test_json_returns_all_users(self):
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
+    def test_json_returns_all_users(self, password_needed):
+        password_needed.return_value = False
         self.register(fullname="Manolita")
         project = self.create_project_and_tasks()
         self.signin()
@@ -99,7 +102,9 @@ class TestExportUsers(web.Helper):
             assert attribute in data, data
 
     @with_context
-    def test_csv_returns_all_users(self):
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
+    def test_csv_returns_all_users(self, password_needed):
+        password_needed.return_value = False
         self.register(fullname="Manolita")
         project = self.create_project_and_tasks()
         self.signin()

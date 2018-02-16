@@ -135,6 +135,7 @@ class TestApiCommon(TestAPI):
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + user.api_key + '&all=1'
+            self.set_proj_passwd_cookie(project, user)
             res = self.app.get(url)
             data = json.loads(res.data)
 

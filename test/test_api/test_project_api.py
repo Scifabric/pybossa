@@ -357,7 +357,8 @@ class TestProjectAPI(TestAPI):
             short_name='xxxx-project',
             description='description',
             owner_id=1,
-            long_description=u'Long Description\n================')
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/project', data=data)
@@ -380,7 +381,8 @@ class TestProjectAPI(TestAPI):
             short_name='xxxx-project2',
             description='description2',
             owner_id=1,
-            long_description=u'Long Description\n================')
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
         new_project = json.dumps(new_project)
         res = self.app.post('/api/project', headers=headers,
                             data=new_project)
@@ -876,6 +878,7 @@ class TestProjectAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
         # as a real user
+        self.set_proj_passwd_cookie(project, user)
         url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url)
         assert res, res
@@ -1014,7 +1017,8 @@ class TestProjectAPI(TestAPI):
         owner = UserFactory.create()
         category = CategoryFactory.create()
         url = '/api/project?api_key=%s' % owner.api_key
-        payload = dict(name='foo', short_name='foo', description='foo')
+        payload = dict(name='foo', short_name='foo', description='foo',
+                       info=dict(passwd_hash="hey"))
         res = self.app.post(url, data=json.dumps(payload))
         print res.data
         project_id = json.loads(res.data)['id']

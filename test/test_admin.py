@@ -231,6 +231,7 @@ class TestAdmin(web.Helper):
         self.new_task(1)
         project = db.session.query(Project).get(1)
         project.info = dict(task_presenter="something")
+        project.set_password('hello')
         db.session.add(project)
         db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)

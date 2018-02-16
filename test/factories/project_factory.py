@@ -27,6 +27,8 @@ class ProjectFactory(BaseFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         project = model_class(*args, **kwargs)
+        if 'passwd_hash' not in project.info:
+            project.set_password('hello')
         project_repo.save(project)
         return project
 

@@ -221,6 +221,7 @@ class TestSched(sched.Helper):
         self.register()
         self.signin()
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         data = json.loads(res.data)
         task_id = data['id']
@@ -266,6 +267,7 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # Get Task until scheduler returns None
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         data = json.loads(res.data)
         while data.get('id') is not None:
@@ -344,10 +346,12 @@ class TestSched(sched.Helper):
 
 
     @with_context
-    def test_user_03_respects_limit_tasks(self):
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
+    def test_user_03_respects_limit_tasks(self, password_needed):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         project = ProjectFactory.create(owner=UserFactory.create(id=500))
         TaskFactory.create_batch(1, project=project, n_answers=10)
+        password_needed.return_value = False
 
         url = 'api/project/%s/newtask' % project.id
         assigned_tasks = []
@@ -393,9 +397,11 @@ class TestSched(sched.Helper):
 
 
     @with_context
-    def test_user_03_respects_limit_tasks_limit(self):
+    @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
+    def test_user_03_respects_limit_tasks_limit(self, password_needed):
         """ Test SCHED limit arg newtask respects the limit of 30 TaskRuns per list of Tasks"""
         # Del previous TaskRuns
+        password_needed.return_value = False
         assigned_tasks = []
         project = ProjectFactory.create(owner=UserFactory.create(id=500))
         TaskFactory.create_batch(2, project=project, n_answers=10)
@@ -453,6 +459,7 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
+        self.set_proj_passwd_cookie(project, username='johndoe')
         url = 'api/project/%s/newtask' % project.id
         res = self.app.get(url)
         task1 = json.loads(res.data)
@@ -504,6 +511,7 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         url = 'api/project/%s/newtask?limit=2' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         tasks1 = json.loads(res.data)
         # Check that we received a Task
@@ -565,6 +573,7 @@ class TestSched(sched.Helper):
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         task1 = json.loads(res.data)
         # Check that we received a Task
@@ -600,6 +609,7 @@ class TestSched(sched.Helper):
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=project.id).order_by('id').all()
         url = 'api/project/%s/newtask?limit=2' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         tasks1 = json.loads(res.data)
         # Check that we received a Task
@@ -730,6 +740,7 @@ class TestGetBreadthFirst(Test):
             url_newtask = 'api/project/%s/newtask' % (project.id)
             url_post = 'api/taskrun'
 
+        self.set_proj_passwd_cookie(project, user)
         res = self.app.get(url_newtask)
         task = json.loads(res.data)
         taskrun = dict(project_id=project.id, task_id=task['id'], info=task['id'])
@@ -969,6 +980,7 @@ class TestBreadthFirst(sched.Helper):
         url = '/api/project/%s/newtask' % (project.id)
         self.register()
         self.signin()
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         task_one = json.loads(res.data)
         taskrun = dict(project_id=project.id, task_id=task_one['id'], info=1)

@@ -274,6 +274,7 @@ class TestSched(sched.Helper):
         self.register()
         self.signin()
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         data = json.loads(res.data)
         task_id = data['id']
@@ -323,6 +324,7 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # Get Task until scheduler returns None
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         data = json.loads(res.data)
         while data.get('id') is not None:
@@ -509,6 +511,7 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         # Get Task until scheduler returns None
+        self.set_proj_passwd_cookie(project, username='johndoe')
         url = 'api/project/%s/newtask' % project.id
         res = self.app.get(url)
         task1 = json.loads(res.data)
@@ -562,6 +565,7 @@ class TestSched(sched.Helper):
 
         assigned_tasks = []
         url = 'api/project/%s/newtask?limit=2' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         tasks1 = json.loads(res.data)
         # Check that we received a Task
@@ -625,6 +629,7 @@ class TestSched(sched.Helper):
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=1).order_by('id').all()
         url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         task1 = json.loads(res.data)
         # Check that we received a Task
@@ -662,6 +667,7 @@ class TestSched(sched.Helper):
         # By default, tasks without priority should be ordered by task.id (FIFO)
         tasks = db.session.query(Task).filter_by(project_id=project.id).order_by('id').all()
         url = 'api/project/%s/newtask?limit=2' % project.id
+        self.set_proj_passwd_cookie(project, username='johndoe')
         res = self.app.get(url)
         tasks1 = json.loads(res.data)
         # Check that we received a Task
