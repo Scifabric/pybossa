@@ -77,11 +77,44 @@ CONTACT_TWITTER = 'PyBossa'
 ## logging config
 # Sentry configuration
 # SENTRY_DSN=''
-## set path to enable
-# LOG_FILE = '/path/to/log/file'
-## Optional log level
-# import logging
-# LOG_LEVEL = logging.DEBUG
+## https://docs.python.org/2/library/logging.config.html#logging.config.dictConfig
+# When logging to stdout, the python logs and uwsgi may be mixed together.  You
+# can configure uwsgi to log only errors using, e.g., the ini configs:
+#       log-4xx = true
+#       log-5xx = true
+#       disable-logging = true
+# Also note that
+#   app.logger == logging.getLogging(app.name)
+# so to be sure to add the appropriate logger handlers.
+# LOG_DICT_CONFIG = {
+#     'version': 1,
+#     'formatters': {
+#         'default': {
+#             'format': '%(name)s:%(levelname)s:[%(asctime)s] %(message)s [in %(pathname)s:%(lineno)d]',
+#         }
+#     },
+#     'handlers': {
+#         'log_file': {
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': '/var/log/pybossa/pybossa.log',
+#             'level': 'DEBUG',
+#             'formatter': 'default'
+#         },
+#         'stdout': {
+#             'class': 'logging.StreamHandler',
+#             'stream': 'ext://sys.stdout',
+#             'level': 'DEBUG',
+#             'formatter': 'default'
+#         }
+#     },
+#     'loggers': {
+#         'pybossa': {
+#             'level': 'DEBUG',
+#             'handlers': ['stdout', 'log_file'],
+#             'formatter': 'default'
+#         }
+#     }
+# }
 
 ## Mail setup
 MAIL_SERVER = 'localhost'

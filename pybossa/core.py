@@ -17,7 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Core module for PYBOSSA."""
 import os
-import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack, abort
@@ -39,15 +38,15 @@ import pybossa.model as model
 
 def create_app(run_as_server=True):
     """Create web app."""
-    app = Flask(__name__)
+    app = Flask('pybossa')
     configure_app(app)
+    setup_logging(app)
     setup_assets(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
     setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
-    setup_logging(app)
     setup_login_manager(app)
     setup_babel(app)
     setup_markdown(app)
@@ -249,22 +248,12 @@ def setup_error_email(app):
 
 
 def setup_logging(app):
-    """Setup logging."""
-    from logging.handlers import RotatingFileHandler
-    from logging import Formatter
-    log_file_path = app.config.get('LOG_FILE')
-    log_level = app.config.get('LOG_LEVEL', logging.WARN)
-    if log_file_path:  # pragma: no cover
-        file_handler = RotatingFileHandler(log_file_path)
-        file_handler.setFormatter(Formatter(
-            '%(name)s:%(levelname)s:[%(asctime)s] %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-            ))
-        file_handler.setLevel(log_level)
-        app.logger.addHandler(file_handler)
-        logger = logging.getLogger('pybossa')
-        logger.setLevel(log_level)
-        logger.addHandler(file_handler)
+    """ Setup logging. """
+    log_config = app.config.get('LOG_DICT_CONFIG')
+    if log_config:
+        from logging.config import dictConfig
+        app.logger
+        dictConfig(log_config)
 
 
 def setup_login_manager(app):
