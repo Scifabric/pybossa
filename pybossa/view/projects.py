@@ -1797,6 +1797,7 @@ def task_n_answers(short_name):
 
     title = project_title(project, gettext('Redundancy'))
     form = TaskRedundancyForm(request.body)
+    default_form = TaskDefaultRedundancyForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -1808,27 +1809,41 @@ def task_n_answers(short_name):
         response = dict(template='/projects/task_n_answers.html',
                         title=title,
                         form=form,
+                        default_task_redundancy=project.get_default_n_answers(),
+                        default_form=default_form,
                         project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro)
         return handle_content_type(response)
-    elif request.method == 'POST' and form.validate():
-        task_repo.update_tasks_redundancy(project, form.n_answers.data)
-        # Log it
-        auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                              'N/A', form.n_answers.data)
-        msg = gettext('Redundancy of Tasks updated!')
-        flash(msg, 'success')
-        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
-    else:
-        flash(gettext('Please correct the errors'), 'error')
-        response = dict(template='/projects/task_n_answers.html',
-                        title=title,
-                        form=form,
-                        project=project_sanitized,
-                        owner=owner_sanitized,
-                        pro_features=pro)
-        return handle_content_type(response)
+    elif request.method == 'POST':
+        if default_form.validate():
+            project.set_default_n_answers(default_form.default_n_answers.data)
+            auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
+                      'N/A', default_form.default_n_answers.data)
+        elif form.validate():
+            task_repo.update_tasks_redundancy(project, form.n_answers.data)
+            # Log it
+            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
+                                  'N/A', form.n_answers.data)
+        if default_form.validate() or form.validate():
+            msg = gettext('Redundancy updated!')
+            flash(msg, 'success')
+            return redirect_content_type(url_for('.tasks', short_name=project.short_name))
+        else:
+            flash(gettext('Please correct the errors'), 'error')
+            if not form.n_answers.data:
+                form = TaskRedundancyForm()
+            if not default_form.default_n_answers.data:
+                default_form = TaskDefaultRedundancyForm()
+            response = dict(template='/projects/task_n_answers.html',
+                            title=title,
+                            form=form,
+                            default_task_redundancy=project.get_default_n_answers(),
+                            default_form=default_form,
+                            project=project_sanitized,
+                            owner=owner_sanitized,
+                            pro_features=pro)
+            return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])

@@ -22,6 +22,7 @@ from forms import (
     ProjectUpdateForm,
     ProjectSyncForm,
     TaskPresenterForm,
+    TaskDefaultRedundancyForm,
     TaskRedundancyForm,
     TaskPriorityForm,
     TaskTimeoutForm,

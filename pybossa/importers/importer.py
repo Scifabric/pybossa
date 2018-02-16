@@ -98,8 +98,9 @@ class Importer(object):
                 return ImportReport(message=msg, metadata=None, total=0)
 
         s3_bucket_failures = 0
+        n_answers = project.get_default_n_answers()
         for task_data in tasks:
-            task = Task(project_id=project.id)
+            task = Task(project_id=project.id, n_answers=n_answers)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.find_duplicate(project_id=project.id,
                                              info=task.info)

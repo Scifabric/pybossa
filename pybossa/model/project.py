@@ -124,6 +124,12 @@ class Project(db.Model, DomainObject):
         else:
             return self.info.get('task_presenter') not in ('', None)
 
+    def get_default_n_answers(self):
+        return self.info.get('default_n_answers', 1)
+
+    def set_default_n_answers(self, default_n_answers):
+        self.info['default_n_answers'] = default_n_answers
+
     @classmethod
     def public_attributes(self):
         """Return a list of public attributes."""
