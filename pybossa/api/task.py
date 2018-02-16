@@ -62,6 +62,9 @@ class TaskAPI(APIBase):
                 'task_id': duplicate
             }
             raise Conflict(json.dumps(message))
+        if 'n_answers' not in data:
+            project = Project(**get_project_data(project_id))
+            data['n_answers'] = project.get_default_n_answers()
 
     def _verify_auth(self, item):
         if not current_user.is_authenticated():

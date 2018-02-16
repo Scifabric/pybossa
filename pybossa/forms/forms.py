@@ -118,6 +118,20 @@ class TaskPresenterForm(Form):
     editor = TextAreaField('')
 
 
+class TaskDefaultRedundancyForm(Form):
+    default_n_answers = IntegerField(lazy_gettext('Default Redundancy'),
+                           [validators.Required(),
+                            validators.NumberRange(
+                                min=task_repo.MIN_REDUNDANCY,
+                                max=task_repo.MAX_REDUNDANCY,
+                                message=lazy_gettext(
+                                    'Number of answers should be a \
+                                     value between {} and {:,}'.format(
+                                        task_repo.MIN_REDUNDANCY,
+                                        task_repo.MAX_REDUNDANCY
+                                    )))])
+
+
 class TaskRedundancyForm(Form):
     n_answers = IntegerField(lazy_gettext('Redundancy'),
                              [validators.Required(),

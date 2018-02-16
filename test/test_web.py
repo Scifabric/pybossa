@@ -6665,7 +6665,7 @@ class TestWeb(web.Helper):
                                                 n_answers=n_answers)
             db.session.close()
             err_msg = "Task Redundancy should be updated"
-            assert "Redundancy of Tasks updated" in res.data, err_msg
+            assert "Redundancy updated!" in res.data, err_msg
             assert "success" in res.data, err_msg
             project = db.session.query(Project).get(1)
             for t in project.tasks:
