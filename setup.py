@@ -62,11 +62,13 @@ requirements = [
     "otpauth>=1.0.1, <1.0.2",
     "Flask-SimpleLDAP >=1.1.2, <1.1.3",
     "flask_profiler >= 1.6, <1.6.1",
+    "pycountry",
+    "wtforms-components>=0.10.3, <0.10.4",
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.9.0',
+    version = '2.9.1',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

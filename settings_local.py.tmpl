@@ -18,8 +18,13 @@
 
 # DEBUG = False
 
-## webserver host and port
+## host for local development
 # HOST = '0.0.0.0'
+
+## use SERVER_NAME instead of HOST for production environment with real URLs
+# SERVER_NAME = 'somecoolurl.com'
+
+## PORT used for local development, in production environment let nginx handle this
 # PORT = 5000
 
 SECRET = 'foobar'
@@ -170,9 +175,9 @@ ACCOUNT_CONFIRMATION_DISABLED = True
 # SSE = False
 
 # Add here any other ATOM feed that you want to get notified.
-NEWS_URL = ['https://github.com/pybossa/enki/releases.atom',
-            'https://github.com/pybossa/pybossa-client/releases.atom',
-            'https://github.com/pybossa/pbs/releases.atom']
+NEWS_URL = ['https://github.com/Scifabric/enki/releases.atom',
+            'https://github.com/Scifabric/pybossa-client/releases.atom',
+            'https://github.com/Scifabric/pbs/releases.atom']
 
 # Pro user features. False will make the feature available to all regular users,
 # while True will make it available only to pro users

@@ -700,7 +700,7 @@ def news():
         import cPickle as pickle
     except ImportError:  # pragma: no cover
         import pickle
-    urls = ['https://github.com/pybossa/pybossa/releases.atom',
+    urls = ['https://github.com/Scifabric/pybossa/releases.atom',
             'http://scifabric.com/blog/all.atom.xml']
     score = 0
     notify = False

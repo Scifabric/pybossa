@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField, FieldList
+    SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -37,6 +37,8 @@ from pybossa.uploader import local
 from flask import safe_join
 from flask.ext.login import current_user
 import os
+from pybossa.forms.fields.time_field import TimeField
+from validator import TimeFieldsValidator
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -501,3 +503,44 @@ class AvatarUploadForm(Form):
 
 class TransferOwnershipForm(Form):
     email_addr = EmailField(lazy_gettext('Email of the new owner'))
+
+
+class UserPrefMetadataForm(Form):
+    """Form for admins to add metadata for users."""
+    languages = SelectMultipleField(
+                        lazy_gettext('Language(s)'),
+                        choices=[], default='')
+    locations = SelectMultipleField(
+                        lazy_gettext('Location(s)'),
+                        choices=[], default='')
+    work_hours_from = TimeField(
+                        lazy_gettext('Work Hours From'),
+                        [TimeFieldsValidator(["work_hours_to", "timezone"],
+                        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+                        default='')
+    work_hours_to = TimeField(
+                        lazy_gettext('Work Hours To'),
+                        [TimeFieldsValidator(["work_hours_to", "timezone"],
+                        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+                        default='')
+    timezone = SelectField(
+                        lazy_gettext('Timezone'),
+                        [TimeFieldsValidator(["work_hours_from", "work_hours_to"],
+                        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+                        choices=[], default=None)
+    user_type = SelectField(
+                        lazy_gettext('Type of user'),
+                        choices=[], default='')
+    review = TextAreaField(
+                        lazy_gettext('Additional comments'), default='')
+
+    def set_upref_mdata_choices(self):
+        from pybossa.core import upref_mdata_choices
+        self.languages.choices = upref_mdata_choices['languages']
+        self.locations.choices = upref_mdata_choices['locations']
+        self.timezone.choices = upref_mdata_choices['timezones']
+        self.user_type.choices = upref_mdata_choices['user_types']
+
+class RegisterFormWithUserPrefMetadata(RegisterForm, UserPrefMetadataForm):
+    """Create User Form that has ability to set user preferences and metadata"""
+    consent = BooleanField(default='checked', false_values=("False", "false", '', '0', 0))

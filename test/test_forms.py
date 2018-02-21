@@ -22,12 +22,13 @@ from flask import current_app
 
 from default import Test, db, with_context
 from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
-    USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm)
+    USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm,
+    RegisterFormWithUserPrefMetadata, UserPrefMetadataForm)
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
 from mock import patch, MagicMock
-
+from werkzeug.datastructures import MultiDict
 
 user_repo = UserRepository(db)
 
@@ -224,7 +225,7 @@ class TestRegisterForm(Test):
         assert form.validate()
 
 class TestBulkTaskLocalCSVForm(Test):
-    
+
     def setUp(self):
         super(TestBulkTaskLocalCSVForm, self).setUp()
         self.form_data = {'csv_filename': 'sample.csv'}
@@ -288,3 +289,77 @@ class TestBulkTaskLocalCSVForm(Test):
         mock_request.files = dict(file=mock_file)
         form = BulkTaskLocalCSVImportForm(**self.form_data)
         assert_raises(IOError, form.get_import_data)
+
+
+class TestRegisterFormWithUserPrefMetadata(Test):
+
+    def setUp(self):
+        super(TestRegisterFormWithUserPrefMetadata, self).setUp()
+        self.fill_in_data = {'fullname': 'Tyrion Lannister', 'name': 'mylion',
+                             'email_addr': 'tyrion@casterly.rock',
+                             'password':'secret', 'confirm':'secret',
+                             'user_type': 'Researcher'}
+
+        self.fields = ['fullname', 'name', 'email_addr', 'password', 'confirm',
+                  'languages', 'locations', 'work_hours_from', 'work_hours_to',
+                  'timezone', 'user_type', 'review']
+
+        self.upref_mdata_valid_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+                                    locations=[("us", "us"), ("uk", "uk")],
+                                    timezones=[("", ""), ("ACT", "Australia Central Time")],
+                                    user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
+
+    @with_context
+    def test_register_form_with_upref_mdata_contains_fields(self):
+        form = RegisterFormWithUserPrefMetadata()
+
+        for field in self.fields:
+            assert form.__contains__(field), 'Field %s is not in form' %field
+
+    @with_context
+    def test_register_form_with_upref_mdata_validates_with_valid_fields(self):
+        import pybossa.core
+        pybossa.core.upref_mdata_choices = self.upref_mdata_valid_choices
+
+        form_data = dict(languages="en", locations="uk",
+                        user_type="Researcher", timezone="")
+        form = UserPrefMetadataForm(MultiDict(form_data))
+        form.set_upref_mdata_choices()
+        assert form.validate()
+
+    @with_context
+    def test_register_form_with_upref_mdata_with_invalid_language(self):
+        import pybossa.core
+        pybossa.core.upref_mdata_choices = self.upref_mdata_valid_choices
+
+        form_data = dict(languages="somelang", locations="uk",
+                        user_type="Researcher", timezone="")
+        form = UserPrefMetadataForm(MultiDict(form_data))
+        form.set_upref_mdata_choices()
+        assert not form.validate()
+
+    @with_context
+    def test_register_form_with_upref_mdata_with_invalid_preferences(self):
+        import pybossa.core
+        pybossa.core.upref_mdata_choices = self.upref_mdata_valid_choices
+
+        form_data = dict(languages="somelang", locations="someloc",
+                        user_type="someutype", timezone="ZZZ")
+        form = UserPrefMetadataForm(MultiDict(form_data))
+        form.set_upref_mdata_choices()
+        assert not form.validate()
+        expected_form_errors = {
+                        'work_hours_to':
+                            ['Work Hours From, Work Hours To, and Timezone must be filled out for submission'],
+                        'locations':
+                            [u"'someloc' is not a valid choice for this field"],
+                        'user_type':
+                            [u'Not a valid choice'],
+                        'languages':
+                            [u"'somelang' is not a valid choice for this field"],
+                        'work_hours_from':
+                            ['Work Hours From, Work Hours To, and Timezone must be filled out for submission'],
+                        'timezone':
+                            [u'Not a valid choice', 'Work Hours From, Work Hours To, and Timezone must be filled out for submission']
+                        }
+        assert form.errors == expected_form_errors
