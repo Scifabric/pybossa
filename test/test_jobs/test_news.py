@@ -82,7 +82,7 @@ class TestNews(Test):
     @patch('feedparser.parse')
     def test_news_check_config_urls(self, feedparser_mock):
         """Test NEWS adds config URLs."""
-        urls = ['https://github.com/pybossa/pybossa/releases.atom',
+        urls = ['https://github.com/Scifabric/pybossa/releases.atom',
                 'http://scifabric.com/blog/all.atom.xml',
                 'http://url']
 
