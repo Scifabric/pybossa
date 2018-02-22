@@ -430,7 +430,7 @@ def redirect_profile():
     """Redirect method for profile."""
     if current_user.is_anonymous():  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
-    if (request.headers.get('Content-Type') == 'application/json' and current_user.is_authenticated():
+    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
         form = None
         if current_app.config.upref_mdata:
             form_data = cached_users.get_user_pref_metadata(current_user.name)
