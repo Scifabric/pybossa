@@ -120,7 +120,7 @@ def projects_contributed(user_id, order_by='name'):
         project = dict(row)
         project['n_tasks'] = n_tasks(row.id)
         project['n_volunteers'] = n_volunteers(row.id)
-        project['overall_progress'] = overall_progress(row.id),
+        project['overall_progress'] = overall_progress(row.id)
         projects_contributed.append(project)
     return projects_contributed
 
@@ -163,7 +163,7 @@ def published_projects(user_id):
         project = dict(row)
         project['n_tasks'] = n_tasks(row.id)
         project['n_volunteers'] = n_volunteers(row.id)
-        project['overall_progress'] = overall_progress(row.id),
+        project['overall_progress'] = overall_progress(row.id)
         projects_published.append(project)
     return projects_published
 
@@ -206,7 +206,7 @@ def draft_projects(user_id):
         project = dict(row)
         project['n_tasks'] = n_tasks(row.id)
         project['n_volunteers'] = n_volunteers(row.id)
-        project['overall_progress'] = overall_progress(row.id),
+        project['overall_progress'] = overall_progress(row.id)
         projects_draft.append(project)
     return projects_draft
 
