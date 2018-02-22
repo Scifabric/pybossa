@@ -431,7 +431,12 @@ def redirect_profile():
     if current_user.is_anonymous():  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
     if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
-        return _show_own_profile(current_user)
+        form = None
+        if current_app.config.upref_mdata:
+            form_data = cached_users.get_user_pref_metadata(current_user.name)
+            form = UserPrefMetadataForm(**form_data)
+            form.set_upref_mdata_choices()
+        return _show_own_profile(current_user, form)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
 
