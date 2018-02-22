@@ -18,6 +18,7 @@
 
 from flask.ext.babel import gettext
 from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
+from .sparql import BulkTaskSPARQLImport
 from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
@@ -32,6 +33,7 @@ class Importer(object):
     def __init__(self):
         """Init method."""
         self._importers = dict(csv=BulkTaskCSVImport,
+                               sparql=BulkTaskSPARQLImport,
                                gdocs=BulkTaskGDImport,
                                epicollect=BulkTaskEpiCollectPlusImport,
                                s3=BulkTaskS3Import,

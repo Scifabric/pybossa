@@ -5329,6 +5329,7 @@ class TestWeb(web.Helper):
         assert data['available_importers'] is not None, data
         importers = ["projects/tasks/epicollect.html",
                      "projects/tasks/csv.html",
+                     "projects/tasks/sparql.html",
                      "projects/tasks/s3.html",
                      "projects/tasks/twitter.html",
                      "projects/tasks/youtube.html",

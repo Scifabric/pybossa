@@ -161,6 +161,17 @@ class BulkTaskCSVImportForm(Form):
     def get_import_data(self):
         return {'type': 'csv', 'csv_url': self.csv_url.data}
 
+class BulkTaskSPARQLImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='sparql')
+    msg_required = lazy_gettext("You must provide a URL")
+    msg_url = lazy_gettext("Oops! That's not a valid URL. "
+                           "You must provide a valid URL")
+    sparql_url = TextField(lazy_gettext('URL'),
+                        [validators.Required(message=msg_required),
+                         validators.URL(message=msg_url)])
+
+    def get_import_data(self):
+        return {'type': 'sparql', 'sparql_url': self.sparql_url.data}
 
 class BulkTaskGDImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='gdocs')
@@ -292,6 +303,7 @@ class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
     _forms = { 'csv': BulkTaskCSVImportForm,
+              'sparql': BulkTaskSPARQLImportForm,
               'gdocs': BulkTaskGDImportForm,
               'epicollect': BulkTaskEpiCollectPlusImportForm,
               'flickr': BulkTaskFlickrImportForm,
