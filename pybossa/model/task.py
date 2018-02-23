@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from flask import current_app
 from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -49,7 +50,7 @@ class Task(db.Model, DomainObject):
     #: Task.info field in JSON with the data for the task.
     info = Column(JSONB)
     #: Number of answers to collect for this task.
-    n_answers = Column(Integer, default=30)
+    n_answers = Column(Integer, default=current_app.config.get('TASK_REDUNDANCY'))
     #: Array of User IDs that favorited this task
     fav_user_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
 
