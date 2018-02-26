@@ -542,6 +542,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
         """Test API TaskRun creation and auth for authenticated external uid"""
+        user = UserFactory.create()
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
@@ -601,6 +602,11 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson, headers=headers)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert tmp.status_code == 200, r_taskrun
+        msg = "user_id & user_ip should be None"
+        assert r_taskrun['user_id'] is None, (msg, r_taskrun['user_id'])
+        assert r_taskrun['user_ip'] is None, (msg, r_taskrun['user_ip'])
+
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson, headers=headers)
