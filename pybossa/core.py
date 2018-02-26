@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Core module for PYBOSSA."""
 import os
+import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
     flash, _app_ctx_stack, abort
@@ -36,9 +37,10 @@ from pybossa.messages import *
 from datetime import timedelta
 import pybossa.model as model
 
+
 def create_app(run_as_server=True):
     """Create web app."""
-    app = Flask('pybossa')
+    app = Flask(__name__.split('.')[0])
     configure_app(app)
     setup_logging(app)
     setup_assets(app)
