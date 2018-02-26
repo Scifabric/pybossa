@@ -75,12 +75,16 @@ class TaskRunAPI(APIBase):
             raise Forbidden('You must request a task first!')
 
     def _add_user_info(self, taskrun):
-        if current_user.is_anonymous():
-            taskrun.user_ip = request.remote_addr
-            if taskrun.user_ip is None:
-                taskrun.user_ip = '127.0.0.1'
+        if taskrun.external_uid is None:
+            if current_user.is_anonymous():
+                taskrun.user_ip = request.remote_addr
+                if taskrun.user_ip is None:
+                    taskrun.user_ip = '127.0.0.1'
+            else:
+                taskrun.user_id = current_user.id
         else:
-            taskrun.user_id = current_user.id
+            taskrun.user_ip = None
+            taskrun.user_id = None
 
     def _add_created_timestamp(self, taskrun, task, guard):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
