@@ -254,7 +254,7 @@ def setup_logging(app):
     log_config = app.config.get('LOG_DICT_CONFIG')
     if log_config:
         from logging.config import dictConfig
-        app.logger
+        app.logger  # see issue https://github.com/pallets/flask/issues/2023
         dictConfig(log_config)
 
 
