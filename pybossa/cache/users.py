@@ -28,6 +28,7 @@ from pybossa.model.project import Project
 from pybossa.leaderboard.data import get_leaderboard as gl
 from pybossa.leaderboard.jobs import leaderboard as lb
 import json
+from pybossa.util import get_user_pref_db_clause
 
 session = db.slave_session
 
@@ -334,20 +335,7 @@ def delete_user_pref_metadata(name):
 def get_user_preferences(user_id):
     assert user_id is not None or user_id > 0
     user_pref = User.query.get(user_id).user_pref or {}
-
-    # expand user preferences as per sql format for jsonb datatype
-    # single user preference with multiple value or
-    # multiple user preferences with single/multiple values
-    _valid = ((k, v) for k, v in user_pref.iteritems() if isinstance(v, list))
-    user_prefs = [{k: [item]} for k, pref_list in _valid
-                  for item in pref_list]
-
-    if not user_prefs:
-        return 'task.user_pref IS NULL OR task.user_pref = \'{}\''
-
-    sql_strings = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
-                   for up in user_prefs)
-    return ' OR '.join(sql_strings)
+    return get_user_pref_db_clause(user_pref)
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))

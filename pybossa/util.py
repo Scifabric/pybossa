@@ -46,6 +46,8 @@ from flask.ext.babel import lazy_gettext
 import re
 import boto
 
+# dict containing list of valid user preferences
+valid_user_preferences = {}
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -867,6 +869,8 @@ def languages():
         ("Ukrainian", "Ukrainian"),
         ("Vietnamese", "Vietnamese"),
         ("Welsh", "Welsh")]
+
+    valid_user_preferences['languages'] = [v[0] for v in langs]
     return langs
 
 
@@ -875,7 +879,9 @@ def countries():
     for ct in pycountry.countries:
         name = ct.name.encode('ascii', 'ignore').replace("'", "")
         cts.append((name, name))
-    return sorted(cts)
+    cts = sorted(cts)
+    valid_user_preferences['locations'] = [v[0] for v in cts]
+    return cts
 
 
 def check_password_strength(
@@ -1028,3 +1034,24 @@ def get_unique_user_preferences(user_prefs):
                     pref = '\'{}\''.format(json.dumps({k: [v]}))
                     duser_prefs.add(pref)
     return duser_prefs
+
+def get_user_pref_db_clause(user_pref):
+    # expand user preferences as per sql format for jsonb datatype
+    # single user preference with multiple value or
+    # multiple user preferences with single/multiple values
+    _valid = ((k, v) for k, v in user_pref.iteritems() if isinstance(v, list))
+    user_prefs = [{k: [item]} for k, pref_list in _valid
+                  for item in pref_list]
+
+    if not user_prefs:
+        return 'task.user_pref IS NULL OR task.user_pref = \'{}\''
+
+    sql_strings = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
+                   for up in user_prefs)
+    return ' OR '.join(sql_strings)
+
+def get_valid_user_preferences():
+    if not valid_user_preferences:
+        languages()
+        countries()
+    return valid_user_preferences
