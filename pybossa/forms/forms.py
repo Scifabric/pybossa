@@ -169,9 +169,14 @@ class BulkTaskSPARQLImportForm(Form):
     sparql_url = TextField(lazy_gettext('URL'),
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
+    sparql_query = TextField(label=None)
 
     def get_import_data(self):
-        return {'type': 'sparql', 'sparql_url': self.sparql_url.data}
+        return {
+            'type': 'sparql',
+            'sparql_url': self.sparql_url.data,
+            'sparql_query': self.sparql_query.data,
+        }
 
 class BulkTaskGDImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='gdocs')
