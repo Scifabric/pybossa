@@ -161,6 +161,7 @@ class BulkTaskCSVImportForm(Form):
     def get_import_data(self):
         return {'type': 'csv', 'csv_url': self.csv_url.data}
 
+
 class BulkTaskSPARQLImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='sparql')
     msg_required = lazy_gettext("You must provide a URL")
@@ -170,12 +171,16 @@ class BulkTaskSPARQLImportForm(Form):
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
     sparql_query = TextField(label=None)
+    task_priority = TextField(label=None)
+    task_n_answers = TextField(label=None)
 
     def get_import_data(self):
         return {
             'type': 'sparql',
             'sparql_url': self.sparql_url.data,
             'sparql_query': self.sparql_query.data,
+            'task_priority': self.task_priority.data,
+            'task_n_answers': self.task_n_answers.data,
         }
 
 class BulkTaskGDImportForm(Form):

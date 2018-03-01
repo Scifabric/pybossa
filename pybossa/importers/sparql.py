@@ -16,9 +16,16 @@ class BulkTaskSPARQLImport(BulkTaskImport):
 
     importer_id = "sparql"
 
-    def __init__(self, sparql_url, sparql_query, last_import_meta=None):
+    def __init__(self,
+                 sparql_url,
+                 sparql_query,
+                 task_priority,
+                 task_n_answers,
+                 last_import_meta=None):
         self.sparql_url = sparql_url
         self.sparql_query = sparql_query
+        self.task_priority = task_priority
+        self.task_n_answers = task_n_answers
         self.last_import_meta = last_import_meta
 
     def tasks(self):
@@ -33,19 +40,26 @@ class BulkTaskSPARQLImport(BulkTaskImport):
             PREFIX foaf: <http://xmlns.com/foaf/0.1/>
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-            SELECT ?members ?bandName where {
-             ?band dbo:genre dbr:Punk_rock .
-             ?band dbp:currentMembers ?members.
-             ?band foaf:name ?bandName
-             FILTER(langMatches(lang(?bandName), "en"))
-            } LIMIT 20
+                        SELECT ?members ?bandName where {
+                        ?band dbo:genre dbr:Punk_rock .
+                        ?band dbp:currentMembers ?members.
+                        ?band foaf:name ?bandName
+                        FILTER(langMatches(lang(?bandName), "en"))
+                        } LIMIT 20
         """)
         sparql.setReturnFormat(JSON)
-        result = sparql.queryAndConvert()
-        for bindings in result["results"]["bindings"]:
-            task_data = {"info": {}}
-            for binding in bindings.keys():
-                task_data["info"][binding] = bindings[binding]["value"]
-                print task_data
-                yield task_data
+        results = sparql.queryAndConvert()
+        for result in results["results"]["bindings"]:
+            task_data = {
+                "info": {},
+            }
+            if self.task_priority != "":
+                task_data["priority_0"] = self.task_priority
+            if self.task_n_answers != "":
+                task_data["n_answers"] = self.task_n_answers
 
+            for binding in result.keys():
+                task_data["info"][binding] = result[binding]["value"]
+
+            print task_data
+            yield task_data
