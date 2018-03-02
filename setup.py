@@ -60,7 +60,7 @@ requirements = [
     "pandas>=0.20.2, <0.20.3",
     "flatten-json",
     "pycountry",
-    "boto>=2.47.0, <2.48",
+    "boto>=2.48.0, <2.49",
     "python-magic>=0.4.13, <0.4.14",
     "wtforms-components>=0.10.3, <0.10.4",
     "otpauth>=1.0.1, <1.0.2",
