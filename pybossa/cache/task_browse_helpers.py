@@ -1,6 +1,7 @@
 from werkzeug.exceptions import BadRequest
 from collections import defaultdict
-from pybossa.util import convert_est_to_utc
+from pybossa.util import (convert_est_to_utc,
+    get_user_pref_db_clause, get_valid_user_preferences)
 import re
 import json
 
@@ -12,7 +13,6 @@ def get_task_filters(args):
     """
     filters = ''
     params = {}
-
     if args.get('task_id'):
         params['task_id'] = args['task_id']
         filters += ' AND task.id = :task_id'
@@ -53,6 +53,11 @@ def get_task_filters(args):
             args['filter_by_field'])
         filters += filter_query
         params.update(**filter_params)
+    if args.get('filter_by_upref'):
+        user_pref = args['filter_by_upref']
+        if user_pref['languages'] or user_pref['locations']:
+            user_pref_db_clause = get_user_pref_db_clause(user_pref)
+            filters += " AND ( {} )".format(user_pref_db_clause)
     return filters, params
 
 
@@ -154,7 +159,6 @@ def parse_tasks_browse_args(args):
     :return: a dictionary of selected filters
     """
     parsed_args = dict()
-
     if args.get('task_id'):
         parsed_args["task_id"] = int(args['task_id'])
     if args.get('pcomplete_from'):
@@ -223,8 +227,32 @@ def parse_tasks_browse_args(args):
     if args.get('filter_by_field'):
         parsed_args['filter_by_field'] = _get_field_filters(args['filter_by_field'])
 
+    if args.get('filter_by_upref'):
+        user_pref = json.loads(args['filter_by_upref'])
+        validate_user_preferences(user_pref)
+        parsed_args['filter_by_upref'] = user_pref
+
     return parsed_args
 
+def validate_user_preferences(user_pref):
+    if not isinstance(user_pref, dict) or \
+        not all(x in ['languages', 'locations'] for x in user_pref.iterkeys()):
+            raise ValueError('invalid user preference keys')
+
+    valid_user_preferences = get_valid_user_preferences()
+    valid_languages = valid_user_preferences['languages']
+    valid_locations = valid_user_preferences['locations']
+
+    lang = user_pref['languages']
+    loc = user_pref['locations']
+
+    if lang and not all(x in valid_languages for x in lang):
+        raise ValueError('invalid languages user preference: {}'
+                        .format(lang))
+
+    if loc and not all(x in valid_locations for x in loc):
+        raise ValueError('invalid locations user preference: {}'
+                        .format(loc))
 
 def _get_field_filters(filter_string):
     filters = json.loads(filter_string)

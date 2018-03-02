@@ -85,6 +85,7 @@ from pybossa.error import ErrorStatus
 from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
+from pybossa.util import get_valid_user_preferences
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -1219,6 +1220,9 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                 for col in disp_info_columns:
                     task['info'][col] = task_info.get(col, '')
 
+        valid_user_preferences = get_valid_user_preferences()
+        language_options = valid_user_preferences['languages']
+        location_options = valid_user_preferences['locations']
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
                     owner=owner_sanitized,
@@ -1235,7 +1239,9 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     filter_data=args,
                     first_task_id=first_task_id,
                     info_columns=disp_info_columns,
-                    filter_columns=columns)
+                    filter_columns=columns,
+                    language_options=language_options,
+                    location_options=location_options)
 
         return handle_content_type(data)
 

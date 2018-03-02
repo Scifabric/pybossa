@@ -622,3 +622,31 @@ class TestProjectsCache(Test):
         average_time = cached_projects.average_contribution_time(project.id)
 
         assert average_time == expected_average_time.total_seconds(), average_time
+
+    @with_context
+    def test_task_browse_user_pref_args(self):
+        from pybossa.cache.task_browse_helpers import parse_tasks_browse_args
+
+        args = dict(task_id=12345, pcomplete_from=0,
+                    pcomplete_to=50,hide_completed='true',
+                    created_from='2018-01-24T19:49:21.799870',
+                    created_to='2018-01-24T19:49:21.799870',
+                    ftime_from='2018-01-24T19:49:21.799870',
+                    ftime_to='2018-01-24T19:49:21.799870',
+                    priority_from=0, priority_to=0.5,
+                    display_columns='["task_id", "priority"]',display_info_columns='["co_id"]',
+                    filter_by_upref='{"languages": ["English"], "locations": ["Fiji"]}')
+
+        valid_args = dict(task_id=12345, pcomplete_to=0.5,
+                    hide_completed=True,
+                    created_from='2018-01-24T19:49:21.799870',
+                    created_to='2018-01-24T19:49:21.799870',
+                    ftime_from='2018-01-24T19:49:21.799870',
+                    ftime_to='2018-01-24T19:49:21.799870',
+                    priority_to=0.5, order_by_dict={},
+                    display_columns=[u'task_id', u'priority'], display_info_columns=[u'co_id'],
+                    filter_by_upref={u'languages': [u'English'], u'locations': [u'Fiji']})
+
+
+        pargs = parse_tasks_browse_args(args)
+        assert pargs == valid_args, "arguments should be valid"
