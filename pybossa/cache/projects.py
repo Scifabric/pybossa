@@ -248,6 +248,11 @@ def n_remaining_task_runs(project_id):
     return session.execute(sql, dict(project_id=project_id)).scalar() or 0
 
 
+def n_expected_task_runs(project_id):
+    """Return total number of expected task_runs of a project."""
+    return n_task_runs(project_id) + n_remaining_task_runs(project_id)
+
+
 def overall_progress(project_id):
     """Return the percentage of completed tasks for a project."""
     if n_tasks(project_id) != 0:
