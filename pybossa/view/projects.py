@@ -660,6 +660,7 @@ def details(short_name):
     num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
     latest_submission_date = latest_submission_task_date(project.id)
     num_remaining_task_runs = cached_projects.n_remaining_task_runs(project.id)
+    num_expected_task_runs = cached_projects.n_expected_task_runs(project.id)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -684,6 +685,7 @@ def details(short_name):
                      "overall_progress": ps.overall_progress,
                      "last_activity": ps.last_activity,
                      "n_completed_tasks": ps.n_completed_tasks,
+                     "num_expected_task_runs": num_expected_task_runs,
                      "num_remaining_task_runs": num_remaining_task_runs,
                      "n_volunteers": ps.n_volunteers,
                      "pro_features": pro,
