@@ -69,7 +69,12 @@ class ProjectCsvExporter(CsvExporter):
                 ('pending_tasks', row.pending_tasks),
                 ('n_workers', row.n_workers),
                 ('n_answers', row.n_answers),
-                ('workers', row.workers)])
+                ('workers', row.workers),
+                ('updated', row.updated),
+                ('oldest_available', row.oldest_available),
+                ('last_submission', row.last_submission),
+                ('n_taskruns', row.n_taskruns),
+                ('pending_taskruns', row.pending_taskruns)])
 
             projects.append(project)
         return pd.DataFrame(projects)

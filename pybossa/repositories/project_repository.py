@@ -169,37 +169,57 @@ class ProjectRepository(Repository):
 
     def get_projects_report(self):
         sql = text(
-            '''WITH completed_tasks AS 
+            '''
+            WITH completed_tasks AS
               (
                  SELECT
                     task.project_id,
                     COUNT(DISTINCT task.id) AS value,
-                    MAX(task_run.finish_time) AS ft 
-                 FROM task INNER JOIN task_run on task.id = task_run.task_id 
-                 WHERE task.state = 'completed' 
-                 GROUP BY task.project_id 
-              ), all_tasks AS 
+                    MAX(task_run.finish_time) AS ft
+                 FROM task INNER JOIN task_run on task.id = task_run.task_id
+                 WHERE task.state = 'completed'
+                 GROUP BY task.project_id
+              ), all_tasks AS
               (
                  SELECT
                     project_id,
-                    COUNT(task.id) AS value 
-                 FROM task 
-                 GROUP BY project_id 
-              ), workers AS 
+                    COUNT(task.id) AS value
+                 FROM task
+                 GROUP BY project_id
+              ), workers AS
               (
                  SELECT DISTINCT
                     project_id,
                     user_id,
                     "user".fullname,
-                    "user".email_addr 
-                 FROM task_run INNER JOIN "user" ON task_run.user_id = "user".id 
-              ), n_workers AS 
+                    "user".email_addr
+                 FROM task_run INNER JOIN "user" ON task_run.user_id = "user".id
+              ), n_workers AS
               (
                  SELECT
                     project_id,
-                    COUNT(user_id) as value 
-                 FROM workers 
-                 GROUP BY project_id 
+                    COUNT(user_id) as value
+                 FROM workers
+                 GROUP BY project_id
+              ),
+              n_taskruns AS (
+                 SELECT project_id,
+                        COUNT(id) AS value
+                 FROM task_run
+                 GROUP BY project_id
+              ),
+              pending_taskruns AS (
+                 SELECT project_id,
+                        SUM(task.n_answers - COALESCE(t.actual_answers, 0)) AS value
+                 FROM task
+                 LEFT JOIN (
+                    SELECT task_id,
+                           COUNT(id) AS actual_answers
+                    FROM task_run
+                    GROUP BY task_id) AS t
+                 ON task.id = t.task_id
+                 WHERE task.state = 'ongoing'
+                 GROUP BY project_id
               )
               SELECT
                  project.id,
@@ -213,7 +233,7 @@ class ProjectRepository(Repository):
                  category.name as category_name,
                  project.allow_anonymous_contributors,
                  (
-                    COALESCE(project.info::json ->> 'passwd_hash', 'null') != 'null' 
+                    COALESCE(project.info::json ->> 'passwd_hash', 'null') != 'null'
                  )
                  as password_protected,
                  project.webhook,
@@ -221,21 +241,24 @@ class ProjectRepository(Repository):
                  completed_tasks.ft,
                  CASE
                     WHEN
-                       all_tasks.value = 0 
-                       OR completed_tasks.value IS NULL 
+                       all_tasks.value = 0
+                       OR completed_tasks.value IS NULL
                     THEN
-                       0 
+                       0
                     ELSE
-                       completed_tasks.value * 100 / all_tasks.value 
+                       completed_tasks.value * 100 / all_tasks.value
                  END
-                 as percent_complete, COALESCE(all_tasks.value, 0) AS n_tasks, COALESCE(all_tasks.value, 0) - COALESCE(completed_tasks.value, 0) AS pending_tasks, COALESCE(n_workers.value, 0) as n_workers, 
+                 as percent_complete,
+                 COALESCE(all_tasks.value, 0) AS n_tasks,
+                 COALESCE(all_tasks.value, 0) - COALESCE(completed_tasks.value, 0) AS pending_tasks,
+                 COALESCE(n_workers.value, 0) as n_workers,
                  (
                     SELECT
-                       n_answers 
+                       n_answers
                     FROM
-                       task 
+                       task
                     WHERE
-                       project_id = project.id 
+                       project_id = project.id
                     ORDER BY
                        task.id DESC LIMIT 1
                  )
@@ -244,27 +267,51 @@ class ProjectRepository(Repository):
                     SELECT
                        string_agg(concat('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|')
                     FROM
-                       workers 
+                       workers
                     WHERE
                        project.id = workers.project_id 
                  )
-                 as workers 
+                 as workers,
+                 project.updated,
+                 COALESCE((
+                    SELECT created
+                    FROM task
+                    WHERE project_id = project.id
+                    AND state != 'completed'
+                    ORDER BY priority_0 DESC, created ASC
+                    LIMIT 1
+                 ), 'null') AS oldest_available,
+                 COALESCE((
+                    SELECT MAX(finish_time)
+                    FROM task_run
+                    WHERE project_id = project.id
+                 ), 'null') AS last_submission,
+                 COALESCE(n_taskruns.value, 0) AS n_taskruns,
+                 COALESCE(pending_taskruns.value, 0) AS pending_taskruns
               FROM
-                 project 
+                 project
                  INNER JOIN
-                    "user" as u 
-                    on project.owner_id = u.id 
+                    "user" as u
+                    on project.owner_id = u.id
                  INNER JOIN
-                    category 
-                    on project.category_id = category.id 
+                    category
+                    on project.category_id = category.id
                  LEFT OUTER JOIN
-                    completed_tasks 
-                    ON project.id = completed_tasks.project_id 
+                    completed_tasks
+                    ON project.id = completed_tasks.project_id
                  LEFT OUTER JOIN
-                    all_tasks 
-                    ON project.id = all_tasks.project_id 
+                    all_tasks
+                    ON project.id = all_tasks.project_id
                  LEFT OUTER JOIN
-                    n_workers 
-                    ON project.id = n_workers.project_id;''')
+                    n_workers
+                    ON project.id = n_workers.project_id
+                 LEFT OUTER JOIN
+                    n_taskruns
+                    ON project.id = n_taskruns.project_id
+                 LEFT OUTER JOIN
+                    pending_taskruns
+                    ON project.id = pending_taskruns.project_id;
+            '''
+        )
 
         return self.db.session.execute(sql)
