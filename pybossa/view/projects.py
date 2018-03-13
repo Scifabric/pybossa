@@ -1694,7 +1694,7 @@ def export_projects():
     export_queue.enqueue(mail_project_report, info, current_user.email_addr)
     flash(gettext('You will be emailed when your export has been'
                   ' completed.'), 'success')
-    return redirect_content_type(url_for('.index'))
+    return redirect_content_type(url_for('admin.index'))
 
 
 @blueprint.route('/<short_name>/stats')
