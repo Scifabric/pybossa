@@ -2127,12 +2127,17 @@ class TestWeb(web.Helper):
         """Test WEB projects index with projects"""
         self.register()
         self.signin()
-        self.create()
+        self.new_project()
+        project = db.session.query(Project).first()
+        project_short_name = project.short_name
+        project.published = True
+        project.featured = True
+        db.session.commit()
 
         res = self.app.get('/project/category/featured', follow_redirects=True)
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
-        assert Fixtures.project_short_name in res.data, res.data
+        assert project_short_name in res.data, res.data
 
     @with_context
     def test_06_featured_project_json(self):
@@ -2963,12 +2968,12 @@ class TestWeb(web.Helper):
         self.update_project(new_category_id="1")
         project = db.session.query(Project).first()
         project.published = True
+        project.featured = True
         db.session.commit()
         #self.signout()
 
         res = self.app.get('project/category/featured', follow_redirects=True)
-        assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
-        assert "Draft" in res.data, res.data
+        assert "Featured Projects" in res.data, res.data
         assert "Sample Project" in res.data, res.data
 
     @with_context

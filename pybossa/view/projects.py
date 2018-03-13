@@ -197,24 +197,37 @@ def pro_features(owner=None):
     return pro
 
 
+@blueprint.route('/search/', defaults={'page': 1})
+@blueprint.route('/search/page/<int:page>/')
+@login_required
+def search(page):
+    def lookup(*args, **kwargs):
+        return cached_projects.text_search(search_text)
+    def no_results(*args, **kwargs):
+        return []
+    search_text = request.args.get('search_text', None)
+    lookup_fn = lookup
+    if not search_text:
+        flash(gettext('Please provide a search phrase'), 'error')
+        lookup_fn = no_results
+    extra_tmplt_args = {'search_text': search_text}
+    return project_index(page, lookup_fn, 'search_results', False, False, None,
+                         False, True, extra_tmplt_args)
+
+
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
 @login_required
-def index(page):
+def featured(page):
     """List projects in the system"""
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))
-    if cached_projects.n_count('featured') > 0:
-        return project_index(page, cached_projects.get_all_featured,
-                             'featured', True, False, order_by, desc)
-    else:
-        categories = cached_cat.get_all()
-        cat_short_name = categories[0].short_name
-        return redirect_content_type(url_for('.project_cat_index', category=cat_short_name))
+    return project_index(page, cached_projects.get_all_featured,
+                         'featured', True, False, order_by, desc)
 
 
 def project_index(page, lookup, category, fallback, use_count, order_by=None,
-                  desc=False, pre_ranked=False):
+                  desc=False, pre_ranked=False, extra_tmplt_args=None):
     """Show projects of a category"""
     per_page = current_app.config['APPS_PER_PAGE']
     ranked_projects = lookup(category)
@@ -248,6 +261,10 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
                               description='Draft projects')
     elif category == 'historical_contributions':
         active_cat = historical_contributions_cat
+    elif category == 'search_results':
+        active_cat = Category(name='Search Results',
+                              short_name='search_results',
+                              description='Projects matching text \'{search_text}\''.format(**extra_tmplt_args))
     else:
         active_cat = project_repo.get_category_by(short_name=category)
 
@@ -256,13 +273,14 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
     # Check if we have to add the section Featured to local nav
     if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
-    template_args = {
+    template_args = extra_tmplt_args or {}
+    template_args.update({
         "projects": projects,
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
         "categories": categories,
-        "template": '/projects/index.html'}
+        "template": '/projects/index.html'})
 
     if use_count:
         template_args.update({"count": count})
@@ -284,7 +302,7 @@ def draft(page):
 @blueprint.route('/category/historical_contributions/', defaults={'page': 1})
 @blueprint.route('/category/historical_contributions/page/<int:page>/')
 @login_required
-def historical_contributions(page):
+def index(page):
     """Show the projects a user has previously worked on"""
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))

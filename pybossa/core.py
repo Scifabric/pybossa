@@ -474,7 +474,7 @@ def setup_geocoding(app):
 
 def url_for_other_page(page):
     """Setup url for other pages."""
-    args = request.view_args.copy()
+    args = dict(request.view_args.items() + request.args.to_dict().items())
     args['page'] = page
     return url_for(request.endpoint, **args)
 

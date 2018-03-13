@@ -513,6 +513,44 @@ def get_all_projects():
         projects.append(project)
     return projects
 
+
+@memoize(timeout=60 * 2)
+def text_search(search_text):
+    """Return a list of published projects short_names.
+    """
+    sql = text(
+        '''SELECT project.id, project.name, project.short_name,
+        project.description, project.info, project.created, project.updated,
+        project.category_id, project.featured, "user".fullname AS owner
+        FROM project
+        LEFT JOIN "user" ON project.owner_id="user".id
+        WHERE
+        (project.name ILIKE '%' || :search_text || '%'
+         OR "user".fullname ILIKE '%' || :search_text || '%'
+         OR project.description ILIKE '%' || :search_text || '%')
+        AND project.published=true
+        AND coalesce(project.hidden, false)=false
+        ORDER BY project.name;''')
+    results = session.execute(sql, dict(search_text=search_text))
+    projects = []
+    for row in results:
+        project = dict(id=row.id,
+                       name=row.name, short_name=row.short_name,
+                       created=row.created,
+                       updated=row.updated,
+                       description=row.description,
+                       owner=row.owner,
+                       featured=row.featured,
+                       last_activity=pretty_date(last_activity(row.id)),
+                       last_activity_raw=last_activity(row.id),
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=row.info)
+        projects.append(Project().to_public_json(project))
+    return projects
+
+
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_project_report_projectdata(project_id):
     """Return data to build project report"""
