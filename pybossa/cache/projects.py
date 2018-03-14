@@ -515,7 +515,7 @@ def get_all_projects():
 
 
 @memoize(timeout=60 * 2)
-def text_search(search_text):
+def text_search(search_text, show_unpublished=True, show_hidden=True):
     """Return a list of published projects short_names.
     """
     sql = text(
@@ -528,9 +528,11 @@ def text_search(search_text):
         (project.name ILIKE '%' || :search_text || '%'
          OR "user".fullname ILIKE '%' || :search_text || '%'
          OR project.description ILIKE '%' || :search_text || '%')
-        AND project.published=true
-        AND coalesce(project.hidden, false)=false
-        ORDER BY project.name;''')
+         {}
+         {}
+        ORDER BY project.name;'''.format(
+          'AND project.published=true' if not show_unpublished else '',
+          'AND coalesce(project.hidden, false)=false' if not show_hidden else ''))
     results = session.execute(sql, dict(search_text=search_text))
     projects = []
     for row in results:
