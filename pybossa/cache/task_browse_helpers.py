@@ -160,13 +160,13 @@ def parse_tasks_browse_args(args):
     """
     parsed_args = dict()
     if args.get('task_id'):
-        parsed_args["task_id"] = int(args['task_id'])
-    if args.get('pcomplete_from'):
-        parsed_args["pcomplete_from"] = float(args['pcomplete_from']) / 100
-    if args.get('pcomplete_to'):
-        parsed_args["pcomplete_to"] = float(args['pcomplete_to']) / 100
+        parsed_args['task_id'] = int(args['task_id'])
+    if args.get('pcomplete_from') is not None:
+        parsed_args['pcomplete_from'] = float(args['pcomplete_from']) / 100
+    if args.get('pcomplete_to') is not None:
+        parsed_args['pcomplete_to'] = float(args['pcomplete_to']) / 100
     if args.get('hide_completed'):
-        parsed_args["hide_completed"] = args['hide_completed'].lower() == 'true'
+        parsed_args['hide_completed'] = args['hide_completed'].lower() == 'true'
 
     iso_string_format = '^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?$'
 
@@ -194,14 +194,14 @@ def parse_tasks_browse_args(args):
         else:
             raise ValueError('ftime_to date format error, value: %s'
                              .format(args['ftime_to']))
-    if args.get('priority_from'):
-        parsed_args["priority_from"] = float(args['priority_from'])
-    if args.get('priority_to'):
-        parsed_args["priority_to"] = float(args['priority_to'])
+    if args.get('priority_from') is not None:
+        parsed_args['priority_from'] = float(args['priority_from'])
+    if args.get('priority_to') is not None:
+        parsed_args['priority_to'] = float(args['priority_to'])
     if args.get('display_columns'):
-        parsed_args["display_columns"] = json.loads(args['display_columns'])
-    if not isinstance(parsed_args.get("display_columns"), list):
-        parsed_args["display_columns"] = ['task_id', 'priority', 'pcomplete',
+        parsed_args['display_columns'] = json.loads(args['display_columns'])
+    if not isinstance(parsed_args.get('display_columns'), list):
+        parsed_args['display_columns'] = ['task_id', 'priority', 'pcomplete',
                                           'created', 'finish_time', 'actions']
     if 'display_info_columns' in args:
         display_info_columns = json.loads(args['display_info_columns'])
@@ -209,10 +209,10 @@ def parse_tasks_browse_args(args):
             display_info_columns = []
         parsed_args['display_info_columns'] = display_info_columns
 
-    parsed_args["order_by_dict"] = dict()
+    parsed_args['order_by_dict'] = dict()
     if args.get('order_by'):
-        parsed_args["order_by"] = args['order_by'].strip().lower()
-        for clause in parsed_args["order_by"].split(','):
+        parsed_args['order_by'] = args['order_by'].strip().lower()
+        for clause in parsed_args['order_by'].split(','):
             order_by_field = clause.split(' ')
             if len(order_by_field) != 2 or order_by_field[0] not in allowed_fields:
                 raise ValueError('order_by value sent by the user is invalid: %s'.format(args['order_by']))
