@@ -237,7 +237,7 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
 
     offset = (page - 1) * per_page
     projects = ranked_projects[offset:offset+per_page]
-    count = cached_projects.n_count(category)
+    count = len(ranked_projects)
 
     if fallback and not projects:  # pragma: no cover
         return redirect(url_for('.index'))

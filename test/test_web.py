@@ -2954,9 +2954,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/" class="pagination-tasks-browse" rel="nofollow">2</a>' in page1.data
+        assert '<a href="/project/category/cat/page/2/" rel="nofollow">2</a>' in page1.data
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/" class="pagination-tasks-browse" rel="nofollow">1</a>' in page2.data
+        assert '<a href="/project/category/cat/" rel="nofollow">1</a>' in page2.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
