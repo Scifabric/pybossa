@@ -288,18 +288,34 @@ class BulkTaskLocalCSVImportForm(Form):
         return {'type': 'localCSV', 'csv_filename': None}
 
 
+class BulkTaskIIIFImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='iiif')
+    msg_required = lazy_gettext("You must provide a URL")
+    msg_url = lazy_gettext("Oops! That's not a valid URL. "
+                           "You must provide a valid URL")
+    manifest_uri = TextField(lazy_gettext('URL'),
+                             [validators.Required(message=msg_required),
+                             validators.URL(message=msg_url)])
+
+    def get_import_data(self):
+        return {'type': 'iiif', 'manifest_uri': self.manifest_uri.data}
+
+
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
-    _forms = { 'csv': BulkTaskCSVImportForm,
-              'gdocs': BulkTaskGDImportForm,
-              'epicollect': BulkTaskEpiCollectPlusImportForm,
-              'flickr': BulkTaskFlickrImportForm,
-              'dropbox': BulkTaskDropboxImportForm,
-              'twitter': BulkTaskTwitterImportForm,
-              's3': BulkTaskS3ImportForm,
-              'youtube': BulkTaskYoutubeImportForm,
-              'localCSV': BulkTaskLocalCSVImportForm }
+    _forms = {
+        'csv': BulkTaskCSVImportForm,
+        'gdocs': BulkTaskGDImportForm,
+        'epicollect': BulkTaskEpiCollectPlusImportForm,
+        'flickr': BulkTaskFlickrImportForm,
+        'dropbox': BulkTaskDropboxImportForm,
+        'twitter': BulkTaskTwitterImportForm,
+        's3': BulkTaskS3ImportForm,
+        'youtube': BulkTaskYoutubeImportForm,
+        'localCSV': BulkTaskLocalCSVImportForm,
+        'iiif': BulkTaskIIIFImportForm
+    }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
