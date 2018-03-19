@@ -5335,8 +5335,9 @@ class TestWeb(web.Helper):
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
                      "projects/tasks/flickr.html",
-                     "projects/tasks/localCSV.html"]
-        assert data['available_importers'] == importers, data
+                     "projects/tasks/localCSV.html",
+                     "projects/tasks/iiif.html"]
+        assert sorted(data['available_importers']) == sorted(importers), data
 
         importers = ['&type=epicollect',
                      '&type=csv',
@@ -5346,7 +5347,8 @@ class TestWeb(web.Helper):
                      '&type=gdocs',
                      '&type=dropbox',
                      '&type=flickr',
-                     '&type=localCSV']
+                     '&type=localCSV',
+                     '&type=iiif']
 
         for importer in importers:
             res = self.app_get_json(url + importer)
@@ -5374,6 +5376,8 @@ class TestWeb(web.Helper):
                 assert 'album_id' in data['form'].keys(), data
             if 'localCSV' in importer:
                 assert 'form_name' in data['form'].keys(), data
+            if 'iiif' in importer:
+                assert 'manifest_uri' in data['form'].keys(), data
 
         for importer in importers:
             if 'epicollect' in importer:
@@ -5417,6 +5421,11 @@ class TestWeb(web.Helper):
                 res = self.app_post_json(url + importer, data=data)
                 data = json.loads(res.data)
                 assert data['flash'] == "SUCCESS", data
+            if 'iiif' in importer:
+                data = dict(manifest_uri='http://example.com')
+                res = self.app_post_json(url + importer, data=data)
+                data = json.loads(res.data)
+                assert data['flash'] == "SUCCESS", data
 
 
     @with_context
@@ -5439,8 +5448,10 @@ class TestWeb(web.Helper):
                      "projects/tasks/gdocs.html",
                      "projects/tasks/dropbox.html",
                      "projects/tasks/flickr.html",
-                     "projects/tasks/localCSV.html"]
-        assert data['available_importers'] == importers, data
+                     "projects/tasks/localCSV.html",
+                     "projects/tasks/iiif.html"]
+        assert sorted(data['available_importers']) == sorted(importers), (importers,
+                                                          data['available_importers'])
 
 
     @with_context
@@ -5529,6 +5540,14 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From an Amazon S3 bucket" in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
+
+        # IIIF
+        url = "/project/%s/tasks/import?type=iiif" % project.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a IIIF manifest" in data
         assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Invalid
