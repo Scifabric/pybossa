@@ -84,4 +84,5 @@ class BulkTaskIIIFImporter(BulkTaskImport):
             default_err = "Oops! That doesn't look like a valid IIIF manifest."
             raise BulkImportException(json_response.get('error', default_err))
 
-        return json_response['received']
+        manifest = json.loads(json_response['received'])
+        return manifest
