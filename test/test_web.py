@@ -5337,7 +5337,7 @@ class TestWeb(web.Helper):
                      "projects/tasks/flickr.html",
                      "projects/tasks/localCSV.html",
                      "projects/tasks/iiif.html"]
-        assert data['available_importers'] == importers, data
+        assert sorted(data['available_importers']) == sorted(importers), data
 
         importers = ['&type=epicollect',
                      '&type=csv',
