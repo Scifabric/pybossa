@@ -61,7 +61,7 @@ class TestBulkTaskIIIFImport(object):
         headers = {'Content-Type': 'application/json'}
         wrapper = {
             'okay': 1,
-            'received': self.create_manifest()
+            'received': json.dumps(self.create_manifest())
         }
         valid_manifest = FakeResponse(text=json.dumps(wrapper),
                                       status_code=200, headers=headers,
@@ -113,7 +113,7 @@ class TestBulkTaskIIIFImport(object):
         headers = {'Content-Type': 'application/json'}
         wrapper = {
             'okay': 1,
-            'received': self.create_manifest(n)
+            'received': json.dumps(self.create_manifest(n))
         }
         valid_manifest = FakeResponse(text=json.dumps(wrapper),
                                       status_code=200, headers=headers,
@@ -136,3 +136,16 @@ class TestBulkTaskIIIFImport(object):
                 'url_m': '{}/full/240,/0/default.jpg'.format(img_id),
                 'url_b': '{}/full/1024,/0/default.jpg'.format(img_id)
             })
+
+    def test_validated_manifest_returned_as_json(self, requests):
+        headers = {'Content-Type': 'application/json'}
+        wrapper = {
+            'okay': 1,
+            'received': json.dumps(self.create_manifest())
+        }
+        valid_manifest = FakeResponse(text=json.dumps(wrapper),
+                                      status_code=200, headers=headers,
+                                      encoding='utf-8')
+        requests.get.return_value = valid_manifest
+        returned_manifest = self.importer._get_validated_manifest(None)
+        assert_equal(type(returned_manifest), dict)
