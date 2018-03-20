@@ -28,28 +28,23 @@ class BulkTaskSPARQLImport(BulkTaskImport):
         self.task_n_answers = task_n_answers
         self.last_import_meta = last_import_meta
 
+    def convertToJsonValue(self, value):
+        from SPARQLWrapper.SmartWrapper import Value
+        if value.type == Value.TypedLiteral:
+            if value.datatype == "http://www.w3.org/2001/XMLSchema#int":
+                return int(value.value)
+            elif value.datatype == "http://www.w3.org/2001/XMLSchema#double":
+                return float(value.value)
+        else:
+            return value.value
+
+
     def tasks(self):
-
-        from SPARQLWrapper import SPARQLWrapper, JSON
-
-        sparql = SPARQLWrapper(self.sparql_url)
-        sparql.setQuery("""
-            PREFIX dbo: <http://dbpedia.org/ontology/>
-            PREFIX dbr: <http://dbpedia.org/resource/>
-            PREFIX dbp: <http://dbpedia.org/property/>
-            PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-                        SELECT ?members ?bandName where {
-                        ?band dbo:genre dbr:Punk_rock .
-                        ?band dbp:currentMembers ?members.
-                        ?band foaf:name ?bandName
-                        FILTER(langMatches(lang(?bandName), "en"))
-                        } LIMIT 20
-        """)
-        sparql.setReturnFormat(JSON)
-        results = sparql.queryAndConvert()
-        for result in results["results"]["bindings"]:
+        from SPARQLWrapper import SPARQLWrapper2, JSON
+        sparql = SPARQLWrapper2(self.sparql_url)
+        sparql.setQuery(self.sparql_query)
+        results = sparql.query().bindings
+        for result in results:
             task_data = {
                 "info": {},
             }
@@ -57,9 +52,6 @@ class BulkTaskSPARQLImport(BulkTaskImport):
                 task_data["priority_0"] = self.task_priority
             if self.task_n_answers != "":
                 task_data["n_answers"] = self.task_n_answers
-
-            for binding in result.keys():
-                task_data["info"][binding] = result[binding]["value"]
-
-            print task_data
+            for binding in result:
+                task_data["info"][binding] = self.convertToJsonValue(result[binding])
             yield task_data
