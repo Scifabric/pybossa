@@ -28,11 +28,11 @@ class TestBulkTaskIIIFImport(object):
 
     def setUp(self):
         self.manifest_uri = 'http://example.org/iiif/book1/manifest'
-        self.canvas_id_base = 'http://example.org/iiif/book1/canvas/p'
-        self.img_id_base = 'http://example.org/images/book1-page'
+        self.canvas_id_base = 'http://example.org/iiif/book1/canvas/p{0}'
+        self.img_id_base = 'http://example.org/images/book1-page{0}-img{1}'
         self.importer = BulkTaskIIIFImporter(manifest_uri=self.manifest_uri)
 
-    def create_manifest(self, sequences=1):
+    def create_manifest(self, canvases=1, images=1):
         manifest = {
             '@id': self.manifest_uri,
             'sequences': [
@@ -41,19 +41,20 @@ class TestBulkTaskIIIFImport(object):
                 }
             ]
         }
-        for i in range(sequences):
+        for i in range(canvases):
             canvas = {
                 '@id': self.canvas_id_base.format(i),
-                'images': [
-                    {
-                        'resource': {
-                            'service': {
-                                '@id': self.img_id_base.format(i)
-                            }
+                'images': []
+            }
+            for j in range(images):
+                image = {
+                    'resource': {
+                        'service': {
+                            '@id': self.img_id_base.format(i, j)
                         }
                     }
-                ]
-            }
+                }
+                canvas['images'].append(image)
             manifest['sequences'][0]['canvases'].append(canvas)
         return manifest
 
@@ -109,33 +110,43 @@ class TestBulkTaskIIIFImport(object):
 
     @with_context
     def test_get_tasks_for_valid_manifest(self, requests):
-        n = 3
-        headers = {'Content-Type': 'application/json'}
+        n_canvases = 3
+        n_images = 2
+        manifest = self.create_manifest(canvases=n_canvases, images=n_images)
         wrapper = {
             'okay': 1,
-            'received': json.dumps(self.create_manifest(n))
+            'received': json.dumps(manifest)
         }
+        headers = {'Content-Type': 'application/json'}
         valid_manifest = FakeResponse(text=json.dumps(wrapper),
                                       status_code=200, headers=headers,
                                       encoding='utf-8')
         requests.get.return_value = valid_manifest
         tasks = self.importer.tasks()
 
-        assert_equal(len(tasks), n)
-        for i, task in enumerate(tasks):
+        # Check task generated for all images of all canvases
+        total_images = n_canvases * n_images
+        assert_equal(len(tasks), total_images)
+
+        for i in range(n_canvases):
             canvas_id = self.canvas_id_base.format(i)
-            img_id = self.img_id_base.format(i)
-            link_query = '?manifest={}#?cv={}'.format(self.manifest_uri, i)
-            link = 'http://universalviewer.io/uv.html' + link_query
-            assert_dict_equal(task['info'], {
-                'manifest': self.manifest_uri,
-                'target': canvas_id,
-                'link': link,
-                'tileSource': '{}/info.json'.format(img_id),
-                'url': '{}/full/max/0/default.jpg'.format(img_id),
-                'url_m': '{}/full/240,/0/default.jpg'.format(img_id),
-                'url_b': '{}/full/1024,/0/default.jpg'.format(img_id)
-            })
+            for j in range(n_images):
+                img_id = self.img_id_base.format(i, j)
+                task = tasks.pop(0)
+                link_query = '?manifest={}#?cv={}'.format(self.manifest_uri, i)
+                link = 'http://universalviewer.io/uv.html' + link_query
+                assert_dict_equal(task['info'], {
+                    'manifest': self.manifest_uri,
+                    'target': canvas_id,
+                    'link': link,
+                    'tileSource': '{}/info.json'.format(img_id),
+                    'url': '{}/full/max/0/default.jpg'.format(img_id),
+                    'url_m': '{}/full/240,/0/default.jpg'.format(img_id),
+                    'url_b': '{}/full/1024,/0/default.jpg'.format(img_id)
+                })
+
+        # Make sure that we have checked all tasks
+        assert_equal(len(tasks), 0)
 
     def test_validated_manifest_returned_as_json(self, requests):
         headers = {'Content-Type': 'application/json'}

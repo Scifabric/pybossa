@@ -49,21 +49,23 @@ class BulkTaskIIIFImporter(BulkTaskImport):
         """Return the task data generated from a manifest."""
         manifest_uri = manifest['@id']
         canvases = manifest['sequences'][0]['canvases']
-        images = [c['images'][0]['resource']['service']['@id']
-                  for c in canvases]
 
         data = []
-        for i, img in enumerate(images):
-            row = {
-                'tileSource': '{}/info.json'.format(img),
-                'target': canvases[i]['@id'],
-                'manifest': manifest_uri,
-                'link': self._get_link(manifest_uri, i),
-                'url': '{}/full/max/0/default.jpg'.format(img),
-                'url_m': '{}/full/240,/0/default.jpg'.format(img),
-                'url_b': '{}/full/1024,/0/default.jpg'.format(img)
-            }
-            data.append(row)
+        for i, canvas in enumerate(canvases):
+            images = [img['resource']['service']['@id']
+                      for img in canvas['images']]
+
+            for img in images:
+                row = {
+                    'tileSource': '{}/info.json'.format(img),
+                    'target': canvas['@id'],
+                    'manifest': manifest_uri,
+                    'link': self._get_link(manifest_uri, i),
+                    'url': '{}/full/max/0/default.jpg'.format(img),
+                    'url_m': '{}/full/240,/0/default.jpg'.format(img),
+                    'url_b': '{}/full/1024,/0/default.jpg'.format(img)
+                }
+                data.append(row)
         return data
 
     def _get_link(self, manifest_uri, canvas_index):
