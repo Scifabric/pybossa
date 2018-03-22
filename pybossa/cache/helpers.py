@@ -21,6 +21,7 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
+from pybossa.cache import users as cached_users
 from pybossa.cache.projects import n_results
 from pybossa.model.project_stats import ProjectStats
 
@@ -58,6 +59,42 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     for row in result:
         n_tasks = row.n_tasks
     return n_tasks
+
+
+def oldest_available_task(project_id, user_id=None, user_ip=None):
+    """Return the timestamp of the oldest task with the highest priority that a user can contribute to.
+    """
+    if user_id and not user_ip:
+        query = text('''SELECT created FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       project_id=:project_id AND user_id=:user_id
+                       AND task_id=task.id)
+                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+        return session.scalar(query, dict(project_id=project_id,
+                                             user_id=user_id))
+    else:
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        query = text('''SELECT created FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       project_id=:project_id AND user_ip=:user_ip
+                       AND task_id=task.id)
+                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+
+        return session.scalar(query, dict(project_id=project_id,
+                                             user_ip=user_ip))
+
+
+def n_completed_tasks_by_user(project_id, user_id=None, user_ip=None):
+    """Return number of completed tasks of a project."""
+    sql = ''
+    if user_id:
+        sql = text('''SELECT COUNT(task_run.id) FROM task_run
+                      WHERE task_run.project_id=:project_id AND task_run.user_id=:user_id;''')
+        return session.scalar(sql, dict(project_id=project_id, user_id=user_id)) or 0
+    sql = text('''SELECT COUNT(task_run.id) FROM task_run
+                  WHERE task_run.project_id=:project_id AND task_run.user_ip=:user_ip;''')
+    return session.scalar(sql, dict(project_id=project_id, user_ip=user_ip)) or 0
 
 
 def check_contributing_state(project, user_id=None, user_ip=None,

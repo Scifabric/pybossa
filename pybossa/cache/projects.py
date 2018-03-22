@@ -178,6 +178,24 @@ def n_task_runs(project_id):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def n_remaining_task_runs(project_id):
+    """Return total number of tasks runs currently remaining for a project."""
+    sql = text('''SELECT SUM(task.n_answers - COALESCE(t.actual_answers, 0))
+                  FROM task
+                  LEFT JOIN (SELECT task_id, COUNT(id) AS actual_answers
+                             FROM task_run
+                             GROUP BY task_id) AS t
+                  ON task.id = t.task_id
+                  WHERE task.project_id=:project_id AND task.state = 'ongoing';''')
+    return session.execute(sql, dict(project_id=project_id)).scalar() or 0
+
+
+def n_expected_task_runs(project_id):
+    """Return total number of expected task_runs of a project."""
+    return n_task_runs(project_id) + n_remaining_task_runs(project_id)
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def overall_progress(project_id):
     """Return the percentage of completed tasks for a project."""
     if n_tasks(project_id) != 0:

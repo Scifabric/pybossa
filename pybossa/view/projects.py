@@ -53,7 +53,9 @@ from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
-from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
+from pybossa.cache.helpers import (add_custom_contrib_button_to, has_no_presenter,
+                                   n_available_tasks, n_completed_tasks_by_user,
+                                   oldest_available_task)
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
@@ -572,6 +574,14 @@ def update(short_name):
 @blueprint.route('/<short_name>/')
 def details(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    user_info = get_user_id_or_ip()
+    user_id, user_ip = user_info['user_id'], user_info['user_ip']
+    num_available_tasks = n_available_tasks(project.id, user_id, user_ip)
+    num_completed_tasks_by_user = n_completed_tasks_by_user(project.id, user_id, user_ip)
+    oldest_task = oldest_available_task(project.id, user_id, user_ip)
+    latest_submission_date = cached_projects.last_activity(project.id)
+    num_remaining_task_runs = cached_projects.n_remaining_task_runs(project.id)
+    num_expected_task_runs = cached_projects.n_expected_task_runs(project.id)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
@@ -597,7 +607,13 @@ def details(short_name):
                      "last_activity": ps.last_activity,
                      "n_completed_tasks": ps.n_completed_tasks,
                      "n_volunteers": ps.n_volunteers,
-                     "pro_features": pro}
+                     "pro_features": pro,
+                     "n_available_tasks": num_available_tasks,
+                     "n_completed_tasks_by_user": num_completed_tasks_by_user,
+                     "oldest_available_task": oldest_task,
+                     "latest_submitted_task": latest_submission_date,
+                     "num_expected_task_runs": num_expected_task_runs,
+                     "num_remaining_task_runs": num_remaining_task_runs}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
