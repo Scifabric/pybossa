@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PYBOSSA utils."""
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 from functools import update_wrapper
 from flask_wtf import Form
 import csv
@@ -223,6 +223,20 @@ def pretty_date(time=False):
     if day_diff < (365 * 2):
         return ' '.join([str(day_diff / 365), "year ago"])
     return ' '.join([str(day_diff / 365), "years ago"])
+
+
+def datetime_filter(source, fmt, view_tz=None):
+    import dateutil
+    if not isinstance(source, (date, datetime)):
+        try:
+            source = datetime.strptime(str(source), "%Y-%m-%dT%H:%M:%S.%f")
+        except Exception:
+            return source
+
+    utc = dateutil.tz.gettz('UTC')
+    target_tz = dateutil.tz.gettz(view_tz or 'UTC')
+    source = source.replace(tzinfo=utc).astimezone(target_tz)
+    return source.strftime(fmt)
 
 
 class Pagination(object):
