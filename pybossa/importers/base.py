@@ -79,6 +79,8 @@ class BulkUserImport(object):
         headers = []
         field_header_index = []
         row_number = 0
+        default_vals = dict(
+            user_pref={}, metadata={}, project_slugs=[])
         for row in csvreader:
             if not headers:
                 headers = row
@@ -95,17 +97,17 @@ class BulkUserImport(object):
                 self._check_valid_row_length(row, row_number, headers)
                 user_data = {"info": {}}
                 for idx, cell in enumerate(row):
+                    col_header = headers[idx]
+                    cell = cell.strip()
                     if idx in field_header_index:
-                        if headers[idx] in ('user_pref', 'metadata', 'project_slugs'):
-                            if len(cell) > 0:
-                                user_data[headers[idx]] = json.loads(cell)
-                            else:
-                                user_data[headers[idx]] = {}
+                        if col_header in default_vals:
+                            user_data[col_header] = json.loads(cell) \
+                                if cell else \
+                                default_vals[col_header]
                         else:
-                            user_data[headers[idx]] = cell
+                            user_data[col_header] = cell
                     else:
-                        user_data["info"][headers[idx]] = cell
-
+                        user_data["info"][col_header] = cell
                 yield user_data
 
     def _check_no_duplicated_headers(self, headers):

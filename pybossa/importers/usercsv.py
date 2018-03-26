@@ -45,7 +45,7 @@ class BulkUserCSVImport(BulkUserImport):
         """Get users from a given URL."""
         csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
-        
+
     def _get_csv_data_from_request(self, csv_filename):
         if csv_filename is None:
             msg = ("Not a valid csv file for import")
@@ -55,12 +55,12 @@ class BulkUserCSVImport(BulkUserImport):
         csv_file = None
         while retry < 5:
             try:
-                csv_file = FileStorage(open(csv_filename, 'r'))
+                csv_file = FileStorage(io.open(csv_filename, encoding='utf-8-sig'))    #utf-8-sig to ignore BOM
                 break
             except IOError, e:
                 time.sleep(1)
                 retry += 1
-                
+
         if csv_file is None:
            if (('text/plain' not in request.headers['content-type']) and
                    ('text/csv' not in request.headers['content-type']) and
