@@ -124,9 +124,7 @@ class TestModelProject(Test):
         assert project.check_password('mypassword')
 
 
-    @patch('pybossa.model.project.signer')
-    def test_check_password_bad_password(self, mock_signer):
-        mock_signer.loads = lambda x: x
+    def test_check_password_bad_password(self):
         project = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert not project.check_password('notmypassword')

@@ -96,14 +96,14 @@ class Project(db.Model, DomainObject):
 
     def set_password(self, password):
         if len(password) > 1:
-            self.info['passwd_hash'] = signer.dumps(password)
+            self.info['passwd_hash'] = signer.generate_password_hash(password)
             return True
         self.info['passwd_hash'] = None
         return False
 
     def check_password(self, password):
         if self.needs_password():
-            return self.get_passwd() == password
+            return signer.check_password_hash(self.get_passwd_hash(), password)
         return False
 
     def has_autoimporter(self):
