@@ -19,14 +19,14 @@
 import requests
 from StringIO import StringIO
 from flask.ext.babel import gettext
-from pybossa.util import unicode_csv_reader
+from pybossa.util import unicode_csv_reader, validate_required_fields
 
 from .base import BulkTaskImport, BulkImportException
 from flask import request
 from werkzeug.datastructures import FileStorage
 import io, time, json
 from flask import current_app as app
-from pybossa.uploader.s3_uploader import get_file_from_s3, delete_file_from_s3
+from pybossa.util import get_import_csv_file
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -60,12 +60,23 @@ class BulkTaskCSVImport(BulkTaskImport):
                 headers = self._headers = row
                 self._check_no_duplicated_headers(headers)
                 self._check_no_empty_headers(headers)
+                self._check_required_headers(headers)
                 field_headers = set(headers) & fields
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
                 row_number += 1
                 self._check_valid_row_length(row, row_number, headers)
+
+                # check required fields
+                fvals = {headers[idx]: cell for idx, cell in enumerate(row)}
+                invalid_fields = validate_required_fields(fvals)
+                if invalid_fields:
+                    msg = gettext('The file you uploaded has incorrect/missing '
+                                  'values for required header(s): {0}'
+                                  .format(','.join(invalid_fields)))
+                    raise BulkImportException(msg)
+
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
@@ -98,6 +109,14 @@ class BulkTaskCSVImport(BulkTaskImport):
         if len(headers) != len(row):
             msg = gettext("The file you uploaded has an extra value on "
                           "row %s." % (row_number+1))
+            raise BulkImportException(msg)
+
+    def _check_required_headers(self, headers):
+        required_headers = app.config.get("TASK_REQUIRED_FIELDS", {})
+        missing_headers = [r for r in required_headers if r not in headers]
+        if missing_headers:
+            msg = gettext('The file you uploaded has missing '
+                          'required header(s): {0}'.format(','.join(missing_headers)))
             raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
@@ -158,11 +177,9 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
 
-        datafile = self.get_local_csv_import_file_from_s3(csv_filename)
-        if not datafile:
-            return []
-
+        datafile = get_import_csv_file(csv_filename)
         csv_file = FileStorage(io.open(datafile.name, encoding='utf-8-sig'))    #utf-8-sig to ignore BOM
+
         if csv_file is None or csv_file.stream is None:
             msg = ("Unable to load csv file for import, file {0}".format(csv_filename))
             raise BulkImportException(gettext(msg), 'error')
@@ -176,13 +193,3 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         """Get tasks from a given URL."""
         csv_filename = self._get_data()
         return self._get_csv_data_from_request(csv_filename)
-
-    def get_local_csv_import_file_from_s3(self, s3_url):
-        return get_file_from_s3(
-                    app.config.get("S3_IMPORT_BUCKET"),
-                    s3_url)
-
-    def delete_local_csv_import_s3_file(self, s3_url):
-        delete_file_from_s3(
-            app.config.get("S3_IMPORT_BUCKET"),
-            s3_url)

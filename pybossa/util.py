@@ -29,7 +29,6 @@ from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 import dateutil.parser
-from flask import abort, request, make_response, current_app
 from functools import wraps
 from flask.ext.login import current_user
 from sqlalchemy import text
@@ -45,6 +44,12 @@ import pycountry
 from flask.ext.babel import lazy_gettext
 import re
 import boto
+import os
+from werkzeug.utils import secure_filename
+from flask import safe_join
+from pybossa.uploader.s3_uploader import s3_upload_file_storage
+from pybossa.uploader import local
+from pybossa.uploader.s3_uploader import get_file_from_s3, delete_file_from_s3
 
 # dict containing list of valid user preferences
 valid_user_preferences = {}
@@ -1055,3 +1060,50 @@ def get_valid_user_preferences():
         languages()
         countries()
     return valid_user_preferences
+
+def validate_required_fields(data):
+    invalid_fields = []
+    required_fields = current_app.config.get("TASK_REQUIRED_FIELDS", {})
+    for field_name, field_info in required_fields.iteritems():
+        field_val = field_info['val']
+        check_val = field_info['check_val']
+        import_data = data.get(field_name)
+        if not import_data or \
+            (check_val and import_data not in field_val):
+            invalid_fields.append(field_name)
+    return invalid_fields
+
+def get_file_path_for_import_csv(csv_file):
+    from pybossa.core import uploader
+
+    s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
+    container = 'user_{}'.format(current_user.id) if current_user else 'user'
+    if s3_bucket:
+        path = s3_upload_file_storage(s3_bucket,
+            csv_file, directory=container,
+            file_type_check=False, return_key_only=True)
+    else:
+        filename = secure_filename(csv_file.filename)
+        if isinstance(uploader, local.LocalUploader):
+            base_path = safe_join(uploader.upload_folder, container)
+            if not os.path.isdir(base_path):
+                os.makedirs(base_path)
+            path = safe_join(base_path, filename)
+            csv_file.save(path)
+        else:
+            raise IOError('Missing local upload folder')
+    return path
+
+def get_import_csv_file(path):
+    s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
+    if s3_bucket:
+        return get_file_from_s3(s3_bucket, path)
+    else:
+        return open(path)
+
+def delete_import_csv_file(path):
+    s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
+    if s3_bucket:
+        delete_file_from_s3(s3_bucket, path)
+    else:
+        os.remove(path)
