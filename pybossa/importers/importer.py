@@ -243,7 +243,7 @@ class UserImporter(object):
                 found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
                 if not found:
                     full_name = user_data['fullname']
-                    password = user_data['password']
+                    project_slugs = user_data.get('project_slugs')
                     valid_form_data, err_msg = self._valid_user_data(user_data)
                     if not valid_form_data:
                         failed_user_import_count += 1
@@ -251,7 +251,7 @@ class UserImporter(object):
                         continue
 
                     user_data['metadata']['admin'] = current_user.name
-                    create_account(user_data, project_slugs=user_data['project_slugs'])
+                    create_account(user_data, project_slugs=project_slugs)
                     n += 1
             except Exception:
                 current_app.logger.exception('Error in create_user')
