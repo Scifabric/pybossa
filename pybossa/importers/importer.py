@@ -209,13 +209,17 @@ class UserImporter(object):
         from pybossa.forms.forms import RegisterFormWithUserPrefMetadata
 
         form_data = copy.deepcopy(user_data)
-        upref = form_data.pop('user_pref', None)
-        if upref:
-            form_data['languages'] = upref.get('languages', [])
-            form_data['locations'] = upref.get('locations', [])
-        mdata = form_data.pop('metadata', None)
-        if mdata:
-            form_data['user_type'] = mdata.get('user_type')
+        upref = form_data.pop('user_pref', {})
+        mdata = form_data.pop('metadata', {})
+
+        if not isinstance(upref, dict) or \
+            not isinstance(mdata, dict) or \
+            'user_type' not in mdata:
+            return False, 'missing/incorrect user pref/type data'
+
+        form_data['languages'] = upref.get('languages', [])
+        form_data['locations'] = upref.get('locations', [])
+        form_data['user_type'] = mdata.get('user_type')
         form_data.pop('info', None)
         form_data['confirm'] = user_data['password']
         form_data['project_slug'] = form_data.pop('project_slugs', [])
@@ -261,7 +265,7 @@ class UserImporter(object):
             msg = gettext('It looks like there were no new users created.')
 
         if failed_user_import_count:
-            msg += str(failed_user_import_count) + gettext(' user(s) could not be imported due to invalid data.')
+            msg += str(failed_user_import_count) + gettext(' user(s) could not be imported due to missing/incorrect user data.')
             current_app.logger.error(
                 u'Failed to import users\n{0}'
                 .format(",".join(failed_user_imports)))
