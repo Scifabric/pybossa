@@ -89,11 +89,6 @@ class Project(db.Model, DomainObject):
     def get_passwd_hash(self):
         return self.info.get('passwd_hash')
 
-    def get_passwd(self):
-        if self.needs_password():
-            return signer.loads(self.get_passwd_hash())
-        return None
-
     def set_password(self, password):
         if len(password) > 1:
             self.info['passwd_hash'] = signer.generate_password_hash(password)
