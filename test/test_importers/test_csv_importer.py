@@ -20,8 +20,7 @@ from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from pybossa.importers.csv import BulkTaskCSVImport
-from default import FakeResponse, with_context
-
+from default import FakeResponse, with_context, flask_app
 
 @patch('pybossa.importers.csv.requests.get')
 class TestBulkTaskCSVImport(object):
@@ -29,7 +28,6 @@ class TestBulkTaskCSVImport(object):
     def setUp(self):
         url = 'http://myfakecsvurl.com'
         self.importer = BulkTaskCSVImport(csv_url=url)
-
 
     @with_context
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
@@ -42,6 +40,7 @@ class TestBulkTaskCSVImport(object):
 
         assert number_of_tasks is 0, number_of_tasks
 
+    @with_context
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
                                   headers={'content-type': 'text/plain'},
@@ -149,6 +148,7 @@ class TestBulkTaskCSVImport(object):
         finally:
             assert raised, "Exception not raised"
 
+    @with_context
     def test_tasks_raises_exception_if_headers_row_mismatch(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3,4', status_code=200,
                                 headers={'content-type': 'text/plain'},
@@ -165,6 +165,7 @@ class TestBulkTaskCSVImport(object):
         finally:
             assert raised, "Exception not raised"
 
+    @with_context
     def test_tasks_return_tasks_with_only_info_fields(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
                                 headers={'content-type': 'text/plain'},
@@ -176,6 +177,7 @@ class TestBulkTaskCSVImport(object):
 
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
+    @with_context
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
                                 status_code=200,
@@ -189,6 +191,7 @@ class TestBulkTaskCSVImport(object):
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
                         u'priority_0': u'3'}, task
 
+    @with_context
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
         csv_file = FakeResponse(text=u'Foo\nM\xc3\xbcnchen', status_code=200,
                                 headers={'content-type': 'text/plain'},

@@ -30,7 +30,7 @@ from pybossa.model.project import Project
 from pybossa.core import result_repo
 from api_base import APIBase
 from pybossa.api.pwd_manager import get_pwd_manager
-from pybossa.util import get_user_id_or_ip
+from pybossa.util import get_user_id_or_ip, validate_required_fields
 from pybossa.core import task_repo
 from pybossa.cache.projects import get_project_data
 import json
@@ -65,6 +65,10 @@ class TaskAPI(APIBase):
         if 'n_answers' not in data:
             project = Project(**get_project_data(project_id))
             data['n_answers'] = project.get_default_n_answers()
+        invalid_fields = validate_required_fields(info)
+        if invalid_fields:
+            raise BadRequest('Missing or incorrect required fields: {}'
+                            .format(','.join(invalid_fields)))
 
     def _verify_auth(self, item):
         if not current_user.is_authenticated():

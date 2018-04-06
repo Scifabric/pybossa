@@ -33,6 +33,7 @@ from flask.ext.login import current_user
 from werkzeug.datastructures import MultiDict
 import copy
 import json
+from pybossa.util import delete_import_csv_file
 
 class Importer(object):
 
@@ -116,8 +117,8 @@ class Importer(object):
         additional_msg = ' {} task import failed due to invalid S3 bucket.'\
                             .format(s3_bucket_failures) if s3_bucket_failures else ''
         if form_data.get('type') == 'localCSV':
-            s3_url = form_data.get('csv_filename')
-            importer.delete_local_csv_import_s3_file(s3_url)
+            csv_filename = form_data.get('csv_filename')
+            delete_import_csv_file(csv_filename)
 
         if empty:
             msg = gettext('It looks like there were no new records to import.')

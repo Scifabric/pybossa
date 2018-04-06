@@ -41,7 +41,7 @@ from pybossa.forms.fields.time_field import TimeField
 from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
-from pybossa.uploader.s3_uploader import s3_upload_file_storage
+from pybossa.util import get_file_path_for_import_csv
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -272,14 +272,8 @@ class BulkTaskLocalCSVImportForm(Form):
             if csv_file.filename == '':
                 return {'type': 'localCSV', 'csv_filename': None}
             if csv_file and self._allowed_file(csv_file.filename):
-                path = "{0}".format(current_user.id)
-                s3_url = s3_upload_file_storage(
-                            current_app.config.get("S3_IMPORT_BUCKET"),
-                            csv_file,
-                            directory=path,
-                            file_type_check=False,
-                            return_key_only=True)
-                return {'type': 'localCSV', 'csv_filename': s3_url}
+                file_path = get_file_path_for_import_csv(csv_file)
+                return {'type': 'localCSV', 'csv_filename': file_path}
         return {'type': 'localCSV', 'csv_filename': None}
 
 

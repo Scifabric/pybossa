@@ -18,7 +18,9 @@
 
 from mock import patch, Mock, mock_open
 from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
-
+from nose.tools import assert_raises
+from pybossa.importers import BulkImportException
+from default import with_context
 
 class TestBulkTaskLocalCSVImport(object):
 
@@ -35,19 +37,22 @@ class TestBulkTaskLocalCSVImport(object):
         csv_file = self.importer._get_data()
         assert csv_file == 'fakefile.csv'
 
-    @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
     def test_count_tasks_returns_0_row(self, s3_get):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 0, number_of_tasks
 
-    @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
     def test_count_tasks_returns_1_row(self, s3_mock):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n1,2\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 1, number_of_tasks
 
-    @patch('pybossa.importers.csv.BulkTaskLocalCSVImport.get_local_csv_import_file_from_s3')
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
     def test_count_tasks_returns_2_rows(self, s3_mock):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n1,2\naaa,bbb\n'), create=True):
             number_of_tasks = self.importer.count_tasks()

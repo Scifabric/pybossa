@@ -332,3 +332,10 @@ S3_SSL_NO_VERIFY = False
 S3_HOST_SUFFIX = ''
 S3_CUSTOM_HEADERS = []
 S3_CUSTOM_HANDLER_HOSTS = []
+
+TASK_REQUIRED_FIELDS = {
+    'data_owner': {'val': None, 'check_val': False},
+    'data_source_id': {'val': None, 'check_val': False},
+    'data_type': {'val': ['NUMERICAL', 'CATEGORICAL'], 'check_val': True},
+    'data_classifier': {'val': ['C1', 'C2'], 'check_val': True}
+}
