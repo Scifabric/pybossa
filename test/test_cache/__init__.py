@@ -19,7 +19,8 @@
 import hashlib
 from mock import patch
 from pybossa.cache import (get_key_to_hash, get_hash_key, cache, memoize,
-                           delete_cached, delete_memoized)
+                           delete_cached, delete_memoized, memoize_essentials,
+                           delete_memoized_essential)
 from pybossa.sentinel import Sentinel
 from settings_test import REDIS_SENTINEL, REDIS_KEYPREFIX
 
@@ -301,3 +302,39 @@ class TestCacheMemoizeFunctions(object):
         delete_succedeed = delete_memoized(my_func)
         assert delete_succedeed is True, delete_succedeed
         assert len(test_sentinel.master.keys()) == 1
+
+
+    def test_delete_memoized_essentials(self):
+        """Test CACHE delete_memoized_essential deletes all the function
+        calls stored if essential parameter is the given value"""
+
+        @memoize_essentials(timeout=300, essentials=[0])
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+
+        my_func('arg', kwarg='kwarg')
+        my_func('other', kwarg='kwother')
+        assert len(test_sentinel.master.keys()) == 2
+
+        delete_succedeed = delete_memoized_essential(my_func, 'other')
+        assert delete_succedeed is True, delete_succedeed
+        assert len(test_sentinel.master.keys()) == 1
+
+
+    def test_delete_memoized_essentials_no_key(self):
+        """Test CACHE delete_memoized_essential no key to delete"""
+        @memoize_essentials(timeout=300, essentials=[0])
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+
+        @memoize_essentials(timeout=300, essentials=[0])
+        def my_other_func(*args, **kwargs):
+            return [args, kwargs]
+
+        my_func('arg', kwarg='kwarg')
+        my_func('other', kwarg='kwother')
+        assert len(test_sentinel.master.keys()) == 2
+
+        delete_succedeed = delete_memoized_essential(my_other_func, 'other')
+        assert delete_succedeed is False, delete_succedeed
+        assert len(test_sentinel.master.keys()) == 2

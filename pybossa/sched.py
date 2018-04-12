@@ -24,6 +24,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo
+from pybossa.sentinel import keys
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
@@ -326,16 +327,13 @@ def release_user_locks(user_id):
     task_presented_key = cguard_prefix.replace('{1}', '*')
     task_presented_key = task_presented_key.format(user_id)
     pattern = task_presented_key.replace('*', '')
-    cursor = 0
-    while cursor != '0':
-        cursor, keys = redis_conn.scan(cursor=cursor, match=task_presented_key)
+    for key in keys(redis_conn, pattern=task_presented_key):
         # extract task id to build resource_id for release/expire lock
-        for key in keys:
-            tid = key.split(pattern)
-            if len(tid) == 2:
-                task_id = tid[1]
-                resource_id = get_key(task_id)
-                lock_manager.release_lock(resource_id, user_id)
+        tid = key.split(pattern)
+        if len(tid) == 2:
+            task_id = tid[1]
+            resource_id = get_key(task_id)
+            lock_manager.release_lock(resource_id, user_id)
 
 
 def get_project_scheduler_and_timeout(project_id):
