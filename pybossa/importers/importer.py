@@ -213,10 +213,13 @@ class UserImporter(object):
         upref = form_data.pop('user_pref', {})
         mdata = form_data.pop('metadata', {})
 
-        if not isinstance(upref, dict) or \
-            not isinstance(mdata, dict) or \
+        if not isinstance(upref, dict):
+            err = dict(user_pref='incorrect value')
+            return False, err
+        if not isinstance(mdata, dict) or \
             'user_type' not in mdata:
-            return False, 'missing/incorrect user pref/type data'
+            err = dict(metadata='missing or incorrect user_type value')
+            return False, err
 
         form_data['languages'] = upref.get('languages', [])
         form_data['locations'] = upref.get('locations', [])
@@ -228,7 +231,7 @@ class UserImporter(object):
         form = RegisterFormWithUserPrefMetadata(MultiDict(form_data))
         form.project_slug.choices = get_project_choices()
         form.user_type.choices = current_app.config.get('USER_TYPES')
-        return form.validate(), json.dumps(form.errors)
+        return form.validate(), form.errors
 
     def create_users(self, user_repo, **form_data):
         """Create users from a remote source using an importer object and
@@ -237,37 +240,33 @@ class UserImporter(object):
         from pybossa.view.account import create_account
 
         n = 0
-        failed_user_import_count = 0
-
+        failed_users = 0
+        invalid_values = set()
         importer = self._create_importer_for(**form_data)
-        failed_user_imports =[]
-        user_types = current_app.config.get('USER_TYPES')
         for user_data in importer.users():
-            fail_user_import = False
-            try:
-                found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
-                if not found:
-                    full_name = user_data['fullname']
-                    project_slugs = user_data.get('project_slugs')
-                    valid_form_data, err_msg = self._valid_user_data(user_data)
-                    if not valid_form_data:
-                        failed_user_import_count += 1
-                        failed_user_imports.append(u'user: {}, error: {}'.format(full_name, err_msg))
-                        continue
-
-                    user_data['metadata']['admin'] = current_user.name
-                    create_account(user_data, project_slugs=project_slugs)
-                    n += 1
-            except Exception:
-                current_app.logger.exception('Error in create_user')
+            found = user_repo.search_by_email(email_addr=user_data['email_addr'].lower())
+            if not found:
+                full_name = user_data['fullname']
+                project_slugs = user_data.get('project_slugs')
+                valid, errors = self._valid_user_data(user_data)
+                if not valid:
+                    failed_users += 1
+                    current_app.logger.error(u'Failed to import user {}, {}'
+                        .format(full_name, errors))
+                    try:
+                        for k in errors.keys():
+                            invalid_values.add(k)
+                    except AttributeError as e:
+                        pass
+                    continue
+                user_data['metadata']['admin'] = current_user.name
+                create_account(user_data, project_slugs=project_slugs)
+                n += 1
         if n > 0:
             msg = str(n) + " " + gettext('new users were imported successfully.')
         else:
             msg = gettext('It looks like there were no new users created.')
 
-        if failed_user_import_count:
-            msg += str(failed_user_import_count) + gettext(' user(s) could not be imported due to missing/incorrect user data.')
-            current_app.logger.error(
-                u'Failed to import users\n{0}'
-                .format(",".join(failed_user_imports)))
+        if failed_users:
+            msg += str(failed_users) + gettext(' user import failed for incorrect values of ') + ', '.join(invalid_values) + '.'
         return msg

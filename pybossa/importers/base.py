@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
+from flask.ext.babel import gettext
 
 class BulkImportException(Exception):
 
@@ -51,7 +52,9 @@ class BulkUserImport(object):
     """Class to import users in bulk."""
 
     importer_id = None
-
+    default_vals = dict(
+        user_pref={}, metadata={}, project_slugs=[])
+    reqd_headers = ["name", "fullname", "email_addr", "password", "metadata"]
     def users(self):
         """Return a generator with all the users imported."""
         raise NotImplementedError
@@ -73,14 +76,18 @@ class BulkUserImport(object):
             msg = 'The file you uploaded has incorrect header(s): {0}'.format(','.join(invalid_headers))
             raise BulkImportException(msg)
 
+        missing_reqd_headers = set(self.reqd_headers) - set(headers)
+        if missing_reqd_headers:
+            msg = 'The file you uploaded has missing header(s): {0}' \
+                    .format(', '.join(missing_reqd_headers))
+            raise BulkImportException(msg)
 
     def _import_csv_users(self, csvreader):
         """Import users from CSV."""
         headers = []
         field_header_index = []
         row_number = 0
-        default_vals = dict(
-            user_pref={}, metadata={}, project_slugs=[])
+
         for row in csvreader:
             if not headers:
                 headers = row
@@ -94,16 +101,16 @@ class BulkUserImport(object):
                     field_header_index.append(headers.index(field))
             else:
                 row_number += 1
-                self._check_valid_row_length(row, row_number, headers)
+                self._check_row_values(row, row_number, headers, field_header_index)
                 user_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     col_header = headers[idx]
                     cell = cell.strip()
                     if idx in field_header_index:
-                        if col_header in default_vals:
+                        if col_header in self.default_vals:
                             user_data[col_header] = json.loads(cell) \
                                 if cell else \
-                                default_vals[col_header]
+                                self.default_vals[col_header]
                         else:
                             user_data[col_header] = cell
                     else:
@@ -124,8 +131,25 @@ class BulkUserImport(object):
                           "column %(pos)s.", pos=(position+1))
             raise BulkImportException(msg)
 
-    def _check_valid_row_length(self, row, row_number, headers):
+    def _check_row_values(self, row, row_number, headers, field_header_index):
+        errors = []
         if len(headers) != len(row):
             msg = gettext("The file you uploaded has an extra value on "
                           "row %s." % (row_number+1))
+            raise BulkImportException(msg)
+
+        for idx, cell in enumerate(row):
+            col_header = headers[idx]
+            cell = cell.strip()
+            if not cell and col_header in self.reqd_headers:
+                errors.append('Missing {} value'.format(col_header))
+            elif col_header == 'metadata' and 'user_type' not in cell:
+                errors.append('Missing user_type in metadata')
+            elif cell and col_header in self.default_vals:
+                try:
+                    json.loads(cell)
+                except ValueError:
+                    errors.append('{} value error'.format(col_header))
+        if errors:
+            msg = ', '.join(errors)
             raise BulkImportException(msg)
