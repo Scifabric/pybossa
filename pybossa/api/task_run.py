@@ -79,7 +79,7 @@ class TaskRunAPI(APIBase):
                 taskrun.user_ip = anonymizer.ip(request.remote_addr or
                                                 '127.0.0.1')
                 if taskrun.user_ip is None:
-                    taskrun.user_ip = '127.0.0.1'
+                    taskrun.user_ip = anonymizer.ip('127.0.0.1')
             else:
                 taskrun.user_id = current_user.id
         else:
