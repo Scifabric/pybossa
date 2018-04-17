@@ -676,6 +676,18 @@ def update_project_stats():
                        VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (project.id)
         db.engine.execute(sql_query)
 
+
+def anonymize_ips():
+    """Anonymize all the IPs of the server."""
+    from pybossa.core import anonymizer, task_repo
+
+    taskruns = task_repo.filter_task_runs_by(user_id=None)
+    for tr in taskruns:
+        print "Working on taskrun %s" % tr.id
+        print "From %s to %s" % (tr.user_ip, anonymizer.ip(tr.user_ip))
+        tr.user_ip = anonymizer.ip(tr.user_ip)
+        task_repo.update(tr)
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
