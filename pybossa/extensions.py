@@ -157,5 +157,5 @@ ldap = LDAP()
 import flask_profiler
 
 # IP anonymizer
-from pybossa.anonimizer import Anonymizer
+from pybossa.anonymizer import Anonymizer
 anonymizer = Anonymizer()
