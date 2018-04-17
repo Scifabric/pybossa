@@ -38,6 +38,7 @@ from flask.ext.login import current_user
 import os
 import json
 from pybossa.forms.fields.time_field import TimeField
+from pybossa.forms.fields.select_two import Select2Field
 from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
@@ -604,8 +605,8 @@ class GenericUserImportForm(object):
 
 class UserPrefMetadataForm(Form):
     """Form for admins to add metadata for users."""
-    languages = SelectMultipleField(lazy_gettext('Language(s)'), choices=util.languages(),default="")
-    locations = SelectMultipleField(lazy_gettext('Location(s)'), choices=util.countries(), default="")
+    languages = Select2Field(lazy_gettext('Language(s)'), choices=util.languages(),default="")
+    locations = Select2Field(lazy_gettext('Location(s)'), choices=util.countries(), default="")
     start_time = TimeField(lazy_gettext('Start Time'),
         [TimeFieldsValidator(["end_time", "timezone"],
         message="Start time, End time, and Timezone must be filled out for submission")], default=None)
