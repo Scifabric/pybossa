@@ -484,6 +484,13 @@ class TestTaskrunAPI(TestAPI):
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
 
+        res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
+        tmp = json.loads(res.data)
+        print len(tmp)
+        for tr in tmp:
+            assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
+            assert tr['user_ip'] != '127.0.0.0'
+
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_post(self, guard):
