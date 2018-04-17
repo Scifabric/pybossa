@@ -26,4 +26,4 @@ This exports:
 """
 
 
-__version__ = "1.5.1"  # pragma: no cover
+__version__ = "2.9.2"  # pragma: no cover
