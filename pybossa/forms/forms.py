@@ -43,6 +43,7 @@ from pybossa.sched import sched_variants
 from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
 from pybossa.util import get_file_path_for_import_csv
+from flask import flash
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
