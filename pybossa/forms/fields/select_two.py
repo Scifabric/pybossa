@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2017 SciFabric LTD.
+# Copyright (C) 2018 SciFabric LTD.
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -21,7 +21,7 @@ from wtforms import SelectMultipleField
 class Select2Field(SelectMultipleField):
     '''
     This is a sentinel class that allows you to conditionally render this field
-    type.  The rendering logic must be handled in the client code whic includes
+    type.  The rendering logic must be handled in the client code which includes
     adding the select2 source files.
     '''
     pass
