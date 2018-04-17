@@ -475,6 +475,8 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post('/api/taskrun', data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
+        assert r_taskrun['user_ip'] != '127.0.0.0'
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
