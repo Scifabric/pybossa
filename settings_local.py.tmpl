@@ -275,3 +275,10 @@ LIBSASS_STYLE = 'compressed'
 # TASK_CSV_EXPORT_INFO_KEY = 'key'
 # TASK_RUN_CSV_EXPORT_INFO_KEY = 'key2'
 # RESULT_CSV_EXPORT_INFO_KEY = 'key3'
+
+# A 32 char string for AES encryption of public IPs.
+# NOTE: this is really important, don't use the following one
+# as anyone with the source code of pybossa will be able to reverse
+# the anonymization of the IPs.
+CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
+
