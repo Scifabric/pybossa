@@ -25,12 +25,12 @@ class Sentinel(object):
         self.app = app
         self.master = StrictRedis()
         self.slave = self.master
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
         self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
-                                                  socket_timeout=0.1)
+                                            socket_timeout=0.1)
         redis_db = app.config.get('REDIS_DB') or 0
         redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
         self.master = self.connection.master_for(redis_master, db=redis_db)
