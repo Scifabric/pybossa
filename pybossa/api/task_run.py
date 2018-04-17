@@ -76,7 +76,8 @@ class TaskRunAPI(APIBase):
     def _add_user_info(self, taskrun):
         if taskrun.external_uid is None:
             if current_user.is_anonymous():
-                taskrun.user_ip = anonymizer.ip(request.remote_addr)
+                taskrun.user_ip = anonymizer.ip(request.remote_addr or
+                                                '127.0.0.1')
                 if taskrun.user_ip is None:
                     taskrun.user_ip = '127.0.0.1'
             else:
