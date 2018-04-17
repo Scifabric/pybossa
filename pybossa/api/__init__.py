@@ -228,7 +228,7 @@ def user_progress(project_id=None, short_name=None):
             # used here for task_runs too
             query_attrs = dict(project_id=project.id)
             if current_user.is_anonymous():
-                query_attrs['user_ip'] = (anonymize.ip(request.remote_addr)
+                query_attrs['user_ip'] = (anonymizer.ip(request.remote_addr)
                                           or '127.0.0.1')
             else:
                 query_attrs['user_id'] = current_user.id
