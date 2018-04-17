@@ -356,7 +356,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     from flask import current_app
 
     # cached_projects.get_project(short_name)
-    stats.update_stats(_id, current_app.config.get('GEO'))
+    stats.update_stats(_id)
 
 
 @with_cache_disabled
@@ -367,7 +367,7 @@ def warm_up_stats():  # pragma: no cover
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
                                           get_top5_projects_24_hours,
-                                          get_top5_users_24_hours, get_locs)
+                                          get_top5_users_24_hours)
     n_auth_users()
     n_anon_users()
     n_tasks_site()
@@ -375,7 +375,6 @@ def warm_up_stats():  # pragma: no cover
     n_task_runs_site()
     get_top5_projects_24_hours()
     get_top5_users_24_hours()
-    get_locs()
 
     return True
 
@@ -406,7 +405,7 @@ def warm_cache():  # pragma: no cover
             #if n_task_runs >= 1000 or featured:
             #    # print ("Getting stats for %s as it has %s task runs" %
             #    #        (short_name, n_task_runs))
-            stats.update_stats(_id, app.config.get('GEO'))
+            stats.update_stats(_id)
             projects_cached.append(_id)
 
     # Cache top projects

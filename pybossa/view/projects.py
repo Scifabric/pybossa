@@ -1264,7 +1264,6 @@ def show_stats(short_name):
         auth_pct_taskruns = 0
 
     userStats = dict(
-        geo=current_app.config['GEO'],
         anonymous=dict(
             users=users_stats['n_anon'],
             taskruns=users_stats['n_anon'],

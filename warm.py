@@ -52,7 +52,7 @@ def warm_cache():
                 cached_apps.n_volunteers(id)
                 if n_task_runs >= 1000 or featured:
                     print "Getting stats for %s as it has %s task runs" % (short_name, n_task_runs)
-                    stats.get_stats(id, app.config.get('GEO'))
+                    stats.get_stats(id)
                 apps_cached.append(id)
 
         # Cache top projects
