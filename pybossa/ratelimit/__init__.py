@@ -69,7 +69,7 @@ def get_view_rate_limit():
 
 
 def ratelimit(limit, per, send_x_headers=True,
-              scope_func=lambda: anonymizer.ip(request.remote_addr),
+              scope_func=lambda: anonymizer.ip(request.remote_addr or '127.0.0.1'),
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
     """
