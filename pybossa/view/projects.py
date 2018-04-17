@@ -860,7 +860,7 @@ def presenter(short_name):
 
     def invite_new_volunteers(project, ps):
         user_id = None if current_user.is_anonymous() else current_user.id
-        user_ip = (anonimizer.ip(request.remote_addr)
+        user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
                    if current_user.is_anonymous() else None)
         task = sched.new_task(project.id,
                               project.info.get('sched'),
