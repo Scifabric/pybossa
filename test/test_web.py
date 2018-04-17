@@ -6135,7 +6135,7 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_58_global_stats(self, mock1):
+    def test_58_global_stats(self):
         """Test WEB global stats of the site works"""
         Fixtures.create()
 
@@ -6145,7 +6145,7 @@ class TestWeb(web.Helper):
         assert "General Statistics" in res.data, err_msg
 
     @with_context
-    def test_58_global_stats_json(self, mock1):
+    def test_58_global_stats_json(self):
         """Test WEB global stats JSON of the site works"""
         Fixtures.create()
 
