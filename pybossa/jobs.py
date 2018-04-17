@@ -647,7 +647,6 @@ def send_weekly_stats_project(project_id):
         return "Owner does not want updates by email"
     update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,
-                                                      geo=True,
                                                       period='1 week')
     subject = "Weekly Update: %s" % project.name
 
