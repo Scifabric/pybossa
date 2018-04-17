@@ -79,6 +79,7 @@ def create_app(run_as_server=True):
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
+    anonymizer.init_app(app)
     return app
 
 
@@ -534,6 +535,7 @@ def setup_hooks(app):
                 request.body = get_json_multidict(request)
             except TypeError:
                 abort(400)
+
 
     @app.context_processor
     def _global_template_context():

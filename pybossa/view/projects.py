@@ -35,7 +35,7 @@ from rq import Queue
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, sentinel, db)
+                          csv_exporter, importer, sentinel, db, anonymizer)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -860,8 +860,11 @@ def presenter(short_name):
 
     def invite_new_volunteers(project, ps):
         user_id = None if current_user.is_anonymous() else current_user.id
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(project.id, project.info.get('sched'), user_id, user_ip, 0)
+        user_ip = (anonimizer.ip(request.remote_addr)
+                   if current_user.is_anonymous() else None)
+        task = sched.new_task(project.id,
+                              project.info.get('sched'),
+                              user_id, user_ip, 0)
         return task == [] and ps.overall_progress < 100.0
 
     def respond(tmpl):

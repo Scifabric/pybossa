@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PYBOSSA utils."""
+from yacryptopan import CryptoPAn
 from datetime import timedelta, datetime
 from functools import update_wrapper
 from flask_wtf import Form
@@ -373,8 +374,9 @@ def get_user_id_or_ip():
     """Return the id of the current user if is authenticated.
     Otherwise returns its IP address (defaults to 127.0.0.1).
     """
+    cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
     user_id = current_user.id if current_user.is_authenticated() else None
-    user_ip = request.remote_addr or "127.0.0.1" \
+    user_ip = cp.anonymize(request.remote_addr) or "127.0.0.1" \
         if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
     return dict(user_id=user_id, user_ip=user_ip, external_uid=external_uid)
