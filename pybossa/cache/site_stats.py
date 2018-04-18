@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for site statistics."""
-import pygeoip
 from sqlalchemy.sql import text
 from flask import current_app
 
