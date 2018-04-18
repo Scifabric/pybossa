@@ -24,7 +24,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
-from pybossa.core import db
+from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
 
@@ -475,12 +475,21 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post('/api/taskrun', data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
+        assert r_taskrun['user_ip'] != '127.0.0.0'
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
         err_msg = ("Anonymous users should be only allowed to post \
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
+
+        res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
+        tmp = json.loads(res.data)
+        print len(tmp)
+        for tr in tmp:
+            assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
+            assert tr['user_ip'] != '127.0.0.0'
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
@@ -934,6 +943,8 @@ class TestTaskrunAPI(TestAPI):
         r_taskrun = json.loads(tmp.data)
 
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] != '127.0.0.0', r_taskrun
+        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 

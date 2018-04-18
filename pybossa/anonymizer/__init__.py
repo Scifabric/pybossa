@@ -15,15 +15,17 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PYBOSSA main module.
 
-This exports:
-    * auth: for authorization methods
-    * cache: for caching pages, and methods
-    * view: for web front views
-
-"""
+from yacryptopan import CryptoPAn
 
 
-__version__ = "2.9.2"  # pragma: no cover
+class Anonymizer(object):
+
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:  # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app):
+        cp = CryptoPAn(app.config.get('CRYPTOPAN_KEY'))
+        self.ip = cp.anonymize

@@ -209,23 +209,3 @@ class TestSiteStatsCache(Test):
 
         assert recently_contributing_user.id in top5_ids
         assert long_ago_contributing_user.id not in top5_ids
-
-    @with_context
-    @patch('pybossa.cache.site_stats.current_app')
-    @patch('pybossa.cache.site_stats.pygeoip.GeoIP')
-    def test_get_locs_returns_list_of_locations_with_each_different_ip(self, geoip_mock, current_app):
-        current_app.config = {'GEO': True}
-        geoip_instance = Mock()
-        ip_addr = lambda ip: {"1.1.1.1": {'latitude': 1, 'longitude': 1}, "2.2.2.2": None}.get(ip)
-        geoip_instance.record_by_addr = ip_addr
-        geoip_mock.return_value = geoip_instance
-
-        AnonymousTaskRunFactory.create(user_ip="1.1.1.1")
-        AnonymousTaskRunFactory.create(user_ip="1.1.1.1")
-        AnonymousTaskRunFactory.create(user_ip="2.2.2.2")
-
-        locations = stats.get_locs()
-
-        assert len(locations) == 2, locations
-        assert locations[0]['loc'] == {'latitude': 1, 'longitude': 1}, locations[0]
-        assert locations[1]['loc'] == {'latitude': 0, 'longitude': 0}, locations[1]

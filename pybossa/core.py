@@ -66,7 +66,6 @@ def create_app(run_as_server=True):
     setup_ldap(app)
     setup_external_services(app)
     setup_jinja(app)
-    setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
@@ -79,6 +78,7 @@ def create_app(run_as_server=True):
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
+    anonymizer.init_app(app)
     return app
 
 
@@ -445,18 +445,6 @@ def setup_youtube_importer(app):
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
-def setup_geocoding(app):
-    """Setup geocoding."""
-    # Check if app stats page can generate the map
-    geolite = app.root_path + '/../dat/GeoLiteCity.dat'
-    if not os.path.exists(geolite):  # pragma: no cover
-        app.config['GEO'] = False
-        print("GeoLiteCity.dat file not found")
-        print("Project page stats web map disabled")
-    else:  # pragma: no cover
-        app.config['GEO'] = True
-
-
 def url_for_other_page(page):
     """Setup url for other pages."""
     args = request.view_args.copy()
@@ -534,6 +522,7 @@ def setup_hooks(app):
                 request.body = get_json_multidict(request)
             except TypeError:
                 abort(400)
+
 
     @app.context_processor
     def _global_template_context():

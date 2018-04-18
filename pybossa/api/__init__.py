@@ -38,7 +38,7 @@ from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload
 import pybossa.model as model
-from pybossa.core import csrf, ratelimits, sentinel
+from pybossa.core import csrf, ratelimits, sentinel, anonymizer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
@@ -186,7 +186,8 @@ def _retrieve_new_task(project_id):
         desc = False
 
     user_id = None if current_user.is_anonymous() else current_user.id
-    user_ip = request.remote_addr if current_user.is_anonymous() else None
+    user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
+               if current_user.is_anonymous() else None)
     external_uid = request.args.get('external_uid')
     task = sched.new_task(project_id, project.info.get('sched'),
                           user_id,
@@ -223,10 +224,12 @@ def user_progress(project_id=None, short_name=None):
             project = project_repo.get(project_id)
 
         if project:
-            # For now, keep this version, but wait until redis cache is used here for task_runs too
+            # For now, keep this version, but wait until redis cache is 
+            # used here for task_runs too
             query_attrs = dict(project_id=project.id)
             if current_user.is_anonymous():
-                query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
+                query_attrs['user_ip'] = anonymizer.ip(request.remote_addr or
+                                                       '127.0.0.1')
             else:
                 query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)

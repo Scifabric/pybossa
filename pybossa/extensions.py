@@ -42,7 +42,7 @@ __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'task_repo', 'announcement_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
            'result_repo', 'newsletter', 'importer', 'flickr',
            'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'ldap',
-           'flask_profiler']
+           'flask_profiler', 'anonymizer']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -155,3 +155,7 @@ ldap = LDAP()
 
 # Flask Profiler
 import flask_profiler
+
+# IP anonymizer
+from pybossa.anonymizer import Anonymizer
+anonymizer = Anonymizer()

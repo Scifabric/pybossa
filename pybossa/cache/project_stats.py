@@ -24,7 +24,6 @@ import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
 
-import pygeoip
 import operator
 import time
 import datetime
@@ -473,7 +472,7 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
+def stats_format_users(project_id, users, anon_users, auth_users):
     """Format User Stats into JSON."""
     userStats = dict(label="User Statistics", values=[])
     userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
@@ -493,37 +492,8 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     # Get location for Anonymous users
     top5_anon = []
     top5_auth = []
-    loc_anon = []
-    # Check if the GeoLiteCity.dat exists
-    geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo:
-        if os.path.isfile(geolite) is False:
-            geo = False
-    if geo:  # pragma: no cover
-        gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
-        if geo:  # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None:  # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
-
-    for u in anon_users:
-        if geo:  # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None:  # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+        top5_anon.append(dict(ip=u[0], tasks=u[1]))
 
     for u in auth_users:
         sql = text('''SELECT name, fullname from "user" where id=:id;''')
@@ -534,14 +504,13 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
         top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
     userAnonStats['top5'] = top5_anon[0:5]
-    userAnonStats['locs'] = loc_anon
     userAuthStats['top5'] = top5_auth
 
     return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-def update_stats(project_id, geo=False, period='2 week'):
+def update_stats(project_id, period='2 week'):
     """Update the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
@@ -559,8 +528,7 @@ def update_stats(project_id, geo=False, period='2 week'):
     hours_stats = stats_format_hours(project_id, hours, hours_anon, hours_auth,
                                      max_hours, max_hours_anon, max_hours_auth)
 
-    users_stats = stats_format_users(project_id, users, anon_users, auth_users,
-                                     geo)
+    users_stats = stats_format_users(project_id, users, anon_users, auth_users)
 
     data = dict(dates_stats=dates_stats,
                 hours_stats=hours_stats,
@@ -605,7 +573,7 @@ def update_stats(project_id, geo=False, period='2 week'):
 
 
 @memoize(timeout=FIVE_MINUTES)
-def get_stats(project_id, geo=False, period='2 week', full=False):
+def get_stats(project_id, period='2 week', full=False):
     """Get project's stats."""
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
     if full:

@@ -269,16 +269,11 @@ class TestWeb(web.Helper):
         assert announcement0['id'] == 1
 
     @with_context
-    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    def test_project_stats(self, mock1):
+    def test_project_stats(self):
         """Test WEB project stats page works"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
-        returns = [Mock()]
-        returns[0].GeoIP.return_value = 'gic'
-        returns[0].GeoIP.record_by_addr.return_value = {}
-        mock1.side_effects = returns
 
         project = db.session.query(Project).first()
         user = db.session.query(User).first()
@@ -307,23 +302,12 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, res.status_code
         assert "Distribution" in res.data, res.data
 
-        with patch.dict(self.flask_app.config, {'GEO': True}):
-            url = '/project/%s/stats' % project.short_name
-            res = self.app.get(url)
-            assert_raises(ValueError, json.loads, res.data)
-            assert "GeoLite" in res.data, res.data
-
     @with_context
-    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    def test_project_stats_json(self, mock1):
+    def test_project_stats_json(self):
         """Test WEB project stats page works JSON"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
-        returns = [Mock()]
-        returns[0].GeoIP.return_value = 'gic'
-        returns[0].GeoIP.record_by_addr.return_value = {}
-        mock1.side_effects = returns
 
         project = db.session.query(Project).first()
         user = db.session.query(User).first()
@@ -385,28 +369,27 @@ class TestWeb(web.Helper):
         assert 'secret_key' in data['project'], err_msg
         assert res.status_code == 200, res.status_code
 
-        with patch.dict(self.flask_app.config, {'GEO': True}):
-            url = '/project/%s/stats' % project.short_name
-            res = self.app_get_json(url)
-            data = json.loads(res.data)
-            err_msg = 'Field missing in JSON response'
-            assert 'avg_contrib_time' in data, err_msg
-            assert 'n_completed_tasks' in data, err_msg
-            assert 'n_tasks' in data, err_msg
-            assert 'n_volunteers' in data, err_msg
-            assert 'overall_progress' in data, err_msg
-            assert 'owner' in data, err_msg
-            assert 'pro_features' in data, err_msg
-            assert 'project' in data, err_msg
-            assert 'projectStats' in data, err_msg
-            assert 'userStats' in data, err_msg
-            err_msg = 'Field should not be private'
-            assert 'id' in data['owner'], err_msg
-            assert 'api_key' in data['owner'], err_msg
-            assert 'secret_key' in data['project'], err_msg
-            assert res.status_code == 200, res.status_code
-            err_msg = 'no geo data'
-            assert data['userStats']['geo'] == True, err_msg
+        url = '/project/%s/stats' % project.short_name
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        err_msg = 'Field missing in JSON response'
+        assert 'avg_contrib_time' in data, err_msg
+        assert 'n_completed_tasks' in data, err_msg
+        assert 'n_tasks' in data, err_msg
+        assert 'n_volunteers' in data, err_msg
+        assert 'overall_progress' in data, err_msg
+        assert 'owner' in data, err_msg
+        assert 'pro_features' in data, err_msg
+        assert 'project' in data, err_msg
+        assert 'projectStats' in data, err_msg
+        assert 'userStats' in data, err_msg
+        err_msg = 'Field should not be private'
+        assert 'id' in data['owner'], err_msg
+        assert 'api_key' in data['owner'], err_msg
+        assert 'secret_key' in data['project'], err_msg
+        assert res.status_code == 200, res.status_code
+        err_msg = 'there should not have geo data'
+        assert data['userStats'].get('geo') == None, err_msg
 
 
     @with_context
@@ -6142,8 +6125,7 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude': 0, 'longitude': 0}])
-    def test_58_global_stats(self, mock1):
+    def test_58_global_stats(self):
         """Test WEB global stats of the site works"""
         Fixtures.create()
 
@@ -6152,13 +6134,8 @@ class TestWeb(web.Helper):
         err_msg = "There should be a Global Statistics page of the project"
         assert "General Statistics" in res.data, err_msg
 
-        with patch.dict(self.flask_app.config, {'GEO': True}):
-            res = self.app.get(url, follow_redirects=True)
-            assert "GeoLite" in res.data, res.data
-
     @with_context
-    @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude': 0, 'longitude': 0}])
-    def test_58_global_stats_json(self, mock1):
+    def test_58_global_stats_json(self):
         """Test WEB global stats JSON of the site works"""
         Fixtures.create()
 
@@ -6166,13 +6143,9 @@ class TestWeb(web.Helper):
         res = self.app_get_json(url)
         err_msg = "There should be a Global Statistics page of the project"
         data = json.loads(res.data)
-        keys = ['locs', 'projects', 'show_locs', 'stats', 'tasks', 'top5_projects_24_hours', 'top5_users_24_hours', 'users']
+        keys = ['projects', 'show_locs', 'stats', 'tasks', 'top5_projects_24_hours', 'top5_users_24_hours', 'users']
         assert keys.sort() == data.keys().sort(), keys
 
-
-        with patch.dict(self.flask_app.config, {'GEO': True}):
-            res = self.app.get(url, follow_redirects=True)
-            assert "GeoLite" in res.data, res.data
 
     @with_context
     def test_59_help_api(self):

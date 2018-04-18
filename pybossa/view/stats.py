@@ -50,12 +50,6 @@ def index():
 
     top5_users_24_hours = site_stats.get_top5_users_24_hours()
 
-    locs = site_stats.get_locs()
-
-    show_locs = False
-    if len(locs) > 0:
-        show_locs = True
-
     stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
                  n_published_projects=n_published_projects,
                  n_draft_projects=n_draft_projects,
@@ -83,8 +77,7 @@ def index():
                     users=json.dumps(users),
                     projects=json.dumps(projects),
                     tasks=json.dumps(tasks),
-                    locs=json.dumps(locs),
-                    show_locs=show_locs,
+                    show_locs=False,
                     top5_users_24_hours=top5_users_24_hours,
                     top5_projects_24_hours=top5_projects_24_hours,
                     stats=stats)
