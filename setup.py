@@ -18,7 +18,6 @@ requirements = [
     "rsa>=3.4.2",
     "markdown>=2.4, <3.0",
     "psycopg2>=2.5.2, <3.0",
-    "pygeoip>=0.3.1, <1.0",
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
     "pyOpenSSL>=16.2",                  # fix for python below 2.7.9

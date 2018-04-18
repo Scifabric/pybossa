@@ -269,16 +269,11 @@ class TestWeb(web.Helper):
         assert announcement0['id'] == 1
 
     @with_context
-    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    def test_project_stats(self, mock1):
+    def test_project_stats(self):
         """Test WEB project stats page works"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
-        returns = [Mock()]
-        returns[0].GeoIP.return_value = 'gic'
-        returns[0].GeoIP.record_by_addr.return_value = {}
-        mock1.side_effects = returns
 
         project = db.session.query(Project).first()
         user = db.session.query(User).first()
@@ -308,16 +303,11 @@ class TestWeb(web.Helper):
         assert "Distribution" in res.data, res.data
 
     @with_context
-    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
-    def test_project_stats_json(self, mock1):
+    def test_project_stats_json(self):
         """Test WEB project stats page works JSON"""
         res = self.register()
         res = self.signin()
         res = self.new_project(short_name="igil")
-        returns = [Mock()]
-        returns[0].GeoIP.return_value = 'gic'
-        returns[0].GeoIP.record_by_addr.return_value = {}
-        mock1.side_effects = returns
 
         project = db.session.query(Project).first()
         user = db.session.query(User).first()
