@@ -61,7 +61,7 @@ class User(db.Model, DomainObject, UserMixin):
     newsletter_prompted = Column(Boolean, default=False)
     valid_email = Column(Boolean, default=False)
     confirmation_email_sent = Column(Boolean, default=False)
-    subscribed = Column(Boolean, default=True)
+    subscribed = Column(Boolean, default=False)
     consent = Column(Boolean, default=False)
     info = Column(MutableDict.as_mutable(JSONB), default=dict())
     user_pref = Column(JSONB)
