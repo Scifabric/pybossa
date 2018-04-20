@@ -186,7 +186,7 @@ def delete_memoized(function, *args, **kwargs):
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
             return bool(sentinel.master.delete(key))
-        keys_to_delete = keys(sentinel.slave, pattern=key + '*')
+        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
@@ -204,7 +204,7 @@ def delete_memoized_essential(function, *args, **kwargs):
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key += get_key_to_hash(*args, **kwargs)
-        keys_to_delete = keys(sentinel.slave, pattern=key + '*')
+        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
