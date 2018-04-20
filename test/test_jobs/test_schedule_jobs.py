@@ -20,7 +20,7 @@ import settings_test
 from pybossa.jobs import schedule_job
 from rq_scheduler import Scheduler
 from redis.sentinel import Sentinel
-
+from redis import StrictRedis
 
 def a_function():
     return
@@ -37,9 +37,13 @@ class TestSetupScheduledJobs(object):
     """Tests for setup function 'schedule_job'"""
 
     def setUp(self):
-        sentinel = Sentinel(settings_test.REDIS_SENTINEL)
         db = getattr(settings_test, 'REDIS_DB', 0)
-        self.connection = sentinel.master_for('mymaster', db=db)
+        if all(hasattr(settings_test, attr) for attr in ['REDIS_MASTER_DNS', 'REDIS_PORT']):
+            self.connection = StrictRedis(host=settings_test.REDIS_MASTER_DNS,
+                port=settings_test.REDIS_PORT, db=db)
+        else:
+            sentinel = Sentinel(settings_test.REDIS_SENTINEL)
+            self.connection = sentinel.master_for('mymaster', db=db)
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 

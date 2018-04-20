@@ -18,7 +18,6 @@
 
 from redis import sentinel, StrictRedis
 
-
 class Sentinel(object):
 
     def __init__(self, app=None):
@@ -29,13 +28,20 @@ class Sentinel(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
-                                                  socket_timeout=0.1)
         redis_db = app.config.get('REDIS_DB') or 0
-        redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
-        self.master = self.connection.master_for(redis_master, db=redis_db)
-        self.slave = self.connection.slave_for(redis_master, db=redis_db)
-
+        if app.config.get('REDIS_MASTER_DNS') and \
+            app.config.get('REDIS_SLAVE_DNS') and \
+            app.config.get('REDIS_PORT'):
+            self.master = StrictRedis(host=app.config['REDIS_MASTER_DNS'],
+                port=app.config['REDIS_PORT'], db=redis_db)
+            self.slave = StrictRedis(host=app.config['REDIS_SLAVE_DNS'],
+                port=app.config['REDIS_PORT'], db=redis_db)
+        else:
+            self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
+                                                      socket_timeout=0.1)
+            redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
+            self.master = self.connection.master_for(redis_master, db=redis_db)
+            self.slave = self.connection.slave_for(redis_master, db=redis_db)
 
 def scan_iter(conn, match, count=None):
     cursor = 0

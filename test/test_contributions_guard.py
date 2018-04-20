@@ -17,17 +17,27 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import settings_test
-from redis.sentinel import Sentinel
+from pybossa.sentinel import Sentinel
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model.task import Task
 from mock import patch
+
+class FakeApp(object):
+    def __init__(self):
+        if all(hasattr(settings_test, attr) for attr in 
+            ['REDIS_MASTER_DNS', 'REDIS_SLAVE_DNS', 'REDIS_PORT']):
+            self.config = dict(REDIS_MASTER_DNS=settings_test.REDIS_MASTER_DNS,
+                REDIS_SLAVE_DNS=settings_test.REDIS_SLAVE_DNS,
+                REDIS_PORT=settings_test.REDIS_PORT)
+        else:
+            self.config = { 'REDIS_SENTINEL': settings_test.REDIS_SENTINEL }
 
 class TestContributionsGuard(object):
 
     def setUp(self):
         db = getattr(settings_test, 'REDIS_DB', 0)
-        sentinel = Sentinel(settings_test.REDIS_SENTINEL)
-        self.connection = sentinel.master_for('mymaster', db=db)
+        sentinel = Sentinel(app=FakeApp())
+        self.connection = sentinel.master
         self.connection.flushall()
         self.guard = ContributionsGuard(self.connection)
         self.anon_user = {'user_id': None, 'user_ip': '127.0.0.1'}
