@@ -4,11 +4,13 @@ import re
 from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 import boto
+from boto.s3.key import Key
 from flask import current_app as app
 from werkzeug.utils import secure_filename
 import magic
 from werkzeug.exceptions import BadRequest, InternalServerError
 from pybossa.uploader.s3_connection import CustomConnection
+from pybossa.uploader.cloud_jwt import create_jwt
 
 allowed_mime_types = ['application/pdf',
                       'text/csv',
@@ -24,6 +26,15 @@ allowed_mime_types = ['application/pdf',
                       'image/bmp',
                       'image/x-ms-bmp',
                       'image/gif']
+
+
+class NoChecksumKey(Key):
+
+    def should_retry(self, response, chunked_transfer=False):
+        perform_checksum = app.config.get('CLOUDSTORE_CHECKSUM', True)
+        if not perform_checksum and 200 <= response.status <= 299:
+            return True
+        return super(Key, self).should_retry(self, response, chunked_transfer)
 
 
 def check_type(filename):
@@ -53,7 +64,7 @@ def tmp_file_from_string(string):
 
 
 def s3_upload_from_string(s3_bucket, string, filename, headers=None,
-                          directory="", file_type_check=True,
+                          directory='', file_type_check=True,
                           return_key_only=False):
     """
     Upload a string to s3
@@ -64,13 +75,14 @@ def s3_upload_from_string(s3_bucket, string, filename, headers=None,
             return_key_only)
 
 
-def s3_upload_file_storage(s3_bucket, source_file, directory='',
+def s3_upload_file_storage(s3_bucket, source_file, headers=None, directory='',
                            file_type_check=True, return_key_only=False):
     """
     Upload a werzkeug FileStorage content to s3
     """
     filename = source_file.filename
-    headers = {'Content-Type': source_file.content_type}
+    headers = headers or {}
+    headers['Content-Type'] = source_file.content_type
     tmp_file = NamedTemporaryFile(delete=False)
     source_file.save(tmp_file.name)
     return s3_upload_tmp_file(
@@ -126,7 +138,13 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     conn = create_connection()
     bucket = conn.get_bucket(s3_bucket, validate=False)
 
-    key = bucket.new_key(upload_key)
+    key = NoChecksumKey(bucket, upload_key)
+
+    if app.config.get('W_JWT'):
+        headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+                                    app.config['JWT_SECRET'],
+                                    'PUT', s3_bucket, key)
+
     key.set_contents_from_filename(
         source_file_name, headers=headers,
         policy='bucket-owner-full-control')
@@ -146,16 +164,26 @@ def get_s3_bucket_key(s3_bucket, s3_url):
     return bucket, key
 
 
-def get_file_from_s3(s3_bucket, s3_url):
+def get_file_from_s3(s3_bucket, path):
+    headers = {}
     temp_file = NamedTemporaryFile()
-    _, key = get_s3_bucket_key(s3_bucket, s3_url)
-    key.get_contents_to_filename(temp_file.name)
+    _, key = get_s3_bucket_key(s3_bucket, path)
+    if app.config.get('W_JWT'):
+        headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+                                    app.config['JWT_SECRET'],
+                                    'GET', s3_bucket, key)
+    key.get_contents_to_filename(temp_file.name, headers=headers)
     return temp_file
 
 
 def delete_file_from_s3(s3_bucket, s3_url):
+    headers = {}
     try:
         bucket, key = get_s3_bucket_key(s3_bucket, s3_url)
-        bucket.delete_key(key.name, version_id=key.version_id)
+        if app.config.get('W_JWT'):
+            headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+                                        app.config['JWT_SECRET'],
+                                        'GET', s3_bucket, key)
+        bucket.delete_key(key.name, version_id=key.version_id, headers=headers)
     except boto.exception.S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))

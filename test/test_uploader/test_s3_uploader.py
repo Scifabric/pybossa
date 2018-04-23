@@ -106,7 +106,7 @@ class TestS3Uploader(Test):
             'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
         }):
             delete_file_from_s3('test_bucket', '/the/key')
-            delete_key.assert_called_with('/the/key', version_id=None)
+            delete_key.assert_called_with('/the/key', headers={}, version_id=None)
 
     @with_context
     @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
