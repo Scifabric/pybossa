@@ -1,14 +1,14 @@
 """unsubscribe gdpr
 
 Revision ID: d5b07c8f0893
-Revises: 6f137b29f917
+Revises: d317dc38cf39
 Create Date: 2018-04-20 11:31:48.786659
 
 """
 
 # revision identifiers, used by Alembic.
 revision = 'd5b07c8f0893'
-down_revision = '6f137b29f917'
+down_revision = 'd317dc38cf39'
 
 from alembic import op
 import sqlalchemy as sa
