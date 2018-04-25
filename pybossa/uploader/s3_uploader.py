@@ -34,7 +34,7 @@ class NoChecksumKey(Key):
         perform_checksum = app.config.get('CLOUDSTORE_CHECKSUM', True)
         if not perform_checksum and 200 <= response.status <= 299:
             return True
-        return super(Key, self).should_retry(self, response, chunked_transfer)
+        return super(NoChecksumKey, self).should_retry(response, chunked_transfer)
 
 
 def check_type(filename):
@@ -70,6 +70,7 @@ def s3_upload_from_string(s3_bucket, string, filename, headers=None,
     Upload a string to s3
     """
     tmp_file = tmp_file_from_string(string)
+    headers = headers or {}
     return s3_upload_tmp_file(
             s3_bucket, tmp_file, filename, headers, directory, file_type_check,
             return_key_only)
@@ -140,7 +141,7 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
 
     key = NoChecksumKey(bucket, upload_key)
 
-    if app.config.get('W_JWT'):
+    if app.config.get('JWT_CONFIG'):
         headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                     app.config['JWT_SECRET'],
                                     'PUT', s3_bucket, key)
@@ -168,7 +169,7 @@ def get_file_from_s3(s3_bucket, path):
     headers = {}
     temp_file = NamedTemporaryFile()
     _, key = get_s3_bucket_key(s3_bucket, path)
-    if app.config.get('W_JWT'):
+    if app.config.get('JWT_CONFIG'):
         headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                     app.config['JWT_SECRET'],
                                     'GET', s3_bucket, key)
@@ -180,7 +181,7 @@ def delete_file_from_s3(s3_bucket, s3_url):
     headers = {}
     try:
         bucket, key = get_s3_bucket_key(s3_bucket, s3_url)
-        if app.config.get('W_JWT'):
+        if app.config.get('JWT_CONFIG'):
             headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                         app.config['JWT_SECRET'],
                                         'GET', s3_bucket, key)
