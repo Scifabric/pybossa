@@ -22,7 +22,7 @@ from pybossa.cache import (get_key_to_hash, get_hash_key, cache, memoize,
                            delete_cached, delete_memoized, memoize_essentials,
                            delete_memoized_essential)
 from pybossa.sentinel import Sentinel
-from settings_test import REDIS_SENTINEL, REDIS_KEYPREFIX
+import settings_test
 
 
 
@@ -66,7 +66,13 @@ class TestCacheHashFunctions(object):
 
 class FakeApp(object):
     def __init__(self):
-        self.config = { 'REDIS_SENTINEL': REDIS_SENTINEL }
+        if all(hasattr(settings_test, attr) for attr in
+            ['REDIS_MASTER_DNS', 'REDIS_SLAVE_DNS', 'REDIS_PORT']):
+            self.config = dict(REDIS_MASTER_DNS=settings_test.REDIS_MASTER_DNS,
+                REDIS_SLAVE_DNS=settings_test.REDIS_SLAVE_DNS,
+                REDIS_PORT=settings_test.REDIS_PORT)
+        else:
+            self.config = { 'REDIS_SENTINEL': settings_test.REDIS_SENTINEL }
 
 test_sentinel = Sentinel(app=FakeApp())
 
@@ -100,7 +106,7 @@ class TestCacheMemoizeFunctions(object):
         def my_func():
             return 'my_func was called'
         my_func()
-        key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
+        key = "%s::%s" % (settings_test.REDIS_KEYPREFIX, 'my_cached_func')
 
         assert test_sentinel.master.keys() == [key], test_sentinel.master.keys()
 
@@ -142,7 +148,7 @@ class TestCacheMemoizeFunctions(object):
         def my_func(*args, **kwargs):
             return [args, kwargs]
         my_func('arg')
-        key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
+        key_pattern = "%s:%s_args:*" % (settings_test.REDIS_KEYPREFIX, my_func.__name__)
 
         assert len(test_sentinel.master.keys(key_pattern)) == 1
 
@@ -156,7 +162,7 @@ class TestCacheMemoizeFunctions(object):
             return [args, kwargs]
         my_func('arg')
         my_func('arg')
-        key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
+        key_pattern = "%s:%s_args:*" % (settings_test.REDIS_KEYPREFIX, my_func.__name__)
 
         assert len(test_sentinel.master.keys(key_pattern)) == 1
 
@@ -168,7 +174,7 @@ class TestCacheMemoizeFunctions(object):
         @memoize()
         def my_func(*args, **kwargs):
             return [args, kwargs]
-        key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
+        key_pattern = "%s:%s_args:*" % (settings_test.REDIS_KEYPREFIX, my_func.__name__)
         my_func('arg')
         assert len(test_sentinel.master.keys(key_pattern)) == 1
         my_func('another_arg')
@@ -217,7 +223,7 @@ class TestCacheMemoizeFunctions(object):
         @cache(key_prefix='my_cached_func')
         def my_func():
             return 'my_func was called'
-        key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
+        key = "%s::%s" % (settings_test.REDIS_KEYPREFIX, 'my_cached_func')
         my_func()
         assert test_sentinel.master.keys() == [key]
 
@@ -232,7 +238,7 @@ class TestCacheMemoizeFunctions(object):
         @cache(key_prefix='my_cached_func')
         def my_func():
             return 'my_func was called'
-        key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
+        key = "%s::%s" % (settings_test.REDIS_KEYPREFIX, 'my_cached_func')
         assert test_sentinel.master.keys() == []
 
         delete_succedeed = delete_cached('my_cached_func')

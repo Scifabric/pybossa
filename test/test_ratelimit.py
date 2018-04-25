@@ -34,7 +34,7 @@ class TestAPI(object):
     app = flask_app.test_client()
 
     def setUp(self):
-        sentinel.connection.master_for('mymaster').flushall()
+        sentinel.master.flushall()
 
     limit = flask_app.config.get('LIMIT')
 

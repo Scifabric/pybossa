@@ -292,7 +292,7 @@ class Test(object):
         db.session.commit()
 
     def redis_flushall(self):
-        sentinel.connection.master_for('mymaster').flushall()
+        sentinel.master.flushall()
 
     def set_proj_passwd_cookie(self, project, user=None, username=None):
         from pybossa.core import user_repo
@@ -475,7 +475,7 @@ class Fixtures:
 
     @classmethod
     def redis_flushall(cls):
-        sentinel.connection.master_for('mymaster').flushall()
+        sentinel.master.flushall()
 
 def assert_not_raises(exception, call, *args, **kwargs):
     try:
