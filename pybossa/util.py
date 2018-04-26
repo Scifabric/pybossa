@@ -783,112 +783,6 @@ class AttrDict(OrderedDict):
         return self
 
 
-def timezones():
-    tz = [("", ""), ("ACT", "Australia Central Time"),
-        ("AET", "Australia Eastern Time"),
-        ("AGT", "Argentina Standard Time"),
-        ("ART", "(Arabic) Egypt Standard Time"),
-        ("AST", "Alaska Standard Time"),
-        ("BET", "Brazil Eastern Time"),
-        ("BST", "Bangladesh Standard Time"),
-        ("CAT", "Central African Time"),
-        ("CNT", "Canada Newfoundland Time"),
-        ("CST", "Central Standard Time"),
-        ("CTT", "China Taiwan Time"),
-        ("EAT", "Eastern African Time"),
-        ("ECT", "European Central Time"),
-        ("EET", "Eastern European Time"),
-        ("EST", "Eastern Standard Time"),
-        ("GMT", "Greenwich Mean Time"),
-        ("HST", "Hawaii Standard Time"),
-        ("IET", "Indiana Eastern Standard Time"),
-        ("IST", "India Standard Time"),
-        ("JST", "Japan Standard Time"),
-        ("MET", "Middle East Time"),
-        ("MIT", "Midway Islands Time"),
-        ("MST", "Mountain Standard Time"),
-        ("NET", "Near East Time"),
-        ("NST", "New Zealand Standard Time"),
-        ("PLT", "Pakistan Lahore Time"),
-        ("PNT", "Phoenix Standard Time"),
-        ("PRT", "Puerto Rick and US Virgin Islands Time"),
-        ("PST", "Pacific Standard Time"),
-        ("SST", "Solomon Standard Time"),
-        ("UTC", "Universal Coordinated Time"),
-        ("VST", "Vietnam Standard Time")]
-    return tz
-
-
-def languages():
-    langs = [("Afrikaans", "Afrikaans"),
-        ("Albanian", "Albanian"),
-        ("Arabic", "Arabic"),
-        ("Armenian", "Armenian"),
-        ("Bengali", "Bengali"),
-        ("Bosnian", "Bosnian"),
-        ("Bulgarian", "Bulgarian"),
-        ("Catalan", "Catalan"),
-        ("Croatian", "Croatian"),
-        ("Czech", "Czech"),
-        ("Danish", "Danish"),
-        ("Dutch", "Dutch"),
-        ("English", "English"),
-        ("Estonian", "Estonian"),
-        ("Filipino", "Filipino"),
-        ("Finnish", "Finnish"),
-        ("French", "French"),
-        ("German", "German"),
-        ("Greek", "Greek"),
-        ("Hebrew", "Hebrew"),
-        ("Hindi", "Hindi"),
-        ("Hungarian", "Hungarian"),
-        ("Icelandic", "Icelandic"),
-        ("Indonesian", "Indonesian"),
-        ("Italian", "Italian"),
-        ("Japanese", "Japanese"),
-        ("Korean", "Korean"),
-        ("Latvian", "Latvian"),
-        ("Lithuanian", "Lithuanian"),
-        ("Luxembourgish", "Luxembourgish"),
-        ("Macedonian", "Macedonian"),
-        ("Malay", "Malay"),
-        ("Maltese", "Maltese"),
-        ("Mongolian", "Mongolian"),
-        ("Norwegian", "Norwegian"),
-        ("Polish", "Polish"),
-        ("Portuguese", "Portuguese"),
-        ("Punjabi", "Punjabi"),
-        ("Romanian", "Romanian"),
-        ("Russian", "Russian"),
-        ("Samoan", "Samoan"),
-        ("Serbian", "Serbian"),
-        ("Simplified Chinese", "Simplified Chinese"),
-        ("Slovak", "Slovak"),
-        ("Slovenian", "Slovenian"),
-        ("Spanish", "Spanish"),
-        ("Swedish", "Swedish"),
-        ("Tamil", "Tamil"),
-        ("Thai", "Thai"),
-        ("Traditional Chinese", "Traditional Chinese"),
-        ("Turkish", "Turkish"),
-        ("Ukrainian", "Ukrainian"),
-        ("Vietnamese", "Vietnamese"),
-        ("Welsh", "Welsh")]
-
-    valid_user_preferences['languages'] = [v[0] for v in langs]
-    return langs
-
-
-def countries():
-    cts = []
-    for ct in pycountry.countries:
-        name = ct.name.encode('ascii', 'ignore').replace("'", "")
-        cts.append((name, name))
-    cts = sorted(cts)
-    valid_user_preferences['locations'] = [v[0] for v in cts]
-    return cts
-
-
 def check_password_strength(
         password, min_len=8, max_len=15,
         uppercase=True, lowercase=True,
@@ -1056,9 +950,12 @@ def get_user_pref_db_clause(user_pref):
     return ' OR '.join(sql_strings)
 
 def get_valid_user_preferences():
-    if not valid_user_preferences:
-        languages()
-        countries()
+    from pybossa.core import upref_mdata_choices
+
+    if not valid_user_preferences and \
+        current_app.config.upref_mdata:
+            for user_pref, values in upref_mdata_choices.iteritems():
+                valid_user_preferences[user_pref] = [v[0] for v in values]
     return valid_user_preferences
 
 def validate_required_fields(data):

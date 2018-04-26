@@ -240,17 +240,17 @@ def validate_user_preferences(user_pref):
             raise ValueError('invalid user preference keys')
 
     valid_user_preferences = get_valid_user_preferences()
-    valid_languages = valid_user_preferences['languages']
-    valid_locations = valid_user_preferences['locations']
+    valid_languages = valid_user_preferences.get('languages')
+    valid_locations = valid_user_preferences.get('locations')
 
-    lang = user_pref['languages']
-    loc = user_pref['locations']
+    lang = user_pref.get('languages')
+    loc = user_pref.get('locations')
 
-    if lang and not all(x in valid_languages for x in lang):
+    if lang and valid_languages and not all(x in valid_languages for x in lang):
         raise ValueError('invalid languages user preference: {}'
                         .format(lang))
 
-    if loc and not all(x in valid_locations for x in loc):
+    if loc and valid_locations and not all(x in valid_locations for x in loc):
         raise ValueError('invalid locations user preference: {}'
                         .format(loc))
 

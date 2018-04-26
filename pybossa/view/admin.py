@@ -41,7 +41,7 @@ from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_invitation_email_for_admins_subadmins
-from pybossa.util import generate_manage_user_email, countries, languages, timezones
+from pybossa.util import generate_manage_user_email
 from pybossa.util import can_update_user_info, can_have_super_user_access
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
@@ -179,7 +179,7 @@ def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
                              'created', 'admin', 'subadmin', 'enabled', 'languages',
-                             'locations', 'start_time', 'end_time',
+                             'locations', 'work_hours_from', 'work_hours_to',
                              'timezone', 'type_of_user', 'additional_comments',
                              'total_projects_contributed', 'completed_tasks',
                              'percentage_tasks_completed', 'first_submission_date',
@@ -776,11 +776,16 @@ def userimport():
 @admin_or_subadmin_required
 def manageusers():
     """Enable/disable users of PyBossa."""
+    from pybossa.core import upref_mdata_choices
+
     found = []
-    locs = countries()
-    langs = languages()
-    utypes = current_app.config.get('USER_TYPES', [('','')])
-    timezone = [time[0] for time in timezones()]
+    locs = langs = utypes = timezone = [('', '')]
+    if current_app.config.upref_mdata:
+        locs = upref_mdata_choices['locations']
+        langs = upref_mdata_choices['languages']
+        utypes = upref_mdata_choices['user_types']
+        timezone = upref_mdata_choices['timezones']
+
     args = request.args
     form = SearchForm(request.form)
 

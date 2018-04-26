@@ -606,21 +606,35 @@ class GenericUserImportForm(object):
 
 class UserPrefMetadataForm(Form):
     """Form for admins to add metadata for users."""
-    languages = Select2Field(lazy_gettext('Language(s)'), choices=util.languages(),default="")
-    locations = Select2Field(lazy_gettext('Location(s)'), choices=util.countries(), default="")
-    start_time = TimeField(lazy_gettext('Start Time'),
-        [TimeFieldsValidator(["end_time", "timezone"],
-        message="Start time, End time, and Timezone must be filled out for submission")], default=None)
-    end_time = TimeField(lazy_gettext('End Time'),
-        [TimeFieldsValidator(["start_time", "timezone"],
-        message="Start time, End time, and Timezone must be filled out for submission")], default=None)
+    languages = Select2Field(
+        lazy_gettext('Language(s)'), choices=[],default="")
+    locations = Select2Field(
+        lazy_gettext('Location(s)'), choices=[], default="")
+    work_hours_from = TimeField(
+        lazy_gettext('Work Hours From'),
+        [TimeFieldsValidator(["work_hours_to", "timezone"],
+        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+        default='')
+    work_hours_to = TimeField(
+        lazy_gettext('Work Hours To'),
+        [TimeFieldsValidator(["work_hours_from", "timezone"],
+        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+        default='')
     timezone = SelectField(lazy_gettext('Timezone'),
-        [TimeFieldsValidator(["start_time", "end_time"],
-        message="Start time, End time, and Timezone must be filled out for submission")],
-        choices=util.timezones(), default="")
-    user_type = SelectField(lazy_gettext('Type of user'), [validators.Required()], choices=[], default="")
-    review = TextAreaField(lazy_gettext('Additional comments'), default="")
+        [TimeFieldsValidator(["work_hours_from", "work_hours_to"],
+        message="Work Hours From, Work Hours To, and Timezone must be filled out for submission")],
+        choices=[], default="")
+    user_type = SelectField(
+        lazy_gettext('Type of user'), [validators.Required()], choices=[], default="")
+    review = TextAreaField(
+        lazy_gettext('Additional comments'), default="")
 
+    def set_upref_mdata_choices(self):
+        from pybossa.core import upref_mdata_choices
+        self.languages.choices = upref_mdata_choices['languages']
+        self.locations.choices = upref_mdata_choices['locations']
+        self.timezone.choices = upref_mdata_choices['timezones']
+        self.user_type.choices = upref_mdata_choices['user_types']
 
 class TransferOwnershipForm(Form):
     email_addr = EmailField(lazy_gettext('Email of the new owner'))

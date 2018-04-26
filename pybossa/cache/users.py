@@ -344,7 +344,7 @@ def get_users_for_report():
     sql = text("""
                 SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled, locale,
                 subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
-                u.info->'metadata'->'start_time' AS start_time, u.info->'metadata'->'end_time' AS end_time,
+                u.info->'metadata'->'work_hours_from' AS work_hours_from, u.info->'metadata'->'work_hours_to' AS work_hours_to,
                 u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
                 u.info->'metadata'->'review' AS additional_comments,
                 MIN(finish_time) AS first_submission_date,
@@ -359,8 +359,8 @@ def get_users_for_report():
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created, locale=row.locale,
                     admin=row.admin, subadmin=row.subadmin, enabled=row.enabled, languages=row.languages,
-                    locations=row.locations, start_time=row.start_time,
-                    end_time=row.end_time, timezone=row.timezone,
+                    locations=row.locations, work_hours_from=row.work_hours_from,
+                    work_hours_to=row.work_hours_to, timezone=row.timezone,
                     additional_comments=row.additional_comments,
                     type_of_user=row.type_of_user, first_submission_date=row.first_submission_date,
                     last_submission_date=row.last_submission_date,
@@ -383,7 +383,7 @@ def get_project_report_userdata(project_id):
             '''
             SELECT id as u_id, name, fullname, email_addr, admin, subadmin, enabled,
             user_pref->'languages' AS languages, user_pref->'locations' AS locations,
-            info->'metadata'->'start_time' AS start_time, info->'metadata'->'end_time' AS end_time,
+            info->'metadata'->'work_hours_from' AS work_hours_from, info->'metadata'->'work_hours_to' AS work_hours_to,
             info->'metadata'->'timezone' AS timezone, info->'metadata'->'user_type' AS type_of_user,
             info->'metadata'->'review' AS additional_comments,
             (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS completed_tasks,
@@ -400,7 +400,7 @@ def get_project_report_userdata(project_id):
     users_report = [
         [row.u_id, row.name, row.fullname, row.email_addr,
          row.admin, row.subadmin, row.enabled, row.languages,
-         row.locations, row.start_time, row.end_time,
+         row.locations, row.work_hours_from, row.work_hours_to,
          row.timezone, row.type_of_user, row.additional_comments,
          row.completed_tasks, row.percent_completed_tasks,
          row.first_submission_date, row.last_submission_date,

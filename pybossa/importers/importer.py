@@ -229,8 +229,8 @@ class UserImporter(object):
         form_data['project_slug'] = form_data.pop('project_slugs', [])
 
         form = RegisterFormWithUserPrefMetadata(MultiDict(form_data))
+        form.set_upref_mdata_choices()
         form.project_slug.choices = get_project_choices()
-        form.user_type.choices = current_app.config.get('USER_TYPES')
         return form.validate(), form.errors
 
     def create_users(self, user_repo, **form_data):
@@ -263,9 +263,9 @@ class UserImporter(object):
                 create_account(user_data, project_slugs=project_slugs)
                 n += 1
         if n > 0:
-            msg = str(n) + " " + gettext('new users were imported successfully.')
+            msg = str(n) + " " + gettext('new users were imported successfully. ')
         else:
-            msg = gettext('It looks like there were no new users created.')
+            msg = gettext('It looks like there were no new users created. ')
 
         if failed_users:
             msg += str(failed_users) + gettext(' user import failed for incorrect values of ') + ', '.join(invalid_values) + '.'
