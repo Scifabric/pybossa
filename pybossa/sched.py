@@ -428,6 +428,10 @@ def sched_variants():
             ]
 
 
+def randomizable_scheds():
+    return [Schedulers.locked, Schedulers.user_pref]
+
+
 def _set_orderby_desc(query, orderby, descending):
     """Set order by to query."""
     if orderby == 'fav_user_ids':

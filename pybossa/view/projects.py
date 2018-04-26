@@ -1894,7 +1894,8 @@ def task_scheduler(short_name):
                         form=form,
                         project=project_sanitized,
                         owner=owner_sanitized,
-                        pro_features=pro)
+                        pro_features=pro,
+                        randomizable_scheds=sched.randomizable_scheds())
         return handle_content_type(response)
 
     ensure_authorized_to('read', project)
