@@ -293,7 +293,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
            AND task.project_id=:project_id
            AND ({0})
            AND task.state !='completed'
-           group by task.id ORDER BY priority_0 DESC, {}
+           group by task.id ORDER BY priority_0 DESC, {1}
            LIMIT :limit; '''.format(user_pref_list, secondary_order)
     return text(sql)
 
