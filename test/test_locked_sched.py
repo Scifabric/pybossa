@@ -19,7 +19,7 @@
 from helper import sched
 from pybossa.core import project_repo
 from factories import TaskFactory, ProjectFactory, UserFactory
-from pybossa.sched import Schedulers, get_key
+from pybossa.sched import Schedulers, get_task_users_key
 from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
 from default import with_context
@@ -111,5 +111,5 @@ class TestLockedSched(sched.Helper):
         self.signout()
 
         key_args = [args[0] for args, kwargs in release_lock.call_args_list]
-        assert get_key(task1.id) in key_args
-        assert get_key(task2.id) in key_args
+        assert get_task_users_key(task1.id) in key_args
+        assert get_task_users_key(task2.id) in key_args

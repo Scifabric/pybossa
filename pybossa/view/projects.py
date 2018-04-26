@@ -1906,6 +1906,7 @@ def task_scheduler(short_name):
                 if project.info['sched'] == s[0]:
                     form.sched.data = s[0]
                     break
+        form.rand_within_priority.data = project.info.get('sched_rand_within_priority', False)
         return respond()
 
     if request.method == 'POST' and form.validate():
@@ -1916,6 +1917,7 @@ def task_scheduler(short_name):
             old_sched = 'default'
         if form.sched.data:
             project.info['sched'] = form.sched.data
+        project.info['sched_rand_within_priority'] = form.rand_within_priority.data
         project_repo.save(project)
         # Log it
         if old_sched != project.info['sched']:

@@ -177,6 +177,7 @@ class TaskSchedulerForm(Form):
     _translate_names = lambda variant: (variant[0], lazy_gettext(variant[1]))
     _choices = map(_translate_names, sched_variants())
     sched = SelectField(lazy_gettext('Task Scheduler'), choices=_choices)
+    rand_within_priority = BooleanField(lazy_gettext('Randomize Within Priority'))
 
     @classmethod
     def update_sched_options(cls, new_options):
