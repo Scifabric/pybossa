@@ -344,11 +344,29 @@ class TestUserRepository(Test):
         user = UserFactory.create()
         taskruns = TaskRunFactory.create_batch(3, user=user)
         fake_ips = []
+        assert taskruns[0].user_id == user.id
+        user_repo.fake_user_id(user)
         for taskrun in taskruns:
-            assert taskrun.user_id == user.id
-            user_repo.fake_user_id(user)
             taskrun = task_repo.get_task_run_by(id=taskrun.id)
             assert taskrun.user_id is None
             assert taskrun.user_ip is not None
             fake_ips.append(taskrun.user_ip)
         assert len(set(fake_ips)) == 3
+
+    @with_context
+    def delete_user_with_task_runs(self):
+        """Delete user with task runs works."""
+        user = UserFactory.create()
+        taskruns = TaskRunFactory.create_batch(3, user=user)
+        fake_ips = []
+        user_id = user.id
+        assert taskruns[0].user_id == user.id
+        user_repo.delete(user)
+        for taskrun in taskruns:
+            taskrun = task_repo.get_task_run_by(id=taskrun.id)
+            assert taskrun.user_id is None
+            assert taskrun.user_ip is not None
+            fake_ips.append(taskrun.user_ip)
+        assert len(set(fake_ips)) == 3
+        user = self.user_repo.get_by(id=user_id)
+        assert user is None
