@@ -88,6 +88,7 @@ class UserRepository(Repository):
     def delete(self, user):
         self._validate_can_be('deleted', user)
         try:
+            self.fake_user_id(user)
             self.db.session.delete(user)
             self.db.session.commit()
         except IntegrityError as e:
