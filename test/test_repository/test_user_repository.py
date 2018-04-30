@@ -326,3 +326,13 @@ class TestUserRepository(Test):
         retrieved_users = self.user_repo.get_users([tyrion.id, theon.id])
         assert any(user == tyrion for user in retrieved_users)
         assert any(user == theon for user in retrieved_users)
+
+    @with_context
+    def delete_user(self):
+        user = UserFactory.create()
+        user_id = user_id
+        user = self.user_repo.get_by(id=user_id)
+        assert user.id == user_id
+        self.user_repo.delete(user)
+        user = self.user_repo.get_by(id=user_id)
+        assert user is None
