@@ -19,7 +19,14 @@
 from helper import sched
 from pybossa.core import project_repo
 from factories import TaskFactory, ProjectFactory, UserFactory
-from pybossa.sched import Schedulers, get_task_users_key
+from pybossa.sched import (
+    Schedulers,
+    get_task_users_key,
+    acquire_lock,
+    has_lock,
+    get_task_id_and_duration_for_project_user,
+    get_task_id_project_id_key
+)
 from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
 from default import with_context
@@ -113,3 +120,25 @@ class TestLockedSched(sched.Helper):
         key_args = [args[0] for args, kwargs in release_lock.call_args_list]
         assert get_task_users_key(task1.id) in key_args
         assert get_task_users_key(task2.id) in key_args
+
+    @with_context
+    def test_acquire_lock_no_pipeline(self):
+        task_id = 1
+        user_id = 1
+        limit = 1
+        timeout = 100
+        acquire_lock(task_id, user_id, limit, timeout)
+        assert has_lock(task_id, user_id, limit)
+
+    @with_context
+    def test_get_task_id_and_duration_for_project_user_missing(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user, short_name='egil', name='egil',
+                  description='egil')
+        task = TaskFactory.create_batch(1, project=project, n_answers=1)[0]
+        limit = 1
+        timeout = 100
+        acquire_lock(task.id, user.id, limit, timeout)
+        task_id, _ = get_task_id_and_duration_for_project_user(project.id, user.id)
+        assert get_task_id_project_id_key(task.id) in sentinel.master.keys()
+        assert task.id == task_id

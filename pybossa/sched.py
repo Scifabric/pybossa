@@ -385,7 +385,7 @@ def get_task_id_and_duration_for_project_user(project_id, user_id):
         if int(task_project_id) == project_id:
             seconds_remaining = LockManager.seconds_remaining(user_tasks[task_id])
             if seconds_remaining > max_seconds_remaining:
-                max_seconds_task_id = task_id
+                max_seconds_task_id = int(task_id)
                 max_seconds_remaining = seconds_remaining
     if max_seconds_task_id > 0:
         return max_seconds_task_id, max_seconds_remaining
