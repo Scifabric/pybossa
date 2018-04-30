@@ -330,7 +330,7 @@ class TestUserRepository(Test):
     @with_context
     def delete_user(self):
         user = UserFactory.create()
-        user_id = user_id
+        user_id = user.id
         user = self.user_repo.get_by(id=user_id)
         assert user.id == user_id
         self.user_repo.delete(user)
