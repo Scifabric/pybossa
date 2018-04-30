@@ -19,8 +19,8 @@
 
 from default import Test, db, with_context
 from nose.tools import assert_raises
-from factories import UserFactory
-from pybossa.repositories import UserRepository
+from factories import UserFactory, TaskRunFactory
+from pybossa.repositories import UserRepository, TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
@@ -30,6 +30,7 @@ class TestUserRepository(Test):
     def setUp(self):
         super(TestUserRepository, self).setUp()
         self.user_repo = UserRepository(db)
+        self.task_repo = TaskRepository(db)
 
 
     @with_context
@@ -345,9 +346,9 @@ class TestUserRepository(Test):
         taskruns = TaskRunFactory.create_batch(3, user=user)
         fake_ips = []
         assert taskruns[0].user_id == user.id
-        user_repo.fake_user_id(user)
+        self.user_repo.fake_user_id(user)
         for taskrun in taskruns:
-            taskrun = task_repo.get_task_run_by(id=taskrun.id)
+            taskrun = self.task_repo.get_task_run_by(id=taskrun.id)
             assert taskrun.user_id is None
             assert taskrun.user_ip is not None
             fake_ips.append(taskrun.user_ip)
@@ -361,9 +362,9 @@ class TestUserRepository(Test):
         fake_ips = []
         user_id = user.id
         assert taskruns[0].user_id == user.id
-        user_repo.delete(user)
+        self.user_repo.delete(user)
         for taskrun in taskruns:
-            taskrun = task_repo.get_task_run_by(id=taskrun.id)
+            taskrun = self.task_repo.get_task_run_by(id=taskrun.id)
             assert taskrun.user_id is None
             assert taskrun.user_ip is not None
             fake_ips.append(taskrun.user_ip)
