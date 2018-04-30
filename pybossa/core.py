@@ -83,6 +83,7 @@ def create_app(run_as_server=True):
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
+    setup_upref_mdata(app)
     return app
 
 
@@ -96,6 +97,12 @@ def configure_app(app):
         config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
         if os.path.exists(config_path):  # pragma: no cover
             app.config.from_pyfile(config_path)
+    else:
+        config_path = os.path.abspath(os.environ.get('PYBOSSA_SETTINGS'))
+
+    config_upref_mdata = os.path.join(os.path.dirname(config_path), 'settings_upref_mdata.py')
+    app.config.upref_mdata = True if os.path.exists(config_upref_mdata) else False
+
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = \
@@ -730,3 +737,16 @@ def setup_ldap(app):
 def setup_profiler(app):
     if app.config.get('FLASK_PROFILER'):
         flask_profiler.init_app(app)
+
+def setup_upref_mdata(app):
+    """Setup user preference and metadata choices for user accounts"""
+    global upref_mdata_choices
+    upref_mdata_choices = dict(languages=[], locations=[],
+                                timezones=[], user_types=[])
+    if app.config.upref_mdata:
+        from settings_upref_mdata import (upref_languages, upref_locations,
+                mdata_timezones, mdata_user_types)
+        upref_mdata_choices['languages'] = upref_languages()
+        upref_mdata_choices['locations'] = upref_locations()
+        upref_mdata_choices['timezones'] = mdata_timezones()
+        upref_mdata_choices['user_types'] = mdata_user_types()

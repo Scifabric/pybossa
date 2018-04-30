@@ -113,7 +113,7 @@ class UserRepository(Repository):
         return self.db.session.query(User).filter(func.lower(User.email_addr) == email_addr).first()
 
     def get_info_columns(self):
-        return [u'languages', u'locations', u'start_time', u'end_time', u'timezone', u'user_type', u'additional_comments']
+        return [u'languages', u'locations', u'work_hours_from', u'work_hours_to', u'timezone', u'user_type', u'additional_comments']
 
     def smart_search(self, current_user_is_admin, where, query_params):
         sql = text('''

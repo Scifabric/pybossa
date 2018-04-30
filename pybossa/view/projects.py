@@ -1241,8 +1241,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     task['info'][col] = task_info.get(col, '')
 
         valid_user_preferences = get_valid_user_preferences()
-        language_options = valid_user_preferences['languages']
-        location_options = valid_user_preferences['locations']
+        language_options = valid_user_preferences.get('languages')
+        location_options = valid_user_preferences.get('locations')
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
                     owner=owner_sanitized,
