@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from StringIO import StringIO
-from mock import patch, Mock
+from mock import patch, Mock, MagicMock
 import boto
 from default import Test, with_context
 from pybossa.uploader.s3_uploader import *
@@ -53,6 +53,21 @@ class TestS3Uploader(Test):
         }):
             url = s3_upload_from_string('bucket', u'hello world', 'test.txt')
             assert url == 'https://s3.storage.com/bucket/test.txt', url
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    def test_upload_from_string_with_jwt(self, set_contents):
+        with patch.dict(self.flask_app.config, {
+            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
+            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com'],
+            'JWT_CONFIG': [
+                ('test', 'value', (1,))
+            ],
+            'JWT_SECRET': 'aa'
+        }):
+            s3_upload_from_string('bucket', u'hello world', 'test.txt')
+            args, kwargs = set_contents.call_args
+            assert 'jwt' in kwargs['headers']
 
     @with_context
     @patch('pybossa.uploader.s3_uploader.io.open')
@@ -106,7 +121,22 @@ class TestS3Uploader(Test):
             'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
         }):
             delete_file_from_s3('test_bucket', '/the/key')
-            delete_key.assert_called_with('/the/key', version_id=None)
+            delete_key.assert_called_with('/the/key', headers={}, version_id=None)
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
+    def test_delete_file_from_s3_with_jwt(self, delete_key):
+        with patch.dict(self.flask_app.config, {
+            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
+            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com'],
+            'JWT_CONFIG': [
+                ('test', 'value', (1,))
+            ],
+            'JWT_SECRET': 'aa'
+        }):
+            delete_file_from_s3('test_bucket', '/the/key')
+            args, kwargs = delete_key.call_args
+            assert 'jwt' in kwargs['headers']
 
     @with_context
     @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
@@ -129,3 +159,52 @@ class TestS3Uploader(Test):
         }):
             get_file_from_s3('test_bucket', '/the/key')
             get_contents.assert_called()
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.get_contents_to_filename')
+    def test_get_file_from_s3_with_jwt(self, get_contents):
+        with patch.dict(self.flask_app.config, {
+            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
+            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com'],
+            'JWT_CONFIG': [
+                ('test', 'value', (1,))
+            ],
+            'JWT_SECRET': 'aa'
+        }):
+            get_file_from_s3('test_bucket', '/the/key')
+            args, kwargs = get_contents.call_args
+            assert 'jwt' in kwargs['headers']
+
+    @with_context
+    def test_no_checksum_key(self):
+        response = MagicMock()
+        response.status = 200
+        key = NoChecksumKey()
+        with patch.dict(self.flask_app.config, {
+            'CLOUDSTORE_CHECKSUM': False
+        }):
+            assert key.should_retry(response)
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.should_retry')
+    def test_checksum(self, should_retry):
+        response = MagicMock()
+        response.status = 200
+        key = NoChecksumKey()
+        key.should_retry(response)
+        should_retry.assert_called()
+
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.should_retry')
+    def test_checksum_not_ok(self, should_retry):
+        response = MagicMock()
+        response.status = 300
+        key = NoChecksumKey()
+        key.should_retry(response)
+        should_retry.assert_called()
+        with patch.dict(self.flask_app.config, {
+            'CLOUDSTORE_CHECKSUM': False
+        }):
+            key.should_retry(response)
+            should_retry.assert_called()
