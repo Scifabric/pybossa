@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.repositories import Repository
 from pybossa.model.user import User
 from pybossa.exc import WrongObjectError, DBIntegrityError
+from faker import Faker
 
 
 class UserRepository(Repository):
@@ -75,6 +76,14 @@ class UserRepository(Repository):
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+    def fake_user_id(self, user):
+        faker = Faker()
+        task_runs = task_repo.filter_task_runs_by(user_id=user.id)
+        for tr in task_runs:
+            tr.user_id = None
+            tr.user_ip = faker.ipv4()
+            task_repo.update(tr)
 
     def delete(self, user):
         self._validate_can_be('deleted', user)
