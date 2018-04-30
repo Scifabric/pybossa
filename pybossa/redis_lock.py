@@ -37,7 +37,7 @@ class LockManager(object):
         self._cache = cache
         self._duration = duration
 
-    def acquire_lock(self, resource_id, client_id, limit):
+    def acquire_lock(self, resource_id, client_id, limit, pipeline=None):
         # TODO can lock access to hash
         """
         Acquire a lock on a resource.
@@ -53,8 +53,9 @@ class LockManager(object):
             return True
         num_acquired = self._cache.hlen(resource_id)
         if num_acquired < limit:
-            self._cache.hset(resource_id, client_id, expiration)
-            self._cache.expire(resource_id, timedelta(seconds=self._duration))
+            cache = pipeline or self._cache
+            cache.hset(resource_id, client_id, expiration)
+            cache.expire(resource_id, timedelta(seconds=self._duration))
             return True
         return False
 
@@ -73,7 +74,7 @@ class LockManager(object):
         now = time()
         return expiration > now
 
-    def release_lock(self, resource_id, client_id):
+    def release_lock(self, resource_id, client_id, pipeline=None):
         """
         Release a lock. Note that the lock is not release immediately, rather
         its expiration is set after a short interval from the current time.
@@ -83,7 +84,8 @@ class LockManager(object):
         :param resource_id: resource on which lock is being held
         :param client_id: id of client holding the lock
         """
-        self._cache.hset(resource_id, client_id, time() + 5)
+        cache = pipeline or self._cache
+        cache.hset(resource_id, client_id, time() + 5)
 
     def get_locks(self, resource_id):
         """
@@ -101,3 +103,7 @@ class LockManager(object):
                 to_delete.append(key)
         if to_delete:
             self._cache.hdel(resource_id, *to_delete)
+
+    @staticmethod
+    def seconds_remaining(expiration):
+        return float(expiration) - time()

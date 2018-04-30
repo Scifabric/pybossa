@@ -23,7 +23,7 @@ from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
-from pybossa.core import db, sentinel, project_repo
+from pybossa.core import db, sentinel, project_repo, task_repo
 from pybossa.sentinel import keys
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
@@ -45,7 +45,8 @@ DEFAULT_SCHEDULER = Schedulers.locked
 
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
-             external_uid=None, offset=0, limit=1, orderby='priority_0', desc=True):
+             external_uid=None, offset=0, limit=1, orderby='priority_0',
+             desc=True, rand_within_priority=False):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
         'default': get_locked_task,
@@ -56,7 +57,9 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         Schedulers.user_pref: get_user_pref_task,
         'depth_first_all': get_depth_first_all_task}
     scheduler = sched_map.get(sched, sched_map['default'])
-    return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
+    return scheduler(project_id, user_id, user_ip, external_uid,
+                     offset=offset, limit=limit, orderby=orderby, desc=desc,
+                     rand_within_priority=rand_within_priority)
 
 
 def can_post(project_id, task_id, user_id):
@@ -88,7 +91,8 @@ def after_save(project_id, task_id, user_id):
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
-                           external_uid=None, offset=0, limit=1, orderby='id', desc=False):
+                           external_uid=None, offset=0, limit=1, orderby='id',
+                           desc=False, **kwargs):
     """Get a new task which have the least number of task runs."""
     project_query = session.query(Task.id).filter(Task.project_id==project_id,
                                                   Task.state!='completed')
@@ -119,7 +123,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
 
 def get_depth_first_task(project_id, user_id=None, user_ip=None,
                          external_uid=None, offset=0, limit=1,
-                         orderby='priority_0', desc=True):
+                         orderby='priority_0', desc=True, **kwargs):
     """Get a new task for a given project."""
     tasks = get_candidate_task_ids(project_id, user_id,
                                    user_ip, external_uid, limit, offset,
@@ -129,7 +133,7 @@ def get_depth_first_task(project_id, user_id=None, user_ip=None,
 
 def get_depth_first_all_task(project_id, user_id=None, user_ip=None,
                              external_uid=None, offset=0, limit=1,
-                             orderby='priority_0', desc=True):
+                             orderby='priority_0', desc=True, **kwargs):
     """Get a new task for a given project."""
     tasks = get_candidate_task_ids(project_id, user_id,
                                    user_ip, external_uid, limit, offset,
@@ -138,7 +142,8 @@ def get_depth_first_all_task(project_id, user_id=None, user_ip=None,
 
 
 def get_incremental_task(project_id, user_id=None, user_ip=None,
-                         external_uid=None, offset=0, limit=1, orderby='id', desc=False):
+                         external_uid=None, offset=0, limit=1, orderby='id',
+                         desc=False, **kwargs):
     """Get a new task for a given project with its last given answer.
 
     It is an important strategy when dealing with large tasks, as
@@ -195,19 +200,22 @@ def locked_scheduler(query_factory):
     @wraps(query_factory)
     def template_get_locked_task(project_id, user_id=None, user_ip=None,
                                  external_uid=None, limit=1, offset=0,
-                                 orderby='priority_0', desc=True):
+                                 orderby='priority_0', desc=True,
+                                 rand_within_priority=False):
         if offset > 2:
             raise BadRequest()
         if offset == 1:
             return None
+        task_id, lock_seconds = get_task_id_and_duration_for_project_user(project_id, user_id)
+        if lock_seconds > 10:
+            return [session.query(Task).get(task_id)]
         user_count = get_active_user_count(project_id, sentinel.slave)
         current_app.logger.info(
             "Project {} - number of current users: {}"
             .format(project_id, user_count))
 
         sql = query_factory(project_id, user_id, user_ip, external_uid,
-                            limit, offset, orderby, desc)
-
+                            limit, offset, orderby, desc, rand_within_priority)
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
                                          limit=user_count + 5))
@@ -217,6 +225,7 @@ def locked_scheduler(query_factory):
             remaining = n_answers - taskcount
             if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
+                save_task_id_project_id(task_id, project_id, 2 * timeout)
                 register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
                 current_app.logger.info(
                     'Project {} - user {} obtained task {}, timeout: {}'
@@ -231,7 +240,7 @@ def locked_scheduler(query_factory):
 @locked_scheduler
 def get_locked_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, limit=1, offset=0,
-                    orderby='priority_0', desc=True):
+                    orderby='priority_0', desc=True, rand_within_priority=False):
     """ Select a new task to be returned to the contributor.
 
     For each incomplete task, check if the number of users working on the task
@@ -251,8 +260,8 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id AND task.state !='completed'
            group by task.id HAVING COUNT(task_run.task_id) < n_answers
-           ORDER BY priority_0 DESC, id ASC LIMIT :limit;
-           ''')
+           ORDER BY priority_0 DESC, {} LIMIT :limit;
+           '''.format('random()' if rand_within_priority else 'id ASC'))
 
     return sql
 
@@ -260,7 +269,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
 @locked_scheduler
 def get_user_pref_task(project_id, user_id=None, user_ip=None,
                        external_uid=None, limit=1, offset=0,
-                       orderby='priority_0', desc=True):
+                       orderby='priority_0', desc=True, rand_within_priority=False):
     """ Select a new task based on user preference set under user profile.
 
     For each incomplete task, check if the number of users working on the task
@@ -270,6 +279,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     available tasks before returning to the user.
     """
     user_pref_list = cached_users.get_user_preferences(user_id)
+    secondary_order = 'random()' if rand_within_priority else 'id ASC'
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -283,57 +293,111 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
            AND task.project_id=:project_id
            AND ({0})
            AND task.state !='completed'
-           group by task.id ORDER BY priority_0 DESC, id ASC
-           LIMIT :limit; '''.format(user_pref_list)
+           group by task.id ORDER BY priority_0 DESC, {1}
+           LIMIT :limit; '''.format(user_pref_list, secondary_order)
     return text(sql)
 
 
-KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
+TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
+USER_TASKS_KEY_PREFIX = 'pybossa:user:task_acquired:timestamps:{0}'
+TASK_ID_PROJECT_ID_KEY_PREFIX = 'pybossa:task_id:project_id:{0}'
 TIMEOUT = ContributionsGuard.STAMP_TTL
 
 
 def has_lock(task_id, user_id, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(task_id)
-    return lock_manager.has_lock(key, user_id)
+    task_users_key = get_task_users_key(task_id)
+    return lock_manager.has_lock(task_users_key, user_id)
 
 
-def acquire_lock(task_id, user_id, limit, timeout):
-    lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(task_id)
-    return lock_manager.acquire_lock(key, user_id, limit)
+def acquire_lock(task_id, user_id, limit, timeout, pipeline=None, execute=True):
+    redis_conn = sentinel.master
+    pipeline = pipeline or redis_conn.pipeline(transaction=True)
+    lock_manager = LockManager(redis_conn, timeout)
+    task_users_key = get_task_users_key(task_id)
+    user_tasks_key = get_user_tasks_key(user_id)
+    if lock_manager.acquire_lock(task_users_key, user_id, limit, pipeline=pipeline):
+        lock_manager.acquire_lock(user_tasks_key, task_id, float('inf'), pipeline=pipeline)
+        if execute:
+            return all(not isinstance(r, Exception) for r in pipeline.execute())
+        return True
+    return False
 
 
-def release_lock(task_id, user_id, timeout):
-    lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(task_id)
-    lock_manager.release_lock(key, user_id)
+def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):
+    redis_conn = sentinel.master
+    pipeline = pipeline or redis_conn.pipeline(transaction=True)
+    lock_manager = LockManager(redis_conn, timeout)
+    task_users_key = get_task_users_key(task_id)
+    user_tasks_key = get_user_tasks_key(user_id)
+    lock_manager.release_lock(task_users_key, user_id, pipeline=pipeline)
+    lock_manager.release_lock(user_tasks_key, task_id, pipeline=pipeline)
+    if execute:
+        pipeline.execute()
 
 
 def get_locks(task_id, timeout):
     lock_manager = LockManager(sentinel.master, timeout)
-    key = get_key(task_id)
-    return lock_manager.get_locks(key)
+    task_users_key = get_task_users_key(task_id)
+    return lock_manager.get_locks(task_users_key)
 
 
-def get_key(task_id):
-    return KEY_PREFIX.format(task_id)
+def get_user_tasks(user_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
+    user_tasks_key = get_user_tasks_key(user_id)
+    return lock_manager.get_locks(user_tasks_key)
+
+
+def save_task_id_project_id(task_id, project_id, timeout):
+    task_id_project_id_key = get_task_id_project_id_key(task_id)
+    sentinel.master.setex(task_id_project_id_key, timeout, project_id)
+
+
+def get_task_ids_project_id(task_ids):
+    keys = [get_task_id_project_id_key(t) for t in task_ids]
+    if keys:
+        return sentinel.master.mget(keys)
+    return []
+
+
+def get_task_users_key(task_id):
+    return TASK_USERS_KEY_PREFIX.format(task_id)
+
+
+def get_user_tasks_key(user_id):
+    return USER_TASKS_KEY_PREFIX.format(user_id)
+
+
+def get_task_id_project_id_key(task_id):
+    return TASK_ID_PROJECT_ID_KEY_PREFIX.format(task_id)
+
+
+def get_task_id_and_duration_for_project_user(project_id, user_id):
+    user_tasks = get_user_tasks(user_id, TIMEOUT)
+    user_task_ids = user_tasks.keys()
+    results = get_task_ids_project_id(user_task_ids)
+    max_seconds_task_id = -1
+    max_seconds_remaining = float('-inf')
+    for task_id, task_project_id in zip(user_task_ids, results):
+        if not task_project_id:
+            task_project_id = task_repo.get_task(task_id).project_id
+            save_task_id_project_id(task_id, task_project_id, 2 * TIMEOUT)
+        if int(task_project_id) == project_id:
+            seconds_remaining = LockManager.seconds_remaining(user_tasks[task_id])
+            if seconds_remaining > max_seconds_remaining:
+                max_seconds_task_id = int(task_id)
+                max_seconds_remaining = seconds_remaining
+    if max_seconds_task_id > 0:
+        return max_seconds_task_id, max_seconds_remaining
+    return None, -1
 
 
 def release_user_locks(user_id):
     redis_conn = sentinel.master
-    lock_manager = LockManager(sentinel.master, TIMEOUT)
-    cguard_prefix = ContributionsGuard.PRESENTED_KEY_PREFIX
-    task_presented_key = cguard_prefix.replace('{1}', '*')
-    task_presented_key = task_presented_key.format(user_id)
-    pattern = task_presented_key.replace('*', '')
-    for key in keys(redis_conn, pattern=task_presented_key):
-        # extract task id to build resource_id for release/expire lock
-        tid = key.split(pattern)
-        if len(tid) == 2:
-            task_id = tid[1]
-            resource_id = get_key(task_id)
-            lock_manager.release_lock(resource_id, user_id)
+    pipeline = redis_conn.pipeline(transaction=True)
+    for key in get_user_tasks(user_id, TIMEOUT).keys():
+        release_lock(key, user_id, TIMEOUT, pipeline=pipeline, execute=False)
+    pipeline.execute()
 
 
 def get_project_scheduler_and_timeout(project_id):
@@ -362,6 +426,10 @@ def sched_variants():
             (Schedulers.user_pref, 'User Preference Scheduler'),
             ('depth_first_all', 'Depth First All'),
             ]
+
+
+def randomizable_scheds():
+    return [Schedulers.locked, Schedulers.user_pref]
 
 
 def _set_orderby_desc(query, orderby, descending):

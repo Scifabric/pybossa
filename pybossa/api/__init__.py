@@ -225,6 +225,7 @@ def _retrieve_new_task(project_id):
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
+    sched_rand_within_priority = project.info.get('sched_rand_within_priority', False)
     task = sched.new_task(project.id, project.info.get('sched'),
                           user_id,
                           user_ip,
@@ -232,7 +233,8 @@ def _retrieve_new_task(project_id):
                           offset,
                           limit,
                           orderby=orderby,
-                          desc=desc)
+                          desc=desc,
+                          rand_within_priority=sched_rand_within_priority)
 
     handler = partial(pwd_manager.update_response, project=project,
                       user=user_id_or_ip)
