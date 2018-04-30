@@ -63,7 +63,8 @@ requirements = [
     "flask_profiler >= 1.6, <1.6.1",
     "pycountry",
     "wtforms-components>=0.10.3, <0.10.4",
-    "yacryptopan"
+    "yacryptopan",
+    "Faker"
 ]
 
 setup(
