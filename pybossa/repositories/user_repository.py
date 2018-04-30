@@ -21,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pybossa.repositories import Repository
 from pybossa.model.user import User
+from pybossa.model.task_run import TaskRun
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from faker import Faker
 from yacryptopan import CryptoPAn
@@ -82,11 +83,12 @@ class UserRepository(Repository):
     def fake_user_id(self, user):
         faker = Faker()
         cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
-        task_runs = task_repo.filter_task_runs_by(user_id=user.id)
+        task_runs = self.db.session.query(TaskRun).filter_by(user_id=user.id)
         for tr in task_runs:
             tr.user_id = None
             tr.user_ip = cp.anonymize(faker.ipv4())
-            task_repo.update(tr)
+            self.db.session.merge(tr)
+            self.db.session.commit()
 
     def delete(self, user):
         self._validate_can_be('deleted', user)

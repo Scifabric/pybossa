@@ -769,3 +769,16 @@ def push_notification(project_id, **kwargs):
                                launch_url=kwargs['launch_url'],
                                web_buttons=kwargs['web_buttons'],
                                filters=filters)
+
+
+def delete_account(user_id, **kwargs):
+    """Delete user account from the system."""
+    from pybossa.core import user_repo
+    user = user_repo.get(user_id)
+    email = user.email_addr
+    brand = current_app.config.get('BRAND')
+    user_repo.delete(user)
+    subject = '[%s]: Your account has been deleted' % brand
+    body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+    mail_dict = dict(recipients=[email], subject=subject, body=body)
+    send_mail(mail_dict)
