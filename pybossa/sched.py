@@ -429,7 +429,10 @@ def sched_variants():
 
 
 def randomizable_scheds():
-    return [Schedulers.locked, Schedulers.user_pref]
+    scheds = [Schedulers.locked, Schedulers.user_pref]
+    if DEFAULT_SCHEDULER in scheds:
+        scheds.append('default')
+    return scheds
 
 
 def _set_orderby_desc(query, orderby, descending):
