@@ -69,3 +69,17 @@ class TestS3Connection(Test):
             http.authorize(conn)
             assert header in http.headers
             assert http.headers[header] == access_key
+
+    @with_context
+    def test_addtl_headers(self):
+        header = 'x-custom-header'
+        value = 'custom-header-value'
+        host = 's3.store.com'
+        with patch.dict(self.flask_app.config,
+                        {'S3_ADDTL_HEADERS': [(header, value)],
+                         'S3_CUSTOM_HANDLER_HOSTS': [host]}):
+            conn = CustomConnection(host=host)
+            http = conn.build_base_http_request('GET', '/', None)
+            http.authorize(conn)
+            assert header in http.headers
+            assert http.headers[header] == value
