@@ -38,5 +38,8 @@ class CustomAuthHandler(boto.auth_handler.AuthHandler):
     def add_auth(self, http_request, **kwargs):
         headers = http_request.headers
         custom_headers = current_app.config.get('S3_CUSTOM_HEADERS', [])
+        addtl_headers = current_app.config.get('S3_ADDTL_HEADERS', [])
         for header, attr in custom_headers:
             headers[header] = getattr(self._provider, attr)
+        for header, value in addtl_headers:
+            headers[header] = value

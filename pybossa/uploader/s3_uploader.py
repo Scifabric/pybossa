@@ -144,7 +144,7 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     if app.config.get('JWT_CONFIG'):
         headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                     app.config['JWT_SECRET'],
-                                    'PUT', s3_bucket, key)
+                                    'PUT', s3_bucket, key.name)
 
     key.set_contents_from_filename(
         source_file_name, headers=headers,
@@ -172,7 +172,7 @@ def get_file_from_s3(s3_bucket, path):
     if app.config.get('JWT_CONFIG'):
         headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                     app.config['JWT_SECRET'],
-                                    'GET', s3_bucket, key)
+                                    'GET', s3_bucket, key.name)
     key.get_contents_to_filename(temp_file.name, headers=headers)
     return temp_file
 
@@ -184,7 +184,7 @@ def delete_file_from_s3(s3_bucket, s3_url):
         if app.config.get('JWT_CONFIG'):
             headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
                                         app.config['JWT_SECRET'],
-                                        'GET', s3_bucket, key)
+                                        'GET', s3_bucket, key.name)
         bucket.delete_key(key.name, version_id=key.version_id, headers=headers)
     except boto.exception.S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))

@@ -11,7 +11,7 @@ def request(field, **kwargs):
 
 
 def timestamp(offset, **kwargs):
-    return time.time() + offset
+    return int(time.time() + offset)
 
 
 def path(base, **kwargs):
