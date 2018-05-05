@@ -197,6 +197,9 @@ class TaskRepository(Repository):
             conditions, params = get_task_filters(filters)
             sql = text('''
                 BEGIN;
+
+                SET session_replication_role TO replica;
+
                 CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
                     SELECT task.id as id,
                     coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
