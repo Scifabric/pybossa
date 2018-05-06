@@ -30,12 +30,11 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date, handle_content_type, get_disqus_sso
-from pybossa.util import pretty_date, datetime_filter, grant_access_with_api_key
+from pybossa.util import datetime_filter, grant_access_with_api_key
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
 from datetime import timedelta
-import pybossa.model as model
 
 
 def create_app(run_as_server=True):
