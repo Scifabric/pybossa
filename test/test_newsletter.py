@@ -26,7 +26,6 @@ from pybossa.newsletter import Newsletter
 from factories import UserFactory
 from bs4 import BeautifulSoup
 from nose.tools import assert_raises
-from mailchimp import Error
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
