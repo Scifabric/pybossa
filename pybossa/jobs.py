@@ -760,7 +760,7 @@ def push_notification(project_id, **kwargs):
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     if project.info.get('onesignal'):
-        app_id = current_app.config.get('ONESIGNAL_APP_ID') 
+        app_id = current_app.config.get('ONESIGNAL_APP_ID')
         api_key = current_app.config.get('ONESIGNAL_API_KEY')
         client = PybossaOneSignal(app_id=app_id, api_key=api_key)
         filters = [{"field": "tag", "key": project_id, "relation": "exists"}]
@@ -774,11 +774,15 @@ def push_notification(project_id, **kwargs):
 def delete_account(user_id, **kwargs):
     """Delete user account from the system."""
     from pybossa.core import user_repo
+    from pybossa.core import newsletter
     user = user_repo.get(user_id)
     email = user.email_addr
+    mailchimp_deleted = newsletter.delete_user(email)
     brand = current_app.config.get('BRAND')
     user_repo.delete(user)
     subject = '[%s]: Your account has been deleted' % brand
     body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+    if not mailchimp_deleted:
+        body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
     mail_dict = dict(recipients=[email], subject=subject, body=body)
     send_mail(mail_dict)

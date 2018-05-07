@@ -112,9 +112,11 @@ class TestNewsletterClass(Test):
 
             email = {'email': user.email_addr}
             merge_vars = {'FNAME': user.fullname}
-            url = "%s/lists/1/members/" % (nw.root)
+            url = "%s/lists/1/members/%s" % (nw.root,
+                                             nw.get_email_hash(user.email_addr))
             data = dict(email_address=user.email_addr,
                         status='pending',
+                        status_if_new='pending',
                         merge_fields=dict(FNAME=user.fullname))
             mailchimp.assert_called_with(url, data=json.dumps(data),
                                          headers={'content-type':
