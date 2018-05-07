@@ -147,6 +147,23 @@ class TestNewsletterClass(Test):
 
     @with_context
     @patch('pybossa.newsletter.mailchimp')
+    def test_delete_user(self, mailchimp):
+        """Test delete user from mailchimp."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            nw.delete_user('email')
+
+            email = {'email': 'email'}
+
+            nw.client.lists.unsubscribe.assert_called_with(1,
+                                                           email,
+                                                           delete_member=True)
+
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
     def test_is_initialized_returns_false_before_calling_init_app(self, mailchimp):
         nw = Newsletter()
         app = MagicMock()

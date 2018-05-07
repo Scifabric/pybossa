@@ -64,8 +64,8 @@ class Newsletter(object):
             if list_id is None:
                 list_id = self.list_id
             res = self.client.lists.unsubscribe(list_id,
-												{'email': email},
-												delete_member=True)
+                                                {'email': email},
+                                                delete_member=True)
             return res
         except Error as e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
