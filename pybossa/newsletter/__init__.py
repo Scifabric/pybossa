@@ -51,6 +51,7 @@ class Newsletter(object):
     def get_email_hash(self, email):
         """Return MD5 user email hash."""
         self.md5 = hashlib.md5()
+        self.md5.update(email)
         return self.md5.hexdigest()
 
     def is_user_subscribed(self, email, list_id=None):
@@ -75,7 +76,10 @@ class Newsletter(object):
                                           list_id,
                                           self.get_email_hash(email))
         res = requests.delete(url, auth=self.auth)
-        return res.json()
+        if res.status_code == 204:
+            return True
+        else:
+            return False
 
     def subscribe_user(self, user, list_id=None, update=False):
         """Subscribe, update a user of a mailchimp list."""
@@ -92,6 +96,11 @@ class Newsletter(object):
                                 headers={'content-type': 'application/json'},
                                 auth=self.auth)
         else:
+            data['status_if_new'] = 'pending'
+            url = '%s/lists/%s/members/%s' % (self.root,
+                                              list_id,
+                                              self.get_email_hash(user.email_addr))
+
             res = requests.put(url, data=json.dumps(data),
                                headers={'content-type': 'application/json'},
                                auth=self.auth)
