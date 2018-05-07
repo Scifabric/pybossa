@@ -58,6 +58,20 @@ class Newsletter(object):
             self.app.logger.error(msg)
             raise
 
+    def delete_user(self, email, list_id=None):
+        """Delete user from list_id."""
+        try:
+            if list_id is None:
+                list_id = self.list_id
+            res = self.client.lists.unsubscribe(list_id,
+												{'email': email},
+												delete_member=True)
+            return res
+        except Error as e:
+            msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
+            self.app.logger.error(msg)
+            raise
+
     def subscribe_user(self, user, list_id=None, old_email=None):
         """Subscribe, update a user of a mailchimp list."""
         try:
