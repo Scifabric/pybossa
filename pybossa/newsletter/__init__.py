@@ -21,7 +21,6 @@ import json
 import hashlib
 import requests
 from requests.auth import HTTPBasicAuth
-from mailchimp import Error
 
 
 class Newsletter(object):
