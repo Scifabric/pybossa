@@ -49,7 +49,7 @@ from pybossa.util import url_for_app_type
 from pybossa.util import fuzzyboolean
 from pybossa.cache import users as cached_users
 from pybossa.auth import ensure_authorized_to
-from pybossa.jobs import send_mail
+from pybossa.jobs import send_mail, delete_account
 from pybossa.core import user_repo, ldap
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
@@ -62,6 +62,8 @@ from werkzeug.datastructures import MultiDict
 blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('email', connection=sentinel.master)
+
+super_queue = Queue('super', connection=sentinel.master)
 
 
 @blueprint.route('/')
@@ -844,6 +846,24 @@ def reset_api_key(name):
     else:
         csrf = dict(form=dict(csrf=generate_csrf()))
         return jsonify(csrf)
+
+
+@blueprint.route('/<name>/delete', methods=['GET', 'POST'])
+@login_required
+def delete(name):
+    """
+    Delete user account.
+    """
+    user = user_repo.get_by_name(name)
+    if not user:
+        return abort(404)
+    if current_user.name != name:
+        return abort(403)
+
+    super_queue.enqueue(delete_account, user.id)
+
+    response = dict(job='enqueued', template=None)
+    return handle_content_type(response)
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
