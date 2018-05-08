@@ -132,11 +132,37 @@ class TestNewsletterClass(Test):
             nw = Newsletter()
             nw.init_app(self.flask_app)
 
-            nw.delete_user('email')
+            mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=204)),
+                                                 json=lambda : '',
+                                               status_code=204)]
+
+            res = nw.delete_user('email')
 
             url = "%s/lists/1/members/%s" % (nw.root,
                                              nw.get_email_hash('email'))
             mailchimp.assert_called_with(url, auth=nw.auth)
+            assert res is True, res
+
+    @with_context
+    @patch('requests.delete')
+    def test_delete_user_returns_false(self, mailchimp):
+        """Test delete user from mailchimp returns false."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=404)),
+                                                 json=lambda : '',
+                                               status_code=404)]
+
+            res = nw.delete_user('email')
+
+            url = "%s/lists/1/members/%s" % (nw.root,
+                                             nw.get_email_hash('email'))
+            mailchimp.assert_called_with(url, auth=nw.auth)
+            assert res is False, res
+
 
     @with_context
     def test_is_initialized_returns_false_before_calling_init_app(self):
