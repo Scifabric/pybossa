@@ -775,6 +775,7 @@ def delete_account(user_id, **kwargs):
     """Delete user account from the system."""
     from pybossa.core import user_repo
     from pybossa.core import newsletter
+    newsletter.init_app(current_app)
     user = user_repo.get(user_id)
     email = user.email_addr
     mailchimp_deleted = newsletter.delete_user(email)
@@ -784,5 +785,10 @@ def delete_account(user_id, **kwargs):
     body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
     if not mailchimp_deleted:
         body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
-    mail_dict = dict(recipients=[email], subject=subject, body=body)
+    if current_app.config.get('DISQUS_SECRET_KEY'):
+        body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
+    recipients = [email]
+    for em in current_app.config.get('ADMINS'):
+        recipients.append(em)
+    mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
