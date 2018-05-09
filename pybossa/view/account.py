@@ -848,7 +848,7 @@ def reset_api_key(name):
         return jsonify(csrf)
 
 
-@blueprint.route('/<name>/delete', methods=['GET', 'POST'])
+@blueprint.route('/<name>/delete')
 @login_required
 def delete(name):
     """
@@ -862,8 +862,13 @@ def delete(name):
 
     super_queue.enqueue(delete_account, user.id)
 
-    response = dict(job='enqueued', template=None)
-    return handle_content_type(response)
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
+
+        response = dict(job='enqueued', template='account/delete.html')
+        return handle_content_type(response)
+    else:
+        return redirect(url_for('account.signout'))
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
