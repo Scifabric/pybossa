@@ -1434,7 +1434,7 @@ def delete_selected_tasks(short_name):
             async = False
         else:
             args = parse_tasks_browse_args(request.json.get('filters'))
-            count = cached_projects.n_tasks(project.id)
+            count = cached_projects.task_count(project.id, args)
             async = count > MAX_NUM_SYNCHRONOUS_TASKS_DELETE
             if async:
                 owners = user_repo.get_users(project.owners_ids)
