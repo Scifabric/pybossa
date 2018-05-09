@@ -3523,6 +3523,18 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_41_password_change(self, mock):
+        """Test WEB delete account works"""
+        from pybossa.jobs import delete_account
+        self.register()
+        res = self.app.get('/account/johndoe/delete')
+        assert res.status_code == 302, res.status_code
+        assert 'account/signout' in res.data
+        user = user_repo.filter_by(name='johndoe')[0]
+        mock.assert_called_with(delete_account, user.id)
+
+    @with_context
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
