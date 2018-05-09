@@ -841,8 +841,18 @@ def forgot_password():
 
     """
     form = ForgotPasswordForm(request.body)
+    data = dict(template='/account/password_forgot.html',
+                form=form)
+
     if form.validate_on_submit():
-        user = user_repo.get_by(email_addr=form.email_addr.data)
+        email_addr = form.email_addr.data.lower()
+        user = user_repo.get_by(email_addr=email_addr)
+        if user and not user.enabled:
+            brand = current_app.config['BRAND']
+            flash(gettext('Your account is disabled. '
+                          'Please contact your {} administrator.'.format(brand)),
+                  'error')
+            return handle_content_type(data)
         if user and user.email_addr:
             msg = dict(subject='Account Recovery',
                        recipients=[user.email_addr])
@@ -889,8 +899,6 @@ def forgot_password():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Something went wrong, please correct the errors on the '
               'form'), 'error')
-    data = dict(template='/account/password_forgot.html',
-                form=form)
     return handle_content_type(data)
 
 

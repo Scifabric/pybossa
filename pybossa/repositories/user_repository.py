@@ -78,10 +78,14 @@ class UserRepository(Repository):
     def total_users(self):
         return self.db.session.query(User).count()
 
+    def lowercase_user_attributes(self, user):
+        user.email_addr = user.email_addr.lower()
+
     def save(self, user):
         self._validate_can_be('saved', user)
         try:
             can_have_super_user_access(user)
+            self.lowercase_user_attributes(user)
             self.db.session.add(user)
             self.db.session.commit()
         except IntegrityError as e:
@@ -92,6 +96,7 @@ class UserRepository(Repository):
         self._validate_can_be('updated', new_user)
         try:
             can_have_super_user_access(new_user)
+            self.lowercase_user_attributes(new_user)
             self.db.session.merge(new_user)
             self.db.session.commit()
         except IntegrityError as e:
