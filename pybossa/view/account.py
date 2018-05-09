@@ -821,6 +821,24 @@ def forgot_password():
     return handle_content_type(data)
 
 
+@blueprint.route('/<name>/export', methods=['GET', 'POST'])
+@login_required
+def start_export(name):
+    """
+    Starts a export of all user data according to EU GDPR
+
+    Data will be available on GET /export after it is processed
+
+    """
+    if request.method == 'POST':
+        msg = gettext('GDPR export started')
+        flash(msg, 'success')
+        return redirect_content_type(url_for('account.profile', name=name))
+    else:
+        # TODO: gives export GDPR data here too!
+        csrf = dict(form=dict(csrf=generate_csrf()))
+        return jsonify(csrf)
+
 @blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
 @login_required
 def reset_api_key(name):
