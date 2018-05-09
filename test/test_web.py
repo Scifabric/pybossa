@@ -3524,13 +3524,25 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.super_queue.enqueue')
-    def test_41_password_change(self, mock):
+    def test_delete_account(self, mock):
         """Test WEB delete account works"""
         from pybossa.jobs import delete_account
         self.register()
         res = self.app.get('/account/johndoe/delete')
         assert res.status_code == 302, res.status_code
         assert 'account/signout' in res.data
+        user = user_repo.filter_by(name='johndoe')[0]
+        mock.assert_called_with(delete_account, user.id)
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_json(self, mock):
+        """Test WEB JSON delete account works"""
+        from pybossa.jobs import delete_account
+        self.register()
+        res = self.app_get_json('/account/johndoe/delete')
+        data = json.loads(res.data)
+        assert data['job'] == 'enqueued', data
         user = user_repo.filter_by(name='johndoe')[0]
         mock.assert_called_with(delete_account, user.id)
 
