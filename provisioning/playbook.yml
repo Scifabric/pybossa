@@ -171,6 +171,17 @@
         state=present
         insertafter=EOF
         create=yes
+        
+     # activate virtualenv ->line redis-server {{pybossa_path}}/contrib/sentinel.conf --sentinel added
+    - name: virtualenv usage by default on bash login
+      become_user: "{{pybossa_user}}"
+      lineinfile:
+        dest={{vagrant_home}}/.bashrc
+        line="redis-server {{pybossa_path}}/contrib/sentinel.conf --sentinel"
+        owner=vagrant
+        state=present
+        insertafter=EOF
+        create=yes     
 
     - name: go to /vagrant directory on bash login
       lineinfile:
