@@ -208,7 +208,9 @@ def locked_scheduler(query_factory):
             return None
         task_id, lock_seconds = get_task_id_and_duration_for_project_user(project_id, user_id)
         if lock_seconds > 10:
-            return [session.query(Task).get(task_id)]
+            task = session.query(Task).get(task_id)
+            if task:
+                return [task]
         user_count = get_active_user_count(project_id, sentinel.master)
         current_app.logger.info(
             "Project {} - number of current users: {}"
