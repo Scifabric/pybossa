@@ -329,7 +329,7 @@ class TestUserRepository(Test):
         assert any(user == theon for user in retrieved_users)
 
     @with_context
-    def delete_user(self):
+    def test_delete_user(self):
         """Test USER delete works."""
         user = UserFactory.create()
         user_id = user.id
@@ -340,7 +340,7 @@ class TestUserRepository(Test):
         assert user is None
 
     @with_context
-    def fake_user_id(self):
+    def test_fake_user_id(self):
         """Test remove user ID works and it's replaced by a fake IP."""
         user = UserFactory.create()
         taskruns = TaskRunFactory.create_batch(3, user=user)
@@ -355,7 +355,7 @@ class TestUserRepository(Test):
         assert len(set(fake_ips)) == 3
 
     @with_context
-    def delete_user_with_task_runs(self):
+    def test_delete_user_with_task_runs(self):
         """Delete user with task runs works."""
         user = UserFactory.create()
         taskruns = TaskRunFactory.create_batch(3, user=user)
