@@ -3578,6 +3578,24 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_404_user(self, mock):
+        """Test WEB delete account user does not exists"""
+        from pybossa.jobs import delete_account
+        self.register()
+        res = self.app.get('/account/juan/delete')
+        assert res.status_code == 404, res.status_code
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_json_404_user(self, mock):
+        """Test WEB delete account json user does not exist"""
+        from pybossa.jobs import delete_account
+        self.register()
+        res = self.app_get_json('/account/asdafsdlw/delete')
+        assert res.status_code == 404, (res.status_code, res.data)
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
     def test_delete_account_json(self, mock):
         """Test WEB JSON delete account works"""
         from pybossa.jobs import delete_account
