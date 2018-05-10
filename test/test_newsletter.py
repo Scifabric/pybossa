@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import with_context, Test
+import json
+from default import with_context, Test, FakeResponse
 from helper import web
 from mock import patch, MagicMock
 from collections import namedtuple
@@ -25,7 +26,6 @@ from pybossa.newsletter import Newsletter
 from factories import UserFactory
 from bs4 import BeautifulSoup
 from nose.tools import assert_raises
-from mailchimp import Error
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -33,8 +33,7 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 class TestNewsletterClass(Test):
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_init_app(self, mailchimp):
+    def test_init_app(self):
         """Test Newsletter init_app method works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
@@ -42,70 +41,42 @@ class TestNewsletterClass(Test):
             assert nw.app is None
             nw.init_app(self.flask_app)
             assert nw.app == self.flask_app
-            assert nw.client, nw.client
             assert nw.list_id == 1
+            assert nw.root == 'https://3.api.mailchimp.com/3.0'
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_is_user_subscribed_false(self, mailchimp):
+    @patch('pybossa.newsletter.requests.get')
+    def test_is_user_subscribed_false(self, req_mock):
         """Test is_user_subscribed returns False."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
             email = 'john@john.com'
             nw = Newsletter()
             nw.init_app(self.flask_app)
-            res = nw.is_user_subscribed(email)
-            nw.client.lists.member_info.assert_called_with(1,
-                                                           [{'email': email}])
+            req_mock.side_effect = [FakeResponse(text=json.dumps(dict(status=404)),
+                                                 json=lambda : dict(status=404),
+                                               status_code=200)]
+
+            res = nw.is_user_subscribed(email)[0]
             assert res is False
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_is_user_subscribed_true(self, mailchimp):
+    @patch('requests.get')
+    def test_is_user_subscribed_true(self, req_mock):
         """Test is_user_subscribed returns True."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
             email = 'john@john.com'
             nw = Newsletter()
             nw.init_app(self.flask_app)
-            tmp = {'data': [{'email': email}],
-                   'success_count': 1}
-            nw.client.lists.member_info.return_value = tmp
-            res = nw.is_user_subscribed(email)
-            nw.client.lists.member_info.assert_called_with(1,
-                                                           [{'email': email}])
-            assert res is True
+            req_mock.side_effect = [FakeResponse(text=json.dumps(dict(status='200')),
+                                               json=lambda : dict(status=200),
+                                               status_code=200)]
+            res, err = nw.is_user_subscribed(email)
+            assert res is True, (res, err)
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_is_user_subscribed_exception(self, mp):
-        """Test is_user_subscribed exception works."""
-        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
-                                                'MAILCHIMP_LIST_ID': 1}):
-            email = 'john@john.com'
-            nw = Newsletter()
-            nw.init_app(self.flask_app)
-            nw.client.lists.member_info.side_effect = Error
-            assert_raises(Error, nw.is_user_subscribed, email)
-
-    @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_subscribe_user_exception(self, mp):
-        """Test subscribe_user exception works."""
-        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
-                                                'MAILCHIMP_LIST_ID': 1}):
-            user = UserFactory.create()
-            nw = Newsletter()
-            nw.init_app(self.flask_app)
-            nw.client.lists.subscribe.side_effect = Error
-            tmp = {'data': [{'email': user.email_addr}],
-                   'success_count': 1}
-            nw.client.lists.member_info.return_value = tmp
-            assert_raises(Error, nw.subscribe_user, user)
-
-
-    @with_context
-    @patch('pybossa.newsletter.mailchimp')
+    @patch('requests.post')
     def test_subscribe_user(self, mailchimp):
         """Test subscribe user works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
@@ -118,11 +89,17 @@ class TestNewsletterClass(Test):
 
             email = {'email': user.email_addr}
             merge_vars = {'FNAME': user.fullname}
-            nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
-                                                         update_existing=False)
+            url = "%s/lists/1/members/" % (nw.root)
+            data = dict(email_address=user.email_addr,
+                        status='pending',
+                        merge_fields=dict(FNAME=user.fullname))
+            mailchimp.assert_called_with(url, data=json.dumps(data),
+                                         headers={'content-type':
+                                                  'application/json'},
+                                         auth=nw.auth)
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
+    @patch('requests.put')
     def test_subscribe_user_update_existing(self, mailchimp):
         """Test subscribe user update existing works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
@@ -131,31 +108,71 @@ class TestNewsletterClass(Test):
             nw = Newsletter()
             nw.init_app(self.flask_app)
 
-            old_email = 'old@email.com'
+            nw.subscribe_user(user, update=True)
 
-            tmp = {'data': [{'email': old_email}],
-                   'success_count': 1}
-            nw.client.lists.member_info.return_value = tmp
-
-            nw.subscribe_user(user, old_email=old_email)
-
-            email = {'email': old_email}
-            merge_vars = {'FNAME': user.fullname,
-                          'new-email': user.email_addr}
-            nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
-                                                         update_existing=True)
+            email = {'email': user.email_addr}
+            merge_vars = {'FNAME': user.fullname}
+            url = "%s/lists/1/members/%s" % (nw.root,
+                                             nw.get_email_hash(user.email_addr))
+            data = dict(email_address=user.email_addr,
+                        status='pending',
+                        status_if_new='pending',
+                        merge_fields=dict(FNAME=user.fullname))
+            mailchimp.assert_called_with(url, data=json.dumps(data),
+                                         headers={'content-type':
+                                                  'application/json'},
+                                         auth=nw.auth)
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_is_initialized_returns_false_before_calling_init_app(self, mailchimp):
+    @patch('requests.delete')
+    def test_delete_user(self, mailchimp):
+        """Test delete user from mailchimp."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=204)),
+                                                 json=lambda : '',
+                                               status_code=204)]
+
+            res = nw.delete_user('email')
+
+            url = "%s/lists/1/members/%s" % (nw.root,
+                                             nw.get_email_hash('email'))
+            mailchimp.assert_called_with(url, auth=nw.auth)
+            assert res is True, res
+
+    @with_context
+    @patch('requests.delete')
+    def test_delete_user_returns_false(self, mailchimp):
+        """Test delete user from mailchimp returns false."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=404)),
+                                                 json=lambda : '',
+                                               status_code=404)]
+
+            res = nw.delete_user('email')
+
+            url = "%s/lists/1/members/%s" % (nw.root,
+                                             nw.get_email_hash('email'))
+            mailchimp.assert_called_with(url, auth=nw.auth)
+            assert res is False, res
+
+
+    @with_context
+    def test_is_initialized_returns_false_before_calling_init_app(self):
         nw = Newsletter()
         app = MagicMock()
 
         assert nw.is_initialized() is False
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_is_initialized_returns_true_after_calling_init_app(self, mailchimp):
+    def test_is_initialized_returns_true_after_calling_init_app(self):
         nw = Newsletter()
         app = MagicMock()
         nw.init_app(app)
@@ -170,8 +187,7 @@ class TestNewsletterClass(Test):
         assert nw.ask_user_to_subscribe(user) is False
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_ask_user_to_subscribe_returns_false_if_newsletter_prompted(self, mailchimp):
+    def test_ask_user_to_subscribe_returns_false_if_newsletter_prompted(self):
         nw = Newsletter()
         app = MagicMock()
         nw.init_app(app)
@@ -180,30 +196,29 @@ class TestNewsletterClass(Test):
         assert nw.ask_user_to_subscribe(user) is False
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_ask_user_to_subscribe_returns_false_if_user_subscribed(self, mailchimp):
+    @patch('requests.get')
+    def test_ask_user_to_subscribe_returns_false_if_user_subscribed(self,
+                                                                    req_mock):
         user = UserFactory.build(newsletter_prompted=False)
         app = MagicMock()
-        fake_client = MagicMock()
-        fake_client.lists.member_info.return_value = {
-            'success_count': 1, 'data': [{'email':user.email_addr}]}
-        mailchimp.Mailchimp.return_value = fake_client
         nw = Newsletter()
         nw.init_app(app)
-
+        req_mock.side_effect = [FakeResponse(text=json.dumps(dict(foo='bar')),
+                                             json=lambda: dict(status=200),
+                                             status_code=200)]
         assert nw.ask_user_to_subscribe(user) is False
 
     @with_context
-    @patch('pybossa.newsletter.mailchimp')
-    def test_ask_user_to_subscribe_returns_true_if_user_not_subscribed(self, mailchimp):
+    @patch('requests.get')
+    def test_ask_user_to_subscribe_returns_true_if_user_not_subscribed(self,
+                                                                       req_mock):
         user = UserFactory.build(newsletter_prompted=False)
         app = MagicMock()
-        fake_client = MagicMock()
-        fake_client.lists.member_info.return_value = {
-            'success_count': 0, 'data': [{'email':'anotheruser@a.com'}]}
-        mailchimp.Mailchimp.return_value = fake_client
         nw = Newsletter()
         nw.init_app(app)
+        req_mock.side_effect = [FakeResponse(text=json.dumps(dict(foo='bar')),
+                                             json=lambda: dict(status=404),
+                                             status_code=200)]
 
         assert nw.ask_user_to_subscribe(user) is True
 

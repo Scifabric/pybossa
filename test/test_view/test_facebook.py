@@ -20,6 +20,7 @@ from pybossa.view.facebook import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
 from pybossa.util import username_from_full_name
+from pybossa.core import newsletter
 
 
 class TestFacebook(Test):
@@ -34,6 +35,7 @@ class TestFacebook(Test):
             "name": "Mauricio Perez Sanchez"
         }
         self.name = username_from_full_name(self.user_data['name'])
+        newsletter.app = None
 
     @with_context
     def test_manage_user_with_email_new_user(self):

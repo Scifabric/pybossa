@@ -40,7 +40,6 @@ requirements = [
     "rq-scheduler>=0.5.1, <0.5.2",
     "rq-dashboard",
     "unidecode>=0.04.16, <0.05",
-    "mailchimp",
     "flask-plugins",
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
@@ -63,7 +62,8 @@ requirements = [
     "flask_profiler >= 1.6, <1.6.1",
     "pycountry",
     "wtforms-components>=0.10.3, <0.10.4",
-    "yacryptopan"
+    "yacryptopan",
+    "Faker"
 ]
 
 setup(
