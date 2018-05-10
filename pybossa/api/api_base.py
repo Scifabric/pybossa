@@ -297,7 +297,8 @@ class APIBase(MethodView):
             getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
             self.refresh_cache(cls_name, inst.id)
-            return json.dumps(inst.dictize())
+            json_response = json.dumps(inst.dictize())
+            return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,
@@ -330,7 +331,7 @@ class APIBase(MethodView):
             self._delete_instance(oid)
             cls_name = self.__class__.__name__
             self.refresh_cache(cls_name, oid)
-            return '', 204
+            return Response('', 204, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,
