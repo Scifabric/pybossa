@@ -3536,6 +3536,48 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_anon(self, mock):
+        """Test WEB delete account anon fails"""
+        from pybossa.jobs import delete_account
+        self.register()
+        self.signout()
+        res = self.app.get('/account/johndoe/delete')
+        assert res.status_code == 302, res.status_code
+        assert 'account/signin?next' in res.data
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_json_anon(self, mock):
+        """Test WEB delete account json anon fails"""
+        from pybossa.jobs import delete_account
+        self.register()
+        self.signout()
+        res = self.app_get_json('/account/johndoe/delete')
+        assert res.status_code == 302, res.status_code
+        assert 'account/signin?next' in res.data
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_other_user(self, mock):
+        """Test WEB delete account other user fails"""
+        from pybossa.jobs import delete_account
+        user = UserFactory.create(id=5000)
+        self.register()
+        res = self.app.get('/account/%s/delete' % user.name)
+        assert res.status_code == 403, res.status_code
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_account_json_other_user(self, mock):
+        """Test WEB delete account json anon fails"""
+        from pybossa.jobs import delete_account
+        user = UserFactory.create(id=5001)
+        self.register()
+        res = self.app_get_json('/account/%s/delete' % user.name)
+        assert res.status_code == 403, (res.status_code, res.data)
+
+    @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
     def test_delete_account_json(self, mock):
         """Test WEB JSON delete account works"""
         from pybossa.jobs import delete_account
