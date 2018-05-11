@@ -770,6 +770,52 @@ def push_notification(project_id, **kwargs):
                                web_buttons=kwargs['web_buttons'],
                                filters=filters)
 
-def export_userdata(user, **kwargs):
-    # TODO: get all user data
-    pass
+def export_userdata(user_id, **kwargs):
+    from pybossa.core import user_repo, project_repo, task_repo, result_repo
+    from pybossa.exporter.json_export import JsonExporter
+    from pybossa.core import uploader
+    from flask import current_app, url_for
+    user = user_repo.get(user_id)
+    user_data = user.dictize()
+    del user_data['passwd_hash']
+    projects = project_repo.filter_by(owner_id=user.id)
+    projects_data = [project.dictize() for project in projects]
+    taskruns = task_repo.filter_task_runs_by(user_id=user.id)
+    taskruns_data = [tr.dictize() for tr in taskruns]
+    e = JsonExporter()
+    e._make_zip(None, '', 'personal_data', user_data, user_id,
+                'personal_data.zip')
+    e._make_zip(None, '', 'user_projects', projects_data, user_id,
+                'user_projects.zip')
+    e._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
+                'user_contributions.zip')
+    upload_method = current_app.config.get('UPLOAD_METHOD')
+    if upload_method == 'local':
+        upload_method = 'uploads.uploaded_file'
+
+    personal_data_link = url_for(upload_method,
+                                 filename="user_%s/personal_data.zip" % user_id)
+    personal_projects_link = url_for(upload_method,
+                                    filename="user_%s/user_projects.zip" % user_id)
+    personal_contributions_link = url_for(upload_method,
+                                          filename="user_%s/user_contributions.zip" % user_id)
+
+    body = render_template('/account/email/exportdata.md',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           personal_projects_link=personal_projects_link,
+                           personal_contributions_link=personal_contributions_link,
+                           config=current_app.config)
+
+    html = render_template('/account/email/exportdata.html',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           personal_projects_link=personal_projects_link,
+                           personal_contributions_link=personal_contributions_link,
+                           config=current_app.config)
+    subject = 'Your personal data'
+    mail_dict = dict(recipients=[user.email_addr],
+                     subject=subject,
+                     body=body,
+                     html=html)
+    send_mail(mail_dict)
