@@ -149,3 +149,6 @@ GCM_SENDER_ID = "482941778795"
 
 # Unpublish inactive projects
 UNPUBLISH_PROJECTS = True
+
+# TTL for ZIP files of personal data
+TTL_ZIP_SEC_FILES = 3

@@ -4231,6 +4231,123 @@ class TestWeb(web.Helper):
         assert "Owner Message" not in res.data, error_msg
 
     @with_context
+    def test_export_user_json(self):
+        """Test export user data in JSON."""
+        user = UserFactory.create()
+        from pybossa.core import json_exporter as e
+        e._make_zip(None, '', 'personal_data', user.dictize(), user.id,
+                    'personal_data.zip')
+
+        uri = "/uploads/user_%s/personal_data.zip" % user.id
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        expected_filename = 'personal_data_.json'
+        assert extracted_filename == expected_filename, (zip.namelist()[0],
+                                                         expected_filename)
+        exported_user = json.loads(zip.read(extracted_filename))
+        assert exported_user['id'] == user.id
+
+    @with_context
+    def test_export_user_link(self):
+        """Test WEB export user data link only for owner."""
+        root, user, other = UserFactory.create_batch(3)
+        uri = 'account/%s/export' % user.name
+        # As anon
+        res = self.app.get(uri)
+        assert res.status_code == 302
+
+        # As admin
+        res = self.app.get(uri + '?api_key=%s' % root.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As other
+        res = self.app.get(uri + '?api_key=%s' % other.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        res = self.app.get(uri + '?api_key=%s' % user.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+        # As non existing user
+        uri = 'account/algo/export'
+        res = self.app.get(uri + '?api_key=%s' % user.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+
+    @with_context
+    def test_export_user_link_json(self):
+        """Test WEB export user data link only for owner as JSON."""
+        root, user, other = UserFactory.create_batch(3)
+        uri = 'account/%s/export' % user.name
+        # As anon
+        res = self.app_get_json(uri)
+        assert res.status_code == 302
+
+        # As admin
+        res = self.app_get_json(uri + '?api_key=%s' % root.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As other
+        res = self.app_get_json(uri + '?api_key=%s' % other.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+        # As non existing user
+        uri = 'account/algo/export'
+        res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+
+    @with_context
+    @patch('pybossa.exporter.uploader.delete_file')
+    @patch('pybossa.exporter.json_export.scheduler.enqueue_in')
+    @patch('pybossa.exporter.json_export.uuid.uuid1', return_value='random')
+    def test_export_user_json(self, m1, m2, m3):
+        """Test export user data in JSON."""
+        user = UserFactory.create(id=50423)
+        from pybossa.core import json_exporter as e
+        e._make_zip(None, '', 'personal_data', user.dictize(), user.id,
+                    'personal_data.zip')
+
+        uri = "/uploads/user_%s/random_sec_personal_data.zip" % user.id
+        print uri
+        res = self.app.get(uri, follow_redirects=True)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        expected_filename = 'personal_data_.json'
+        assert extracted_filename == expected_filename, (zip.namelist()[0],
+                                                         expected_filename)
+        exported_user = json.loads(zip.read(extracted_filename))
+        assert exported_user['id'] == user.id
+
+        container = 'user_%s' % user.id
+        import datetime
+        m2.assert_called_with(datetime.timedelta(3),
+                              m3,
+                              'random_sec_personal_data.zip',
+                              container)
+
+    @with_context
     def test_export_result_json(self):
         """Test WEB export Results to JSON works"""
         project = ProjectFactory.create()

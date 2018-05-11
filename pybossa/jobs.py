@@ -27,6 +27,8 @@ from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
 from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
+from pybossa.core import uploader
+from pybossa.exporter.json_export import JsonExporter
 
 
 def schedule_job(function, scheduler):
@@ -792,3 +794,59 @@ def delete_account(user_id, **kwargs):
         recipients.append(em)
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
+
+def export_userdata(user_id, **kwargs):
+    from pybossa.core import user_repo, project_repo, task_repo, result_repo
+    from flask import current_app, url_for
+    json_exporter = JsonExporter()
+    user = user_repo.get(user_id)
+    user_data = user.dictize()
+    del user_data['passwd_hash']
+    projects = project_repo.filter_by(owner_id=user.id)
+    projects_data = [project.dictize() for project in projects]
+    taskruns = task_repo.filter_task_runs_by(user_id=user.id)
+    taskruns_data = [tr.dictize() for tr in taskruns]
+    pdf = json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
+                                  'personal_data.zip')
+    upf = json_exporter._make_zip(None, '', 'user_projects', projects_data, user_id,
+                                  'user_projects.zip')
+    ucf = json_exporter._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
+                                  'user_contributions.zip')
+    upload_method = current_app.config.get('UPLOAD_METHOD')
+    if upload_method == 'local':
+        upload_method = 'uploads.uploaded_file'
+
+    personal_data_link = url_for(upload_method,
+                                 filename="user_%s/%s" % (user_id, pdf))
+    personal_projects_link = url_for(upload_method,
+                                    filename="user_%s/%s" % (user_id,
+                                                             upf))
+    personal_contributions_link = url_for(upload_method,
+                                          filename="user_%s/%s" % (user_id,
+                                                                   ucf))
+
+    body = render_template('/account/email/exportdata.md',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           personal_projects_link=personal_projects_link,
+                           personal_contributions_link=personal_contributions_link,
+                           config=current_app.config)
+
+    html = render_template('/account/email/exportdata.html',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           personal_projects_link=personal_projects_link,
+                           personal_contributions_link=personal_contributions_link,
+                           config=current_app.config)
+    subject = 'Your personal data'
+    mail_dict = dict(recipients=[user.email_addr],
+                     subject=subject,
+                     body=body,
+                     html=html)
+    send_mail(mail_dict)
+
+
+def delete_file(fname, container):
+    """Delete file."""
+    from pybossa.core import uploader
+    return uploader.delete_file(fname, container)
