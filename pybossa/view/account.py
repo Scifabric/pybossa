@@ -822,7 +822,7 @@ def forgot_password():
     return handle_content_type(data)
 
 
-@blueprint.route('/<name>/export', methods=['GET', 'POST'])
+@blueprint.route('/<name>/export')
 @login_required
 def start_export(name):
     """
@@ -831,20 +831,16 @@ def start_export(name):
     Data will be available on GET /export after it is processed
 
     """
-    if request.method == 'POST':
-        user = user_repo.get_by_name(name)
-        if not user:
-            return abort(404)
-        ensure_authorized_to('update', user)
-        export_queue.enqueue(export_userdata,
-                             user=user)
-        msg = gettext('GDPR export started')
-        flash(msg, 'success')
-        return redirect_content_type(url_for('account.profile', name=name))
-    else:
-        # TODO: after job/rq is done export data here!
-        csrf = dict(form=dict(csrf=generate_csrf()))
-        return jsonify(csrf)
+    user = user_repo.get_by_name(name)
+    if not user:
+        return abort(404)
+    ensure_authorized_to('update', user)
+    export_queue.enqueue(export_userdata,
+                         user=user.id)
+    msg = gettext('GDPR export started')
+    flash(msg, 'success')
+    return redirect_content_type(url_for('account.profile', name=name))
+
 
 @blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
 @login_required
