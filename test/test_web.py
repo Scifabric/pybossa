@@ -4299,16 +4299,17 @@ class TestWeb(web.Helper):
         res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
                                 follow_redirects=True)
         assert res.status_code == 200, res.status_code
+        assert 1 == 0, res.data
 
 
     @with_context
+    @patch('pybossa.exporter.uploader.delete_file')
     @patch('pybossa.exporter.json_export.scheduler.enqueue_in')
     @patch('pybossa.exporter.json_export.uuid.uuid1', return_value='random')
-    def test_export_user_json(self, m1, m2):
+    def test_export_user_json(self, m1, m2, m3):
         """Test export user data in JSON."""
         user = UserFactory.create(id=50423)
         from pybossa.core import json_exporter as e
-        from pybossa.core import uploader
         e._make_zip(None, '', 'personal_data', user.dictize(), user.id,
                     'personal_data.zip')
 
@@ -4330,7 +4331,7 @@ class TestWeb(web.Helper):
         container = 'user_%s' % user.id
         import datetime
         m2.assert_called_with(datetime.timedelta(3),
-                              uploader.delete_file,
+                              m3,
                               'random_sec_personal_data.zip',
                               container)
 
