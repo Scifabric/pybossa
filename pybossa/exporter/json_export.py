@@ -93,7 +93,7 @@ class JsonExporter(Exporter):
                                     stream=zipped_datafile)
             uploader.upload_file(_file, container=container)
 
-            if "_sec_" in zipname:
+            if zipname and "_sec_" in zipname:
                 days = current_app.config.get('TTL_ZIP_SEC_FILES', 3)
                 scheduler.enqueue_in(timedelta(days=days),
                                      uploader.delete_file,
