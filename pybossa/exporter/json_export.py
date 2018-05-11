@@ -36,26 +36,37 @@ class JsonExporter(Exporter):
         # TODO: check ty here
         return self.gen_json(ty, id)
 
-    def _make_zip(self, project, ty):
-        name = self._project_name_latin_encoded(project)
-        json_task_generator = self._respond_json(ty, project.id)
-        if json_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
+    def _make_zip(self, project, ty, name=None, data=None, user_id=None):
+        if data:
+            self.handle_zip(name, data, ty, user_id, project)
+        else:
+            name = self._project_name_latin_encoded(project)
+            json_task_generator = self._respond_json(ty, project.id)
+            if json_task_generator is not None:
+                self.handle_zip(name, json_task_generator, ty, user_id, project)
+
+    def handle_zip(self, name, data, ty, user_id, project):
+        datafile = tempfile.NamedTemporaryFile()
+        try:
+            datafile.write(json.dumps(data))
+            datafile.flush()
+            zipped_datafile = tempfile.NamedTemporaryFile()
             try:
-                datafile.write(json.dumps(json_task_generator))
-                datafile.flush()
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    _zip = self._zip_factory(zipped_datafile.name)
-                    _zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
-                    _zip.close()
+                _zip = self._zip_factory(zipped_datafile.name)
+                _zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
+                _zip.close()
+                if user_id:
+                    container = "user_%d" % user_id
+                    _file = FileStorage(filename="user_%s.zip" % user_id, stream=zipped_datafile)
+                else:
                     container = "user_%d" % project.owner_id
                     _file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
-                finally:
-                    zipped_datafile.close()
+                print _file
+                uploader.upload_file(_file, container=container)
             finally:
-                datafile.close()
+                zipped_datafile.close()
+        finally:
+            datafile.close()
 
     def download_name(self, project, ty):
         return super(JsonExporter, self).download_name(project, ty, 'json')
