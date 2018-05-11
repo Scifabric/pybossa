@@ -4276,6 +4276,13 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
 
+        # As non existing user
+        uri = 'account/algo/export'
+        res = self.app.get(uri + '?api_key=%s' % user.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+
     @with_context
     def test_export_user_link_json(self):
         """Test WEB export user data link only for owner as JSON."""
@@ -4299,6 +4306,12 @@ class TestWeb(web.Helper):
         res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
                                 follow_redirects=True)
         assert res.status_code == 200, res.status_code
+
+        # As non existing user
+        uri = 'account/algo/export'
+        res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
 
     @with_context
