@@ -19,8 +19,8 @@
 
 from default import Test, db, with_context
 from nose.tools import assert_raises
-from factories import UserFactory
-from pybossa.repositories import UserRepository
+from factories import UserFactory, TaskRunFactory
+from pybossa.repositories import UserRepository, TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
@@ -30,6 +30,7 @@ class TestUserRepository(Test):
     def setUp(self):
         super(TestUserRepository, self).setUp()
         self.user_repo = UserRepository(db)
+        self.task_repo = TaskRepository(db)
 
 
     @with_context
@@ -326,3 +327,47 @@ class TestUserRepository(Test):
         retrieved_users = self.user_repo.get_users([tyrion.id, theon.id])
         assert any(user == tyrion for user in retrieved_users)
         assert any(user == theon for user in retrieved_users)
+
+    @with_context
+    def test_delete_user(self):
+        """Test USER delete works."""
+        user = UserFactory.create()
+        user_id = user.id
+        user = self.user_repo.get_by(id=user_id)
+        assert user.id == user_id
+        self.user_repo.delete(user)
+        user = self.user_repo.get_by(id=user_id)
+        assert user is None
+
+    @with_context
+    def test_fake_user_id(self):
+        """Test remove user ID works and it's replaced by a fake IP."""
+        user = UserFactory.create()
+        taskruns = TaskRunFactory.create_batch(3, user=user)
+        fake_ips = []
+        assert taskruns[0].user_id == user.id
+        self.user_repo.fake_user_id(user)
+        for taskrun in taskruns:
+            taskrun = self.task_repo.get_task_run_by(id=taskrun.id)
+            assert taskrun.user_id is None
+            assert taskrun.user_ip is not None
+            fake_ips.append(taskrun.user_ip)
+        assert len(set(fake_ips)) == 3
+
+    @with_context
+    def test_delete_user_with_task_runs(self):
+        """Delete user with task runs works."""
+        user = UserFactory.create()
+        taskruns = TaskRunFactory.create_batch(3, user=user)
+        fake_ips = []
+        user_id = user.id
+        assert taskruns[0].user_id == user.id
+        self.user_repo.delete(user)
+        for taskrun in taskruns:
+            taskrun = self.task_repo.get_task_run_by(id=taskrun.id)
+            assert taskrun.user_id is None
+            assert taskrun.user_ip is not None
+            fake_ips.append(taskrun.user_ip)
+        assert len(set(fake_ips)) == 3
+        user = self.user_repo.get_by(id=user_id)
+        assert user is None

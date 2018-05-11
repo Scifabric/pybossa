@@ -762,7 +762,7 @@ def push_notification(project_id, **kwargs):
     from pybossa.core import project_repo
     project = project_repo.get(project_id)
     if project.info.get('onesignal'):
-        app_id = current_app.config.get('ONESIGNAL_APP_ID') 
+        app_id = current_app.config.get('ONESIGNAL_APP_ID')
         api_key = current_app.config.get('ONESIGNAL_API_KEY')
         client = PybossaOneSignal(app_id=app_id, api_key=api_key)
         filters = [{"field": "tag", "key": project_id, "relation": "exists"}]
@@ -771,6 +771,29 @@ def push_notification(project_id, **kwargs):
                                launch_url=kwargs['launch_url'],
                                web_buttons=kwargs['web_buttons'],
                                filters=filters)
+
+
+def delete_account(user_id, **kwargs):
+    """Delete user account from the system."""
+    from pybossa.core import user_repo
+    from pybossa.core import newsletter
+    newsletter.init_app(current_app)
+    user = user_repo.get(user_id)
+    email = user.email_addr
+    mailchimp_deleted = newsletter.delete_user(email)
+    brand = current_app.config.get('BRAND')
+    user_repo.delete(user)
+    subject = '[%s]: Your account has been deleted' % brand
+    body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+    if not mailchimp_deleted:
+        body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
+    if current_app.config.get('DISQUS_SECRET_KEY'):
+        body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
+    recipients = [email]
+    for em in current_app.config.get('ADMINS'):
+        recipients.append(em)
+    mail_dict = dict(recipients=recipients, subject=subject, body=body)
+    send_mail(mail_dict)
 
 def export_userdata(user_id, **kwargs):
     from pybossa.core import user_repo, project_repo, task_repo, result_repo

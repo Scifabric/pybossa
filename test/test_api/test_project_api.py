@@ -348,6 +348,8 @@ class TestProjectAPI(TestAPI):
         res = self.app.post('/api/project', data=data)
         assert_equal(res.status, '401 UNAUTHORIZED',
                      'Should not be allowed to create')
+
+        assert res.mimetype == 'application/json'
         # now a real user
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
                             data=data)
@@ -569,6 +571,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
+        assert res.mimetype == 'application/json'
 
         # delete a project that does not exist
         url = '/api/project/5000?api_key=%s' % users[1].api_key
@@ -652,6 +655,7 @@ class TestProjectAPI(TestAPI):
         assert_equal(res.status, '200 OK', res.data)
         out2 = project_repo.get(project.id)
         assert_equal(out2.name, data['name'])
+        assert res.mimetype == 'application/json'
 
         # PUT with not JSON data
         res = self.app.put(url, data=data)
@@ -696,6 +700,7 @@ class TestProjectAPI(TestAPI):
         ### DELETE success real user  not owner!
         res = self.app.delete(url, data=json.dumps(data))
         assert_equal(res.status, '204 NO CONTENT', res.data)
+        assert res.mimetype == 'application/json'
 
     @with_context
     def test_user_progress_anonymous(self):
