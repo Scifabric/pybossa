@@ -30,24 +30,33 @@ from flask.ext.mail import Message
 class TestExportAccount(Test):
 
     @with_context
+    @patch('pybossa.exporter.json_export.scheduler')
+    @patch('pybossa.exporter.json_export.uploader')
+    @patch('uuid.uuid1', return_value='random')
     @patch('pybossa.jobs.Message')
     @patch('pybossa.jobs.send_mail')
-    @patch('pybossa.jobs.JsonExporter')
-    def test_export(self, json_mock, m1, m2):
+    # @patch('pybossa.jobs.JsonExporter')
+    def test_export(self, m1, m2, m3, m4, m5):
         """Check email is sent to user."""
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
-        taskrun = TaskRunFactory.create(user_id=user.id)
+        taskrun = TaskRunFactory.create(user=user)
+
+        m4.delete_file.return_value = True
+
         export_userdata(user.id)
 
         upload_method = 'uploads.uploaded_file'
 
         personal_data_link = url_for(upload_method,
-                                     filename="user_%s/personal_data.zip" % user.id)
+                                     filename="user_%s/%s_sec_personal_data.zip"
+                                     % (user.id, 'random'))
         personal_projects_link = url_for(upload_method,
-                                        filename="user_%s/user_projects.zip" % user.id)
+                                         filename="user_%s/%s_sec_user_projects.zip"
+                                         % (user.id, 'random'))
         personal_contributions_link = url_for(upload_method,
-                                          filename="user_%s/user_contributions.zip" % user.id)
+                                              filename="user_%s/%s_sec_user_contributions.zip"
+                                              % (user.id, 'random'))
 
 
         body = render_template('/account/email/exportdata.md',
