@@ -47,13 +47,15 @@ class JsonExporter(Exporter):
     def _make_zip(self, project, ty, name=None, data=None, user_id=None,
                   zipname=None):
         if data:
-            self.handle_zip(name, data, ty, user_id, project, 'json', zipname)
+            return self.handle_zip(name, data, ty,
+                                   user_id, project,
+                                   'json', zipname)
         else:
             name = self._project_name_latin_encoded(project)
             json_task_generator = self._respond_json(ty, project.id)
             if json_task_generator is not None:
-                self.handle_zip(name, json_task_generator,
-                                ty, user_id, project, 'json', zipname)
+                return self.handle_zip(name, json_task_generator,
+                                       ty, user_id, project, 'json', zipname)
 
     def download_name(self, project, ty):
         return super(JsonExporter, self).download_name(project, ty, 'json')
@@ -100,3 +102,4 @@ class JsonExporter(Exporter):
                                      zipname,
                                      container)
             zipped_datafile.close()
+            return zipname
