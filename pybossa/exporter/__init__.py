@@ -179,5 +179,3 @@ class Exporter(object):
     def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
-
-
