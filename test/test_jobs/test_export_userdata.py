@@ -69,3 +69,11 @@ class TestExportAccount(Test):
                      body=body,
                      html=html)
         m1.assert_called_with(mail_dict)
+
+    @with_context
+    @patch('pybossa.core.uploader.delete_file')
+    def test_delete_file(self, m1):
+        """Test delete file works."""
+        from pybossa.jobs import delete_file
+        delete_file('f', 'a')
+        m1.assert_called_with('f', 'a')
