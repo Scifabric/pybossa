@@ -4299,7 +4299,6 @@ class TestWeb(web.Helper):
         res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
                                 follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 1 == 0, res.data
 
 
     @with_context
