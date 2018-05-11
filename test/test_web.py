@@ -4253,6 +4253,55 @@ class TestWeb(web.Helper):
         assert exported_user['id'] == user.id
 
     @with_context
+    def test_export_user_link(self):
+        """Test WEB export user data link only for owner."""
+        root, user, other = UserFactory.create_batch(3)
+        uri = 'account/%s/export' % user.name
+        # As anon
+        res = self.app.get(uri)
+        assert res.status_code == 302
+
+        # As admin
+        res = self.app.get(uri + '?api_key=%s' % root.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As other
+        res = self.app.get(uri + '?api_key=%s' % other.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        res = self.app.get(uri + '?api_key=%s' % user.api_key,
+                           follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_export_user_link_json(self):
+        """Test WEB export user data link only for owner as JSON."""
+        root, user, other = UserFactory.create_batch(3)
+        uri = 'account/%s/export' % user.name
+        # As anon
+        res = self.app_get_json(uri)
+        assert res.status_code == 302
+
+        # As admin
+        res = self.app_get_json(uri + '?api_key=%s' % root.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As other
+        res = self.app_get_json(uri + '?api_key=%s' % other.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As owner
+        res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
+                                follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+
+    @with_context
     @patch('pybossa.exporter.json_export.scheduler.enqueue_in')
     @patch('pybossa.exporter.json_export.uuid.uuid1', return_value='random')
     def test_export_user_json(self, m1, m2):
