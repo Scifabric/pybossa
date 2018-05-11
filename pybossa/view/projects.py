@@ -31,6 +31,7 @@ from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from flask_wtf.csrf import generate_csrf
 from rq import Queue
+from werkzeug.datastructures import MultiDict
 
 import pybossa.sched as sched
 
@@ -2738,3 +2739,48 @@ def sync_project(short_name):
 
     return redirect_content_type(
         url_for('.update', short_name=short_name))
+
+
+@blueprint.route('/<short_name>/ext-config', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def ext_config(short_name):
+    """Manage configuration of external services."""
+    from pybossa.forms.dynamic_forms import form_builder
+
+    project = project_repo.get_by_shortname(short_name)
+    ext_conf = project.info.get('ext_config', {})
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    forms = current_app.config.get('EXTERNAL_CONFIGURATIONS', {})
+
+    form_classes = []
+    for form_name, form_config in forms.iteritems():
+        display = form_config['display']
+        form = form_builder(form_name, form_config['fields'].iteritems())
+        form_classes.append((form_name, display, form))
+
+    if request.method == 'POST':
+        for form_name, _, form_class in form_classes:
+            if form_name in request.body:
+                form = form_class()
+                if not form.validate():
+                    flash(gettext('Please correct the errors', 'error'))
+                ext_conf[form_name] = form.data
+                project.info['ext_config'] = ext_conf
+                project_repo.save(project)
+
+    template_forms = [(name, disp, cl(MultiDict(ext_conf.get(name, {}))))
+                      for name, disp, cl in form_classes]
+
+    response = dict(
+        template='/projects/external_config.html',
+        project=project.to_public_json(),
+        title=gettext("Configure external services"),
+        forms=template_forms,
+        pro_features=pro_features()
+    )
+
+    return handle_content_type(response)
