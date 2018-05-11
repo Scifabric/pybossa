@@ -842,3 +842,9 @@ def export_userdata(user_id, **kwargs):
                      body=body,
                      html=html)
     send_mail(mail_dict)
+
+
+def delete_file(fname, container):
+    """Delete file."""
+    from pybossa.core import uploader
+    return uploader.delete_file(fname, container)

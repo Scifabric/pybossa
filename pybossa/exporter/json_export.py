@@ -20,12 +20,19 @@
 JSON Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
+import uuid
 import json
 import tempfile
 from pybossa.exporter import Exporter
-from pybossa.core import uploader, task_repo
+from pybossa.core import uploader, task_repo, sentinel
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from rq_scheduler import Scheduler
+from datetime import timedelta
+from flask import current_app
+
+redis_conn = sentinel.master
+scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
 
 
 class JsonExporter(Exporter):
@@ -75,6 +82,8 @@ class JsonExporter(Exporter):
                 container = "user_%d" % user_id
                 if zipname is None:
                     zipname = "user_%s.zip" % user_id
+                else:
+                    zipname = "%s_sec_%s" % (uuid.uuid1(), zipname)
                 _file = FileStorage(filename=zipname,
                                     stream=zipped_datafile)
             else:
@@ -84,4 +93,10 @@ class JsonExporter(Exporter):
                                     stream=zipped_datafile)
             uploader.upload_file(_file, container=container)
 
+            if "_sec_" in zipname:
+                days = current_app.config.get('TTL_ZIP_SEC_FILES', 3)
+                scheduler.enqueue_in(timedelta(days=days),
+                                     uploader.delete_file,
+                                     zipname,
+                                     container)
             zipped_datafile.close()
