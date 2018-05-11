@@ -27,6 +27,8 @@ from pybossa.util import with_cache_disabled, publish_channel
 import pybossa.dashboard.jobs as dashboard
 from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
+from pybossa.core import uploader
+from pybossa.exporter.json_export import JsonExporter
 
 
 def schedule_job(function, scheduler):
@@ -772,9 +774,8 @@ def push_notification(project_id, **kwargs):
 
 def export_userdata(user_id, **kwargs):
     from pybossa.core import user_repo, project_repo, task_repo, result_repo
-    from pybossa.exporter.json_export import JsonExporter
-    from pybossa.core import uploader
     from flask import current_app, url_for
+    json_exporter = JsonExporter()
     user = user_repo.get(user_id)
     user_data = user.dictize()
     del user_data['passwd_hash']
@@ -782,12 +783,11 @@ def export_userdata(user_id, **kwargs):
     projects_data = [project.dictize() for project in projects]
     taskruns = task_repo.filter_task_runs_by(user_id=user.id)
     taskruns_data = [tr.dictize() for tr in taskruns]
-    e = JsonExporter()
-    e._make_zip(None, '', 'personal_data', user_data, user_id,
+    json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
                 'personal_data.zip')
-    e._make_zip(None, '', 'user_projects', projects_data, user_id,
+    json_exporter._make_zip(None, '', 'user_projects', projects_data, user_id,
                 'user_projects.zip')
-    e._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
+    json_exporter._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
                 'user_contributions.zip')
     upload_method = current_app.config.get('UPLOAD_METHOD')
     if upload_method == 'local':
