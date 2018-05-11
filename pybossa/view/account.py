@@ -840,7 +840,7 @@ def start_export(name):
 
     ensure_authorized_to('update', user)
     export_queue.enqueue(export_userdata,
-                         user=user.id)
+                         user_id=user.id)
     msg = gettext('GDPR export started')
     flash(msg, 'success')
     return redirect_content_type(url_for('account.profile', name=name))
