@@ -835,6 +835,9 @@ def start_export(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
+    if user.id != current_user.id:
+        return abort(403)
+
     ensure_authorized_to('update', user)
     export_queue.enqueue(export_userdata,
                          user=user.id)
