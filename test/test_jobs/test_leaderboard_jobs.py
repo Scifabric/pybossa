@@ -84,12 +84,22 @@ class TestLeaderboard(Test):
     @with_context
     def test_anon_week(self):
         """Test JOB leaderboard returns anon active week runs."""
+        db.session.execute('''delete from "user";''')
+        from pybossa.core import user_repo
         users = UserFactory.create_batch(20)
+        restricted = UserFactory.create(restrict=True)
+        users.append(restricted)
         for user in users:
             TaskRunFactory.create(user=user)
         leaderboard()
         top_users = get_leaderboard()
         assert len(top_users) == 20, len(top_users)
+        for u in top_users:
+            assert u['name'] != restricted.name, u
+
+        results = db.session.execute('select * from users_rank');
+        for r in results:
+            assert r.restrict is False, r
 
     @with_context
     def test_leaderboard_foo_key(self):
@@ -97,6 +107,7 @@ class TestLeaderboard(Test):
         users = []
         for score in range(1, 11):
             users.append(UserFactory.create(info=dict(foo=score)))
+        users.append(UserFactory.create(restrict=True, info=dict(foo=11)))
         leaderboard(info='foo')
         top_users = get_leaderboard(info='foo')
         assert len(top_users) == 10, len(top_users)
@@ -105,12 +116,20 @@ class TestLeaderboard(Test):
             user['score'] == score, user
             score = score - 1
 
+        results = db.session.execute('select * from users_rank_foo');
+        for r in results:
+            assert r.restrict is False, r
+
+
     @with_context
     def test_leaderboard_foo_key_current_user(self):
         """Test JOB leaderboard returns users for foo key with current user."""
         users = []
         for score in range(1, 11):
             users.append(UserFactory.create(info=dict(foo=score)))
+
+        users.append(UserFactory.create(restrict=True, info=dict(foo=11)))
+
         leaderboard(info='foo')
         top_users = get_leaderboard(user_id=users[0].id, info='foo')
         assert len(top_users) == 11, len(top_users)
@@ -121,12 +140,18 @@ class TestLeaderboard(Test):
         assert top_users[-1]['name'] == users[0].name
         assert top_users[-1]['score'] == users[0].info.get('foo')
 
+        results = db.session.execute('select * from users_rank_foo');
+        for r in results:
+            assert r.restrict is False, r
+
+
     @with_context
     def test_leaderboard_foo_key_current_user_window(self):
         """Test JOB leaderboard returns users for foo key with current user and
         window."""
         UserFactory.create_batch(10, info=dict(n=0))
         UserFactory.create_batch(10, info=dict(n=2))
+        UserFactory.create_batch(10, info=dict(n=2), restrict=True)
         users = []
         for score in range(11, 22):
             users.append(UserFactory.create(info=dict(n=score)))
@@ -141,6 +166,10 @@ class TestLeaderboard(Test):
         assert top_users[25]['score'] == myself.info.get('n')
         assert top_users[24]['score'] >= myself.info.get('n')
         assert top_users[26]['score'] <= myself.info.get('n')
+
+        results = db.session.execute('select * from users_rank_n');
+        for r in results:
+            assert r.restrict is False, r
 
 
     #@with_context

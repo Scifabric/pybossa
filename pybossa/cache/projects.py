@@ -254,6 +254,7 @@ def get_all_featured(category=None):
            FROM project, "user"
            WHERE project.featured=true
            AND "user".id=project.owner_id
+           AND "user".restrict=false
            GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)
@@ -313,6 +314,7 @@ def get_all_draft(category=None):
             "user".fullname AS owner
            FROM "user", project
            WHERE project.owner_id="user".id
+           AND "user".restrict=false
            AND project.published=false;''')
 
     results = session.execute(sql)
@@ -378,6 +380,7 @@ def get_all(category):
            WHERE
            category.short_name=:category
            AND "user".id=project.owner_id
+           AND "user".restrict=false
            AND project.published=true
            AND (project.info->>'passwd_hash') IS NULL
            GROUP BY project.id, "user".id ORDER BY project.name;''')

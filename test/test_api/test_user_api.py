@@ -32,8 +32,10 @@ class TestUserAPI(Test):
     @with_context
     def test_user_get(self):
         """Test API User GET"""
-        admin, expected_user, someone = UserFactory.create_batch(3, info=dict(extra='foo',
+        admin, expected_user, someone = UserFactory.create_batch(3,
+                                                                 info=dict(extra='foo',
                                                                  badges=[1,2,3]))
+        restricted = UserFactory.create(restrict=True)
         # Test GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
@@ -94,17 +96,43 @@ class TestUserAPI(Test):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+        # Test restricted by anon
+        url = '/api/user/%s' % restricted.id
+        res = self.app.get(url)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        res = self.app.get(url + '?api_key=' + someone.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As admin
+        res = self.app.get(url + '?api_key=' + admin.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As same user
+        res = self.app.get(url + '?api_key=' + restricted.api_key)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['id'] == restricted.id
 
     @with_context
     def test_query_user(self):
         """Test API query for user endpoint works"""
-        expected_user = UserFactory.create_batch(2)[0]
+        expected_user, other = UserFactory.create_batch(2)
+        restricted = UserFactory.create(restrict=True)
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
         res = self.app.get('/api/user?name=%s' % expected_user.name)
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert data[0]['name'] == expected_user.name, data
+        # Trying to change restrict
+        res = self.app.get('/api/user?restrict=true')
+        data = json.loads(res.data)
+        assert len(data) == 2, data
+        for d in data:
+            assert d['name'] != restricted.name, d
+
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
         data = json.loads(res.data)
@@ -136,6 +164,112 @@ class TestUserAPI(Test):
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == 'AttributeError', err_msg
 
+
+
+    @with_context
+    def test_query_restricted_user(self):
+        """Test API query for restricted user endpoint works"""
+        expected_user, other = UserFactory.create_batch(2, restrict=True)
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s' % expected_user.name)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla')
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en")
+        data = json.loads(res.data)
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 0, data
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en' % expected_user.name)
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 0, data
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever')
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
+
+        # As other user
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name,
+                                                           other.api_key))
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla&api_key=%s' + other.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en&api_key=" + other.api_key)
+        data = json.loads(res.data)
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 0, data
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
+                           (expected_user.name, other.api_key))
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 0, data
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever&api_key=' +
+                           other.api_key)
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
+
+        # As same user
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name,
+                                                           expected_user.api_key))
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla&api_key=' + expected_user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en&api_key=" + expected_user.api_key)
+        data = json.loads(res.data)
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 0, data
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
+                           (expected_user.name, expected_user.api_key))
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 0, data
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever&api_key=' +
+                           expected_user.api_key)
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
 
     @with_context
     def test_user_not_allowed_actions_anon(self):

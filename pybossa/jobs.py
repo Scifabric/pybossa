@@ -232,7 +232,7 @@ def get_inactive_users_jobs(queue='quaterly'):
 
         user = User.query.get(row.user_id)
 
-        if user.subscribed:
+        if user.subscribed and user.restrict is False:
             subject = "We miss you!"
             body = render_template('/account/email/inactive.md',
                                    user=user.dictize(),
@@ -303,7 +303,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
     for row in results:
         user = User.query.get(row.id)
 
-        if user.subscribed:
+        if (user.subscribed and user.restrict is False):
             subject = "Why don't you help us?!"
             body = render_template('/account/email/noncontributors.md',
                                    user=user.dictize(),
@@ -575,6 +575,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
                    WHERE task_run.project_id=:project_id
                    AND task_run.user_id="user".id
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    GROUP BY email_addr, name, subscribed;
                    ''')
         results = db.slave_session.execute(sql, dict(project_id=project_id))
@@ -623,6 +624,7 @@ def get_weekly_stats_update_projects():
                    FROM project, "user", task
                    WHERE "user".id=project.owner_id %s
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    AND task.project_id=project.id
                    AND task.state!='completed'
                    UNION
@@ -645,7 +647,7 @@ def send_weekly_stats_project(project_id):
     from pybossa.core import project_repo
     from datetime import datetime
     project = project_repo.get(project_id)
-    if project.owner.subscribed is False:
+    if project.owner.subscribed is False or project.owner.restrict:
         return "Owner does not want updates by email"
     update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,

@@ -54,6 +54,7 @@ def get_user_summary(name):
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
+               AND "user".restrict=false
                GROUP BY "user".id;
                ''')
     results = session.execute(sql, dict(name=name))

@@ -20,6 +20,7 @@ import json
 import StringIO
 from default import with_context
 from pybossa.util import unicode_csv_reader
+from factories import UserFactory
 from helper import web
 
 
@@ -42,6 +43,7 @@ class TestExportUsers(web.Helper):
 
     @with_context
     def test_json_returns_all_users(self):
+        restricted = UserFactory.create(restrict=True, id=5000014)
         self.register(fullname="Manolita")
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
@@ -59,11 +61,14 @@ class TestExportUsers(web.Helper):
         assert "Juan Jose" in data, data
         assert "Manolita" in data, data
         assert "Juan Jose2" in data, data
+        assert restricted.name not in data, data
         assert len(json_data) == 3
 
     @with_context
     def test_csv_contains_all_attributes(self):
         self.register()
+
+        restricted = UserFactory.create(restrict=True, id=5000015)
 
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
@@ -71,9 +76,11 @@ class TestExportUsers(web.Helper):
 
         for attribute in self.exportable_attributes:
             assert attribute in data, data
+        assert restricted.name not in data, data
 
     @with_context
     def test_csv_returns_all_users(self):
+        restricted = UserFactory.create(restrict=True, id=5000016)
         self.register(fullname="Manolita")
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
@@ -86,6 +93,7 @@ class TestExportUsers(web.Helper):
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
         data = res.data
+        assert restricted.name not in data
         csv_content = StringIO.StringIO(data)
         csvreader = unicode_csv_reader(csv_content)
 
