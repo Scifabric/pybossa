@@ -49,6 +49,8 @@ class UserRepository(Repository):
                   fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
+        # Force only restrict to False
+        filters['restrict'] = False
         return self._filter_by(User, limit, offset, yielded,
                                last_id, fulltextsearch, desc, **filters)
 
