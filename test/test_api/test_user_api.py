@@ -32,8 +32,10 @@ class TestUserAPI(Test):
     @with_context
     def test_user_get(self):
         """Test API User GET"""
-        admin, expected_user, someone = UserFactory.create_batch(3, info=dict(extra='foo',
+        admin, expected_user, someone = UserFactory.create_batch(3,
+                                                                 info=dict(extra='foo',
                                                                  badges=[1,2,3]))
+        restricted = UserFactory.create(restrict=True)
         # Test GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
@@ -93,6 +95,26 @@ class TestUserAPI(Test):
         assert err['target'] == 'user', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
+
+        # Test restricted by anon
+        url = '/api/user/%s' % restricted.id
+        res = self.app.get(url)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        res = self.app.get(url + '?api_key=' + someone.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As admin
+        res = self.app.get(url + '?api_key=' + admin.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As same user
+        res = self.app.get(url + '?api_key=' + restricted.api_key)
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data['id'] == restricted.id
+
 
 
     @with_context
