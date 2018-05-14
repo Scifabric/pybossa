@@ -179,7 +179,9 @@ class TestSiteStatsCache(Test):
 
     @with_context
     def test_get_top5_users_24_hours_returns_best_5_users_only(self):
-        users = UserFactory.create_batch(5)
+        users = UserFactory.create_batch(4)
+        restricted = UserFactory.create(restrict=True)
+        users.append(restricted)
         i = 5
         for user in users:
             TaskRunFactory.create_batch(i, user=user)
@@ -190,10 +192,12 @@ class TestSiteStatsCache(Test):
         top5 = stats.get_top5_users_24_hours()
         top5_ids = [top['id'] for top in top5]
 
-        assert len(top5) == 5
+        assert len(top5) == 4, len(top5)
         assert worst_user.id not in top5_ids
         for i in range(len(top5)):
             assert users[i].id == top5_ids[i]
+            assert users[i].restrict is False
+            assert users[i].id != restricted.id
 
     @with_context
     def test_get_top5_users_24_hours_considers_last_24_hours_contributions_only(self):
