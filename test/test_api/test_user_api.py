@@ -120,12 +120,21 @@ class TestUserAPI(Test):
     def test_query_user(self):
         """Test API query for user endpoint works"""
         expected_user, other = UserFactory.create_batch(2)
+        restricted = UserFactory.create(restrict=True)
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
         res = self.app.get('/api/user?name=%s' % expected_user.name)
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert data[0]['name'] == expected_user.name, data
+        # Trying to change restrict
+        res = self.app.get('/api/user?restrict=true')
+        data = json.loads(res.data)
+        assert len(data) == 2, data
+        for d in data:
+            assert d['id'] != restricted.id
+            assert d['restrict'] is False
+
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
         data = json.loads(res.data)
@@ -202,7 +211,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert len(data) == 0, data
         # And it should return no results if there are no matches
-        res = self.app.get('/api/user?name=Godzilla&api_key=' + other.api_key)
+        res = self.app.get('/api/user?name=Godzilla&api_key=%s' + other.api_key)
         data = json.loads(res.data)
         assert len(data) == 0, data
 
@@ -211,9 +220,6 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         # It should return 3 results, as every registered user has locale=en by default
         assert len(data) == 0, data
-        # And they should be the correct ones
-        assert (data[0]['locale'] == data[1]['locale'] == 'en'
-               and data[0] != data[1]), data
 
         # When querying with multiple valid fields
         res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
@@ -238,10 +244,7 @@ class TestUserAPI(Test):
         res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name,
                                                            expected_user.api_key))
         data = json.loads(res.data)
-        assert len(data) == 1, data
-        assert data[0]['name'] == expected_user.name, data
-        assert data[0]['id'] == expected_user.id
-        assert data[0]['restricted'] = True, data
+        assert len(data) == 0, data
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla&api_key=' + expected_user.api_key)
         data = json.loads(res.data)
@@ -251,20 +254,14 @@ class TestUserAPI(Test):
         res = self.app.get("/api/user?locale=en&api_key=" + expected_user.api_key)
         data = json.loads(res.data)
         # It should return 3 results, as every registered user has locale=en by default
-        assert len(data) == 1, data
-        assert data[0]['id'] == expected_user.id
-        assert data[0]['restricted'] = True, data
+        assert len(data) == 0, data
 
         # When querying with multiple valid fields
         res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
                            (expected_user.name, expected_user.api_key))
         data = json.loads(res.data)
         # It should find and return one correct result
-        assert len(data) == 1, data
-        assert data[0]['name'] == expected_user.name, data
-        assert data[0]['locale'] == 'en', data
-        assert data[0]['id'] == expected_user.id
-        assert data[0]['restricted'] = True, data
+        assert len(data) == 0, data
 
         # When querying with non-valid fields -- Errors
         res = self.app.get('/api/user?something_invalid=whatever&api_key=' +
