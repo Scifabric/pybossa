@@ -158,7 +158,8 @@ def users(user_id=None):
 def export_users():
     """Export Users list in the given format, only for admins."""
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin', 'consent')
+                             'created', 'locale', 'admin', 'consent',
+                             'restrict')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'
@@ -167,7 +168,7 @@ def export_users():
         return res
 
     def gen_json():
-        users = user_repo.get_all()
+        users = user_repo.filter_by(restrict=False)
         json_users = []
         for user in users:
             json_users.append(dictize_with_exportable_attributes(user))
@@ -189,7 +190,7 @@ def export_users():
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)
-        for user in user_repo.get_all():
+        for user in user_repo.filter_by(restrict=False):
             write_user(writer, user)
         yield out.getvalue()
 
