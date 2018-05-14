@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('user', sa.Column('restrict', sa.Boolean))
+    op.add_column('user', sa.Column('restrict', sa.Boolean, default=False))
+    sql = 'update "user" set restrict=false'
+    op.execute(sql)
 
 
 def downgrade():
