@@ -624,6 +624,7 @@ def get_weekly_stats_update_projects():
                    FROM project, "user", task
                    WHERE "user".id=project.owner_id %s
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    AND task.project_id=project.id
                    AND task.state!='completed'
                    UNION
@@ -646,7 +647,7 @@ def send_weekly_stats_project(project_id):
     from pybossa.core import project_repo
     from datetime import datetime
     project = project_repo.get(project_id)
-    if project.owner.subscribed is False:
+    if project.owner.subscribed is False or project.owner.restrict:
         return "Owner does not want updates by email"
     update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,

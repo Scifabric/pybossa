@@ -131,7 +131,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert len(data) == 2, data
         for d in data:
-            assert d['id'] != restricted.id
+            assert d['name'] != restricted.name, d
 
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
