@@ -76,6 +76,7 @@ def format_user(user):
         email_addr=user.email_addr,
         info=user.info,
         created=user.created,
+        restrict=user.restrict,
         score=user.score)
     tmp = u.to_public_json(data=user)
     return tmp

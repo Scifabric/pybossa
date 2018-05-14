@@ -43,7 +43,7 @@ class UserRepository(Repository):
         return self.db.session.query(User).filter_by(**attributes).first()
 
     def get_all(self):
-        return self.db.session.query(User).all()
+        return self.db.session.query(User).filter_by(restrict=False).all()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   fulltextsearch=None, desc=False, **filters):
