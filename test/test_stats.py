@@ -22,6 +22,7 @@ from factories import ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTask
 from default import Test, with_context
 from pybossa.model.task_run import TaskRun
 import pybossa.cache.project_stats as stats
+from pybossa.core import user_repo
 
 
 class TestStats(Test):
@@ -104,8 +105,11 @@ class TestStats(Test):
         date_ms = time.mktime(time.strptime(today, "%Y-%m-%d")) * 1000
         anon = 0
         auth = 0
-        TaskRunFactory.create(task=self.project.tasks[0])
-        TaskRunFactory.create(task=self.project.tasks[1])
+        tr1 = TaskRunFactory.create(task=self.project.tasks[0])
+        tr2 = TaskRunFactory.create(task=self.project.tasks[1])
+        user = user_repo.get(tr1.user_id)
+        user.restrict = True
+        user_repo.update(user)
         stats.update_stats(self.project.id)
         dates_stats, hours_stats, user_stats = stats.get_stats(self.project.id)
         for item in dates_stats:
@@ -164,3 +168,5 @@ class TestStats(Test):
 
         err_msg = "user stats sum of auth and anon should be 7"
         assert user_stats['n_anon'] + user_stats['n_auth'] == 7, err_msg
+        for u in user_stats['auth']['top5']:
+            assert u['restrict'] is False, u
