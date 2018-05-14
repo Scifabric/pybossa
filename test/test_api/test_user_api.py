@@ -115,7 +115,6 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert data['id'] == restricted.id
 
-
     @with_context
     def test_query_user(self):
         """Test API query for user endpoint works"""
@@ -133,7 +132,6 @@ class TestUserAPI(Test):
         assert len(data) == 2, data
         for d in data:
             assert d['id'] != restricted.id
-            assert d['restrict'] is False
 
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
