@@ -254,6 +254,7 @@ def get_all_featured(category=None):
            FROM project, "user"
            WHERE project.featured=true
            AND "user".id=project.owner_id
+           AND "user".restrict=false
            GROUP BY project.id, "user".id;''')
 
     results = session.execute(sql)

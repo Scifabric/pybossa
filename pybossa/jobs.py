@@ -232,7 +232,7 @@ def get_inactive_users_jobs(queue='quaterly'):
 
         user = User.query.get(row.user_id)
 
-        if user.subscribed:
+        if user.subscribed and user.restrict is False:
             subject = "We miss you!"
             body = render_template('/account/email/inactive.md',
                                    user=user.dictize(),
