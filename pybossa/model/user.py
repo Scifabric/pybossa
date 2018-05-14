@@ -52,6 +52,7 @@ class User(db.Model, DomainObject, UserMixin):
     admin = Column(Boolean, default=False)
     pro = Column(Boolean, default=False)
     privacy_mode = Column(Boolean, default=True, nullable=False)
+    restrict = Column(Boolean, default=False, nullable=False)
     category = Column(Integer)
     flags = Column(Integer)
     twitter_user_id = Column(BigInteger, unique=True)
