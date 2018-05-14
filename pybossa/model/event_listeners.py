@@ -133,7 +133,7 @@ def add_user_event(mapper, conn, target):
 def add_user_contributed_to_feed(conn, user_id, project_obj):
     if user_id is not None:
         sql_query = ('select fullname, name, info from "user" \
-                     where id=%s') % user_id
+                     where id=%s and restrict=false') % user_id
         results = conn.execute(sql_query)
         for r in results:
             tmp = dict(id=user_id,
@@ -266,7 +266,7 @@ def update_timestamp(mapper, conn, target):
 
 @event.listens_for(User, 'before_insert')
 def make_admin(mapper, conn, target):
-    users = conn.scalar('select count(*) from "user"')
+    users = conn.scalar('select count(*) from "user" where restrict=false')
     if users == 0:
         target.admin = True
 

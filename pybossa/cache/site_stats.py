@@ -119,7 +119,7 @@ def get_top5_users_24_hours():
     # Top 5 Most active users in last 24 hours
     sql = text('''SELECT "user".id, "user".fullname, "user".name,
                COUNT(task_run.project_id) AS n_answers FROM "user", task_run
-               WHERE "user".id=task_run.user_id
+               WHERE "user".restrict=false AND "user".id=task_run.user_id
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY "user".id

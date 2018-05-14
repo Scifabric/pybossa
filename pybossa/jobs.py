@@ -303,7 +303,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
     for row in results:
         user = User.query.get(row.id)
 
-        if user.subscribed:
+        if (user.subscribed and user.restrict is False):
             subject = "Why don't you help us?!"
             body = render_template('/account/email/noncontributors.md',
                                    user=user.dictize(),
@@ -575,6 +575,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
                    WHERE task_run.project_id=:project_id
                    AND task_run.user_id="user".id
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    GROUP BY email_addr, name, subscribed;
                    ''')
         results = db.slave_session.execute(sql, dict(project_id=project_id))

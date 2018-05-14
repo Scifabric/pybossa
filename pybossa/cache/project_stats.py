@@ -496,7 +496,7 @@ def stats_format_users(project_id, users, anon_users, auth_users):
         top5_anon.append(dict(ip=u[0], tasks=u[1]))
 
     for u in auth_users:
-        sql = text('''SELECT name, fullname from "user" where id=:id;''')
+        sql = text('''SELECT name, fullname from "user" where id=:id and restrict=false;''')
         results = session.execute(sql, dict(id=u[0]))
         for row in results:
             fullname = row.fullname

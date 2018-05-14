@@ -192,6 +192,7 @@ def new_users_week():
                       FROM "user" WHERE TO_DATE("user".created,
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
+                      AND "user".restrict=false
                       GROUP BY day;''')
         db.session.execute(sql)
         db.session.commit()
