@@ -679,6 +679,7 @@ def _handle_profile_update(user, update_form):
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
         user.privacy_mode = fuzzyboolean(update_form.privacy_mode.data)
+        user.restrict = fuzzyboolean(update_form.restrict.data)
         user.locale = update_form.locale.data
         user.subscribed = fuzzyboolean(update_form.subscribed.data)
         user_repo.update(user)
