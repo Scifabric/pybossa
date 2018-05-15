@@ -30,7 +30,7 @@ import os
 import hashlib
 from functools import wraps
 from pybossa.core import sentinel
-from pybossa.sentinel import keys
+from pybossa.sentinel import keys, scan_iter
 
 try:
     import cPickle as pickle
@@ -69,7 +69,35 @@ def get_hash_key(prefix, key_to_hash):
     return key
 
 
-def cache(key_prefix, timeout=300):
+def get_cache_group_key(key):
+    return '{}:memoize_cache_group:{}'.format(settings.REDIS_KEYPREFIX, key)
+
+
+def add_key_to_cache_groups(key_to_add, cache_group_keys_arg, *args, **kwargs):
+    print(cache_group_keys_arg)
+    for cache_group_key_arg in cache_group_keys_arg:
+        cache_group_key = None
+        if isinstance(cache_group_key_arg, list):
+            cache_group_key = '_'.join(str(args[i]) for i in cache_group_key_arg)
+        elif isinstance(cache_group_key_arg, basestring):
+            cache_group_key = cache_group_key_arg
+        elif callable(cache_group_key_arg):
+            cache_group_key = cache_group_key_arg(*args, **kwargs)
+        elif cache_group_key_arg is not None:
+            raise Exception('Invalid cache_group_key_arg: {}'.format(cache_group_key_arg))
+        else:
+            return
+        key = get_cache_group_key(cache_group_key)
+        sentinel.master.sadd(key, key_to_add)
+
+
+def delete_cache_group(cache_group_key):
+    key = get_cache_group_key(cache_group_key)
+    keys_to_delete = list(sentinel.slave.smembers(key)) + [key]
+    sentinel.master.delete(*keys_to_delete)
+
+
+def cache(key_prefix, timeout=300, cache_group_keys=None):
     """
     Decorator for caching functions.
 
@@ -88,15 +116,17 @@ def cache(key_prefix, timeout=300):
                     return pickle.loads(output)
                 output = f(*args, **kwargs)
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
+                add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
                 return output
             output = f(*args, **kwargs)
             sentinel.master.setex(key, timeout, pickle.dumps(output))
+            add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
             return output
         return wrapper
     return decorator
 
 
-def memoize(timeout=300):
+def memoize(timeout=300, cache_group_keys=None):
     """
     Decorator for caching functions using its arguments as part of the key.
 
@@ -117,15 +147,18 @@ def memoize(timeout=300):
                     return pickle.loads(output)
                 output = f(*args, **kwargs)
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
+                print(cache_group_keys)
+                add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
                 return output
             output = f(*args, **kwargs)
             sentinel.master.setex(key, timeout, pickle.dumps(output))
+            add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
             return output
         return wrapper
     return decorator
 
 
-def memoize_essentials(timeout=300, essentials=None):
+def memoize_essentials(timeout=300, essentials=None, cache_group_keys=None):
     """
     Decorator for caching functions using its arguments as part of the key.
 
@@ -152,9 +185,11 @@ def memoize_essentials(timeout=300, essentials=None):
                     return pickle.loads(output)
                 output = f(*args, **kwargs)
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
+                add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
                 return output
             output = f(*args, **kwargs)
             sentinel.master.setex(key, timeout, pickle.dumps(output))
+            add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
             return output
         return wrapper
     return decorator
@@ -186,7 +221,7 @@ def delete_memoized(function, *args, **kwargs):
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
             return bool(sentinel.master.delete(key))
-        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
+        keys_to_delete = list(scan_iter(sentinel.slave, match=key + '*', count=10000))
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
@@ -204,7 +239,7 @@ def delete_memoized_essential(function, *args, **kwargs):
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key += get_key_to_hash(*args, **kwargs)
-        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
+        keys_to_delete = list(scan_iter(sentinel.slave, match=key + '*', count=10000))
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
