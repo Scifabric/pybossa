@@ -83,7 +83,6 @@ class Uploader(object):
         except:
             return False
 
-
     def allowed_file(self, filename):
         """Return True if valid, otherwise false."""
         return '.' in filename and \

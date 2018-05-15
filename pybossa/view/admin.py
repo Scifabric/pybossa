@@ -767,6 +767,8 @@ def userimport():
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
                 return abort(500)
+            finally:
+                form.delete_file()
         else:
             flash(gettext('Please correct the errors'), 'error')
     return render_template('/admin/userimport.html', form=form)

@@ -58,7 +58,7 @@ class TestTaskrunWithFile(TestAPI):
             assert success.status_code == 200, success.data
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_taskrun_with_upload(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -95,7 +95,7 @@ class TestTaskrunWithFile(TestAPI):
             assert url == expected, url
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_taskrun_with_no_upload(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -121,7 +121,7 @@ class TestTaskrunWithFile(TestAPI):
             assert res['info']['test__upload_url']['test'] == 'not a file'
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_taskrun_multipart(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -160,7 +160,7 @@ class TestTaskrunWithFile(TestAPI):
             assert url == expected, url
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_taskrun_multipart_error(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()

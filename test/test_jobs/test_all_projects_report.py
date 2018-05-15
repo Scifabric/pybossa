@@ -22,6 +22,7 @@ from mock import patch
 from default import Fixtures, with_context
 from helper import web
 from helper.gig_helper import make_subadmin_by
+from nose.tools import assert_raises
 
 
 @with_context
@@ -42,17 +43,18 @@ def test_report(mail):
 
 
 @with_context
+@patch('pybossa.jobs.os.unlink')
 @patch('pybossa.jobs.send_mail')
 @patch('pybossa.core.project_csv_exporter')
-def test_report_fails(exporter, mail):
+def test_report_fails(exporter, mail, unlink):
     Fixtures.create_project({})
-    exporter.pregenerate_zip_files.side_effect = Exception()
+    exporter.generate_zip_files.side_effect = Exception()
     info = {
         'timestamp': 'timestamp',
         'user_id': 42,
         'base_url': 'www.example.com/project/'
     }
-    mail_project_report(info, 'tyrion@casterlyrock.com')
+    assert_raises(Exception, mail_project_report, info, 'tyrion@casterlyrock.com')
     args, _ = mail.call_args
     message = args[0]
     assert 'tyrion@casterlyrock.com' in message['recipients']

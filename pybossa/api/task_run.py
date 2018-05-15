@@ -32,8 +32,8 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from api_base import APIBase
 from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel, anonymizer
-from pybossa.uploader.s3_uploader import s3_upload_from_string
-from pybossa.uploader.s3_uploader import s3_upload_file_storage
+from pybossa.cloud_store_api.s3 import s3_upload_from_string
+from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from datetime import datetime

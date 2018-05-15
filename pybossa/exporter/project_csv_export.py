@@ -88,16 +88,14 @@ class ProjectCsvExporter(CsvExporter):
                 dataframe.to_csv(datafile, index=False,
                                  encoding='utf-8')
                 datafile.flush()
-                zipped_datafile = tempfile.NamedTemporaryFile()
+                zipped_datafile = tempfile.NamedTemporaryFile(delete=False)
                 try:
                     _zip = self._zip_factory(zipped_datafile.name)
                     _zip.write(
                         datafile.name, secure_filename('{}.csv'.format(name)))
                     _zip.close()
                     container = "user_%d" % info['user_id']
-                    _file = FileStorage(
-                        filename=self.zip_name(info), stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
+                    return zipped_datafile.name
                 finally:
                     zipped_datafile.close()
             finally:
@@ -109,5 +107,5 @@ class ProjectCsvExporter(CsvExporter):
     def download_name(self, info):
         return '{}_projects'.format(info['timestamp'])
 
-    def pregenerate_zip_files(self, info):
-        self._make_zip(info)
+    def generate_zip_files(self, info):
+        return self._make_zip(info)

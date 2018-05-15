@@ -13,6 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+import json
+import os
 
 import requests
 from StringIO import StringIO
@@ -50,7 +52,6 @@ class BulkUserCSVImport(BulkUserImport):
         if csv_filename is None:
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
-
         retry = 0
         csv_file = None
         while retry < 5:
@@ -78,3 +79,38 @@ class BulkUserCSVImport(BulkUserImport):
         csvcontent = io.StringIO(csv_file.stream.read().decode("UTF8"))
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_users(csvreader)
+
+    def _import_csv_users(self, csvreader):
+        """Import users from CSV."""
+        headers = []
+        field_header_index = []
+        row_number = 0
+
+        for row in csvreader:
+            if not headers:
+                headers = row
+                self._check_no_duplicated_headers(headers)
+                self._check_no_empty_headers(headers)
+                headers = [header.strip() for header in headers]
+                self._check_valid_headers(headers)
+
+                field_headers = set(headers)
+                for field in field_headers:
+                    field_header_index.append(headers.index(field))
+            else:
+                row_number += 1
+                self._check_row_values(row, row_number, headers, field_header_index)
+                user_data = {"info": {}}
+                for idx, cell in enumerate(row):
+                    col_header = headers[idx]
+                    cell = cell.strip()
+                    if idx in field_header_index:
+                        if col_header in self.default_vals:
+                            user_data[col_header] = json.loads(cell) \
+                                if cell else \
+                                self.default_vals[col_header]
+                        else:
+                            user_data[col_header] = cell
+                    else:
+                        user_data["info"][col_header] = cell
+                yield user_data

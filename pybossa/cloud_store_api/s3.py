@@ -9,8 +9,8 @@ from flask import current_app as app
 from werkzeug.utils import secure_filename
 import magic
 from werkzeug.exceptions import BadRequest, InternalServerError
-from pybossa.uploader.s3_connection import CustomConnection
-from pybossa.uploader.cloud_jwt import create_jwt
+from pybossa.cloud_store_api.s3_connection import CustomConnection
+from pybossa.cloud_store_api.cloud_jwt import create_jwt
 
 allowed_mime_types = ['application/pdf',
                       'text/csv',
