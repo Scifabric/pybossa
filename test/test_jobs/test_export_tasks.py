@@ -66,3 +66,50 @@ class TestExport(Test):
         proj_name = unidecode(project.short_name)
         filename = '{}_{}'.format(project.id, proj_name)
         assert attachment.filename == '{}_consensus_json.zip'.format(filename)
+
+    @with_context
+    @patch('pybossa.jobs.mail')
+    def test_export_tasks_csv_json(self, mail):
+        """Test JOB export_tasks task csv works."""
+        user = UserFactory.create(admin=True)
+        project = ProjectFactory.create(name='test_project')
+        task = TaskFactory.create(project=project)
+        task_run = TaskRunFactory.create(project=project, task=task)
+
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'csv')
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject
+
+        attachment = message.attachments[0]
+        proj_name = unidecode(project.short_name)
+        filename = '{}_{}'.format(project.id, proj_name)
+        assert attachment.filename == '{}_task_csv.zip'.format(filename)
+
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'json')
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject
+
+        attachment = message.attachments[0]
+        assert attachment.filename == '{}_task_json.zip'.format(filename)
+
+        export_tasks(user.email_addr, project.short_name, 'task_run', False, 'csv')
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject
+
+        attachment = message.attachments[0]
+        assert attachment.filename == '{}_task_run_csv.zip'.format(filename)
+
+        export_tasks(user.email_addr, project.short_name, 'task_run', False, 'json')
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject
+
+        attachment = message.attachments[0]
+        assert attachment.filename == '{}_task_run_json.zip'.format(filename)

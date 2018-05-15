@@ -21,7 +21,10 @@ from default import Test, with_context
 from pybossa.exporter.task_csv_export import TaskCsvExporter
 from mock import patch
 from codecs import encode
-
+from pybossa.exporter.csv_export import CsvExporter
+from pybossa.exporter.json_export import JsonExporter
+from factories import ProjectFactory, UserFactory, TaskFactory, TaskRunFactory
+from werkzeug.datastructures import FileStorage
 
 class TestTaskCsvExporter(Test):
 
@@ -86,4 +89,25 @@ class TestTaskCsvExporter(Test):
         assert smart_quotes_value == u'\u201CHello\u201D'
 
 
+class TestExporters(Test):
 
+    """Test PyBossa Csv and Json Exporter module."""
+
+    @with_context
+    @patch('pybossa.exporter.csv_export.uploader')
+    @patch('pybossa.exporter.json_export.uploader')
+    def test_exporters_generates_zip(self, json_uploader, csv_uploader):
+        """Test that CsvExporter and JsonExporter generate zip works."""
+
+        user = UserFactory.create(admin=True)
+        project = ProjectFactory.create(name='test_project')
+        task = TaskFactory.create(project=project)
+        task_run = TaskRunFactory.create(project=project, task=task)
+        csv_exporter = CsvExporter()
+        json_exporter = JsonExporter()
+        csv_exporter.pregenerate_zip_files(project)
+        json_exporter.pregenerate_zip_files(project)
+        csv_file = FileStorage(filename='1_project1_result_csv.zip')
+        json_file = FileStorage(filename='1_project1_result_json.zip')
+        assert csv_uploader.file_exists(csv_file, container='user_2')
+        assert csv_uploader.file_exists(json_file, container='user_2')

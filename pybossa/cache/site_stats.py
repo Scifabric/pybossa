@@ -279,8 +279,7 @@ def avg_time_to_complete_task(days=30):
 
 
 @memoize(ONE_WEEK)
-@allow_all_time
-def avg_task_per_job(days=30):
+def avg_task_per_job(days=0):
     """Average number of tasks per job"""
     sql = text('''
         SELECT AVG(ct) FROM (SELECT
@@ -295,8 +294,7 @@ def avg_task_per_job(days=30):
 
 
 @memoize(ONE_WEEK)
-@allow_all_time
-def tasks_per_category(days=30):
+def tasks_per_category(days=0):
     """Average number of tasks per category"""
     sql = text('''
         SELECT AVG(ct) FROM (SELECT

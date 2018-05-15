@@ -20,7 +20,7 @@ import datetime
 from default import db, Test, with_context
 from pybossa.cache import site_stats as stats
 from factories import (UserFactory, ProjectFactory, AnonymousTaskRunFactory,
-                       TaskRunFactory, TaskFactory)
+                       TaskRunFactory, TaskFactory, CategoryFactory)
 from pybossa.repositories import ResultRepository
 from mock import patch, Mock
 
@@ -229,3 +229,200 @@ class TestSiteStatsCache(Test):
         assert len(locations) == 2, locations
         assert locations[0]['loc'] == {'latitude': 1, 'longitude': 1}, locations[0]
         assert locations[1]['loc'] == {'latitude': 0, 'longitude': 0}, locations[1]
+
+    @with_context
+    def test_number_of_created_jobs(self):
+        """Test number of projects created in last 30 days"""
+        date_now = datetime.datetime.utcnow()
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+        projects = ProjectFactory.create_batch(5, created=date_now)
+        old_project = ProjectFactory.create(created=date_60_days_old)
+        total_projects = stats.number_of_created_jobs()
+        assert total_projects == 5, "Total number of projects created in last 30 days should be 5"
+
+    @with_context
+    def test_number_of_active_jobs(self):
+        """Test number of active projects with submissions in last 30 days"""
+        recently_contributed_project = ProjectFactory.create()
+        long_ago_contributed_project = ProjectFactory.create()
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+
+        recently_contributed_project = ProjectFactory.create()
+        long_ago_contributed_project = ProjectFactory.create()
+
+        TaskRunFactory.create(project=recently_contributed_project)
+        TaskRunFactory.create(project=long_ago_contributed_project, finish_time=date_60_days_old)
+
+        total_active_projects = stats.number_of_active_jobs()
+        assert total_active_projects == 1, "Total number of active projects in last 30 days should be 1"
+
+        all_projects = stats.number_of_active_jobs(days='all')
+        assert all_projects == 2, "Total number of all projects should be 2"
+
+    @with_context
+    def test_number_of_created_tasks(self):
+        """Test number of tasks created in last 30 days"""
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+
+        TaskFactory.create()
+        TaskFactory.create()
+        TaskFactory.create(created=date_60_days_old)
+        tasks = stats.number_of_created_tasks()
+
+        assert tasks == 2, "Total number tasks created in last 30 days should be 2"
+
+    @with_context
+    def test_number_of_completed_tasks(self):
+        """Test number of tasks completed in last 30 days"""
+        date_now = datetime.datetime.utcnow()
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+
+        recent_project = ProjectFactory.create(created=date_now)
+        old_project = ProjectFactory.create(created=date_60_days_old)
+
+        # recent tasks completed
+        recent_taskruns = 5
+        for i in range(recent_taskruns):
+            task = TaskFactory.create(n_answers=1, project=recent_project, created=date_now)
+            TaskRunFactory.create(task=task, project=recent_project, finish_time=date_now)
+
+        # old tasks completed
+        for i in range(3):
+            task = TaskFactory.create(n_answers=1, project=old_project, created=date_60_days_old)
+            TaskRunFactory.create(task=task, project=recent_project, finish_time=date_60_days_old)
+
+        total_tasks = stats.number_of_completed_tasks()
+        assert total_tasks == recent_taskruns, "Total completed tasks in last 30 days should be {}".format(recent_taskruns)
+
+    @with_context
+    def test_number_of_active_users(self):
+        """Test number of active users in last 30 days"""
+        date_now = datetime.datetime.utcnow()
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+
+        recent_users = 4
+        users = UserFactory.create_batch(recent_users)
+        i = recent_users
+        for user in users:
+            TaskRunFactory.create_batch(i, user=user, finish_time=date_now)
+            i -= 1
+
+        old_user = UserFactory.create()
+        TaskRunFactory.create(user=old_user, finish_time=date_60_days_old)
+
+        total_users = stats.number_of_active_users()
+        assert total_users == recent_users, "Total active users in last 30 days should be {}".format(recent_users)
+
+    @with_context
+    def test_get_categories_with_recent_projects(self):
+        """Test categories with projects created in last 30 days"""
+        date_now = datetime.datetime.utcnow()
+        date_60_days_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+
+        categories = CategoryFactory.create_batch(3)
+        unused_category = CategoryFactory.create()
+
+        ProjectFactory.create(category=categories[0], created=date_now)
+        ProjectFactory.create(category=categories[1], created=date_now)
+        ProjectFactory.create(category=categories[0], created=date_now)
+
+        ProjectFactory.create(category=categories[2], created=date_60_days_old)
+        total_categories = stats.categories_with_new_projects()
+        assert total_categories == 2, "Total categories with recent projects should be 2"
+
+    @with_context
+    def test_avg_task_per_job(self):
+        """Test average task per job created since current time"""
+        date_recent = (datetime.datetime.utcnow() -  datetime.timedelta(29)).isoformat()
+        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+        date_now = datetime.datetime.utcnow().isoformat()
+        expected_avg_tasks = 5
+
+        project = ProjectFactory.create(created=date_recent)
+        old_project = ProjectFactory.create(created=date_old)
+
+        TaskFactory.create_batch(5, n_answers=1, project=project, created=date_now)
+        TaskFactory.create_batch(5, n_answers=1, project=old_project, created=date_old)
+
+        avg_tasks = stats.avg_task_per_job()
+        assert avg_tasks == expected_avg_tasks, "Average task created per job should be {}".format(expected_avg_tasks)
+
+    @with_context
+    def test_avg_time_to_complete_task(self):
+        """Test average time to complete tasks in last 30 days"""
+        date_15m_old = (datetime.datetime.utcnow() -  datetime.timedelta(minutes=15)).isoformat()
+        date_now = datetime.datetime.utcnow()
+
+        expected_avg_time = '15m 00s'
+        for i in range(5):
+            TaskRunFactory.create(created=date_15m_old, finish_time=date_now)
+
+        avg_time = stats.avg_time_to_complete_task()
+        assert avg_time == expected_avg_time, \
+            "Average time to complete tasks in last 30 days should be {}".format(expected_avg_time)
+
+    @with_context
+    def test_avg_tasks_per_category(self):
+        """Test average tasks per category created since current time"""
+        date_recent = (datetime.datetime.utcnow() -  datetime.timedelta(31)).isoformat()
+        date_now = (datetime.datetime.utcnow() -  datetime.timedelta(1)).isoformat()
+        expected_avg_tasks = 3
+
+        categories = CategoryFactory.create_batch(3)
+        project1 = ProjectFactory.create(category=categories[0], created=date_now)
+        project2 = ProjectFactory.create(category=categories[1], created=date_recent)
+        project3 = ProjectFactory.create(category=categories[2], created=date_recent)
+
+        for i in range(5):
+            TaskFactory.create(project=project1, created=date_now)
+
+        for i in range(2):
+            TaskFactory.create(project=project2, created=date_recent)
+
+        for i in range(3):
+            TaskFactory.create(project=project3, created=date_recent)
+
+        avg_tasks = round(stats.tasks_per_category())
+        assert avg_tasks == expected_avg_tasks, "Average tasks created per category should be {}".format(expected_avg_tasks)
+
+    @with_context
+    def test_charts(self):
+        """Test project chart"""
+        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(30*36)).isoformat()
+        date_3_mo = (datetime.datetime.utcnow() -  datetime.timedelta(90)).isoformat()
+        date_2_mo = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
+        date_1_mo = (datetime.datetime.utcnow() -  datetime.timedelta(30)).isoformat()
+        date_now = (datetime.datetime.utcnow() -  datetime.timedelta(1)).isoformat()
+        expected_tasks = 6
+        expected_categories = 2
+        expected_projects = 4
+        expected_taskruns = 5
+
+        CategoryFactory.create(created=date_now)
+        CategoryFactory.create(created=date_1_mo)
+        CategoryFactory.create(created=date_2_mo)
+
+        ProjectFactory.create(created=date_now)
+        ProjectFactory.create(created=date_1_mo)
+        ProjectFactory.create(created=date_2_mo)
+        ProjectFactory.create(created=date_3_mo)
+        ProjectFactory.create(created=date_old)
+
+        TaskFactory.create(created=date_now)
+        TaskFactory.create(created=date_1_mo)
+        TaskFactory.create(created=date_2_mo)
+
+        TaskRunFactory.create(created=date_now)
+        TaskRunFactory.create(created=date_1_mo)
+        TaskRunFactory.create(created=date_2_mo)
+        TaskRunFactory.create(created=date_3_mo)
+        TaskRunFactory.create(created=date_old)
+
+        projects = stats.project_chart()
+        assert projects['series'][0][24] == expected_projects, "{} projects created in last 24 months".format(expected_projects)
+        categories = stats.category_chart()
+        assert categories['series'][0][24] == expected_categories, "{} categories created in last 24 months".format(expected_categories)
+        tasks = stats.task_chart()
+        assert tasks['series'][0][24] == expected_tasks, "{} tasks created in last 24 months".format(expected_tasks)
+        taskruns = stats.submission_chart()
+        assert taskruns['series'][0][24] == expected_taskruns, "{} taskruns created in last 24 months".format(expected_taskruns)
