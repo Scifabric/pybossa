@@ -83,6 +83,7 @@ def create_app(run_as_server=True):
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
     anonymizer.init_app(app)
+    setup_task_presenter_editor(app)
     return app
 
 
@@ -740,3 +741,8 @@ def setup_upref_mdata(app):
         upref_mdata_choices['locations'] = upref_locations()
         upref_mdata_choices['timezones'] = mdata_timezones()
         upref_mdata_choices['user_types'] = mdata_user_types()
+
+def setup_task_presenter_editor(app):
+    if app.config.get('DISABLE_TASK_PRESENTER_EDITOR'):
+        from pybossa.api.project import ProjectAPI
+        ProjectAPI.restricted_keys.add('info::task_presenter')
