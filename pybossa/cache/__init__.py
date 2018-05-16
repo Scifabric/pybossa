@@ -74,8 +74,7 @@ def get_cache_group_key(key):
 
 
 def add_key_to_cache_groups(key_to_add, cache_group_keys_arg, *args, **kwargs):
-    print(cache_group_keys_arg)
-    for cache_group_key_arg in cache_group_keys_arg:
+    for cache_group_key_arg in (cache_group_keys_arg or []):
         cache_group_key = None
         if isinstance(cache_group_key_arg, list):
             cache_group_key = '_'.join(str(args[i]) for i in cache_group_key_arg)
@@ -147,7 +146,6 @@ def memoize(timeout=300, cache_group_keys=None):
                     return pickle.loads(output)
                 output = f(*args, **kwargs)
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
-                print(cache_group_keys)
                 add_key_to_cache_groups(key, cache_group_keys, *args, **kwargs)
                 return output
             output = f(*args, **kwargs)
