@@ -102,7 +102,7 @@ def featured(project_id=None):
             categories = cached_cat.get_all()
             projects = {}
             for c in categories:
-                n_projects = cached_projects.n_count(category=c.short_name)
+                n_projects = cached_projects.n_count(c.short_name)
                 projects[c.short_name] = cached_projects.get(
                     category=c.short_name,
                     page=1,
