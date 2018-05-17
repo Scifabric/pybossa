@@ -84,6 +84,7 @@ def create_app(run_as_server=True):
     setup_upref_mdata(app)
     anonymizer.init_app(app)
     setup_task_presenter_editor(app)
+    setup_schedulers(app)
     return app
 
 
@@ -725,9 +726,11 @@ def setup_ldap(app):
     if app.config.get('LDAP_HOST'):
         ldap.init_app(app)
 
+
 def setup_profiler(app):
     if app.config.get('FLASK_PROFILER'):
         flask_profiler.init_app(app)
+
 
 def setup_upref_mdata(app):
     """Setup user preference and metadata choices for user accounts"""
@@ -742,7 +745,15 @@ def setup_upref_mdata(app):
         upref_mdata_choices['timezones'] = mdata_timezones()
         upref_mdata_choices['user_types'] = mdata_user_types()
 
+
 def setup_task_presenter_editor(app):
     if app.config.get('DISABLE_TASK_PRESENTER_EDITOR'):
         from pybossa.api.project import ProjectAPI
         ProjectAPI.restricted_keys.add('info::task_presenter')
+
+
+def setup_schedulers(app):
+    opts = app.config.get('AVAILABLE_SCHEDULERS')
+    if opts:
+        from pybossa.forms.forms import TaskSchedulerForm
+        TaskSchedulerForm.update_sched_options(opts)
