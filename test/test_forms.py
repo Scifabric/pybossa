@@ -327,6 +327,39 @@ class TestRegisterFormWithUserPrefMetadata(Test):
                                     user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
 
     @with_context
+    @patch('pybossa.forms.forms.uploader')
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_ioerror(self, mock_user, mock_request,
+                                        mock_uploader):
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        assert_raises(IOError, form.get_import_data)
+
+
+class TestRegisterFormWithUserPrefMetadata(Test):
+
+    def setUp(self):
+        super(TestRegisterFormWithUserPrefMetadata, self).setUp()
+        self.fill_in_data = {'fullname': 'Tyrion Lannister', 'name': 'mylion',
+                             'email_addr': 'tyrion@casterly.rock',
+                             'password':'secret', 'confirm':'secret',
+                             'user_type': 'Researcher'}
+
+        self.fields = ['fullname', 'name', 'email_addr', 'password', 'confirm',
+                  'languages', 'locations', 'work_hours_from', 'work_hours_to',
+                  'timezone', 'user_type', 'review']
+
+        self.upref_mdata_valid_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+                                    locations=[("us", "us"), ("uk", "uk")],
+                                    timezones=[("", ""), ("ACT", "Australia Central Time")],
+                                    user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
+
+    @with_context
     def test_register_form_with_upref_mdata_contains_fields(self):
         form = RegisterFormWithUserPrefMetadata()
 

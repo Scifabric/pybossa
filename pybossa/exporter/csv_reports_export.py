@@ -25,7 +25,6 @@ from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
 
-
 class ProjectReportCsvExporter(CsvExporter):
     """Project reports exporter in CSV format"""
 
@@ -52,8 +51,9 @@ class ProjectReportCsvExporter(CsvExporter):
         p = project_repo.get(id)
         if p is not None:
             project_section = ['Project Statistics']
-            project_header = ['Id', 'Name', 'Short Name', 'Total Tasks', 'First Task Submission',
-                              'Last Task Submission', 'Average Time Spend Per Task', 'Task Redundancy']
+            project_header = ['Id', 'Name', 'Short Name', 'Total Tasks',
+                              'First Task Submission', 'Last Task Submission',
+                              'Average Time Spend Per Task', 'Task Redundancy']
             writer.writerow(project_section)
             writer.writerow(project_header)
             project_data = get_project_report_projectdata(id)
@@ -71,7 +71,6 @@ class ProjectReportCsvExporter(CsvExporter):
                 writer.writerow(user_header)
                 for user_data in users_project_data:
                     writer.writerow(user_data)
-
             else:
                 writer.writerow(['No user data'])
 

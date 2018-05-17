@@ -24,7 +24,6 @@ import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
 from flask.ext.babel import gettext
 
-import pygeoip
 import operator
 import time
 import datetime
@@ -502,32 +501,15 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     if geo:  # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
-        if geo:  # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None:  # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
-
-    for u in anon_users:
-        if geo:  # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None:  # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+        top5_anon.append(dict(ip=u[0], tasks=u[1]))
 
     for u in auth_users:
-        sql = text('''SELECT name, fullname from "user" where id=:id;''')
+        sql = text('''SELECT name, fullname, restrict from "user"
+                   where id=:id and restrict=false;''')
         results = session.execute(sql, dict(id=u[0]))
+        fullname = None
+        name = None
+        restrict = None
         for row in results:
             fullname = row.fullname
             name = row.name
@@ -541,7 +523,7 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-def update_stats(project_id, geo=False, period='2 week'):
+def update_stats(project_id, period='2 week'):
     """Update the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
@@ -559,8 +541,7 @@ def update_stats(project_id, geo=False, period='2 week'):
     hours_stats = stats_format_hours(project_id, hours, hours_anon, hours_auth,
                                      max_hours, max_hours_anon, max_hours_auth)
 
-    users_stats = stats_format_users(project_id, users, anon_users, auth_users,
-                                     geo)
+    users_stats = stats_format_users(project_id, users, anon_users, auth_users)
 
     data = dict(dates_stats=dates_stats,
                 hours_stats=hours_stats,

@@ -44,7 +44,10 @@ class TaskAuth(object):
         return self._only_admin_or_subadminowners(user, task)
 
     def _delete(self, user, task):
-        if self.result_repo.get_by(task_id=task.id, project_id=task.project_id):
+        if user.is_authenticated() and user.admin:
+            return True
+        if self.result_repo.get_by(task_id=task.id,
+                                   project_id=task.project_id):
             return False
         return self._only_admin_or_subadminowners(user, task)
 

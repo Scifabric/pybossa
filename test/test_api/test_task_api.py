@@ -28,6 +28,7 @@ from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.counter import Counter
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -41,7 +42,7 @@ class TestTaskAPI(TestAPI):
         if owner:
             owner = owner
         else:
-            owner = UserFactory.create()
+            admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)
         tasks = []
         for i in range(n_results):
@@ -885,7 +886,8 @@ class TestTaskAPI(TestAPI):
 
         ## anonymous
         res = self.app.delete('/api/task/%s' % task.id)
-        error_msg = 'Anonymous should not be allowed to update'
+        error_msg = 'Anonymous should not be allowed to delete'
+        print res.status
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
@@ -973,3 +975,86 @@ class TestTaskAPI(TestAPI):
                                            project.owner.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '403 FORBIDDEN', res.status)
+
+    @with_context
+    def test_delete_task_when_result_associated_admin(self):
+        """Test API delete task works when a result is associated as admin."""
+        admin = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+
+        url = '/api/task/%s?api_key=%s' % (result.task_id,
+                                           admin.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_delete_task_when_result_associated_variation(self):
+        """Test API delete task fails when a result is associated after
+        increasing the n_answers changing its state from completed to
+        ongoing."""
+        admin = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        task = task_repo.get_task(result.task_id)
+        task.n_answers = 100
+        task_repo.update(task)
+
+        url = '/api/task/%s?api_key=%s' % (result.task_id,
+                                           admin.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_counter_table(self):
+        """Test API Counter table is updated accordingly."""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 1
+
+        TaskFactory.create_batch(9, project=project)
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 10
+
+        task_id = task.id
+        task_repo.delete(task)
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 9
+        items = db.session.query(Counter).filter_by(task_id=task_id).all()
+        assert len(items) == 0
+
+    @with_context
+    def test_counter_table_api(self):
+        """Test API Counter table is updated accordingly via api."""
+        project = ProjectFactory.create()
+
+        task = dict(project_id=project.id, info=dict(foo=1))
+
+        url = '/api/task?api_key=%s' % project.owner.api_key
+
+        res = self.app.post(url, data=json.dumps(task))
+
+        data = json.loads(res.data)
+
+        assert data.get('id') is not None, res.data
+
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 1
+        items = db.session.query(Counter).filter_by(task_id=data.get('id')).all()
+        assert len(items) == 1
+        assert items[0].task_id == data.get('id')
+
+        for i in range(9):
+            res = self.app.post(url, data=json.dumps(task))
+            created_task = json.loads(res.data)
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 10, len(items)
+
+        res = self.app.delete('/api/task/%s?api_key=%s' % (created_task['id'],
+                                                           project.owner.api_key))
+        items = db.session.query(Counter).filter_by(project_id=project.id).all()
+        assert len(items) == 9
+        items = db.session.query(Counter).filter_by(task_id=created_task.get('id')).all()
+        assert len(items) == 0

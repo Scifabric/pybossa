@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PyBossa utils."""
 from collections import OrderedDict
 from datetime import timedelta, datetime, date
+from yacryptopan import CryptoPAn
 from functools import update_wrapper
 from flask_wtf import Form
 import csv
@@ -74,10 +74,21 @@ def user_to_json(user):
     """Return a user in JSON format."""
     return user.dictize()
 
+def hash_last_flash_message():
+    """Base64 encode the last flash message"""
+    data = {}
+    message_and_status = last_flashed_message()
+    if message_and_status:
+        data['flash'] = message_and_status[1]
+        data['status'] = message_and_status[0]
+    json_data = json.dumps(data)
+    return base64.b64encode(json_data)
+
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     from pybossa.model.project import Project
-    if request.headers.get('Content-Type') == 'application/json':
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
@@ -104,7 +115,7 @@ def handle_content_type(data):
                 data[item] = cat
             if (item == 'users') and type(data[item]) != str:
                 data[item] = [user_to_json(user) for user in data[item]]
-            if (item == 'users' or item =='projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
+            if (item == 'users' or item == 'projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
                 data[item] = json.loads(data[item])
             if (item == 'found'):
                 data[item] = [user_to_json(user) for user in data[item]]
@@ -129,7 +140,8 @@ def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
         data['status'] = status
-    if request.headers.get('Content-Type') == 'application/json':
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
         return handle_content_type(data)
     else:
         return redirect(url)
@@ -141,11 +153,14 @@ def static_vars(**kwargs):
         return func
     return decorate
 
-def url_for_app_type(endpoint, **values):
+def url_for_app_type(endpoint, _hash_last_flash=False, **values):
     """Generate a URL for an SPA, or otherwise."""
     spa_server_name = current_app.config.get('SPA_SERVER_NAME')
     if spa_server_name:
       values.pop('_external', None)
+      if _hash_last_flash:
+          values['flash'] = hash_last_flash_message()
+          return spa_server_name + url_for(endpoint, **values)
       return spa_server_name + url_for(endpoint, **values)
     return url_for(endpoint, **values)
 
@@ -477,8 +492,9 @@ def get_user_id_or_ip():
     """Return the id of the current user if is authenticated.
     Otherwise returns its IP address (defaults to 127.0.0.1).
     """
+    cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
     user_id = current_user.id if current_user.is_authenticated() else None
-    user_ip = request.remote_addr or "127.0.0.1" \
+    user_ip = cp.anonymize(request.remote_addr or "127.0.0.1") \
         if current_user.is_anonymous() else None
     external_uid = request.args.get('external_uid')
     return dict(user_id=user_id, user_ip=user_ip, external_uid=external_uid)
@@ -616,7 +632,8 @@ def get_avatar_url(upload_method, avatar, container):
                        container=container)
     else:
         filename = container + '/' + avatar
-        return url_for('uploads.uploaded_file', filename=filename)
+        return url_for('uploads.uploaded_file', filename=filename,
+                       _external=True)
 
 
 def get_disqus_sso(user): # pragma: no cover

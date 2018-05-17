@@ -82,7 +82,8 @@ class TestTwitter(Test):
         manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
         url_for_app_type.assert_called_once_with('account.newsletter_subscribe',
-                                                 next=next_url)
+                                                 next=next_url,
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
@@ -126,7 +127,8 @@ class TestTwitter(Test):
         user_repo.update(user)
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
-        url_for_app_type.assert_called_once_with('account.forgot_password')
+        url_for_app_type.assert_called_once_with('account.forgot_password',
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
@@ -148,7 +150,8 @@ class TestTwitter(Test):
         user_repo.update(user)
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
-        url_for_app_type.assert_called_once_with('account.signin')
+        url_for_app_type.assert_called_once_with('account.signin',
+                                                 _hash_last_flash=True)
 
     @with_context
     @patch('pybossa.view.twitter.newsletter', autospec=True)
@@ -213,12 +216,15 @@ class TestTwitter(Test):
 
     @with_context
     @patch('pybossa.view.twitter.current_user')
+    @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
-        self, current_user):
+        self, redirect, current_user):
         user = UserFactory.create(info={})
         current_user.id = user.id
         token_and_secret = {'oauth_token_secret': 'secret', 'oauth_token': 'token'}
+        next_url = '/'
 
-        manage_user_no_login(token_and_secret, '/')
+        manage_user_no_login(token_and_secret, next_url)
 
+        redirect.assert_called_once_with(next_url)
         assert user.info == {'twitter_token': token_and_secret}, user.info

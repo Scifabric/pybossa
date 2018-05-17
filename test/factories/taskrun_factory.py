@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from yacryptopan import CryptoPAn
 from pybossa.model.task_run import TaskRun
 from . import BaseFactory, factory, task_repo
+import settings_test
 
+cp = CryptoPAn(settings_test.CRYPTOPAN_KEY)
 
 class TaskRunFactory(BaseFactory):
     class Meta:
@@ -43,12 +46,13 @@ class TaskRunFactory(BaseFactory):
 class AnonymousTaskRunFactory(TaskRunFactory):
     user = None
     user_id = None
-    user_ip = '127.0.0.1'
+    user_ip = cp.anonymize('127.0.0.1')
     info = 'yes'
+
 
 class ExternalUidTaskRunFactory(TaskRunFactory):
     user = None
     user_id = None
-    user_ip = '127.0.0.1'
+    user_ip = cp.anonymize('127.0.0.1')
     external_uid = '1xa'
     info = 'yes'

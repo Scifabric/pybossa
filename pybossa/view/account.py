@@ -49,8 +49,9 @@ from pybossa.util import can_update_user_info, url_for_app_type
 from pybossa.cache import users as cached_users, delete_memoized
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
 from pybossa.util import url_for_app_type
+from pybossa.util import fuzzyboolean
 from pybossa.auth import ensure_authorized_to
-from pybossa.jobs import send_mail
+from pybossa.jobs import send_mail, export_userdata, delete_account
 from pybossa.core import user_repo, ldap
 from pybossa.feed import get_update_feed
 from pybossa.messages import *
@@ -62,10 +63,11 @@ import time
 from pybossa.cache.users import get_user_preferences
 from pybossa.sched import release_user_locks
 
-
 blueprint = Blueprint('account', __name__)
 
 mail_queue = Queue('email', connection=sentinel.master)
+export_queue = Queue('high', connection=sentinel.master)
+super_queue = Queue('super', connection=sentinel.master)
 
 
 @blueprint.route('/')
@@ -351,6 +353,7 @@ def register():
                            email_addr=form.email_addr.data,
                            password=form.password.data,
                            consent=form.consent.data)
+
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
@@ -435,7 +438,6 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
 
     if user_data.get('user_pref'):
         new_user.user_pref = user_data['user_pref']
-
     if user_data.get('metadata'):
         new_user.info = dict(metadata=user_data['metadata'])
 
@@ -471,7 +473,12 @@ def redirect_profile():
     if current_user.is_anonymous():  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
     if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
-        return _show_own_profile(current_user)
+        form = None
+        if current_app.config.upref_mdata:
+            form_data = cached_users.get_user_pref_metadata(current_user.name)
+            form = UserPrefMetadataForm(**form_data)
+            form.set_upref_mdata_choices()
+        return _show_own_profile(current_user, form)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
 
@@ -512,11 +519,13 @@ def _show_public_profile(user, form, can_update):
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
     percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
 
+    can_update = False
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
-    title = "%s &middot; User Profile" % user_dict['fullname']
+        can_update = True
 
+    title = "%s &middot; User Profile" % user_dict['fullname']
     response = dict(template='/account/public_profile.html',
                     title=title,
                     user=user_dict,
@@ -540,7 +549,9 @@ def _show_own_profile(user, form, can_update):
     projects_published, projects_draft = _get_user_projects(user.id)
     cached_users.get_user_summary(user.name)
 
-    response = dict(template='account/profile.html', title=gettext("Profile"),
+    response = dict(template='account/profile.html',
+                    title=gettext("Profile"),
+                    user=user_dict,
                     projects_contrib=projects_contributed,
                     projects_published=projects_published,
                     projects_draft=projects_draft,
@@ -640,7 +651,8 @@ def update_profile(name):
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
-    if request.body.get('btn') != 'Profile':
+    btn = request.body.get('btn', 'None').capitalize()
+    if btn != 'Profile':
         update_form = UpdateProfileForm(formdata=None, obj=user)
     else:
         update_form = UpdateProfileForm(obj=user)
@@ -653,21 +665,23 @@ def update_profile(name):
     if request.method == 'POST':
         # Update user avatar
         succeed = False
-        if request.body.get('btn') == 'Upload':
+        btn = request.body.get('btn', 'None').capitalize()
+        if btn == 'Upload':
             succeed = _handle_avatar_update(user, avatar_form)
         # Update user profile
-        elif request.body.get('btn') == 'Profile':
+        elif btn == 'Profile':
             succeed = _handle_profile_update(user, update_form)
         # Update user password
-        elif request.body.get('btn') == 'Password':
+        elif btn == 'Password':
             succeed = _handle_password_update(user, password_form)
         # Update user external services
-        elif request.body.get('btn') == 'External':
+        elif btn == 'External':
             succeed = _handle_external_services_update(user, update_form)
         # Otherwise return 415
         else:
             return abort(415)
         if succeed:
+            cached_users.delete_user_summary(user.name)
             return redirect_content_type(url_for('.update_profile',
                                                  name=user.name),
                                          status=SUCCESS)
@@ -706,9 +720,9 @@ def _handle_avatar_update(user, avatar_form):
         upload_method = current_app.config.get('UPLOAD_METHOD')
         avatar_url = get_avatar_url(upload_method,
                                     _file.filename, container)
-        user.info = {'avatar': _file.filename,
-                     'container': container,
-                     'avatar_url': avatar_url}
+        user.info['avatar'] = _file.filename
+        user.info['container'] = container
+        user.info['avatar_url'] = avatar_url
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your avatar has been updated! It may \
@@ -750,9 +764,10 @@ def _handle_profile_update(user, update_form):
             return True
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
-        user.privacy_mode = update_form.privacy_mode.data
+        user.privacy_mode = fuzzyboolean(update_form.privacy_mode.data)
+        user.restrict = fuzzyboolean(update_form.restrict.data)
         user.locale = update_form.locale.data
-        user.subscribed = update_form.subscribed.data
+        user.subscribed = fuzzyboolean(update_form.subscribed.data)
         user_repo.update(user)
         cached_users.delete_user_summary(user.name)
         flash(gettext('Your profile has been updated!'), 'success')
@@ -902,6 +917,29 @@ def forgot_password():
     return handle_content_type(data)
 
 
+@blueprint.route('/<name>/export')
+@login_required
+def start_export(name):
+    """
+    Starts a export of all user data according to EU GDPR
+
+    Data will be available on GET /export after it is processed
+
+    """
+    user = user_repo.get_by_name(name)
+    if not user:
+        return abort(404)
+    if user.id != current_user.id:
+        return abort(403)
+
+    ensure_authorized_to('update', user)
+    export_queue.enqueue(export_userdata,
+                         user_id=user.id)
+    msg = gettext('GDPR export started')
+    flash(msg, 'success')
+    return redirect_content_type(url_for('account.profile', name=name))
+
+
 @blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
 @login_required
 def reset_api_key(name):
@@ -927,9 +965,31 @@ def reset_api_key(name):
         return jsonify(csrf)
 
 
+@blueprint.route('/<name>/delete')
+@login_required
+def delete(name):
+    """
+    Delete user account.
+    """
+    user = user_repo.get_by_name(name)
+    if not user:
+        return abort(404)
+    if current_user.name != name:
+        return abort(403)
+
+    super_queue.enqueue(delete_account, user.id)
+
+    if (request.headers.get('Content-Type') == 'application/json' or
+        request.args.get('response_format') == 'json'):
+
+        response = dict(job='enqueued', template='account/delete.html')
+        return handle_content_type(response)
+    else:
+        return redirect(url_for('account.signout'))
+
+
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
 @admin_or_subadmin_required
-@login_required
 def add_metadata(name):
     """
     Admin can save metadata for selected user

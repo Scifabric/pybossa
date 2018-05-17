@@ -18,8 +18,13 @@
 
 # DEBUG = False
 
-## webserver host and port
+## host for local development
 # HOST = '0.0.0.0'
+
+## use SERVER_NAME instead of HOST for production environment with real URLs
+# SERVER_NAME = 'somecoolurl.com'
+
+## PORT used for local development, in production environment let nginx handle this
 # PORT = 5000
 
 SECRET = 'foobar'
@@ -221,9 +226,9 @@ ACCOUNT_CONFIRMATION_DISABLED = True
 # SSE = False
 
 # Add here any other ATOM feed that you want to get notified.
-NEWS_URL = ['https://github.com/pybossa/enki/releases.atom',
-            'https://github.com/pybossa/pybossa-client/releases.atom',
-            'https://github.com/pybossa/pbs/releases.atom']
+NEWS_URL = ['https://github.com/Scifabric/enki/releases.atom',
+            'https://github.com/Scifabric/pybossa-client/releases.atom',
+            'https://github.com/Scifabric/pbs/releases.atom']
 
 # Pro user features. False will make the feature available to all regular users,
 # while True will make it available only to pro users
@@ -317,6 +322,7 @@ LIBSASS_STYLE = 'compressed'
 # 	    "^/static/.*"
 # 	]
 # }
+<<<<<<< HEAD
 
 # disallow api access without login using api key that can bypass two factor authentication
 # SECURE_APP_ACCESS = True
@@ -341,3 +347,19 @@ TASK_REQUIRED_FIELDS = {
     'data_type': {'val': ['NUMERICAL', 'CATEGORICAL'], 'check_val': True},
     'data_classifier': {'val': ['C1', 'C2'], 'check_val': True}
 }
+=======
+# Specify which key from the info field of task, task_run or result is going to be used as the root key
+# for exporting in CSV format
+# TASK_CSV_EXPORT_INFO_KEY = 'key'
+# TASK_RUN_CSV_EXPORT_INFO_KEY = 'key2'
+# RESULT_CSV_EXPORT_INFO_KEY = 'key3'
+
+# A 32 char string for AES encryption of public IPs.
+# NOTE: this is really important, don't use the following one
+# as anyone with the source code of pybossa will be able to reverse
+# the anonymization of the IPs.
+CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
+
+# TTL for ZIP files of personal data
+TTL_ZIP_SEC_FILES = 3
+>>>>>>> scifabric-master

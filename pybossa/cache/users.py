@@ -67,12 +67,14 @@ def get_user_summary(name):
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
                "user".google_user_id, "user".info, "user".admin,
+               "user".locale,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
                "user".valid_email, "user".confirmation_email_sent,
                max(task_run.finish_time) AS last_task_submission_on
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
+               AND "user".restrict=false
                GROUP BY "user".id;
                ''')
     results = session.execute(sql, dict(name=name))
@@ -84,6 +86,7 @@ def get_user_summary(name):
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
                     info=row.info, admin=row.admin,
+                    locale=row.locale,
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
@@ -309,6 +312,12 @@ def get_users_page(page, per_page=24):
     return accounts
 
 
+def delete_user_summary_id(oid):
+    """Delete from cache the user summary."""
+    user = db.session.query(User).get(oid)
+    delete_memoized(get_user_summary, user.name)
+
+
 def delete_user_summary(name):
     """Delete from cache the user summary."""
     delete_memoized(get_user_summary, name)
@@ -352,8 +361,10 @@ def get_users_for_report():
                 (SELECT COUNT(id) FROM task_run WHERE user_id = u.id)AS completed_tasks,
                 (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
                 to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
-                FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent
-                FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id group by user_id, u.id;
+                FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent, u.restrict
+                FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id
+                AND u.restrict=False
+                GROUP BY user_id, u.id;
                """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
@@ -367,7 +378,7 @@ def get_users_for_report():
                     completed_tasks=row.completed_tasks, avg_time_per_task=str(round(row.avg_time_per_task.total_seconds() / 60, 2)),
                     total_projects_contributed=n_projects_contributed(row.u_id),
                     percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2) if n_total_tasks() else 0,
-                    consent=row.consent)
+                    consent=row.consent, restrict=row.restrict)
                     for row in results]
     return users_report
 

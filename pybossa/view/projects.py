@@ -36,8 +36,8 @@ from werkzeug.datastructures import MultiDict
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-                          csv_exporter, importer, db,
-                          task_json_exporter, task_csv_exporter)
+                          csv_exporter, importer, db, task_json_exporter,
+                          task_csv_exporter, anonymizer)
 from pybossa.model import make_uuid
 from pybossa.model.project import Project
 from pybossa.model.category import Category
@@ -50,7 +50,7 @@ from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
                           get_avatar_url, admin_or_subadmin_required,
-                          s3_get_file_contents)
+                          s3_get_file_contents, get_avatar_url, fuzzyboolean)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -89,7 +89,6 @@ from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from pybossa.util import get_valid_user_preferences
 
 cors_headers = ['Content-Type', 'Authorization']
-
 
 blueprint = Blueprint('project', __name__)
 blueprint_projectid = Blueprint('projectid', __name__)
@@ -154,6 +153,16 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
         project_sanitized['last_activity'] = ps.last_activity
         project_sanitized['overall_progress'] = ps.overall_progress
     return project_sanitized, owner_sanitized
+
+def zip_enabled(project, user):
+    """Return if the user can download a ZIP file."""
+    if project.zip_download is False:
+        if user.is_anonymous():
+            return abort(401)
+        if (user.is_authenticated() and
+            (user.id not in project.owners_ids and
+                user.admin is False)):
+            return abort(403)
 
 
 def project_title(project, page_name):
@@ -252,8 +261,8 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
                             short_name='featured',
                             description='Featured projects')
     historical_contributions_cat = Category(name='Historical Contributions',
-                                   short_name='historical_contributions',
-                                   description='Projects previously contributed to')
+                                            short_name='historical_contributions',
+                                            description='Projects previously contributed to')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
@@ -560,7 +569,7 @@ def update(short_name):
             new_project.webhook = form.webhook.data
             new_project.info = project.info
             new_project.owner_id = project.owner_id
-            new_project.allow_anonymous_contributors = form.allow_anonymous_contributors.data
+            new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
 
@@ -994,8 +1003,11 @@ def presenter(short_name):
 
     def invite_new_volunteers(project, ps):
         user_id = None if current_user.is_anonymous() else current_user.id
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(project.id, project.info.get('sched'), user_id, user_ip, 0)
+        user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
+                   if current_user.is_anonymous() else None)
+        task = sched.new_task(project.id,
+                              project.info.get('sched'),
+                              user_id, user_ip, 0)
         return task == [] and ps.overall_progress < 100.0
 
     def respond(tmpl):
@@ -1527,6 +1539,8 @@ def export_to(short_name):
         if redirect_to_password:
             return redirect_to_password
 
+    zip_enabled(project, current_user)
+
     def respond():
         return render_template('/projects/export.html',
                                title=title,
@@ -1747,7 +1761,6 @@ def show_stats(short_name):
         auth_pct_taskruns = 0
 
     userStats = dict(
-        geo=current_app.config['GEO'],
         anonymous=dict(
             users=users_stats['n_anon'],
             taskruns=users_stats['n_anon'],
@@ -2252,13 +2265,18 @@ def auditlog(short_name):
 def publish(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
-
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
     pro = pro_features()
     ensure_authorized_to('publish', project)
     if request.method == 'GET':
-        return render_template('projects/publish.html',
-                                project=project,
-                                pro_features=pro)
+        template_args = {"project": project_sanitized,
+                         "pro_features": pro,
+                         "csrf": generate_csrf()}
+        response = dict(template = '/projects/publish.html', **template_args)
+        return handle_content_type(response)
+
     project.published = True
     project_repo.save(project)
     task_repo.delete_taskruns_from_project(project)

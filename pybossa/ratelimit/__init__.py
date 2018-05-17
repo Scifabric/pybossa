@@ -28,7 +28,7 @@ import time
 from functools import update_wrapper, wraps
 from flask import request, g
 from werkzeug.exceptions import TooManyRequests
-from pybossa.core import sentinel
+from pybossa.core import sentinel, anonymizer
 from pybossa.error import ErrorStatus
 from flask.ext.login import current_user
 from flask import current_app
@@ -74,7 +74,7 @@ def get_view_rate_limit():
 
 
 def ratelimit(limit, per, send_x_headers=True,
-              scope_func=lambda: request.remote_addr,
+              scope_func=lambda: anonymizer.ip(request.remote_addr or '127.0.0.1'),
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
     """
@@ -90,7 +90,7 @@ def ratelimit(limit, per, send_x_headers=True,
                 key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
                 rlimit = RateLimit(key, limit, per, send_x_headers)
                 g._view_rate_limit = rlimit
-                #if over_limit is not None and rlimit.over_limit:
+                # if over_limit is not None and rlimit.over_limit:
                 if rlimit.over_limit:
                     raise TooManyRequests
                 return f(*args, **kwargs)

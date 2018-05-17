@@ -45,6 +45,7 @@ from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 from pybossa.cache.projects import clean_project
+from pybossa.cache.users import delete_user_summary_id
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -75,7 +76,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                              'save': 'save', 'delete': 'delete'}
         }
 
-caching = {'Project': {'refresh': clean_project}}
+caching = {'Project': {'refresh': clean_project},
+           'User': {'refresh': delete_user_summary_id}}
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -304,7 +306,8 @@ class APIBase(MethodView):
             self._after_save(inst)
             self._log_changes(None, inst)
             self.refresh_cache(cls_name, inst.id)
-            return json.dumps(inst.dictize())
+            json_response = json.dumps(inst.dictize())
+            return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,
@@ -349,7 +352,7 @@ class APIBase(MethodView):
             self._delete_instance(oid)
             cls_name = self.__class__.__name__
             self.refresh_cache(cls_name, oid)
-            return '', 204
+            return Response('', 204, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,

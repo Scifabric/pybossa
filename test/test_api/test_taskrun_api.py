@@ -25,7 +25,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
-from pybossa.core import db
+from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
 from nose.tools import nottest
@@ -446,6 +446,8 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post('/api/taskrun', data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
+        assert r_taskrun['user_ip'] != '127.0.0.0'
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
@@ -453,6 +455,13 @@ class TestTaskrunAPI(TestAPI):
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
         '''
+
+        res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
+        tmp = json.loads(res.data)
+        print len(tmp)
+        for tr in tmp:
+            assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
+            assert tr['user_ip'] != '127.0.0.0'
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
@@ -516,6 +525,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
         """Test API TaskRun creation and auth for authenticated external uid"""
+        user = UserFactory.create()
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
@@ -576,6 +586,11 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson, headers=headers)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert tmp.status_code == 200, r_taskrun
+        msg = "user_id & user_ip should be None"
+        assert r_taskrun['user_id'] is None, (msg, r_taskrun['user_id'])
+        assert r_taskrun['user_ip'] is None, (msg, r_taskrun['user_ip'])
+
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson, headers=headers)
@@ -907,6 +922,8 @@ class TestTaskrunAPI(TestAPI):
         r_taskrun = json.loads(tmp.data)
 
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] != '127.0.0.0', r_taskrun
+        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 

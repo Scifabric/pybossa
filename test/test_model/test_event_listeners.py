@@ -56,6 +56,30 @@ class TestModelEventListeners(Test):
         assert mock_webpush.called
 
     @with_context
+    @patch('pybossa.model.event_listeners.webpush_queue.enqueue')
+    @patch('pybossa.model.event_listeners.update_feed')
+    @patch('pybossa.model.event_listeners.mail_queue')
+    def test_add_blog_event_disabled(self, mock_queue, mock_update_feed, mock_webpush):
+        """Test add_blog_event is not called when disabled is enabled."""
+        conn = MagicMock()
+        target = MagicMock()
+        target.id = 1
+        target.project_id = 1
+        tmp = Project(id=1, name='name', short_name='short_name',
+                      info=dict(container=1, thumbnail="avatar.png"))
+        conn.execute.return_value = [tmp]
+
+        with patch.dict(self.flask_app.config, {'DISABLE_EMAIL_NOTIFICATIONS': True}):
+            add_blog_event(None, conn, target)
+            assert mock_queue.enqueue.called is False
+            assert mock_update_feed.called
+            obj = tmp.to_public_json()
+            obj['action_updated'] = 'Blog'
+            mock_update_feed.assert_called_with(obj)
+            assert mock_webpush.called is False
+
+
+    @with_context
     @patch('pybossa.model.event_listeners.update_feed')
     def test_add_project_event(self, mock_update_feed):
         """Test add_project_event is called."""

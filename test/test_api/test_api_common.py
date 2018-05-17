@@ -52,7 +52,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/project?all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
-        return
+        assert res.mimetype == 'application/json'
 
         res = self.app.get('/api/project?limit=10&api_key=' + user.api_key)
         data = json.loads(res.data)

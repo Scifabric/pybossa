@@ -24,7 +24,7 @@ class Sentinel(object):
         self.app = app
         self.master = StrictRedis()
         self.slave = self.master
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):

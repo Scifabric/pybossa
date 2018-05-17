@@ -24,6 +24,8 @@ from redis import StrictRedis
 
 def a_function():
     return
+
+
 def another_function():
     return
 
@@ -47,7 +49,6 @@ class TestSetupScheduledJobs(object):
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 
-
     def test_adds_scheduled_job_with_interval(self):
         a_job['interval'] = 7
         schedule_job(a_job, self.scheduler)
@@ -56,7 +57,6 @@ class TestSetupScheduledJobs(object):
         assert len(sched_jobs) == 1, sched_jobs
         assert sched_jobs[0].meta['interval'] == 7 , sched_jobs[0].meta
         a_job['interval'] = 1
-
 
     def test_adds_several_jobs_(self):
         schedule_job(a_job, self.scheduler)
@@ -69,7 +69,6 @@ class TestSetupScheduledJobs(object):
         assert module_name + '.a_function' in job_func_names, job_func_names
         assert module_name + '.another_function' in job_func_names, job_func_names
 
-
     def test_does_not_add_job_if_already_added(self):
         schedule_job(a_job, self.scheduler)
         schedule_job(a_job, self.scheduler)
@@ -77,14 +76,12 @@ class TestSetupScheduledJobs(object):
 
         assert len(sched_jobs) == 1, sched_jobs
 
-
     def test_returns_log_messages(self):
         success_message = schedule_job(a_job, self.scheduler)
         failure_message = schedule_job(a_job, self.scheduler)
 
         assert success_message == 'Scheduled a_function([], {}) to run every 1 seconds'
         assert failure_message == 'WARNING: Job a_function([], {}) is already scheduled'
-
 
     def test_failed_attempt_to_schedule_does_not_polute_redis(self):
         schedule_job(a_job, self.scheduler)

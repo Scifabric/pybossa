@@ -70,7 +70,6 @@ def create_app(run_as_server=True):
     setup_external_services(app)
     setup_importers(app)
     setup_jinja(app)
-    setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
@@ -83,6 +82,7 @@ def create_app(run_as_server=True):
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
+    anonymizer.init_app(app)
     return app
 
 
@@ -461,7 +461,6 @@ def setup_youtube_importer(app):
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
-
 def setup_importers(app):
     importers = app.config.get('AVAILABLE_IMPORTERS')
     if importers:
@@ -553,6 +552,7 @@ def setup_hooks(app):
                 request.body = get_json_multidict(request)
             except TypeError:
                 abort(400)
+
 
     @app.context_processor
     def _global_template_context():
@@ -730,6 +730,7 @@ def setup_assets(app):
 def setup_strong_password(app):
     global enable_strong_password
     enable_strong_password = app.config.get('ENABLE_STRONG_PASSWORD')
+
 
 def setup_ldap(app):
     if app.config.get('LDAP_HOST'):

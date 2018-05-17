@@ -27,6 +27,9 @@ from sqlalchemy.orm.base import _entity_descriptor
 from flask import current_app
 import re
 from pybossa.util import get_unique_user_preferences
+from pybossa.model.task_run import TaskRun
+from faker import Faker
+from yacryptopan import CryptoPAn
 
 class UserRepository(Repository):
 
@@ -43,12 +46,14 @@ class UserRepository(Repository):
         return self.db.session.query(User).filter_by(**attributes).first()
 
     def get_all(self):
-        return self.db.session.query(User).all()
+        return self.db.session.query(User).filter_by(restrict=False).all()
 
     def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
                   fulltextsearch=None, desc=False, **filters):
         if filters.get('owner_id'):
             del filters['owner_id']
+        # Force only restrict to False
+        filters['restrict'] = False
         return self._filter_by(User, limit, offset, yielded,
                                last_id, fulltextsearch, desc, **filters)
 
@@ -98,6 +103,26 @@ class UserRepository(Repository):
             can_have_super_user_access(new_user)
             self.lowercase_user_attributes(new_user)
             self.db.session.merge(new_user)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
+    def fake_user_id(self, user):
+        faker = Faker()
+        cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
+        task_runs = self.db.session.query(TaskRun).filter_by(user_id=user.id)
+        for tr in task_runs:
+            tr.user_id = None
+            tr.user_ip = cp.anonymize(faker.ipv4())
+            self.db.session.merge(tr)
+            self.db.session.commit()
+
+    def delete(self, user):
+        self._validate_can_be('deleted', user)
+        try:
+            self.fake_user_id(user)
+            self.db.session.delete(user)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()

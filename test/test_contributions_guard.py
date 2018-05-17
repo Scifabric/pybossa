@@ -21,10 +21,13 @@ from pybossa.sentinel import Sentinel
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model.task import Task
 from mock import patch
+import settings_test
+from redis.sentinel import Sentinel
+
 
 class FakeApp(object):
     def __init__(self):
-        if all(hasattr(settings_test, attr) for attr in 
+        if all(hasattr(settings_test, attr) for attr in
             ['REDIS_MASTER_DNS', 'REDIS_SLAVE_DNS', 'REDIS_PORT']):
             self.config = dict(REDIS_MASTER_DNS=settings_test.REDIS_MASTER_DNS,
                 REDIS_SLAVE_DNS=settings_test.REDIS_SLAVE_DNS,

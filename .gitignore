@@ -47,4 +47,7 @@ coverage.xml
 htmlcov/*
 pybossa/themes/*
 .vscode/
+env3/
+*.bak
+*.orig
 tags
