@@ -407,3 +407,29 @@ class TestCacheMemoizeFunctions(object):
         assert get_cache_group_key('key2') in keys
         delete_cache_group('key2')
         assert not test_sentinel.master.keys()
+
+    def test_cache_group_key_callable(self):
+        def cache_group_key_fn(*args, **kwargs):
+            return args[0]
+        @memoize(cache_group_keys=(cache_group_key_fn,))
+        def my_func(*args, **kwargs):
+            return None
+        my_func('a')
+        assert get_cache_group_key('a') in test_sentinel.master.keys()
+
+    def test_cache_group_key_invalid(self):
+        @memoize(cache_group_keys=(0,))
+        def my_func(*args, **kwargs):
+            return None
+        try:
+            my_func('a')
+        except:
+            return
+        raise Exception('Should have raised')
+
+    def test_cache_group_key_none(self):
+        @memoize()
+        def my_func(*args, **kwargs):
+            return None
+        my_func('a')
+        assert len(test_sentinel.master.keys()) == 1
