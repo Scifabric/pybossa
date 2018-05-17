@@ -492,14 +492,6 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
     # Get location for Anonymous users
     top5_anon = []
     top10_auth = []
-    loc_anon = []
-    # Check if the GeoLiteCity.dat exists
-    geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo:
-        if os.path.isfile(geolite) is False:
-            geo = False
-    if geo:  # pragma: no cover
-        gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
         top5_anon.append(dict(ip=u[0], tasks=u[1]))
 
