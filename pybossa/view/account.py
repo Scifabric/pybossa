@@ -551,7 +551,6 @@ def _show_own_profile(user, form, can_update):
 
     response = dict(template='account/profile.html',
                     title=gettext("Profile"),
-                    user=user_dict,
                     projects_contrib=projects_contributed,
                     projects_published=projects_published,
                     projects_draft=projects_draft,
