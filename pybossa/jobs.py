@@ -812,21 +812,29 @@ def export_userdata(user_id, **kwargs):
     taskruns_data = [tr.dictize() for tr in taskruns]
     pdf = json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
                                   'personal_data.zip')
-    upf = json_exporter._make_zip(None, '', 'user_projects', projects_data, user_id,
-                                  'user_projects.zip')
-    ucf = json_exporter._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
-                                  'user_contributions.zip')
+    upf = None
+    if len(projects_data) > 0:
+        upf = json_exporter._make_zip(None, '', 'user_projects', projects_data, user_id,
+                                      'user_projects.zip')
+    ucf = None
+    if len(taskruns_data) > 0:
+        ucf = json_exporter._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
+                                      'user_contributions.zip')
     upload_method = current_app.config.get('UPLOAD_METHOD')
     if upload_method == 'local':
         upload_method = 'uploads.uploaded_file'
 
     personal_data_link = url_for(upload_method,
                                  filename="user_%s/%s" % (user_id, pdf))
-    personal_projects_link = url_for(upload_method,
-                                    filename="user_%s/%s" % (user_id,
+    personal_projects_link = None
+    if upf:
+        personal_projects_link = url_for(upload_method,
+                                         filename="user_%s/%s" % (user_id,
                                                              upf))
-    personal_contributions_link = url_for(upload_method,
-                                          filename="user_%s/%s" % (user_id,
+    personal_contributions_link = None
+    if ucf:
+        personal_contributions_link = url_for(upload_method,
+                                              filename="user_%s/%s" % (user_id,
                                                                    ucf))
 
     body = render_template('/account/email/exportdata.md',
