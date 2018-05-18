@@ -36,10 +36,11 @@ class Newsletter(object):
     def init_app(self, app):
         """Configure newsletter Mailchimp client."""
         self.app = app
-        self.dc = app.config.get('MAILCHIMP_API_KEY').split('-')[1]
-        self.root = 'https://%s.api.mailchimp.com/3.0' % self.dc
-        self.auth = HTTPBasicAuth('user', app.config.get('MAILCHIMP_API_KEY'))
-        self.list_id = app.config.get('MAILCHIMP_LIST_ID')
+        if app.config.get('MAILCHIMP_API_KEY'):
+            self.dc = app.config.get('MAILCHIMP_API_KEY').split('-')[1]
+            self.root = 'https://%s.api.mailchimp.com/3.0' % self.dc
+            self.auth = HTTPBasicAuth('user', app.config.get('MAILCHIMP_API_KEY'))
+            self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 
     def is_initialized(self):
         return self.app is not None
