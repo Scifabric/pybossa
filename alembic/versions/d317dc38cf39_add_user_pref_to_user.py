@@ -1,4 +1,4 @@
-"""add user_pref to user
+"""empty message for add user_pref to user
 
 Revision ID: d317dc38cf39
 Revises: fa8cf884aa8e
@@ -15,8 +15,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
 def upgrade():
-    op.add_column('user', sa.Column('user_pref', JSONB))
+    pass #op.add_column('user', sa.Column('user_pref', JSONB))
 
 
 def downgrade():
-    op.drop_column('user', 'user_pref')
+    pass #op.drop_column('user', 'user_pref')
