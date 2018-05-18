@@ -20,9 +20,9 @@ tables = ['user', 'task', 'task_run', 'result', 'blogpost',
 
 def upgrade():
     for table in tables:
-        #if table == 'user':
-        #    query = 'DROP MATERIALIZED VIEW users_rank'
-        #    op.execute(query)
+        if table == 'user':
+            query = 'DROP MATERIALIZED VIEW users_rank'
+            op.execute(query)
         if table != 'webhook':
             query = '''ALTER TABLE "%s" ALTER COLUMN info SET DATA TYPE jsonb USING info::jsonb;''' % table
         else:
