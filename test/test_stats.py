@@ -168,5 +168,5 @@ class TestStats(Test):
 
         err_msg = "user stats sum of auth and anon should be 7"
         assert user_stats['n_anon'] + user_stats['n_auth'] == 7, err_msg
-        for u in user_stats['auth']['top5']:
+        for u in user_stats['auth']['top10']:
             assert u['restrict'] is False, u

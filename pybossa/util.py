@@ -40,7 +40,6 @@ import hashlib
 import hmac
 import simplejson
 import time
-import pycountry
 from flask.ext.babel import lazy_gettext
 import re
 import boto

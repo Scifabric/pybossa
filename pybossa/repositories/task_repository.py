@@ -351,7 +351,7 @@ class TaskRepository(Repository):
                    FROM task
                    WHERE task.project_id=:project_id
                    AND task.state='ongoing'
-                   AND md5(task.info::text)=md5(:info)
+                   AND md5(task.info::text)=md5(((:info)::jsonb)::text)
                    ''')
         row = self.db.session.execute(sql, dict(project_id=project_id,
                                                 info=json.dumps(info))).first()

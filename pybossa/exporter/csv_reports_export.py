@@ -24,9 +24,37 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
+from pybossa.uploader import local
+from flask import url_for, safe_join, send_file, redirect, current_app
+
 
 class ProjectReportCsvExporter(CsvExporter):
     """Project reports exporter in CSV format"""
+
+    def delete_existing_zip(self, project, ty):
+        """Delete existing ZIP from uploads directory"""
+        filename = self.download_name(project, ty)
+        if uploader.file_exists(filename, self._container(project)):
+            assert uploader.delete_file(filename, self._container(project))
+
+    def get_zip(self, project, ty):
+        """Delete existing ZIP file directly from uploads directory,
+        generate one on the fly and upload it."""
+
+        filename = self.download_name(project, ty)
+        self.delete_existing_zip(project, ty)
+        self._make_zip(project, ty)
+        if isinstance(uploader, local.LocalUploader):
+            filepath = self._download_path(project)
+            res = send_file(filename_or_fp=safe_join(filepath, filename),
+                            mimetype='application/octet-stream',
+                            as_attachment=True,
+                            attachment_filename=filename)
+            return res
+        else:
+            return redirect(url_for('rackspace', filename=filename,
+                                    container=self._container(project),
+                                    _external=True))
 
     def response_zip(self, project, ty):
         return super(ProjectReportCsvExporter, self).response_zip(project, ty)

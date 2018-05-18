@@ -22,7 +22,6 @@ from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model.task import Task
 from mock import patch
 import settings_test
-from redis.sentinel import Sentinel
 
 
 class FakeApp(object):
@@ -38,7 +37,6 @@ class FakeApp(object):
 class TestContributionsGuard(object):
 
     def setUp(self):
-        db = getattr(settings_test, 'REDIS_DB', 0)
         sentinel = Sentinel(app=FakeApp())
         self.connection = sentinel.master
         self.connection.flushall()

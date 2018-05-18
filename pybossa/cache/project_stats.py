@@ -505,10 +505,13 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
         for row in results:
             fullname = row.fullname
             name = row.name
-        top10_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
+            restrict = row.restrict
+        if (fullname and name and restrict):
+            top10_auth.append(dict(name=name,
+                                   fullname=fullname,
+                                   tasks=u[1]))
 
     userAnonStats['top5'] = top5_anon[0:5]
-    userAnonStats['locs'] = loc_anon
     userAuthStats['top10'] = top10_auth
 
     return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
@@ -577,11 +580,11 @@ def update_stats(project_id, period='2 week'):
     return dates_stats, hours_stats, users_stats
 
 
-def get_stats(project_id, geo=False, period='2 week', full=False):
+def get_stats(project_id, period='2 week', full=False):
     """Get project's stats."""
     ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
     if not ps:
-        update_stats(project_id, geo, period)
+        update_stats(project_id, period)
         ps = session.query(ProjectStats).filter_by(project_id=project_id).first()
     # stuff we want real-time
     ps.overall_progress = cached_projects.overall_progress(project_id)

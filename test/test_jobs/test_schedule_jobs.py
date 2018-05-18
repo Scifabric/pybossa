@@ -22,12 +22,14 @@ from rq_scheduler import Scheduler
 from redis.sentinel import Sentinel
 from redis import StrictRedis
 
+
 def a_function():
     return
 
 
 def another_function():
     return
+
 
 a_job = dict(name=a_function, args=[], kwargs={},
              interval=1, timeout=180)

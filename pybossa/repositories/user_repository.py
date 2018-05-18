@@ -21,12 +21,11 @@ from sqlalchemy.exc import IntegrityError
 from pybossa.repositories import Repository
 from sqlalchemy import text
 from pybossa.model.user import User
-from pybossa.util import AttrDict, can_have_super_user_access
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from sqlalchemy.orm.base import _entity_descriptor
 from flask import current_app
 import re
-from pybossa.util import get_unique_user_preferences
+from pybossa.util import can_have_super_user_access, get_unique_user_preferences
 from pybossa.model.task_run import TaskRun
 from faker import Faker
 from yacryptopan import CryptoPAn

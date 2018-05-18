@@ -400,7 +400,6 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_anonymous_post(self, guard, mock_request):
         """Test API TaskRun creation and auth for anonymous users."""
-        '''
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -420,7 +419,6 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid project_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
@@ -433,7 +431,6 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid task_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
@@ -444,24 +441,14 @@ class TestTaskrunAPI(TestAPI):
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
-        r_taskrun = json.loads(tmp.data)
-        assert tmp.status_code == 200, r_taskrun
-        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
-        assert r_taskrun['user_ip'] != '127.0.0.0'
+        # no anonymous contributions
+        assert tmp.status_code == 403, r_taskrun
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
         err_msg = ("Anonymous users should be only allowed to post \
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
-        '''
-
-        res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
-        tmp = json.loads(res.data)
-        print len(tmp)
-        for tr in tmp:
-            assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
-            assert tr['user_ip'] != '127.0.0.0'
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
@@ -923,7 +910,6 @@ class TestTaskrunAPI(TestAPI):
 
         assert tmp.status_code == 200, r_taskrun
         assert r_taskrun['user_ip'] != '127.0.0.0', r_taskrun
-        assert r_taskrun['user_ip'] == anonymizer.ip('127.0.0.0')
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 

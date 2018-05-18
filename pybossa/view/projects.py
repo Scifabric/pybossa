@@ -50,7 +50,7 @@ from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
                           get_avatar_url, admin_or_subadmin_required,
-                          s3_get_file_contents, get_avatar_url, fuzzyboolean)
+                          s3_get_file_contents, fuzzyboolean)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -1324,6 +1324,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     else:
         ensure_authorized_to('read', project)
 
+    zip_enabled(project, current_user)
+
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
     download_type = request.args.get('download_type')
@@ -2575,7 +2577,7 @@ def del_coowner(short_name, user_name=None):
     return abort(404)
 
 
-@blueprint.route('/<short_name>/tasks/projectreport/export')
+@blueprint.route('/<short_name>/projectreport/export')
 @login_required
 def export_project_report(short_name):
     """Export individual project information in the given format"""
@@ -2623,7 +2625,6 @@ def export_project_report(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return respond()
 
     if fmt not in export_formats:

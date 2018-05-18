@@ -3058,7 +3058,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('project/%s/task/%s' % (project.short_name, task.id),
                            follow_redirects=True)
-        assert "sign in" in res.data
+        assert 'This feature requires being logged in' in res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous_json(self):
@@ -3762,6 +3762,7 @@ class TestWeb(web.Helper):
         """Test WEB delete account works"""
         from pybossa.jobs import delete_account
         self.register()
+        self.signin()
         res = self.app.get('/account/johndoe/delete')
         assert res.status_code == 302, res.status_code
         assert 'account/signout' in res.data
@@ -3797,6 +3798,7 @@ class TestWeb(web.Helper):
         from pybossa.jobs import delete_account
         user = UserFactory.create(id=5000)
         self.register()
+        self.signin()
         res = self.app.get('/account/%s/delete' % user.name)
         assert res.status_code == 403, res.status_code
 
@@ -3807,6 +3809,7 @@ class TestWeb(web.Helper):
         from pybossa.jobs import delete_account
         user = UserFactory.create(id=5001)
         self.register()
+        self.signin()
         res = self.app_get_json('/account/%s/delete' % user.name)
         assert res.status_code == 403, (res.status_code, res.data)
 
@@ -3816,6 +3819,7 @@ class TestWeb(web.Helper):
         """Test WEB delete account user does not exists"""
         from pybossa.jobs import delete_account
         self.register()
+        self.signin()
         res = self.app.get('/account/juan/delete')
         assert res.status_code == 404, res.status_code
 
@@ -3825,6 +3829,7 @@ class TestWeb(web.Helper):
         """Test WEB delete account json user does not exist"""
         from pybossa.jobs import delete_account
         self.register()
+        self.signin()
         res = self.app_get_json('/account/asdafsdlw/delete')
         assert res.status_code == 404, (res.status_code, res.data)
 
@@ -3834,6 +3839,7 @@ class TestWeb(web.Helper):
         """Test WEB JSON delete account works"""
         from pybossa.jobs import delete_account
         self.register()
+        self.signin()
         res = self.app_get_json('/account/johndoe/delete')
         data = json.loads(res.data)
         assert data['job'] == 'enqueued', data
@@ -4865,6 +4871,8 @@ class TestWeb(web.Helper):
         """Test WEB export Results to CSV with no keys works"""
         # First test for a non-existant project
         uri = '/project/somethingnotexists/tasks/export'
+        self.register()
+        self.signin()
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in CSV format
@@ -4877,7 +4885,8 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real project
-        project = ProjectFactory.create()
+        owner = UserFactory.create(id=100)
+        project = ProjectFactory.create(owner=owner)
         self.clear_temp_container(project.owner_id)
         tasks = TaskFactory.create_batch(5, project=project,
                                          n_answers=1)
@@ -4900,6 +4909,9 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
+        assert 'You will be emailed when your export has been completed' in res.data
+        return
+
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
@@ -5174,6 +5186,8 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV new root key without keys works"""
         # Fixtures.create()
         # First test for a non-existant project
+        self.register()
+        self.signin()
         with patch.dict(self.flask_app.config, {'TASK_CSV_EXPORT_INFO_KEY':'answer'}):
             uri = '/project/somethingnotexists/tasks/export'
             res = self.app.get(uri, follow_redirects=True)
@@ -5188,7 +5202,8 @@ class TestWeb(web.Helper):
             assert res.status == '404 NOT FOUND', res.status
 
             # Now with a real project
-            project = ProjectFactory.create()
+            owner = UserFactory.create(id=199)
+            project = ProjectFactory.create(owner=owner)
             self.clear_temp_container(project.owner_id)
             for i in range(0, 5):
                 task = TaskFactory.create(project=project,
@@ -5202,6 +5217,9 @@ class TestWeb(web.Helper):
             # Now get the tasks in CSV format
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
+            assert 'You will be emailed when your export has been completed' in res.data
+            return
+
             file_name = '/tmp/task_%s.zip' % project.short_name
             with open(file_name, 'w') as f:
                 f.write(res.data)
@@ -5243,6 +5261,8 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV new root key works"""
         # Fixtures.create()
         # First test for a non-existant project
+        self.register()
+        self.signin()
         with patch.dict(self.flask_app.config, {'TASK_CSV_EXPORT_INFO_KEY':'answer'}):
             uri = '/project/somethingnotexists/tasks/export'
             res = self.app.get(uri, follow_redirects=True)
@@ -5257,7 +5277,8 @@ class TestWeb(web.Helper):
             assert res.status == '404 NOT FOUND', res.status
 
             # Now with a real project
-            project = ProjectFactory.create()
+            owner = UserFactory.create(id=199)
+            project = ProjectFactory.create(owner=owner)
             self.clear_temp_container(project.owner_id)
             for i in range(0, 5):
                 task = TaskFactory.create(project=project,
@@ -5271,6 +5292,9 @@ class TestWeb(web.Helper):
             # Now get the tasks in CSV format
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
+            assert 'You will be emailed when your export has been completed' in res.data
+            return
+
             file_name = '/tmp/task_%s.zip' % project.short_name
             with open(file_name, 'w') as f:
                 f.write(res.data)
@@ -6894,7 +6918,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Only authenticated users can participate"
-        assert "sign in" in res.data, err_msg
+        assert 'This feature requires being logged in' in res.data, err_msg
 
     @with_context
     def test_70_public_user_profile(self):
@@ -8293,7 +8317,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(zip_download=False)
         url = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401
+        assert 'This feature requires being logged in' in res.data
 
     @with_context
     def test_export_task_zip_download_not_owner(self):
@@ -8333,7 +8357,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(zip_download=False)
         url = '/project/%s/tasks/browse' % project.short_name
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401
+        assert 'This feature requires being logged in' in res.data
 
     @with_context
     def test_browse_task_zip_download_not_owner(self):
@@ -8375,8 +8399,9 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=owner, info=info)
         TaskRunFactory.create(project=project, user=contributor)
 
-        url = '/account/%s/' % contributor.name
+        url = '/account/%s/?api_key=%s' % (contributor.name, owner.api_key)
         res = self.app_get_json(url)
+        print res.data
         data = json.loads(res.data)
         assert 'projects' in data.keys(), data.keys()
         assert len(data['projects']) == 1, len(data['projects'])
@@ -8384,7 +8409,7 @@ class TestWeb(web.Helper):
         for key in info.keys():
             assert key not in tmp['info'].keys()
 
-        url = '/account/%s/' % owner.name
+        url = '/account/%s/?api_key=%s' % (owner.name, contributor.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         assert len(data['projects']) == 0, len(data['projects'])
@@ -8460,13 +8485,8 @@ class TestWeb(web.Helper):
         assert metadata['work_hours_to'] == upref_data['work_hours_to'], "work hours to not updated"
         assert metadata['review'] == upref_data['review'], "review not updated"
 
-
     @with_context
-    @patch('pybossa.view.account.current_user')
-    @patch('pybossa.view.account.mail_queue', autospec=True)
-    @patch('pybossa.view.account.render_template')
-    @patch('pybossa.view.account.signer')
-    def test_register_with_invalid_upref_mdata(self, signer, render, queue, current_user):
+    def test_register_with_invalid_upref_mdata(self):
         """Test WEB register user - invalid user preferences cannot be set"""
         from flask import current_app
         import pybossa.core
@@ -8492,13 +8512,10 @@ class TestWeb(web.Helper):
         assert user.consent, user
         assert user.name == 'ajd', user
         assert user.email_addr == 'ajd@example.com', user
-
         expected_upref = dict(languages=['sp'], locations=['uk'])
         assert user.user_pref == expected_upref, "User preferences did not matched"
 
         # update invalid user preferences
-        current_user.admin = True
-        current_user.id = 999
         upref_invalid_data = dict(languages="ch", locations="jp",
             user_type="Researcher", timezone="ACT",
             work_hours_from="10:00", work_hours_to="17:00",

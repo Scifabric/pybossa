@@ -1047,7 +1047,9 @@ class TestTaskAPI(TestAPI):
         assert items[0].task_id == data.get('id')
 
         for i in range(9):
+            task['info']['bar'] = i
             res = self.app.post(url, data=json.dumps(task))
+            print res
             created_task = json.loads(res.data)
         items = db.session.query(Counter).filter_by(project_id=project.id).all()
         assert len(items) == 10, len(items)
