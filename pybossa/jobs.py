@@ -782,13 +782,15 @@ def delete_account(user_id, **kwargs):
     newsletter.init_app(current_app)
     user = user_repo.get(user_id)
     email = user.email_addr
-    mailchimp_deleted = newsletter.delete_user(email)
     brand = current_app.config.get('BRAND')
     user_repo.delete(user)
     subject = '[%s]: Your account has been deleted' % brand
+    mailchimp_deleted = True
     body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
-    if not mailchimp_deleted:
-        body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
+    if current_app.config.get('MAILCHIMP_API_KEY'):
+        mailchimp_deleted = newsletter.delete_user(email)
+        if not mailchimp_deleted:
+            body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
     if current_app.config.get('DISQUS_SECRET_KEY'):
         body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
     recipients = [email]
