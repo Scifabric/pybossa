@@ -642,6 +642,8 @@ def update_profile(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
+    if current_user.name != name:
+        return abort(403)
     ensure_authorized_to('update', user)
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
