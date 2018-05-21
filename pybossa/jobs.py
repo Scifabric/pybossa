@@ -526,9 +526,9 @@ def disable_users_job():
     return True
 
 
-def send_mail(message_dict):
+def send_mail(message_dict, mail_all=False):
     """Send email."""
-    if mail_with_enabled_users(message_dict):
+    if mail_all or mail_with_enabled_users(message_dict):
         message = Message(**message_dict)
         mail.send(message)
 
@@ -1117,7 +1117,7 @@ def delete_account(user_id, **kwargs):
     for em in current_app.config.get('ADMINS'):
         recipients.append(em)
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
-    send_mail(mail_dict)
+    send_mail(mail_dict, mail_all=True)
 
 def export_userdata(user_id, **kwargs):
     from pybossa.core import user_repo, project_repo, task_repo, result_repo

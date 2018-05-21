@@ -91,7 +91,6 @@ class TestExportUsers(web.Helper):
         assert "Juan Jose2" in data, data
         assert len(json_data) == 4 # all users report returns user_1@test.com
         assert restricted.name not in data, data
-        assert len(json_data) == 3
 
     @with_context
     def test_csv_contains_all_attributes(self):

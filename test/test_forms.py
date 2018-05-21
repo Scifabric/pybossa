@@ -307,31 +307,14 @@ class TestBulkTaskLocalCSVForm(Test):
             assert return_value['type'] is 'localCSV', return_value
             assert return_value['csv_filename'] == url, return_value
 
-
-class TestRegisterFormWithUserPrefMetadata(Test):
-
-    def setUp(self):
-        super(TestRegisterFormWithUserPrefMetadata, self).setUp()
-        self.fill_in_data = {'fullname': 'Tyrion Lannister', 'name': 'mylion',
-                             'email_addr': 'tyrion@casterly.rock',
-                             'password':'secret', 'confirm':'secret',
-                             'user_type': 'Researcher'}
-
-        self.fields = ['fullname', 'name', 'email_addr', 'password', 'confirm',
-                  'languages', 'locations', 'work_hours_from', 'work_hours_to',
-                  'timezone', 'user_type', 'review']
-
-        self.upref_mdata_valid_choices = dict(languages=[("en", "en"), ("sp", "sp")],
-                                    locations=[("us", "us"), ("uk", "uk")],
-                                    timezones=[("", ""), ("ACT", "Australia Central Time")],
-                                    user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
-
     @with_context
-    @patch('pybossa.forms.forms.uploader')
+    @patch('pybossa.core.uploader')
     @patch('pybossa.forms.forms.request')
     @patch('pybossa.forms.forms.current_user')
     def test_import_upload_path_ioerror(self, mock_user, mock_request,
                                         mock_uploader):
+        # This test passes because the uploader is mocked, so it's not an
+        # instance of localUploader.
         mock_user.id = 1
         mock_request.method = 'POST'
         mock_file = MagicMock()

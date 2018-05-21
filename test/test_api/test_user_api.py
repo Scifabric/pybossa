@@ -40,7 +40,7 @@ class TestUserAPI(Test):
         res = self.app.get('/api/user?api_key=%s' % admin.api_key)
         data = json.loads(res.data)
         user = data[1]
-        assert len(data) == 2, data
+        assert len(data) == 3, data
         assert user['name'] == expected_user.name, data
 
         # The output should have a mime-type: application/json
@@ -52,23 +52,17 @@ class TestUserAPI(Test):
         user = data
         assert user['name'] == admin.name, data
 
-        res = self.app.get('/api/user/%s' % expected_user.id)
+        res = self.app.get('/api/user/%s?api_key=%s' % (expected_user.id, admin.api_key))
         data = json.loads(res.data)
         user = data
         assert user['name'] == expected_user.name, (user['name'],
                                                     expected_user.name)
-        assert 'info' not in user.keys(), user.keys()
 
         # Test GETting a specific user by ID as owner
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
                                            expected_user.api_key)
         res = self.app.get(url)
-        data = json.loads(res.data)
-        user = data
-        assert user['name'] == expected_user.name, data
-        assert 'info' in user.keys(), user.keys()
-        assert user['info']['extra'] == 'foo'
-        assert user['info']['badges'] == [1,2,3]
+        assert res.status_code == 403
 
         # Test GETting a specific user by ID as admin
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
@@ -85,10 +79,7 @@ class TestUserAPI(Test):
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
                                            someone.api_key)
         res = self.app.get(url)
-        data = json.loads(res.data)
-        user = data
-        assert user['name'] == expected_user.name, data
-        assert 'info' not in user.keys(), user.keys()
+        assert res.status_code == 403
 
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209?api_key=%s' % admin.api_key)
@@ -114,9 +105,7 @@ class TestUserAPI(Test):
 
         # As same user
         res = self.app.get(url + '?api_key=' + restricted.api_key)
-        assert res.status_code == 200, res.status_code
-        data = json.loads(res.data)
-        assert data['id'] == restricted.id
+        assert res.status_code == 403, res.status_code
 
     @with_context
     def test_query_user(self):
@@ -132,10 +121,7 @@ class TestUserAPI(Test):
         assert data[0]['name'] == expected_user.name, data
         # Trying to change restrict
         res = self.app.get('/api/user?restrict=true')
-        data = json.loads(res.data)
-        assert len(data) == 2, data
-        for d in data:
-            assert d['name'] != restricted.name, d
+        assert res.status_code == 401
 
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla&api_key=%s' % admin.api_key)
@@ -177,33 +163,27 @@ class TestUserAPI(Test):
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
         res = self.app.get('/api/user?name=%s' % expected_user.name)
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 401
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 401
 
         # When querying with a valid existing non-unique field
         res = self.app.get("/api/user?locale=en")
-        data = json.loads(res.data)
-        # It should return 3 results, as every registered user has locale=en by default
-        assert len(data) == 0, data
+        assert res.status_code == 401
 
         # When querying with multiple valid fields
         res = self.app.get('/api/user?name=%s&locale=en' % expected_user.name)
-        data = json.loads(res.data)
-        # It should find and return one correct result
-        assert len(data) == 0, data
+        assert res.status_code == 401
 
         # When querying with non-valid fields -- Errors
         res = self.app.get('/api/user?something_invalid=whatever')
         err = json.loads(res.data)
         err_msg = "AttributeError exception should be raised"
-        assert res.status_code == 415, err_msg
+        assert res.status_code == 401, err_msg
         assert err['action'] == 'GET', err_msg
         assert err['status'] == 'failed', err_msg
-        assert err['exception_cls'] == 'AttributeError', err_msg
+        assert err['exception_cls'] == 'Unauthorized', err_msg
 
         # As other user
         # When querying with a valid existing field which is unique
@@ -214,8 +194,7 @@ class TestUserAPI(Test):
         assert len(data) == 0, data
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla&api_key=%s' + other.api_key)
-        data = json.loads(res.data)
-        assert len(data) == 0, data
+        assert res.status_code == 401, err_msg
 
         # When querying with a valid existing non-unique field
         res = self.app.get("/api/user?locale=en&api_key=" + other.api_key)

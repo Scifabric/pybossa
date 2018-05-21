@@ -1037,14 +1037,6 @@ def add_metadata(name):
     return redirect(url_for('account.profile', name=name))
 
 
-@blueprint.route('/ldap')
-def ldap_protected():
-    if ldap.bind_user('test', 'test'):
-        print ldap.get_object_details('test')
-        return "HOLA"
-    else:
-        return "INvalid"
-
 def get_user_pref_and_metadata(user_name, form):
     user_pref = {}
     metadata = {}

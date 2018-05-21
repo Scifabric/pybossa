@@ -696,7 +696,7 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'autoimporter'
 
-        new_value = '{"type": "localCSV", "csv_filename": null}'
+        new_value = '{"csv_filename": null, "type": "localCSV"}'
 
         old_value = 'Nothing'
 

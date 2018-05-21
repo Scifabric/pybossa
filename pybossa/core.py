@@ -467,18 +467,6 @@ def setup_importers(app):
         importer.set_importers(importers)
 
 
-def setup_geocoding(app):
-    """Setup geocoding."""
-    # Check if app stats page can generate the map
-    geolite = app.root_path + '/../dat/GeoLiteCity.dat'
-    if not os.path.exists(geolite):  # pragma: no cover
-        app.config['GEO'] = False
-        print("GeoLiteCity.dat file not found")
-        print("Project page stats web map disabled")
-    else:  # pragma: no cover
-        app.config['GEO'] = True
-
-
 def url_for_other_page(page):
     """Setup url for other pages."""
     args = dict(request.view_args.items() + request.args.to_dict().items())

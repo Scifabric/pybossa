@@ -17,8 +17,8 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
-from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import Column
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
