@@ -25,6 +25,7 @@ from pybossa.exporter.csv_export import CsvExporter
 from pybossa.exporter.json_export import JsonExporter
 from factories import ProjectFactory, UserFactory, TaskFactory, TaskRunFactory
 from werkzeug.datastructures import FileStorage
+from pybossa.uploader.local import LocalUploader
 
 class TestTaskCsvExporter(Test):
 
@@ -93,6 +94,11 @@ class TestExporters(Test):
 
     """Test PyBossa Csv and Json Exporter module."""
 
+    @staticmethod
+    def _check_func_called_with_params(call_params, expected_params):
+        params = set([param[0][0].filename for param in call_params])
+        return not len(params - expected_params)
+
     @with_context
     @patch('pybossa.exporter.csv_export.uploader')
     @patch('pybossa.exporter.json_export.uploader')
@@ -106,8 +112,11 @@ class TestExporters(Test):
         csv_exporter = CsvExporter()
         json_exporter = JsonExporter()
         csv_exporter.pregenerate_zip_files(project)
+        call_csv_params = csv_uploader.upload_file.call_args_list
+        expected_csv_params = set(['1_project1_task_run_csv.zip', '1_project1_result_csv.zip', '1_project1_task_csv.zip'])
+        assert self._check_func_called_with_params(call_csv_params, expected_csv_params)
+
         json_exporter.pregenerate_zip_files(project)
-        csv_file = FileStorage(filename='1_project1_result_csv.zip')
-        json_file = FileStorage(filename='1_project1_result_json.zip')
-        assert csv_uploader.file_exists(csv_file, container='user_2')
-        assert csv_uploader.file_exists(json_file, container='user_2')
+        call_json_params = json_uploader.upload_file.call_args_list
+        expected_json_params = set(['1_project1_task_run_json.zip', '1_project1_result_json.zip', '1_project1_task_json.zip'])
+        assert self._check_func_called_with_params(call_json_params, expected_json_params)

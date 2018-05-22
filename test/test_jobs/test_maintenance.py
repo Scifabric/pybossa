@@ -17,10 +17,12 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import sentinel
-from pybossa.jobs import check_failed, get_maintenance_jobs
+from pybossa.jobs import (check_failed, get_maintenance_jobs,
+    disable_users_job)
 from default import Test, with_context
-from mock import patch, MagicMock, call
-
+from mock import patch, MagicMock
+from factories import UserFactory
+import datetime
 
 class TestMaintenance(Test):
 
@@ -72,3 +74,18 @@ class TestMaintenance(Test):
         mock_send_mail.reset_mock()
         response = check_failed()
         assert not mock_send_mail.called
+
+    @with_context
+    def test_disable_users_jobs(self):
+        """Test disable users jobs works."""
+        users = UserFactory.create_batch(3)
+        res = disable_users_job()
+        assert users[0].enabled and users[1].enabled \
+            and users[2].enabled, "Users created recently shouldn't be disabled"
+
+        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(100)).isoformat()
+        old_users = UserFactory.create_batch(2, created=date_old, last_login=date_old)
+        res = disable_users_job()
+        assert users[0].enabled and users[1].enabled \
+            and users[2].enabled and not old_users[0].enabled \
+            and not old_users[1].enabled, "Only users not logged in > 90 days should be disabled"
