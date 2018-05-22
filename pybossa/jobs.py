@@ -1097,76 +1097,77 @@ def mail_project_report(info, current_user_email_addr):
 
     send_mail(mail_dict)
 
-def delete_account(user_id, **kwargs):
+
+def delete_account(user_id, admin_addr, **kwargs):
     """Delete user account from the system."""
-    from pybossa.core import user_repo
-    from pybossa.core import newsletter
-    newsletter.init_app(current_app)
+    from pybossa.core import (user_repo, uploader)
     user = user_repo.get(user_id)
+
+    container = "user_%s" % user.id
+    if user.info.get('avatar'):
+        uploader.delete_file(user.info['avatar'], container)
+
     email = user.email_addr
-    mailchimp_deleted = newsletter.delete_user(email)
+    if current_app.config.get('MAILCHIMP_API_KEY'):
+        from pybossa.core import newsletter
+        newsletter.init_app(current_app)
+        mailchimp_deleted = newsletter.delete_user(email)
+    else:
+        mailchimp_deleted = True
     brand = current_app.config.get('BRAND')
-    user_repo.delete(user)
+    user_repo.delete_data(user)
     subject = '[%s]: Your account has been deleted' % brand
-    body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+    body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
     if not mailchimp_deleted:
         body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
     if current_app.config.get('DISQUS_SECRET_KEY'):
         body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
     recipients = [email]
-    for em in current_app.config.get('ADMINS'):
-        recipients.append(em)
-    mail_dict = dict(recipients=recipients, subject=subject, body=body)
+    bcc = [admin_addr]
+    mail_dict = dict(recipients=recipients, bcc=bcc, subject=subject, body=body)
     send_mail(mail_dict, mail_all=True)
 
-def export_userdata(user_id, **kwargs):
-    from pybossa.core import user_repo, project_repo, task_repo, result_repo
+
+def export_userdata(user_id, admin_addr, **kwargs):
+    from pybossa.core import (user_repo, uploader)
     from flask import current_app, url_for
     json_exporter = JsonExporter()
     user = user_repo.get(user_id)
     user_data = user.dictize()
     del user_data['passwd_hash']
-    projects = project_repo.filter_by(owner_id=user.id)
-    projects_data = [project.dictize() for project in projects]
-    taskruns = task_repo.filter_task_runs_by(user_id=user.id)
-    taskruns_data = [tr.dictize() for tr in taskruns]
     pdf = json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
                                   'personal_data.zip')
-    upf = json_exporter._make_zip(None, '', 'user_projects', projects_data, user_id,
-                                  'user_projects.zip')
-    ucf = json_exporter._make_zip(None, '', 'user_contributions', taskruns_data, user_id,
-                                  'user_contributions.zip')
     upload_method = current_app.config.get('UPLOAD_METHOD')
-    if upload_method == 'local':
-        upload_method = 'uploads.uploaded_file'
 
-    personal_data_link = url_for(upload_method,
-                                 filename="user_%s/%s" % (user_id, pdf))
-    personal_projects_link = url_for(upload_method,
-                                    filename="user_%s/%s" % (user_id,
-                                                             upf))
-    personal_contributions_link = url_for(upload_method,
-                                          filename="user_%s/%s" % (user_id,
-                                                                   ucf))
+    attachments = []
+    personal_data_link = None
+    if upload_method == 'local':
+        filename = uploader.get_file_path('user_%s' % user_id, pdf)
+        with open(filename) as fp:
+            attachment = Attachment(pdf, "application/zip",
+                                    fp.read())
+        attachments = [attachment]
+    else:
+        personal_data_link = url_for(upload_method,
+                                    filename="user_%s/%s" % (user_id, pdf))
 
     body = render_template('/account/email/exportdata.md',
                            user=user.dictize(),
                            personal_data_link=personal_data_link,
-                           personal_projects_link=personal_projects_link,
-                           personal_contributions_link=personal_contributions_link,
                            config=current_app.config)
 
     html = render_template('/account/email/exportdata.html',
                            user=user.dictize(),
                            personal_data_link=personal_data_link,
-                           personal_projects_link=personal_projects_link,
-                           personal_contributions_link=personal_contributions_link,
                            config=current_app.config)
     subject = 'Your personal data'
+    bcc = [admin_addr]
     mail_dict = dict(recipients=[user.email_addr],
+                     bcc=bcc,
                      subject=subject,
                      body=body,
-                     html=html)
+                     html=html,
+                     attachments=attachments)
     send_mail(mail_dict)
 
 

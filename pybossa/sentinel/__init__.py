@@ -43,6 +43,7 @@ class Sentinel(object):
             self.master = self.connection.master_for(redis_master, db=redis_db)
             self.slave = self.connection.slave_for(redis_master, db=redis_db)
 
+
 def scan_iter(conn, match, count=None):
     cursor = 0
     while cursor != '0':

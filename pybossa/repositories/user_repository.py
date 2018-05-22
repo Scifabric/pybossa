@@ -127,6 +127,23 @@ class UserRepository(Repository):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
+    def delete_data(self, user):
+        self._validate_can_be('deleted', user)
+        import uuid
+        try:
+            dummy = 'del-' + str(uuid.uuid4())
+            user.name = dummy
+            user.fullname = dummy
+            user.email_addr = '{}@del.com'.format(dummy)
+            user.enabled = False
+            user.info = {}
+            user.user_pref = {}
+            self.db.session.merge(user)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
     def _validate_can_be(self, action, user):
         if not isinstance(user, User):
             name = user.__class__.__name__

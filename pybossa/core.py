@@ -54,10 +54,10 @@ def create_app(run_as_server=True):
     setup_db(app)
     setup_repositories(app)
     setup_cache(app)
-    setup_exporter(app)
     setup_strong_password(app)
     mail.init_app(app)
     sentinel.init_app(app)
+    setup_exporter(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
