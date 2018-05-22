@@ -142,8 +142,10 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
                        fullname=r.fullname,
                        info=r.info)
             tmp = User().to_public_json(tmp)
+            tmp['project_id'] = project_obj['id']
             tmp['project_name'] = project_obj['name']
             tmp['project_short_name'] = project_obj['short_name']
+            tmp['category_id'] = project_obj['category_id']
             tmp['action_updated'] = 'UserContribution'
         if tmp:
             update_feed(tmp)
