@@ -37,19 +37,26 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
             body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
 
-            recipients = [user.email_addr, 'admin@broken.com']
+            admin_addr = 'admin@pybossa.com'
+            recipients = [user.email_addr]
             mail_dict = dict(recipients=recipients,
                              subject=subject,
-                             body=body)
+                             body=body,
+                             bcc=[admin_addr])
 
-            delete_account(user.id)
+            user_old = user.dictize()
+            delete_account(user.id, 'admin@pybossa.com')
             Message.assert_called_once_with(**mail_dict)
             mail.send.assert_called_once_with(Message())
-            user = user_repo.get(user_id)
-            assert user is None
+            user_new = user_repo.get(user_id)
+            assert user_new.name != user_old['name']
+            assert user_new.fullname != user_old['fullname']
+            assert user_new.email_addr != user_old['email_addr']
+            assert not user_new.info
+            assert not user_new.user_pref
 
     @with_context
     @patch('requests.delete')
@@ -60,21 +67,28 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
 
-            recipients = [user.email_addr, 'admin@broken.com']
+            admin_addr = 'admin@pybossa.com'
+            recipients = [user.email_addr]
             mail_dict = dict(recipients=recipients,
                              subject=subject,
-                             body=body)
+                             body=body,
+                             bcc=[admin_addr])
 
+            user_old = user.dictize()
             mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=204)),
                                                  json=lambda : '',
                                                status_code=204)]
-            delete_account(user.id)
+            delete_account(user.id, admin_addr)
             Message.assert_called_once_with(**mail_dict)
             mail.send.assert_called_once_with(Message())
-            user = user_repo.get(user_id)
-            assert user is None
+            user_new = user_repo.get(user_id)
+            assert user_new.name != user_old['name']
+            assert user_new.fullname != user_old['fullname']
+            assert user_new.email_addr != user_old['email_addr']
+            assert not user_new.info
+            assert not user_new.user_pref
 
     @with_context
     @patch('requests.delete')
@@ -86,19 +100,26 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
             body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
 
-            recipients = [user.email_addr, 'admin@broken.com']
+            admin_addr = 'admin@pybossa.com'
+            recipients = [user.email_addr]
             mail_dict = dict(recipients=recipients,
                              subject=subject,
-                             body=body)
+                             body=body,
+                             bcc=[admin_addr])
 
+            user_old = user.dictize()
             mailchimp.side_effect = [FakeResponse(text=json.dumps(dict(status=204)),
                                                  json=lambda : '',
                                                status_code=204)]
-            delete_account(user.id)
+            delete_account(user.id, admin_addr)
             Message.assert_called_once_with(**mail_dict)
             mail.send.assert_called_once_with(Message())
-            user = user_repo.get(user_id)
-            assert user is None
+            user_new = user_repo.get(user_id)
+            assert user_new.name != user_old['name']
+            assert user_new.fullname != user_old['fullname']
+            assert user_new.email_addr != user_old['email_addr']
+            assert not user_new.info
+            assert not user_new.user_pref

@@ -35,48 +35,39 @@ class TestExportAccount(Test):
     @patch('uuid.uuid1', return_value='random')
     @patch('pybossa.jobs.Message')
     @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.Attachment')
+    @patch('pybossa.jobs.open')
     # @patch('pybossa.jobs.JsonExporter')
-    def test_export(self, m1, m2, m3, m4, m5):
+    def test_export(self, op, att, m1, m2, m3, m4, m5):
         """Check email is sent to user."""
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         taskrun = TaskRunFactory.create(user=user)
 
+        att.return_value = 'the_attachment_file'
         m4.delete_file.return_value = True
 
-        export_userdata(user.id)
+        admin_addr = 'admin@pybossa.com'
+        export_userdata(user.id, admin_addr)
 
         upload_method = 'uploads.uploaded_file'
 
-        personal_data_link = url_for(upload_method,
-                                     filename="user_%s/%s_sec_personal_data.zip"
-                                     % (user.id, 'random'))
-        personal_projects_link = url_for(upload_method,
-                                         filename="user_%s/%s_sec_user_projects.zip"
-                                         % (user.id, 'random'))
-        personal_contributions_link = url_for(upload_method,
-                                              filename="user_%s/%s_sec_user_contributions.zip"
-                                              % (user.id, 'random'))
-
-
         body = render_template('/account/email/exportdata.md',
                            user=user.dictize(),
-                           personal_data_link=personal_data_link,
-                           personal_projects_link=personal_projects_link,
-                           personal_contributions_link=personal_contributions_link,
+                           personal_data_link='',
                            config=current_app.config)
 
         html = render_template('/account/email/exportdata.html',
                            user=user.dictize(),
-                           personal_data_link=personal_data_link,
-                           personal_projects_link=personal_projects_link,
-                           personal_contributions_link=personal_contributions_link,
+                           personal_data_link='',
                            config=current_app.config)
         subject = 'Your personal data'
         mail_dict = dict(recipients=[user.email_addr],
                      subject=subject,
                      body=body,
-                     html=html)
+                     html=html,
+                     bcc=[admin_addr],
+                     attachments=['the_attachment_file'])
         m1.assert_called_with(mail_dict)
 
     @with_context

@@ -3763,11 +3763,12 @@ class TestWeb(web.Helper):
         from pybossa.jobs import delete_account
         self.register()
         self.signin()
-        res = self.app.get('/account/johndoe/delete')
+        admin = user_repo.get(1)
+        user = UserFactory.create(id=100)
+        res = self.app.get('/account/%s/delete' % user.name)
         assert res.status_code == 302, res.status_code
-        assert 'account/signout' in res.data
-        user = user_repo.filter_by(name='johndoe')[0]
-        mock.assert_called_with(delete_account, user.id)
+        assert '/admin' in res.data
+        mock.assert_called_with(delete_account, user.id, admin.email_addr)
 
     @with_context
     @patch('pybossa.view.account.super_queue.enqueue')
@@ -3840,11 +3841,12 @@ class TestWeb(web.Helper):
         from pybossa.jobs import delete_account
         self.register()
         self.signin()
-        res = self.app_get_json('/account/johndoe/delete')
+        admin = user_repo.get(1)
+        user = UserFactory.create(id=100)
+        res = self.app_get_json('/account/%s/delete' % user.name)
         data = json.loads(res.data)
         assert data['job'] == 'enqueued', data
-        user = user_repo.filter_by(name='johndoe')[0]
-        mock.assert_called_with(delete_account, user.id)
+        mock.assert_called_with(delete_account, user.id, admin.email_addr)
 
     @with_context
     def test_42_password_link(self):
@@ -4524,7 +4526,7 @@ class TestWeb(web.Helper):
         # As admin
         res = self.app.get(uri + '?api_key=%s' % root.api_key,
                            follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 200, res.status_code
 
         # As other
         res = self.app.get(uri + '?api_key=%s' % other.api_key,
@@ -4534,13 +4536,13 @@ class TestWeb(web.Helper):
         # As owner
         res = self.app.get(uri + '?api_key=%s' % user.api_key,
                            follow_redirects=True)
-        assert res.status_code == 200, res.status_code
+        assert res.status_code == 403, res.status_code
 
         # As non existing user
         uri = 'account/algo/export'
         res = self.app.get(uri + '?api_key=%s' % user.api_key,
                            follow_redirects=True)
-        assert res.status_code == 404, res.status_code
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
@@ -4555,7 +4557,7 @@ class TestWeb(web.Helper):
         # As admin
         res = self.app_get_json(uri + '?api_key=%s' % root.api_key,
                                 follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 200, res.status_code
 
         # As other
         res = self.app_get_json(uri + '?api_key=%s' % other.api_key,
@@ -4565,13 +4567,13 @@ class TestWeb(web.Helper):
         # As owner
         res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
                                 follow_redirects=True)
-        assert res.status_code == 200, res.status_code
+        assert res.status_code == 403, res.status_code
 
         # As non existing user
         uri = 'account/algo/export'
         res = self.app_get_json(uri + '?api_key=%s' % user.api_key,
                                 follow_redirects=True)
-        assert res.status_code == 404, res.status_code
+        assert res.status_code == 403, res.status_code
 
 
     @with_context

@@ -514,6 +514,8 @@ def _show_public_profile(user, form, can_update):
         user_dict = cached_users.get_user_summary(user.name)
     else:
         user_dict = cached_users.public_get_user_summary(user.name)
+    if current_user.admin:
+        user_dict['email_addr'] = user.email_addr
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_created = cached_users.public_published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
@@ -920,6 +922,7 @@ def forgot_password():
 
 @blueprint.route('/<name>/export')
 @login_required
+@admin_required
 def start_export(name):
     """
     Starts a export of all user data according to EU GDPR
@@ -930,12 +933,11 @@ def start_export(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    if user.id != current_user.id:
-        return abort(403)
 
     ensure_authorized_to('update', user)
     export_queue.enqueue(export_userdata,
-                         user_id=user.id)
+                         user_id=user.id,
+                         admin_addr=current_user.email_addr)
     msg = gettext('GDPR export started')
     flash(msg, 'success')
     return redirect_content_type(url_for('account.profile', name=name))
@@ -968,6 +970,7 @@ def reset_api_key(name):
 
 @blueprint.route('/<name>/delete')
 @login_required
+@admin_required
 def delete(name):
     """
     Delete user account.
@@ -975,10 +978,10 @@ def delete(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    if current_user.name != name:
+    if user.admin:
         return abort(403)
 
-    super_queue.enqueue(delete_account, user.id)
+    super_queue.enqueue(delete_account, user.id, current_user.email_addr)
 
     if (request.headers.get('Content-Type') == 'application/json' or
         request.args.get('response_format') == 'json'):
@@ -986,7 +989,7 @@ def delete(name):
         response = dict(job='enqueued', template='account/delete.html')
         return handle_content_type(response)
     else:
-        return redirect(url_for('account.signout'))
+        return redirect(url_for('admin.index'))
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
