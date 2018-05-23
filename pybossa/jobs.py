@@ -786,7 +786,7 @@ def delete_account(user_id, **kwargs):
     user_repo.delete(user)
     subject = '[%s]: Your account has been deleted' % brand
     mailchimp_deleted = True
-    body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+    body = """Hi,\nYour account and personal data has been deleted from the %s.""" % brand
     if current_app.config.get('MAILCHIMP_API_KEY'):
         mailchimp_deleted = newsletter.delete_user(email)
         if not mailchimp_deleted:
