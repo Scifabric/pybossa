@@ -794,8 +794,9 @@ def delete_account(user_id, **kwargs):
     if current_app.config.get('DISQUS_SECRET_KEY'):
         body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
     recipients = [email]
-    for em in current_app.config.get('ADMINS'):
-        recipients.append(em)
+    if current_app.config.get('ADMINS'):
+        for em in current_app.config.get('ADMINS'):
+            recipients.append(em)
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
 
@@ -826,6 +827,7 @@ def export_userdata(user_id, **kwargs):
 
     personal_data_link = url_for(upload_method,
                                  filename="user_%s/%s" % (user_id, pdf))
+    personal_data_link = personal_data_link.replace('http://', 'https://', 1)
     personal_projects_link = None
     if upf:
         personal_projects_link = url_for(upload_method,
