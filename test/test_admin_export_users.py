@@ -20,6 +20,7 @@ import json
 import StringIO
 from default import with_context
 from pybossa.util import unicode_csv_reader
+from factories import UserFactory
 from helper import web
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from mock import patch
@@ -62,6 +63,7 @@ class TestExportUsers(web.Helper):
     @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
     def test_json_returns_all_users(self, password_needed):
         password_needed.return_value = False
+        restricted = UserFactory.create(restrict=True, id=5000014)
         self.register(fullname="Manolita")
         project = self.create_project_and_tasks()
         self.signin()
@@ -88,11 +90,14 @@ class TestExportUsers(web.Helper):
         assert "Manolita" in data, data
         assert "Juan Jose2" in data, data
         assert len(json_data) == 4 # all users report returns user_1@test.com
+        assert restricted.name not in data, data
 
     @with_context
     def test_csv_contains_all_attributes(self):
         self.register()
         self.signin()
+
+        restricted = UserFactory.create(restrict=True, id=5000015)
 
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
@@ -100,11 +105,13 @@ class TestExportUsers(web.Helper):
 
         for attribute in self.exportable_attributes:
             assert attribute in data, data
+        assert restricted.name not in data, data
 
     @with_context
     @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
     def test_csv_returns_all_users(self, password_needed):
         password_needed.return_value = False
+        restricted = UserFactory.create(restrict=True, id=5000016)
         self.register(fullname="Manolita")
         project = self.create_project_and_tasks()
         self.signin()
@@ -127,6 +134,7 @@ class TestExportUsers(web.Helper):
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
         data = res.data
+        assert restricted.name not in data
         csv_content = StringIO.StringIO(data)
         csvreader = unicode_csv_reader(csv_content)
         # number of users is -1 because the first row in csv are the headers

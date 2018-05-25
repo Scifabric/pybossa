@@ -33,8 +33,10 @@ user_repo = UserRepository(db)
 class TestBlogpostView(web.Helper):
 
     @with_context
-    def test_blogposts_get_all(self):
+    @patch('pybossa.view.projects._check_if_redirect_to_password')
+    def test_blogposts_get_all(self, redirect):
         """Test blogpost GET all blogposts"""
+        redirect.return_value = False
         user = self.create_users()[1]
         project = ProjectFactory.create(owner=user)
         blogpost_1 = BlogpostFactory.create(owner=user, project=project,
@@ -52,6 +54,7 @@ class TestBlogpostView(web.Helper):
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
+        print res.data
         assert res.status_code == 200, res.status_code
         assert 'titleone' in res.data
         assert 'titletwo' in res.data
@@ -65,8 +68,10 @@ class TestBlogpostView(web.Helper):
         assert 'titlethree' not in res.data
 
     @with_context
-    def test_json_blogposts_get_all(self):
+    @patch('pybossa.view.projects._check_if_redirect_to_password')
+    def test_json_blogposts_get_all(self, redirect):
         """Test JSON blogpost GET all blogposts"""
+        redirect.return_value = False
         user = self.create_users()[1]
         project = ProjectFactory.create(owner=user)
         blogpost_1 = BlogpostFactory.create(owner=user, project=project,

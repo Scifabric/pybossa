@@ -19,7 +19,7 @@
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text, Table
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.dialects.postgresql import JSON, ARRAY
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from flask import current_app
 
@@ -64,14 +64,16 @@ class Project(db.Model, DomainObject):
     featured = Column(Boolean, nullable=False, default=False)
     # Secret key for project
     secret_key = Column(Text, default=make_uuid)
+    # Zip download
+    zip_download = Column(Boolean, default=True)
     # If the project owner has been emailed
     contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
-    #: Project info field formatted as JSON
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    #: Project info field formatted as JSONB
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())
     #: If emails are sent to users about new tasks
     email_notif = Column(Boolean, default=False)
 

@@ -24,7 +24,7 @@ class Sentinel(object):
         self.app = app
         self.master = StrictRedis()
         self.slave = self.master
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
@@ -42,6 +42,7 @@ class Sentinel(object):
             redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
             self.master = self.connection.master_for(redis_master, db=redis_db)
             self.slave = self.connection.slave_for(redis_master, db=redis_db)
+
 
 def scan_iter(conn, match, count=None):
     cursor = 0

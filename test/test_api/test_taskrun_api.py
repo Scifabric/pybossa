@@ -25,7 +25,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
-from pybossa.core import db
+from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
 from nose.tools import nottest
@@ -400,7 +400,6 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_anonymous_post(self, guard, mock_request):
         """Test API TaskRun creation and auth for anonymous users."""
-        '''
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
@@ -420,7 +419,6 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, tmp.data
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid project_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
@@ -433,7 +431,6 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid task_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
@@ -444,15 +441,14 @@ class TestTaskrunAPI(TestAPI):
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
-        r_taskrun = json.loads(tmp.data)
-        assert tmp.status_code == 200, r_taskrun
+        # no anonymous contributions
+        assert tmp.status_code == 403, r_taskrun
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
         err_msg = ("Anonymous users should be only allowed to post \
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
-        '''
 
     @with_context
     @patch('pybossa.api.task_run.ContributionsGuard')
@@ -516,6 +512,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run.ContributionsGuard')
     def test_taskrun_authenticated_external_uid_post(self, guard):
         """Test API TaskRun creation and auth for authenticated external uid"""
+        user = UserFactory.create()
         guard.return_value = mock_contributions_guard(True)
         project = ProjectFactory.create()
         url = '/api/auth/project/%s/token' % project.short_name
@@ -576,6 +573,11 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson, headers=headers)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        assert tmp.status_code == 200, r_taskrun
+        msg = "user_id & user_ip should be None"
+        assert r_taskrun['user_id'] is None, (msg, r_taskrun['user_id'])
+        assert r_taskrun['user_ip'] is None, (msg, r_taskrun['user_ip'])
+
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson, headers=headers)
@@ -907,6 +909,7 @@ class TestTaskrunAPI(TestAPI):
         r_taskrun = json.loads(tmp.data)
 
         assert tmp.status_code == 200, r_taskrun
+        assert r_taskrun['user_ip'] != '127.0.0.0', r_taskrun
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg
 

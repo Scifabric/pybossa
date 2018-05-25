@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import json
 from mock import patch
 
 from default import db, with_context
@@ -59,15 +60,13 @@ class TestProjectPublicationView(web.Helper):
         assert call_args[1][0][1].id == project.id, call_args[1]
 
     @with_context
-    @patch('pybossa.view.projects.render_template', wraps=render_template)
-    def test_it_renders_template_when_get(self, fake_render):
+    def test_template_returned_when_get(self):
         project = project_repo.get(self.project_id)
         TaskFactory.create(project=project)
-        resp = self.app.get('/project/%s/publish' % project.short_name)
-
-        call_args = fake_render.call_args_list
-        assert call_args[0][0][0] == 'projects/publish.html', call_args[0]
-        assert call_args[0][1]['project'].id == project.id, call_args[0]
+        url = '/project/%s/publish' % project.short_name
+        res = self.app_get_json(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['template'] == '/projects/publish.html'
 
     @with_context
     def test_it_changes_project_to_published_after_post(self):

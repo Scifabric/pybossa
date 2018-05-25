@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
+from flask import current_app
 
 from rq import Queue
 from sqlalchemy import event
@@ -63,25 +64,26 @@ def add_blog_event(mapper, conn, target):
     obj.update(tmp)
     update_feed(obj)
     # Notify volunteers
-    mail_queue.enqueue(notify_blog_users,
-                       blog_id=target.id,
-                       project_id=target.project_id)
-    contents = {"en": "New update!"}
-    headings = {"en": target.title}
-    launch_url = url_for('project.show_blogpost',
-                         short_name=tmp['short_name'],
-                         id=target.id,
-                         _external=True)
-    web_buttons = [{"id": "read-more-button",
-                    "text": "Read more",
-                    "icon": "http://i.imgur.com/MIxJp1L.png",
-                    "url": launch_url }]
-    webpush_queue.enqueue(push_notification,
-                          project_id=target.project_id,
-                          contents=contents,
-                          headings=headings,
-                          web_buttons=web_buttons,
-                          launch_url=launch_url)
+    if current_app.config.get('DISABLE_EMAIL_NOTIFICATIONS') is None:
+        mail_queue.enqueue(notify_blog_users,
+                           blog_id=target.id,
+                           project_id=target.project_id)
+        contents = {"en": "New update!"}
+        headings = {"en": target.title}
+        launch_url = url_for('project.show_blogpost',
+                             short_name=tmp['short_name'],
+                             id=target.id,
+                             _external=True)
+        web_buttons = [{"id": "read-more-button",
+                        "text": "Read more",
+                        "icon": "http://i.imgur.com/MIxJp1L.png",
+                        "url": launch_url }]
+        webpush_queue.enqueue(push_notification,
+                              project_id=target.project_id,
+                              contents=contents,
+                              headings=headings,
+                              web_buttons=web_buttons,
+                              launch_url=launch_url)
 
 
 @event.listens_for(Project, 'after_insert')
@@ -144,8 +146,9 @@ def add_user_event(mapper, conn, target):
 def add_user_contributed_to_feed(conn, user_id, project_obj):
     if user_id is not None:
         sql_query = ('select fullname, name, info from "user" \
-                     where id=%s') % user_id
+                     where id=%s and restrict=false') % user_id
         results = conn.execute(sql_query)
+        tmp = None
         for r in results:
             tmp = dict(id=user_id,
                        name=r.name,
@@ -155,7 +158,8 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
             tmp['project_name'] = project_obj['name']
             tmp['project_short_name'] = project_obj['short_name']
             tmp['action_updated'] = 'UserContribution'
-        update_feed(tmp)
+        if tmp:
+            update_feed(tmp)
 
 
 def is_task_completed(conn, task_id, project_id):
@@ -279,9 +283,10 @@ def update_timestamp(mapper, conn, target):
 
 @event.listens_for(User, 'before_insert')
 def make_admin(mapper, conn, target):
-    users = conn.scalar('select count(*) from "user"')
+    users = conn.scalar('select count(*) from "user" where restrict=false')
     if users == 0:
         target.admin = True
+
 
 @event.listens_for(Task, 'after_insert')
 def create_zero_counter(mapper, conn, target):
@@ -290,12 +295,21 @@ def create_zero_counter(mapper, conn, target):
                  % (make_timestamp(), target.project_id, target.id))
     conn.execute(sql_query)
 
+
+@event.listens_for(Task, 'after_delete')
+def delete_task_counter(mapper, conn, target):
+    sql_query = ("delete from counter where project_id=%s and task_id=%s"
+                 % (target.project_id, target.id))
+    conn.execute(sql_query)
+
+
 @event.listens_for(TaskRun, 'after_insert')
 def increase_task_counter(mapper, conn, target):
     sql_query = ("insert into counter(created, project_id, task_id, n_task_runs) \
                  VALUES (TIMESTAMP '%s', %s, %s, 1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
+
 
 @event.listens_for(TaskRun, 'after_delete')
 def decrease_task_counter(mapper, conn, target):

@@ -41,8 +41,7 @@ def login():  # pragma: no cover
         if request.args.get("next"):
             request_token_params = {'scope': 'profile email'}
             google.oauth.request_token_params = request_token_params
-        callback = url_for('.oauth_authorized',
-                           _external=True)
+        callback = url_for('.oauth_authorized', _external=True)
         return google.oauth.authorize(callback=callback)
     else:
         return abort(404)
@@ -61,18 +60,21 @@ def get_google_token():  # pragma: no cover
 def oauth_authorized():  # pragma: no cover
     """Authorize Oauth."""
     resp = google.oauth.authorized_response()
-    next_url = url_for_app_type('home.home')
-
     if resp is None or request.args.get('error'):
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
             current_app.logger.error(resp)
-            return redirect(url_for_app_type('account.signin'))
+            return redirect(url_for_app_type('account.signin',
+                            _hash_last_flash=True))
+        next_url = (request.args.get('next') or
+                    url_for_app_type('home.home', _hash_last_flash=True))
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
         current_app.logger.error(resp)
+        next_url = (request.args.get('next') or
+                    url_for_app_type('home.home', _hash_last_flash=True))
         return redirect(next_url)
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
     url = 'https://www.googleapis.com/oauth2/v1/userinfo'
@@ -89,6 +91,7 @@ def oauth_authorized():  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data)
+    next_url = request.args.get('next') or url_for_app_type('home.home')
     return manage_user_login(user, user_data, next_url)
 
 
@@ -140,13 +143,16 @@ def manage_user_login(user, user_data, next_url):
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
-            return redirect(url_for_app_type('account.forgot_password'))
+            return redirect(url_for_app_type('account.forgot_password',
+                                             _hash_last_flash=True))
         else:
-            return redirect(url_for_app_type('account.signin'))
+            return redirect(url_for_app_type('account.signin',
+                                             _hash_last_flash=True))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         if user.newsletter_prompted is False and newsletter.is_initialized():
             return redirect(url_for_app_type('account.newsletter_subscribe',
-                                             next=next_url))
+                                             next=next_url,
+                                             _hash_last_flash=True))
         return redirect(next_url)

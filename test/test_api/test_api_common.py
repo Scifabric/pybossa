@@ -52,9 +52,9 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/project?all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
-        return
+        assert res.mimetype == 'application/json'
 
-        res = self.app.get('/api/project?limit=10&api_key=' + user.api_key)
+        res = self.app.get('/api/project?limit=10&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
@@ -71,11 +71,11 @@ class TestApiCommon(TestAPI):
         assert len(data) == 10, len(data)
         assert data[0].get('name') == projects[10].name, data[0]
 
-        res = self.app.get('/api/task')
+        res = self.app.get('/api/task?api_key=' + owner.api_key)
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        res = self.app.get('/api/taskrun')
+        res = self.app.get('/api/taskrun?api_key=' + owner.api_key)
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
@@ -114,10 +114,10 @@ class TestApiCommon(TestAPI):
         assert len(data) == 1, len(data)
         assert data[0].get('id') == project_created.id
         year = datetime.datetime.now().year
-        res = self.app.get('/api/project?all=1&created=%s&api_key=' % (year, owner.api_key))
+        res = self.app.get('/api/project?all=1&created=%s&api_key=%s' % (year, owner.api_key))
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
-        res = self.app.get('/api/project?all=1&created=%s&limit=100&api_key=' % (year, owner.api_key))
+        res = self.app.get('/api/project?all=1&created=%s&limit=100&api_key=%s' % (year, owner.api_key))
         data = json.loads(res.data)
         assert len(data) == 30, len(data)
 

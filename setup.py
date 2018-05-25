@@ -18,7 +18,6 @@ requirements = [
     "rsa>=3.4.2",
     "markdown>=2.4, <3.0",
     "psycopg2>=2.5.2, <3.0",
-    "pygeoip>=0.3.1, <1.0",
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
     "pyOpenSSL>=16.2",                  # fix for python below 2.7.9
@@ -41,7 +40,6 @@ requirements = [
     "rq-scheduler>=0.5.1, <0.5.2",
     "rq-dashboard",
     "unidecode>=0.04.16, <0.05",
-    "mailchimp",
     "flask-plugins",
     "humanize",
     "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
@@ -66,11 +64,15 @@ requirements = [
     "otpauth>=1.0.1, <1.0.2",
     "Flask-SimpleLDAP >=1.1.2, <1.1.3",
     "flask_profiler >= 1.6, <1.6.1",
+    "pycountry",
+    "wtforms-components>=0.10.3, <0.10.4",
+    "yacryptopan",
+    "Faker"
 ]
 
 setup(
     name = 'pybossa',
-    version = '2.8.1',
+    version = '2.9.3',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

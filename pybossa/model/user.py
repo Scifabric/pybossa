@@ -17,9 +17,9 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
-from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.dialects.postgresql import JSON, JSONB
+from sqlalchemy.schema import Column
+from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 from flask.ext.login import UserMixin
 from flask import current_app
@@ -52,6 +52,7 @@ class User(db.Model, DomainObject, UserMixin):
     admin = Column(Boolean, default=False)
     pro = Column(Boolean, default=False)
     privacy_mode = Column(Boolean, default=True, nullable=False)
+    restrict = Column(Boolean, default=False, nullable=False)
     category = Column(Integer)
     flags = Column(Integer)
     twitter_user_id = Column(BigInteger, unique=True)
@@ -61,9 +62,9 @@ class User(db.Model, DomainObject, UserMixin):
     newsletter_prompted = Column(Boolean, default=False)
     valid_email = Column(Boolean, default=False)
     confirmation_email_sent = Column(Boolean, default=False)
-    subscribed = Column(Boolean, default=True)
+    subscribed = Column(Boolean, default=False)
     consent = Column(Boolean, default=False)
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())
     subadmin = Column(Boolean, default=False)
     enabled = Column(Boolean, default=True)
     user_pref = Column(JSONB)

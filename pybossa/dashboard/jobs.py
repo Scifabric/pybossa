@@ -94,6 +94,7 @@ def draft_projects_week():
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
                                 ('1 week')::INTERVAL
                    AND "user".id = project.owner_id
+                   AND "user".restrict = false
                    AND project.published = false
                    GROUP BY project.id, "user".name, "user".email_addr;''')
         db.session.execute(sql)
@@ -115,6 +116,7 @@ def published_projects_week():
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
                                 ('1 week')::INTERVAL
                    AND "user".id = project.owner_id
+                   AND "user".restrict = false
                    AND project.owner_id = auditlog.user_id
                    AND auditlog.project_id = project.id
                    AND auditlog.attribute = 'published'
@@ -138,6 +140,7 @@ def update_projects_week():
                                 'YYYY-MM-DD\THH24:MI:SS.US') >= now() -
                                 ('1 week')::INTERVAL
                    AND "user".id = project.owner_id
+                   AND "user".restrict = false
                    GROUP BY project.id, "user".name, "user".email_addr;''')
         db.session.execute(sql)
         db.session.commit()
@@ -192,6 +195,7 @@ def new_users_week():
                       FROM "user" WHERE TO_DATE("user".created,
                                               'YYYY-MM-DD\THH24:MI:SS.US')
                                           >= now() - ('1 week'):: INTERVAL
+                      AND "user".restrict=false
                       GROUP BY day;''')
         db.session.execute(sql)
         db.session.commit()

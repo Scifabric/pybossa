@@ -656,45 +656,16 @@ def update_project_stats():
                        VALUES (%s, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (project.id)
         db.engine.execute(sql_query)
 
-def update_user_work_hours():
-    from pybossa.core import user_repo
+def anonymize_ips():
+    """Anonymize all the IPs of the server."""
+    from pybossa.core import anonymizer, task_repo
 
-    print 'in update_user_work_hours'
-    users = user_repo.get_all()
-    with app.app_context():
-        for user in users:
-            metadata = user.info.get('metadata') if user.info else None
-            print '---------------------\nbefore metadata: {}'.format(metadata)
-            if metadata and 'start_time' in metadata:
-                metadata['work_hours_from'] = metadata.pop('start_time')
-
-            if metadata and 'end_time' in metadata:
-                metadata['work_hours_to'] = metadata.pop('end_time')
-
-            print 'after metadata: {}'.format(metadata)
-            if metadata and any(x in metadata for x in ['work_hours_from', 'work_hours_to']):
-                user.info['metadata'] = metadata
-                user_repo.save(user)
-
-def revert_user_work_hours():
-    from pybossa.core import user_repo
-
-    print 'in revert_user_work_hours'
-    users = user_repo.get_all()
-    with app.app_context():
-        for user in users:
-            metadata = user.info.get('metadata') if user.info else None
-            print '---------------------\nbefore metadata: {}'.format(metadata)
-            if metadata and 'work_hours_from' in metadata:
-                metadata['start_time'] = metadata.pop('work_hours_from')
-
-            if metadata and 'work_hours_to' in metadata:
-                metadata['end_time'] = metadata.pop('work_hours_to')
-
-            print 'after metadata: {}'.format(metadata)
-            if metadata and any(x in metadata for x in ['start_time', 'end_time']):
-                user.info['metadata'] = metadata
-                user_repo.save(user)
+    taskruns = task_repo.filter_task_runs_by(user_id=None)
+    for tr in taskruns:
+        print "Working on taskrun %s" % tr.id
+        print "From %s to %s" % (tr.user_ip, anonymizer.ip(tr.user_ip))
+        tr.user_ip = anonymizer.ip(tr.user_ip)
+        task_repo.update(tr)
 
 ## ==================================================
 ## Misc stuff for setting up a command line interface
