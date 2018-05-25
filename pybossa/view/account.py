@@ -521,11 +521,9 @@ def _show_public_profile(user, form, can_update):
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
     percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
 
-    can_update = False
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
-        can_update = True
 
     title = "%s &middot; User Profile" % user_dict['fullname']
     response = dict(template='/account/public_profile.html',
