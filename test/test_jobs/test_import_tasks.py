@@ -22,6 +22,8 @@ from pybossa.model.task import Task
 from pybossa.importers import ImportReport
 from factories import ProjectFactory, TaskFactory, UserFactory
 from mock import patch
+from rq.timeouts import JobTimeoutException
+from nose.tools import assert_raises
 
 class TestImportTasksJob(Test):
 
@@ -85,6 +87,50 @@ class TestImportTasksJob(Test):
         autoimporter = project.get_autoimporter()
 
         assert autoimporter.get('last_import_meta') == None, autoimporter
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.importer')
+    def test_create_tasks_throws_timeout_exception(self, importer, send_mail):
+        importer.create_tasks.side_effect = JobTimeoutException()
+        uploader_name = 'Cersei Lannister'
+        project = ProjectFactory.create()
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
+        subject = 'Your import task has timed out'
+        with patch.dict(self.flask_app.config, {'BRAND': 'GOT'}):
+            body = '\n'.join(
+                ['Hello,\n',
+                 'Import task to your project {} by {} failed because the file was too large.',
+                 'It was able to process approximately {} tasks.',
+                 'Please break up your task upload into smaller CSV files.',
+                 'Thank you,\n',
+                 u'The {} team.']).format(project.name, uploader_name,
+                                         0, self.flask_app.config['BRAND'])
+
+            email_data = dict(recipients=[project.owner.email_addr],
+                              subject=subject, body=body)
+            assert_raises(JobTimeoutException, import_tasks, project.id, uploader_name, **form_data)
+            send_mail.assert_called_once_with(email_data)
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.importer')
+    def test_create_tasks_throws_exception(self, importer, send_mail):
+        importer.create_tasks.side_effect = Exception()
+        uploader_name = 'Cersei Lannister'
+        project = ProjectFactory.create()
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
+        subject = 'Tasks Import to your project %s' % project.name
+        msg = (u'Import tasks to your project {0} by {1} failed'
+               .format(project.name, uploader_name))
+        with patch.dict(self.flask_app.config, {'BRAND': 'GOT'}):
+            body = (u'Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
+                    .format(msg, self.flask_app.config['BRAND']))
+
+            email_data = dict(recipients=[project.owner.email_addr],
+                              subject=subject, body=body)
+            assert_raises(Exception, import_tasks, project.id, uploader_name, **form_data)
+            send_mail.assert_called_once_with(email_data)
 
 
 class TestAutoimportJobs(Test):

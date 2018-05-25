@@ -705,7 +705,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
              'It was able to process approximately {} tasks.',
              'Please break up your task upload into smaller CSV files.',
              'Thank you,\n',
-             'The {} team.']).format(project.name, current_user_fullname,
+             u'The {} team.']).format(project.name, current_user_fullname,
                                      n_tasks, current_app.config.get('BRAND'))
         mail_dict = dict(recipients=recipients, subject=subject, body=body)
         send_mail(mail_dict)
@@ -714,7 +714,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         msg = (u'Import tasks to your project {0} by {1} failed'
                .format(project.name, current_user_fullname))
         subject = 'Tasks Import to your project %s' % project.name
-        body = ('Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
+        body = (u'Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
                 .format(msg, current_app.config.get('BRAND')))
         mail_dict = dict(recipients=recipients, subject=subject, body=body)
         send_mail(mail_dict)
