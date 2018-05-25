@@ -36,14 +36,15 @@ def leaderboard(info=None):
                    CREATE MATERIALIZED VIEW {} AS WITH scores AS (
                         SELECT "user".*, COUNT(task_run.user_id) AS score
                         FROM "user" LEFT JOIN task_run
-                        ON task_run.user_id="user".id GROUP BY "user".id
+                        ON task_run.user_id="user".id where
+                        "user".restrict=false GROUP BY "user".id
                     ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
               '''.format(materialized_view)
         if info:
             sql = '''
                        CREATE MATERIALIZED VIEW {} AS WITH scores AS (
                             SELECT "user".*, COALESCE(CAST("user".info->>'{}' AS INTEGER), 0) AS score
-                            FROM "user" ORDER BY score DESC) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
+                            FROM "user" where "user".restrict=false ORDER BY score DESC) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
                   '''.format(materialized_view, info)
         db.session.execute(sql)
         db.session.commit()

@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 from pybossa.core import sentinel
 from pybossa.jobs import news
 from pybossa.news import get_news
@@ -83,7 +82,7 @@ class TestNews(Test):
     @patch('feedparser.parse')
     def test_news_check_config_urls(self, feedparser_mock):
         """Test NEWS adds config URLs."""
-        urls = ['https://github.com/pybossa/pybossa/releases.atom',
+        urls = ['https://github.com/Scifabric/pybossa/releases.atom',
                 'http://scifabric.com/blog/all.atom.xml',
                 'http://url']
 

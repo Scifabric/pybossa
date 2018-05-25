@@ -307,6 +307,22 @@ class TestBulkTaskLocalCSVForm(Test):
             assert return_value['type'] is 'localCSV', return_value
             assert return_value['csv_filename'] == url, return_value
 
+    @with_context
+    @patch('pybossa.core.uploader')
+    @patch('pybossa.forms.forms.request')
+    @patch('pybossa.forms.forms.current_user')
+    def test_import_upload_path_ioerror(self, mock_user, mock_request,
+                                        mock_uploader):
+        # This test passes because the uploader is mocked, so it's not an
+        # instance of localUploader.
+        mock_user.id = 1
+        mock_request.method = 'POST'
+        mock_file = MagicMock()
+        mock_file.filename = 'sample.csv'
+        mock_request.files = dict(file=mock_file)
+        form = BulkTaskLocalCSVImportForm(**self.form_data)
+        assert_raises(IOError, form.get_import_data)
+
 
 class TestRegisterFormWithUserPrefMetadata(Test):
 

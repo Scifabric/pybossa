@@ -42,6 +42,7 @@ class TaskRepository(Repository):
 
     def get_task_by(self, **attributes):
         filters, _, _, _ = self.generate_query_from_keywords(Task, **attributes)
+        print self.db.session.query(Task).filter(*filters)
         return self.db.session.query(Task).filter(*filters).first()
 
     def filter_tasks_by(self, limit=None, offset=0, yielded=False,
@@ -350,7 +351,7 @@ class TaskRepository(Repository):
                    FROM task
                    WHERE task.project_id=:project_id
                    AND task.state='ongoing'
-                   AND md5(task.info::text)=md5(:info)
+                   AND md5(task.info::text)=md5(((:info)::jsonb)::text)
                    ''')
         row = self.db.session.execute(sql, dict(project_id=project_id,
                                                 info=json.dumps(info))).first()

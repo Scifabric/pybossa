@@ -18,7 +18,7 @@ class TestProjectReport(web.Helper):
         self.signout()
         self.register(fullname='Juan', name='juan', password='juana')
         self.signin(email="juan@example.com", password='juana')
-        url = '/project/%s/tasks/projectreport/export' % project.short_name
+        url = '/project/%s/projectreport/export' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.data
 
@@ -28,7 +28,7 @@ class TestProjectReport(web.Helper):
         self.register()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export' % project.short_name
+        url = '/project/%s/projectreport/export' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.data
 
@@ -39,7 +39,7 @@ class TestProjectReport(web.Helper):
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?badparam=badval' % project.short_name
+        url = '/project/%s/projectreport/export?badparam=badval' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.data
 
@@ -50,7 +50,7 @@ class TestProjectReport(web.Helper):
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?type=badtype&format=csv' % project.short_name
+        url = '/project/%s/projectreport/export?type=badtype&format=csv' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.data
 
@@ -61,7 +61,7 @@ class TestProjectReport(web.Helper):
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?type=project&format=badfmt' % project.short_name
+        url = '/project/%s/projectreport/export?type=project&format=badfmt' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 415, res.data
 
@@ -72,7 +72,7 @@ class TestProjectReport(web.Helper):
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?type=project&format=csv' % project.short_name
+        url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.data
 
@@ -87,7 +87,7 @@ class TestProjectReport(web.Helper):
         project = ProjectFactory.create(owner=owner)
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
-        url = '/project/%s/tasks/projectreport/export?type=project&format=csv' % project.short_name
+        url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.data
 
@@ -99,18 +99,18 @@ class TestProjectReport(web.Helper):
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?type=project&format=csv' % project.short_name
+        url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.data
 
     @with_context
-    @patch('pybossa.exporter.isinstance', return_value=False)
+    @patch('pybossa.exporter.csv_reports_export.isinstance', return_value=False)
     def test_project_report_no_zip_without_uploader(self, mock_no_up):
         """Test project report does not returns zip with no uploader instance """
         self.register()
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/tasks/projectreport/export?type=project&format=csv' % project.short_name
+        url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 500, res.data

@@ -61,8 +61,9 @@ def is_json(json_type):
             raise validators.ValidationError('Field must be JSON object.')
     return v
 
+BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-### Forms for projects view
+# Forms for projects view
 
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
@@ -97,6 +98,7 @@ class ProjectUpdateForm(ProjectForm):
                              validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
+    zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
     email_notif = BooleanField(lazy_gettext('Email Notifications'))
@@ -353,19 +355,34 @@ class BulkTaskS3ImportForm(Form):
             'bucket': self.bucket.data
         }
 
+class BulkTaskIIIFImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='iiif')
+    msg_required = lazy_gettext("You must provide a URL")
+    msg_url = lazy_gettext("Oops! That's not a valid URL. "
+                           "You must provide a valid URL")
+    manifest_uri = TextField(lazy_gettext('URL'),
+                             [validators.Required(message=msg_required),
+                             validators.URL(message=msg_url)])
+
+    def get_import_data(self):
+        return {'type': 'iiif', 'manifest_uri': self.manifest_uri.data}
+
 
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
-    _forms = { 'csv': BulkTaskCSVImportForm,
-              'gdocs': BulkTaskGDImportForm,
-              'epicollect': BulkTaskEpiCollectPlusImportForm,
-              'flickr': BulkTaskFlickrImportForm,
-              'dropbox': BulkTaskDropboxImportForm,
-              'twitter': BulkTaskTwitterImportForm,
-              's3': BulkTaskS3ImportForm,
-              'youtube': BulkTaskYoutubeImportForm,
-              'localCSV': BulkTaskLocalCSVImportForm }
+    _forms = {
+        'csv': BulkTaskCSVImportForm,
+        'gdocs': BulkTaskGDImportForm,
+        'epicollect': BulkTaskEpiCollectPlusImportForm,
+        'flickr': BulkTaskFlickrImportForm,
+        'dropbox': BulkTaskDropboxImportForm,
+        'twitter': BulkTaskTwitterImportForm,
+        's3': BulkTaskS3ImportForm,
+        'youtube': BulkTaskYoutubeImportForm,
+        'localCSV': BulkTaskLocalCSVImportForm,
+        'iiif': BulkTaskIIIFImportForm
+    }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
@@ -473,6 +490,7 @@ class UpdateProfileForm(Form):
     locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
+    restrict = BooleanField(lazy_gettext('Restrict processing'))
 
     def set_locales(self, locales):
         """Fill the locale.choices."""

@@ -18,7 +18,7 @@
 
 from sqlalchemy import Integer, Text, Float
 from sqlalchemy.schema import Column, ForeignKey
-from sqlalchemy.dialects.postgresql import TIMESTAMP, JSON
+from sqlalchemy.dialects.postgresql import TIMESTAMP, JSONB
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 from sqlalchemy.ext.mutable import MutableDict
@@ -38,7 +38,7 @@ class HelpingMaterial(db.Model, DomainObject):
                                             ondelete='CASCADE'),
                         nullable=False)
     #: Info field where it can be stored anything related to it
-    info = Column(MutableDict.as_mutable(JSON), default=dict())
+    info = Column(MutableDict.as_mutable(JSONB), default=dict())
     media_url = Column(Text)
     #: Priority of the helping material from 0.0 to 1.0
     priority = Column(Float, default=0)

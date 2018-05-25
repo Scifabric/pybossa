@@ -76,6 +76,22 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert res[0].info == 'answer', res[0]
 
     @with_context
+    def test_handle_info_json_integer(self):
+        """Test handle info in JSON as integer text works."""
+        TaskFactory.create(info=95)
+        res = self.task_repo.filter_tasks_by(info='"95"')
+        assert len(res) == 1
+        assert res[0].info == 95, res[0]
+
+    @with_context
+    def test_handle_info_json_float(self):
+        """Test handle info in JSON as floattext works."""
+        TaskFactory.create(info='9.5')
+        res = self.task_repo.filter_tasks_by(info='9.5')
+        assert len(res) == 1
+        assert res[0].info == '9.5', res[0]
+
+    @with_context
     def test_handle_info_json(self):
         """Test handle info in JSON works."""
         TaskFactory.create(info={'foo': 'bar'})

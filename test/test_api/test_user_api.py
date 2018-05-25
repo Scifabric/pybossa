@@ -22,6 +22,7 @@ from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
 from test_api import TestAPI
 from pybossa.core import db
+from mock import patch, MagicMock
 
 from factories import UserFactory
 
@@ -31,13 +32,15 @@ class TestUserAPI(Test):
     @with_context
     def test_user_get(self):
         """Test API User GET"""
-        admin = UserFactory.create()
-        expected_user = UserFactory.create()
+        admin, expected_user, someone = UserFactory.create_batch(3,
+                                                                 info=dict(extra='foo',
+                                                                 badges=[1,2,3]))
+        restricted = UserFactory.create(restrict=True)
         # Test GET all users
         res = self.app.get('/api/user?api_key=%s' % admin.api_key)
         data = json.loads(res.data)
         user = data[1]
-        assert len(data) == 2, data
+        assert len(data) == 3, data
         assert user['name'] == expected_user.name, data
 
         # The output should have a mime-type: application/json
@@ -49,6 +52,35 @@ class TestUserAPI(Test):
         user = data
         assert user['name'] == admin.name, data
 
+        res = self.app.get('/api/user/%s?api_key=%s' % (expected_user.id, admin.api_key))
+        data = json.loads(res.data)
+        user = data
+        assert user['name'] == expected_user.name, (user['name'],
+                                                    expected_user.name)
+
+        # Test GETting a specific user by ID as owner
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           expected_user.api_key)
+        res = self.app.get(url)
+        assert res.status_code == 403
+
+        # Test GETting a specific user by ID as admin
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           admin.api_key)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        user = data
+        assert user['name'] == expected_user.name, data
+        assert 'info' in user.keys(), user.keys()
+        assert user['info']['extra'] == 'foo'
+        assert user['info']['badges'] == [1,2,3]
+
+        # Test GETting a specific user by ID as non owner non admin
+        url = '/api/user/%s?api_key=%s' % (expected_user.id,
+                                           someone.api_key)
+        res = self.app.get(url)
+        assert res.status_code == 403
+
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209?api_key=%s' % admin.api_key)
         err = json.loads(res.data)
@@ -58,18 +90,39 @@ class TestUserAPI(Test):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+        # Test restricted by anon
+        url = '/api/user/%s' % restricted.id
+        res = self.app.get(url)
+        assert res.status_code == 401, res.status_code
+
+        # As user
+        res = self.app.get(url + '?api_key=' + someone.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As admin
+        res = self.app.get(url + '?api_key=' + admin.api_key)
+        assert res.status_code == 403, res.status_code
+
+        # As same user
+        res = self.app.get(url + '?api_key=' + restricted.api_key)
+        assert res.status_code == 403, res.status_code
 
     @with_context
     def test_query_user(self):
         """Test API query for user endpoint works"""
         admin = UserFactory.create()
-        expected_user = UserFactory.create_batch(2)[0]
+        expected_user, other = UserFactory.create_batch(2)
+        restricted = UserFactory.create(restrict=True)
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
         res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name, admin.api_key))
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert data[0]['name'] == expected_user.name, data
+        # Trying to change restrict
+        res = self.app.get('/api/user?restrict=true')
+        assert res.status_code == 401
+
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla&api_key=%s' % admin.api_key)
         data = json.loads(res.data)
@@ -102,6 +155,105 @@ class TestUserAPI(Test):
         assert err['exception_cls'] == 'AttributeError', err_msg
 
 
+
+    @with_context
+    def test_query_restricted_user(self):
+        """Test API query for restricted user endpoint works"""
+        expected_user, other = UserFactory.create_batch(2, restrict=True)
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s' % expected_user.name)
+        assert res.status_code == 401
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla')
+        assert res.status_code == 401
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en")
+        assert res.status_code == 401
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en' % expected_user.name)
+        assert res.status_code == 401
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever')
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 401, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'Unauthorized', err_msg
+
+        # As other user
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name,
+                                                           other.api_key))
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla&api_key=%s' + other.api_key)
+        assert res.status_code == 401, err_msg
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en&api_key=" + other.api_key)
+        data = json.loads(res.data)
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 0, data
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
+                           (expected_user.name, other.api_key))
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 0, data
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever&api_key=' +
+                           other.api_key)
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
+
+        # As same user
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get('/api/user?name=%s&api_key=%s' % (expected_user.name,
+                                                           expected_user.api_key))
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+        # And it should return no results if there are no matches
+        res = self.app.get('/api/user?name=Godzilla&api_key=' + expected_user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # When querying with a valid existing non-unique field
+        res = self.app.get("/api/user?locale=en&api_key=" + expected_user.api_key)
+        data = json.loads(res.data)
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 0, data
+
+        # When querying with multiple valid fields
+        res = self.app.get('/api/user?name=%s&locale=en&api_key=%s' %
+                           (expected_user.name, expected_user.api_key))
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 0, data
+
+        # When querying with non-valid fields -- Errors
+        res = self.app.get('/api/user?something_invalid=whatever&api_key=' +
+                           expected_user.api_key)
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
+
     @with_context
     def test_user_not_allowed_actions_anon(self):
         """Test POST, PUT and DELETE for ANON actions are not allowed for user
@@ -121,9 +273,12 @@ class TestUserAPI(Test):
         assert res.status_code == 405, res.status_code
 
     @with_context
-    def test_user_not_allowed_actions_user(self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_user(self, caching_mock):
         """Test POST, PUT and DELETE for USER actions are not allowed for user
         in the API"""
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -150,11 +305,17 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
+        clean_user_mock.assert_called_with(data['id'])
 
     @with_context
-    def test_user_not_allowed_actions_admin (self):
+    @patch('pybossa.api.api_base.caching')
+    def test_user_not_allowed_actions_admin(self, caching_mock):
         """Test POST, PUT and DELETE for ADMIN actions are not allowed for user
         in the API"""
+
+        clean_user_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_user_mock)
+
         admin = UserFactory.create()
         auth = UserFactory.create()
         user = UserFactory.create()
@@ -175,6 +336,7 @@ class TestUserAPI(Test):
         assert res.status_code == 200, res.data
         assert data['name'] == 'new', data
         assert data['info']['foo'] == 'bar', data
+        clean_user_mock.assert_called_with(data['id'])
 
         res = self.app.delete(url + '?apikey=%s' % auth.api_key)
         assert res.status_code == 405, res.status_code
@@ -186,6 +348,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         assert res.status_code == 200, res.data
         assert data['name'] == 'newadmin', data
+        clean_user_mock.assert_called_with(data['id'])
 
 
     @with_context

@@ -36,6 +36,8 @@ MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
 TASK_DELETE_TIMEOUT = (60 * MINUTE)
 EXPORT_TASKS_TIMEOUT = (10 * MINUTE)
+from pybossa.core import uploader
+from pybossa.exporter.json_export import JsonExporter
 
 
 def schedule_job(function, scheduler):
@@ -241,7 +243,7 @@ def get_inactive_users_jobs(queue='quaterly'):
 
         user = User.query.get(row.user_id)
 
-        if user.subscribed:
+        if user.subscribed and user.restrict is False:
             subject = "We miss you!"
             body = render_template('/account/email/inactive.md',
                                    user=user.dictize(),
@@ -312,7 +314,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
     for row in results:
         user = User.query.get(row.id)
 
-        if user.subscribed:
+        if (user.subscribed and user.restrict is False):
             subject = "Why don't you help us?!"
             body = render_template('/account/email/noncontributors.md',
                                    user=user.dictize(),
@@ -367,7 +369,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
     from flask import current_app
 
     # cached_projects.get_project(short_name)
-    stats.update_stats(_id, current_app.config.get('GEO'))
+    stats.update_stats(_id)
 
 
 @with_cache_disabled
@@ -378,7 +380,7 @@ def warm_up_stats():  # pragma: no cover
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
                                           get_top5_projects_24_hours,
-                                          get_top5_users_24_hours, get_locs)
+                                          get_top5_users_24_hours)
     n_auth_users()
     n_anon_users()
     n_tasks_site()
@@ -386,7 +388,6 @@ def warm_up_stats():  # pragma: no cover
     n_task_runs_site()
     get_top5_projects_24_hours()
     get_top5_users_24_hours()
-    get_locs()
 
     return True
 
@@ -417,7 +418,7 @@ def warm_cache():  # pragma: no cover
             #if n_task_runs >= 1000 or featured:
             #    # print ("Getting stats for %s as it has %s task runs" %
             #    #        (short_name, n_task_runs))
-            stats.update_stats(_id, app.config.get('GEO'))
+            stats.update_stats(_id)
             projects_cached.append(_id)
 
     # Cache top projects
@@ -525,9 +526,9 @@ def disable_users_job():
     return True
 
 
-def send_mail(message_dict):
+def send_mail(message_dict, mail_all=False):
     """Send email."""
-    if mail_with_enabled_users(message_dict):
+    if mail_all or mail_with_enabled_users(message_dict):
         message = Message(**message_dict)
         mail.send(message)
 
@@ -860,6 +861,7 @@ def notify_blog_users(blog_id, project_id, queue='high'):
                    WHERE task_run.project_id=:project_id
                    AND task_run.user_id="user".id
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    GROUP BY email_addr, name, subscribed;
                    ''')
         results = db.slave_session.execute(sql, dict(project_id=project_id))
@@ -908,6 +910,7 @@ def get_weekly_stats_update_projects():
                    FROM project, "user", task
                    WHERE "user".id=project.owner_id %s
                    AND "user".subscribed=true
+                   AND "user".restrict=false
                    AND task.project_id=project.id
                    AND task.state!='completed'
                    UNION
@@ -930,11 +933,10 @@ def send_weekly_stats_project(project_id):
     from pybossa.core import project_repo
     from datetime import datetime
     project = project_repo.get(project_id)
-    if project.owner.subscribed is False:
+    if project.owner.subscribed is False or project.owner.restrict:
         return "Owner does not want updates by email"
     update_stats(project_id)
     dates_stats, hours_stats, users_stats = get_stats(project_id,
-                                                      geo=True,
                                                       period='1 week')
     subject = "Weekly Update: %s" % project.name
 
@@ -986,7 +988,7 @@ def news():
         import cPickle as pickle
     except ImportError:  # pragma: no cover
         import pickle
-    urls = ['https://github.com/pybossa/pybossa/releases.atom',
+    urls = ['https://github.com/Scifabric/pybossa/releases.atom',
             'http://scifabric.com/blog/all.atom.xml']
     score = 0
     notify = False
@@ -995,7 +997,8 @@ def news():
     for url in urls:
         d = feedparser.parse(url)
         tmp = get_news(score)
-        if (len(tmp) == 0) or (tmp[0]['updated'] != d.entries[0]['updated']):
+        if (d.entries and (len(tmp) == 0)
+           or (tmp[0]['updated'] != d.entries[0]['updated'])):
             sentinel.master.zadd(FEED_KEY, float(score),
                                  pickle.dumps(d.entries[0]))
             notify = True
@@ -1093,3 +1096,82 @@ def mail_project_report(info, current_user_email_addr):
                          body=body)
 
     send_mail(mail_dict)
+
+
+def delete_account(user_id, admin_addr, **kwargs):
+    """Delete user account from the system."""
+    from pybossa.core import (user_repo, uploader)
+    user = user_repo.get(user_id)
+
+    container = "user_%s" % user.id
+    if user.info.get('avatar'):
+        uploader.delete_file(user.info['avatar'], container)
+
+    email = user.email_addr
+    if current_app.config.get('MAILCHIMP_API_KEY'):
+        from pybossa.core import newsletter
+        newsletter.init_app(current_app)
+        mailchimp_deleted = newsletter.delete_user(email)
+    else:
+        mailchimp_deleted = True
+    brand = current_app.config.get('BRAND')
+    user_repo.delete_data(user)
+    subject = '[%s]: Your account has been deleted' % brand
+    body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
+    if not mailchimp_deleted:
+        body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
+    if current_app.config.get('DISQUS_SECRET_KEY'):
+        body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
+    recipients = [email]
+    bcc = [admin_addr]
+    mail_dict = dict(recipients=recipients, bcc=bcc, subject=subject, body=body)
+    send_mail(mail_dict, mail_all=True)
+
+
+def export_userdata(user_id, admin_addr, **kwargs):
+    from pybossa.core import (user_repo, uploader)
+    from flask import current_app, url_for
+    json_exporter = JsonExporter()
+    user = user_repo.get(user_id)
+    user_data = user.dictize()
+    del user_data['passwd_hash']
+    pdf = json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
+                                  'personal_data.zip')
+    upload_method = current_app.config.get('UPLOAD_METHOD')
+
+    attachments = []
+    personal_data_link = None
+    if upload_method == 'local':
+        filename = uploader.get_file_path('user_%s' % user_id, pdf)
+        with open(filename) as fp:
+            attachment = Attachment(pdf, "application/zip",
+                                    fp.read())
+        attachments = [attachment]
+    else:
+        personal_data_link = url_for(upload_method,
+                                    filename="user_%s/%s" % (user_id, pdf))
+
+    body = render_template('/account/email/exportdata.md',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           config=current_app.config)
+
+    html = render_template('/account/email/exportdata.html',
+                           user=user.dictize(),
+                           personal_data_link=personal_data_link,
+                           config=current_app.config)
+    subject = 'Your personal data'
+    bcc = [admin_addr]
+    mail_dict = dict(recipients=[user.email_addr],
+                     bcc=bcc,
+                     subject=subject,
+                     body=body,
+                     html=html,
+                     attachments=attachments)
+    send_mail(mail_dict)
+
+
+def delete_file(fname, container):
+    """Delete file."""
+    from pybossa.core import uploader
+    return uploader.delete_file(fname, container)

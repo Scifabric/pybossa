@@ -183,7 +183,8 @@ def export_users():
                              'timezone', 'type_of_user', 'additional_comments',
                              'total_projects_contributed', 'completed_tasks',
                              'percentage_tasks_completed', 'first_submission_date',
-                             'last_submission_date', 'avg_time_per_task', 'consent')
+                             'last_submission_date', 'avg_time_per_task', 'consent',
+                             'restrict')
 
     def respond_json():
         tmp = 'attachment; filename=all_users.json'

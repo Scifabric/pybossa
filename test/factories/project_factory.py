@@ -40,6 +40,7 @@ class ProjectFactory(BaseFactory):
     featured = False
     published = True
     webhook = None
+    zip_download = True
     owner = factory.SubFactory('factories.UserFactory')
     owner_id = factory.LazyAttribute(lambda project: project.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')

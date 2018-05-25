@@ -17,7 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for site statistics."""
 from functools import wraps
-import pygeoip
 from sqlalchemy.sql import text
 from flask import current_app
 
@@ -120,8 +119,9 @@ def get_top5_users_24_hours():
     """Return top 5 users in last 24 hours."""
     # Top 5 Most active users in last 24 hours
     sql = text('''SELECT "user".id, "user".fullname, "user".name,
+               "user".restrict,
                COUNT(task_run.project_id) AS n_answers FROM "user", task_run
-               WHERE "user".id=task_run.user_id
+               WHERE "user".restrict=false AND "user".id=task_run.user_id
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY "user".id
@@ -135,29 +135,6 @@ def get_top5_users_24_hours():
                     n_answers=row.n_answers)
         top5_users_24_hours.append(user)
     return top5_users_24_hours
-
-
-@cache(timeout=ONE_DAY, key_prefix="site_locs")
-def get_locs():
-    """Return locations (latitude, longitude) for anonymous users."""
-    # All IP addresses from anonymous users
-    locs = []
-    if current_app.config['GEO']:
-        sql = '''SELECT DISTINCT(user_ip) FROM task_run
-                 WHERE user_ip IS NOT NULL;'''
-        results = session.execute(sql)
-
-        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-        gic = pygeoip.GeoIP(geolite)
-        for row in results:
-            loc = gic.record_by_addr(row.user_ip)
-            if loc is None:
-                loc = {}
-            if (len(loc.keys()) == 0):
-                loc['latitude'] = 0
-                loc['longitude'] = 0
-            locs.append(dict(loc=loc))
-    return locs
 
 
 def allow_all_time(func):

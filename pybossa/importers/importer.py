@@ -24,6 +24,7 @@ from .flickr import BulkTaskFlickrImport
 from .twitterapi import BulkTaskTwitterImport
 from .youtubeapi import BulkTaskYoutubeImport
 from .epicollect import BulkTaskEpiCollectPlusImport
+from .iiif import BulkTaskIIIFImporter
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
@@ -45,7 +46,8 @@ class Importer(object):
                                gdocs=BulkTaskGDImport,
                                epicollect=BulkTaskEpiCollectPlusImport,
                                s3=BulkTaskS3Import,
-                               localCSV=BulkTaskLocalCSVImport)
+                               localCSV=BulkTaskLocalCSVImport,
+                               iiif=BulkTaskIIIFImporter)
         self._importer_constructor_params = dict()
 
     def register_flickr_importer(self, flickr_params):
