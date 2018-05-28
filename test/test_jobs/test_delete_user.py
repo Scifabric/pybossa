@@ -37,7 +37,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from the %s.""" % brand
             body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
 
             recipients = [user.email_addr, 'admin@broken.com']
@@ -60,7 +60,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from the %s.""" % brand
 
             recipients = [user.email_addr, 'admin@broken.com']
             mail_dict = dict(recipients=recipients,
@@ -78,7 +78,7 @@ class TestDeleteAccount(Test):
 
     @with_context
     @patch('requests.delete')
-    def test_send_mail_creates_message_mailchimp_disquss(self, mailchimp, Message, mail):
+    def test_send_mail_creates_message_mailchimp_disqus(self, mailchimp, Message, mail):
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1,
                                                 'DISQUS_SECRET_KEY': 'key'}):
@@ -86,7 +86,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from the %s.""" % brand
             body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
 
             recipients = [user.email_addr, 'admin@broken.com']
