@@ -20,7 +20,8 @@ import hashlib
 from mock import patch
 from pybossa.cache import (get_key_to_hash, get_hash_key, cache, memoize,
                            delete_cached, delete_memoized, memoize_essentials,
-                           delete_memoized_essential)
+                           delete_memoized_essential, delete_cache_group,
+                           get_cache_group_key)
 from pybossa.sentinel import Sentinel
 import settings_test
 
@@ -344,3 +345,91 @@ class TestCacheMemoizeFunctions(object):
         delete_succedeed = delete_memoized_essential(my_other_func, 'other')
         assert delete_succedeed is False, delete_succedeed
         assert len(test_sentinel.master.keys()) == 2
+
+
+    def test_delete_cache_group_no_group(self):
+        assert not test_sentinel.master.keys()
+        delete_cache_group('key')
+        assert not test_sentinel.master.keys()
+
+
+    def test_cache_group_key_one_group(self):
+        @memoize(cache_group_keys=([0],))
+        def my_func(*args, **kwargs):
+            return None
+        @memoize(cache_group_keys=([0],))
+        def my_func2(*args, **kwargs):
+            return None
+        my_func('key')
+        my_func2('key')
+        keys = test_sentinel.master.keys()
+        assert len(keys) == 3
+        assert get_cache_group_key('key') in keys
+        delete_cache_group('key')
+        assert not test_sentinel.master.keys()
+
+
+    def test_cache_group_key_two_groups(self):
+        @memoize(cache_group_keys=([0],))
+        def my_func(*args, **kwargs):
+            return None
+        @memoize(cache_group_keys=([0],))
+        def my_func2(*args, **kwargs):
+            return None
+        my_func('key1')
+        my_func2('key2')
+        keys = test_sentinel.master.keys()
+        assert len(keys) == 4
+        assert get_cache_group_key('key1') in keys
+        assert get_cache_group_key('key2') in keys
+        delete_cache_group('key1')
+        keys = test_sentinel.master.keys()
+        assert len(keys) == 2
+        assert get_cache_group_key('key1') not in keys
+        assert get_cache_group_key('key2') in keys
+        delete_cache_group('key2')
+        assert not test_sentinel.master.keys()
+
+
+    def test_cache_group_key_two_groups_one_key(self):
+        @memoize(cache_group_keys=([0],[1]))
+        def my_func(*args, **kwargs):
+            return None
+        my_func('key1', 'key2')
+        keys = test_sentinel.master.keys()
+        assert len(keys) == 3
+        assert get_cache_group_key('key1') in keys
+        assert get_cache_group_key('key2') in keys
+        delete_cache_group('key1')
+        keys = test_sentinel.master.keys()
+        assert len(keys) == 1
+        assert get_cache_group_key('key1') not in keys
+        assert get_cache_group_key('key2') in keys
+        delete_cache_group('key2')
+        assert not test_sentinel.master.keys()
+
+    def test_cache_group_key_callable(self):
+        def cache_group_key_fn(*args, **kwargs):
+            return args[0]
+        @memoize(cache_group_keys=(cache_group_key_fn,))
+        def my_func(*args, **kwargs):
+            return None
+        my_func('a')
+        assert get_cache_group_key('a') in test_sentinel.master.keys()
+
+    def test_cache_group_key_invalid(self):
+        @memoize(cache_group_keys=(0,))
+        def my_func(*args, **kwargs):
+            return None
+        try:
+            my_func('a')
+        except:
+            return
+        raise Exception('Should have raised')
+
+    def test_cache_group_key_none(self):
+        @memoize()
+        def my_func(*args, **kwargs):
+            return None
+        my_func('a')
+        assert len(test_sentinel.master.keys()) == 1

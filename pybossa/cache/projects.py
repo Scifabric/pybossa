@@ -20,7 +20,8 @@ from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import Project
 from pybossa.util import pretty_date, static_vars, convert_utc_to_est
-from pybossa.cache import memoize, cache, delete_memoized, delete_cached, memoize_essentials, delete_memoized_essential
+from pybossa.cache import memoize, cache, delete_memoized, delete_cached, \
+    memoize_essentials, delete_memoized_essential, delete_cache_group
 from pybossa.cache.task_browse_helpers import get_task_filters, allowed_fields
 
 
@@ -52,7 +53,8 @@ def get_top(n=4):
     return top_projects
 
 
-@memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0])
+@memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0],
+                    cache_group_keys=[[0]])
 @static_vars(allowed_fields=allowed_fields)
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
@@ -140,7 +142,7 @@ def first_task_id(project_id):
     return session.scalar(sql, dict(project_id=project_id)) or 0
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_tasks(project_id):
     """Return number of tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
@@ -152,7 +154,7 @@ def n_tasks(project_id):
     return n_tasks
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_completed_tasks(project_id):
     """Return number of completed tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
@@ -166,7 +168,7 @@ def n_completed_tasks(project_id):
     return n_completed_tasks
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_results(project_id):
     """Return number of results of a project."""
     query = text('''
@@ -183,7 +185,7 @@ def n_results(project_id):
     return n_results
 
 
-@memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'))
+@memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'), cache_group_keys=[[0]])
 def n_registered_volunteers(project_id):
     """Return number of registered users that have participated in a project."""
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_id))
@@ -199,7 +201,7 @@ def n_registered_volunteers(project_id):
     return n_registered_volunteers
 
 
-@memoize(timeout=timeouts.get('ANON_USERS_TIMEOUT'))
+@memoize(timeout=timeouts.get('ANON_USERS_TIMEOUT'), cache_group_keys=[[0]])
 def n_anonymous_volunteers(project_id):
     """Return number of anonymous users that have participated in a project."""
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
@@ -222,7 +224,7 @@ def n_volunteers(project_id):
     return total
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_task_runs(project_id):
     """Return number of task_runs of a project."""
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
@@ -261,7 +263,7 @@ def overall_progress(project_id):
         return 0
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def last_activity(project_id):
     """Return last activity, date, from a project."""
     sql = text('''SELECT finish_time FROM task_run WHERE project_id=:project_id
@@ -380,7 +382,7 @@ def _n_draft():
     return count
 
 
-@memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
+@memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'), cache_group_keys=['get_all_draft',])
 def get_all_draft(category=None):
     """Return list of all draft projects."""
     sql = text(
@@ -416,7 +418,7 @@ def get_draft(category=None, page=1, per_page=5):
     return get_all_draft()[offset:offset+per_page]
 
 
-@memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
+@memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'), cache_group_keys=[[0]])
 def n_count(category):
     """Count the number of projects in a given category."""
     if category == 'featured':
@@ -442,7 +444,7 @@ def n_count(category):
     return count
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def get_all(category):
     """Return a list of published projects for a given category.
     """
@@ -557,31 +559,6 @@ def text_search(search_text, show_unpublished=True, show_hidden=True):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project_report_projectdata(project_id):
-    """Return data to build project report"""
-    sql = text(
-            '''
-            SELECT id, name, short_name,
-            (SELECT COUNT(id) FROM task WHERE project_id = p.id) AS total_tasks,
-            (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id) AS first_task_submission,
-            (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id) AS last_task_submission,
-            (SELECT MAX(n_answers) FROM task WHERE project_id = p.id) AS redundancy,
-            (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s') FROM task_run WHERE project_id=p.id)
-            AS average_time
-            FROM project p
-            WHERE p.id=:project_id;
-            ''')
-    results = session.execute(sql, dict(project_id=project_id))
-    project_data = []
-    for row in results:
-        project_data.extend((project_id, row.name, row.short_name, row.total_tasks,
-            row.first_task_submission, row.last_task_submission,
-            round(row.average_time.total_seconds()/60,2), row.redundancy))
-    return project_data
-
-
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_total_tasks():
     """Return number of tasks from published project."""
     sql = text('''SELECT COUNT(task.id) AS n_total_tasks
@@ -687,20 +664,10 @@ def clean(project_id):
 def clean_project(project_id, category=None):
     """Clean cache for a specific project"""
     project = db.session.query(Project).get(project_id)
-    delete_browse_tasks(project_id)
-    delete_n_tasks(project_id)
-    delete_n_completed_tasks(project_id)
-    delete_n_results(project_id)
-    delete_n_registered_volunteers(project_id)
-    delete_n_anonymous_volunteers(project_id)
-    delete_n_volunteers(project_id)
-    delete_last_activity(project_id)
-    delete_n_task_runs(project_id)
-    delete_overall_progress(project_id)
+    delete_cache_group(project_id)
     if project:
-        delete_memoized(get_all, project.category.short_name)
-        delete_memoized(n_count, project.category.short_name)
-        delete_memoized(get_all_draft, None)
+        delete_cache_group(project.category.short_name)
+        delete_cache_group('get_all_draft')
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
