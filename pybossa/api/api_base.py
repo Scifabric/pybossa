@@ -298,6 +298,7 @@ class APIBase(MethodView):
             if data is None:
                 data = self._parse_request_data()
             self._forbidden_attributes(data)
+            self._restricted_attributes(data)
             self._preprocess_post_data(data)
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
@@ -412,10 +413,12 @@ class APIBase(MethodView):
         if new_upload is None:
             data = json.loads(request.data)
             self._forbidden_attributes(data)
+            self._restricted_attributes(data)
             # Remove hateoas links
             data = self.hateoas.remove_links(data)
         else:
             self._forbidden_attributes(request.form)
+            self._restricted_attributes(request.form)
         # may be missing the id as we allow partial updates
         self.__class__(**data)
         old = self.__class__(**existing.dictize())
@@ -481,6 +484,11 @@ class APIBase(MethodView):
     def _forbidden_attributes(self, data):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""
+        pass
+
+    def _restricted_attributes(self, data):
+        """Method to be overriden by inheriting classes that will restrict
+        certain fields to be used in PUT or POST requests for certain users"""
         pass
 
     def _file_upload(self, data):

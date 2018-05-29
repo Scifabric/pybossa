@@ -20,6 +20,18 @@ from default import db
 from pybossa.repositories import UserRepository
 
 
+def make_admin(user):
+    user_repo = UserRepository(db)
+    user.admin = True
+    user_repo.save(user)
+
+
+def make_admin_by(**attributes):
+    user_repo = UserRepository(db)
+    user = user_repo.get_by(**attributes)
+    make_admin(user)
+
+
 def make_subadmin(user):
     user_repo = UserRepository(db)
     user.subadmin = True

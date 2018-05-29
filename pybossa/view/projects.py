@@ -413,36 +413,45 @@ def task_presenter_editor(short_name):
 
     form = TaskPresenterForm(request.body)
     form.id.data = project.id
-    if request.method == 'POST' and form.validate():
-        db_project = project_repo.get(project.id)
-        old_project = Project(**db_project.dictize())
-        old_info = dict(db_project.info)
-        old_info['task_presenter'] = form.editor.data
 
-        # Remove GitHub info on save
-        for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
-            old_info.pop(field, None)
+    disable_editor = current_app.config.get('DISABLE_TASK_PRESENTER_EDITOR')
 
-        # Remove sync info on save
-        old_sync = old_info.pop('sync', None)
-        if old_sync:
-            for field in ['syncer', 'latest_sync', 'source_url']:
-                old_sync.pop(field, None)
-            old_info['sync'] = old_sync
+    if not current_user.admin and disable_editor:
+        flash(gettext('Must be an admin to update!'), 'error')
 
-        db_project.info = old_info
-        auditlogger.add_log_entry(old_project, db_project, current_user)
-        project_repo.update(db_project)
-        msg_1 = gettext('Task presenter added!')
-        markup = Markup('<i class="icon-ok"></i> {}')
-        flash(markup.format(msg_1), 'success')
-        return redirect_content_type(url_for('.tasks',
-                                             short_name=project.short_name))
+    if request.method == 'POST':
 
-    # It does not have a validation
-    if request.method == 'POST' and not form.validate():  # pragma: no cover
-        flash(gettext('Please correct the errors'), 'error')
-        errors = True
+        if not current_user.admin and disable_editor:
+            flash(gettext('Must be an admin to update!'), 'error')
+            errors = True
+        elif form.validate():
+            db_project = project_repo.get(project.id)
+            old_project = Project(**db_project.dictize())
+            old_info = dict(db_project.info)
+            old_info['task_presenter'] = form.editor.data
+
+            # Remove GitHub info on save
+            for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
+                old_info.pop(field, None)
+
+            # Remove sync info on save
+            old_sync = old_info.pop('sync', None)
+            if old_sync:
+                for field in ['syncer', 'latest_sync', 'source_url']:
+                    old_sync.pop(field, None)
+                old_info['sync'] = old_sync
+
+            db_project.info = old_info
+            auditlogger.add_log_entry(old_project, db_project, current_user)
+            project_repo.update(db_project)
+            msg_1 = gettext('Task presenter added!')
+            markup = Markup('<i class="icon-ok"></i> {}')
+            flash(markup.format(msg_1), 'success')
+            return redirect_content_type(url_for('.tasks',
+                                                 short_name=project.short_name))
+        elif not form.validate():  # pragma: no cover
+            flash(gettext('Please correct the errors'), 'error')
+            errors = True
 
     if project.info.get('task_presenter'):
         form.editor.data = project.info['task_presenter']
@@ -516,7 +525,8 @@ def task_presenter_editor(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     errors=errors,
-                    pro_features=pro)
+                    pro_features=pro,
+                    disable_editor=disable_editor)
     return handle_content_type(response)
 
 

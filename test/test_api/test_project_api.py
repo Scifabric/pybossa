@@ -20,7 +20,7 @@ from mock import patch, call, MagicMock
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
-from helper.gig_helper import make_subadmin
+from helper.gig_helper import make_subadmin, make_admin
 
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
@@ -473,8 +473,11 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
-        assert 'task_presenter' not in out.get('info').keys(), error
+        out_info = out.get('info')
+        assert out_info is not None, error
+        assert out_info.get('task_presenter') is None, error
 
+        # Subadmin can update task presenter when DISABLE_EDITOR = False
         data['info']['task_presenter'] = 'htmlpresenter'
         newdata = json.dumps(data)
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
@@ -605,6 +608,98 @@ class TestProjectAPI(TestAPI):
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
 
+    @with_context
+    def test_project_update_task_presenter(self):
+        """Test API project task presenter on PUT and POST"""
+        from flask import current_app
+        from pybossa.core import setup_task_presenter_editor
+
+        current_app.config['DISABLE_TASK_PRESENTER_EDITOR'] = True
+        setup_task_presenter_editor(current_app)
+
+        [admin, subadmin] = UserFactory.create_batch(2)
+        make_admin(admin)
+        make_subadmin(subadmin)
+        CategoryFactory.create()
+
+        name = u'XXXX Project'
+        data = dict(
+            name=name,
+            short_name='xxxx-project',
+            description='description',
+            owner_id=subadmin.id,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello", task_presenter='taskpresenter'))
+        newdata = json.dumps(data)
+
+        # Subadmin cannot create project with task presenter
+        res = self.app.post('/api/project?api_key=' + subadmin.api_key,
+                            data=newdata)
+
+        assert_equal(res.status, '401 UNAUTHORIZED', res.data)
+        out = json.loads(res.data)
+        assert out.get('status') == 'failed', error
+
+        # Subadmin can create project without task presenter
+        data['info'].pop('task_presenter')
+        newdata = json.dumps(data)
+        res = self.app.post('/api/project?api_key=' + subadmin.api_key,
+                            data=newdata)
+
+        out = project_repo.get_by(name=name)
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project'), out
+        assert_equal(out.owner.name, 'user2')
+        assert_equal(out.owners_ids, [subadmin.id])
+        assert_equal(out.info, {u'passwd_hash': u'hello'})
+        id_ = out.id
+
+        # Subadmin cannot update project task presenter
+        data = dict(info=dict(task_presenter='taskpresenter'))
+        newdata = json.dumps(data)
+        res = self.app.put(
+            '/api/project/{}?api_key={}'.format(id_, subadmin.api_key),
+            data=newdata)
+
+        assert_equal(res.status, '401 UNAUTHORIZED', res.data)
+        out = json.loads(res.data)
+        assert out.get('status') == 'failed', error
+
+        # Admin can create project with task presenter
+        name=u'XXXX Project 2'
+        data = dict(
+            name=name,
+            short_name='xxxx-project-2',
+            description='description',
+            owner_id=admin.id,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello", task_presenter='taskpresenter'))
+
+        newdata = json.dumps(data)
+        res = self.app.post('/api/project?api_key=' + admin.api_key,
+                            data=newdata)
+        out = project_repo.get_by(name=name)
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project-2'), out
+        assert_equal(out.owner.name, 'user1')
+        assert_equal(out.owners_ids, [1])
+        assert_equal(out.info, {u'task_presenter': u'taskpresenter', u'passwd_hash': u'hello'})
+        id_ = out.id
+
+         # Admin can update project task presenter
+        data = dict(info=dict(task_presenter='new-taskpresenter'))
+        newdata = json.dumps(data)
+        res = self.app.put(
+            '/api/project/{}?api_key={}'.format(id_, admin.api_key),
+            data=newdata)
+
+        out = project_repo.get_by(name=name)
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project-2'), out
+        assert_equal(out.owner.name, 'user1')
+        assert_equal(out.owners_ids, [1])
+        assert_equal(out.info, {u'task_presenter': u'new-taskpresenter', u'passwd_hash': u'hello'})
+        assert out.id == id_, error
 
     @with_context
     def test_project_post_invalid_short_name(self):

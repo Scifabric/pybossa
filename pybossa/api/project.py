@@ -23,7 +23,8 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import copy
-from werkzeug.exceptions import BadRequest, Forbidden
+from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
+from flask import current_app
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
@@ -48,6 +49,7 @@ class ProjectAPI(APIBase):
     reserved_keys = set(['id', 'created', 'updated', 'completed', 'contacted',
                          'published', 'secret_key'])
     private_keys = set(['secret_key'])
+    restricted_keys = set()
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
@@ -68,6 +70,9 @@ class ProjectAPI(APIBase):
         if not new.info.get('passwd_hash'):
             new.info['passwd_hash'] = old.info.get('passwd_hash')
 
+        if not new.info.get('task_presenter'):
+            new.info['task_presenter'] = old.info.get('task_presenter')
+
     def _validate_instance(self, project):
         if project.short_name and is_reserved_name('project', project.short_name):
             msg = "Project short_name is not valid, as it's used by the system."
@@ -82,6 +87,29 @@ class ProjectAPI(APIBase):
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
+
+    def _restricted_attributes(self, data):
+        if current_user.is_authenticated() and not current_user.admin:
+            for key in data.keys():
+                self._raise_if_restricted(key, data)
+
+    @classmethod
+    def _raise_if_restricted(cls, key, data, restricted_keys=None):
+        if not restricted_keys:
+            restricted_keys = list(cls.restricted_keys)
+
+        for restricted_key in restricted_keys:
+            split_key = restricted_key.split('::', 1)
+            restricted_key = split_key.pop(0)
+            if key == restricted_key:
+                if isinstance(data, dict) and split_key:
+                    for k in data[key].keys():
+                        cls._raise_if_restricted(
+                            k, data[key], split_key)
+                else:
+                    raise Unauthorized(
+                        'Restricted key in payload '
+                        '(Admin privilege required)')
 
     def _filter_private_data(self, data):
         tmp = copy.deepcopy(data)
