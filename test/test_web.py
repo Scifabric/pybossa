@@ -7074,6 +7074,49 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    def test_75_available_task_schedulers(self, mock):
+        """Test WEB TASK SETTINGS scheduler page works"""
+        # Creat root user
+        self.register()
+        self.signin()
+        self.new_project()
+        url = "/project/sampleapp/tasks/scheduler"
+        form_id = 'task_scheduler'
+        from pybossa.core import setup_schedulers
+
+        try:
+            sched_config = [
+                ('default', 'Default'),
+                ('locked_scheduler', 'Locked Scheduler')
+            ]
+            with patch.dict(self.flask_app.config, {'AVAILABLE_SCHEDULERS': sched_config}):
+                setup_schedulers(self.flask_app)
+
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            form = dom.find(id=form_id)
+            assert form is not None, res.data
+            options = dom.find_all('option')
+            assert len(options) == len(sched_config)
+            scheds = [o.attrs['value'] for o in options]
+            assert all(s in scheds for s, d in sched_config)
+        finally:
+            from pybossa.sched import sched_variants
+            sched_config = sched_variants()
+            with patch.dict(self.flask_app.config, {'AVAILABLE_SCHEDULERS': sched_config}):
+                setup_schedulers(self.flask_app)
+
+        # all schedulers
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        form = dom.find(id=form_id)
+        assert form is not None, err_msg
+        options = dom.find_all('option')
+        scheds = [o.attrs['value'] for o in options]
+        assert 'user_pref_scheduler' in scheds
+        assert 'breadth_first' in scheds
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
