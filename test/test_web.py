@@ -6572,6 +6572,53 @@ class TestWeb(web.Helper):
         assert data['status'] == 'not_signed_in'
 
     @with_context
+    def test_72_profile_url_json_restrict(self):
+        """Test JSON WEB public user profile restrict works"""
+
+        user = UserFactory.create(restrict=True)
+        admin = UserFactory.create(admin=True)
+        other = UserFactory.create()
+
+        url = '/account/profile?api_key=%s' % user.api_key
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is not None, data
+        userDict = data.get('user')
+        assert userDict['id'] == user.id, userDict
+        assert userDict['restrict'] is True, userDict
+
+        # As admin should return nothing
+        url = '/account/%s/?api_key=%s' % (user.name, admin.api_key)
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is None, data
+        assert data.get('title') == 'User data is restricted'
+        assert data.get('can_update') is False
+        assert data.get('projects_created') == []
+        assert data.get('projects') == [], data
+
+        # As another user should return nothing
+        url = '/account/%s/?api_key=%s' % (user.name, other.api_key)
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is None, data
+        assert data.get('title') == 'User data is restricted'
+        assert data.get('can_update') is False
+        assert data.get('projects_created') == []
+        assert data.get('projects') == [], data
+
+
+
+    @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_74_task_settings_page(self, mock):
         """Test WEB TASK SETTINGS page works"""
