@@ -60,7 +60,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
 
             recipients = [user.email_addr, 'admin@broken.com']
             mail_dict = dict(recipients=recipients,
@@ -86,7 +86,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from the %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
             body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
 
             recipients = [user.email_addr, 'admin@broken.com']
