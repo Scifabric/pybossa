@@ -438,7 +438,7 @@ def redirect_profile():
             form_data = cached_users.get_user_pref_metadata(current_user.name)
             form = UserPrefMetadataForm(**form_data)
             form.set_upref_mdata_choices()
-        return _show_own_profile(current_user, form)
+        return _show_own_profile(current_user, form, current_user)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
 
@@ -464,7 +464,7 @@ def profile(name):
     if current_user.is_anonymous() or (user.id != current_user.id):
         return _show_public_profile(user, form)
     if current_user.is_authenticated() and user.id == current_user.id:
-        return _show_own_profile(user, form)
+        return _show_own_profile(user, form, current_user)
 
 
 def _show_public_profile(user, form):
@@ -473,12 +473,21 @@ def _show_public_profile(user, form):
     projects_created = cached_users.public_published_projects_cached(user.id)
 
     can_update = False
-    if current_user.is_authenticated() and current_user.admin:
+
+    if (user.restrict is False and
+        current_user.is_authenticated() and
+            current_user.admin):
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
         can_update = True
 
-    title = "%s &middot; User Profile" % user_dict['fullname']
+    if user.restrict is False:
+        title = "%s &middot; User Profile" % user_dict['fullname']
+    else:
+        title = "User data is restricted"
+        projects_contributed = []
+        projects_created = []
+        form = None
     response = dict(template='/account/public_profile.html',
                     title=title,
                     user=user_dict,
@@ -491,8 +500,8 @@ def _show_public_profile(user, form):
     return handle_content_type(response)
 
 
-def _show_own_profile(user, form):
-    user_dict = cached_users.get_user_summary(user.name)
+def _show_own_profile(user, form, current_user):
+    user_dict = cached_users.get_user_summary(user.name, current_user)
     rank_and_score = cached_users.rank_and_score(user.id)
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
@@ -561,7 +570,7 @@ def update_profile(name):
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
-    usr = cached_users.get_user_summary(name)
+    usr = cached_users.get_user_summary(name, current_user)
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
