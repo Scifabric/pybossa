@@ -63,6 +63,7 @@ def add_blog_event(mapper, conn, target):
     update_feed(obj)
     # Notify volunteers
     if current_app.config.get('DISABLE_EMAIL_NOTIFICATIONS') is None:
+        scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
         mail_queue.enqueue(notify_blog_users,
                            blog_id=target.id,
                            project_id=target.project_id)
@@ -71,7 +72,9 @@ def add_blog_event(mapper, conn, target):
         launch_url = url_for('project.show_blogpost',
                              short_name=tmp['short_name'],
                              id=target.id,
+                             _scheme=scheme,
                              _external=True)
+        print launch_url
         web_buttons = [{"id": "read-more-button",
                         "text": "Read more",
                         "icon": "http://i.imgur.com/MIxJp1L.png",
