@@ -1200,3 +1200,52 @@ class TestProjectAPI(TestAPI):
         res = self.app.put(url, data=json.dumps(payload))
         project = project_repo.get(project.id)
         assert project.check_password('hello_world')
+
+    @with_context
+    def put_project_updates_info(self):
+        """Test info is merged after PUT."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        old_info = project.info
+        project_repo.save(project)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        payload = project.dictize()
+        payload['info'] = {'foo': 'bar'}
+        del payload['id']
+        del payload['created']
+        del payload['updated']
+        del payload['contacted']
+        del payload['published']
+        del payload['owner_id']
+        del payload['secret_key']
+        res = self.app.put(url, data=json.dumps(payload))
+        project = project_repo.get(project.id)
+
+        for key, value in old_info.iteritems():
+            if not payload['info'].get(key):
+                assert project.info.get(key) == value
+
+    @with_context
+    def put_project_does_not_remove_info(self):
+        """Test info is not removed after PUT."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        old_info = project.info
+        project_repo.save(project)
+        url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
+        payload = project.dictize()
+        payload['info'] = {'foo': 'bar'}
+        payload['info'].update({key: None for key in old_info.keys()})
+        del payload['id']
+        del payload['created']
+        del payload['updated']
+        del payload['contacted']
+        del payload['published']
+        del payload['owner_id']
+        del payload['secret_key']
+        res = self.app.put(url, data=json.dumps(payload))
+        project = project_repo.get(project.id)
+
+        for key, value in old_info.iteritems():
+            if not payload['info'].get(key):
+                assert project.info.get(key) == value
