@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-SERVER_NAME='localhost'
+SERVER_NAME='https://localhost'
 # THEME='crowdcrafting-theme'
 CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
 SECRET = 'foobar'
