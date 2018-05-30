@@ -414,15 +414,27 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.body)
     form.id.data = project.id
 
-    disable_editor = current_app.config.get('DISABLE_TASK_PRESENTER_EDITOR')
+    disable_editor = (not current_user.admin and
+                      current_app.config.get(
+                          'DISABLE_TASK_PRESENTER_EDITOR'))
+    disabled_msg = ('Task presenter code must be synced from '
+                    'your corresponding job on the development '
+                    'platform!')
+    is_admin_or_owner = (
+        current_user.admin or
+        (project.owner_id == current_user.id or
+            current_user.id in project.owners_ids))
 
-    if not current_user.admin and disable_editor:
-        flash(gettext('Must be an admin to update!'), 'error')
+    if disable_editor:
+        flash(gettext(disabled_msg), 'error')
 
     if request.method == 'POST':
-
-        if not current_user.admin and disable_editor:
-            flash(gettext('Must be an admin to update!'), 'error')
+        if disable_editor:
+            flash(gettext(disabled_msg), 'error')
+            errors = True
+        elif not is_admin_or_owner:
+            flash(gettext('Ooops! Only project owners can update.'),
+                  'error')
             errors = True
         elif form.validate():
             db_project = project_repo.get(project.id)
@@ -526,7 +538,7 @@ def task_presenter_editor(short_name):
                     n_volunteers=ps.n_volunteers,
                     errors=errors,
                     pro_features=pro,
-                    disable_editor=disable_editor)
+                    disable_editor=disable_editor or not is_admin_or_owner)
     return handle_content_type(response)
 
 
