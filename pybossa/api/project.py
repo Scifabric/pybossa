@@ -24,13 +24,13 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 import copy
 from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
-from flask import current_app
+from flask import current_app, request
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
-from pybossa.core import auditlog_repo, result_repo
+from pybossa.core import auditlog_repo, result_repo, http_signer
 from pybossa.auditlogger import AuditLogger
 
 auditlogger = AuditLogger(auditlog_repo, caller='api')
@@ -87,8 +87,10 @@ class ProjectAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _restricted_attributes(self, data):
-        return #TODO: remove; this breaks sync
-        if current_user.is_authenticated() and not current_user.admin:
+        if (current_user.is_authenticated() and
+            not current_user.admin and
+            not http_signer.valid(request)):
+
             for key in data.keys():
                 self._raise_if_restricted(key, data)
 
