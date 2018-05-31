@@ -106,7 +106,7 @@ class TestProjectReport(web.Helper):
     @with_context
     @patch('pybossa.exporter.isinstance', return_value=False)
     @patch('pybossa.exporter.url_for')
-    def test_project_report_nonlocal_uploader(self, mock_no_up, url_for):
+    def test_project_report_nonlocal_uploader(self, url_for, mock_no_up):
         self.register()
         self.signin()
         rv = 'http://store/object'
@@ -114,7 +114,7 @@ class TestProjectReport(web.Helper):
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
-        res = self.app.get(url)
+        res = self.app.get(url, follow_redirects=False)
         url_for.assert_called()
         assert res.status_code == 302, res.status_code
         assert rv in res.data
