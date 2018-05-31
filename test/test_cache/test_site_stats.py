@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PYBOSSA.  If not,  see <http://www.gnu.org/licenses/>.
 
 import datetime
 from default import db, Test, with_context
@@ -373,33 +373,33 @@ class TestSiteStatsCache(Test):
     def test_charts(self):
         """Test project chart"""
         date_old = (datetime.datetime.utcnow() -  datetime.timedelta(30*36)).isoformat()
+        date_4_mo = (datetime.datetime.utcnow() -  datetime.timedelta(120)).isoformat()
         date_3_mo = (datetime.datetime.utcnow() -  datetime.timedelta(90)).isoformat()
         date_2_mo = (datetime.datetime.utcnow() -  datetime.timedelta(60)).isoformat()
         date_1_mo = (datetime.datetime.utcnow() -  datetime.timedelta(30)).isoformat()
-        date_now = (datetime.datetime.utcnow() -  datetime.timedelta(1)).isoformat()
         expected_tasks = 6
         expected_categories = 2
         expected_projects = 4
         expected_taskruns = 5
 
-        CategoryFactory.create(created=date_now)
         CategoryFactory.create(created=date_1_mo)
         CategoryFactory.create(created=date_2_mo)
+        CategoryFactory.create(created=date_3_mo)
 
-        ProjectFactory.create(created=date_now)
         ProjectFactory.create(created=date_1_mo)
         ProjectFactory.create(created=date_2_mo)
         ProjectFactory.create(created=date_3_mo)
+        ProjectFactory.create(created=date_4_mo)
         ProjectFactory.create(created=date_old)
 
-        TaskFactory.create(created=date_now)
         TaskFactory.create(created=date_1_mo)
         TaskFactory.create(created=date_2_mo)
+        TaskFactory.create(created=date_3_mo)
 
-        TaskRunFactory.create(created=date_now)
         TaskRunFactory.create(created=date_1_mo)
         TaskRunFactory.create(created=date_2_mo)
         TaskRunFactory.create(created=date_3_mo)
+        TaskRunFactory.create(created=date_4_mo)
         TaskRunFactory.create(created=date_old)
 
         projects = stats.project_chart()
