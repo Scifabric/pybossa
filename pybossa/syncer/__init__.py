@@ -26,7 +26,7 @@ from datetime import datetime
 from flask import current_app
 from flask.ext.login import current_user
 from werkzeug.exceptions import Unauthorized
-from pybossa.core import sentinel
+from pybossa.core import sentinel, http_signer
 
 
 ONE_WEEK = 60 * 60 * 24 * 7
@@ -119,7 +119,8 @@ class Syncer(object):
     def _create(self, payload, params):
         url = '{}/api/{}'.format(
             self.target_url, self._api_endpoint)
-        res = requests.post(url, json=payload, params=params)
+        res = requests.post(
+            url, json=payload, params=params, auth=http_signer)
         return res
 
     def cache_target(self, target, target_id):
