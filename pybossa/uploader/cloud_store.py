@@ -43,7 +43,6 @@ class CloudStoreUploader(Uploader):
 
     def _upload_file(self, file, container): # pragma: no cover
         """Override by the specific uploader handler."""
-        print 'oi'
         try:
             key = self.key_name(container, file.filename)
             key = self.bucket.get_key(key, validate=False)
