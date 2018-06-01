@@ -688,6 +688,53 @@ def anonymize_ips():
         tr.user_ip = anonymizer.ip(tr.user_ip)
         task_repo.update(tr)
 
+def clean_project(project_id, skip_tasks=False):
+    """Remove everything from a project."""
+    from pybossa.core import task_repo
+    from pybossa.model import make_timestamp
+    n_tasks = 0
+    if not skip_tasks:
+        print "Deleting tasks"
+        sql = 'delete from task where project_id=%s' % project_id
+        db.engine.execute(sql)
+    else:
+        sql = 'select count(id) as n from task where project_id=%s' % project_id
+        result = db.engine.execute(sql)
+        for row in result:
+            n_tasks = row.n
+
+    sql = 'delete from task_run where project_id=%s' % project_id
+    db.engine.execute(sql)
+    sql = 'delete from result where project_id=%s' % project_id
+    db.engine.execute(sql)
+    sql = 'delete from counter where project_id=%s' % project_id
+    db.engine.execute(sql)
+    sql = 'delete from project_stats where project_id=%s' % project_id
+    db.engine.execute(sql)
+    sql = """INSERT INTO project_stats 
+             (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
+             n_completed_tasks, overall_progress, average_time,
+             n_blogposts, last_activity, info)
+             VALUES (%s, %s, 0, 0, 0, 0, 0, 0, 0, 0, '{}');""" % (project_id,
+                                                                  n_tasks)
+    db.engine.execute(sql)
+    if skip_tasks:
+        tasks = task_repo.filter_tasks_by(project_id=project_id, limit=100)
+        last_id = tasks[len(tasks)-1].id
+        while(len(tasks) > 0):
+            for task in tasks:
+                sql= ("insert into counter(created, project_id, task_id, n_task_runs) \
+                       VALUES (TIMESTAMP '%s', %s, %s, 0)"
+                       % (make_timestamp(), project_id, task.id))
+                db.engine.execute(sql)
+            tasks = task_repo.filter_tasks_by(project_id=project_id,
+                                              limit=100,
+                                              last_id=last_id)
+            if (len(tasks) > 0):
+                last_id = tasks[len(tasks)-1].id
+    print "Project has been cleaned"
+
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
