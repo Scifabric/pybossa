@@ -65,6 +65,10 @@ class TaskRunAPI(APIBase):
         path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
         _upload_files_from_json(info, path)
         _upload_files_from_request(info, request.files, path)
+        if app.config.get('PRIVATE_INSTANCE'):
+            data['info'] = {
+                'pyb_answer_url': _upload_task_run(info, path)
+            }
 
     def check_can_post(self, project_id, task_id, user_id):
         if not can_post(project_id, task_id, user_id):
@@ -174,3 +178,10 @@ def _upload_files_from_request(task_run_info, files, upload_path):
                                         file_obj,
                                         directory=upload_path)
         task_run_info[key] = s3_url
+
+
+def _upload_task_run(task_run, upload_path):
+    content = json.dumps(task_run, ensure_ascii=False)
+    return s3_upload_from_string(app.config.get("S3_BUCKET"),
+                                 content, 'pyb_answer.json',
+                                 directory=upload_path)
