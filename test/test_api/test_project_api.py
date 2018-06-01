@@ -611,7 +611,6 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_update_task_presenter(self):
         """Test API project task presenter on PUT and POST"""
-        return # TODO: fix
         from flask import current_app
         from pybossa.core import setup_task_presenter_editor
 
