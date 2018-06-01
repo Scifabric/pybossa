@@ -50,13 +50,16 @@ class TestExportAccount(Test):
 
         personal_data_link = url_for(upload_method,
                                      filename="user_%s/%s_sec_personal_data.zip"
-                                     % (user.id, 'random'))
+                                     % (user.id, 'random'),
+                                     _external=True)
         personal_projects_link = url_for(upload_method,
                                          filename="user_%s/%s_sec_user_projects.zip"
-                                         % (user.id, 'random'))
+                                         % (user.id, 'random'),
+                                         _external=True)
         personal_contributions_link = url_for(upload_method,
                                               filename="user_%s/%s_sec_user_contributions.zip"
-                                              % (user.id, 'random'))
+                                              % (user.id, 'random'),
+                                              _external=True)
 
 
         body = render_template('/account/email/exportdata.md',
@@ -78,6 +81,7 @@ class TestExportAccount(Test):
                      body=body,
                      html=html)
         m1.assert_called_with(mail_dict)
+        assert 'https' in personal_contributions_link
 
     @with_context
     @patch('pybossa.core.uploader.delete_file')

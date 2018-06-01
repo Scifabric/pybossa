@@ -42,7 +42,7 @@ def get_leaderboard(n, user_id=None, window=0, info=None):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def get_user_summary(name):
+def get_user_summary(name, current_user=None):
     """Return user summary."""
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
@@ -50,11 +50,11 @@ def get_user_summary(name):
                "user".google_user_id, "user".info, "user".admin,
                "user".locale,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
-               "user".valid_email, "user".confirmation_email_sent
+               "user".valid_email, "user".confirmation_email_sent, 
+               "user".restrict
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
-               AND "user".restrict=false
                GROUP BY "user".id;
                ''')
     results = session.execute(sql, dict(name=name))
@@ -70,13 +70,22 @@ def get_user_summary(name):
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
+                    restrict=row.restrict,
                     registered_ago=pretty_date(row.created))
     if user:
         rank_score = rank_and_score(user['id'])
         user['rank'] = rank_score['rank']
         user['score'] = rank_score['score']
         user['total'] = get_total_users()
-        return user
+        if user['restrict']:
+            if (current_user and
+                current_user.is_authenticated() and
+               (current_user.id == user['id'])):
+                return user
+            else:
+                return None
+        else:
+            return user
     else:  # pragma: no cover
         return None
 

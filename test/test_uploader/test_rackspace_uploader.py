@@ -210,7 +210,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.user.png'
+            failover_url = 'https://localhost/static/img/placeholder.user.png'
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
             assert res == failover_url, err_msg
 
@@ -229,7 +229,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.project.png'
+            failover_url = 'https://localhost/static/img/placeholder.project.png'
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
             assert res == failover_url, err_msg
 
@@ -249,7 +249,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.project.png'
+            failover_url = 'https://localhost/static/img/placeholder.project.png'
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
             assert res == failover_url, err_msg
 

@@ -18,7 +18,7 @@
 
 import json
 from pybossa.jobs import push_notification
-from default import Test, with_context 
+from default import Test, with_context
 from mock import patch, MagicMock, call
 from factories import ProjectFactory, UserFactory, CategoryFactory
 from pybossa.core import project_repo
@@ -90,7 +90,7 @@ class TestOnesignal(Test):
     @with_context
     @patch('pybossa.jobs.PybossaOneSignal.push_msg')
     def test_push_notification_method(self, mock_onesignal):
-        """Test push_notification method alone.""" 
+        """Test push_notification method alone."""
         project = ProjectFactory.create()
         mock_onesignal.return_value = "msg"
 

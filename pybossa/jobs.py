@@ -786,7 +786,7 @@ def delete_account(user_id, **kwargs):
     user_repo.delete(user)
     subject = '[%s]: Your account has been deleted' % brand
     mailchimp_deleted = True
-    body = """Hi,\nYour account and personal data has been deleted from the %s.""" % brand
+    body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
     if current_app.config.get('MAILCHIMP_API_KEY'):
         mailchimp_deleted = newsletter.delete_user(email)
         if not mailchimp_deleted:
@@ -826,18 +826,21 @@ def export_userdata(user_id, **kwargs):
         upload_method = 'uploads.uploaded_file'
 
     personal_data_link = url_for(upload_method,
-                                 filename="user_%s/%s" % (user_id, pdf))
-    personal_data_link = personal_data_link.replace('http://', 'https://', 1)
+                                 filename="user_%s/%s" % (user_id, pdf),
+                                 _external=True)
+    # personal_data_link = personal_data_link.replace('http://', 'https://', 1)
     personal_projects_link = None
     if upf:
         personal_projects_link = url_for(upload_method,
                                          filename="user_%s/%s" % (user_id,
-                                                             upf))
+                                                             upf),
+                                         _external=True)
     personal_contributions_link = None
     if ucf:
         personal_contributions_link = url_for(upload_method,
                                               filename="user_%s/%s" % (user_id,
-                                                                   ucf))
+                                                                   ucf),
+                                              _external=True)
 
     body = render_template('/account/email/exportdata.md',
                            user=user.dictize(),
