@@ -23,6 +23,7 @@ from mock import patch
 from factories import ProjectFactory, TaskFactory
 from pybossa.core import db
 from pybossa.model.task_run import TaskRun
+from pybossa.uploader.s3_uploader import s3_upload_from_string
 
 
 class TestTaskrunWithFile(TestAPI):
@@ -185,3 +186,116 @@ class TestTaskrunWithFile(TestAPI):
 
             assert success.status_code == 400, success.data
             set_content.assert_not_called()
+
+
+
+class TestTaskrunWithSensitiveFile(TestAPI):
+
+    host = 's3.storage.com'
+    bucket = 'test_bucket'
+    patch_config = {
+        'S3_CONN_KWARGS': {'host': host},
+        'S3_CUSTOM_HANDLER_HOSTS': [host],
+        'PRIVATE_INSTANCE': True,
+        'S3_BUCKET': 'test_bucket'
+    }
+
+    def setUp(self):
+        super(TestTaskrunWithSensitiveFile, self).setUp()
+        db.session.query(TaskRun).delete()
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.api.task_run.s3_upload_from_string', wraps=s3_upload_from_string)
+    def test_taskrun_with_upload(self, upload_from_string, set_content):
+        with patch.dict(self.flask_app.config, self.patch_config):
+            project = ProjectFactory.create()
+            task = TaskFactory.create(project=project)
+            self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
+
+            data = dict(
+                project_id=project.id,
+                task_id=task.id,
+                info={
+                    'test__upload_url': {
+                        'filename': 'hello.txt',
+                        'content': 'abc'
+                    },
+                    'another_field': 42
+                })
+            datajson = json.dumps(data)
+            url = '/api/taskrun?api_key=%s' % project.owner.api_key
+
+            success = self.app.post(url, data=datajson)
+
+            assert success.status_code == 200, success.data
+            set_content.assert_called()
+            res = json.loads(success.data)
+            assert len(res['info']) == 1
+            url = res['info']['pyb_answer_url']
+            args = {
+                'host': self.host,
+                'bucket': self.bucket,
+                'project_id': project.id,
+                'task_id': task.id,
+                'user_id': project.owner.id,
+                'filename': 'pyb_answer.json'
+            }
+            expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
+            assert url == expected, url
+
+            upload_from_string.assert_called()
+            args, kwargs = upload_from_string.call_args
+            _, content, _ = args
+            actual_content = json.loads(content)
+
+            args = {
+                'host': self.host,
+                'bucket': self.bucket,
+                'project_id': project.id,
+                'task_id': task.id,
+                'user_id': project.owner.id,
+                'filename': 'hello.txt'
+            }
+            expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
+            assert actual_content['test__upload_url'] == expected
+            assert actual_content['another_field'] == 42
+
+    @with_context
+    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    def test_taskrun_multipart(self, set_content):
+        with patch.dict(self.flask_app.config, self.patch_config):
+            project = ProjectFactory.create()
+            task = TaskFactory.create(project=project)
+            self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
+
+            data = dict(
+                project_id=project.id,
+                task_id=task.id,
+                info={'field': 'value'}
+            )
+            datajson = json.dumps(data)
+
+            form = {
+                'request_json': datajson,
+                'test__upload_url': (StringIO('Hi there'), 'hello.txt')
+            }
+
+            url = '/api/taskrun?api_key=%s' % project.owner.api_key
+            success = self.app.post(url, content_type='multipart/form-data',
+                                    data=form)
+
+            assert success.status_code == 200, success.data
+            set_content.assert_called()
+            res = json.loads(success.data)
+            url = res['info']['pyb_answer_url']
+            args = {
+                'host': self.host,
+                'bucket': self.bucket,
+                'project_id': project.id,
+                'task_id': task.id,
+                'user_id': project.owner.id,
+                'filename': 'pyb_answer.json'
+            }
+            expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
+            assert url == expected, url
