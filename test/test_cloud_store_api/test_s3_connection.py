@@ -18,7 +18,7 @@
 
 from mock import patch, Mock
 from default import Test, with_context
-from pybossa.uploader.s3_connection import CustomConnection, CustomAuthHandler
+from pybossa.cloud_store_api.s3_connection import CustomConnection, CustomAuthHandler
 from nose.tools import assert_raises
 from boto.auth_handler import NotReadyToAuthenticate
 

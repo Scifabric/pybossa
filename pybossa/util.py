@@ -20,6 +20,7 @@ from collections import OrderedDict
 from datetime import timedelta, datetime, date
 from yacryptopan import CryptoPAn
 from functools import update_wrapper
+from tempfile import NamedTemporaryFile
 from flask_wtf import Form
 import csv
 import codecs
@@ -46,9 +47,9 @@ import boto
 import os
 from werkzeug.utils import secure_filename
 from flask import safe_join
-from pybossa.uploader.s3_uploader import s3_upload_file_storage
+from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.uploader import local
-from pybossa.uploader.s3_uploader import get_file_from_s3, delete_file_from_s3
+from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
 
 # dict containing list of valid user preferences
 valid_user_preferences = {}
@@ -625,8 +626,9 @@ def fuzzyboolean(value):
 
 def get_avatar_url(upload_method, avatar, container):
     """Return absolute URL for avatar."""
-    if upload_method.lower() == 'rackspace':
-        return url_for('rackspace',
+    upload_method = upload_method.lower()
+    if upload_method in ['rackspace', 'cloud']:
+        return url_for(upload_method,
                        filename=avatar,
                        container=container)
     else:
@@ -996,15 +998,9 @@ def get_file_path_for_import_csv(csv_file):
             csv_file, directory=container,
             file_type_check=False, return_key_only=True)
     else:
-        filename = secure_filename(csv_file.filename)
-        if isinstance(uploader, local.LocalUploader):
-            base_path = safe_join(uploader.upload_folder, container)
-            if not os.path.isdir(base_path):
-                os.makedirs(base_path)
-            path = safe_join(base_path, filename)
-            csv_file.save(path)
-        else:
-            raise IOError('Missing local upload folder')
+        tmpfile = NamedTemporaryFile(delete=False)
+        path = tmpfile.name
+        csv_file.save(path)
     return path
 
 def get_import_csv_file(path):

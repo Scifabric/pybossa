@@ -20,7 +20,7 @@ from StringIO import StringIO
 from mock import patch, Mock, MagicMock
 import boto
 from default import Test, with_context
-from pybossa.uploader.s3_uploader import *
+from pybossa.cloud_store_api.s3 import *
 from nose.tools import assert_raises
 from werkzeug.exceptions import BadRequest
 from werkzeug.datastructures import FileStorage
@@ -45,7 +45,7 @@ class TestS3Uploader(Test):
         assert_raises(RuntimeError, validate_directory, 'hello$world')
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_string(self, set_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -55,7 +55,7 @@ class TestS3Uploader(Test):
             assert url == 'https://s3.storage.com/bucket/test.txt', url
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_string_with_jwt(self, set_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -70,14 +70,14 @@ class TestS3Uploader(Test):
             assert 'jwt' in kwargs['headers']
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.io.open')
+    @patch('pybossa.cloud_store_api.s3.io.open')
     def test_upload_from_string_exception(self, open):
         open.side_effect = IOError
         assert_raises(IOError, s3_upload_from_string,
                       'bucket', u'hellow world', 'test.txt')
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_string_return_key(self, set_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -88,7 +88,7 @@ class TestS3Uploader(Test):
             assert key == 'test.txt', key
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_storage(self, set_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -102,8 +102,8 @@ class TestS3Uploader(Test):
             assert url == 'https://s3.storage.com/bucket/test.txt', url
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.generate_url')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.generate_url')
     def test_upload_remove_query_params(self, generate_url, set_content):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -114,7 +114,7 @@ class TestS3Uploader(Test):
             assert url == 'https://s3.storage.com/bucket/key'
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.bucket.Bucket.delete_key')
     def test_delete_file_from_s3(self, delete_key):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -124,7 +124,7 @@ class TestS3Uploader(Test):
             delete_key.assert_called_with('/the/key', headers={}, version_id=None)
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.bucket.Bucket.delete_key')
     def test_delete_file_from_s3_with_jwt(self, delete_key):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -139,8 +139,8 @@ class TestS3Uploader(Test):
             assert 'jwt' in kwargs['headers']
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.bucket.Bucket.delete_key')
-    @patch('pybossa.uploader.s3_uploader.app.logger.exception')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.bucket.Bucket.delete_key')
+    @patch('pybossa.cloud_store_api.s3.app.logger.exception')
     def test_delete_file_from_s3_exception(self, logger, delete_key):
         delete_key.side_effect = boto.exception.S3ResponseError('', '', '')
         with patch.dict(self.flask_app.config, {
@@ -151,7 +151,7 @@ class TestS3Uploader(Test):
             logger.assert_called()
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.get_contents_to_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_to_filename')
     def test_get_file_from_s3(self, get_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -161,7 +161,7 @@ class TestS3Uploader(Test):
             get_contents.assert_called()
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.get_contents_to_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_to_filename')
     def test_get_file_from_s3_with_jwt(self, get_contents):
         with patch.dict(self.flask_app.config, {
             'S3_CONN_KWARGS': {'host': 's3.storage.com'},
@@ -186,7 +186,7 @@ class TestS3Uploader(Test):
             assert key.should_retry(response)
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.should_retry')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.should_retry')
     def test_checksum(self, should_retry):
         response = MagicMock()
         response.status = 200
@@ -196,7 +196,7 @@ class TestS3Uploader(Test):
 
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.should_retry')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.should_retry')
     def test_checksum_not_ok(self, should_retry):
         response = MagicMock()
         response.status = 300

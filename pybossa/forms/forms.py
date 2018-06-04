@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+from tempfile import NamedTemporaryFile
 
 from flask import current_app
 from flask import request
@@ -604,12 +605,13 @@ class BulkUserCSVImportForm(Form):
                 flash('No file selected')
                 return {'type': 'usercsvimport', 'csv_filename': None}
             if csv_file and self._allowed_file(csv_file.filename):
-                filename = secure_filename(csv_file.filename)
-                tmpfile = '{0}/{1}'.format(uploader.upload_folder, filename)
-                with open(tmpfile, 'w') as fp:
-                    fp.write(csv_file.stream.read())
-                return {'type': 'usercsvimport', 'csv_filename': tmpfile}
+                with NamedTemporaryFile(delete=False) as tmpfile:
+                    csv_file.save(tmpfile)
+                return {'type': 'usercsvimport', 'csv_filename': tmpfile.name}
         return {'type': 'usercsvimport', 'csv_filename': None}
+
+    def delete_file(self):
+        os.remove(request.files['file'].filename)
 
 
 class GenericUserImportForm(object):

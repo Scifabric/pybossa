@@ -145,6 +145,7 @@ def setup_theme(app):
 def setup_uploader(app):
     """Setup uploader."""
     global uploader
+
     if app.config.get('UPLOAD_METHOD') == 'local':
         from pybossa.uploader.local import LocalUploader
         uploader = LocalUploader()
@@ -152,6 +153,11 @@ def setup_uploader(app):
     if app.config.get('UPLOAD_METHOD') == 'rackspace':  # pragma: no cover
         from pybossa.uploader.rackspace import RackspaceUploader
         uploader = RackspaceUploader()
+        app.url_build_error_handlers.append(uploader.external_url_handler)
+        uploader.init_app(app)
+    if app.config.get('UPLOAD_METHOD') == 'cloud':  # pragma: no cover
+        from pybossa.uploader.cloud_store import CloudStoreUploader
+        uploader = CloudStoreUploader()
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 

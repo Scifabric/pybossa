@@ -20,6 +20,7 @@
 Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
+from contextlib import closing
 import copy
 import os
 import zipfile
@@ -211,25 +212,14 @@ class Exporter(object):
                 datafile.flush()
                 obj_generator.close()
 
-                with tempfile.NamedTemporaryFile() as zipped_datafile:
-                    with self._zip_factory(zipped_datafile.name) as _zip:
-                        _zip.write(datafile.name,
-                                   secure_filename('{0}_{1}.{2}'
-                                                   .format(name, obj, file_format)))
-                        _zip.content_type = 'application/zip'
+                zipped_datafile = tempfile.NamedTemporaryFile()
 
-                    filename = self.download_name(project, obj)
-                    zip_file = FileStorage(filename=filename,
-                                           stream=zipped_datafile)
+                with self._zip_factory(zipped_datafile.name) as _zip:
+                    _zip.write(datafile.name,
+                               secure_filename('{0}_{1}.{2}'
+                                               .format(name, obj, file_format)))
+                    _zip.content_type = 'application/zip'
 
-                    container = self._container(project)
-                    if uploader.file_exists(filename, container):
-                        assert uploader.delete_file(filename, container)
-                    uploader.upload_file(zip_file, container=container)
-
-                    if isinstance(uploader, local.LocalUploader):
-                        path = uploader.get_file_path(container, filename)
-                    else:
-                        path = None
-
-                    return path
+                filename = self.download_name(project, obj)
+                fs = FileStorage(filename=filename, stream=zipped_datafile)
+                return closing(fs)

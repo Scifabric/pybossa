@@ -110,9 +110,6 @@ class TestExport(Test):
         task = TaskFactory.create(project=project)
         task_run = TaskRunFactory.create(project=project, task=task)
 
-        task_csv_exporter.make_zip.return_value = None
-        task_json_exporter.make_zip.return_value = None
-
         export_tasks(user.email_addr, project.short_name, 'task', False, 'csv')
         export_tasks(user.email_addr, project.short_name, 'task', False, 'json')
 

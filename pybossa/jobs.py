@@ -740,23 +740,24 @@ def export_tasks(current_user_email_addr, short_name,
     """Export tasks/taskruns from a project."""
     from pybossa.core import (task_csv_exporter, task_json_exporter,
                               project_repo)
-    from pybossa.exporter.consensus_exporter import export_consensus
+    import pybossa.exporter.consensus_exporter as export_consensus
 
     project = project_repo.get_by_shortname(short_name)
 
     try:
         # Export data and upload .zip file locally
         if ty == 'consensus':
-            path = export_consensus(project, ty, filetype, expanded, filters)
+            export_fn = getattr(export_consensus,
+                                'export_consensus_{}'.format(filetype))
         elif filetype == 'json':
-            path = task_json_exporter.make_zip(project, ty, expanded, filters)
+            export_fn = task_json_exporter.make_zip
         elif filetype == 'csv':
-            path = task_csv_exporter.make_zip(project, ty, expanded, filters)
+            export_fn = task_csv_exporter.make_zip
         else:
-            path = None
+            export_fn = None
 
         # Construct message
-        if path is not None:
+        if export_fn is not None:
             # Success email
             subject = u'Data exported for your project: {0}'.format(project.name)
             msg = u'Your exported data is attached.'
@@ -776,9 +777,9 @@ def export_tasks(current_user_email_addr, short_name,
         message = Message(**mail_dict)
 
         # Attach export file to message
-        if path is not None:
-            with current_app.open_resource(path) as fp:
-                message.attach(path.split('/')[-1], "application/zip", fp.read())
+        if export_fn is not None:
+            with export_fn(project, ty, expanded, filters) as fp:
+                message.attach(fp.filename, "application/zip", fp.read())
 
         mail.send(message)
         job_response = u'{0} {1} file was successfully exported for: {2}'
@@ -1066,7 +1067,7 @@ def mail_project_report(info, current_user_email_addr):
     from pybossa.core import uploader
 
     try:
-        project_csv_exporter.pregenerate_zip_files(info)
+        zipfile = None
         filename = project_csv_exporter.zip_name(info)
         subject = '{} project report'.format(current_app.config['BRAND'])
         msg = 'Your exported data is attached.'
@@ -1078,12 +1079,11 @@ def mail_project_report(info, current_user_email_addr):
                          body=body)
 
         container = 'user_{}'.format(info['user_id'])
-        path = uploader.get_file_path(container, filename)
-        with current_app.open_resource(path) as fp:
-            attachment = Attachment(path.split('/')[-1], "application/zip",
+        zipfile = project_csv_exporter.generate_zip_files(info)
+        with open(zipfile) as fp:
+            attachment = Attachment(filename, "application/zip",
                                     fp.read())
-            mail_dict['attachments'] = [attachment]
-        uploader.delete_file(filename, container)
+        mail_dict['attachments'] = [attachment]
     except Exception:
         current_app.logger.exception('Error in mail_project_report')
         subject = 'Error in {} project report'.format(current_app.config['BRAND'])
@@ -1094,6 +1094,11 @@ def mail_project_report(info, current_user_email_addr):
         mail_dict = dict(recipients=[current_user_email_addr],
                          subject=subject,
                          body=body)
+        send_mail(mail_dict)
+        raise
+    finally:
+        if zipfile:
+            os.unlink(zipfile)
 
     send_mail(mail_dict)
 

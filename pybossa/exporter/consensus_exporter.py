@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from contextlib import closing
 import json
 import re
 import tempfile
@@ -17,6 +18,14 @@ from pybossa.cache.users import get_user_info
 
 __KEY_RE = re.compile(
     '^consensus__(?P<ans_key>.+)__contributorsConsensusPercentage$')
+
+
+def export_consensus_json(project, ty, expanded, filters):
+    return export_consensus(project, ty, 'json', expanded, filters)
+
+
+def export_consensus_csv(project, ty, expanded, filters):
+    return export_consensus(project, ty, 'csv', expanded, filters)
 
 
 def export_consensus(project, obj, filetype, expanded, filters):
@@ -196,14 +205,13 @@ class ConsensusExporter(Exporter):
         with tempfile.NamedTemporaryFile() as datafile:
             self.data_to_file(project.id, filters, datafile)
             datafile.flush()
-            with tempfile.NamedTemporaryFile() as zipped_datafile:
-                _zip = self._zip_factory(zipped_datafile.name)
-                _zip.write(
-                    datafile.name, secure_filename('%s_%s.%s' % (name, obj, filetype)))
-                _zip.close()
-                container = "user_%d" % project.owner_id
-                filename = self.download_name(project, obj, filetype)
-                _file = FileStorage(
-                    filename=filename, stream=zipped_datafile)
-                uploader.upload_file(_file, container=container)
-        return uploader.get_file_path(container, filename)
+            file_name = secure_filename(u'%s_%s.%s' % (name, obj, filetype))
+            zipped_datafile = tempfile.NamedTemporaryFile()
+            _zip = self._zip_factory(zipped_datafile.name)
+            _zip.write(
+                datafile.name, file_name)
+            _zip.close()
+            container = "user_%d" % project.owner_id
+            filename = self.download_name(project, obj, filetype)
+            fs = FileStorage(filename=filename, stream=zipped_datafile)
+            return closing(fs)
