@@ -23,7 +23,7 @@ from mock import patch
 from factories import ProjectFactory, TaskFactory
 from pybossa.core import db
 from pybossa.model.task_run import TaskRun
-from pybossa.uploader.s3_uploader import s3_upload_from_string
+from pybossa.cloud_store_api.s3 import s3_upload_from_string
 
 
 class TestTaskrunWithFile(TestAPI):
@@ -205,7 +205,7 @@ class TestTaskrunWithSensitiveFile(TestAPI):
         db.session.query(TaskRun).delete()
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     @patch('pybossa.api.task_run.s3_upload_from_string', wraps=s3_upload_from_string)
     def test_taskrun_with_upload(self, upload_from_string, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
@@ -262,7 +262,7 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             assert actual_content['another_field'] == 42
 
     @with_context
-    @patch('pybossa.uploader.s3_uploader.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_taskrun_multipart(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
