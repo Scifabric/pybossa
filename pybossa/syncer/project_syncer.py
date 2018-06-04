@@ -23,7 +23,7 @@ ProjectSyncer module for syncing projects on different domains.
 import json
 from copy import deepcopy
 import requests
-from pybossa.core import project_repo
+from pybossa.core import project_repo, http_signer
 from pybossa.syncer import Syncer, NotEnabled, SyncUnauthorized
 from pybossa.syncer.category_syncer import CategorySyncer
 
@@ -71,7 +71,8 @@ class ProjectSyncer(Syncer):
     def _sync(self, payload, target_id, params):
         url = '{}/api/project/{}'.format(
                 self.target_url, target_id)
-        res = requests.put(url, json=payload, params=params)
+        res = requests.put(
+            url, json=payload, params=params, auth=http_signer)
         return res
 
     def _build_payload(self, project, target=None):

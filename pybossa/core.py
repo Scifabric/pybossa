@@ -58,6 +58,7 @@ def create_app(run_as_server=True):
     mail.init_app(app)
     sentinel.init_app(app)
     setup_exporter(app)
+    setup_http_signer(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
@@ -763,3 +764,10 @@ def setup_schedulers(app):
     if opts:
         from pybossa.forms.forms import TaskSchedulerForm
         TaskSchedulerForm.update_sched_options(opts)
+
+
+def setup_http_signer(app):
+    global http_signer
+    from pybossa.http_signer import HttpSigner
+    secret = app.config.get('SIGNATURE_SECRET')
+    http_signer = HttpSigner(secret, 'X-Pybossa-Signature')
