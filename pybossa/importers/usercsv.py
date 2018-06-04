@@ -114,3 +114,6 @@ class BulkUserCSVImport(BulkUserImport):
                     else:
                         user_data["info"][col_header] = cell
                 yield user_data
+
+    def _delete_file(self):
+        os.remove(self.form_data['csv_filename'])

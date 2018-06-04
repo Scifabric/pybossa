@@ -203,6 +203,9 @@ class UserImporter(object):
         del params['type']
         return self._importers[importer_id](**params)
 
+    def delete_file(self, **form_data):
+        self._create_importer_for(**form_data)._delete_file()
+
     def get_all_importer_names(self):
         """Get all importer names."""
         return self._importers.keys()
