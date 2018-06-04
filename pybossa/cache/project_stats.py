@@ -506,7 +506,7 @@ def stats_format_users(project_id, users, anon_users, auth_users):
             fullname = row.fullname
             name = row.name
             restrict = row.restrict
-        if (fullname and name and restrict):
+        if (fullname and name and restrict is False):
             top5_auth.append(dict(name=name,
                                   fullname=fullname,
                                   tasks=u[1],
