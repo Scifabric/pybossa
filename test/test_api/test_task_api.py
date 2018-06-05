@@ -188,7 +188,7 @@ class TestTaskAPI(TestAPI):
         ExternalUidTaskRunFactory.create(task=tasks[1])
         ExternalUidTaskRunFactory.create(task=tasks[2])
 
-        url = '/api/task?participated=1&all=1&external_uid=1xa' 
+        url = '/api/task?participated=1&all=1&external_uid=1xa'
 
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -415,7 +415,6 @@ class TestTaskAPI(TestAPI):
         err_msg = "It should get the last item first."
         assert data[0]['id'] == tasks[1]['id'], err_msg
 
-
         # Related
         taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
         res = self.app.get('/api/task?id=' + str(t2.id) + '&related=True')
@@ -425,6 +424,12 @@ class TestTaskAPI(TestAPI):
         assert len(task['task_runs']) == 8, task
         assert len(task['task_runs']) == len(taskruns), task
         assert task['result'] == None, task
+
+        # Stats
+        res = self.app.get("/api/task?limit=1&stats=True")
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert 'stats' not in data[0].keys()
 
     @with_context
     def test_task_query_without_params_with_context(self):
