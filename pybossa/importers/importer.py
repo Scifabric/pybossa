@@ -258,11 +258,8 @@ class UserImporter(object):
                     failed_users += 1
                     current_app.logger.error(u'Failed to import user {}, {}'
                         .format(full_name, errors))
-                    try:
-                        for k in errors.keys():
-                            invalid_values.add(k)
-                    except AttributeError as e:
-                        pass
+                    for k in errors.keys():
+                        invalid_values.add(k)
                     continue
                 user_data['metadata']['admin'] = current_user.name
                 create_account(user_data, project_slugs=project_slugs)

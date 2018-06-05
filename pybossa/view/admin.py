@@ -760,7 +760,7 @@ def userimport():
     if request.method == 'POST':
         if form.validate():
             if 'file' not in request.files:
-                flash(msg, 'No file part')
+                flash('No file', 'error')
             try:
                 return _import_users(**form.get_import_data())
             except BulkImportException as err_msg:
