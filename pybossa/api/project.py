@@ -83,6 +83,7 @@ class ProjectAPI(APIBase):
         public = Project().public_attributes()
         public.append('link')
         public.append('links')
+        public.append('stats')
         for key in tmp.keys():
             if key not in public:
                 del tmp[key]
