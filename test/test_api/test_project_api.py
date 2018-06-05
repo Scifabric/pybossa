@@ -100,6 +100,13 @@ class TestProjectAPI(TestAPI):
         for key in keys:
             assert key not in data[0].keys()
 
+        # Stats
+        res = self.app.get("/api/project?limit=1&stats=True")
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert 'stats' in data[0].keys()
+        assert data[0]['stats']['overall_progress'] == 0
+
         # Keyset pagination
         url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
         res = self.app.get(url)

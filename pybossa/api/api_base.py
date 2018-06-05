@@ -198,6 +198,12 @@ class APIBase(MethodView):
                 for tr in task_runs:
                     obj['task_runs'].append(tr.dictize())
 
+        stats = request.args.get('stats')
+        if stats:
+            if item.__class__.__name__ == 'Project':
+                stats = project_stats_repo.filter_by(project_id=item.id, limit=1)
+                obj['stats'] = stats[0].dictize() if stats else {}
+
         links, link = self.hateoas.create_links(item)
         if links:
             obj['links'] = links
@@ -229,7 +235,7 @@ class APIBase(MethodView):
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
-                         'participated', 'full']:
+                         'participated', 'full', 'stats']:
                 # Raise an error if the k arg is not a column
                 if self.__class__ == Task and k == 'external_uid':
                     pass
