@@ -362,7 +362,7 @@ def get_users_for_report():
                 to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
                 FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent, u.restrict
                 FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id
-                WHERE u.restrict=False
+                WHERE u.restrict=False and u.email_addr not like 'del-%@del.com'
                 GROUP BY user_id, u.id;
                """)
     results = session.execute(sql)
