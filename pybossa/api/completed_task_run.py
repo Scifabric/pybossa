@@ -22,15 +22,13 @@ This package adds GET method for:
     * completedtaskruns
 
 """
-from flask import redirect, url_for, request, Response
+from flask import request, Response
 from flask.ext.login import current_user
 from api_base import APIBase
-from pybossa.auth import ensure_authorized_to
 from pybossa.model.task_run import TaskRun
-from pybossa.core import user_repo
 from pybossa.error import ErrorStatus
 from pybossa.core import task_repo
-from werkzeug.exceptions import BadRequest, MethodNotAllowed
+from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import ratelimits
 from pybossa.ratelimit import ratelimit
@@ -54,15 +52,8 @@ class CompletedTaskRunAPI(APIBase):
     def get(self, oid):
         """Get taskruns for all completed tasks. Need admin access"""
         try:
-            ensure_authorized_to('read', self.__class__)
-            # check admin access
-            if 'api_key' in request.args.keys():
-                apikey = request.args['api_key']
-                user = user_repo.get_by(api_key=apikey)
-                if not user or user.admin is False:
-                    raise BadRequest("Insufficient privilege to the request")
-            else:
-                raise BadRequest("Insufficient privilege to the request")
+            if not (current_user.is_authenticated() and current_user.admin):
+                raise Unauthorized("Insufficient privilege to the request")
 
             # set filter from args
             filters = {}
