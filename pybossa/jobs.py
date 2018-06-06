@@ -463,6 +463,7 @@ def get_non_updated_projects():
 
 def warn_old_project_owners():
     """E-mail the project owners not updated in the last 3 months."""
+    from smtplib import SMTPRecipientsRefused
     from pybossa.core import mail, project_repo
     from pybossa.cache.projects import clean
     from flask.ext.mail import Message
@@ -471,21 +472,27 @@ def warn_old_project_owners():
 
     with mail.connect() as conn:
         for project in projects:
-            subject = ('Your %s project: %s has been inactive'
-                       % (current_app.config.get('BRAND'), project.name))
-            body = render_template('/account/email/inactive_project.md',
-                                   project=project)
-            html = render_template('/account/email/inactive_project.html',
-                                   project=project)
-            msg = Message(recipients=[project.owner.email_addr],
-                          subject=subject,
-                          body=body,
-                          html=html)
-            conn.send(msg)
-            project.contacted = True
-            project.published = False
-            clean(project.id)
-            project_repo.update(project)
+            if (project.owner.consent and project.owner.subscribed):
+                subject = ('Your %s project: %s has been inactive'
+                           % (current_app.config.get('BRAND'), project.name))
+                body = render_template('/account/email/inactive_project.md',
+                                       project=project)
+                html = render_template('/account/email/inactive_project.html',
+                                       project=project)
+                msg = Message(recipients=[project.owner.email_addr],
+                              subject=subject,
+                              body=body,
+                              html=html)
+                try:
+                    conn.send(msg)
+                    project.contacted = True
+                    project.published = False
+                    clean(project.id)
+                    project_repo.update(project)
+                except SMTPRecipientsRefused:
+                    return False
+            else:
+                return False
     return True
 
 
