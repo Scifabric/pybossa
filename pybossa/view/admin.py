@@ -732,13 +732,16 @@ def del_subadmin(user_id=None):
 def _import_users(**form_data):
     number_of_users = userimporter.count_users_to_import(**form_data)
 
-    if number_of_users <= MAX_NUM_USERS_IMPORT:
-        message = userimporter.create_users(user_repo, **form_data)
-        flash(message, 'success')
-    else:
-        message = "Maximum number of users that can be imported are {0}".format(MAX_NUM_USERS_IMPORT)
-        flash(message, 'error')
-    return redirect(url_for('.index'))
+    try:
+        if number_of_users <= MAX_NUM_USERS_IMPORT:
+            message = userimporter.create_users(user_repo, **form_data)
+            flash(message, 'success')
+        else:
+            message = "Maximum number of users that can be imported are {0}".format(MAX_NUM_USERS_IMPORT)
+            flash(message, 'error')
+        return redirect(url_for('.index'))
+    finally:
+        userimporter.delete_file(**form_data)
 
 
 @blueprint.route('/userimport', methods=['GET', 'POST'])
@@ -757,7 +760,7 @@ def userimport():
     if request.method == 'POST':
         if form.validate():
             if 'file' not in request.files:
-                flash(msg, 'No file part')
+                flash('No file', 'error')
             try:
                 return _import_users(**form.get_import_data())
             except BulkImportException as err_msg:
@@ -767,8 +770,6 @@ def userimport():
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
                 return abort(500)
-            finally:
-                form.delete_file()
         else:
             flash(gettext('Please correct the errors'), 'error')
     return render_template('/admin/userimport.html', form=form)

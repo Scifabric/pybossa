@@ -610,9 +610,6 @@ class BulkUserCSVImportForm(Form):
                 return {'type': 'usercsvimport', 'csv_filename': tmpfile.name}
         return {'type': 'usercsvimport', 'csv_filename': None}
 
-    def delete_file(self):
-        os.remove(request.files['file'].filename)
-
 
 class GenericUserImportForm(object):
     """Callable class that will return, when called, the appropriate form

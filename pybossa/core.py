@@ -743,7 +743,7 @@ def setup_upref_mdata(app):
     """Setup user preference and metadata choices for user accounts"""
     global upref_mdata_choices
     upref_mdata_choices = dict(languages=[], locations=[],
-                                timezones=[], user_types=[])
+                               timezones=[], user_types=[])
     if app.config.upref_mdata:
         from settings_upref_mdata import (upref_languages, upref_locations,
                 mdata_timezones, mdata_user_types)
