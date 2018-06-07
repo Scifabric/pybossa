@@ -29,6 +29,7 @@ from pybossa.util import can_have_super_user_access, get_unique_user_preferences
 from pybossa.model.task_run import TaskRun
 from faker import Faker
 from yacryptopan import CryptoPAn
+import sqlalchemy
 
 class UserRepository(Repository):
 
@@ -55,6 +56,14 @@ class UserRepository(Repository):
         filters['restrict'] = False
         return self._filter_by(User, limit, offset, yielded,
                                last_id, fulltextsearch, desc, **filters)
+
+    def filter_deleted_users(self, **filters):
+        """Filter out deleted users."""
+        filters['restrict'] = False
+        query_args, queries, headlines, orders = self.generate_query_from_keywords(User, None, **filters)
+        query = self.db.session.query(User).filter(*query_args)
+        query = query.filter(sqlalchemy.not_(User.email_addr.contains(u'@del.com'))).order_by(User.id)
+        return query.all()
 
     def search_by_name(self, keyword, **filters):
         if len(keyword) == 0:

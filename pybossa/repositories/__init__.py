@@ -212,7 +212,6 @@ class Repository(object):
             query = query.limit(limit).offset(offset)
         return query
 
-
     def _filter_by(self, model, limit=None, offset=0, yielded=False,
                   last_id=None, fulltextsearch=None, desc=False,
                   orderby='id', **filters):
