@@ -46,7 +46,6 @@ from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
-import sqlalchemy
 
 class Repository(object):
 
@@ -185,8 +184,6 @@ class Repository(object):
     def _set_orderby_desc(self, query, model, limit,
                           last_id, offset, descending, orderby):
         """Return an updated query with the proper orderby and desc."""
-        if model.__tablename__ == 'user':
-            query = query.filter(sqlalchemy.not_(model.email_addr.contains('@del.com')))
         if orderby == 'fav_user_ids':
             n_favs = func.coalesce(func.array_length(model.fav_user_ids, 1), 0).label('n_favs')
             query = query.add_column(n_favs)
@@ -214,7 +211,6 @@ class Repository(object):
         else:
             query = query.limit(limit).offset(offset)
         return query
-
 
     def _filter_by(self, model, limit=None, offset=0, yielded=False,
                   last_id=None, fulltextsearch=None, desc=False,

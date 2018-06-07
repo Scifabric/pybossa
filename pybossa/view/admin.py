@@ -767,8 +767,6 @@ def userimport():
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
                 return abort(500)
-            finally:
-                form.delete_file()
         else:
             flash(gettext('Please correct the errors'), 'error')
     return render_template('/admin/userimport.html', form=form)
@@ -780,7 +778,6 @@ def userimport():
 def manageusers():
     """Enable/disable users of PyBossa."""
     from pybossa.core import upref_mdata_choices
-
     found = []
     locs = langs = utypes = timezone = [('', '')]
     if current_app.config.upref_mdata:
@@ -799,9 +796,9 @@ def manageusers():
         efilters.update(admin=False, subadmin=False)
         dfilters.update(admin=False, subadmin=False)
 
-    users = [user for user in user_repo.filter_by(**efilters)
+    users = [user for user in user_repo.filter_deleted_users(**efilters)
              if user.id != current_user.id]
-    disabledusers = [user for user in user_repo.filter_by(**dfilters)
+    disabledusers = [user for user in user_repo.filter_deleted_users(**dfilters)
              if user.id != current_user.id]
     columns = user_repo.get_info_columns()
 
