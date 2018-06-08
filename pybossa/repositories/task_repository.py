@@ -353,8 +353,9 @@ class TaskRepository(Repository):
                    AND task.state='ongoing'
                    AND md5(task.info::text)=md5(((:info)::jsonb)::text)
                    ''')
-        row = self.db.session.execute(sql, dict(project_id=project_id,
-                                                info=json.dumps(info))).first()
+        info = json.dumps(info, allow_nan=False)
+        row = self.db.session.execute(
+            sql, dict(info=info, project_id=project_id)).first()
         if row:
             return row[0]
 
