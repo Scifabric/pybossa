@@ -574,6 +574,7 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
+    sync_enabled = current_app.config.get('SYNC_ENABLED')
     project, owner, ps = project_by_shortname(short_name)
     def handle_valid_form(form):
         project, owner, ps = project_by_shortname(short_name)
@@ -598,11 +599,8 @@ def update(short_name):
         if form.password.data:
             new_project.set_password(form.password.data)
 
-        sync = new_project.info.get('sync')
-        if not sync:
-            sync = dict(enabled=form.sync_enabled.data)
-        else:
-            sync['enabled'] = form.sync_enabled.data
+        sync = new_project.info.get('sync', dict(enabled=False))
+        sync['enabled'] = sync_enabled and form.sync_enabled.data
         new_project.info['sync'] = sync
 
         project_repo.update(new_project)
@@ -696,7 +694,8 @@ def update(short_name):
                     title=title,
                     pro_features=pro,
                     target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
-                    server_url=current_app.config.get('SERVER_URL'))
+                    server_url=current_app.config.get('SERVER_URL'),
+                    sync_enabled=sync_enabled)
     return handle_content_type(response)
 
 
