@@ -40,3 +40,8 @@ notifications:
 after_success:
 - pip install coveralls
 - coveralls
+addons:
+  browserstack:
+    username: "marvinreimer2"
+    access_key:
+      secure: "gCZyx16pVBUh0GweUJcc0QMTk8NDaSnwIHaMTTgU79nXZ4/H1vFzx4R05DOvqaeBGFQAfXbHENlKt7nZjq3quSLTejzwjRLvqgl/yVSAuU/+MzNGrCSQR8xKm4YiFs80w0e1CFlVn2CyIWgfp+iSqxGheS+i2t+waO022pI4SwU="
