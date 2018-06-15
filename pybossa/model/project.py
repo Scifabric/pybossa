@@ -128,7 +128,8 @@ class Project(db.Model, DomainObject):
                 'overall_progress', 'short_name', 'created', 'category_id',
                 'long_description', 'last_activity', 'last_activity_raw',
                 'n_task_runs', 'n_results', 'owner', 'updated', 'featured',
-                'owner_id', 'n_completed_tasks', 'n_blogposts', 'owners_ids']
+                'owner_id', 'n_completed_tasks', 'n_blogposts', 'owners_ids',
+                'category_id']
 
     @classmethod
     def public_info_keys(self):
