@@ -223,8 +223,8 @@ def create_result(conn, project_id, task_id):
 def on_taskrun_submit(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get project details
-    sql_query = ('select name, short_name, published, webhook, info from project \
-                 where id=%s') % target.project_id
+    sql_query = ('select name, short_name, published, webhook, info, category_id \
+                 from project where id=%s') % target.project_id
     results = conn.execute(sql_query)
     tmp = dict()
     for r in results:
@@ -233,6 +233,7 @@ def on_taskrun_submit(mapper, conn, target):
         _published = r.published
         tmp['info'] = r.info
         _webhook = r.webhook
+        tmp['category_id'] = r.category_id
         tmp['id'] = target.project_id
 
     project_public = dict()
