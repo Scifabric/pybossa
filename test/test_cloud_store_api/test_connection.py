@@ -18,7 +18,7 @@
 
 from mock import patch, Mock
 from default import Test, with_context
-from pybossa.cloud_store_api.connection import create_connection, CustomConnection, CustomAuthHandler
+from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider
 from nose.tools import assert_raises
 from boto.auth_handler import NotReadyToAuthenticate
 
@@ -47,8 +47,9 @@ class TestS3Connection(Test):
 
     @with_context
     def test_auth_handler_error(self):
+        provider = CustomProvider('aws')
         assert_raises(NotReadyToAuthenticate, CustomAuthHandler,
-                      's3.store.com', None, None)
+                      's3.store.com', None, provider)
 
     @with_context
     def test_custom_headers(self):
