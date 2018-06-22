@@ -30,6 +30,13 @@ from tempfile import NamedTemporaryFile
 
 class TestS3Uploader(Test):
 
+    default_config = {
+        'S3_DEFAULT': {
+            'host': 's3.storage.com',
+            'auth_headers': [('test', 'name')]
+        }
+    }
+
     def test_check_valid_type(self):
         with NamedTemporaryFile() as fp:
             fp.write('hello world')
@@ -48,12 +55,7 @@ class TestS3Uploader(Test):
     @with_context
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_string(self, set_contents):
-        with patch.dict(self.flask_app.config, {
-            'S3_DEFAULT': {
-                'host': 's3.storage.com',
-                'auth_headers': ['a']
-            }
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             url = s3_upload_from_string('bucket', u'hello world', 'test.txt')
             assert url == 'https://s3.storage.com/bucket/test.txt', url
 
@@ -67,12 +69,7 @@ class TestS3Uploader(Test):
     @with_context
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_string_return_key(self, set_contents):
-        with patch.dict(self.flask_app.config, {
-            'S3_DEFAULT': {
-                'host': 's3.storage.com',
-                'auth_headers': ['a']
-            }
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             key = s3_upload_from_string('bucket', u'hello world', 'test.txt',
                                         return_key_only=True)
             assert key == 'test.txt', key
@@ -80,12 +77,7 @@ class TestS3Uploader(Test):
     @with_context
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     def test_upload_from_storage(self, set_contents):
-        with patch.dict(self.flask_app.config, {
-            'S3_DEFAULT': {
-                'host': 's3.storage.com',
-                'auth_headers': ['a']
-            },
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             stream = StringIO('Hello world!')
             fstore = FileStorage(stream=stream,
                                  filename='test.txt',
@@ -97,10 +89,7 @@ class TestS3Uploader(Test):
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.generate_url')
     def test_upload_remove_query_params(self, generate_url, set_content):
-        with patch.dict(self.flask_app.config, {
-            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
-            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             generate_url.return_value = 'https://s3.storage.com/bucket/key?query_1=aaaa&query_2=bbbb'
             url = s3_upload_file('bucket', 'a_file', 'a_file', {})
             assert url == 'https://s3.storage.com/bucket/key'
@@ -108,10 +97,7 @@ class TestS3Uploader(Test):
     @with_context
     @patch('pybossa.cloud_store_api.s3.boto.s3.bucket.Bucket.delete_key')
     def test_delete_file_from_s3(self, delete_key):
-        with patch.dict(self.flask_app.config, {
-            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
-            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             delete_file_from_s3('test_bucket', '/the/key')
             delete_key.assert_called_with('/the/key', headers={}, version_id=None)
 
@@ -120,20 +106,14 @@ class TestS3Uploader(Test):
     @patch('pybossa.cloud_store_api.s3.app.logger.exception')
     def test_delete_file_from_s3_exception(self, logger, delete_key):
         delete_key.side_effect = boto.exception.S3ResponseError('', '', '')
-        with patch.dict(self.flask_app.config, {
-            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
-            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             delete_file_from_s3('test_bucket', '/the/key')
             logger.assert_called()
 
     @with_context
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_to_filename')
     def test_get_file_from_s3(self, get_contents):
-        with patch.dict(self.flask_app.config, {
-            'S3_CONN_KWARGS': {'host': 's3.storage.com'},
-            'S3_CUSTOM_HANDLER_HOSTS': ['s3.storage.com']
-        }):
+        with patch.dict(self.flask_app.config, self.default_config):
             get_file_from_s3('test_bucket', '/the/key')
             get_contents.assert_called()
 
@@ -142,10 +122,7 @@ class TestS3Uploader(Test):
         response = MagicMock()
         response.status = 200
         key = ProxiedKey()
-        with patch.dict(self.flask_app.config, {
-            'CLOUDSTORE_CHECKSUM': False
-        }):
-            assert key.should_retry(response)
+        assert key.should_retry(response)
 
     @with_context
     @patch('pybossa.cloud_store_api.connection.Key.should_retry')

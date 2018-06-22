@@ -25,24 +25,29 @@ from boto.auth_handler import NotReadyToAuthenticate
 
 class TestS3Connection(Test):
 
+    auth_headers = [('test', 'name')]
+
     @with_context
     def test_path(self):
-        conn = create_connection(host='s3.store.com', host_suffix='/test')
+        conn = create_connection(host='s3.store.com', host_suffix='/test',
+                                 auth_headers=self.auth_headers)
         path = conn.get_path(path='/')
         assert path == '/test/', path
 
     @with_context
     def test_path_key(self):
-        conn = create_connection(host='s3.store.com', host_suffix='/test')
+        conn = create_connection(host='s3.store.com', host_suffix='/test',
+                                 auth_headers=self.auth_headers)
         path = conn.get_path(path='/bucket/key')
         assert path == '/test/bucket/key', path
 
     @with_context
     def test_no_verify_context(self):
-        conn = create_connection(host='s3.store.com', s3_ssl_no_verify=True)
+        conn = create_connection(host='s3.store.com', s3_ssl_no_verify=True,
+                                 auth_headers=self.auth_headers)
         assert 'context' in conn.http_connection_kwargs
 
-        conn = create_connection(host='s3.store.com')
+        conn = create_connection(host='s3.store.com', auth_headers=self.auth_headers)
         assert 'context' not in conn.http_connection_kwargs
 
     @with_context
