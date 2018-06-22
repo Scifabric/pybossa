@@ -27,6 +27,9 @@ allowed_mime_types = ['application/pdf',
                       'image/gif']
 
 
+DEFAULT_CONN = 'S3_DEFAULT'
+
+
 def check_type(filename):
     mime_type = magic.from_file(filename, mime=True)
     if mime_type not in allowed_mime_types:
@@ -55,7 +58,7 @@ def tmp_file_from_string(string):
 
 def s3_upload_from_string(s3_bucket, string, filename, headers=None,
                           directory='', file_type_check=True,
-                          return_key_only=False):
+                          return_key_only=False, conn=DEFAULT_CONN):
     """
     Upload a string to s3
     """
@@ -63,11 +66,12 @@ def s3_upload_from_string(s3_bucket, string, filename, headers=None,
     headers = headers or {}
     return s3_upload_tmp_file(
             s3_bucket, tmp_file, filename, headers, directory, file_type_check,
-            return_key_only)
+            return_key_only, conn)
 
 
 def s3_upload_file_storage(s3_bucket, source_file, headers=None, directory='',
-                           file_type_check=True, return_key_only=False):
+                           file_type_check=True, return_key_only=False,
+                           conn=DEFAULT_CONN):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -78,24 +82,20 @@ def s3_upload_file_storage(s3_bucket, source_file, headers=None, directory='',
     source_file.save(tmp_file.name)
     return s3_upload_tmp_file(
             s3_bucket, tmp_file, filename, headers, directory, file_type_check,
-            return_key_only)
+            return_key_only, conn)
 
 
 def s3_upload_tmp_file(s3_bucket, tmp_file, filename,
                        headers, directory='', file_type_check=True,
-                       return_key_only=False):
+                       return_key_only=False, conn=DEFAULT_CONN):
     """
     Upload the content of a temporary file to s3 and delete the file
     """
     try:
         if file_type_check:
             check_type(tmp_file.name)
-        url = s3_upload_file(s3_bucket,
-                             tmp_file.name,
-                             filename,
-                             headers,
-                             directory,
-                             return_key_only)
+        url = s3_upload_file(s3_bucket, tmp_file.name, filename, headers,
+                             directory, return_key_only, conn)
     finally:
         os.unlink(tmp_file.name)
     return url
@@ -109,7 +109,8 @@ def form_upload_directory(directory, filename):
 
 
 def s3_upload_file(s3_bucket, source_file_name, target_file_name,
-                   headers, directory="", return_key_only=False):
+                   headers, directory="", return_key_only=False,
+                   conn=DEFAULT_CONN):
     """
     Upload a file-type object to S3
     :param s3_bucket: AWS S3 bucket name
@@ -121,15 +122,11 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     """
     filename = secure_filename(target_file_name)
     upload_key = form_upload_directory(directory, filename)
-    conn = create_connection()
+    conn_kwargs = app.config.get(conn, {})
+    conn = create_connection(**conn_kwargs)
     bucket = conn.get_bucket(s3_bucket, validate=False)
 
     key = bucket.new_key(upload_key)
-
-    # if app.config.get('JWT_CONFIG'):
-    #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-    #                                 app.config['JWT_SECRET'],
-    #                                 'PUT', s3_bucket, key.name)
 
     key.set_contents_from_filename(
         source_file_name, headers=headers,
@@ -141,8 +138,8 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     return url.split('?')[0]
 
 
-def get_s3_bucket_key(s3_bucket, s3_url, conn_kwargs):
-    conn_kwargs = conn_kwargs or {}
+def get_s3_bucket_key(s3_bucket, s3_url, conn=DEFAULT_CONN):
+    conn_kwargs = app.config.get(conn, {})
     conn = create_connection(**conn_kwargs)
     bucket = conn.get_bucket(s3_bucket, validate=False)
     obj = urlparse(s3_url)
@@ -151,26 +148,18 @@ def get_s3_bucket_key(s3_bucket, s3_url, conn_kwargs):
     return bucket, key
 
 
-def get_file_from_s3(s3_bucket, path, conn_kwargs=None):
+def get_file_from_s3(s3_bucket, path, conn=DEFAULT_CONN):
     headers = {}
     temp_file = NamedTemporaryFile()
-    _, key = get_s3_bucket_key(s3_bucket, conn_kwargs)
-    # if app.config.get('JWT_CONFIG'):
-    #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-    #                                 app.config['JWT_SECRET'],
-    #                                 'GET', s3_bucket, key.name)
+    _, key = get_s3_bucket_key(s3_bucket, conn)
     key.get_contents_to_filename(temp_file.name, headers=headers)
     return temp_file
 
 
-def delete_file_from_s3(s3_bucket, s3_url, conn_kwargs):
+def delete_file_from_s3(s3_bucket, s3_url, conn=DEFAULT_CONN):
     headers = {}
     try:
-        bucket, key = get_s3_bucket_key(s3_bucket, s3_url, conn_kwargs=None)
-        # if app.config.get('JWT_CONFIG'):
-        #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-        #                                 app.config['JWT_SECRET'],
-        #                                 'GET', s3_bucket, key.name)
+        bucket, key = get_s3_bucket_key(s3_bucket, s3_url, conn)
         bucket.delete_key(key.name, version_id=key.version_id, headers=headers)
     except boto.exception.S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))
