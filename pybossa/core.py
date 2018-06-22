@@ -234,12 +234,13 @@ def setup_repositories(app):
     global result_repo
     global helping_repo
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
+    rdancy_upd_exp = app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
     project_stats_repo = ProjectStatsRepository(db)
     announcement_repo = AnnouncementRepository(db)
     blog_repo = BlogRepository(db)
-    task_repo = TaskRepository(db, language)
+    task_repo = TaskRepository(db, language, rdancy_upd_exp)
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)

@@ -30,7 +30,7 @@ from pybossa.core import uploader
 from sqlalchemy import text
 from pybossa.cache.task_browse_helpers import get_task_filters
 import json
-
+from datetime import datetime, timedelta
 
 class TaskRepository(Repository):
     MIN_REDUNDANCY = 1
@@ -242,8 +242,18 @@ class TaskRepository(Repository):
         tasks with curr redundancy < new redundancy, with state as completed
         and were marked as exported = True
         """
+        from pybossa.jobs import send_mail
 
         filters = filters or {}
+        date_now = datetime.utcnow().strftime('%Y-%m-%dT23:59:59')
+        date_max_exp = (datetime.utcnow() - timedelta(self.rdancy_upd_exp)
+            ).strftime('%Y-%m-%dT00:00:00')
+
+        tasks_not_updated = self._get_redundancy_update_msg(project, filters, date_now, date_max_exp)
+        filters['state'] = 'ongoing'
+        filters['created_from'] = max(date_max_exp, filters.get('created_from'))
+        filters['created_to'] = max(date_now, filters.get('created_to'))
+
         conditions, params = get_task_filters(filters)
         if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
             raise ValueError("Invalid redundancy value: {}".format(n_answers))
@@ -272,6 +282,7 @@ class TaskRepository(Repository):
         self.update_task_state(project.id, n_answers)
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+        return tasks_not_updated
 
     def update_task_state(self, project_id, n_answers):
         # Create temp tables for completed tasks
@@ -412,3 +423,33 @@ class TaskRepository(Repository):
         self.db.session.execute(sql, dict(n_answers=n_answers,
                                           project_id=project_id,
                                           **params))
+
+
+    def _get_redundancy_update_msg(self, project, filters, date_now, date_max_exp):
+        """generate email msg for redundancy not updated, if any"""
+        filters = filters or {}
+        if not all(k in filters.keys() for k in ['created_from', 'created_to']):
+            conditions = ' AND state=:state OR created < :created_max_exp'
+            params = dict(state='completed', created_max_exp=date_max_exp)
+        else:
+            if filters['created_from'] >= date_max_exp:
+                conditions = ' AND state=:state '
+                params = dict(state='completed')
+            else:
+                conditions = ' AND (created < :created_from AND created >= :created_max_exp) \
+                    OR (created >= :created_max_exp AND state = :state)'
+                params = dict(state='completed', created_from=filters['created_from'],
+                    created_max_exp=date_max_exp)
+
+        sql = text('''
+                    SELECT task.id as id
+                    FROM task
+                    WHERE task.project_id=:project_id {}
+                    ;'''
+                   .format(conditions))
+
+        tasks = self.db.session.execute(sql,
+            dict(project_id=project.id, **params)).fetchall()
+
+        tasks_not_updated = '\n'.join([str(task.id) for task in tasks])
+        return tasks_not_updated

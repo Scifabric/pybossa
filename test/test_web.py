@@ -39,7 +39,7 @@ from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.messages import *
 from pybossa.leaderboard.jobs import leaderboard as update_leaderboard
-from pybossa.core import user_repo, project_repo, result_repo, announcement_repo, signer
+from pybossa.core import user_repo, project_repo, result_repo, announcement_repo, signer, task_repo
 from pybossa.jobs import send_mail, import_tasks
 from pybossa.importers import ImportReport
 from pybossa.cache.project_stats import update_stats
@@ -51,6 +51,7 @@ from nose.tools import assert_raises
 from flatten_json import flatten
 from nose.tools import nottest
 from helper.gig_helper import make_subadmin, make_subadmin_by
+from datetime import datetime, timedelta
 
 
 class TestWeb(web.Helper):
@@ -7314,12 +7315,12 @@ class TestWeb(web.Helper):
 
         res = self.task_settings_redundancy(short_name="sampleapp",
                                             n_answers=2)
-        err_msg = "Task state should be ongoing"
+        err_msg = "Completed tasks state should not be updated to ongoing"
         db.session.add(project)
         db.session.commit()
 
         for t in project.tasks:
-            assert t.state == 'ongoing', t.state
+            assert t.state == 'completed', t.state
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -8571,3 +8572,97 @@ class TestWeb(web.Helper):
         user = user_repo.get_by(name='ajd')
         invalid_upref = dict(languages=['ch'], locations=['jp'])
         assert user.user_pref != invalid_upref, "Invalid preferences should not be updated"
+
+    @with_context
+    def test_task_redundancy_update_tasks_created_within_max_date_range(self):
+        """Test task redundancy update applies to tasks created within days as per configured under REDUNDANCY_UPDATE_EXPIRATION"""
+
+        self.register()
+        self.signin()
+        self.new_project()
+
+        project = db.session.query(Project).first()
+        project.published = True
+        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S')
+        past_10days = (datetime.utcnow() - timedelta(10)).strftime('%Y-%m-%dT%H:%M:%S')
+        past_30days = (datetime.utcnow() - timedelta(30)).strftime('%Y-%m-%dT%H:%M:%S')
+        past_60days = (datetime.utcnow() - timedelta(60)).strftime('%Y-%m-%dT%H:%M:%S')
+        future_10days = (datetime.utcnow() + timedelta(10)).strftime('%Y-%m-%dT23:00:00')
+
+        task = Task(project_id=project.id, n_answers=1, created=now)
+        db.session.add(task)
+        db.session.commit()
+
+        # redundancy updated with filter containing valid date range
+        filter = dict(n_answers=2, filters=dict())
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+            data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 2, "Updated task redundancy must be 2"
+
+        # future date in filter updates redundancy for 30 days period from current date
+        filter = dict(n_answers=3, filters=dict(created_from=past_10days, created_to=future_10days))
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+             data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 3, "Updated task redundancy must be 3"
+
+        # bunch of tasks created in different period. however, redundancy is updated
+        # for tasks created were within 30 days range from current date
+        tasks_10days = []
+        for _ in range(5):
+            task = Task(project_id=project.id, n_answers=1, created=past_10days)
+            db.session.add(task)
+            db.session.commit()
+            tasks_10days.append(task)
+
+        tasks_60days = []
+        for _ in range(3):
+            task = Task(project_id=project.id, n_answers=1, created=past_60days)
+            db.session.add(task)
+            db.session.commit()
+            tasks_60days.append(task)
+
+        filter = dict(n_answers=4, filters=dict(created_from=past_30days, created_to=now))
+        res = self.app.post(u'/project/{}/tasks/redundancyupdate'.format(project.short_name),
+             data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+
+        # updated redundancy
+        for task in tasks_10days:
+            assert task.n_answers == 4, "Task created 10 days old should have updated redundancy of 4"
+
+        for task in tasks_60days:
+            assert task.n_answers == 1, "Task created 60 days old should have redundancy of 1"
+
+    @with_context
+    @patch('pybossa.view.projects.mail_queue', autospec=True)
+    def test_update_tasks_redundancy_updates_email_sent_for_redundancy_not_updated(self, email_queue):
+        """Test update_tasks_redundancy sends email for tasks not updated"""
+
+        self.register()
+        self.signin()
+        user = User.query.first()
+        project = ProjectFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, project=project, n_answers=1)
+        taskrun = TaskRunFactory.create(task=tasks[0], user=user)
+
+        # update redundancy passing filters
+        filter = dict(n_answers=2, filters=dict())
+        res = self.app.post(u'/project/{}/tasks/redundancyupdate'.format(project.short_name),
+             data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+
+        # completed tasks redundancy wont be updated
+        assert tasks[0].state == 'completed', tasks[0].state
+        assert tasks[1].state == 'ongoing', tasks[1].state
+
+        # updated task redundancy to be 2 for second task
+        assert tasks[0].n_answers == 1, tasks[0].n_answers
+        assert tasks[1].n_answers == 2, tasks[1].n_answers
+
+        assert send_mail == email_queue.enqueue.call_args[0][0], "send_mail not called"
+        email_data = email_queue.enqueue.call_args[0][1]
+        assert 'subject' in email_data.keys()
+        assert 'recipients' in email_data.keys()
+        assert 'body' in email_data.keys()
+
+        email_content = email_data['body']
+        assert 'Redundancy could not be updated for tasks that are either complete or older \
+            than {} days\nTask Ids\n{}'.format(task_repo.rdancy_upd_exp, tasks[0].id)
