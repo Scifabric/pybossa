@@ -9,8 +9,7 @@ from flask import current_app as app
 from werkzeug.utils import secure_filename
 import magic
 from werkzeug.exceptions import BadRequest, InternalServerError
-from pybossa.cloud_store_api.s3_connection import CustomConnection
-from pybossa.cloud_store_api.cloud_jwt import create_jwt
+from pybossa.cloud_store_api.connection import create_connection
 
 allowed_mime_types = ['application/pdf',
                       'text/csv',
@@ -26,15 +25,6 @@ allowed_mime_types = ['application/pdf',
                       'image/bmp',
                       'image/x-ms-bmp',
                       'image/gif']
-
-
-class NoChecksumKey(Key):
-
-    def should_retry(self, response, chunked_transfer=False):
-        perform_checksum = app.config.get('CLOUDSTORE_CHECKSUM', True)
-        if not perform_checksum and 200 <= response.status <= 299:
-            return True
-        return super(NoChecksumKey, self).should_retry(response, chunked_transfer)
 
 
 def check_type(filename):
@@ -118,11 +108,6 @@ def form_upload_directory(directory, filename):
     return "/".join(part for part in parts if part)
 
 
-def create_connection():
-    kwargs = app.config.get('S3_CONN_KWARGS', {})
-    return CustomConnection(**kwargs)
-
-
 def s3_upload_file(s3_bucket, source_file_name, target_file_name,
                    headers, directory="", return_key_only=False):
     """
@@ -139,12 +124,12 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     conn = create_connection()
     bucket = conn.get_bucket(s3_bucket, validate=False)
 
-    key = NoChecksumKey(bucket, upload_key)
+    key = bucket.new_key(upload_key)
 
-    if app.config.get('JWT_CONFIG'):
-        headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-                                    app.config['JWT_SECRET'],
-                                    'PUT', s3_bucket, key.name)
+    # if app.config.get('JWT_CONFIG'):
+    #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+    #                                 app.config['JWT_SECRET'],
+    #                                 'PUT', s3_bucket, key.name)
 
     key.set_contents_from_filename(
         source_file_name, headers=headers,
@@ -156,8 +141,9 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     return url.split('?')[0]
 
 
-def get_s3_bucket_key(s3_bucket, s3_url):
-    conn = create_connection()
+def get_s3_bucket_key(s3_bucket, s3_url, conn_kwargs):
+    conn_kwargs = conn_kwargs or {}
+    conn = create_connection(**conn_kwargs)
     bucket = conn.get_bucket(s3_bucket, validate=False)
     obj = urlparse(s3_url)
     path = obj.path
@@ -165,26 +151,26 @@ def get_s3_bucket_key(s3_bucket, s3_url):
     return bucket, key
 
 
-def get_file_from_s3(s3_bucket, path):
+def get_file_from_s3(s3_bucket, path, conn_kwargs=None):
     headers = {}
     temp_file = NamedTemporaryFile()
-    _, key = get_s3_bucket_key(s3_bucket, path)
-    if app.config.get('JWT_CONFIG'):
-        headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-                                    app.config['JWT_SECRET'],
-                                    'GET', s3_bucket, key.name)
+    _, key = get_s3_bucket_key(s3_bucket, conn_kwargs)
+    # if app.config.get('JWT_CONFIG'):
+    #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+    #                                 app.config['JWT_SECRET'],
+    #                                 'GET', s3_bucket, key.name)
     key.get_contents_to_filename(temp_file.name, headers=headers)
     return temp_file
 
 
-def delete_file_from_s3(s3_bucket, s3_url):
+def delete_file_from_s3(s3_bucket, s3_url, conn_kwargs):
     headers = {}
     try:
-        bucket, key = get_s3_bucket_key(s3_bucket, s3_url)
-        if app.config.get('JWT_CONFIG'):
-            headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
-                                        app.config['JWT_SECRET'],
-                                        'GET', s3_bucket, key.name)
+        bucket, key = get_s3_bucket_key(s3_bucket, s3_url, conn_kwargs=None)
+        # if app.config.get('JWT_CONFIG'):
+        #     headers['jwt'] = create_jwt(app.config['JWT_CONFIG'],
+        #                                 app.config['JWT_SECRET'],
+        #                                 'GET', s3_bucket, key.name)
         bucket.delete_key(key.name, version_id=key.version_id, headers=headers)
     except boto.exception.S3ResponseError:
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))
