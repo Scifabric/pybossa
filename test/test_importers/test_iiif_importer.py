@@ -109,6 +109,20 @@ class TestBulkTaskIIIFImport(object):
             assert e[0] == msg, e
 
     @with_context
+    def test_get_tasks_raises_exception_for_non_json_manifest(self, requests):
+        headers = {'Content-Type': 'application/json'}
+        text = 'bad response'
+        invalid_manifest = FakeResponse(text=text, status_code=200)
+        requests.get.return_value = invalid_manifest
+        msg = "Oops! That doesn't look like a valid IIIF manifest."
+
+        assert_raises(BulkImportException, self.importer.count_tasks)
+        try:
+            self.importer.tasks()
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+    @with_context
     def test_get_tasks_for_valid_manifest(self, requests):
         n_canvases = 3
         n_images = 2

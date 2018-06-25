@@ -79,11 +79,13 @@ class BulkTaskIIIFImporter(BulkTaskImport):
         url = 'http://iiif.io/api/presentation/validator/service/validate'
         payload = dict(format='json', url=manifest_uri)
         response = requests.get(url, params=payload)
-        json_response = json.loads(response.text)
+        default_err = "Oops! That doesn't look like a valid IIIF manifest."
+        try:
+            json_response = json.loads(response.text)
+        except ValueError:
+            raise BulkImportException(default_err)
         valid = (response.status_code == 200 and json_response.get('okay'))
-
         if not valid:
-            default_err = "Oops! That doesn't look like a valid IIIF manifest."
             raise BulkImportException(json_response.get('error', default_err))
 
         manifest = json.loads(json_response['received'])
