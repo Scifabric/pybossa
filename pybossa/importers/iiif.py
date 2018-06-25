@@ -18,6 +18,7 @@
 
 import json
 import requests
+from iiif_prezi.loader import ManifestReader
 
 from .base import BulkTaskImport, BulkImportException
 
@@ -74,19 +75,16 @@ class BulkTaskIIIFImporter(BulkTaskImport):
         query = '?manifest={}#?cv={}'.format(manifest_uri, canvas_index)
         return base + query
 
-    def _get_validated_manifest(self, manifest_uri):
+    def _get_validated_manifest(self, manifest_uri, version="2.1"):
         """Return a validated manifest."""
-        url = 'http://iiif.io/api/presentation/validator/service/validate'
-        payload = dict(format='json', url=manifest_uri)
-        response = requests.get(url, params=payload)
-        default_err = "Oops! That doesn't look like a valid IIIF manifest."
+        r = requests.get(manifest_uri)
+        if r.status_code != 200:
+            err_msg = 'Invalid manifest URI: {} error'.format(r.status_code)
+            raise BulkImportException(err_msg)
+        reader = ManifestReader(r.text, version=version)
         try:
-            json_response = json.loads(response.text)
-        except ValueError:
-            raise BulkImportException(default_err)
-        valid = (response.status_code == 200 and json_response.get('okay'))
-        if not valid:
-            raise BulkImportException(json_response.get('error', default_err))
-
-        manifest = json.loads(json_response['received'])
-        return manifest
+            mf = reader.read()
+            mf_json = mf.toJSON()
+        except Exception as e:
+            raise BulkImportException(str(e))
+        return mf_json
