@@ -39,6 +39,7 @@ from flask.ext.login import current_user
 import os
 from pybossa.forms.fields.time_field import TimeField
 from validator import TimeFieldsValidator
+from iiif_prezi.loader import ManifestReader
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -296,9 +297,16 @@ class BulkTaskIIIFImportForm(Form):
     manifest_uri = TextField(lazy_gettext('URL'),
                              [validators.Required(message=msg_required),
                              validators.URL(message=msg_url)])
+    version = SelectField(lazy_gettext('Presentation API version'), choices=[
+        (ctx, ctx) for ctx in ManifestReader.contexts
+    ], default='2.1')
 
     def get_import_data(self):
-        return {'type': 'iiif', 'manifest_uri': self.manifest_uri.data}
+        return {
+            'type': 'iiif',
+            'manifest_uri': self.manifest_uri.data,
+            'version': self.version.data
+        }
 
 
 class GenericBulkTaskImportForm(object):

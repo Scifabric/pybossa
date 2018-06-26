@@ -31,7 +31,7 @@ class TestBulkTaskIIIFImport(object):
         self.manifest_uri = 'http://example.org/iiif/book1/manifest'
         self.canvas_id_base = 'http://example.org/iiif/book1/canvas/p{0}'
         self.img_id_base = 'http://example.org/images/book1-page{0}-img{1}'
-        self.importer = BulkTaskIIIFImporter(manifest_uri=self.manifest_uri)
+        self.importer = BulkTaskIIIFImporter(self.manifest_uri, '2.1')
 
     def create_manifest(self, canvases=1, images=1):
         manifest = {
@@ -161,5 +161,5 @@ class TestBulkTaskIIIFImport(object):
         response = FakeResponse(text=json.dumps(manifest), status_code=200,
                                 headers=headers, encoding='utf-8')
         requests.get.return_value = response
-        returned_manifest = self.importer._get_validated_manifest(None)
+        returned_manifest = self.importer._get_validated_manifest(None, '2.1')
         assert_equal(type(returned_manifest), OrderedDict)

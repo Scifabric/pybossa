@@ -28,9 +28,10 @@ class BulkTaskIIIFImporter(BulkTaskImport):
 
     importer_id = "iiif"
 
-    def __init__(self, manifest_uri):
+    def __init__(self, manifest_uri, version):
         """Init method."""
         self.manifest_uri = manifest_uri
+        self.version = version
 
     def tasks(self):
         """Get tasks."""
@@ -42,7 +43,8 @@ class BulkTaskIIIFImporter(BulkTaskImport):
 
     def _generate_tasks(self):
         """Generate the tasks."""
-        manifest = self._get_validated_manifest(self.manifest_uri)
+        manifest = self._get_validated_manifest(self.manifest_uri,
+                                                self.version)
         task_data = self._get_task_data(manifest)
         return [dict(info=data) for data in task_data]
 
@@ -75,7 +77,7 @@ class BulkTaskIIIFImporter(BulkTaskImport):
         query = '?manifest={}#?cv={}'.format(manifest_uri, canvas_index)
         return base + query
 
-    def _get_validated_manifest(self, manifest_uri, version="2.1"):
+    def _get_validated_manifest(self, manifest_uri, version):
         """Return a validated manifest."""
         r = requests.get(manifest_uri)
         if r.status_code != 200:
