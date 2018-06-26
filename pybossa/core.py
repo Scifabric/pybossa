@@ -64,6 +64,7 @@ def create_app(run_as_server=True):
         Sentry(app)
     if run_as_server:  # pragma: no cover
         setup_scheduled_jobs(app)
+    setup_private_instance_params(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -772,3 +773,10 @@ def setup_http_signer(app):
     from pybossa.http_signer import HttpSigner
     secret = app.config.get('SIGNATURE_SECRET')
     http_signer = HttpSigner(secret, 'X-Pybossa-Signature')
+
+
+def setup_private_instance_params(app):
+    global private_instance_params
+
+    private_instance_params = dict(data_access=app.config['DATA_ACCESS']) \
+        if app.config.get('DATA_ACCESS') else {}

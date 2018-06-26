@@ -62,6 +62,7 @@ from pybossa import otp
 import time
 from pybossa.cache.users import get_user_preferences
 from pybossa.sched import release_user_locks
+from pybossa.core import private_instance_params
 
 blueprint = Blueprint('account', __name__)
 
@@ -353,7 +354,8 @@ def register():
                            email_addr=form.email_addr.data,
                            password=form.password.data,
                            consent=form.consent.data)
-
+        if private_instance_params:
+            account['data_access'] = form.data_access.data
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
@@ -446,6 +448,8 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
     else:
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
+    if private_instance_params:
+        new_user.info['dataAccess'] = user_data.get('data_access', [])
     user_repo.save(new_user)
     if not ldap_disabled:
         flash(gettext('Thanks for signing-up'), 'success')
@@ -470,6 +474,7 @@ def _update_user_with_valid_email(user, email_addr):
 @login_required
 def redirect_profile():
     """Redirect method for profile."""
+
     if current_user.is_anonymous():  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
     if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
@@ -534,7 +539,8 @@ def _show_public_profile(user, form, can_update):
                     total_projects_contributed=total_projects_contributed,
                     percentage_tasks_completed=percentage_tasks_completed,
                     form=form,
-                    can_update=can_update)
+                    can_update=can_update,
+                    private_instance=bool(private_instance_params))
 
     return handle_content_type(response)
 
@@ -556,7 +562,8 @@ def _show_own_profile(user, form, can_update):
                     projects_draft=projects_draft,
                     user=user_dict,
                     form=form,
-                    can_update=can_update)
+                    can_update=can_update,
+                    private_instance=bool(private_instance_params))
 
     return handle_content_type(response)
 
@@ -1032,6 +1039,8 @@ def add_metadata(name):
 
     user_pref, metadata = get_user_pref_and_metadata(name, form)
     user.info['metadata'] = metadata
+    if private_instance_params:
+        user.info['dataAccess'] = form.data_access.data
     user.user_pref = user_pref
     user_repo.update(user)
     cached_users.delete_user_pref_metadata(user.name)
