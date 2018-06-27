@@ -93,9 +93,9 @@ class TestAuditlogAPI(Test):
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
-                'info': {u'list': [1]}
+                'info': {'list': [1]}
                 }
-        attributes = data.keys()
+        attributes = list(data.keys())
         attributes.append('list')
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -128,7 +128,7 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
                 }
-        attributes = data.keys()
+        attributes = list(data.keys())
         url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -216,7 +216,7 @@ class TestAuditlogAPI(Test):
         owner_id = project.owner.id
         owner_name = project.owner.name
         data = {'info': {'sched': 'depth_first', 'task_presenter': 'new'}}
-        attributes = data['info'].keys()
+        attributes = list(data['info'].keys())
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -385,7 +385,7 @@ class TestAuditlogWEB(web.Helper):
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         for log in logs:
-            print log
+            print(log)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute

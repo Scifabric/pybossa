@@ -184,7 +184,7 @@ class TestFavoritesAPI(TestAPI):
         task = TaskFactory.create()
         url = self.url + '?api_key=%s' % user.api_key
         res = self.app.post(url, data=json.dumps(dict(task_id=task.id, id=3)))
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert res.status_code == 415, res.status_code
         assert data['status_code'] == 415, data

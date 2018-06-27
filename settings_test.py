@@ -24,9 +24,9 @@ MAIL_FAIL_SILENTLY = False
 MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
 ADMINS = ['admin@broken.com']
 ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
-LOCALES = [('en', 'English'), ('es', u'Español'),
-           ('it', 'Italiano'), ('fr', u'Français'),
-           ('ja', u'日本語'), ('el', u'ελληνικά')]
+LOCALES = [('en', 'English'), ('es', 'Español'),
+           ('it', 'Italiano'), ('fr', 'Français'),
+           ('ja', '日本語'), ('el', 'ελληνικά')]
 ENFORCE_PRIVACY = False
 REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]

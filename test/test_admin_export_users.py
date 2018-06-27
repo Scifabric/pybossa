@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import StringIO
+import io
 from default import with_context
 from pybossa.util import unicode_csv_reader
 from helper import web
@@ -86,7 +86,7 @@ class TestExportUsers(web.Helper):
         res = self.app.get('/admin/users/export?format=csv',
                             follow_redirects=True)
         data = res.data
-        csv_content = StringIO.StringIO(data)
+        csv_content = io.StringIO(data)
         csvreader = unicode_csv_reader(csv_content)
 
         # number of users is -1 because the first row in csv are the headers

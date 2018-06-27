@@ -48,7 +48,7 @@ class TestSched(sched.Helper):
         # Get the only task with no runs!
         res = self.app.get('api/project/1/newtask')
         data = json.loads(res.data)
-        print "Task:%s" % data['id']
+        print("Task:%s" % data['id'])
         # Check that we received a clean Task
         assert data.get('info'), data
         assert not data.get('info').get('last_answer')

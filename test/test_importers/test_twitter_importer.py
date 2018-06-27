@@ -39,28 +39,28 @@ class TestBulkTaskTwitterImportSearch(object):
     @with_context
     def create_status(_id):
         return {
-            u'created_at': 'created',
-            u'favorite_count': 77,
-            u'coordinates': 'coords',
-            u'id_str': unicode(_id),
-            u'id': _id,
-            u'retweet_count': 44,
-            u'user': {'screen_name': 'fulanito'},
-            u'text': 'this is a tweet #match'
+            'created_at': 'created',
+            'favorite_count': 77,
+            'coordinates': 'coords',
+            'id_str': str(_id),
+            'id': _id,
+            'retweet_count': 44,
+            'user': {'screen_name': 'fulanito'},
+            'text': 'this is a tweet #match'
         }
 
     no_results = {
-        u'statuses': []
+        'statuses': []
     }
 
     one_status = {
-        u'statuses': [
+        'statuses': [
             create_status(0)
         ]
     }
 
     five_statuses = {
-        u'statuses': [create_status(i+1) for i in range(5)]
+        'statuses': [create_status(i+1) for i in range(5)]
     }
 
     @with_context
@@ -307,73 +307,73 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
     def create_status(_id):
         return {
-            u'contributors': None,
-            u'truncated': False,
-            u'text': u'Burning news! PYBOSSA v1.2.1 released! This version gets all new @PYBOSSA releases in your admin page! https://t.co/WkOXc3YL6s',
-            u'is_quote_status': False,
-            u'in_reply_to_status_id': None,
-            u'id': _id,
-            u'favorite_count': 0,
-            u'source': u'<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
-            u'retweeted': False,
-            u'coordinates': None,
-            u'entities': {},
-            u'in_reply_to_screen_name': None,
-            u'id_str': unicode(_id),
-            u'retweet_count': 0,
-            u'in_reply_to_user_id': None,
-            u'favorited': False,
-            u'user': {
-                u'follow_request_sent': False,
-                u'has_extended_profile': False,
-                u'profile_use_background_image': True,
-                u'default_profile_image': False,
-                u'id': 497181885,
-                u'profile_background_image_url_https': u'https://abs.twimg.com/images/themes/theme1/bg.png',
-                u'verified': False,
-                u'profile_text_color': u'333333',
-                u'profile_image_url_https': u'https://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
-                u'profile_sidebar_fill_color': u'DDEEF6',
-                u'entities': {},
-                u'followers_count': 700,
-                u'profile_sidebar_border_color': u'C0DEED',
-                u'id_str': u'497181885',
-                u'profile_background_color': u'C0DEED',
-                u'listed_count': 41,
-                u'is_translation_enabled': False,
-                u'utc_offset': 3600,
-                u'statuses_count': 887,
-                u'description': u'The open source crowdsourcing platform for research built by @Scifabric',
-                u'friends_count': 731,
-                u'location': u'Madrid, Spain',
-                u'profile_link_color': u'EE7147',
-                u'profile_image_url': u'http://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
-                u'following': True,
-                u'geo_enabled': True,
-                u'profile_banner_url': u'https://pbs.twimg.com/profile_banners/497181885/1401885123',
-                u'profile_background_image_url': u'http://abs.twimg.com/images/themes/theme1/bg.png',
-                u'screen_name': u'PYBOSSA',
-                u'lang': u'en',
-                u'profile_background_tile': False,
-                u'favourites_count': 185,
-                u'name': u'PYBOSSA',
-                u'notifications': False,
-                u'url': u'http://t.co/ASSBcIRZjY',
-                u'created_at': u'Sun Feb 19 18:17:39 +0000 2012',
-                u'contributors_enabled': False,
-                u'time_zone': u'Amsterdam',
-                u'protected': False,
-                u'default_profile': False,
-                u'is_translator': False
+            'contributors': None,
+            'truncated': False,
+            'text': 'Burning news! PYBOSSA v1.2.1 released! This version gets all new @PYBOSSA releases in your admin page! https://t.co/WkOXc3YL6s',
+            'is_quote_status': False,
+            'in_reply_to_status_id': None,
+            'id': _id,
+            'favorite_count': 0,
+            'source': '<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
+            'retweeted': False,
+            'coordinates': None,
+            'entities': {},
+            'in_reply_to_screen_name': None,
+            'id_str': str(_id),
+            'retweet_count': 0,
+            'in_reply_to_user_id': None,
+            'favorited': False,
+            'user': {
+                'follow_request_sent': False,
+                'has_extended_profile': False,
+                'profile_use_background_image': True,
+                'default_profile_image': False,
+                'id': 497181885,
+                'profile_background_image_url_https': 'https://abs.twimg.com/images/themes/theme1/bg.png',
+                'verified': False,
+                'profile_text_color': '333333',
+                'profile_image_url_https': 'https://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+                'profile_sidebar_fill_color': 'DDEEF6',
+                'entities': {},
+                'followers_count': 700,
+                'profile_sidebar_border_color': 'C0DEED',
+                'id_str': '497181885',
+                'profile_background_color': 'C0DEED',
+                'listed_count': 41,
+                'is_translation_enabled': False,
+                'utc_offset': 3600,
+                'statuses_count': 887,
+                'description': 'The open source crowdsourcing platform for research built by @Scifabric',
+                'friends_count': 731,
+                'location': 'Madrid, Spain',
+                'profile_link_color': 'EE7147',
+                'profile_image_url': 'http://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+                'following': True,
+                'geo_enabled': True,
+                'profile_banner_url': 'https://pbs.twimg.com/profile_banners/497181885/1401885123',
+                'profile_background_image_url': 'http://abs.twimg.com/images/themes/theme1/bg.png',
+                'screen_name': 'PYBOSSA',
+                'lang': 'en',
+                'profile_background_tile': False,
+                'favourites_count': 185,
+                'name': 'PYBOSSA',
+                'notifications': False,
+                'url': 'http://t.co/ASSBcIRZjY',
+                'created_at': 'Sun Feb 19 18:17:39 +0000 2012',
+                'contributors_enabled': False,
+                'time_zone': 'Amsterdam',
+                'protected': False,
+                'default_profile': False,
+                'is_translator': False
             },
-            u'geo': None,
-            u'in_reply_to_user_id_str': None,
-            u'possibly_sensitive': False,
-            u'lang': u'en',
-            u'created_at': u'Thu Dec 03 15:09:07 +0000 2015',
-            u'in_reply_to_status_id_str': None,
-            u'place': None,
-            u'extended_entities': {}
+            'geo': None,
+            'in_reply_to_user_id_str': None,
+            'possibly_sensitive': False,
+            'lang': 'en',
+            'created_at': 'Thu Dec 03 15:09:07 +0000 2015',
+            'in_reply_to_status_id_str': None,
+            'place': None,
+            'extended_entities': {}
         }
 
     no_results = []
@@ -506,4 +506,4 @@ class TestBulkTaskTwitterImportFromAccount(object):
 
         tasks = importer.tasks()
 
-        assert 'since_id' not in calls[0]['kwargs'].keys(), calls[0]['kwargs']
+        assert 'since_id' not in list(calls[0]['kwargs'].keys()), calls[0]['kwargs']

@@ -31,7 +31,7 @@ class Unique(object):
         self.query_function = query_function
         self.field_name = field_name
         if not message:  # pragma: no cover
-            message = lazy_gettext(u'This item already exists')
+            message = lazy_gettext('This item already exists')
         self.message = message
 
     def __call__(self, form, form_field):
@@ -54,7 +54,7 @@ class NotAllowedChars(object):
 
     def __init__(self, message=None):
         if not message:
-            self.message = lazy_gettext(u'%sand space symbols are forbidden'
+            self.message = lazy_gettext('%sand space symbols are forbidden'
                                         % self.not_valid_chars)
         else:  # pragma: no cover
             self.message = message
@@ -71,7 +71,7 @@ class CommaSeparatedIntegers(object):
 
     def __init__(self, message=None):
         if not message:
-            self.message = lazy_gettext(u'Only comma separated values are allowed, no spaces')
+            self.message = lazy_gettext('Only comma separated values are allowed, no spaces')
 
         else:  # pragma: no cover
             self.message = message
@@ -87,7 +87,7 @@ class Webhook(object):
 
     def __init__(self, message=None):
         if not message:
-            self.message = lazy_gettext(u'Invalid URL')
+            self.message = lazy_gettext('Invalid URL')
 
         else:  # pragma: no cover
             self.message = message
@@ -99,7 +99,7 @@ class Webhook(object):
                 if r.status_code != 200:
                     raise ValidationError(self.message)
         except requests.exceptions.ConnectionError:
-            raise ValidationError(lazy_gettext(u"Connection error"))
+            raise ValidationError(lazy_gettext("Connection error"))
 
 
 class ReservedName(object):
@@ -109,7 +109,7 @@ class ReservedName(object):
     def __init__(self, blueprint, message=None):
         self.blueprint = blueprint
         if not message:  # pragma: no cover
-            message = lazy_gettext(u'This name is used by the system.')
+            message = lazy_gettext('This name is used by the system.')
         self.message = message
 
     def __call__(self, form, field):

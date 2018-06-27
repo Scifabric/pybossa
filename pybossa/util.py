@@ -22,7 +22,7 @@ from functools import update_wrapper
 from flask_wtf import Form
 import csv
 import codecs
-import cStringIO
+import io
 from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
@@ -81,7 +81,7 @@ def handle_content_type(data):
         if message_and_status:
             data['flash'] = message_and_status[1]
             data['status'] = message_and_status[0]
-        for item in data.keys():
+        for item in list(data.keys()):
             if isinstance(data[item], Form):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
@@ -110,14 +110,14 @@ def handle_content_type(data):
             if (item == 'category'):
                 data[item] = data[item].to_public_json()
 
-        if 'code' in data.keys():
+        if 'code' in list(data.keys()):
             return jsonify(data), data['code']
         else:
             return jsonify(data)
     else:
         template = data['template']
         del data['template']
-        if 'code' in data.keys():
+        if 'code' in list(data.keys()):
             error_code = data['code']
             del data['code']
             return render_template(template, **data), error_code
@@ -182,7 +182,7 @@ def pretty_date(time=False):
     """
     import dateutil.parser
     now = datetime.now()
-    if type(time) is str or type(time) is unicode:
+    if type(time) is str or type(time) is str:
         time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
@@ -255,7 +255,7 @@ class Pagination(object):
                    right_edge=0):
         """Iterate over pages."""
         last = 0
-        for num in xrange(1, self.pages + 1):
+        for num in range(1, self.pages + 1):
             if (num <= left_edge or
                     (num > self.page - left_current - 1 and
                      num < self.page + right_current) or
@@ -282,7 +282,7 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
                             dialect=dialect, **kwargs)
     for row in csv_reader:
         # decode UTF-8 back to Unicode, cell by cell:
-        yield [unicode(cell, 'utf-8') for cell in row]
+        yield [str(cell, 'utf-8') for cell in row]
 
 
 def utf_8_encoder(unicode_csv_data):
@@ -299,7 +299,7 @@ class UnicodeWriter:
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         """Init method."""
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
+        self.queue = io.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
@@ -311,7 +311,7 @@ class UnicodeWriter:
             if (type(s) == dict):
                 line.append(json.dumps(s))
             else:
-                line.append(unicode(s).encode("utf-8"))
+                line.append(str(s).encode("utf-8"))
         self.writer.writerow(line)
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
@@ -331,7 +331,7 @@ class UnicodeWriter:
 
 def get_user_signup_method(user):
     """Return which OAuth sign up method the user used."""
-    msg = u'Sorry, there is already an account with the same e-mail.'
+    msg = 'Sorry, there is already an account with the same e-mail.'
     if user.info:
         # Google
         if user.info.get('google_token'):
@@ -428,7 +428,7 @@ def rank(projects, order_by=None, desc=False):
     """
     def earned_points(project):
         points = 0
-        if project['overall_progress'] != 100L:
+        if project['overall_progress'] != 100:
             points += 1000
         if not ('test' in project['name'].lower()
                 or 'test' in project['short_name'].lower()):
@@ -607,7 +607,7 @@ def check_password_strength(
     pwd_len = len(password)
     if pwd_len < min_len or pwd_len > max_len:
         message = lazy_gettext(
-                    u'Password must be between {0} and {1} characters'
+                    'Password must be between {0} and {1} characters'
                     .format(min_len, max_len))
         return False, message
 

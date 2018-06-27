@@ -29,13 +29,13 @@ class ResultRepository(Repository):
         return self.db.session.query(Result).get(id)
 
     def get_by(self, **attributes):
-        if 'last_version' not in attributes.keys():
+        if 'last_version' not in list(attributes.keys()):
             attributes['last_version'] = True
         return self.db.session.query(Result).filter_by(**attributes).first()
 
     def filter_by(self, limit=None, offset=0, yielded=False,
                   last_id=None, fulltextsearch=None, desc=False, **filters):
-        if 'last_version' not in filters.keys():
+        if 'last_version' not in list(filters.keys()):
             filters['last_version'] = True
         if filters['last_version'] is False:
             filters.pop('last_version')

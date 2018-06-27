@@ -29,34 +29,34 @@ from pybossa.importers.flickr import BulkTaskFlickrImport
 @patch('pybossa.importers.flickr.requests')
 class TestBulkTaskFlickrImport(object):
 
-    invalid_response = {u'stat': u'fail',
-                        u'code': 1, u'message': u'Photoset not found'}
+    invalid_response = {'stat': 'fail',
+                        'code': 1, 'message': 'Photoset not found'}
     response = {
-        u'stat': u'ok',
-        u'photoset': {
-            u'perpage': 500,
-            u'title': u'Science Hack Day Balloon Mapping Workshop',
-            u'photo': [
-                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
-                 u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
-                 u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'},
-                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 4,
-                 u'ispublic': 1, u'server': u'3763', u'isfriend': 0,
-                 u'secret': u'70d482fc68', u'isprimary': u'0', u'id': u'8946490553'},
-                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 3,
-                 u'ispublic': 1, u'server': u'2810', u'isfriend': 0,
-                 u'secret': u'99cae13d87', u'isprimary': u'0', u'id': u'8947113960'}],
-            u'pages': 1,
-            u'primary': u'8947113500',
-            u'id': u'72157633923521788',
-            u'ownername': u'Teleyinex',
-            u'owner': u'32985084@N00',
-            u'per_page': 500,
-            u'total': u'3',
-            u'page': 1}}
-    photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
-             u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
-             u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
+        'stat': 'ok',
+        'photoset': {
+            'perpage': 500,
+            'title': 'Science Hack Day Balloon Mapping Workshop',
+            'photo': [
+                {'isfamily': 0, 'title': 'Inflating the balloon', 'farm': 6,
+                 'ispublic': 1, 'server': '5441', 'isfriend': 0,
+                 'secret': '00e2301a0d', 'isprimary': '0', 'id': '8947115130'},
+                {'isfamily': 0, 'title': 'Inflating the balloon', 'farm': 4,
+                 'ispublic': 1, 'server': '3763', 'isfriend': 0,
+                 'secret': '70d482fc68', 'isprimary': '0', 'id': '8946490553'},
+                {'isfamily': 0, 'title': 'Inflating the balloon', 'farm': 3,
+                 'ispublic': 1, 'server': '2810', 'isfriend': 0,
+                 'secret': '99cae13d87', 'isprimary': '0', 'id': '8947113960'}],
+            'pages': 1,
+            'primary': '8947113500',
+            'id': '72157633923521788',
+            'ownername': 'Teleyinex',
+            'owner': '32985084@N00',
+            'per_page': 500,
+            'total': '3',
+            'page': 1}}
+    photo = {'isfamily': 0, 'title': 'Inflating the balloon', 'farm': 6,
+             'ispublic': 1, 'server': '5441', 'isfriend': 0,
+             'secret': '00e2301a0d', 'isprimary': '0', 'id': '8947115130'}
     importer = BulkTaskFlickrImport(api_key='fake-key', album_id='72157633923521788')
 
 
@@ -85,7 +85,7 @@ class TestBulkTaskFlickrImport(object):
         self.importer._get_album_info()
 
         # The request MUST NOT include user credentials, to avoid private photos
-        url_call_params = requests.get.call_args_list[0][1]['params'].keys()
+        url_call_params = list(requests.get.call_args_list[0][1]['params'].keys())
         assert 'auth_token' not in url_call_params
 
     @with_context
@@ -152,12 +152,12 @@ class TestBulkTaskFlickrImport(object):
         # these modifications to affect other tests
         first_response = copy.deepcopy(self.response)
         first_response['photoset']['pages'] = 2
-        first_response['photoset']['total'] = u'600'
+        first_response['photoset']['total'] = '600'
         first_response['photoset']['page'] = 1
         first_response['photoset']['photo'] = [self.photo for i in range(500)]
         second_response = copy.deepcopy(self.response)
         second_response['photoset']['pages'] = 2
-        second_response['photoset']['total'] = u'600'
+        second_response['photoset']['total'] = '600'
         second_response['photoset']['page'] = 2
         second_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = self.make_response(json.dumps(first_response))
@@ -175,17 +175,17 @@ class TestBulkTaskFlickrImport(object):
         # these modifications to affect other tests
         first_response = copy.deepcopy(self.response)
         first_response['photoset']['pages'] = 3
-        first_response['photoset']['total'] = u'1100'
+        first_response['photoset']['total'] = '1100'
         first_response['photoset']['page'] = 1
         first_response['photoset']['photo'] = [self.photo for i in range(500)]
         second_response = copy.deepcopy(self.response)
         second_response['photoset']['pages'] = 3
-        second_response['photoset']['total'] = u'1100'
+        second_response['photoset']['total'] = '1100'
         second_response['photoset']['page'] = 2
         second_response['photoset']['photo'] = [self.photo for i in range(500)]
         third_response = copy.deepcopy(self.response)
         third_response['photoset']['pages'] = 3
-        third_response['photoset']['total'] = u'1100'
+        third_response['photoset']['total'] = '1100'
         third_response['photoset']['page'] = 3
         third_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = self.make_response(json.dumps(first_response))

@@ -111,6 +111,6 @@ class TestBulkTaskEpiCollectPlusImport(object):
                                 encoding='utf-8')
         request.return_value = response
 
-        task = self.importer.tasks().next()
+        task = next(self.importer.tasks())
 
-        assert task == {'info': {u'DeviceID': 23}}, task
+        assert task == {'info': {'DeviceID': 23}}, task

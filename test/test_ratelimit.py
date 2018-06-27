@@ -50,7 +50,7 @@ class TestAPI(object):
                 if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
-                                long_description=u'something')
+                                long_description='something')
                 data = json.dumps(data)
                 res = self.app.post(url, data=data)
             elif action == 'put':
@@ -59,7 +59,7 @@ class TestAPI(object):
                 if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
-                                long_description=u'something')
+                                long_description='something')
                 data = json.dumps(data)
 
                 res = self.app.put(_url + url, data=data)
@@ -71,8 +71,8 @@ class TestAPI(object):
             # Error message
             err_msg = "GET X-RateLimit-Remaining not working"
             # Tests
-            print "X-RateLimit-Remaining: %s" % res.headers['X-RateLimit-Remaining']
-            print "Expected value: %s" % i
+            print("X-RateLimit-Remaining: %s" % res.headers['X-RateLimit-Remaining'])
+            print("Expected value: %s" % i)
             assert int(res.headers['X-RateLimit-Remaining']) == i, err_msg
             if res.headers['X-RateLimit-Remaining'] == 0:
                 error = json.loads(res.data)

@@ -36,7 +36,7 @@ class Ckan(object):
         # Backrefs and functions
         sqlalchemy_refs = ['project', 'task_runs', 'pct_status']
         fields = []
-        for attr in obj.__dict__.keys():
+        for attr in list(obj.__dict__.keys()):
             if ("__" not in attr[0:2] and "_" not in attr[0:1] and
                     attr not in sqlalchemy_refs):
                 if attr in json_fields:

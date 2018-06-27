@@ -28,7 +28,7 @@ app = create_app(run_as_server=False)
 # similar to rqworker
 with app.app_context():
     with Connection(sentinel.master):
-        qs = map(Queue, sys.argv[1:]) or [Queue()]
+        qs = list(map(Queue, sys.argv[1:])) or [Queue()]
 
         w = Worker(qs)
         w.work()

@@ -112,8 +112,8 @@ class TestModelUser(Test):
         assert public_attributes.sort() == user.public_attributes().sort()
         data = user.to_public_json()
         err_msg = "There are some keys that should not be public"
-        assert data.keys().sort() == public_attributes.sort(), err_msg
-        all_attributes = user.dictize().keys()
+        assert list(data.keys()).sort() == public_attributes.sort(), err_msg
+        all_attributes = list(user.dictize().keys())
         s = set(public_attributes)
         private_attributes = [x for x in all_attributes if x not in s]
         for attr in private_attributes:
@@ -135,4 +135,4 @@ class TestModelUser(Test):
 
         data = user.to_public_json()
         err_msg = "There are some keys that should not be public"
-        assert data.get('info').keys().sort() == public_info_keys.sort(), err_msg
+        assert list(data.get('info').keys()).sort() == public_info_keys.sort(), err_msg

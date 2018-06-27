@@ -19,7 +19,7 @@
 from pybossa.core import sentinel
 from pybossa.core import db
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:  # pragma: no cover
     import pickle
 

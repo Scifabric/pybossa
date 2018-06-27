@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * blopost
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.blogpost import Blogpost
 from pybossa.core import user_repo, project_repo
 from flask.ext.login import current_user
@@ -38,7 +38,7 @@ class BlogpostAPI(APIBase):
     __class__ = Blogpost
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 msg = "Reserved keys in payload: %s" % key
                 raise BadRequest(msg)

@@ -74,7 +74,7 @@ class Newsletter(object):
 
             self.client.lists.subscribe(list_id, email, merge_vars,
                                         update_existing=update_existing)
-        except Error, e:
+        except Error as e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
             raise

@@ -19,7 +19,7 @@ import json
 from time import time
 from pybossa.core import sentinel
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:  # pragma: no cover
     import pickle
 
@@ -40,7 +40,7 @@ def get_update_feed():
     for u in data:
         tmp = pickle.loads(u[0])
         tmp['updated'] = u[1]
-        if tmp.get('info') and type(tmp.get('info')) == unicode:
+        if tmp.get('info') and type(tmp.get('info')) == str:
             tmp['info'] = json.loads(tmp['info'])
         feed.append(tmp)
     return feed

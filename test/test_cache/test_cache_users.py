@@ -77,7 +77,7 @@ class TestUsersCache(Test):
         user = cached_users.get_user_summary('user')
 
         for field in fields:
-            assert field in user.keys(), field
+            assert field in list(user.keys()), field
 
     @with_context
     def test_public_get_user_summary_returns_fields(self):
@@ -89,10 +89,10 @@ class TestUsersCache(Test):
         user = cached_users.public_get_user_summary('user')
 
         for field in public_fields:
-            assert field in user.keys(), field
+            assert field in list(user.keys()), field
 
         for field in private_fields:
-            assert field not in user.keys(), field
+            assert field not in list(user.keys()), field
 
     @with_context
     def test_rank_and_score(self):
@@ -108,7 +108,7 @@ class TestUsersCache(Test):
         update_leaderboard()
         first_in_rank = cached_users.rank_and_score(users[3].id)
         last_in_rank = cached_users.rank_and_score(users[0].id)
-        print first_in_rank
+        print(first_in_rank)
         assert first_in_rank['rank'] == 1, first_in_rank['rank']
         assert first_in_rank['score'] == 4, first_in_rank['score']
         assert last_in_rank['rank'] == 4, last_in_rank['rank']
@@ -240,7 +240,7 @@ class TestUsersCache(Test):
         projects_contributed = cached_users.projects_contributed(user.id)
 
         for field in fields:
-            assert field in projects_contributed[0].keys(), field
+            assert field in list(projects_contributed[0].keys()), field
 
     @with_context
     def test_published_projects_no_projects(self):
@@ -330,7 +330,7 @@ class TestUsersCache(Test):
         projects_published = cached_users.published_projects(user.id)
 
         for field in fields:
-            assert field in projects_published[0].keys(), field
+            assert field in list(projects_published[0].keys()), field
 
     @with_context
     def test_public_published_projects_returns_fields(self):
@@ -345,10 +345,10 @@ class TestUsersCache(Test):
         projects_published = cached_users.public_published_projects(user.id)
 
         for field in public_fields:
-            assert field in projects_published[0].keys(), field
+            assert field in list(projects_published[0].keys()), field
 
         for field in private_fields:
-            assert field not in projects_published[0].keys(), field
+            assert field not in list(projects_published[0].keys()), field
 
     @with_context
     def test_public_published_projects_cached_returns_fields(self):
@@ -363,10 +363,10 @@ class TestUsersCache(Test):
         projects_published = cached_users.public_published_projects_cached(user.id)
 
         for field in public_fields:
-            assert field in projects_published[0].keys(), field
+            assert field in list(projects_published[0].keys()), field
 
         for field in private_fields:
-            assert field not in projects_published[0].keys(), field
+            assert field not in list(projects_published[0].keys()), field
 
     @with_context
     def test_draft_projects_no_projects(self):
@@ -414,7 +414,7 @@ class TestUsersCache(Test):
         draft_project = cached_users.draft_projects(user.id)
 
         for field in fields:
-            assert field in draft_project[0].keys(), field
+            assert field in list(draft_project[0].keys()), field
 
     @with_context
     def test_get_leaderboard_no_users_returns_empty_list(self):
@@ -475,8 +475,8 @@ class TestUsersCache(Test):
         leaderboard = cached_users.get_leaderboard(1)
 
         for field in fields:
-            assert field in leaderboard[0].keys(), field
-        assert len(leaderboard[0].keys()) == len(fields)
+            assert field in list(leaderboard[0].keys()), field
+        assert len(list(leaderboard[0].keys())) == len(fields)
 
     @with_context
     def test_get_total_users_returns_0_if_no_users(self):
@@ -522,5 +522,5 @@ class TestUsersCache(Test):
         users = cached_users.get_users_page(1)
 
         for field in fields:
-            assert field in users[0].keys(), field
-        assert len(users[0].keys()) == len(fields)
+            assert field in list(users[0].keys()), field
+        assert len(list(users[0].keys())) == len(fields)

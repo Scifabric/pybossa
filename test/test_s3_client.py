@@ -120,7 +120,7 @@ class TestS3Client(object):
 
         objects = S3Client().objects('test-pybossa')
 
-        assert objects == [u'16535035993_1080p.mp4', u'BFI-demo.mp4'], objects
+        assert objects == ['16535035993_1080p.mp4', 'BFI-demo.mp4'], objects
 
     @patch('pybossa.s3_client.requests')
     def test_objects_not_returns_folders_inside_bucket(self, requests):

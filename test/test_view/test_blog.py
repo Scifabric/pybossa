@@ -82,11 +82,11 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert 'api_key' not in data['owner'].keys()
-        assert 'email_addr' not in data['owner'].keys()
-        assert 'google_user_id' not in data['owner'].keys()
-        assert 'facebook_user_id' not in data['owner'].keys()
-        assert 'twitter_user_id' not in data['owner'].keys()
+        assert 'api_key' not in list(data['owner'].keys())
+        assert 'email_addr' not in list(data['owner'].keys())
+        assert 'google_user_id' not in list(data['owner'].keys())
+        assert 'facebook_user_id' not in list(data['owner'].keys())
+        assert 'twitter_user_id' not in list(data['owner'].keys())
         assert len(data['blogposts']) == 2
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
@@ -96,11 +96,11 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert 'api_key' not in data['owner'].keys()
-        assert 'email_addr' not in data['owner'].keys()
-        assert 'google_user_id' not in data['owner'].keys()
-        assert 'facebook_user_id' not in data['owner'].keys()
-        assert 'twitter_user_id' not in data['owner'].keys()
+        assert 'api_key' not in list(data['owner'].keys())
+        assert 'email_addr' not in list(data['owner'].keys())
+        assert 'google_user_id' not in list(data['owner'].keys())
+        assert 'facebook_user_id' not in list(data['owner'].keys())
+        assert 'twitter_user_id' not in list(data['owner'].keys())
         assert len(data['blogposts']) == 2
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo']
@@ -111,11 +111,11 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert 'api_key' in data['owner'].keys()
-        assert 'email_addr' in data['owner'].keys()
-        assert 'google_user_id' in data['owner'].keys()
-        assert 'facebook_user_id' in data['owner'].keys()
-        assert 'twitter_user_id' in data['owner'].keys()
+        assert 'api_key' in list(data['owner'].keys())
+        assert 'email_addr' in list(data['owner'].keys())
+        assert 'google_user_id' in list(data['owner'].keys())
+        assert 'facebook_user_id' in list(data['owner'].keys())
+        assert 'twitter_user_id' in list(data['owner'].keys())
         assert len(data['blogposts']) == 3
         for blogpost in data['blogposts']:
             assert blogpost['title'] in ['titleone', 'titletwo', 'titlethree']

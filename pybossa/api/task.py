@@ -26,7 +26,7 @@ from flask import abort
 from werkzeug.exceptions import BadRequest
 from pybossa.model.task import Task
 from pybossa.core import result_repo
-from api_base import APIBase
+from .api_base import APIBase
 
 
 class TaskAPI(APIBase):
@@ -37,7 +37,7 @@ class TaskAPI(APIBase):
     reserved_keys = set(['id', 'created', 'state', 'fav_user_ids'])
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 

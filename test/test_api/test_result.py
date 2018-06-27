@@ -104,7 +104,7 @@ class TestResultAPI(TestAPI):
         url = '/api/result?orderby=created&desc=true'
         res = self.app.get(url)
         data = json.loads(res.data)
-        print data
+        print(data)
         err_msg = "It should get the last item first."
         assert data[0]['created'] == '2119-01-01T14:37:30.642119', err_msg
 
@@ -340,7 +340,7 @@ class TestResultAPI(TestAPI):
     def test_result_put_with_reserved_fields_returns_error(self):
         user = UserFactory.create()
         result = self.create_result(owner=user)
-        print result
+        print(result)
         url = '/api/result/%s?api_key=%s' % (result.id, user.api_key)
         data = {'created': 'today',
                 'project_id': 1,

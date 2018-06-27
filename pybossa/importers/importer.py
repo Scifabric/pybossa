@@ -67,7 +67,7 @@ class Importer(object):
         importer = self._create_importer_for(**form_data)
         for task_data in importer.tasks():
             task = Task(project_id=project_id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            [setattr(task, k, v) for k, v in task_data.items()]
             found = task_repo.get_task_by(project_id=project_id, info=task.info)
             if found is None:
                 task_repo.save(task)
@@ -97,12 +97,12 @@ class Importer(object):
 
     def get_all_importer_names(self):
         """Get all importer names."""
-        return self._importers.keys()
+        return list(self._importers.keys())
 
     def get_autoimporter_names(self):
         """Get autoimporter names."""
         no_autoimporters = ('dropbox', 's3')
-        return [name for name in self._importers.keys() if name not in no_autoimporters]
+        return [name for name in list(self._importers.keys()) if name not in no_autoimporters]
 
 
 class ImportReport(object):

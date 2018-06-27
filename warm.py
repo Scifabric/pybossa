@@ -34,7 +34,7 @@ def warm_cache():
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
     # Cache 3 pages
     apps_cached = []
-    pages = range(1, 4)
+    pages = list(range(1, 4))
     with app.app_context():
         import pybossa.cache.projects as cached_apps
         import pybossa.cache.categories as cached_cat
@@ -51,7 +51,7 @@ def warm_cache():
                 cached_apps.n_completed_tasks(id)
                 cached_apps.n_volunteers(id)
                 if n_task_runs >= 1000 or featured:
-                    print "Getting stats for %s as it has %s task runs" % (short_name, n_task_runs)
+                    print("Getting stats for %s as it has %s task runs" % (short_name, n_task_runs))
                     stats.get_stats(id)
                 apps_cached.append(id)
 
@@ -83,7 +83,7 @@ def warm_cache():
 
 def _module_functions(functions):
     local_functions = dict(functions)
-    for k,v in local_functions.items():
+    for k,v in list(local_functions.items()):
         if not inspect.isfunction(v) or k.startswith('_'):
             del local_functions[k]
     return local_functions

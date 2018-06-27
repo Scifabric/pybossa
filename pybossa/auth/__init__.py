@@ -27,19 +27,19 @@ import jwt
 from flask import jsonify
 from jwt import exceptions
 
-import project
-import projectstats
-import task
-import taskrun
-import category
-import user
-import token
-import announcement
-import blogpost
-import auditlog
-import webhook
-import result
-import helpingmaterial
+from . import project
+from . import projectstats
+from . import task
+from . import taskrun
+from . import category
+from . import user
+from . import token
+from . import announcement
+from . import blogpost
+from . import auditlog
+from . import webhook
+from . import result
+from . import helpingmaterial
 
 assert project
 assert projectstats

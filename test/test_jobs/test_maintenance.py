@@ -32,7 +32,7 @@ class TestMaintenance(Test):
     @with_context
     def test_get_maintenance_jobs(self):
         """Test get maintenance jobs works."""
-        res = get_maintenance_jobs().next()
+        res = next(get_maintenance_jobs())
         assert res['queue'] == 'maintenance'
 
     @with_context

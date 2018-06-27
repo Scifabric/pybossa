@@ -48,7 +48,7 @@ def oauth_authorized():
     next_url = request.args.get('next')
     resp = flickr.oauth.authorized_response()
     if resp is None:
-        flash(u'You denied the request to sign in.')
+        flash('You denied the request to sign in.')
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)

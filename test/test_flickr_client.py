@@ -28,8 +28,8 @@ class TestFlickrClient(object):
             self.json = lambda: data
 
     def setUp(self):
-        self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        self.token = {'oauth_token_secret': 'secret', 'oauth_token': 'token'}
+        self.user = {'username': 'palotespaco', 'user_nsid': 'user'}
         self.flickr = FlickrClient('key', MagicMock())
 
 
@@ -91,31 +91,31 @@ class TestFlickrClient(object):
     @patch('pybossa.flickr_client.requests')
     def test_get_user_albums_return_list_with_album_info(self, fake_requests):
         data = {
-            u'stat': u'ok',
-            u'photosets': {
-                u'total': 2,
-                u'perpage': 2,
-                u'photoset':
-                [{u'date_update': u'1421313791',
-                  u'visibility_can_see_set': 1,
-                  u'description': {u'_content': u'mis mejores vacaciones'},
-                  u'videos': 0, u'title': {u'_content': u'vacaciones'},
-                  u'farm': 9, u'needs_interstitial': 0,
-                  u'primary': u'16284868505',
-                  u'primary_photo_extras': {
-                      u'height_t': u'63',
-                      u'width_t': u'100',
-                      u'url_q': u'https://farm9.staticflickr.com/8597/16284868505_c4a032a62e_t.jpg'},
-                  u'server': u'8597',
-                  u'date_create': u'1421313790',
-                  u'photos': u'3',
-                  u'secret': u'c4a032a62e',
-                  u'count_comments': u'0',
-                  u'count_views': u'1',
-                  u'can_comment': 0,
-                  u'id': u'72157649886540037'}],
-                u'page': 1,
-                u'pages': 1}}
+            'stat': 'ok',
+            'photosets': {
+                'total': 2,
+                'perpage': 2,
+                'photoset':
+                [{'date_update': '1421313791',
+                  'visibility_can_see_set': 1,
+                  'description': {'_content': 'mis mejores vacaciones'},
+                  'videos': 0, 'title': {'_content': 'vacaciones'},
+                  'farm': 9, 'needs_interstitial': 0,
+                  'primary': '16284868505',
+                  'primary_photo_extras': {
+                      'height_t': '63',
+                      'width_t': '100',
+                      'url_q': 'https://farm9.staticflickr.com/8597/16284868505_c4a032a62e_t.jpg'},
+                  'server': '8597',
+                  'date_create': '1421313790',
+                  'photos': '3',
+                  'secret': 'c4a032a62e',
+                  'count_comments': '0',
+                  'count_views': '1',
+                  'can_comment': 0,
+                  'id': '72157649886540037'}],
+                'page': 1,
+                'pages': 1}}
         response = self.Res(200, data)
         fake_requests.get.return_value = response
         session = {'flickr_token': self.token, 'flickr_user': self.user}

@@ -96,7 +96,7 @@ class APIBase(MethodView):
 
     def valid_args(self):
         """Check if the domain object args are valid."""
-        for k in request.args.keys():
+        for k in list(request.args.keys()):
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
@@ -135,7 +135,7 @@ class APIBase(MethodView):
         for result in query_result:
             # This is for n_favs orderby case
             if not isinstance(result, DomainObject):
-                if 'n_favs' in result.keys():
+                if 'n_favs' in list(result.keys()):
                     result = result[0]
             try:
                 if (result.__class__ != self.__class__):
@@ -226,7 +226,7 @@ class APIBase(MethodView):
 
     def _filter_query(self, repo_info, limit, offset, orderby):
         filters = {}
-        for k in request.args.keys():
+        for k in list(request.args.keys()):
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated', 'full']:
@@ -463,7 +463,7 @@ class APIBase(MethodView):
         if (content_type in request.headers.get('Content-Type') and
                 cls_name in self.allowed_classes_upload):
             tmp = dict()
-            for key in request.form.keys():
+            for key in list(request.form.keys()):
                 tmp[key] = request.form[key]
 
             if isinstance(self, announcement.Announcement):
@@ -503,7 +503,7 @@ class APIBase(MethodView):
         """Delete file object."""
         cls_name = self.__class__.__name__.lower()
         if cls_name in self.allowed_classes_upload:
-            keys = obj.info.keys()
+            keys = list(obj.info.keys())
             if 'file_name' in keys and 'container' in keys:
                 ensure_authorized_to('delete', obj)
                 uploader.delete_file(obj.info['file_name'],

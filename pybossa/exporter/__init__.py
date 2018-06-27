@@ -153,7 +153,7 @@ class Exporter(object):
         or generate one on the fly and upload it if not existing."""
         filename = self.download_name(project, ty)
         if not self.zip_existing(project, ty):
-            print "Warning: Generating %s on the fly now!" % filename
+            print("Warning: Generating %s on the fly now!" % filename)
             self._make_zip(project, ty)
         if isinstance(uploader, local.LocalUploader):
             filepath = self._download_path(project)

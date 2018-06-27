@@ -193,7 +193,7 @@ def stats_dates(project_id, period='15 day'):
     results = session.execute(sql, params)
     for row in results:
         day = row.day[:10]
-        if day in dates.keys():
+        if day in list(dates.keys()):
             dates[day] += 1
         else:
             dates[day] = 1
@@ -208,7 +208,7 @@ def stats_dates(project_id, period='15 day'):
                     obj[tmp_date.strftime('%Y-%m-%d')] = 0
         return obj
 
-    dates = _fill_empty_days(dates.keys(), dates)
+    dates = _fill_empty_days(list(dates.keys()), dates)
 
     # Get all answers per date for auth
     sql = text('''
@@ -227,7 +227,7 @@ def stats_dates(project_id, period='15 day'):
     for row in results:
         dates_auth[row.d] = row.count
 
-    dates_auth = _fill_empty_days(dates_auth.keys(), dates_auth)
+    dates_auth = _fill_empty_days(list(dates_auth.keys()), dates_auth)
 
     # Get all answers per date for anon
     sql = text('''
@@ -246,7 +246,7 @@ def stats_dates(project_id, period='15 day'):
     for row in results:
         dates_anon[row.d] = row.count
 
-    dates_anon = _fill_empty_days(dates_anon.keys(), dates_anon)
+    dates_anon = _fill_empty_days(list(dates_anon.keys()), dates_anon)
 
     return dates, dates_anon, dates_auth
 
@@ -402,7 +402,7 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     dayNewAnonStats = dict(label=gettext("Anonymous"), values=[])
     dayNewAuthStats = dict(label=gettext("Authenticated"), values=[])
 
-    answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
+    answer_dates = sorted(list(set(list(dates_anon.keys()) + list(dates_auth.keys()))))
     total = 0
 
     for d in sorted(dates.keys()):
@@ -413,8 +413,8 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total])
 
     for d in answer_dates:
-        anon_ans = dates_anon[d] if d in dates_anon.keys() else 0
-        auth_ans = dates_auth[d] if d in dates_auth.keys() else 0
+        anon_ans = dates_anon[d] if d in list(dates_anon.keys()) else 0
+        auth_ans = dates_auth[d] if d in list(dates_auth.keys()) else 0
         total_ans = anon_ans + auth_ans
 
         # New answers per day
@@ -454,7 +454,7 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
             hourNewStats['values'].append([int(h), hours[h], 0])
 
         # New Anonymous answers per hour
-        if h in hours_anon.keys():
+        if h in list(hours_anon.keys()):
             if (hours_anon[h] != 0):
                 tmph = (hours_anon[h] * 5) / max_hours
                 hourNewAnonStats['values'].append([int(h), hours_anon[h], tmph])
@@ -462,7 +462,7 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                 hourNewAnonStats['values'].append([int(h), hours_anon[h], 0])
 
         # New Authenticated answers per hour
-        if h in hours_auth.keys():
+        if h in list(hours_auth.keys()):
             if (hours_auth[h] != 0):
                 tmph = (hours_auth[h] * 5) / max_hours
                 hourNewAuthStats['values'].append([int(h), hours_auth[h], tmph])
@@ -520,7 +520,7 @@ def update_stats(project_id, period='2 week'):
 
     sum(dates.values())
 
-    sorted(dates.iteritems(), key=operator.itemgetter(0))
+    sorted(iter(dates.items()), key=operator.itemgetter(0))
 
     dates_stats = stats_format_dates(project_id, dates,
                                      dates_anon, dates_auth)

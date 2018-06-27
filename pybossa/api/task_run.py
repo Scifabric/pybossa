@@ -28,7 +28,7 @@ from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel, anonymizer
 from pybossa.contributions_guard import ContributionsGuard
@@ -53,7 +53,7 @@ class TaskRunAPI(APIBase):
         self._add_created_timestamp(taskrun, task, guard)
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 

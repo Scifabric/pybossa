@@ -203,7 +203,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "It should get the last item first."
         taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
         for i in range(20):
-            print data[i]['id']
+            print(data[i]['id'])
             assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context
@@ -486,7 +486,7 @@ class TestTaskrunAPI(TestAPI):
 
         res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
         tmp = json.loads(res.data)
-        print len(tmp)
+        print(len(tmp))
         for tr in tmp:
             assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
             assert tr['user_ip'] != '127.0.0.0'

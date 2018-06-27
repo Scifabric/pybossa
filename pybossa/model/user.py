@@ -45,7 +45,7 @@ class User(db.Model, DomainObject, UserMixin):
     #: Fullname of the user.
     fullname = Column(Unicode(length=500), nullable=False)
     #: Language used by the user in the PYBOSSA server.
-    locale = Column(Unicode(length=254), default=u'en', nullable=False)
+    locale = Column(Unicode(length=254), default='en', nullable=False)
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
     ldap = Column(Unicode, unique=True)

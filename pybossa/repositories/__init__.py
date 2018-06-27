@@ -56,7 +56,7 @@ class Repository(object):
     def generate_query_from_keywords(self, model, fulltextsearch=None,
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
-                       for key, value in kwargs.items()
+                       for key, value in list(kwargs.items())
                        if (key != 'info' and key != 'fav_user_ids'
                             and key != 'created' and key != 'project_id')]
         queries = []
@@ -64,16 +64,16 @@ class Repository(object):
         order_by_ranks = []
         or_clauses = []
 
-        if 'info' in kwargs.keys():
+        if 'info' in list(kwargs.keys()):
             queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
                                                                        fulltextsearch)
             clauses = clauses + queries
 
-        if 'created' in kwargs.keys():
+        if 'created' in list(kwargs.keys()):
             like_query = kwargs['created'] + '%'
             clauses.append(_entity_descriptor(model,'created').like(like_query))
 
-        if 'project_id' in kwargs.keys():
+        if 'project_id' in list(kwargs.keys()):
             tmp = "%s" % kwargs['project_id']
             project_ids = re.findall(r'\d+', tmp)
             for project_id in project_ids:
@@ -109,7 +109,7 @@ class Repository(object):
         else:
             if type(info) == dict:
                 clauses.append(_entity_descriptor(model, 'info') == info)
-            if type(info) == str or type(info) == unicode:
+            if type(info) == str or type(info) == str:
                 try:
                     info = json.loads(info)
                     if type(info) == int or type(info) == float:
@@ -231,16 +231,16 @@ class Repository(object):
         return query.all()
 
 
-from project_repository import ProjectRepository
-from project_stats_repository import ProjectStatsRepository
-from user_repository import UserRepository
-from announcement_repository import AnnouncementRepository
-from blog_repository import BlogRepository
-from task_repository import TaskRepository
-from auditlog_repository import AuditlogRepository
-from webhook_repository import WebhookRepository
-from result_repository import ResultRepository
-from helping_repository import HelpingMaterialRepository
+from .project_repository import ProjectRepository
+from .project_stats_repository import ProjectStatsRepository
+from .user_repository import UserRepository
+from .announcement_repository import AnnouncementRepository
+from .blog_repository import BlogRepository
+from .task_repository import TaskRepository
+from .auditlog_repository import AuditlogRepository
+from .webhook_repository import WebhookRepository
+from .result_repository import ResultRepository
+from .helping_repository import HelpingMaterialRepository
 
 assert ProjectRepository
 assert ProjectStatsRepository

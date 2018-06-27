@@ -31,9 +31,9 @@ class ProjectFactory(BaseFactory):
         return project
 
     id = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: u'My (utf8=✓)Project number %d' % n)
-    short_name = factory.Sequence(lambda n: u'✓project%d' % n)
-    description = u'Project description utf8=✓'
+    name = factory.Sequence(lambda n: 'My (utf8=✓)Project number %d' % n)
+    short_name = factory.Sequence(lambda n: '✓project%d' % n)
+    description = 'Project description utf8=✓'
     allow_anonymous_contributors = True
     featured = False
     published = True

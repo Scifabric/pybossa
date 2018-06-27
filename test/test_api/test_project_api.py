@@ -73,7 +73,7 @@ class TestProjectAPI(TestAPI):
         assert len(data) == 10, data
         project = data[0]
         assert project['info']['task_presenter'] == 'foo', data
-        assert 'total' not in project['info'].keys(), data
+        assert 'total' not in list(project['info'].keys()), data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -98,7 +98,7 @@ class TestProjectAPI(TestAPI):
         assert len(data) == 1, data
         keys = ['tasks', 'task_runs', 'results']
         for key in keys:
-            assert key not in data[0].keys()
+            assert key not in list(data[0].keys())
 
         # Keyset pagination
         url = "/api/project?limit=5&last_id=%s" % (projects[4].id)
@@ -336,13 +336,13 @@ class TestProjectAPI(TestAPI):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         CategoryFactory.create()
-        name = u'XXXX Project'
+        name = 'XXXX Project'
         data = dict(
             name=name,
             short_name='xxxx-project',
             description='description',
             owner_id=1,
-            long_description=u'Long Description\n================')
+            long_description='Long Description\n================')
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/project', data=data)
@@ -365,7 +365,7 @@ class TestProjectAPI(TestAPI):
             short_name='xxxx-project2',
             description='description2',
             owner_id=1,
-            long_description=u'Long Description\n================')
+            long_description='Long Description\n================')
         new_project = json.dumps(new_project)
         res = self.app.post('/api/project', headers=headers,
                             data=new_project)
@@ -454,7 +454,7 @@ class TestProjectAPI(TestAPI):
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
-        assert 'task_presenter' not in out.get('info').keys(), error
+        assert 'task_presenter' not in list(out.get('info').keys()), error
 
         data['info']['task_presenter'] = 'htmlpresenter'
         newdata = json.dumps(data)
@@ -535,7 +535,7 @@ class TestProjectAPI(TestAPI):
         data = dict(
             name=name,
             short_name='xxxx-project',
-            long_description=u'Long Description\n================')
+            long_description='Long Description\n================')
 
         datajson = json.dumps(data)
         res = self.app.put('/api/project/%s?api_key=%s&search=select1' % (id_, users[1].api_key),
@@ -592,13 +592,13 @@ class TestProjectAPI(TestAPI):
             a name used by the Flask app as a URL endpoint"""
         users = UserFactory.create_batch(2)
         CategoryFactory.create()
-        name = u'XXXX Project'
+        name = 'XXXX Project'
         data = dict(
             name=name,
             short_name='new',
             description='description',
             owner_id=1,
-            long_description=u'Long Description\n================')
+            long_description='Long Description\n================')
         data = json.dumps(data)
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
                             data=data)
@@ -619,7 +619,7 @@ class TestProjectAPI(TestAPI):
         user = UserFactory.create()
         CategoryFactory.create()
         project = ProjectFactory.create(owner=user)
-        name = u'XXXX Project'
+        name = 'XXXX Project'
         data = {'short_name': 'new'}
         datajson = json.dumps(data)
         res = self.app.put('/api/project/%s?api_key=%s' % (project.id, user.api_key),
@@ -709,7 +709,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
-        print data
+        print(data)
 
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
@@ -718,7 +718,7 @@ class TestProjectAPI(TestAPI):
         assert len(taskruns) == data['done'], data
 
         # Add a new TaskRun and check again
-        taskrun = AnonymousTaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
+        taskrun = AnonymousTaskRunFactory.create(task=tasks[0], info={'answer': 'hello'})
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -762,7 +762,7 @@ class TestProjectAPI(TestAPI):
         assert len(taskruns) == data['done'], error_msg
 
         # Add a new TaskRun and check again
-        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'}, user=user)
+        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': 'hello'}, user=user)
 
         url = '/api/project/1/userprogress?api_key=%s' % user.api_key
         res = self.app.get(url, follow_redirects=True)
@@ -911,7 +911,7 @@ class TestProjectAPI(TestAPI):
             short_name='name',
             description='description',
             owner_id=user.id,
-            long_description=u'Long Description\n================',
+            long_description='Long Description\n================',
             info={},
             id=222,
             created='today',
@@ -947,7 +947,7 @@ class TestProjectAPI(TestAPI):
             short_name='name',
             description='description',
             owner_id=user.id,
-            long_description=u'Long Description\n================',
+            long_description='Long Description\n================',
             info={'task_presenter': '<div>'},
             published=True)
         data = json.dumps(data)
@@ -967,7 +967,7 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
 
         res = self.app.put(url, data=data)
-        print res.data
+        print(res.data)
         error_msg = json.loads(res.data)['exception_msg']
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
@@ -1006,7 +1006,7 @@ class TestProjectAPI(TestAPI):
         url = '/api/project?api_key=%s' % owner.api_key
         payload = dict(name='foo', short_name='foo', description='foo')
         res = self.app.post(url, data=json.dumps(payload))
-        print res.data
+        print(res.data)
         project_id = json.loads(res.data)['id']
         clean_project_mock.assert_called_with(project_id), res.data
 

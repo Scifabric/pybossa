@@ -45,7 +45,7 @@ def myquote(line):
 def calculate_buffer(data, salt):
     """Compute buffer."""
     strBuffer = ""
-    for k in sorted(data.iterkeys()):
+    for k in sorted(data.keys()):
 
         # Handle the BOOL special case
         v = data[k]

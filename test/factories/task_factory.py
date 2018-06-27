@@ -33,7 +33,7 @@ class TaskFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     project = factory.SubFactory('factories.ProjectFactory')
     project_id = factory.LazyAttribute(lambda task: task.project.id)
-    state = u'ongoing'
+    state = 'ongoing'
     quorum = 0
     calibration = 0
     priority_0 = 0.0

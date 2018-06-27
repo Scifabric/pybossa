@@ -65,13 +65,13 @@ class BaseFactory(factory.Factory):
 
 
 # Import the factories
-from project_factory import ProjectFactory
-from announcement_factory import AnnouncementFactory
-from blogpost_factory import BlogpostFactory
-from category_factory import CategoryFactory
-from task_factory import TaskFactory
-from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory, ExternalUidTaskRunFactory
-from user_factory import UserFactory
-from auditlog_factory import AuditlogFactory
-from webhook_factory import WebhookFactory
-from helping_material import HelpingMaterialFactory
+from .project_factory import ProjectFactory
+from .announcement_factory import AnnouncementFactory
+from .blogpost_factory import BlogpostFactory
+from .category_factory import CategoryFactory
+from .task_factory import TaskFactory
+from .taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory, ExternalUidTaskRunFactory
+from .user_factory import UserFactory
+from .auditlog_factory import AuditlogFactory
+from .webhook_factory import WebhookFactory
+from .helping_material import HelpingMaterialFactory

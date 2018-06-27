@@ -40,14 +40,14 @@ class TestContributionsGuard(object):
 
         self.guard.stamp(self.task, self.auth_user)
 
-        assert key in self.connection.keys(), self.connection.keys()
+        assert key in list(self.connection.keys()), list(self.connection.keys())
 
     def test_stamp_registers_specific_user_ip_and_task_if_no_id_provided(self):
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
         self.guard.stamp(self.task, self.anon_user)
 
-        assert key in self.connection.keys(), self.connection.keys()
+        assert key in list(self.connection.keys()), list(self.connection.keys())
 
     def test_stamp_expires_in_one_hour(self):
         key = 'pybossa:task_requested:user:33:task:22'

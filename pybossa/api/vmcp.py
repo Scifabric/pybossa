@@ -25,7 +25,7 @@ import os
 import json
 import pybossa.vmcp
 from flask import Response, request, current_app
-from api_base import APIBase
+from .api_base import APIBase
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.core import ratelimits
 from pybossa.util import jsonpify

@@ -35,7 +35,7 @@ class TestGlobalStatsAPI(TestAPI):
                 'n_users', 'n_task_runs', 'n_results', 'categories']
         for k in keys:
             err_msg = "%s should be in stats JSON object" % k
-            assert k in stats.keys(), err_msg
+            assert k in list(stats.keys()), err_msg
 
     @with_context
     def test_post_global_stats(self):

@@ -40,7 +40,7 @@ class TestUserAPI(Test):
         user = data[0]
         assert len(data) == 3, data
         for datum in data:
-            assert [u'locale', u'name'] == datum.keys(), datum.keys()
+            assert ['locale', 'name'] == list(datum.keys()), list(datum.keys())
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -51,7 +51,7 @@ class TestUserAPI(Test):
         user = data
         assert user['name'] == expected_user.name, (user['name'],
                                                     expected_user.name)
-        assert 'info' not in user.keys(), user.keys()
+        assert 'info' not in list(user.keys()), list(user.keys())
 
         # Test GETting a specific user by ID as owner
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
@@ -60,7 +60,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         user = data
         assert user['name'] == expected_user.name, data
-        assert 'info' in user.keys(), user.keys()
+        assert 'info' in list(user.keys()), list(user.keys())
         assert user['info']['extra'] == 'foo'
         assert user['info']['badges'] == [1,2,3]
 
@@ -71,7 +71,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         user = data
         assert user['name'] == expected_user.name, data
-        assert 'info' in user.keys(), user.keys()
+        assert 'info' in list(user.keys()), list(user.keys())
         assert user['info']['extra'] == 'foo'
         assert user['info']['badges'] == [1,2,3]
 
@@ -82,7 +82,7 @@ class TestUserAPI(Test):
         data = json.loads(res.data)
         user = data
         assert user['name'] == expected_user.name, data
-        assert 'info' not in user.keys(), user.keys()
+        assert 'info' not in list(user.keys()), list(user.keys())
 
 
         # Test a non-existant ID
@@ -355,9 +355,9 @@ class TestUserAPI(Test):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
-        assert 'email_addr' not in public_user.keys(), public_user
-        assert 'id' not in public_user.keys(), public_user
-        assert 'info' not in public_user.keys(), public_user
+        assert 'email_addr' not in list(public_user.keys()), public_user
+        assert 'id' not in list(public_user.keys()), public_user
+        assert 'info' not in list(public_user.keys()), public_user
 
         # with a non-admin API-KEY, the result should be the same
         res = self.app.get(query + '&api_key=' + user.api_key)
@@ -365,9 +365,9 @@ class TestUserAPI(Test):
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
-        assert 'email_addr' not in public_user.keys(), public_user
-        assert 'id' not in public_user.keys(), public_user
-        assert 'info' not in public_user.keys(), public_user
+        assert 'email_addr' not in list(public_user.keys()), public_user
+        assert 'id' not in list(public_user.keys()), public_user
+        assert 'info' not in list(public_user.keys()), public_user
 
         # with an admin API-KEY, all the matching results should be returned
         res = self.app.get(query + '&api_key=' + admin.api_key)

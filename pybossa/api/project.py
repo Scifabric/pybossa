@@ -25,7 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 import copy
 from werkzeug.exceptions import BadRequest, Forbidden
 from flask.ext.login import current_user
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
@@ -72,7 +72,7 @@ class ProjectAPI(APIBase):
         auditlogger.add_log_entry(old_project, new_project, current_user)
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
@@ -83,10 +83,10 @@ class ProjectAPI(APIBase):
         public = Project().public_attributes()
         public.append('link')
         public.append('links')
-        for key in tmp.keys():
+        for key in list(tmp.keys()):
             if key not in public:
                 del tmp[key]
-        for key in tmp['info'].keys():
+        for key in list(tmp['info'].keys()):
             if key not in Project().public_info_keys():
                 del tmp['info'][key]
         return tmp

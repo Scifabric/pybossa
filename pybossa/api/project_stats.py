@@ -21,7 +21,7 @@ PYBOSSA api module for exposing domain object ProjectStats via an API.
 import copy
 from flask import request
 from pybossa.model.project_stats import ProjectStats
-from api_base import APIBase
+from .api_base import APIBase
 
 
 class ProjectStatsAPI(APIBase):
