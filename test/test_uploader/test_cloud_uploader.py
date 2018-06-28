@@ -26,6 +26,11 @@ from io import StringIO
 
 class TestCloudUploader(Test):
 
+    conn_args = {
+        'host': 's3.com',
+        'headers': True
+    }
+
     @with_context
     @patch('pybossa.uploader.cloud_store.create_connection')
     def test_cloud_uploader(self, create_connection):
@@ -40,7 +45,10 @@ class TestCloudUploader(Test):
         fs = FileStorage(stream=StringIO(u'hello world'),
                          filename='the_file.jpg')
 
-        with patch.dict(self.flask_app.config, {'UPLOAD_BUCKET': 'testbucket'}):
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
             assert u.upload_file(fs, 'cont')
 
         assert u.bucket == mock_bucket
@@ -74,7 +82,10 @@ class TestCloudUploader(Test):
         create_connection.return_value = mock_conn
         u = CloudStoreUploader()
 
-        with patch.dict(self.flask_app.config, {'UPLOAD_BUCKET': 'testbucket'}):
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
             assert u.delete_file('hello', 'cont')
 
         mock_bucket.delete_key.assert_called_with(u.key_name('cont', 'hello'))
@@ -89,7 +100,10 @@ class TestCloudUploader(Test):
         u = CloudStoreUploader()
 
         mock_bucket.delete_key.side_effect = Exception
-        with patch.dict(self.flask_app.config, {'UPLOAD_BUCKET': 'testbucket'}):
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
             assert not u.delete_file('hello', 'cont')
 
     @with_context
@@ -110,7 +124,10 @@ class TestCloudUploader(Test):
             'container': 'user_1',
             'filename': 'test.jpg'
         }
-        with patch.dict(self.flask_app.config, {'UPLOAD_BUCKET': 'testbucket'}):
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
             url = u.external_url_handler(None, None, values)
         assert url == 'generated_url', url
 
