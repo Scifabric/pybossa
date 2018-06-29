@@ -163,3 +163,12 @@ class TestBulkTaskIIIFImport(object):
         requests.get.return_value = response
         returned_manifest = self.importer._get_validated_manifest(None, '2.1')
         assert_equal(type(returned_manifest), OrderedDict)
+
+    def test_exception_when_404_response_for_manifest(self, requests):
+        headers = {'Content-Type': 'application/json'}
+        manifest = self.create_manifest()
+        response = FakeResponse(text=json.dumps(manifest), status_code=404,
+                                headers=headers, encoding='utf-8')
+        requests.get.return_value = response
+        assert_raises(BulkImportException,
+                      self.importer._get_validated_manifest, None, '2.1')
