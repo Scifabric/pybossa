@@ -63,7 +63,8 @@ requirements = [
     "pycountry",
     "wtforms-components>=0.10.3, <0.10.4",
     "yacryptopan",
-    "Faker"
+    "Faker",
+    "iiif-prezi>=0.2.9, <1.0.0"
 ]
 
 setup(
