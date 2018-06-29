@@ -8664,5 +8664,34 @@ class TestWeb(web.Helper):
         assert 'body' in email_data.keys()
 
         email_content = email_data['body']
-        assert 'Redundancy could not be updated for tasks that are either complete or older \
-            than {} days\nTask Ids\n{}'.format(task_repo.rdancy_upd_exp, tasks[0].id)
+        expected_email_content = ('Redundancy could not be updated for tasks either completed '
+            'or older than {} days.\nTask Ids\n{}'.format(task_repo.rdancy_upd_exp, tasks[0].id))
+        assert expected_email_content == email_content, "Email should be sent with list of tasks whose redundancy could not be updated"
+
+    @with_context
+    def test_individual_task_redundancy_update(self):
+        """Test task redundancy updated for single task"""
+
+        self.register()
+        self.signin()
+        self.new_project()
+
+        project = db.session.query(Project).first()
+        project.published = True
+        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+        task = Task(project_id=project.id, n_answers=1, created=now)
+        db.session.add(task)
+        db.session.commit()
+
+        # redundancy updated with filter containing single task
+        filter = dict(n_answers=2, filters=dict(), taskIds=[task.id])
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+            data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 2, "Updated task redundancy must be 2"
+
+        # redundancy not updated for single task when new redundancy passed is same as old
+        filter = dict(n_answers=2, filters=dict(), taskIds=[task.id])
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+            data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 2, "Task redundancy should not have been updated"

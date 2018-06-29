@@ -88,6 +88,7 @@ from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from pybossa.util import get_valid_user_preferences
 from pybossa.core import private_instance_params
+from datetime import datetime
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -1415,21 +1416,22 @@ def bulk_redundancy_update(short_name):
         n_answers = req_data.get('n_answers', 1)
         task_ids = req_data.get('taskIds')
         if task_ids:
-            _update_task_redundancy(project.id, task_ids, n_answers)
+            tasks_updated = _update_task_redundancy(project.id, task_ids, n_answers)
+            if not tasks_updated:
+                flash('Redundancy could not be updated for tasks either completed or older than '
+                      '{} days.'.format(current_app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)))
             new_value = json.dumps({
                 'task_ids': task_ids,
                 'n_answers': n_answers
             })
+
         else:
             args = parse_tasks_browse_args(request.json.get('filters'))
             tasks_not_updated = task_repo.update_tasks_redundancy(project, n_answers, args)
+            notify_redundancy_updates(tasks_not_updated)
             if tasks_not_updated:
-                body = 'Redundancy could not be updated for tasks that are either complete or older than {} days\nTask Ids\n{}'
-                body = body.format(task_repo.rdancy_upd_exp, tasks_not_updated)
-                email = dict(subject='Tasks redundancy update status',
-                           recipients=[current_user.email_addr],
-                           body=body)
-                mail_queue.enqueue(send_mail, email)
+                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
+
             new_value = json.dumps({
                 'filters': args,
                 'n_answers': n_answers
@@ -1448,6 +1450,7 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
     exported as False for tasks with curr redundancy < new redundancy
     and task was already exported
     """
+    tasks_updated = False
     for task_id in task_ids:
         if task_id:
             t = task_repo.get_task_by(project_id=project_id,
@@ -1467,7 +1470,8 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
                 if len(t.task_runs) >= n_answers:
                     t.state = 'completed'
                 task_repo.update(t)
-
+                tasks_updated = True
+    return tasks_updated
 
 @crossdomain(origin='*', headers=cors_headers)
 @blueprint.route('/<short_name>/tasks/deleteselected', methods=['POST'])
@@ -1905,13 +1909,17 @@ def task_n_answers(short_name):
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
                       'N/A', default_form.default_n_answers.data)
         elif form.validate():
-            task_repo.update_tasks_redundancy(project, form.n_answers.data)
+            tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
+            notify_redundancy_updates(tasks_not_updated)
             # Log it
             auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
                                   'N/A', form.n_answers.data)
         if default_form.validate() or form.validate():
-            msg = gettext('Redundancy updated!')
-            flash(msg, 'success')
+            if tasks_not_updated:
+                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
+            else:
+                msg = gettext('Redundancy updated!')
+                flash(msg, 'success')
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
             flash(gettext('Please correct the errors'), 'error')
@@ -2843,3 +2851,14 @@ def ext_config(short_name):
     )
 
     return handle_content_type(response)
+
+
+def notify_redundancy_updates(tasks_not_updated):
+    if tasks_not_updated:
+        body = ('Redundancy could not be updated for tasks either completed '
+            'or older than {} days.\nTask Ids\n{}')
+        body = body.format(task_repo.rdancy_upd_exp, tasks_not_updated)
+        email = dict(subject='Tasks redundancy update status',
+                   recipients=[current_user.email_addr],
+                   body=body)
+        mail_queue.enqueue(send_mail, email)

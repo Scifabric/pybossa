@@ -429,15 +429,15 @@ class TaskRepository(Repository):
         """generate email msg for redundancy not updated, if any"""
         filters = filters or {}
         if not all(k in filters.keys() for k in ['created_from', 'created_to']):
-            conditions = ' AND state=:state OR created < :created_max_exp'
+            conditions = ' AND (state=:state OR created < :created_max_exp)'
             params = dict(state='completed', created_max_exp=date_max_exp)
         else:
             if filters['created_from'] >= date_max_exp:
-                conditions = ' AND state=:state '
+                conditions = ' AND state=:state'
                 params = dict(state='completed')
             else:
-                conditions = ' AND (created < :created_from AND created >= :created_max_exp) \
-                    OR (created >= :created_max_exp AND state = :state)'
+                conditions = ' AND ((created >= :created_from AND created < :created_max_exp) \
+                    OR (created >= :created_max_exp AND state = :state))'
                 params = dict(state='completed', created_from=filters['created_from'],
                     created_max_exp=date_max_exp)
 
