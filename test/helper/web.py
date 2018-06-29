@@ -190,7 +190,7 @@ class Helper(Test):
         """Helper function to create tasks for a project"""
         tasks = []
         for i in range(0, 10):
-            tasks.append(Task(project_id=project_id, state='0', info={}))
+            tasks.append(Task(project_id=project_id, state='ongoing', info={}))
         db.session.add_all(tasks)
         db.session.commit()
 

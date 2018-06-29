@@ -49,9 +49,10 @@ from sqlalchemy.orm.base import _entity_descriptor
 
 class Repository(object):
 
-    def __init__(self, db, language='english'):
+    def __init__(self, db, language='english', rdancy_upd_exp=30):
         self.db = db
         self.language = language
+        self.rdancy_upd_exp = rdancy_upd_exp
 
     def generate_query_from_keywords(self, model, fulltextsearch=None,
                                      **kwargs):

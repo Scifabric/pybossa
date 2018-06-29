@@ -1417,7 +1417,14 @@ def bulk_redundancy_update(short_name):
             })
         else:
             args = parse_tasks_browse_args(request.json.get('filters'))
-            task_repo.update_tasks_redundancy(project, n_answers, args)
+            tasks_not_updated = task_repo.update_tasks_redundancy(project, n_answers, args)
+            if tasks_not_updated:
+                body = 'Redundancy could not be updated for tasks that are either complete or older than {} days\nTask Ids\n{}'
+                body = body.format(task_repo.rdancy_upd_exp, tasks_not_updated)
+                email = dict(subject='Tasks redundancy update status',
+                           recipients=[current_user.email_addr],
+                           body=body)
+                mail_queue.enqueue(send_mail, email)
             new_value = json.dumps({
                 'filters': args,
                 'n_answers': n_answers
@@ -1441,8 +1448,15 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
             t = task_repo.get_task_by(project_id=project_id,
                                       id=int(task_id))
             if t and t.n_answers != n_answers:
-                if len(t.task_runs) < n_answers and t.state == 'completed':
-                    t.exported = False
+                now = datetime.now()
+                created = datetime.strptime(t.created, '%Y-%m-%dT%H:%M:%S.%f')
+                days_task_created = (now - created).days
+
+                if len(t.task_runs) < n_answers:
+                    if t.state == 'completed' or days_task_created > 30:
+                        continue
+                    else:
+                        t.exported = False
                 t.n_answers = n_answers
                 t.state = 'ongoing'
                 if len(t.task_runs) >= n_answers:

@@ -5,7 +5,6 @@ from pybossa.util import (convert_est_to_utc,
 import re
 import json
 
-
 def get_task_filters(args):
     """
     build the WHERE part of the query using the filter parameters
@@ -46,6 +45,9 @@ def get_task_filters(args):
         datestring = convert_est_to_utc(args['ftime_to']).isoformat()
         params['ftime_to'] = datestring
         filters += " AND ft <= :ftime_to"
+    if args.get('state'):
+        params['state'] = args['state']
+        filters += " AND state = :state"
     if args.get('order_by'):
         args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
     if args.get('filter_by_field'):
@@ -231,6 +233,11 @@ def parse_tasks_browse_args(args):
         user_pref = json.loads(args['filter_by_upref'])
         validate_user_preferences(user_pref)
         parsed_args['filter_by_upref'] = user_pref
+
+    if args.get('state'):
+        if args['state'] not in ['ongoing', 'completed']:
+            raise ValueError('invalid task state: %s'.format(args['state']))
+        parsed_args['state'] = args['state']
 
     return parsed_args
 
