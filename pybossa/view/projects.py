@@ -87,6 +87,7 @@ from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from pybossa.util import get_valid_user_preferences
+from pybossa.core import private_instance_params
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -595,6 +596,8 @@ def update(short_name):
             new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
+            if private_instance_params:
+                new_project.info['dataAccess'] = form.data_access.data
 
         if form.password.data:
             new_project.set_password(form.password.data)
@@ -632,6 +635,8 @@ def update(short_name):
         if project.category_id is None:
             project.category_id = categories[0].id
         form.populate_obj(project)
+        if private_instance_params:
+            form.data_access.data = project.info.get('dataAccess', [])
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
@@ -641,7 +646,6 @@ def update(short_name):
         categories = sorted(categories,
                             key=lambda category: category.name)
         form.category_id.choices = [(c.id, c.name) for c in categories]
-
         if request.form.get('btn') != 'Upload':
             if form.validate():
                 return handle_valid_form(form)
@@ -695,7 +699,8 @@ def update(short_name):
                     pro_features=pro,
                     target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
                     server_url=current_app.config.get('SERVER_URL'),
-                    sync_enabled=sync_enabled)
+                    sync_enabled=sync_enabled,
+                    private_instance=bool(private_instance_params))
     return handle_content_type(response)
 
 

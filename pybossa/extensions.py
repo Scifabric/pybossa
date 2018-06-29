@@ -164,3 +164,5 @@ import flask_profiler
 # IP anonymizer
 from pybossa.anonymizer import Anonymizer
 anonymizer = Anonymizer()
+
+private_instance_params = {}

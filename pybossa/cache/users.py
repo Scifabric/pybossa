@@ -324,14 +324,17 @@ def delete_user_summary(name):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_user_pref_metadata(name):
-    sql = text("""
-    SELECT info->'metadata', user_pref FROM "user" WHERE name=:name;
-    """)
+    from pybossa.core import private_instance_params
 
+    sql = text("""
+    SELECT info->'metadata', user_pref, info->'dataAccess' FROM "user" WHERE name=:name;
+    """)
     cursor = session.execute(sql, dict(name=name))
     row = cursor.fetchone()
     upref_mdata = row[0] or {}
     upref_mdata.update(row[1] or {})
+    if private_instance_params:
+        upref_mdata['data_access'] = row[2] or []
     return upref_mdata
 
 
