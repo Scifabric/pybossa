@@ -14,7 +14,7 @@ class CloudStoreUploader(Uploader):
     def bucket(self):
         if not self._bucket:
             bucket = app.config['UPLOAD_BUCKET']
-            conn_kwargs = app.config['S3_UPLOAD']
+            conn_kwargs = app.config.get('S3_UPLOAD', {})
             conn = create_connection(**conn_kwargs)
             self._bucket = conn.get_bucket(bucket, validate=False)
         return self._bucket
