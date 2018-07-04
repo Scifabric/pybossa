@@ -508,7 +508,7 @@ def fuzzyboolean(value):
     raise ValueError("Invalid literal for boolean(): {}".format(value))
 
 
-def get_avatar_url(upload_method, avatar, container):
+def get_avatar_url(upload_method, avatar, container, external):
     """Return absolute URL for avatar."""
     if upload_method.lower() == 'rackspace':
         return url_for('rackspace',
@@ -517,10 +517,10 @@ def get_avatar_url(upload_method, avatar, container):
     else:
         filename = container + '/' + avatar
         return url_for('uploads.uploaded_file', filename=filename,
-                       _external=True)
+                       _external=external)
 
 
-def get_disqus_sso(user): # pragma: no cover
+def get_disqus_sso(user):  # pragma: no cover
     # create a JSON packet of our data attributes
     # return a script tag to insert the sso message."""
     message, timestamp, sig, pub_key = get_disqus_sso_payload(user)
