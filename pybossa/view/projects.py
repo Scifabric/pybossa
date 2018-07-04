@@ -539,7 +539,10 @@ def update(short_name):
                 project.info['container'] = container
                 upload_method = current_app.config.get('UPLOAD_METHOD')
                 thumbnail_url = get_avatar_url(upload_method,
-                                               _file.filename, container)
+                                               _file.filename,
+                                               container,
+                                               current_app.config.get('AVATAR_ABSOLUTE')
+                                               )
                 project.info['thumbnail_url'] = thumbnail_url
                 project_repo.save(project)
                 flash(gettext('Your project thumbnail has been updated! It may \

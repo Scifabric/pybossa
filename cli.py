@@ -90,7 +90,10 @@ def get_thumbnail_urls():
                 container = project.info.get('container')
                 if (thumbnail and container):
                     print "Updating project: %s" % project.short_name
-                    thumbnail_url = get_avatar_url(upload_method, thumbnail, container)
+                    thumbnail_url = get_avatar_url(upload_method, thumbnail,
+                                                   container,
+                                                   app.config.get('AVATAR_ABSOLUTE',
+                                                                  True))
                     project.info['thumbnail_url'] = thumbnail_url
                     db.session.merge(project)
                     db.session.commit()
@@ -111,7 +114,9 @@ def get_avatars_url():
                 container = user.info.get('container')
                 if (avatar and container):
                     print "Updating user: %s" % user.name
-                    avatar_url = get_avatar_url(upload_method, avatar, container)
+                    avatar_url = get_avatar_url(upload_method, avatar,
+                                                container,
+                                                app.config.get('AVATAR_ABSOLUTE'))
                     user.info['avatar_url'] = avatar_url
                     db.session.merge(user)
                     db.session.commit()

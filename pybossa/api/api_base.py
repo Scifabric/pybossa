@@ -496,7 +496,9 @@ class APIBase(MethodView):
             uploader.upload_file(_file,
                                  container=container)
             file_url = get_avatar_url(upload_method,
-                                      _file.filename, container)
+                                      _file.filename,
+                                      container,
+                                      current_app.config.get('AVATAR_ABSOLUTE'))
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()
