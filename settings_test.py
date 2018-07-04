@@ -74,3 +74,4 @@ FLASK_PROFILER = {
 	    "^/static/.*"
 	]
 }
+AVATAR_ABSOLUTE = True

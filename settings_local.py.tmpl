@@ -287,3 +287,6 @@ TTL_ZIP_SEC_FILES = 3
 
 # Instruct PYBOSSA to generate HTTP or HTTPS 
 PREFERRED_URL_SCHEME='https'
+
+# Instruct PYBOSSA to generate absolute paths or not for avatars
+AVATAR_ABSOLUTE = True

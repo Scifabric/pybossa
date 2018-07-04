@@ -516,11 +516,12 @@ def get_avatar_url(upload_method, avatar, container):
                        container=container)
     else:
         filename = container + '/' + avatar
+        external = current_app.config.get('AVATAR_ABSOLUTE', True)
         return url_for('uploads.uploaded_file', filename=filename,
-                       _external=True)
+                       _external=external)
 
 
-def get_disqus_sso(user): # pragma: no cover
+def get_disqus_sso(user):  # pragma: no cover
     # create a JSON packet of our data attributes
     # return a script tag to insert the sso message."""
     message, timestamp, sig, pub_key = get_disqus_sso_payload(user)
