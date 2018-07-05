@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import jwt
 from mock import patch, Mock
 from default import Test, with_context
 from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider
@@ -68,3 +69,54 @@ class TestS3Connection(Test):
         http.authorize(conn)
         assert header in http.headers
         assert http.headers[header] == access_key
+
+    @with_context
+    @patch('pybossa.cloud_store_api.connection.S3Connection.make_request')
+    def test_proxied_connection(self, make_request):
+        params = {
+            'host': 's3.test.com',
+            'object_service': 'tests3',
+            'client_secret': 'abcd',
+            'client_id': 'test_id',
+            'auth_headers': [('test', 'object-service')]
+        }
+        conn = create_connection(**params)
+        conn.make_request('GET', 'test_bucket', 'test_key')
+
+        make_request.assert_called()
+        args, kwargs = make_request.call_args
+        headers = args[3]
+        assert headers['x-objectservice-id'] == 'TESTS3'
+
+        jwt_payload = jwt.decode(headers['jwt'], 'abcd', algorithm='HS256')
+        assert jwt_payload['path'] == '/test_bucket/test_key'
+
+        bucket = conn.get_bucket('test_bucket', validate=False)
+        key = bucket.get_key('test_key', validate=False)
+        assert key.generate_url(0).split('?')[0] == 'https://s3.test.com/test_bucket/test_key'
+
+    @with_context
+    @patch('pybossa.cloud_store_api.connection.S3Connection.make_request')
+    def test_proxied_connection_url(self, make_request):
+        params = {
+            'host': 's3.test.com',
+            'object_service': 'tests3',
+            'client_secret': 'abcd',
+            'client_id': 'test_id',
+            'host_suffix': '/test',
+            'auth_headers': [('test', 'object-service')]
+        }
+        conn = create_connection(**params)
+        conn.make_request('GET', 'test_bucket', 'test_key')
+
+        make_request.assert_called()
+        args, kwargs = make_request.call_args
+        headers = args[3]
+        assert headers['x-objectservice-id'] == 'TESTS3'
+
+        jwt_payload = jwt.decode(headers['jwt'], 'abcd', algorithm='HS256')
+        assert jwt_payload['path'] == '/test/test_bucket/test_key'
+
+        bucket = conn.get_bucket('test_bucket', validate=False)
+        key = bucket.get_key('test_key', validate=False)
+        assert key.generate_url(0).split('?')[0] == 'https://s3.test.com/test/test_bucket/test_key'

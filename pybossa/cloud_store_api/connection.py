@@ -100,7 +100,7 @@ class ProxiedConnection(CustomConnection):
 
     def __init__(self, client_id, client_secret, object_service, *args, **kwargs):
         self.client_id = client_id
-        self.client_secret = client_secret.decode('hex')
+        self.client_secret = client_secret
         kwargs['object_service'] = object_service
         super(ProxiedConnection, self).__init__(*args, **kwargs)
         self.set_bucket_class(ProxiedBucket)
