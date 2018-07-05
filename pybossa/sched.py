@@ -16,17 +16,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
-from sqlalchemy.sql import func, desc
+from functools import wraps
+from werkzeug.exceptions import Forbidden
+from sqlalchemy.sql import func, desc, text
 from sqlalchemy import and_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
-from pybossa.core import db
+from pybossa.core import db, sentinel, project_repo
+from pybossa.contributions_guard import ContributionsGuard
+from pybossa.redis_lock import (LockManager, get_active_user_count,
+    register_active_user)
 import random
+
+from flask import current_app
 
 
 session = db.slave_session
+
+
+TIMEOUT = ContributionsGuard.STAMP_TTL
 
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
@@ -37,9 +47,38 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
         'incremental': get_incremental_task,
-        'depth_first_all': get_depth_first_all_task}
+        'depth_first_all': get_depth_first_all_task,
+        'locked': get_locked_task}
     scheduler = sched_map.get(sched, sched_map['default'])
     return scheduler(project_id, user_id, user_ip, external_uid, offset=offset, limit=limit, orderby=orderby, desc=desc)
+
+
+def can_post(project_id, task_id, user_id_or_ip):
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked':
+        user_id = user_id_or_ip['user_id'] or \
+                user_id_or_ip['external_uid'] or \
+                user_id_or_ip['user_ip'] or \
+                '127.0.0.1'
+        allowed = has_lock(task_id, user_id, TIMEOUT)
+        return allowed
+    else:
+        return True
+
+
+def can_read_task(task, user):
+    project_id = task.project_id
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked':
+        return has_read_access(user) or has_lock(task.id, user.id, TIMEOUT)
+    else:
+        return True
+
+
+def after_save(project_id, task_id, user_id):
+    scheduler = get_project_scheduler(project_id)
+    if scheduler == 'locked':
+        release_lock(task_id, user_id, TIMEOUT)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -146,10 +185,106 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
     return _handle_tuples(data)
 
 
+def get_locked_task(project_id, user_id=None, user_ip=None,
+                    external_uid=None, offset=0, limit=1,
+                    orderby='priority_0', desc=True):
+    if offset > 2:
+        raise BadRequest()
+
+    user_count = get_active_user_count(project_id, sentinel.master)
+    limit = 2*user_count
+
+    user_param = 'user_id'
+    uid = user_id
+    if not user_id:
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        if user_ip and not external_uid:
+            user_param = 'user_ip'
+            uid = user_ip
+        else:
+            user_param = 'external_uid'
+            uid = external_uid
+
+    sql = text('''
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers
+           FROM task
+           LEFT JOIN task_run ON (task.id = task_run.task_id)
+           WHERE NOT EXISTS
+           (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+           {}=:uid AND task_id=task.id)
+           AND task.project_id=:project_id AND task.state !='completed'
+           group by task.id HAVING COUNT(task_run.task_id) < n_answers
+           ORDER BY priority_0 DESC, id ASC LIMIT :limit;
+           '''.format(user_param))
+
+    rows = session.execute(sql, dict(project_id=project_id,
+                                     uid=uid, limit=user_count + 5))
+
+    for task_id, taskcount, n_answers in rows:
+        remaining = n_answers - taskcount
+        if acquire_lock(task_id, user_id, remaining, TIMEOUT):
+            rows.close()
+            register_active_user(project_id, user_id, sentinel.master, ttl=TIMEOUT)
+            return [session.query(Task).get(task_id)]
+
+    return []
+
+
+TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
+TASK_ID_PROJECT_ID_KEY_PREFIX = 'pybossa:task_id:project_id:{0}'
+
+
+def has_lock(task_id, user_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
+    task_users_key = get_task_users_key(task_id)
+    return lock_manager.has_lock(task_users_key, user_id)
+
+
+def acquire_lock(task_id, user_id, limit, timeout, pipeline=None, execute=True):
+    redis_conn = sentinel.master
+    pipeline = pipeline or redis_conn.pipeline(transaction=True)
+    lock_manager = LockManager(redis_conn, timeout)
+    task_users_key = get_task_users_key(task_id)
+    if lock_manager.acquire_lock(task_users_key, user_id, limit, pipeline=pipeline):
+        if execute:
+            return all(not isinstance(r, Exception) for r in pipeline.execute())
+        return True
+    return False
+
+
+def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):
+    redis_conn = sentinel.master
+    pipeline = pipeline or redis_conn.pipeline(transaction=True)
+    lock_manager = LockManager(redis_conn, timeout)
+    task_users_key = get_task_users_key(task_id)
+    lock_manager.release_lock(task_users_key, user_id, pipeline=pipeline)
+    if execute:
+        pipeline.execute()
+
+
+def get_locks(task_id, timeout):
+    lock_manager = LockManager(sentinel.master, timeout)
+    task_users_key = get_task_users_key(task_id)
+    return lock_manager.get_locks(task_users_key)
+
+
+def get_task_users_key(task_id):
+    return TASK_USERS_KEY_PREFIX.format(task_id)
+
+
+def get_project_scheduler(project_id):
+    project = project_repo.get(project_id)
+    if not project:
+        raise Forbidden('Invalid project_id')
+    return project.info.get('sched', 'default')
+
+
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
             ('depth_first_all', 'Depth First All'),
+            ('locked', 'Locked')
             ]
 
 
@@ -169,6 +304,7 @@ def _set_orderby_desc(query, orderby, descending):
             query = query.order_by(getattr(Task, orderby).asc())
     #query = query.order_by(Task.id.asc())
     return query
+
 
 def _handle_tuples(data):
     """Handle tuples when query returns several columns."""
