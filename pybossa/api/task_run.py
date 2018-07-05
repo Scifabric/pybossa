@@ -33,6 +33,7 @@ from pybossa.util import get_user_id_or_ip
 from pybossa.core import task_repo, sentinel, anonymizer
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
+from pybossa.sched import can_post
 
 
 class TaskRunAPI(APIBase):
@@ -42,8 +43,13 @@ class TaskRunAPI(APIBase):
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
 
+    def check_can_post(self, project_id, task_id, user_ip_or_id):
+        if not can_post(project_id, task_id, user_ip_or_id):
+            raise Forbidden("You must request a task first!")
+
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
+        self.check_can_post(taskrun.project_id, taskrun.task_id, get_user_id_or_ip())
         task = task_repo.get_task(taskrun.task_id)
         guard = ContributionsGuard(sentinel.master)
 
