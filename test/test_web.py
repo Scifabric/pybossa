@@ -8678,6 +8678,7 @@ class TestWeb(web.Helper):
         self.signin()
         self.new_project()
 
+
         project = db.session.query(Project).first()
         project.published = True
         now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
@@ -8724,3 +8725,32 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, res.status_code
         assert task.n_answers == 1, "redundancy not updated for completed task"
         assert task.state == 'completed', "status not updated for completed task"
+
+    @with_context
+    def test_assign_users_to_project(self):
+        """Test assign users to project based on data access levels"""
+
+        from pybossa import core
+
+        project.info['dataAccess'] = ["L1"]
+
+        user_access = dict(select_users=["L2"])
+        private_instance_params = dict(data_access=[("L1", "L1")],
+            data_access_defaults=dict(L1=["L2", "L3", "L4"]))
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
+                 data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
+            data = json.loads(res.data)
+            assert data.get('status') == 'warning', data
+            assert "Cannot assign users. There is no user matching data access level for this project" in data.get('flash'), data
+
+
+        user = User.query.first()
+        user.info['dataAccess'] = ["L1"]
+        user_access = dict(select_users=["L1"])
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
+                 data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
+            data = json.loads(res.data)
+            assert data.get('status') == 'success', data
+            assert "No user assigned to project" in data.get('flash'), data

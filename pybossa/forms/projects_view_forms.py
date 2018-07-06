@@ -31,4 +31,5 @@ from forms import (
     PasswordForm,
     GenericBulkTaskImportForm,
     AvatarUploadForm,
-    TransferOwnershipForm)
+    TransferOwnershipForm,
+    DataAccessForm)

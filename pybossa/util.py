@@ -1016,3 +1016,15 @@ def delete_import_csv_file(path):
         delete_file_from_s3(s3_bucket, path)
     else:
         os.remove(path)
+
+
+def get_data_access_db_clause(access_levels):
+    from pybossa.core import private_instance_params
+
+    data_access_defaults = private_instance_params.get('data_access_defaults', {})
+    levels = set([level for level in access_levels])
+    for level in access_levels:
+        for default_levels in data_access_defaults.get(level):
+            levels.add(default_levels)
+    sql_clauses = [' info->\'dataAccess\' @> \'["{}"]\''.format(level) for level in levels]
+    return ' OR '.join(sql_clauses)

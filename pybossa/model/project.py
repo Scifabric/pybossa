@@ -177,3 +177,10 @@ class Project(db.Model, DomainObject):
             search_backward_stop = match.end()
 
         return headers
+
+    def set_project_users(self, users):
+        if users and isinstance(users, list):
+            self.info['project_users'] = users
+
+    def get_project_users(self):
+        return self.info.get('project_users', [])
