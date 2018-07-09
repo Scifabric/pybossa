@@ -1006,13 +1006,13 @@ def get_file_path_for_import_csv(csv_file):
 def get_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
-        return get_file_from_s3(s3_bucket, path, conn='S3_IMPORT')
+        return get_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
     else:
         return open(path)
 
 def delete_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
-        delete_file_from_s3(s3_bucket, path, conn='S3_IMPORT')
+        delete_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
     else:
         os.remove(path)

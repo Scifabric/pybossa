@@ -165,7 +165,7 @@ def _upload_files_from_json(task_run_info, upload_path):
             out_url = s3_upload_from_string(app.config.get("S3_BUCKET"),
                                             content,
                                             filename,
-                                            directory=upload_path, conn='S3_TASKRUN')
+                                            directory=upload_path, conn_name='S3_TASKRUN')
             task_run_info[key] = out_url
 
 
@@ -176,7 +176,7 @@ def _upload_files_from_request(task_run_info, files, upload_path):
         file_obj = request.files[key]
         s3_url = s3_upload_file_storage(app.config.get("S3_BUCKET"),
                                         file_obj,
-                                        directory=upload_path, conn='S3_TASKRUN')
+                                        directory=upload_path, conn_name='S3_TASKRUN')
         task_run_info[key] = s3_url
 
 
@@ -184,4 +184,4 @@ def _upload_task_run(task_run, upload_path):
     content = json.dumps(task_run, ensure_ascii=False)
     return s3_upload_from_string(app.config.get("S3_BUCKET"),
                                  content, 'pyb_answer.json',
-                                 directory=upload_path, conn='S3_TASKRUN')
+                                 directory=upload_path, conn_name='S3_TASKRUN')
