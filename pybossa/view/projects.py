@@ -1283,6 +1283,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         valid_user_preferences = get_valid_user_preferences()
         language_options = valid_user_preferences.get('languages')
         location_options = valid_user_preferences.get('locations')
+        rdancy_upd_exp = current_app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)
         data = dict(template='/projects/tasks_browse.html',
                     project=project_sanitized,
                     owner=owner_sanitized,
@@ -1301,7 +1302,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     info_columns=disp_info_columns,
                     filter_columns=columns,
                     language_options=language_options,
-                    location_options=location_options)
+                    location_options=location_options,
+                    rdancy_upd_exp=rdancy_upd_exp)
 
         return handle_content_type(data)
 
@@ -1418,7 +1420,7 @@ def bulk_redundancy_update(short_name):
         if task_ids:
             tasks_updated = _update_task_redundancy(project.id, task_ids, n_answers)
             if not tasks_updated:
-                flash('Redundancy could not be updated for tasks either completed or older than '
+                flash('Redundancy not updated for tasks containing files that are either completed or older than '
                       '{} days.'.format(current_app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)))
             new_value = json.dumps({
                 'task_ids': task_ids,
@@ -1451,17 +1453,21 @@ def _update_task_redundancy(project_id, task_ids, n_answers):
     and task was already exported
     """
     tasks_updated = False
+    rdancy_upd_exp = current_app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)
     for task_id in task_ids:
         if task_id:
             t = task_repo.get_task_by(project_id=project_id,
                                       id=int(task_id))
+            if t and t.n_answers == n_answers:
+                tasks_updated = True # no flash error message for same redundancy not updated
             if t and t.n_answers != n_answers:
                 now = datetime.now()
                 created = datetime.strptime(t.created, '%Y-%m-%dT%H:%M:%S.%f')
                 days_task_created = (now - created).days
 
                 if len(t.task_runs) < n_answers:
-                    if t.state == 'completed' or days_task_created > 30:
+                    if t.info and ([k for k in t.info if k.endswith('__upload_url')] and
+                        (t.state == 'completed' or days_task_created > rdancy_upd_exp)):
                         continue
                     else:
                         t.exported = False
@@ -2855,8 +2861,8 @@ def ext_config(short_name):
 
 def notify_redundancy_updates(tasks_not_updated):
     if tasks_not_updated:
-        body = ('Redundancy could not be updated for tasks either completed '
-            'or older than {} days.\nTask Ids\n{}')
+        body = ('Redundancy could not be updated for tasks containing files that are '
+            'either completed or older than {} days.\nTask Ids\n{}')
         body = body.format(task_repo.rdancy_upd_exp, tasks_not_updated)
         email = dict(subject='Tasks redundancy update status',
                    recipients=[current_user.email_addr],

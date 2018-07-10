@@ -242,26 +242,19 @@ class TaskRepository(Repository):
         tasks with curr redundancy < new redundancy, with state as completed
         and were marked as exported = True
         """
-        from pybossa.jobs import send_mail
 
-        filters = filters or {}
-        date_now = datetime.utcnow().strftime('%Y-%m-%dT23:59:59')
-        date_max_exp = (datetime.utcnow() - timedelta(self.rdancy_upd_exp)
-            ).strftime('%Y-%m-%dT00:00:00')
-
-        tasks_not_updated = self._get_redundancy_update_msg(project, filters, date_now, date_max_exp)
-        filters['state'] = 'ongoing'
-        filters['created_from'] = max(date_max_exp, filters.get('created_from'))
-        filters['created_to'] = max(date_now, filters.get('created_to'))
-
-        conditions, params = get_task_filters(filters)
         if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
             raise ValueError("Invalid redundancy value: {}".format(n_answers))
 
-        self.update_task_exported_status(project.id, n_answers, conditions, params)
+        filters = filters or {}
+        task_expiration = '{} day'.format(self.rdancy_upd_exp)
+        conditions, params = get_task_filters(filters)
+        tasks_not_updated = self._get_redundancy_update_msg(
+            project, n_answers, conditions, params, task_expiration)
 
+        self.update_task_exported_status(project.id, n_answers, conditions, params, task_expiration)
         sql = text('''
-                   WITH to_update AS (
+                   WITH all_tasks_with_orig_filter AS (
                         SELECT task.id as id,
                         coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
                         priority_0, task.created
@@ -271,13 +264,30 @@ class TaskRepository(Repository):
                         WHERE project_id=:project_id GROUP BY task_id) AS log_counts
                         ON task.id=log_counts.task_id
                         WHERE task.project_id=:project_id {}
+                   ),
+
+                   tasks_with_file_urls AS (
+                        SELECT t.id as id FROM task t
+                        WHERE t.id IN (SELECT id from all_tasks_with_orig_filter)
+                        AND jsonb_typeof(t.info) = 'object'
+                        AND EXISTS(SELECT TRUE FROM jsonb_object_keys(t.info) AS key
+                        WHERE key ILIKE '%\_\_upload\_url%')
+                   ),
+
+                   tasks_excl_file_urls AS (
+                        SELECT id FROM all_tasks_with_orig_filter
+                        WHERE id NOT IN (SELECT id FROM tasks_with_file_urls)
                    )
+
                    UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE project_id=:project_id
-                   AND task.id in (SELECT id from to_update);'''
+                   state='ongoing' WHERE project_id=:project_id AND
+                   ((id IN (SELECT id from tasks_excl_file_urls)) OR
+                   (id IN (SELECT id from tasks_with_file_urls) AND state='ongoing'
+                   AND TO_DATE(created, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - :task_expiration ::INTERVAL));'''
                    .format(conditions))
         self.db.session.execute(sql, dict(n_answers=n_answers,
                                           project_id=project.id,
+                                          task_expiration=task_expiration,
                                           **params))
         self.update_task_state(project.id, n_answers)
         self.db.session.commit()
@@ -397,13 +407,13 @@ class TaskRepository(Repository):
         uploader.delete_file(json_taskruns_filename, container)
         uploader.delete_file(csv_taskruns_filename, container)
 
-    def update_task_exported_status(self, project_id, n_answers, conditions, params):
+    def update_task_exported_status(self, project_id, n_answers, conditions, params, task_expiration):
         """
         Update exported=False for completed tasks that were exported
         and with new redundancy, they'll be marked as ongoing
         """
         sql = text('''
-                   WITH to_update AS (
+                   WITH all_tasks_with_orig_filter AS (
                         SELECT task.id as id,
                         coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
                         priority_0, task.created
@@ -415,41 +425,57 @@ class TaskRepository(Repository):
                         WHERE task.project_id=:project_id
                         AND task.state='completed'
                         AND task.n_answers < :n_answers {}
+                   ),
+
+                   tasks_with_file_urls AS (
+                        SELECT t.id as id FROM task t
+                        WHERE t.id IN (SELECT id from all_tasks_with_orig_filter)
+                        AND jsonb_typeof(t.info) = 'object'
+                        AND EXISTS(SELECT TRUE FROM jsonb_object_keys(t.info) AS key
+                        WHERE key ILIKE '%\_\_upload\_url%')
+                   ),
+
+                   tasks_excl_file_urls AS (
+                        SELECT id FROM all_tasks_with_orig_filter
+                        WHERE id NOT IN (SELECT id FROM tasks_with_file_urls)
                    )
+
                    UPDATE task SET exported=False
-                   WHERE project_id=:project_id
-                   AND task.id IN (SELECT id FROM to_update);'''
+                   WHERE project_id=:project_id AND
+                   ((id IN (SELECT id from tasks_excl_file_urls)) OR
+                   (id IN (SELECT id from tasks_with_file_urls) AND state='ongoing'
+                   AND TO_DATE(created, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - :task_expiration ::INTERVAL));'''
                    .format(conditions))
         self.db.session.execute(sql, dict(n_answers=n_answers,
                                           project_id=project_id,
+                                          task_expiration=task_expiration,
                                           **params))
 
 
-    def _get_redundancy_update_msg(self, project, filters, date_now, date_max_exp):
-        """generate email msg for redundancy not updated, if any"""
-        filters = filters or {}
-        if not all(k in filters.keys() for k in ['created_from', 'created_to']):
-            conditions = ' AND (state=:state OR created < :created_max_exp)'
-            params = dict(state='completed', created_max_exp=date_max_exp)
-        else:
-            if filters['created_from'] >= date_max_exp:
-                conditions = ' AND state=:state'
-                params = dict(state='completed')
-            else:
-                conditions = ' AND ((created >= :created_from AND created < :created_max_exp) \
-                    OR (created >= :created_max_exp AND state = :state))'
-                params = dict(state='completed', created_from=filters['created_from'],
-                    created_max_exp=date_max_exp)
-
+    def _get_redundancy_update_msg(self, project, n_answers, conditions, params, task_expiration):
         sql = text('''
-                    SELECT task.id as id
-                    FROM task
-                    WHERE task.project_id=:project_id {}
-                    ;'''
+                   WITH all_tasks_with_orig_filter AS (
+                        SELECT task.id as id,
+                        coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
+                        priority_0, task.created
+                        FROM task LEFT OUTER JOIN
+                        (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                        MAX(finish_time) as ft FROM task_run
+                        WHERE project_id=:project_id GROUP BY task_id) AS log_counts
+                        ON task.id=log_counts.task_id
+                        WHERE task.project_id=:project_id {}
+                   )
+
+                   SELECT t.id as id FROM task t
+                   WHERE t.id IN (SELECT id from all_tasks_with_orig_filter)
+                   AND jsonb_typeof(t.info) = 'object'
+                   AND EXISTS(SELECT TRUE FROM jsonb_object_keys(t.info) AS key
+                   WHERE key ILIKE '%\_\_upload\_url%')
+                   AND (t.state = 'completed' OR TO_DATE(created, 'YYYY-MM-DD\THH24:MI:SS.US') < NOW() - :task_expiration ::INTERVAL)
+                   AND n_answers != :n_answers;'''
                    .format(conditions))
-
         tasks = self.db.session.execute(sql,
-            dict(project_id=project.id, **params)).fetchall()
-
+            dict(project_id=project.id, n_answers=n_answers,
+            task_expiration=task_expiration, **params)).fetchall()
         tasks_not_updated = '\n'.join([str(task.id) for task in tasks])
         return tasks_not_updated
