@@ -151,7 +151,7 @@ def get_s3_bucket_key(s3_bucket, s3_url, conn_name=DEFAULT_CONN):
 def get_file_from_s3(s3_bucket, path, conn_name=DEFAULT_CONN):
     headers = {}
     temp_file = NamedTemporaryFile()
-    _, key = get_s3_bucket_key(s3_bucket, conn_name)
+    _, key = get_s3_bucket_key(s3_bucket, path, conn_name)
     key.get_contents_to_filename(temp_file.name, headers=headers)
     return temp_file
 
