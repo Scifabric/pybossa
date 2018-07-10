@@ -122,7 +122,6 @@ class Importer(object):
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
-        empty = True
         n = 0
         importer = self._create_importer_for(**form_data)
         tasks = importer.tasks()
@@ -161,14 +160,13 @@ class Importer(object):
                 if validator.validate(task):
                     task_repo.save(task)
                     n += 1
-                    empty = False
 
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')
             delete_import_csv_file(csv_filename)
 
         metadata = importer.import_metadata()
-        if empty:
+        if n==0:
             msg = gettext('It looks like there were no new records to import. ')
         elif n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully ')
