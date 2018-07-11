@@ -342,7 +342,8 @@ class TestProjectAPI(TestAPI):
     def test_project_post(self):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
-        CategoryFactory.create()
+        cat1 = CategoryFactory.create()
+        cat2 = CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -382,9 +383,45 @@ class TestProjectAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'user2')
-        ## Test that a default category is assigned to the project
-        assert out.category_id, "No category assigned to project"
+        # Test that a default category is assigned to the project
+        assert cat1.id == out.category_id, "No category assigned to project"
         id_ = out.id
+
+        # now a real user with headers auth and specific category_id
+        headers = [('Authorization', users[1].api_key)]
+        new_project2 = dict(
+            name=name + '3',
+            short_name='xxxx-project3',
+            description='description3',
+            owner_id=1,
+            category_id=cat2.id,
+            long_description=u'Long Description\n================')
+        new_project2 = json.dumps(new_project2)
+        res = self.app.post('/api/project', headers=headers,
+                            data=new_project2)
+        out = project_repo.get_by(name=name + '3')
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project3'), out
+        assert_equal(out.owner.name, 'user2')
+        # Test that a default category is assigned to the project
+        assert cat2.id == out.category_id, "No category assigned to project"
+
+        # now a real user with headers auth and non-existing category_id 
+        headers = [('Authorization', users[1].api_key)]
+        new_project3 = dict(
+            name=name + '4',
+            short_name='xxxx-project4',
+            description='description4',
+            owner_id=1,
+            category_id=5014,
+            long_description=u'Long Description\n================')
+        new_project3 = json.dumps(new_project3)
+        res = self.app.post('/api/project', headers=headers,
+                            data=new_project3)
+        err = json.loads(res.data)
+        assert err['status'] == 'failed'
+        assert err['exception_msg'] == 'category_id does not exist'
+        assert err['status_code'] == 400
 
         # test re-create should fail
         res = self.app.post('/api/project?api_key=' + users[1].api_key,

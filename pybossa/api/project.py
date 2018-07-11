@@ -51,8 +51,14 @@ class ProjectAPI(APIBase):
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
+        category_ids = [c.id for c in get_categories()]
         default_category = get_categories()[0]
         inst.category_id = default_category.id
+        if 'category_id' in data.keys():
+            if int(data.get('category_id')) in category_ids:
+                inst.category_id = data.get('category_id')
+            else:
+                raise BadRequest("category_id does not exist")
         return inst
 
     def _update_object(self, obj):
