@@ -846,7 +846,7 @@ def get_s3_bucket_name(url):
 
 
 def valid_or_no_s3_bucket(task_data):
-    """ Returns False when task has s3 url and s3 bucket is not cf-s3uploads"""
+    """ Returns False when task has s3 url and s3 bucket is not valid"""
     allowed_s3_buckets = current_app.config.get('ALLOWED_S3_BUCKETS')
 
     # with no bucket configured, do not performing bucket check (default)

@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import defaultdict
 from flask import current_app
 from flask.ext.babel import gettext
 from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
@@ -35,6 +36,55 @@ from werkzeug.datastructures import MultiDict
 import copy
 import json
 from pybossa.util import delete_import_csv_file
+
+
+def validate_s3_bucket(task):
+    valid = valid_or_no_s3_bucket(task.info)
+    if not valid:
+        current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(task.project_id, task.info))
+    return valid
+
+
+def validate_priority(task):
+    if task.priority_0 is None:
+        return True
+    try:
+        float(task.priority_0)
+        return True
+    except Exception:
+        return False
+
+
+def validate_n_answers(task):
+    try:
+        int(task.n_answers)
+        return True
+    except Exception:
+        return False
+
+
+class TaskImportValidator(object):
+
+    validations = {
+        'invalid priority': validate_priority,
+        'invalid s3 bucket': validate_s3_bucket,
+        'invalid n_answers': validate_n_answers
+    }
+
+    def __init__(self):
+        self.errors = defaultdict(int)
+
+    def validate(self, task):
+        for error, validator in self.validations.items():
+            if not validator(task):
+                self.errors[error] += 1
+                return False
+        return True
+
+    def __str__(self):
+        msg = '{} task import failed due to {}.'
+        return ' '.join(msg.format(n, error) for error, n in self.errors.items())
+
 
 class Importer(object):
 
@@ -72,7 +122,6 @@ class Importer(object):
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
-        empty = True
         n = 0
         importer = self._create_importer_for(**form_data)
         tasks = importer.tasks()
@@ -100,7 +149,7 @@ class Importer(object):
                 current_app.logger.error(msg)
                 return ImportReport(message=msg, metadata=None, total=0)
 
-        s3_bucket_failures = 0
+        validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
         for task_data in tasks:
             task = Task(project_id=project.id, n_answers=n_answers)
@@ -108,32 +157,24 @@ class Importer(object):
             found = task_repo.find_duplicate(project_id=project.id,
                                              info=task.info)
             if found is None:
-                if valid_or_no_s3_bucket(task.info):
+                if validator.validate(task):
                     task_repo.save(task)
                     n += 1
-                    empty = False
-                else:
-                    s3_bucket_failures += 1
-                    current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(project.id, task.info))
 
-        additional_msg = ' {} task import failed due to invalid S3 bucket.'\
-                            .format(s3_bucket_failures) if s3_bucket_failures else ''
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')
             delete_import_csv_file(csv_filename)
 
-        if empty:
-            msg = gettext('It looks like there were no new records to import.')
-            msg += additional_msg
-            return ImportReport(message=msg, metadata=None, total=n)
         metadata = importer.import_metadata()
-        msg = str(n) + " " + gettext('new tasks were imported successfully ')
-        if n == 1:
+        if n==0:
+            msg = gettext('It looks like there were no new records to import. ')
+        elif n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully ')
-        msg += additional_msg
+        else:
+            msg = str(n) + " " + gettext('new tasks were imported successfully ')
+        msg += str(validator)
 
-        report = ImportReport(message=msg, metadata=metadata, total=n)
-        return report
+        return ImportReport(message=msg, metadata=metadata, total=n)
 
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""

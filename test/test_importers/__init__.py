@@ -76,7 +76,7 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 1, len(tasks)
-        assert result.message == 'It looks like there were no new records to import.', result.message
+        assert result.message == 'It looks like there were no new records to import. ', result.message
         importer_factory.assert_called_with(**form_data)
 
     @with_context
