@@ -800,9 +800,8 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         self.task_repo.update_tasks_redundancy(project, 3)
         tasks = self.task_repo.filter_tasks_by(project_id=project.id)
 
-        # completed tasks redundancy wont be updated
-        assert tasks[0].state == 'completed', tasks[0].state
-        assert tasks[1].state == 'ongoing', tasks[1].state
+        for task in tasks:
+            assert task.state == 'ongoing', task.state
 
 
     @with_context

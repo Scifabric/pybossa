@@ -700,10 +700,10 @@ class TestProjectsCache(Test):
             created_from='2018-01-01T00:00:00.0001', created_to='2018-12-12T00:00:00.0001',
             ftime_from='2018-01-01T00:00:00.0001', ftime_to='2018-12-12T00:00:00.0001',
             order_by='task_id', filter_by_field=[(u'CompanyName', u'starts with', u'abc')],
-            filter_by_upref=dict(languages=['en'], locations=['us']))
-        expected_filter_query = ' AND task.id = :task_id AND task.state=\'ongoing\' AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to AND priority_0 >= :priority_from AND priority_0 <= :priority_to AND task.created >= :created_from AND task.created <= :created_to AND ft >= :ftime_from AND ft <= :ftime_to AND (COALESCE(task.info->>\'CompanyName\', \'\') ilike :filter_by_field_0 escape \'\\\') AND ( task.user_pref @> \'{"languages": ["en"]}\' OR task.user_pref @> \'{"locations": ["us"]}\' )'
+            filter_by_upref=dict(languages=['en'], locations=['us']), state='ongoing')
+        expected_filter_query = ' AND task.id = :task_id AND task.state=\'ongoing\' AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to AND priority_0 >= :priority_from AND priority_0 <= :priority_to AND task.created >= :created_from AND task.created <= :created_to AND ft >= :ftime_from AND ft <= :ftime_to AND state = :state AND (COALESCE(task.info->>\'CompanyName\', \'\') ilike :filter_by_field_0 escape \'\\\') AND ( task.user_pref @> \'{"languages": ["en"]}\' OR task.user_pref @> \'{"locations": ["us"]}\' )'
 
-        expected_params = {'task_id': 1, 'pcomplete_from': '2018-01-01T00:00:00.0001', 'pcomplete_to': '2018-12-12T00:00:00.0001', 'ftime_to': '2018-12-12T05:00:00.000100+00:00', 'created_from': '2018-01-01T05:00:00.000100+00:00', 'ftime_from': '2018-01-01T05:00:00.000100+00:00', 'priority_to': 0.5, 'priority_from': 0.0, 'filter_by_field_0': 'abc%', 'created_to': '2018-12-12T05:00:00.000100+00:00'}
+        expected_params = {'task_id': 1, 'pcomplete_from': '2018-01-01T00:00:00.0001', 'pcomplete_to': '2018-12-12T00:00:00.0001', 'ftime_to': '2018-12-12T05:00:00.000100+00:00', 'created_from': '2018-01-01T05:00:00.000100+00:00', 'ftime_from': '2018-01-01T05:00:00.000100+00:00', 'state':'ongoing', 'priority_to': 0.5, 'priority_from': 0.0, 'filter_by_field_0': 'abc%', 'created_to': '2018-12-12T05:00:00.000100+00:00'}
 
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters

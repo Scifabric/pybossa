@@ -7315,12 +7315,12 @@ class TestWeb(web.Helper):
 
         res = self.task_settings_redundancy(short_name="sampleapp",
                                             n_answers=2)
-        err_msg = "Completed tasks state should not be updated to ongoing"
+        err_msg = "Task state should be ongoing"
         db.session.add(project)
         db.session.commit()
 
         for t in project.tasks:
-            assert t.state == 'completed', t.state
+            assert t.state == 'ongoing', t.state
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -8642,6 +8642,7 @@ class TestWeb(web.Helper):
         user = User.query.first()
         project = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, project=project, n_answers=1)
+        tasks[0].info = {"file__upload_url": "https://mybucket/test.pdf"}
         taskrun = TaskRunFactory.create(task=tasks[0], user=user)
 
         # update redundancy passing filters
@@ -8651,10 +8652,10 @@ class TestWeb(web.Helper):
 
         # completed tasks redundancy wont be updated
         assert tasks[0].state == 'completed', tasks[0].state
-        assert tasks[1].state == 'ongoing', tasks[1].state
+        assert tasks[0].n_answers == 1, tasks[0].n_answers
 
         # updated task redundancy to be 2 for second task
-        assert tasks[0].n_answers == 1, tasks[0].n_answers
+        assert tasks[1].state == 'ongoing', tasks[1].state
         assert tasks[1].n_answers == 2, tasks[1].n_answers
 
         assert send_mail == email_queue.enqueue.call_args[0][0], "send_mail not called"
@@ -8664,5 +8665,62 @@ class TestWeb(web.Helper):
         assert 'body' in email_data.keys()
 
         email_content = email_data['body']
-        assert 'Redundancy could not be updated for tasks that are either complete or older \
-            than {} days\nTask Ids\n{}'.format(task_repo.rdancy_upd_exp, tasks[0].id)
+        expected_email_content = ('Redundancy could not be updated for tasks containing files '
+            'that are either completed or older than {} days.\nTask Ids\n{}'
+            .format(task_repo.rdancy_upd_exp, tasks[0].id))
+        assert expected_email_content == email_content, "Email should be sent with list of tasks whose redundancy could not be updated"
+
+    @with_context
+    def test_individual_task_redundancy_update(self):
+        """Test task redundancy updated for single task"""
+
+        self.register()
+        self.signin()
+        self.new_project()
+
+        project = db.session.query(Project).first()
+        project.published = True
+        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+        task = Task(project_id=project.id, n_answers=1, created=now)
+        db.session.add(task)
+        db.session.commit()
+
+        # redundancy updated with filter containing single task
+        filter = dict(n_answers=2, filters=dict(), taskIds=[task.id])
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+            data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 2, "Updated task redundancy must be 2"
+
+        # redundancy not updated for single task when new redundancy passed is same as old
+        filter = dict(n_answers=2, filters=dict(), taskIds=[task.id])
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+            data=json.dumps(filter), content_type='application/json', follow_redirects=True)
+        assert task.n_answers == 2, "Task redundancy should not have been updated"
+
+    @with_context
+    def test_redundancy_update_returns_right_msg(self):
+        """Test task redundancy update returns appropriate message"""
+
+        self.register()
+        self.signin()
+        self.new_project()
+
+        user = User.query.first()
+        project = db.session.query(Project).first()
+        project.published = True
+
+        task = Task(project_id=project.id, n_answers=1)
+        task.info = {"file__upload_url": "https://mybucket/test.pdf"}
+        db.session.add(task)
+        db.session.commit()
+
+        taskrun = TaskRunFactory.create(task=task, user=user)
+
+        req_data = dict(n_answers=2, taskIds=[task.id])
+        res = self.app.post('/project/{}/tasks/redundancyupdate'.format(project.short_name),
+        data=json.dumps(req_data), content_type='application/json', follow_redirects=False)
+
+        assert res.status_code == 200, res.status_code
+        assert task.n_answers == 1, "redundancy not updated for completed task"
+        assert task.state == 'completed', "status not updated for completed task"
