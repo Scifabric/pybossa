@@ -54,7 +54,7 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
 
 
 def can_post(project_id, task_id, user_id_or_ip):
-    scheduler = get_project_scheduler(project_id)
+    scheduler = get_project_scheduler(project_id, session)
     if scheduler == 'locked':
         user_id = user_id_or_ip['user_id'] or \
                 user_id_or_ip['external_uid'] or \
@@ -66,10 +66,14 @@ def can_post(project_id, task_id, user_id_or_ip):
         return True
 
 
-def after_save(project_id, task_id, user_id):
-    scheduler = get_project_scheduler(project_id)
+def after_save(task_run, conn):
+    scheduler = get_project_scheduler(task_run.project_id, conn)
+    uid = task_run.user_id or \
+          task_run.external_uid or \
+          task_run.user_ip or \
+          '127.0.0.1'
     if scheduler == 'locked':
-        release_lock(task_id, user_id, TIMEOUT)
+        release_lock(task_run.task_id, uid, TIMEOUT)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -264,11 +268,14 @@ def get_task_users_key(task_id):
     return TASK_USERS_KEY_PREFIX.format(task_id)
 
 
-def get_project_scheduler(project_id):
-    project = project_repo.get(project_id)
-    if not project:
-        raise Forbidden('Invalid project_id')
-    return project.info.get('sched', 'default')
+def get_project_scheduler(project_id, conn):
+    sql = text('''
+        SELECT info->>'sched' as sched FROM project WHERE id=:project_id;
+        ''')
+    row = conn.execute(sql, dict(project_id=project_id)).first()
+    if not row:
+        return 'default'
+    return row.sched or 'default'
 
 
 def sched_variants():

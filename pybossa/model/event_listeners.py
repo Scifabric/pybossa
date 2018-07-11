@@ -37,6 +37,7 @@ from pybossa.model.counter import Counter
 from pybossa.core import result_repo, db
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.jobs import push_notification
+from pybossa import sched
 
 from pybossa.core import sentinel
 
@@ -99,7 +100,7 @@ def add_project_event(mapper, conn, target):
     obj.update(tmp)
     update_feed(obj)
     # Create a clean projectstats object for it
-    sql_query = """INSERT INTO project_stats 
+    sql_query = """INSERT INTO project_stats
                    (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
                    n_completed_tasks, overall_progress, average_time,
                    n_blogposts, last_activity, info)
@@ -240,6 +241,7 @@ def on_taskrun_submit(mapper, conn, target):
     project_public.update(Project().to_public_json(tmp))
     project_public['action_updated'] = 'TaskCompleted'
 
+    sched.after_save(target, conn)
     add_user_contributed_to_feed(conn, target.user_id, project_public)
     if is_task_completed(conn, target.task_id, target.project_id):
         update_task_state(conn, target.task_id)
