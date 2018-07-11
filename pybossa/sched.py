@@ -66,15 +66,6 @@ def can_post(project_id, task_id, user_id_or_ip):
         return True
 
 
-def can_read_task(task, user):
-    project_id = task.project_id
-    scheduler = get_project_scheduler(project_id)
-    if scheduler == 'locked':
-        return has_read_access(user) or has_lock(task.id, user.id, TIMEOUT)
-    else:
-        return True
-
-
 def after_save(project_id, task_id, user_id):
     scheduler = get_project_scheduler(project_id)
     if scheduler == 'locked':
@@ -199,7 +190,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     if not user_id:
         if not user_ip:
             user_ip = '127.0.0.1'
-        if user_ip and not external_uid:
+        if not external_uid:
             user_param = 'user_ip'
             uid = user_ip
         else:
@@ -223,9 +214,9 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
 
     for task_id, taskcount, n_answers in rows:
         remaining = n_answers - taskcount
-        if acquire_lock(task_id, user_id, remaining, TIMEOUT):
+        if acquire_lock(task_id, uid, remaining, TIMEOUT):
             rows.close()
-            register_active_user(project_id, user_id, sentinel.master, ttl=TIMEOUT)
+            register_active_user(project_id, uid, sentinel.master, ttl=TIMEOUT)
             return [session.query(Task).get(task_id)]
 
     return []

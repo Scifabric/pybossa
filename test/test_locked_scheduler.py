@@ -84,6 +84,39 @@ class TestLockedSched(sched.Helper):
         assert res.status_code == 200, res.status_code
 
     @with_context
+    def test_anonymous_taskrun_submission(self):
+        """ Test submissions with locked scheduler """
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
+
+        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        rec_task1 = json.loads(res.data)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
+        rec_task2 = json.loads(res.data)
+
+        # users get different tasks
+        assert rec_task1['info'] != rec_task2['info']
+
+        tr = {
+            'project_id': project.id,
+            'task_id': task1.id,
+            'info': 'hello'
+        }
+
+        # submit answer for the right task
+        res = self.app.post('api/taskrun', data=json.dumps(tr))
+        assert res.status_code == 200, res.status_code
+
+
+    @with_context
     def test_acquire_lock_no_pipeline(self):
         task_id = 1
         user_id = 1
