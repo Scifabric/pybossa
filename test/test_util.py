@@ -974,3 +974,39 @@ class TestStrongPassword(object):
         password = 'AaBbCD12345!'
         valid, _ = util.check_password_strength(password=password)
         assert valid
+
+
+class TestAccessLevels(object):
+
+    private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
+        default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
+        default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]))
+
+    def test_can_assign_user(self):
+        from pybossa import core
+
+        with patch.object(core, 'private_instance_params', self.private_instance_params):
+            proj_levels = ["L3"]
+            user_levels = ["L2", "L4"]
+            assign_users = util.can_assign_user(proj_levels, user_levels)
+            assert assign_users
+
+            proj_levels = ["L5"]
+            user_levels = ["L2", "L4"]
+            assign_users = util.can_assign_user(proj_levels, user_levels)
+            assert not assign_users, "project level should be reported invalid"
+
+            proj_levels = ["L3"]
+            user_levels = ["L2", "L6"]
+            assign_users = util.can_assign_user(proj_levels, user_levels)
+            assert not assign_users, "user levels should be reported invalid"
+
+            proj_levels = ["L1"]
+            user_levels = ["L2", "L4"]
+            assign_users = util.can_assign_user(proj_levels, user_levels)
+            assert not assign_users, "user with level L2, L4 cannot be assigned to project with level L1"
+
+            proj_levels = ["L2"]
+            user_levels = ["L1"]
+            assign_users = util.can_assign_user(proj_levels, user_levels)
+            assert assign_users, "user with level L1 can work on project with level L2; user should be assigned"

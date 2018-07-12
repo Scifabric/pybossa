@@ -8732,11 +8732,15 @@ class TestWeb(web.Helper):
 
         from pybossa import core
 
-        project.info['dataAccess'] = ["L1"]
+        self.register()
+        self.signin()
+        self.new_project()
+        project = db.session.query(Project).first()
 
+        project.info['dataAccess'] = ["L1"]
         user_access = dict(select_users=["L2"])
         private_instance_params = dict(data_access=[("L1", "L1")],
-            data_access_defaults=dict(L1=["L2", "L3", "L4"]))
+            default_levels=dict(L1=["L2", "L3", "L4"]))
         with patch.object(core, 'private_instance_params', private_instance_params):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
                  data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
@@ -8753,4 +8757,4 @@ class TestWeb(web.Helper):
                  data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
             data = json.loads(res.data)
             assert data.get('status') == 'success', data
-            assert "No user assigned to project" in data.get('flash'), data
+            assert "Users unassigned or no user assigned to project" in data.get('flash'), data

@@ -780,5 +780,7 @@ def setup_private_instance_params(app):
 
     private_instance_params = dict(data_access=app.config['DATA_ACCESS']) \
         if app.config.get('DATA_ACCESS') else {}
-    if private_instance_params and app.config.get('DATA_ACCESS_DEFAULTS'):
-        private_instance_params['data_access_defaults'] = app.config['DATA_ACCESS_DEFAULTS']
+    if private_instance_params and app.config.get('DEFAULT_LEVELS'):
+        private_instance_params['default_levels'] = app.config['DEFAULT_LEVELS']
+    if private_instance_params and app.config.get('DEFAULT_USER_LEVELS'):
+        private_instance_params['default_user_levels'] = app.config['DEFAULT_USER_LEVELS']

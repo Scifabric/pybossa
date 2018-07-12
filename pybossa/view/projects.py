@@ -2915,13 +2915,14 @@ def assign_users(short_name):
         return handle_content_type(response)
 
     users = request.form.getlist('select_users')
-    if users:
-        project.set_project_users(users)
-        project_repo.save(project)
-        auditlogger.log_event(project, current_user, 'update', 'project.assign_users',
-                  'N/A', users)
-        msg = gettext('Users assigned to project')
+    project.set_project_users(users)
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'project.assign_users',
+              'N/A', users)
+    if not users:
+        msg = gettext('Users unassigned or no user assigned to project')
     else:
-        msg = gettext('No user assigned to project')
+        msg = gettext('Users assigned to project')
+
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))

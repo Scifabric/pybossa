@@ -372,5 +372,19 @@ REDUNDANCY_UPDATE_EXPIRATION=30
 # PRIVATE instance configurations
 # DATA_ACCESS  = [("L1", "L1"), ("L2", "L2"),
 #        ("L3", "L3"), ("L4", "L4")]
-# DATA_ACCESS_DEFAULTS = dict(L1=["L2", "L3", "L4"],
-#    L2=["L3", "L4"], L3=["L4"], L4=[])
+
+
+#PRIVATE instance configurations
+DATA_ACCESS  = [("L1", "L1"), ("L2", "L2"),
+        ("L3", "L3"), ("L4", "L4")]
+
+# default user access levels for project and tasks
+# project/task with L1, users only with level L1 permitted
+# project/task with L2, users with levels L1, L2 permitted ...
+DEFAULT_LEVELS = dict(L1=[],
+    L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"])
+
+# default project/task levels for users
+# users with L1 can work on project/tasks with level L2, L3, L4
+DEFAULT_USER_LEVELS = dict(L1=["L2", "L3", "L4"],
+    L2=["L3", "L4"], L3=["L4"], L4=[])
