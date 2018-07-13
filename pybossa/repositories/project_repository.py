@@ -269,7 +269,7 @@ class ProjectRepository(Repository):
                     FROM
                        workers
                     WHERE
-                       project.id = workers.project_id 
+                       project.id = workers.project_id
                  )
                  as workers,
                  project.updated,

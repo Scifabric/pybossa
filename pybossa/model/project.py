@@ -31,7 +31,6 @@ from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
 import re
 
-
 class Project(db.Model, DomainObject):
     '''A microtasking Project to which Tasks are associated.
     '''
@@ -177,3 +176,22 @@ class Project(db.Model, DomainObject):
             search_backward_stop = match.end()
 
         return headers
+
+    def set_project_users(self, users):
+        from pybossa.cache.users import get_users_access_levels
+        from pybossa.util import can_assign_user
+
+        valid_users = set([])
+        proj_levels = self.info.get('dataAccess', [])
+        if not proj_levels:
+            return
+
+        users = get_users_access_levels(users)
+        for user in users:
+            user_levels = user.get('dataaccess', [])
+            if can_assign_user(proj_levels, user_levels):
+                valid_users.add(user['id'])
+        self.info['project_users'] = list(valid_users)
+
+    def get_project_users(self):
+        return self.info.get('project_users', [])

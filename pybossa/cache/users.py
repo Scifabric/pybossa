@@ -28,7 +28,7 @@ from pybossa.model.project import Project
 from pybossa.leaderboard.data import get_leaderboard as gl
 from pybossa.leaderboard.jobs import leaderboard as lb
 import json
-from pybossa.util import get_user_pref_db_clause
+from pybossa.util import get_user_pref_db_clause, get_data_access_db_clause
 
 session = db.slave_session
 
@@ -451,3 +451,26 @@ def get_announcements_cached(user, announcement_levels):
     elif user.subadmin:
         level = announcement_levels['subadmin']['level']
     return get_announcements_by_level_cached(level)
+
+
+def get_users_for_data_access(data_access):
+    clause = get_data_access_db_clause(data_access)
+    if not clause:
+        return None
+
+    sql = text('''select id::text, fullname from "user" where {}'''.format(clause))
+    results = session.execute(sql).fetchall()
+    return [dict(row) for row in results]
+
+
+def get_users_access_levels(users):
+
+    if not users:
+        return []
+
+    all(int(u) for u in users)
+    users = ', '.join(users)
+    sql = text('''select id::text, info->'dataAccess' as dataAccess from "user"
+        where id in({})'''.format(users))
+    results = session.execute(sql).fetchall()
+    return [dict(row) for row in results]

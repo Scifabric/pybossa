@@ -168,3 +168,12 @@ class TestModelProject(Test):
         project.delete_autoimporter()
 
         assert project.has_autoimporter() is False, project.get_autoimporter()
+
+
+    def test_assign_user_to_project_works_as_expected(self):
+        project = ProjectFactory.build(info={})
+
+        assign_users = [1,3]
+        project.set_project_users(assign_users)
+        users = project.get_project_users()
+        assert not project.info.get('project_users'), "User should not be assigned to project without access levels"

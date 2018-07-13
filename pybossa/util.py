@@ -942,6 +942,7 @@ def s3_get_file_contents(s3_bucket, s3_path,
     return key.get_contents_as_string(
             headers=headers, encoding=encoding)
 
+
 def get_unique_user_preferences(user_prefs):
     duser_prefs = set()
     for user_pref in user_prefs:
@@ -951,6 +952,7 @@ def get_unique_user_preferences(user_prefs):
                     pref = '\'{}\''.format(json.dumps({k: [v]}))
                     duser_prefs.add(pref)
     return duser_prefs
+
 
 def get_user_pref_db_clause(user_pref):
     # expand user preferences as per sql format for jsonb datatype
@@ -967,6 +969,7 @@ def get_user_pref_db_clause(user_pref):
                    for up in user_prefs)
     return ' OR '.join(sql_strings)
 
+
 def get_valid_user_preferences():
     from pybossa.core import upref_mdata_choices
 
@@ -975,6 +978,7 @@ def get_valid_user_preferences():
             for user_pref, values in upref_mdata_choices.iteritems():
                 valid_user_preferences[user_pref] = [v[0] for v in values]
     return valid_user_preferences
+
 
 def validate_required_fields(data):
     invalid_fields = []
@@ -987,6 +991,7 @@ def validate_required_fields(data):
             (check_val and import_data not in field_val):
             invalid_fields.append(field_name)
     return invalid_fields
+
 
 def get_file_path_for_import_csv(csv_file):
     from pybossa.core import uploader
@@ -1003,6 +1008,7 @@ def get_file_path_for_import_csv(csv_file):
         csv_file.save(path)
     return path
 
+
 def get_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
@@ -1010,9 +1016,66 @@ def get_import_csv_file(path):
     else:
         return open(path)
 
+
 def delete_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
         delete_file_from_s3(s3_bucket, path)
     else:
         os.remove(path)
+
+
+def private_instance_levels():
+    from pybossa.core import private_instance_params
+
+    access_levels = private_instance_params.get('data_access', [])
+    access_levels = [level[0] for level in access_levels]
+
+    default_levels = private_instance_params.get('default_levels', [])
+    default_user_levels = private_instance_params.get('default_user_levels', [])
+    return access_levels, default_levels, default_user_levels
+
+
+def valid_access_levels(levels):
+    """check if levels are valid levels"""
+
+    access_levels, _, _ = private_instance_levels()
+    return [l for l in levels if l in access_levels] == levels
+
+
+def can_assign_user(levels, user_levels):
+    """check if user be assigned to an object(project/task) based on
+    whether user_levels matches objects levels """
+
+    access_levels, default_levels, default_user_levels = private_instance_levels()
+    if not (valid_access_levels(levels) and valid_access_levels(user_levels)):
+        return False
+
+    all_user_levels = get_all_access_levels(user_levels, default_user_levels)
+    all_levels = get_all_access_levels(levels, default_levels)
+    return bool(all_levels.intersection(all_user_levels))
+
+
+def get_all_access_levels(levels, default_levels):
+    """based on access level for an object(project/task/user), obtain
+    all access levels considering default_levels for an objects"""
+
+    all_levels = set(levels)
+    for level in levels:
+        for dlevel in default_levels[level]:
+            all_levels.add(dlevel)
+    return all_levels
+
+
+def get_data_access_db_clause(access_levels):
+
+    if not valid_access_levels(access_levels):
+        return
+
+    _, default_levels, _ = private_instance_levels()
+    levels = set([level for level in access_levels])
+    for level in access_levels:
+        for dlevels in default_levels.get(level):
+            levels.add(dlevels)
+    sql_clauses = [' info->\'dataAccess\' @> \'["{}"]\''.format(level) for level in levels]
+    return ' OR '.join(sql_clauses)

@@ -87,7 +87,6 @@ from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from pybossa.util import get_valid_user_preferences
-from pybossa.core import private_instance_params
 from datetime import datetime
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -576,6 +575,8 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
+    from pybossa.core import private_instance_params
+
     sync_enabled = current_app.config.get('SYNC_ENABLED')
     project, owner, ps = project_by_shortname(short_name)
     def handle_valid_form(form):
@@ -761,8 +762,9 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    project, owner, ps = project_by_shortname(short_name)
+    from pybossa.core import private_instance_params
 
+    project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Settings")
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -779,7 +781,8 @@ def settings(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     title=title,
-                    pro_features=pro)
+                    pro_features=pro,
+                    private_instance=bool(private_instance_params))
     return handle_content_type(response)
 
 
@@ -2868,3 +2871,58 @@ def notify_redundancy_updates(tasks_not_updated):
                    recipients=[current_user.email_addr],
                    body=body)
         mail_queue.enqueue(send_mail, email)
+
+
+@blueprint.route('/<short_name>/assign-users', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def assign_users(short_name):
+    """Assign users to project based on projects data access levels."""
+
+    from pybossa.core import private_instance_params
+
+    project, owner, ps = project_by_shortname(short_name)
+    access_levels = project.info.get('dataAccess', None)
+    if not private_instance_params or not access_levels:
+        flash('Cannot assign users to a project without data access levels', 'warning')
+        return redirect_content_type(
+            url_for('.settings', short_name=short_name))
+
+    users = cached_users.get_users_for_data_access(access_levels)
+    if not users:
+        flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
+        return redirect_content_type(url_for('.settings', short_name=project.short_name))
+
+    form = DataAccessForm(request.body)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
+    if request.method == 'GET':
+        project_users = project.get_project_users()
+
+        response = dict(
+            template='/projects/assign_users.html',
+            project=project_sanitized,
+            title=gettext("Assign Users to Project"),
+            project_users=project_users,
+            users=users,
+            form=form,
+            pro_features=pro_features()
+        )
+        return handle_content_type(response)
+
+    users = request.form.getlist('select_users')
+    project.set_project_users(users)
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'project.assign_users',
+              'N/A', users)
+    if not users:
+        msg = gettext('Users unassigned or no user assigned to project')
+    else:
+        msg = gettext('Users assigned to project')
+
+    flash(msg, 'success')
+    return redirect_content_type(url_for('.settings', short_name=project.short_name))

@@ -669,3 +669,9 @@ class TransferOwnershipForm(Form):
 class RegisterFormWithUserPrefMetadata(RegisterForm, UserPrefMetadataForm):
     """Create User Form that has ability to set user preferences and metadata"""
     consent = BooleanField(default='checked', false_values=("False", "false", '', '0', 0))
+
+
+class DataAccessForm(Form):
+    """Form to configure data access levels"""
+
+    #for future extensions
