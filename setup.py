@@ -33,7 +33,7 @@ requirements = [
     "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
-    "pillow>=3.0, <3.1",
+    "pillow>=3.3.2, <3.3.3",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
