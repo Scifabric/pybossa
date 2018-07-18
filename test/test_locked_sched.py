@@ -61,6 +61,24 @@ class TestLockedSched(sched.Helper):
         assert not t6
 
     @with_context
+    def test_get_locked_task_offset(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+        task3 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        t1 = get_locked_task(project.id, 1)
+        assert t1[0].id == task1.id
+        t2 = get_locked_task(project.id, 1, offset=1)
+        assert t2[0].id == task2.id
+        t3 = get_locked_task(project.id, 1, offset=2)
+        assert not t3
+
+    @with_context
     def test_taskrun_submission(self):
         owner = UserFactory.create(id=500)
         user = UserFactory.create(id=501)
@@ -224,7 +242,7 @@ class TestLockedSched(sched.Helper):
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
         task1 = TaskFactory.create(project=project, info='task 2', n_answers=2)
 
-        res = self.app.get('api/project/{}/newtask?api_key={}&offset=2'
+        res = self.app.get('api/project/{}/newtask?api_key={}&offset=3'
                            .format(project.id, owner.api_key))
 
         assert res.status_code == 400, res.data
