@@ -22,7 +22,8 @@ from factories import TaskFactory, ProjectFactory, UserFactory
 from pybossa.sched import (
     get_task_users_key,
     acquire_lock,
-    has_lock
+    has_lock,
+    get_locked_task
 )
 from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
@@ -33,6 +34,31 @@ from mock import patch
 
 
 class TestLockedSched(sched.Helper):
+
+    @with_context
+    def test_get_locked_task(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        t1 = get_locked_task(project.id)
+        t2 = get_locked_task(project.id, 1)
+        assert t1[0].id == task1.id
+        assert t2[0].id == task1.id
+        t3 = get_locked_task(project.id, 2)
+        t4 = get_locked_task(project.id, 3)
+        assert t3[0].id == task2.id
+        assert t4[0].id == task2.id
+
+        t5 = get_locked_task(project.id)
+        assert t5[0].id == task1.id
+
+        t6 = get_locked_task(project.id, 4)
+        assert not t6
 
     @with_context
     def test_taskrun_submission(self):
@@ -186,6 +212,22 @@ class TestLockedSched(sched.Helper):
         rec_task1 = json.loads(res.data)
 
         assert rec_task1['info'] == 'task 1'
+
+    @with_context
+    def test_invalid_offset(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task1 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}&offset=2'
+                           .format(project.id, owner.api_key))
+
+        assert res.status_code == 400, res.data
 
     @with_context
     def test_acquire_lock_no_pipeline(self):

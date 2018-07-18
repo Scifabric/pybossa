@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Scheduler module for PYBOSSA tasks."""
 from functools import wraps
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, BadRequest
 from sqlalchemy.sql import func, desc, text
 from sqlalchemy import and_
 from pybossa.model import DomainObject
@@ -183,7 +183,7 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
 def get_locked_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, offset=0, limit=1,
                     orderby='priority_0', desc=True):
-    if offset > 2:
+    if offset > 1:
         raise BadRequest()
 
     user_count = get_active_user_count(project_id, sentinel.master)
