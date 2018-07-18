@@ -39,17 +39,6 @@ class TestSched(sched.Helper):
 
     endpoints = ['project', 'task', 'taskrun']
 
-    def get_headers_jwt(self, project):
-        """Return headesr JWT token."""
-        # Get JWT token
-        url = 'api/auth/project/%s/token' % project.short_name
-
-        res = self.app.get(url, headers={'Authorization': project.secret_key})
-
-        authorization_token = 'Bearer %s' % res.data
-
-        return {'Authorization': authorization_token}
-
     # Tests
     @with_context
     def test_anonymous_01_newtask(self):
@@ -515,7 +504,7 @@ class TestSched(sched.Helper):
         data = json.loads(res.data)
         assert data['id'], data
         assert data['id'] != task_id, data
-        
+
         self.signout()
 
     @with_context
@@ -594,7 +583,7 @@ class TestSched(sched.Helper):
         url = 'api/project/%s/newtask?limit=5' % project.id
         res = self.app.get(url)
         data = json.loads(res.data)
-        while len(data) > 0: 
+        while len(data) > 0:
             # Check that we received a Task
             for t in data:
                 assert t.get('id'), t
@@ -691,7 +680,7 @@ class TestSched(sched.Helper):
             # Get Task until scheduler returns None
             res = self.app.get(url)
             data = json.loads(res.data)
-            
+
             # Check that we received a Task
             for t in data:
                 assert t.get('id'),  data

@@ -102,7 +102,3 @@ class LockManager(object):
                 to_delete.append(key)
         if to_delete:
             self._cache.hdel(resource_id, *to_delete)
-
-    @staticmethod
-    def seconds_remaining(expiration):
-        return float(expiration) - time()
