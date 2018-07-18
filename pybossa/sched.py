@@ -183,8 +183,10 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
 def get_locked_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, offset=0, limit=1,
                     orderby='priority_0', desc=True):
-    if offset > 1:
+    if offset > 2:
         raise BadRequest()
+    if offset == 2:
+        return []
 
     user_count = get_active_user_count(project_id, sentinel.master)
     limit = 2*user_count
@@ -219,6 +221,9 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     for task_id, taskcount, n_answers in rows:
         remaining = n_answers - taskcount
         if acquire_lock(task_id, uid, remaining, TIMEOUT):
+            if offset == 1:
+                offset = 0
+                continue
             rows.close()
             register_active_user(project_id, uid, sentinel.master, ttl=TIMEOUT)
             return [session.query(Task).get(task_id)]
