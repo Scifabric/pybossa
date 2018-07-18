@@ -258,12 +258,6 @@ def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):
         pipeline.execute()
 
 
-def get_locks(task_id, timeout):
-    lock_manager = LockManager(sentinel.master, timeout)
-    task_users_key = get_task_users_key(task_id)
-    return lock_manager.get_locks(task_users_key)
-
-
 def get_task_users_key(task_id):
     return TASK_USERS_KEY_PREFIX.format(task_id)
 
