@@ -211,7 +211,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         self.signin_user(user)
         url = '/account/%s' % owner.name
         # Use a full url to avoid redirection on API access.
-        full_url = 'http://localhost%s/' % url
+        full_url = 'https://%s%s/' % (self.flask_app.config['SERVER_NAME'], url)
         res = self.app.get(full_url, content_type='application/json')
         data = json.loads(res.data)
         print data.keys()
@@ -274,7 +274,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
         # As Anonymous user
         url = '/account/profile'
         # Use a full url to avoid redirection on API access.
-        full_url = 'http://localhost%s/' % url
+        full_url = 'http://%s%s/' % (self.flask_app.config['SERVER_NAME'], url)
         res = self.app.get(full_url, content_type='application/json')
         assert res.status_code == 302, 'Should redirect to login page'
 

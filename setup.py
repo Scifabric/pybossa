@@ -67,7 +67,8 @@ requirements = [
     "pycountry",
     "wtforms-components>=0.10.3, <0.10.4",
     "yacryptopan",
-    "Faker"
+    "Faker",
+    "flask-talisman>=0.5.0, <0.6.0"
 ]
 
 setup(
