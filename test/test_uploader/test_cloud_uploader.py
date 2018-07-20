@@ -124,11 +124,11 @@ class TestCloudUploader(Test):
             'filename': 'test_avatar.jpg'
         }
         url = u.external_url_handler(None, None, values)
-        assert url == 'http://localhost/static/img/placeholder.user.png', url
+        assert url.endswith('{}/static/img/placeholder.user.png'.format(self.flask_app.config['SERVER_NAME'])), url
 
         values = {
             'container': 'user_1',
             'filename': 'test.jpg'
         }
         url = u.external_url_handler(None, None, values)
-        assert url == 'http://localhost/static/img/placeholder.project.png', url
+        assert url.endswith('{}/static/img/placeholder.project.png'.format(self.flask_app.config['SERVER_NAME'])), url

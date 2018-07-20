@@ -25,6 +25,7 @@ from flask.ext.login import current_user
 from flask.ext.babel import gettext
 from flask.ext.assets import Bundle
 from flask_json_multidict import get_json_multidict
+from flask_talisman import Talisman
 from pybossa import default_settings as settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -41,6 +42,9 @@ def create_app(run_as_server=True):
     """Create web app."""
     app = Flask(__name__.split('.')[0])
     configure_app(app)
+    Talisman(app, content_security_policy={
+        'default-src': ['*', '\'unsafe-inline\'']
+    }, force_https=app.config.get('FORCE_HTTPS', True))
     setup_logging(app)
     setup_assets(app)
     setup_cache_timeouts(app)

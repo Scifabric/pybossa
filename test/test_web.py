@@ -756,7 +756,8 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
                                user=data,
-                               confirm_url='http://localhost/account/register/confirmation?key=')
+                               confirm_url='http://{}/account/register/confirmation?key='.format(
+                                self.flask_app.config['SERVER_NAME']))
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
         assert 'subject' in mail_data.keys()
@@ -792,7 +793,8 @@ class TestWeb(web.Helper):
             signer.dumps.assert_called_with(data, salt='account-validation')
             render.assert_any_call('/account/email/validate_account.md',
                                    user=data,
-                                   confirm_url='http://localhost/account/register/confirmation?key=')
+                                   confirm_url='http://{}/account/register/confirmation?key='.format(
+                                    self.flask_app.config['SERVER_NAME']))
             assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
             mail_data = queue.enqueue.call_args[0][1]
             assert 'subject' in mail_data.keys()
@@ -822,7 +824,8 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
                                user=data,
-                               confirm_url='http://localhost/account/register/confirmation?key=')
+                               confirm_url='http://{}/account/register/confirmation?key='.format(
+                                self.flask_app.config['SERVER_NAME']))
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
         assert 'subject' in mail_data.keys()
@@ -906,7 +909,8 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
                                user=data,
-                               confirm_url='http://localhost/account/register/confirmation?key=')
+                               confirm_url='http://{}/account/register/confirmation?key='.format(
+                                self.flask_app.config['SERVER_NAME']))
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
         assert 'subject' in mail_data.keys()
@@ -945,7 +949,8 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_email.md',
                                user=data,
-                               confirm_url='http://localhost/account/register/confirmation?key=')
+                               confirm_url='http://{}/account/register/confirmation?key='.format(
+                                self.flask_app.config['SERVER_NAME']))
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
         assert 'subject' in mail_data.keys()
@@ -1826,8 +1831,9 @@ class TestWeb(web.Helper):
         p = project_repo.get(project.id)
         assert p.info['thumbnail'] is not None
         assert p.info['container'] is not None
-        thumbnail_url = 'http://localhost/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
-        assert p.info['thumbnail_url'] == thumbnail_url
+        thumbnail_url = '%s/uploads/%s/%s' % (self.flask_app.config['SERVER_NAME'],
+                                              p.info['container'], p.info['thumbnail'])
+        assert p.info['thumbnail_url'].endswith(thumbnail_url)
 
     @with_context
     def test_account_upload_avatar(self):
@@ -1846,8 +1852,9 @@ class TestWeb(web.Helper):
         u = user_repo.get(owner.id)
         assert u.info['avatar'] is not None
         assert u.info['container'] is not None
-        avatar_url = 'http://localhost/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
-        assert u.info['avatar_url'] == avatar_url, u.info['avatar_url']
+        avatar_url = '%s/uploads/%s/%s' % (self.flask_app.config['SERVER_NAME'],
+                                           u.info['container'], u.info['avatar'])
+        assert u.info['avatar_url'].endswith(avatar_url), u.info['avatar_url']
 
     @with_context
     def test_05d_get_nonexistant_project_update_json(self):

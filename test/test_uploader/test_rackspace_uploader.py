@@ -210,9 +210,9 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.user.png'
+            failover_url = '{}/static/img/placeholder.user.png'.format(self.flask_app.config['SERVER_NAME'])
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
-            assert res == failover_url, err_msg
+            assert res.endswith(failover_url), err_msg
 
     @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
@@ -229,9 +229,9 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.project.png'
+            failover_url = '{}/static/img/placeholder.project.png'.format(self.flask_app.config['SERVER_NAME'])
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
-            assert res == failover_url, err_msg
+            assert res.endswith(failover_url), err_msg
 
     @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
@@ -249,9 +249,9 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://localhost/static/img/placeholder.project.png'
+            failover_url = '{}/static/img/placeholder.project.png'.format(self.flask_app.config['SERVER_NAME'])
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
-            assert res == failover_url, err_msg
+            assert res.endswith(failover_url), err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)

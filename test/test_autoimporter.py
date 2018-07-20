@@ -36,7 +36,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter" % project.short_name
 
         res = self.app.get(url)
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = '{}/account/signin?next='.format(self.flask_app.config['SERVER_NAME'])
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
@@ -128,7 +128,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter" % project.short_name
 
         res = self.app.post(url, data={})
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = '{}/account/signin?next='.format(self.flask_app.config['SERVER_NAME'])
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
@@ -227,7 +227,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter/delete" % project.short_name
 
         res = self.app.post(url, data={})
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = '{}/account/signin?next='.format(self.flask_app.config['SERVER_NAME'])
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
