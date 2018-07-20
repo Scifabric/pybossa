@@ -43,7 +43,8 @@ def create_app(run_as_server=True):
     app = Flask(__name__.split('.')[0])
     configure_app(app)
     Talisman(app, content_security_policy={
-        'default-src': ['*', '\'unsafe-inline\'']
+        'default-src': ['*', '\'unsafe-inline\'', '\'unsafe-eval\'', 'data:',
+                        'blob:']
     }, force_https=app.config.get('FORCE_HTTPS', True))
     setup_logging(app)
     setup_assets(app)
