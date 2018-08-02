@@ -21,7 +21,7 @@ from mock import patch
 from default import with_context, db, Test
 from datetime import datetime, timedelta
 from flask_wtf import Form
-from factories import UserFactory
+from factories import UserFactory, ProjectFactory, TaskFactory
 import calendar
 import time
 import csv
@@ -30,7 +30,7 @@ import os
 import json
 import base64
 import hashlib
-from nose.tools import nottest
+from nose.tools import nottest, assert_raises
 
 
 def myjsonify(data):
@@ -976,7 +976,7 @@ class TestStrongPassword(object):
         assert valid
 
 
-class TestAccessLevels(object):
+class TestAccessLevels(Test):
 
     private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
         default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
@@ -1010,3 +1010,30 @@ class TestAccessLevels(object):
             user_levels = ["L1"]
             assign_users = util.can_assign_user(proj_levels, user_levels)
             assert assign_users, "user with level L1 can work on project with level L2; user should be assigned"
+
+    @with_context
+    def test_can_add_task_to_project(self):
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(info={})
+        assert not util.can_add_task_to_project(task, project)
+        project.info['data_access'] = ['A']
+        assert not util.can_add_task_to_project(task, project)
+        project.info['data_access'] = []
+        task.info['data_access'] = 'A'
+        assert not util.can_add_task_to_project(task, project)
+        project.info['data_access'] = ['A', 'B']
+        task.info['data_access'] = 'A'
+        assert util.can_add_task_to_project(task, project)
+
+    @with_context
+    def test_task_save_SufficientPermissions(self):
+        with patch.dict(self.flask_app.config, {'PRIVATE_INSTANCE': True}):
+            project = ProjectFactory.create(info={'data_access': ['A']})
+            TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
+
+    @with_context
+    def test_task_save_InsufficientPermissions(self):
+        with patch.dict(self.flask_app.config, {'PRIVATE_INSTANCE': True}):
+            project = ProjectFactory.create(info={'data_access': ['A']})
+            with assert_raises(Exception):
+                TaskFactory.create(project_id=project.id, info={'data_access': 'B'})

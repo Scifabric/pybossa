@@ -1056,6 +1056,14 @@ def can_assign_user(levels, user_levels):
     return bool(all_levels.intersection(all_user_levels))
 
 
+def can_add_task_to_project(task, project):
+    task_level = task.info.get('data_access', '')
+    if not task_level:
+        return False
+    project_levels = project.info.get('data_access', [])
+    return task_level in project_levels
+
+
 def get_all_access_levels(levels, default_levels):
     """based on access level for an object(project/task/user), obtain
     all access levels considering default_levels for an objects"""

@@ -35,6 +35,8 @@ from datetime import datetime, timedelta
 class TaskRepository(Repository):
     MIN_REDUNDANCY = 1
     MAX_REDUNDANCY = 1000
+    SAVE_ACTION = 'saved'
+    UPDATE_ACTION = 'updated'
 
     # Methods for queries on Task objects
     def get_task(self, id):
@@ -142,7 +144,7 @@ class TaskRepository(Repository):
 
     # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
-        self._validate_can_be('saved', element)
+        self._validate_can_be(self.SAVE_ACTION, element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
@@ -152,7 +154,7 @@ class TaskRepository(Repository):
             raise DBIntegrityError(e)
 
     def update(self, element):
-        self._validate_can_be('updated', element)
+        self._validate_can_be(self.UPDATE_ACTION, element)
         try:
             self.db.session.merge(element)
             self.db.session.commit()
@@ -381,10 +383,20 @@ class TaskRepository(Repository):
             return row[0]
 
     def _validate_can_be(self, action, element):
-        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+        from flask import current_app
+        from pybossa.core import project_repo
+        from pybossa.util import can_add_task_to_project
+        is_task = isinstance(element, Task)
+        if not is_task and not isinstance(element, TaskRun):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+        if (current_app.config.get('PRIVATE_INSTANCE') and is_task and
+            (action in [self.SAVE_ACTION, self.UPDATE_ACTION])):
+            project = project_repo.get(element.project_id)
+            if not can_add_task_to_project(element, project):
+                # Create custom exception class for access control violations
+                raise Exception('Cannot add task to project: invalid or insufficient permission.')
 
     def _delete(self, element):
         self._validate_can_be('deleted', element)
