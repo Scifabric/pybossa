@@ -27,7 +27,7 @@ from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from flask import request
 from flask.ext.login import current_user
-
+from pybossa.util import valid_access_levels
 
 class UserAPI(APIBase):
 
@@ -123,3 +123,12 @@ class UserAPI(APIBase):
         forbidden = ('info', 'user_pref')
         if not current_user.admin and any(attr in data for attr in forbidden):
             raise Forbidden
+
+    def _validate_instance(self, user):
+        from pybossa.core import private_instance_params
+
+        if private_instance_params.get('data_access'):
+            if user.info.get('data_access'):
+                user_levels = user.info['data_access']
+                if not valid_access_levels(user_levels):
+                    raise ValueError(u'Invalid access levels {}'.format(', '.join(user_levels)))

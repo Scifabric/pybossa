@@ -1248,3 +1248,158 @@ class TestProjectAPI(TestAPI):
         for key, value in old_info.iteritems():
             if not payload['info'].get(key):
                 assert project.info.get(key) == value
+
+    @with_context
+    def test_project_post_no_access_levels(self):
+        """Test API project post successful when no access levels set"""
+
+        user, subadmin = UserFactory.create_batch(2)
+        make_subadmin(subadmin)
+        CategoryFactory.create()
+        name = u'XXXX Project'
+        data = dict(
+            name=name,
+            short_name='xxxx-project',
+            description='description',
+            owner_id=1,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
+        data = json.dumps(data)
+
+        res = self.app.post('/api/project?api_key=' + subadmin.api_key,
+                            data=data)
+        out = project_repo.get_by(name=name)
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project'), out
+        assert_equal(out.owner.name, 'user2')
+        assert_equal(out.owners_ids, [2])
+
+    @with_context
+    def test_project_can_post_valid_project_levels(self):
+        """Test API project create can set correct data access levels"""
+
+        from pybossa import core
+
+        users = UserFactory.create_batch(2, info=dict(data_access=['L1']))
+        make_subadmin(users[1])
+
+        project_levels = ['L2']
+        project_users = [str(users[0].id), str(users[1].id)]
+        private_instance_params = dict(
+            data_access=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
+            default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
+            default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]))
+
+        CategoryFactory.create()
+        name = u'My Project'
+        headers = [('Authorization', users[1].api_key)]
+        new_project = dict(
+            name=name,
+            short_name='my-project',
+            description='my-project-description',
+            owner_id=1,
+            long_description=u'my project\nlong description',
+            info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
+        new_project = json.dumps(new_project)
+
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            res = self.app.post('/api/project', headers=headers,
+                                data=new_project)
+            data = json.loads(res.data)['info']
+            assert res.status_code == 200, 'project access levels should have been set'
+            assert data['data_access'] == project_levels
+            assert data['project_users'] == project_users
+
+            # test update
+            project = project_repo.get_by(name=name)
+            assert project, project
+            assert_equal(project.short_name, 'my-project'), project
+            project_id = project.id
+
+            new_project_levels = ["L1", "L3"]
+            new_project_users = [str(users[1].id)]
+            data = dict(info=dict(data_access=new_project_levels, project_users=new_project_users))
+            new_data = json.dumps(data)
+            res = self.app.put('/api/project/%s' % project_id, headers=headers, data=new_data)
+            assert res.status_code == 200, 'project access levels should have been set'
+            data = json.loads(res.data)['info']
+            assert data['data_access'] == new_project_levels
+            assert data['project_users'] == new_project_users
+
+
+    @with_context
+    def test_project_cannot_post_invalid_project_levels(self):
+        """Test API project create cannot set invalid data access levels"""
+
+        from pybossa import core
+
+        users = UserFactory.create_batch(2, info=dict(data_access=['L1']))
+        make_subadmin(users[1])
+
+        project_levels = ['BAD']
+        project_users = [str(users[0].id), str(users[1].id)]
+        private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2")])
+
+        name = u'My Project'
+        headers = [('Authorization', users[1].api_key)]
+        new_project = dict(
+            name=name,
+            short_name='my-project',
+            description='my-project-description',
+            owner_id=1,
+            long_description=u'my project\nlong description',
+            info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
+        new_project = json.dumps(new_project)
+
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            res = self.app.post('/api/project', headers=headers,
+                                data=new_project, follow_redirects=True)
+            error = json.loads(res.data)
+            assert res.status_code == 415, res.status_code
+            assert error['status'] == 'failed', error
+            assert error['action'] == 'POST', error
+            assert error['target'] == 'project', error
+            assert error['exception_cls'] == 'ValueError', error
+            message = u'Invalid project levels {}'.format(', '.join(project_levels))
+            assert error['exception_msg'] == message, error
+
+    @with_context
+    def test_project_cannot_assign_users_with_mismatched_access_levels(self):
+        """Test API project post cannot set users with data access levels that doesnt match project access levels"""
+
+        from pybossa import core
+
+        users = UserFactory.create_batch(2, info=dict(data_access=['L3']))
+        make_subadmin(users[1])
+
+        project_levels = ['L1']
+        project_users = [str(users[0].id), str(users[1].id)]
+        private_instance_params = dict(
+            data_access=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
+            default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
+            default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]))
+
+        CategoryFactory.create()
+        name = u'My Project'
+        headers = [('Authorization', users[1].api_key)]
+        new_project = dict(
+            name=name,
+            short_name='my-project',
+            description='my-project-description',
+            owner_id=1,
+            long_description=u'my project\nlong description',
+            info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
+        new_project = json.dumps(new_project)
+
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            res = self.app.post('/api/project', headers=headers,
+                                data=new_project, follow_redirects=True)
+
+            error = json.loads(res.data)
+            assert res.status_code == 415, res.status_code
+            assert error['status'] == 'failed', error
+            assert error['action'] == 'POST', error
+            assert error['target'] == 'project', error
+            assert error['exception_cls'] == 'ValueError', error
+            message = u'Data access level mismatch. Cannot assign user {} to project'.format(', '.join(project_users))
+            assert error['exception_msg'] == message, error

@@ -1077,5 +1077,5 @@ def get_data_access_db_clause(access_levels):
     for level in access_levels:
         for dlevels in default_levels.get(level):
             levels.add(dlevels)
-    sql_clauses = [' info->\'dataAccess\' @> \'["{}"]\''.format(level) for level in levels]
+    sql_clauses = [' info->\'data_access\' @> \'["{}"]\''.format(level) for level in levels]
     return ' OR '.join(sql_clauses)

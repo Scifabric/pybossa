@@ -8744,7 +8744,7 @@ class TestWeb(web.Helper):
         self.new_project()
         project = db.session.query(Project).first()
 
-        project.info['dataAccess'] = ["L1"]
+        project.info['data_access'] = ["L1"]
         user_access = dict(select_users=["L2"])
         private_instance_params = dict(data_access=[("L1", "L1")],
             default_levels=dict(L1=["L2", "L3", "L4"]))
@@ -8757,7 +8757,7 @@ class TestWeb(web.Helper):
 
 
         user = User.query.first()
-        user.info['dataAccess'] = ["L1"]
+        user.info['data_access'] = ["L1"]
         user_access = dict(select_users=["L1"])
         with patch.object(core, 'private_instance_params', private_instance_params):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),

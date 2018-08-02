@@ -53,7 +53,7 @@ class BulkUserImport(object):
 
     importer_id = None
     default_vals = dict(
-        user_pref={}, metadata={}, project_slugs=[])
+        user_pref={}, metadata={}, project_slugs=[], data_access=[])
     reqd_headers = ["name", "fullname", "email_addr", "password", "metadata"]
     def users(self):
         """Return a generator with all the users imported."""
@@ -68,7 +68,8 @@ class BulkUserImport(object):
 
     def _check_valid_headers(self, headers):
         valid_headers = ["name", "fullname", "email_addr", "password",
-                         "project_slugs", "user_pref", "metadata"]
+                         "project_slugs", "user_pref", "metadata",
+                         "data_access"]
         res = [h in valid_headers for h in headers]
         if False in res:
             invalid_headers = []
