@@ -1012,6 +1012,42 @@ class TestAccessLevels(Test):
             assert assign_users, "user with level L1 can work on project with level L2; user should be assigned"
 
     @with_context
+    def test_access_control_enabled(self):
+        assert not util.access_control_enabled()
+
+    @with_context
+    def test_access_control_required(self):
+        @util.access_control_required
+        def wrapped():
+            return False
+        assert wrapped()
+
+    @with_context
+    def test_get_valid_project_levels_for_task(self):
+        with patch.dict(self.flask_app.config, {
+            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {
+                'A': ['B']
+            }
+        }):
+            task = TaskFactory.create(info={})
+            assert util.get_valid_project_levels_for_task(task) == set()
+            task.info['data_access'] = 'A'
+            assert util.get_valid_project_levels_for_task(task) == set(['B'])
+
+    @with_context
+    def test_get_valid_task_levels_for_project(self):
+        with patch.dict(self.flask_app.config, {
+            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {
+                'A': ['B'],
+                'B': ['C']
+            }
+        }):
+            project = ProjectFactory.create(info={})
+            assert util.get_valid_task_levels_for_project(project) == set()
+            project.info['data_access'] = ['A', 'B']
+            assert util.get_valid_task_levels_for_project(project) == set(['B', 'C'])
+
+    @with_context
     def test_can_add_task_to_project(self):
         project = ProjectFactory.create(info={})
         task = TaskFactory.create(info={})
@@ -1027,13 +1063,24 @@ class TestAccessLevels(Test):
 
     @with_context
     def test_task_save_SufficientPermissions(self):
-        with patch.dict(self.flask_app.config, {'PRIVATE_INSTANCE': True}):
+        with patch.dict(self.flask_app.config, {
+            'PRIVATE_INSTANCE': True,
+            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {'A': ['B']},
+            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {'A': ['B']}
+        }):
             project = ProjectFactory.create(info={'data_access': ['A']})
             TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
 
     @with_context
     def test_task_save_InsufficientPermissions(self):
-        with patch.dict(self.flask_app.config, {'PRIVATE_INSTANCE': True}):
-            project = ProjectFactory.create(info={'data_access': ['A']})
+        with patch.dict(self.flask_app.config, {
+            'PRIVATE_INSTANCE': True,
+            'DATA_ACCESS': True,
+            'DEFAULT_LEVELS': True,
+            'DEFAULT_USER_LEVELS': True,
+            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {'A': ['B']},
+            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {'B': ['C']}
+        }):
+            project = ProjectFactory.create(info={'data_access': ['B']})
             with assert_raises(Exception):
-                TaskFactory.create(project_id=project.id, info={'data_access': 'B'})
+                TaskFactory.create(project_id=project.id, info={'data_access': 'A'})

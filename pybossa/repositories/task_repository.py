@@ -391,8 +391,7 @@ class TaskRepository(Repository):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
-        if (current_app.config.get('PRIVATE_INSTANCE') and is_task and
-            (action in [self.SAVE_ACTION, self.UPDATE_ACTION])):
+        if is_task and (action in [self.SAVE_ACTION, self.UPDATE_ACTION]):
             project = project_repo.get(element.project_id)
             if not can_add_task_to_project(element, project):
                 # Create custom exception class for access control violations

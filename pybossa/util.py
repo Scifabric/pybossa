@@ -1025,6 +1025,45 @@ def delete_import_csv_file(path):
         os.remove(path)
 
 
+def access_control_enabled():
+    return (current_app.config.get('PRIVATE_INSTANCE') and
+            current_app.config.get('DATA_ACCESS') and
+            current_app.config.get('DEFAULT_LEVELS') and
+            current_app.config.get('DEFAULT_USER_LEVELS') and
+            current_app.config.get('VALID_PROJECT_LEVELS_FOR_TASK_LEVEL') and
+            current_app.config.get('VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'))
+
+
+def access_control_required(fn):
+    def wrapper(*args, **kwargs):
+        if access_control_enabled():
+            return fn(*args, **kwargs)
+        return True
+    return wrapper
+
+
+def get_valid_project_levels_for_task(task):
+    task_level = (task.info or {}).get('data_access')
+    return set(current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'].get(task_level, []))
+
+
+def get_valid_task_levels_for_project(project):
+    assigned_project_levels = (project.info or {}).get('data_access', [])
+    return set([
+        level for apl in assigned_project_levels
+        for level in current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'].get(apl, [])
+    ])
+
+
+@access_control_required
+def can_add_task_to_project(task, project):
+    if access_control_enabled():
+        task_levels = get_valid_project_levels_for_task(task)
+        project_levels = get_valid_task_levels_for_project(project)
+        return bool(task_levels & project_levels)
+    return True
+
+
 def private_instance_levels():
     from pybossa.core import private_instance_params
 
@@ -1054,14 +1093,6 @@ def can_assign_user(levels, user_levels):
     all_user_levels = get_all_access_levels(user_levels, default_user_levels)
     all_levels = get_all_access_levels(levels, default_levels)
     return bool(all_levels.intersection(all_user_levels))
-
-
-def can_add_task_to_project(task, project):
-    task_level = task.info.get('data_access', '')
-    if not task_level:
-        return False
-    project_levels = project.info.get('data_access', [])
-    return task_level in project_levels
 
 
 def get_all_access_levels(levels, default_levels):
