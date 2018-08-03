@@ -980,7 +980,17 @@ class TestAccessLevels(Test):
 
     private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
         default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-        default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]))
+        default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
+        valid_project_levels_for_task_level=dict(L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
+        valid_task_levels_for_project_level=dict(L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]))
+
+    def enable_access_control(self, **kwargs):
+        copy = self.private_instance_params.copy()
+        copy.update(kwargs)
+        copy['private_instance'] = True
+        return patch.dict(self.flask_app.config, {
+            k.upper(): v for k, v in copy.iteritems()
+        })
 
     def test_can_assign_user(self):
         from pybossa import core
@@ -1014,34 +1024,29 @@ class TestAccessLevels(Test):
     @with_context
     def test_access_control_enabled(self):
         assert not util.access_control_enabled()
+        with self.enable_access_control():
+            assert util.access_control_enabled()
 
     @with_context
-    def test_access_control_required(self):
-        @util.access_control_required
+    def test_access_controller(self):
+        @util.access_controller
         def wrapped():
             return False
         assert wrapped()
+        with self.enable_access_control():
+            assert not wrapped()
 
     @with_context
     def test_get_valid_project_levels_for_task(self):
-        with patch.dict(self.flask_app.config, {
-            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {
-                'A': ['B']
-            }
-        }):
-            task = TaskFactory.create(info={})
+        task = TaskFactory.create(info={})
+        with self.enable_access_control(valid_project_levels_for_task_level={'A': ['B']}):
             assert util.get_valid_project_levels_for_task(task) == set()
             task.info['data_access'] = 'A'
             assert util.get_valid_project_levels_for_task(task) == set(['B'])
 
     @with_context
     def test_get_valid_task_levels_for_project(self):
-        with patch.dict(self.flask_app.config, {
-            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {
-                'A': ['B'],
-                'B': ['C']
-            }
-        }):
+        with self.enable_access_control(valid_task_levels_for_project_level={'A': ['B'], 'B': ['C']}):
             project = ProjectFactory.create(info={})
             assert util.get_valid_task_levels_for_project(project) == set()
             project.info['data_access'] = ['A', 'B']
@@ -1051,36 +1056,32 @@ class TestAccessLevels(Test):
     def test_can_add_task_to_project(self):
         project = ProjectFactory.create(info={})
         task = TaskFactory.create(info={})
-        assert not util.can_add_task_to_project(task, project)
-        project.info['data_access'] = ['A']
-        assert not util.can_add_task_to_project(task, project)
-        project.info['data_access'] = []
-        task.info['data_access'] = 'A'
-        assert not util.can_add_task_to_project(task, project)
-        project.info['data_access'] = ['A', 'B']
-        task.info['data_access'] = 'A'
-        assert util.can_add_task_to_project(task, project)
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['A']},
+            valid_task_levels_for_project_level={'A': ['A']}):
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = ['A']
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = []
+            task.info['data_access'] = 'A'
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = ['A', 'B']
+            task.info['data_access'] = 'A'
+            assert util.can_add_task_to_project(task, project)
 
     @with_context
     def test_task_save_SufficientPermissions(self):
-        with patch.dict(self.flask_app.config, {
-            'PRIVATE_INSTANCE': True,
-            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {'A': ['B']},
-            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {'A': ['B']}
-        }):
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['B']},
+            valid_task_levels_for_project_level={'A': ['B']}):
             project = ProjectFactory.create(info={'data_access': ['A']})
             TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
 
     @with_context
     def test_task_save_InsufficientPermissions(self):
-        with patch.dict(self.flask_app.config, {
-            'PRIVATE_INSTANCE': True,
-            'DATA_ACCESS': True,
-            'DEFAULT_LEVELS': True,
-            'DEFAULT_USER_LEVELS': True,
-            'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': {'A': ['B']},
-            'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': {'B': ['C']}
-        }):
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['B']},
+            valid_task_levels_for_project_level={'B': ['C']}):
             project = ProjectFactory.create(info={'data_access': ['B']})
             with assert_raises(Exception):
                 TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
