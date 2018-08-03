@@ -182,13 +182,13 @@ class Project(db.Model, DomainObject):
         from pybossa.util import can_assign_user
 
         valid_users = set([])
-        proj_levels = self.info.get('dataAccess', [])
+        proj_levels = self.info.get('data_access', [])
         if not proj_levels:
             return
 
         users = get_users_access_levels(users)
         for user in users:
-            user_levels = user.get('dataaccess', [])
+            user_levels = user.get('data_access', [])
             if can_assign_user(proj_levels, user_levels):
                 valid_users.add(user['id'])
         self.info['project_users'] = list(valid_users)

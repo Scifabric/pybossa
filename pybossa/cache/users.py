@@ -327,7 +327,7 @@ def get_user_pref_metadata(name):
     from pybossa.core import private_instance_params
 
     sql = text("""
-    SELECT info->'metadata', user_pref, info->'dataAccess' FROM "user" WHERE name=:name;
+    SELECT info->'metadata', user_pref, info->'data_access' FROM "user" WHERE name=:name;
     """)
     cursor = session.execute(sql, dict(name=name))
     row = cursor.fetchone()
@@ -470,7 +470,7 @@ def get_users_access_levels(users):
 
     all(int(u) for u in users)
     users = ', '.join(users)
-    sql = text('''select id::text, info->'dataAccess' as dataAccess from "user"
+    sql = text('''select id::text, info->'data_access' as data_access from "user"
         where id in({})'''.format(users))
     results = session.execute(sql).fetchall()
     return [dict(row) for row in results]

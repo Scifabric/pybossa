@@ -599,7 +599,7 @@ def update(short_name):
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
             if private_instance_params:
-                new_project.info['dataAccess'] = form.data_access.data
+                new_project.info['data_access'] = form.data_access.data
 
         if form.password.data:
             new_project.set_password(form.password.data)
@@ -638,7 +638,7 @@ def update(short_name):
             project.category_id = categories[0].id
         form.populate_obj(project)
         if private_instance_params:
-            form.data_access.data = project.info.get('dataAccess', [])
+            form.data_access.data = project.info.get('data_access', [])
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
@@ -2882,7 +2882,7 @@ def assign_users(short_name):
     from pybossa.core import private_instance_params
 
     project, owner, ps = project_by_shortname(short_name)
-    access_levels = project.info.get('dataAccess', None)
+    access_levels = project.info.get('data_access', None)
     if not private_instance_params or not access_levels:
         flash('Cannot assign users to a project without data access levels', 'warning')
         return redirect_content_type(

@@ -531,3 +531,32 @@ class TestUserAPI(Test):
         res = self.app.put(url + '?api_key=%s' % auth.api_key,
                            data=json.dumps(dict(user_pref='new')))
         assert res.status_code == 403, res.data
+
+    @with_context
+    def test_user_set_validates_data_access_levels(self):
+        from pybossa import core
+
+        admin = UserFactory.create()
+        user = UserFactory.create()
+
+        url = 'api/user/%s' % user.id
+        private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2")])
+        with patch.object(core, 'private_instance_params', private_instance_params):
+            user_levels = ["BAD"]
+            res = self.app.put(url + '?api_key=%s' % admin.api_key,
+                               data=json.dumps(dict(name='new', info=dict(data_access=user_levels))))
+            error = json.loads(res.data)
+            assert res.status_code == 415, res.status_code
+            assert error['status'] == 'failed', error
+            assert error['action'] == 'PUT', error
+            assert error['target'] == 'user', error
+            assert error['exception_cls'] == 'ValueError', error
+            message = u'Invalid access levels {}'.format(', '.join(user_levels))
+            assert error['exception_msg'] == message, error
+
+            user_levels = ["L1", "L2"]
+            res = self.app.put(url + '?api_key=%s' % admin.api_key,
+                               data=json.dumps(dict(name='new', info=dict(data_access=user_levels))))
+            data = json.loads(res.data)
+            assert res.status_code == 200, res.status_code
+            assert data['info']['data_access'] == user_levels, data

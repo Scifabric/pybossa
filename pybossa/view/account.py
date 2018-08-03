@@ -449,7 +449,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
     if private_instance_params:
-        new_user.info['dataAccess'] = user_data.get('data_access', [])
+        new_user.info['data_access'] = user_data.get('data_access', [])
     user_repo.save(new_user)
     if not ldap_disabled:
         flash(gettext('Thanks for signing-up'), 'success')
@@ -1040,7 +1040,7 @@ def add_metadata(name):
     user_pref, metadata = get_user_pref_and_metadata(name, form)
     user.info['metadata'] = metadata
     if private_instance_params:
-        user.info['dataAccess'] = form.data_access.data
+        user.info['data_access'] = form.data_access.data
     user.user_pref = user_pref
     user_repo.update(user)
     cached_users.delete_user_pref_metadata(user.name)
