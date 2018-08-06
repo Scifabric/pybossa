@@ -1026,12 +1026,12 @@ def delete_import_csv_file(path):
 
 
 def access_control_enabled():
-    return (current_app.config.get('PRIVATE_INSTANCE') and
-            current_app.config.get('DATA_ACCESS') and
-            current_app.config.get('DEFAULT_LEVELS') and
-            current_app.config.get('DEFAULT_USER_LEVELS') and
-            current_app.config.get('VALID_PROJECT_LEVELS_FOR_TASK_LEVEL') and
-            current_app.config.get('VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'))
+    return (current_app.config.get('ENABLE_ACCESS_CONTROL') and
+            current_app.config['DATA_ACCESS'] and
+            current_app.config['DEFAULT_LEVELS'] and
+            current_app.config['DEFAULT_USER_LEVELS'] and
+            current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'] and
+            current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'])
 
 
 def access_controller(fn):

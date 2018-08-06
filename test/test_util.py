@@ -978,16 +978,16 @@ class TestStrongPassword(object):
 
 class TestAccessLevels(Test):
 
-    private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
+    access_control_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
         default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
         default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
         valid_project_levels_for_task_level=dict(L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
         valid_task_levels_for_project_level=dict(L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]))
 
     def enable_access_control(self, **kwargs):
-        copy = self.private_instance_params.copy()
+        copy = self.access_control_params.copy()
         copy.update(kwargs)
-        copy['private_instance'] = True
+        copy['enable_access_control'] = True
         return patch.dict(self.flask_app.config, {
             k.upper(): v for k, v in copy.iteritems()
         })
@@ -995,7 +995,7 @@ class TestAccessLevels(Test):
     def test_can_assign_user(self):
         from pybossa import core
 
-        with patch.object(core, 'private_instance_params', self.private_instance_params):
+        with patch.object(core, 'private_instance_params', self.access_control_params):
             proj_levels = ["L3"]
             user_levels = ["L2", "L4"]
             assign_users = util.can_assign_user(proj_levels, user_levels)
