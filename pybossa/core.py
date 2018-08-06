@@ -203,9 +203,20 @@ def setup_db(app):
         options = dict(bind=engine, scopefunc=_app_ctx_stack.__ident_func__)
         slave_session = db.create_scoped_session(options=options)
         return slave_session
+
+    def create_bulkdel_session(db, bind):
+        if not 'bulkdel' in app.config.get('SQLALCHEMY_BINDS'):
+            return db.session
+        engine = db.get_engine(db.app, bind=bind)
+        options = dict(bind=engine, scopefunc=_app_ctx_stack.__ident_func__)
+        bulkdel_session = db.create_scoped_session(options=options)
+        return bulkdel_session
+
     db.app = app
     db.init_app(app)
     db.slave_session = create_slave_session(db, bind='slave')
+    db.bulkdel_session = create_bulkdel_session(db, bind='bulkdel')
+
     if db.slave_session is not db.session:
         # flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
@@ -216,6 +227,14 @@ def setup_db(app):
             db.slave_session.remove()
             return response_or_exc
 
+    if db.bulkdel_session is not db.session:
+        @app.teardown_appcontext
+        def _shutdown_session(response_or_exc):  # pragma: no cover
+            if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
+                if response_or_exc is None:
+                    db.bulkdel_session.commit()
+            db.bulkdel_session.remove()
+            return response_or_exc
 
 def setup_repositories(app):
     """Setup repositories."""

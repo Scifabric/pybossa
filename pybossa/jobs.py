@@ -548,6 +548,13 @@ def delete_bulk_tasks(data):
     force_reset = data['force_reset']
     params = {}
 
+    # bulkdel db conn is with db user having session_replication_role
+    # when bulkdel is not configured, make explict sql query to set
+    # session replication role to replica
+    sql_session_repl = ''
+    if not 'bulkdel' in current_app.config.get('SQLALCHEMY_BINDS'):
+        sql_session_repl = 'SET session_replication_role TO replica;'
+
     # lock tasks for given project with SELECT FOR UPDATE
     # create temp table with all tasks to be deleted
     # during transaction, disable constraints check with session_replication_role
@@ -560,7 +567,7 @@ def delete_bulk_tasks(data):
                 SELECT task_id FROM task_run WHERE project_id=:project_id FOR UPDATE;
                 SELECT id FROM task WHERE project_id=:project_id FOR UPDATE;
 
-                SET session_replication_role TO replica;
+                {}
 
                 CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
                     SELECT task.id as id FROM task WHERE project_id=:project_id
@@ -578,7 +585,7 @@ def delete_bulk_tasks(data):
                         AND id IN (SELECT id FROM to_delete);
 
                 COMMIT;
-                ''')
+                '''.format(sql_session_repl))
         msg = ("Tasks and taskruns with no associated results have been "
                "deleted from project {0} by {1}"
                .format(project_name, current_user_fullname))
@@ -592,7 +599,7 @@ def delete_bulk_tasks(data):
                 SELECT task_id FROM task_run WHERE project_id=:project_id FOR UPDATE;
                 SELECT id FROM task WHERE project_id=:project_id FOR UPDATE;
 
-                SET session_replication_role TO replica;
+                {}
 
                 CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
                     SELECT task.id as id,
@@ -616,11 +623,11 @@ def delete_bulk_tasks(data):
                        AND id in (SELECT id FROM to_delete);
 
                 COMMIT;
-                '''.format(conditions))
+                '''.format(sql_session_repl, conditions))
         msg = ("Tasks, taskruns and results associated have been "
                "deleted from project {0} as requested by {1}"
                .format(project_name, current_user_fullname))
-    db.session.execute(sql, dict(project_id=project_id, **params))
+    db.bulkdel_session.execute(sql, dict(project_id=project_id, **params))
     cached_projects.clean_project(project_id)
     subject = 'Tasks deletion from %s' % project_name
     body = 'Hello,\n\n' + msg + '\n\nThe %s team.'\

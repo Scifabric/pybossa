@@ -32,6 +32,7 @@ from pybossa.cache.task_browse_helpers import get_task_filters
 import json
 from datetime import datetime, timedelta
 from pybossa.util import access_controller, can_add_task_to_project
+from flask import current_app
 
 
 class TaskRepository(Repository):
@@ -200,10 +201,17 @@ class TaskRepository(Repository):
             """force reset, remove all results."""
             filters = filters or {}
             conditions, params = get_task_filters(filters)
+
+            # bulkdel db conn is with db user having session_replication_role
+            # when bulkdel is not configured, make explict sql query to set
+            # session replication role to replica
+            sql_session_repl = ''
+            if not 'bulkdel' in current_app.config.get('SQLALCHEMY_BINDS'):
+                sql_session_repl = 'SET session_replication_role TO replica;'
             sql = text('''
                 BEGIN;
 
-                SET session_replication_role TO replica;
+                {}
 
                 CREATE TEMP TABLE to_delete ON COMMIT DROP AS (
                     SELECT task.id as id,
@@ -222,11 +230,10 @@ class TaskRepository(Repository):
                        AND task_id in (SELECT id FROM to_delete);
                 DELETE FROM task WHERE task.project_id=:project_id
                        AND id in (SELECT id FROM to_delete);
-
                 COMMIT;
-                '''.format(conditions))
-        self.db.session.execute(sql, dict(project_id=project.id, **params))
-        self.db.session.commit()
+                '''.format(sql_session_repl, conditions))
+        self.db.bulkdel_session.execute(sql, dict(project_id=project.id, **params))
+        self.db.bulkdel_session.commit()
         cached_projects.clean_project(project.id)
         self._delete_zip_files_from_store(project)
 
