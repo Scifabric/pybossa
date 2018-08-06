@@ -1031,10 +1031,10 @@ class TestAccessLevels(Test):
     def test_access_controller(self):
         @util.access_controller
         def wrapped():
-            return False
-        assert wrapped()
+            return 'something'
+        assert wrapped() == None
         with self.enable_access_control():
-            assert not wrapped()
+            assert wrapped() == 'something'
 
     @with_context
     def test_get_valid_project_levels_for_task(self):

@@ -1038,7 +1038,6 @@ def access_controller(fn):
     def wrapper(*args, **kwargs):
         if access_control_enabled():
             return fn(*args, **kwargs)
-        return True
     return wrapper
 
 
@@ -1055,7 +1054,6 @@ def get_valid_task_levels_for_project(project):
     ])
 
 
-@access_controller
 def can_add_task_to_project(task, project):
     task_levels = get_valid_project_levels_for_task(task)
     project_levels = get_valid_task_levels_for_project(project)
