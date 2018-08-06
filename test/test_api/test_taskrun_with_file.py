@@ -31,8 +31,10 @@ class TestTaskrunWithFile(TestAPI):
     host = 's3.storage.com'
     bucket = 'test_bucket'
     patch_config = {
-        'S3_CONN_KWARGS': {'host': host},
-        'S3_CUSTOM_HANDLER_HOSTS': [host],
+        'S3_TASKRUN': {
+            'host': host,
+            'auth_headers': [('a', 'b')]
+        },
         'S3_BUCKET': 'test_bucket'
     }
 
@@ -194,8 +196,10 @@ class TestTaskrunWithSensitiveFile(TestAPI):
     host = 's3.storage.com'
     bucket = 'test_bucket'
     patch_config = {
-        'S3_CONN_KWARGS': {'host': host},
-        'S3_CUSTOM_HANDLER_HOSTS': [host],
+        'S3_TASKRUN': {
+            'host': host,
+            'auth_headers': [('a', 'b')]
+        },
         'PRIVATE_INSTANCE': True,
         'S3_BUCKET': 'test_bucket'
     }

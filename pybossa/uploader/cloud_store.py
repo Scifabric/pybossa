@@ -2,7 +2,7 @@ from pybossa.uploader import Uploader
 from flask import current_app as app
 from flask import url_for
 import traceback
-from pybossa.cloud_store_api.s3 import create_connection
+from pybossa.cloud_store_api.connection import create_connection
 
 
 class CloudStoreUploader(Uploader):
@@ -14,7 +14,8 @@ class CloudStoreUploader(Uploader):
     def bucket(self):
         if not self._bucket:
             bucket = app.config['UPLOAD_BUCKET']
-            conn = create_connection()
+            conn_kwargs = app.config.get('S3_UPLOAD', {})
+            conn = create_connection(**conn_kwargs)
             self._bucket = conn.get_bucket(bucket, validate=False)
         return self._bucket
 
