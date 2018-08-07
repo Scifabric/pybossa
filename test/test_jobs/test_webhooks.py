@@ -143,7 +143,9 @@ class TestWebHooks(Test):
         wbh = WebhookFactory.create()
         tmp = webhook('url', payload=payload, oid=wbh.id)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        mock_post.assert_called_with('url', data=json.dumps(payload),
+                                     headers=headers,
+                                     params={})
         subject = "Broken: %s webhook failed" % project.name
         body = 'Sorry, but the webhook failed'
         mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
@@ -188,7 +190,9 @@ class TestWebHooks(Test):
         wbh = WebhookFactory.create()
         tmp = webhook('url', payload=payload, oid=wbh.id)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        mock_post.assert_called_with('url', data=json.dumps(payload),
+                                     headers=headers,
+                                     params={})
         subject = "Broken: %s webhook failed" % project.name
         body = 'Sorry, but the webhook failed'
         mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
