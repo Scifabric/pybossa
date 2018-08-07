@@ -521,7 +521,7 @@ def import_tasks(project_id, from_auto=False, **form_data):
     return msg
 
 
-def webhook(url, payload=None, oid=None):
+def webhook(url, payload=None, oid=None, rerun=False):
     """Post to a webhook."""
     from flask import current_app
     from readability.readability import Document
@@ -536,7 +536,12 @@ def webhook(url, payload=None, oid=None):
             webhook = Webhook(project_id=payload['project_id'],
                               payload=payload)
         if url:
-            response = requests.post(url, data=json.dumps(payload), headers=headers)
+            params = dict()
+            if rerun:
+                params['rerun'] = True
+            response = requests.post(url, params=params,
+                                     data=json.dumps(payload),
+                                     headers=headers)
             webhook.response = Document(response.text).summary()
             webhook.response_status_code = response.status_code
         else:
