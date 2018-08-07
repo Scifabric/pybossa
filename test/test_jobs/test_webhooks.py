@@ -58,6 +58,25 @@ class TestWebHooks(Test):
         assert webhook('url', self.webhook_payload), err_msg
         err_msg = "The post method should be called"
         assert mock.called, err_msg
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        mock.assert_called_with('url', params=dict(),
+                                data=json.dumps(self.webhook_payload),
+                                headers=headers)
+
+
+    @with_context
+    @patch('pybossa.jobs.requests.post')
+    def test_webhooks_rerun(self, mock):
+        """Test WEBHOOK rerun works."""
+        mock.return_value = FakeResponse(text=json.dumps(dict(foo='bar')),
+                                         status_code=200)
+        assert webhook('url', self.webhook_payload, rerun=True), err_msg
+        err_msg = "The post method should be called"
+        assert mock.called, err_msg
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        mock.assert_called_with('url', params=dict(rerun=True),
+                                data=json.dumps(self.webhook_payload),
+                                headers=headers)
 
     @with_context
     @patch('pybossa.jobs.requests.post')
