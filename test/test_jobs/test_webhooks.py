@@ -24,15 +24,17 @@ from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from factories import WebhookFactory
+from factories import UserFactory
 from mock import patch, MagicMock
 from datetime import datetime
-from pybossa.repositories import ResultRepository
+from pybossa.repositories import ResultRepository, WebhookRepository
 from pybossa.core import sentinel
 
 queue = MagicMock()
 queue.enqueue.return_value = True
 
 result_repo = ResultRepository(db)
+webhook_repo = WebhookRepository(db)
 
 
 class TestWebHooks(Test):
@@ -51,11 +53,30 @@ class TestWebHooks(Test):
     def test_webhooks(self, mock):
         """Test WEBHOOK works."""
         mock.return_value = FakeResponse(text=json.dumps(dict(foo='bar')),
-                                                              status_code=200)
+                                         status_code=200)
         err_msg = "The webhook should return True from patched method"
         assert webhook('url', self.webhook_payload), err_msg
         err_msg = "The post method should be called"
         assert mock.called, err_msg
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        mock.assert_called_with('url', params=dict(),
+                                data=json.dumps(self.webhook_payload),
+                                headers=headers)
+
+
+    @with_context
+    @patch('pybossa.jobs.requests.post')
+    def test_webhooks_rerun(self, mock):
+        """Test WEBHOOK rerun works."""
+        mock.return_value = FakeResponse(text=json.dumps(dict(foo='bar')),
+                                         status_code=200)
+        assert webhook('url', self.webhook_payload, rerun=True), err_msg
+        err_msg = "The post method should be called"
+        assert mock.called, err_msg
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        mock.assert_called_with('url', params=dict(rerun=True),
+                                data=json.dumps(self.webhook_payload),
+                                headers=headers)
 
     @with_context
     @patch('pybossa.jobs.requests.post')
@@ -110,7 +131,8 @@ class TestWebHooks(Test):
     def test_trigger_webhook_with_url(self):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
-        project = ProjectFactory.create(webhook=url,)
+        owner = UserFactory.create(pro=True)
+        project = ProjectFactory.create(webhook=url,owner=owner)
         task = TaskFactory.create(project=project, n_answers=1)
         TaskRunFactory.create(project=project, task=task)
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
@@ -122,6 +144,28 @@ class TestWebHooks(Test):
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         assert queue.enqueue.called
         assert queue.called_with(webhook, url, payload)
+
+        u = '/project/%s/webhook?api_key=%s&all=1' % (project.short_name,
+                                                      project.owner.api_key)
+        res = self.app.get(u)
+        assert queue.enqueue.called
+        assert queue.called_with(webhook, url, payload, True)
+
+        wh = WebhookFactory(response_status_code=500, project_id=project.id,
+                            payload=payload, response="500")
+        u = '/project/%s/webhook?api_key=%s&failed=1' % (project.short_name,
+                                                         project.owner.api_key)
+        res = self.app.get(u)
+        assert queue.enqueue.called
+        assert queue.called_with(webhook, url, payload, True)
+
+        u = '/project/%s/webhook/%s?api_key=%s&failed=1' % (wh.id,
+                                                            project.short_name,
+                                                            project.owner.api_key)
+        res = self.app.post(u)
+        assert queue.enqueue.called
+        assert queue.called_with(webhook, url, payload, True)
+
         queue.reset_mock()
 
     @with_context
@@ -143,7 +187,9 @@ class TestWebHooks(Test):
         wbh = WebhookFactory.create()
         tmp = webhook('url', payload=payload, oid=wbh.id)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        mock_post.assert_called_with('url', data=json.dumps(payload),
+                                     headers=headers,
+                                     params={})
         subject = "Broken: %s webhook failed" % project.name
         body = 'Sorry, but the webhook failed'
         mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
@@ -188,7 +234,9 @@ class TestWebHooks(Test):
         wbh = WebhookFactory.create()
         tmp = webhook('url', payload=payload, oid=wbh.id)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        mock_post.assert_called_with('url', data=json.dumps(payload), headers=headers)
+        mock_post.assert_called_with('url', data=json.dumps(payload),
+                                     headers=headers,
+                                     params={})
         subject = "Broken: %s webhook failed" % project.name
         body = 'Sorry, but the webhook failed'
         mail_dict = dict(recipients=self.flask_app.config.get('ADMINS'),
