@@ -9,6 +9,18 @@ from pybossa.model.user import User
 # access to the values within the .ini file in use.
 config = context.config
 
+def get_db_from_env():
+    from os import environ
+    return environ.get('PYB_SQLALCHEMY_DATABASE_URI')
+
+def get_db_from_args():
+    xargs = context.get_x_argument(as_dictionary=True)
+    return xargs.get('database-uri')
+
+if not config.get_main_option('sqlalchemy.url'):
+    db = get_db_from_env() or get_db_from_args()
+    config.set_main_option('sqlalchemy.url', db)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
@@ -70,4 +82,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
