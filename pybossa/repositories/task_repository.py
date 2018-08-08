@@ -391,7 +391,7 @@ class TaskRepository(Repository):
             project = project_repo.get(element.project_id)
             if not can_add_task_to_project(element, project):
                 # Create custom exception class for access control violations
-                raise Exception('Cannot add task to project: invalid or insufficient permission.')
+                raise Exception('Invalid or insufficient permission')
 
     def _validate_can_be(self, action, element):
         from flask import current_app
