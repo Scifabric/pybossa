@@ -96,6 +96,19 @@ class TestImporterPublicMethods(Test):
         assert result.metadata == metadata, result.metadata
 
     @with_context
+    def test_create_tasks_save_exception(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
+        metadata = {"metadata": 123}
+        mock_importer.import_metadata.return_value = metadata
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='flickr', album_id='1234')
+        with patch.object(task_repo, 'save', side_effect=Exception('a')):
+            result = self.importer.create_tasks(task_repo, project, **form_data)
+        assert '1 task import failed due to a' in result.message, result.message
+
+    @with_context
     def test_count_tasks_to_import_returns_number_of_tasks_to_import(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
