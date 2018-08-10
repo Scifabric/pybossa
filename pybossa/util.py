@@ -1025,6 +1025,41 @@ def delete_import_csv_file(path):
         os.remove(path)
 
 
+def access_control_enabled():
+    return (current_app.config.get('ENABLE_ACCESS_CONTROL') and
+            current_app.config['DATA_ACCESS'] and
+            current_app.config['DEFAULT_LEVELS'] and
+            current_app.config['DEFAULT_USER_LEVELS'] and
+            current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'] and
+            current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'])
+
+
+def access_controller(fn):
+    def wrapper(*args, **kwargs):
+        if access_control_enabled():
+            return fn(*args, **kwargs)
+    return wrapper
+
+
+def get_valid_project_levels_for_task(task):
+    task_level = (task.info or {}).get('data_access')
+    return set(current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'].get(task_level, []))
+
+
+def get_valid_task_levels_for_project(project):
+    assigned_project_levels = (project.info or {}).get('data_access', [])
+    return set([
+        level for apl in assigned_project_levels
+        for level in current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'].get(apl, [])
+    ])
+
+
+def can_add_task_to_project(task, project):
+    task_levels = get_valid_project_levels_for_task(task)
+    project_levels = get_valid_task_levels_for_project(project)
+    return bool(task_levels & project_levels)
+
+
 def private_instance_levels():
     from pybossa.core import private_instance_params
 

@@ -31,10 +31,14 @@ from sqlalchemy import text
 from pybossa.cache.task_browse_helpers import get_task_filters
 import json
 from datetime import datetime, timedelta
+from pybossa.util import access_controller, can_add_task_to_project
+
 
 class TaskRepository(Repository):
     MIN_REDUNDANCY = 1
     MAX_REDUNDANCY = 1000
+    SAVE_ACTION = 'saved'
+    UPDATE_ACTION = 'updated'
 
     # Methods for queries on Task objects
     def get_task(self, id):
@@ -142,7 +146,7 @@ class TaskRepository(Repository):
 
     # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
-        self._validate_can_be('saved', element)
+        self._validate_can_be(self.SAVE_ACTION, element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
@@ -152,7 +156,7 @@ class TaskRepository(Repository):
             raise DBIntegrityError(e)
 
     def update(self, element):
-        self._validate_can_be('updated', element)
+        self._validate_can_be(self.UPDATE_ACTION, element)
         try:
             self.db.session.merge(element)
             self.db.session.commit()
@@ -380,11 +384,22 @@ class TaskRepository(Repository):
         if row:
             return row[0]
 
+    @access_controller
+    def _can_add_task_to_project(self, action, element):
+        from pybossa.core import project_repo
+        if isinstance(element, Task) and (action in [self.SAVE_ACTION, self.UPDATE_ACTION]):
+            project = project_repo.get(element.project_id)
+            if not can_add_task_to_project(element, project):
+                # Create custom exception class for access control violations
+                raise Exception('Invalid or insufficient permission')
+
     def _validate_can_be(self, action, element):
+        from flask import current_app
         if not isinstance(element, Task) and not isinstance(element, TaskRun):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+        self._can_add_task_to_project(action, element)
 
     def _delete(self, element):
         self._validate_can_be('deleted', element)

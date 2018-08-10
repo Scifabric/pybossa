@@ -369,12 +369,10 @@ TTL_ZIP_SEC_FILES = 3
 
 REDUNDANCY_UPDATE_EXPIRATION=30
 
-# PRIVATE instance configurations
-# DATA_ACCESS  = [("L1", "L1"), ("L2", "L2"),
-#        ("L3", "L3"), ("L4", "L4")]
+# Access control configurations
+ENABLE_ACCESS_CONTROL = False
 
-
-#PRIVATE instance configurations
+# Access control configurations
 DATA_ACCESS  = [("L1", "L1"), ("L2", "L2"),
         ("L3", "L3"), ("L4", "L4")]
 
@@ -388,3 +386,15 @@ DEFAULT_LEVELS = dict(L1=[],
 # users with L1 can work on project/tasks with level L2, L3, L4
 DEFAULT_USER_LEVELS = dict(L1=["L2", "L3", "L4"],
     L2=["L3", "L4"], L3=["L4"], L4=[])
+
+# Given the access control level for a task (key), a project must have one of
+# the access control levels in the value list in order for the task to be
+# assignable to the project.
+VALID_PROJECT_LEVELS_FOR_TASK_LEVEL = dict(
+    L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"])
+
+# Given the access control level of a project (key), a task must be one of
+# the access control levels in the value list in order for the task to be
+# assignable to the project.
+VALID_TASK_LEVELS_FOR_PROJECT_LEVEL = dict(
+    L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])

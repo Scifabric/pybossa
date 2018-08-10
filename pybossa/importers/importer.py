@@ -81,9 +81,12 @@ class TaskImportValidator(object):
                 return False
         return True
 
+    def add_error(self, key):
+        self.errors[key] = self.errors.get(key, 0) + 1
+
     def __str__(self):
         msg = '{} task import failed due to {}.'
-        return ' '.join(msg.format(n, error) for error, n in self.errors.items())
+        return '\n'.join(msg.format(n, error) for error, n in self.errors.items())
 
 
 class Importer(object):
@@ -158,8 +161,12 @@ class Importer(object):
                                              info=task.info)
             if found is None:
                 if validator.validate(task):
-                    task_repo.save(task)
-                    n += 1
+                    try:
+                        task_repo.save(task)
+                        n += 1
+                    except Exception as e:
+                        current_app.logger.exception(msg)
+                        validator.add_error(e.message)
 
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')

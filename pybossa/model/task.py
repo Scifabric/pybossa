@@ -59,7 +59,6 @@ class Task(db.Model, DomainObject):
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 
-
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
         if self.n_answers != 0 and self.n_answers is not None:

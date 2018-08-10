@@ -21,7 +21,7 @@ from mock import patch
 from default import with_context, db, Test
 from datetime import datetime, timedelta
 from flask_wtf import Form
-from factories import UserFactory
+from factories import UserFactory, ProjectFactory, TaskFactory
 import calendar
 import time
 import csv
@@ -30,7 +30,7 @@ import os
 import json
 import base64
 import hashlib
-from nose.tools import nottest
+from nose.tools import nottest, assert_raises
 
 
 def myjsonify(data):
@@ -976,16 +976,26 @@ class TestStrongPassword(object):
         assert valid
 
 
-class TestAccessLevels(object):
+class TestAccessLevels(Test):
 
-    private_instance_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
+    access_control_params = dict(data_access=[("L1", "L1"), ("L2", "L2"), ("L3", "L3"), ("L4", "L4")],
         default_levels=dict(L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-        default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]))
+        default_user_levels=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
+        valid_project_levels_for_task_level=dict(L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
+        valid_task_levels_for_project_level=dict(L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]))
+
+    def enable_access_control(self, **kwargs):
+        copy = self.access_control_params.copy()
+        copy.update(kwargs)
+        copy['enable_access_control'] = True
+        return patch.dict(self.flask_app.config, {
+            k.upper(): v for k, v in copy.iteritems()
+        })
 
     def test_can_assign_user(self):
         from pybossa import core
 
-        with patch.object(core, 'private_instance_params', self.private_instance_params):
+        with patch.object(core, 'private_instance_params', self.access_control_params):
             proj_levels = ["L3"]
             user_levels = ["L2", "L4"]
             assign_users = util.can_assign_user(proj_levels, user_levels)
@@ -1010,3 +1020,68 @@ class TestAccessLevels(object):
             user_levels = ["L1"]
             assign_users = util.can_assign_user(proj_levels, user_levels)
             assert assign_users, "user with level L1 can work on project with level L2; user should be assigned"
+
+    @with_context
+    def test_access_control_enabled(self):
+        assert not util.access_control_enabled()
+        with self.enable_access_control():
+            assert util.access_control_enabled()
+
+    @with_context
+    def test_access_controller(self):
+        @util.access_controller
+        def wrapped():
+            return 'something'
+        assert wrapped() == None
+        with self.enable_access_control():
+            assert wrapped() == 'something'
+
+    @with_context
+    def test_get_valid_project_levels_for_task(self):
+        task = TaskFactory.create(info={})
+        with self.enable_access_control(valid_project_levels_for_task_level={'A': ['B']}):
+            assert util.get_valid_project_levels_for_task(task) == set()
+            task.info['data_access'] = 'A'
+            assert util.get_valid_project_levels_for_task(task) == set(['B'])
+
+    @with_context
+    def test_get_valid_task_levels_for_project(self):
+        with self.enable_access_control(valid_task_levels_for_project_level={'A': ['B'], 'B': ['C']}):
+            project = ProjectFactory.create(info={})
+            assert util.get_valid_task_levels_for_project(project) == set()
+            project.info['data_access'] = ['A', 'B']
+            assert util.get_valid_task_levels_for_project(project) == set(['B', 'C'])
+
+    @with_context
+    def test_can_add_task_to_project(self):
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(info={})
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['A']},
+            valid_task_levels_for_project_level={'A': ['A']}):
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = ['A']
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = []
+            task.info['data_access'] = 'A'
+            assert not util.can_add_task_to_project(task, project)
+            project.info['data_access'] = ['A', 'B']
+            task.info['data_access'] = 'A'
+            assert util.can_add_task_to_project(task, project)
+
+    @with_context
+    def test_task_save_SufficientPermissions(self):
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['B']},
+            valid_task_levels_for_project_level={'A': ['B']}):
+            project = ProjectFactory.create(info={'data_access': ['A']})
+            TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
+
+    @with_context
+    def test_task_save_InsufficientPermissions(self):
+        with self.enable_access_control(
+            valid_project_levels_for_task_level={'A': ['B']},
+            valid_task_levels_for_project_level={'B': ['C']}):
+            project = ProjectFactory.create(info={'data_access': ['B']})
+            with assert_raises(Exception):
+                TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
