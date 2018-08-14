@@ -68,18 +68,20 @@ class TestUserImport(web.Helper):
         assert 'No file' in res.data
 
     @with_context
-    def test_post(self):
+    @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_post(self, upref_mdata, get_upref_mdata_choices):
+        upref_mdata = True
+        get_upref_mdata_choices.return_value = choices
+
         self.register()
         self.signin()
-        from pybossa import core
-
-        with patch.object(core, 'upref_mdata_choices', choices):
-            url = '/admin/userimport?type=%s' % 'usercsvimport'
-            users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
-                newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_a"}'''
-            res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
-                data={'file': (StringIO(users), 'users.csv')})
-            assert '1 new users were imported successfully' in res.data, res.data
+        url = '/admin/userimport?type=%s' % 'usercsvimport'
+        users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
+            newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_a"}'''
+        res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
+            data={'file': (StringIO(users), 'users.csv')})
+        assert '1 new users were imported successfully' in res.data, res.data
 
         new_user = user_repo.get_by_name('newuser')
         assert new_user.fullname == 'New User'
@@ -87,29 +89,35 @@ class TestUserImport(web.Helper):
         assert new_user.info['metadata']['user_type'] == 'type_a'
 
     @with_context
-    def test_invalid_data(self):
+    @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_invalid_data(self, upref_mdata, get_upref_mdata_choices):
+        upref_mdata = True
+        get_upref_mdata_choices.return_value = choices
+
         self.register()
         self.signin()
-        from pybossa import core
-
-        with patch.object(core, 'upref_mdata_choices', choices):
-            url = '/admin/userimport?type=%s' % 'usercsvimport'
-            users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
-                newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_c"}'''
-            res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
-                data={'file': (StringIO(users), 'users.csv')})
-            assert 'It looks like there were no new users created' in res.data, res.data
+        url = '/admin/userimport?type=%s' % 'usercsvimport'
+        users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
+            newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_c"}'''
+        res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
+            data={'file': (StringIO(users), 'users.csv')})
+        assert 'It looks like there were no new users created' in res.data, res.data
 
     @with_context
-    def test_invalid_metadata(self):
+    @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_invalid_metadata(self, upref_mdata, get_upref_mdata_choices):
+        upref_mdata = True
+        get_upref_mdata_choices.return_value = choices
+
         self.register()
         self.signin()
         from pybossa import core
 
-        with patch.object(core, 'upref_mdata_choices', choices):
-            url = '/admin/userimport?type=%s' % 'usercsvimport'
-            users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
-                newuser,New User,new@user.com,NewU$3r!,,{},{}'''
-            res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
-                data={'file': (StringIO(users), 'users.csv')})
-            assert 'Missing user_type in metadata' in res.data, res.data
+        url = '/admin/userimport?type=%s' % 'usercsvimport'
+        users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
+            newuser,New User,new@user.com,NewU$3r!,,{},{}'''
+        res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
+            data={'file': (StringIO(users), 'users.csv')})
+        assert 'Missing user_type in metadata' in res.data, res.data

@@ -28,7 +28,9 @@ from pybossa.model.project import Project
 from pybossa.leaderboard.data import get_leaderboard as gl
 from pybossa.leaderboard.jobs import leaderboard as lb
 import json
-from pybossa.util import get_user_pref_db_clause, get_data_access_db_clause
+from pybossa.util import get_user_pref_db_clause
+from pybossa.data_access import data_access_levels
+
 
 session = db.slave_session
 
@@ -324,8 +326,6 @@ def delete_user_summary(name):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_user_pref_metadata(name):
-    from pybossa.core import private_instance_params
-
     sql = text("""
     SELECT info->'metadata', user_pref, info->'data_access' FROM "user" WHERE name=:name;
     """)
@@ -333,7 +333,7 @@ def get_user_pref_metadata(name):
     row = cursor.fetchone()
     upref_mdata = row[0] or {}
     upref_mdata.update(row[1] or {})
-    if private_instance_params:
+    if data_access_levels:
         upref_mdata['data_access'] = row[2] or []
     return upref_mdata
 
@@ -454,6 +454,8 @@ def get_announcements_cached(user, announcement_levels):
 
 
 def get_users_for_data_access(data_access):
+    from pybossa.data_access import get_data_access_db_clause
+
     clause = get_data_access_db_clause(data_access)
     if not clause:
         return None
@@ -469,8 +471,21 @@ def get_users_access_levels(users):
         return []
 
     all(int(u) for u in users)
-    users = ', '.join(users)
-    sql = text('''select id::text, info->'data_access' as data_access from "user"
+    users = ', '.join(map(str, users))
+    sql = text('''select id, info->'data_access' as data_access from "user"
         where id in({})'''.format(users))
     results = session.execute(sql).fetchall()
     return [dict(row) for row in results]
+
+
+@memoize(timeout=ONE_DAY)
+def get_user_access_levels_by_id(user_id):
+
+    sql = text('''select info->'data_access' from "user"
+        where id=:user_id''')
+    row = session.execute(sql, dict(user_id=user_id)).fetchone()
+    return row[0] or []
+
+
+def delete_user_access_levels_by_id(user_id):
+    delete_memoized(get_user_access_levels_by_id, user_id)

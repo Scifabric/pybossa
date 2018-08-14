@@ -63,7 +63,7 @@ from pybossa.core import userimporter
 from pybossa.importers import BulkImportException
 from pybossa.cache.users import get_users_for_report
 from collections import OrderedDict
-
+import app_settings
 
 blueprint = Blueprint('admin', __name__)
 
@@ -780,14 +780,13 @@ def userimport():
 @admin_or_subadmin_required
 def manageusers():
     """Enable/disable users of PyBossa."""
-    from pybossa.core import upref_mdata_choices
     found = []
     locs = langs = utypes = timezone = [('', '')]
-    if current_app.config.upref_mdata:
-        locs = upref_mdata_choices['locations']
-        langs = upref_mdata_choices['languages']
-        utypes = upref_mdata_choices['user_types']
-        timezone = upref_mdata_choices['timezones']
+    if app_settings.upref_mdata:
+        locs = app_settings.upref_mdata.upref_locations()
+        langs = app_settings.upref_mdata.upref_languages()
+        utypes = app_settings.upref_mdata.mdata_user_types()
+        timezone = app_settings.upref_mdata.mdata_timezones()
 
     args = request.args
     form = SearchForm(request.form)

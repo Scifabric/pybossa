@@ -62,6 +62,18 @@ class TestWeb(web.Helper):
             "message": "Not found",
             "__type": "Not Found Error"}}
 
+    patch_data_access_levels = dict(
+        valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
+        valid_user_levels_for_project_task_level=dict(
+            L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
+        valid_task_levels_for_user_level=dict(
+            L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
+        valid_project_levels_for_task_level=dict(
+            L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
+        valid_task_levels_for_project_level=dict(
+            L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
+    )
+
     def clear_temp_container(self, user_id):
         """Helper function which deletes all files in temp folder of a given owner_id"""
         temp_folder = os.path.join('/tmp', 'user_%d' % user_id)
@@ -773,8 +785,9 @@ class TestWeb(web.Helper):
         """Test WEB register post JSON creates and sends the confirmation email if
         account validation is enabled"""
         from flask import current_app
+        import app_settings
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
-        current_app.config.upref_mdata = False
+        app_settings.upref_mdata = False
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
@@ -8486,13 +8499,14 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
-    def test_register_with_upref_mdata(self, signer, render, queue):
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_register_with_upref_mdata(self, upref_mdata, get_upref_mdata_choices, signer, render, queue):
         """Test WEB register user with user preferences set"""
         from flask import current_app
-        import pybossa.core
-        current_app.config.upref_mdata = True
 
-        pybossa.core.upref_mdata_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+        upref_data = True
+        get_upref_mdata_choices.return_value = dict(languages=[("en", "en"), ("sp", "sp")],
                                     locations=[("us", "us"), ("uk", "uk")],
                                     timezones=[("", ""), ("ACT", "Australia Central Time")],
                                     user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
@@ -8539,12 +8553,14 @@ class TestWeb(web.Helper):
         assert metadata['review'] == upref_data['review'], "review not updated"
 
     @with_context
-    def test_register_with_invalid_upref_mdata(self):
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_register_with_invalid_upref_mdata(self, upref_mdata, get_valid_user_preferences):
         """Test WEB register user - invalid user preferences cannot be set"""
         from flask import current_app
-        import pybossa.core
-        current_app.config.upref_mdata = True
-        pybossa.core.upref_mdata_choices = dict(languages=[("en", "en"), ("sp", "sp")],
+
+        upref_mdata = True
+        get_valid_user_preferences.return_value = dict(languages=[("en", "en"), ("sp", "sp")],
                                     locations=[("us", "us"), ("uk", "uk")],
                                     timezones=[("", ""), ("ACT", "Australia Central Time")],
                                     user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
@@ -8737,7 +8753,7 @@ class TestWeb(web.Helper):
     def test_assign_users_to_project(self):
         """Test assign users to project based on data access levels"""
 
-        from pybossa import core
+        from pybossa.view.projects import data_access_levels
 
         self.register()
         self.signin()
@@ -8746,9 +8762,8 @@ class TestWeb(web.Helper):
 
         project.info['data_access'] = ["L1"]
         user_access = dict(select_users=["L2"])
-        private_instance_params = dict(data_access=[("L1", "L1")],
-            default_levels=dict(L1=["L2", "L3", "L4"]))
-        with patch.object(core, 'private_instance_params', private_instance_params):
+
+        with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
                  data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
             data = json.loads(res.data)
@@ -8759,7 +8774,7 @@ class TestWeb(web.Helper):
         user = User.query.first()
         user.info['data_access'] = ["L1"]
         user_access = dict(select_users=["L1"])
-        with patch.object(core, 'private_instance_params', private_instance_params):
+        with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
                  data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
             data = json.loads(res.data)
