@@ -142,8 +142,9 @@ class TaskRunAPI(APIBase):
         """Delete file object."""
         cls_name = self.__class__.__name__.lower()
         if cls_name in self.allowed_classes_upload:
-            keys = obj.info.keys()
-            if 'file_name' in keys and 'container' in keys:
-                ensure_authorized_to('delete', obj)
-                uploader.delete_file(obj.info['file_name'],
-                                     obj.info['container'])
+            if type(obj.info) == dict:
+                keys = obj.info.keys()
+                if 'file_name' in keys and 'container' in keys:
+                    ensure_authorized_to('delete', obj)
+                    uploader.delete_file(obj.info['file_name'],
+                                         obj.info['container'])
