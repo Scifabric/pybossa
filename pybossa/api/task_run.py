@@ -110,16 +110,12 @@ class TaskRunAPI(APIBase):
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             is_authorized(current_user, 'create', inst)
-            project = project_repo.get(inst.project_id)
             upload_method = current_app.config.get('UPLOAD_METHOD')
             if request.files.get('file') is None:
                 raise AttributeError
             _file = request.files['file']
             if current_user.is_authenticated():
-                if current_user.admin:
-                    container = "user_%s" % project.owner.id
-                else:
-                    container = "user_%s" % current_user.id
+                container = "user_%s" % current_user.id
             else:
                 container = "anonymous"
             uploader.upload_file(_file,
