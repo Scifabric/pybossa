@@ -126,6 +126,7 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     conn = create_connection(**conn_kwargs)
     bucket = conn.get_bucket(s3_bucket, validate=False)
 
+    assert(len(upload_key) < 256)
     key = bucket.new_key(upload_key)
 
     key.set_contents_from_filename(
