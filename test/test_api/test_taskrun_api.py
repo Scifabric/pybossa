@@ -1295,3 +1295,50 @@ class TestTaskrunAPI(TestAPI):
                               data['info']['file_name'])
         assert os.path.isfile(fname) is True, fname
         assert data['info']['container'] == 'anonymous', data
+
+        # wrong project_id
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=-1,
+                       task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
+                       file=img)
+
+        url = '/api/taskrun'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+
+        # Wrong attribute
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
+                       wrong=img)
+
+        url = '/api/taskrun'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
+
+        # reserved key 
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       file=img)
+
+        payload = dict(project_id=project.id,
+                       task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
+                       file=img,
+                       id=3)
+
+        url = '/api/taskrun'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert data['exception_msg'] == 'Reserved keys in payload', data
