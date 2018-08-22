@@ -37,6 +37,8 @@ class TaskRunAuth(object):
 
     def _create(self, user, taskrun):
         project = self.project_repo.get(taskrun.project_id)
+        if project is None:
+            return False
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
             return False
