@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import io
+import os.path
 import json
 from default import with_context, mock_contributions_guard
 from nose.tools import assert_equal
@@ -1163,7 +1164,27 @@ class TestTaskrunAPI(TestAPI):
         # assert res.status_code == 401, data
         # assert data['status_code'] == 401, data
 
-        # As a user
+        # As an authenticated user
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
+                       file=img)
+        # Without requesting the task first
+        url = '/api/taskrun?api_key=%s' % user.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['exception_msg'] == 'You must request a task first!'
+
+        fname = '%s/user_%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
+                                   user.id,
+                                   'test_file.jpg')
+        assert os.path.isfile(fname) is False, fname
+
+        # Succeeds after requesting a task
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,
@@ -1171,7 +1192,6 @@ class TestTaskrunAPI(TestAPI):
                        info=json.dumps(dict(foo="bar")),
                        file=img)
 
-        # Succeeds after requesting a task
         res = self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id,
                                                                    user.api_key))
         url = '/api/taskrun?api_key=%s' % user.api_key
@@ -1179,6 +1199,10 @@ class TestTaskrunAPI(TestAPI):
                             content_type="multipart/form-data")
         data = json.loads(res.data)
         assert res.status_code == 200, data
+        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
+                              data['info']['container'],
+                              data['info']['file_name'])
+        assert os.path.isfile(fname) is True, fname
         # assert data['status_code'] == 403, data
 
         # As owner
