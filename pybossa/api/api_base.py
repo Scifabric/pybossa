@@ -309,6 +309,11 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            content_type = request.headers.get('Content-Type')
+            if (cls_name == 'TaskRun'
+                    and 'multipart/form-data' in content_type):
+                uploader.delete_file(data['info']['file_name'],
+                                     data['info']['container'])
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),

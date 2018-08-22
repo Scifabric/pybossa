@@ -1168,6 +1168,7 @@ class TestTaskrunAPI(TestAPI):
 
         payload = dict(project_id=project.id,
                        task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
                        file=img)
 
         # Succeeds after requesting a task
@@ -1176,9 +1177,8 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/taskrun?api_key=%s' % user.api_key
         res = self.app.post(url, data=payload,
                             content_type="multipart/form-data")
-        assert 1 == 0, res.data
-        # data = json.loads(res.data)
-        # assert res.status_code == 403, data
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
         # assert data['status_code'] == 403, data
 
         # As owner

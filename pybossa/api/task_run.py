@@ -101,6 +101,8 @@ class TaskRunAPI(APIBase):
             for key in request.form.keys():
                 if key in ['project_id', 'task_id']:
                     data[key] = int(request.form[key])
+                elif key == 'info':
+                    data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
 
