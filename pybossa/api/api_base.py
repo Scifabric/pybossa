@@ -295,6 +295,7 @@ class APIBase(MethodView):
         """
         try:
             cls_name = self.__class__.__name__
+            data = None
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -311,7 +312,8 @@ class APIBase(MethodView):
         except Exception as e:
             content_type = request.headers.get('Content-Type')
             if (cls_name == 'TaskRun'
-                    and 'multipart/form-data' in content_type):
+                    and 'multipart/form-data' in content_type
+                    and data):
                 uploader.delete_file(data['info']['file_name'],
                                      data['info']['container'])
             return error.format_exception(
