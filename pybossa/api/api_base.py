@@ -87,7 +87,10 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
+    allowed_classes_upload = ['blogpost',
+                              'helpingmaterial',
+                              'announcement',
+                              'taskrun']
 
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
