@@ -1198,12 +1198,30 @@ class TestTaskrunAPI(TestAPI):
         assert data['info']['foo'] == 'bar', data
 
         # Delete taskrun
-
         # Owner with valid args can delete
         url = '/api/taskrun/%s?api_key=%s' % (data['id'], user.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
+        # With no info data
+        img = (io.BytesIO(b'test'), 'test_file.jpg')
+
+        payload = dict(project_id=project.id,
+                       task_id=task.id,
+                       file=img)
+
+        res = self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id,
+                                                                   user.api_key))
+        url = '/api/taskrun?api_key=%s' % user.api_key
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
+                              data['info']['container'],
+                              data['info']['file_name'])
+        assert os.path.isfile(fname) is True, fname
+        assert data['info']['container'] == 'user_%s' % user.id, data
 
         # wrong project_id
         img = (io.BytesIO(b'test'), 'test_file.jpg')
