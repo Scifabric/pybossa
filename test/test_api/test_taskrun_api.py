@@ -1143,6 +1143,8 @@ class TestTaskrunAPI(TestAPI):
 
         assert result is not None, result
 
+
+
     @with_context
     def test_taskrun_post_file(self):
         """Test API TASKRUN file upload as authenticated user."""
@@ -1152,9 +1154,6 @@ class TestTaskrunAPI(TestAPI):
         task = TaskFactory.create(project=project)
 
         img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
 
         # As an authenticated user
         img = (io.BytesIO(b'test'), 'test_file.jpg')
@@ -1196,6 +1195,7 @@ class TestTaskrunAPI(TestAPI):
                               data['info']['file_name'])
         assert os.path.isfile(fname) is True, fname
         assert data['info']['container'] == 'user_%s' % user.id, data
+        assert data['info']['foo'] == 'bar', data
 
     @with_context
     def test_taskrun_post_file_anon(self):
