@@ -341,31 +341,17 @@ def task_chart():
     Fetch data for a monthly chart of the number of tasks
     """
     sql = text('''
-        WITH dates AS (
-            SELECT * FROM
-            generate_series(
-                date_trunc('month', clock_timestamp()) - interval '24 month',
-                clock_timestamp(),
-                '1 month') as date
-        ),
-        task_date AS (
-            SELECT id,
-                to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    AS created
-            FROM task
-            WHERE to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US') >
-                clock_timestamp() - interval '26 month'
-        )
-        SELECT date, count(task_date.id) as num_tasks FROM
-        dates LEFT JOIN task_date ON
-            task_date.created < dates.date + interval '1 month'
-            AND
-            task_date.created >= dates.date
-        GROUP BY date ORDER  BY date ASC;
+        SELECT  count(id),
+        date_trunc('month', to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US'::text))
+        AS created_monthly
+        FROM task
+        GROUP BY created_monthly
+        ORDER BY created_monthly ASC
+        LIMIT 24;
         ''')
     rows = session.execute(sql).fetchall()
-    labels = [date.strftime('%b %Y') for date, _ in rows]
-    series = [count for _, count in rows]
+    labels = [date.strftime('%b %Y') for _, date in rows]
+    series = [count for count, _ in rows]
     return dict(labels=labels, series=[series])
 
 
@@ -375,29 +361,15 @@ def submission_chart():
     Fetch data for a monthly chart of the number of submissions
     """
     sql = text('''
-        WITH dates AS (
-            SELECT * FROM
-            generate_series(
-                date_trunc('month', clock_timestamp()) - interval '24 month',
-                clock_timestamp(),
-                '1 month') as date
-        ),
-        task_run_date AS (
-            SELECT id,
-                to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    AS finish_time
-            FROM task_run
-            WHERE to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US') >
-                clock_timestamp() - interval '26 month'
-        )
-        SELECT date, count(task_run_date.id) as num_submissions FROM
-        dates LEFT JOIN task_run_date ON
-            task_run_date.finish_time < dates.date + interval '1 month'
-            AND
-            task_run_date.finish_time >= dates.date
-        GROUP BY date ORDER  BY date ASC;
+        SELECT  count(id),
+        date_trunc('month', to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US'::text))
+        AS task_run_monthly
+        FROM task_run
+        GROUP BY task_run_monthly
+        ORDER BY task_run_monthly ASC
+        LIMIT 24;
         ''')
     rows = session.execute(sql).fetchall()
-    labels = [date.strftime('%b %Y') for date, _ in rows]
-    series = [count for _, count in rows]
+    labels = [date.strftime('%b %Y') for _, date in rows]
+    series = [count for count, _ in rows]
     return dict(labels=labels, series=[series])
