@@ -23,7 +23,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
-                        AnonymousTaskRunFactory, UserFactory)
+                       AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db, anonymizer
