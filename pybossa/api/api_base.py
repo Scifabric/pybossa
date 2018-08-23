@@ -87,7 +87,10 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
+    allowed_classes_upload = ['blogpost',
+                              'helpingmaterial',
+                              'announcement',
+                              'taskrun']
 
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
@@ -292,6 +295,7 @@ class APIBase(MethodView):
         """
         try:
             cls_name = self.__class__.__name__
+            data = None
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -306,6 +310,12 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            content_type = request.headers.get('Content-Type')
+            if (cls_name == 'TaskRun'
+                    and 'multipart/form-data' in content_type
+                    and data):
+                uploader.delete_file(data['info']['file_name'],
+                                     data['info']['container'])
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -483,22 +493,26 @@ class APIBase(MethodView):
                 container = "user_%s" % current_user.id
             else:
                 ensure_authorized_to('create', self.__class__,
-                                    project_id=tmp['project_id'])
+                                     project_id=tmp['project_id'])
                 project = project_repo.get(tmp['project_id'])
                 upload_method = current_app.config.get('UPLOAD_METHOD')
                 if request.files.get('file') is None:
                     raise AttributeError
                 _file = request.files['file']
-                if current_user.admin:
-                    container = "user_%s" % project.owner.id
+                if current_user.is_authenticated():
+                    if current_user.admin:
+                        container = "user_%s" % project.owner.id
+                    else:
+                        container = "user_%s" % current_user.id
                 else:
-                    container = "user_%s" % current_user.id
+                    container = "anonymous"
             uploader.upload_file(_file,
                                  container=container)
+            avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
             file_url = get_avatar_url(upload_method,
                                       _file.filename,
                                       container,
-                                      current_app.config.get('AVATAR_ABSOLUTE'))
+                                      avatar_absolute)
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()
