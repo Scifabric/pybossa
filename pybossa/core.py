@@ -116,10 +116,12 @@ def configure_app(app):
         app.config['SQLALCHEMY_DATABASE_URI'] = \
             app.config['SQLALCHEMY_DATABASE_TEST_URI']
     # Enable Slave bind in case is missing using Master node
-    if app.config.get('SQLALCHEMY_BINDS') is None:
+    if not app.config.get('SQLALCHEMY_BINDS'):
+        app.config['SQLALCHEMY_BINDS'] = {}
+    if app.config['SQLALCHEMY_BINDS'].get('slave') is None:
         print "Slave binds are misssing, adding Master as slave too."
-        app.config['SQLALCHEMY_BINDS'] = \
-            dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
+        master = app.config.get('SQLALCHEMY_DATABASE_URI')
+        app.config['SQLALCHEMY_BINDS']['slave'] = master
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
 
     if app.config.get('PERMANENT_SESSION_LIFETIME'):
