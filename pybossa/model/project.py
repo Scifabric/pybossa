@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text, Table
-from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.schema import Column, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.ext.mutable import MutableDict, MutableList
@@ -195,3 +195,5 @@ class Project(db.Model, DomainObject):
 
     def get_project_users(self):
         return self.info.get('project_users', [])
+
+Index('project_owner_id_idx', Project.owner_id)
