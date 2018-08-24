@@ -28,7 +28,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 """
 import json
 from flask import request, abort, Response, current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from werkzeug.exceptions import MethodNotAllowed

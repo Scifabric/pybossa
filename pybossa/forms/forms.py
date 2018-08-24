@@ -23,7 +23,7 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
-from flask.ext.babel import lazy_gettext, gettext
+from flask_babel import lazy_gettext, gettext
 
 from pybossa.core import project_repo, user_repo
 from pybossa.sched import sched_variants
@@ -35,7 +35,7 @@ from werkzeug.utils import secure_filename
 from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
-from flask.ext.login import current_user
+from flask_login import current_user
 import os
 from pybossa.forms.fields.time_field import TimeField
 from validator import TimeFieldsValidator

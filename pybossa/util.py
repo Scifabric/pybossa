@@ -27,7 +27,7 @@ from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from math import ceil
@@ -37,7 +37,7 @@ import hashlib
 import hmac
 import simplejson
 import time
-from flask.ext.babel import lazy_gettext
+from flask_babel import lazy_gettext
 import re
 import pycountry
 

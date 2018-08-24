@@ -18,7 +18,7 @@
 
 import inspect
 from flask import abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
 from pybossa.core import project_stats_repo
 from pybossa.auth.errcodes import *

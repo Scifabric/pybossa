@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Home view for PYBOSSA."""
 from flask import current_app, abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.model.category import Category
 from flask import Blueprint
 from flask import render_template

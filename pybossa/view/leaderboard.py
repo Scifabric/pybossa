@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Leaderboard view for PYBOSSA."""
 from flask import Blueprint, current_app, request, abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.cache import users as cached_users
 from pybossa.util import handle_content_type
 

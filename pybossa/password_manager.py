@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Module for password protect a project."""
-from flask.ext.login import current_user
+from flask_login import current_user
 
 
 class ProjectPasswdManager(object):

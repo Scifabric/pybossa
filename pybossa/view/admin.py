@@ -27,8 +27,8 @@ from flask import url_for
 from flask import current_app
 from flask import Response
 from flask import Markup
-from flask.ext.login import login_required, current_user
-from flask.ext.babel import gettext
+from flask_login import login_required, current_user
+from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError

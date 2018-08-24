@@ -24,7 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 import json
 from flask import request, Response, current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 

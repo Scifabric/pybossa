@@ -24,7 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 import copy
 from werkzeug.exceptions import BadRequest, Forbidden
-from flask.ext.login import current_user
+from flask_login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
@@ -108,4 +108,3 @@ class ProjectAPI(APIBase):
         else:
             data = self._filter_private_data(data)
             return data
-
