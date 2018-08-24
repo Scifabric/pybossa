@@ -23,6 +23,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
+import time
 from flask import request, Response, current_app
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
@@ -109,6 +110,7 @@ class TaskRunAPI(APIBase):
             # inst = self._create_instance_from_request(data)
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
+            self._add_user_info(inst)
             is_authorized(current_user, 'create', inst)
             upload_method = current_app.config.get('UPLOAD_METHOD')
             if request.files.get('file') is None:
@@ -118,6 +120,8 @@ class TaskRunAPI(APIBase):
                 container = "user_%s" % current_user.id
             else:
                 container = "anonymous"
+            if _file.filename == 'blob' or _file.filename is None:
+                _file.filename = "%s.png" % time.time()
             uploader.upload_file(_file,
                                  container=container)
             avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')

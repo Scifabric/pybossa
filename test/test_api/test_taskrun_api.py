@@ -1368,3 +1368,32 @@ class TestTaskrunAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 400, data
         assert data['exception_msg'] == 'Reserved keys in payload', data
+
+    @with_context
+    def test_taskrun_post_no_filename(self):
+        """Test API TASKRUN post file without a name."""
+        # Succeeds after requesting a task
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+
+        img = (io.BytesIO(b'test'), 'blob')
+
+        payload = dict(project_id=project.id,
+                       task_id=task.id,
+                       info=json.dumps(dict(foo="bar")),
+                       file=img)
+
+        res = self.app.get('/api/project/%s/newtask' % project.id)
+        url = '/api/taskrun'
+        res = self.app.post(url, data=payload,
+                            content_type="multipart/form-data")
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
+                              data['info']['container'],
+                              data['info']['file_name'])
+        assert os.path.isfile(fname) is True, fname
+        assert data['info']['container'] == 'anonymous', data
+        assert 'blob' not in data['media_url']
