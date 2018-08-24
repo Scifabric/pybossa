@@ -20,8 +20,7 @@ import json
 
 from flask import Blueprint, Response
 
-from pybossa.core import sentinel
-from pybossa.core import db
+from pybossa.core import sentinel, db, talisman
 
 
 blueprint = Blueprint('diagnostics', __name__)
@@ -65,6 +64,7 @@ def perform_checks():
 
 @blueprint.route('/')
 @blueprint.route('/healthcheck')
+@talisman(force_https=False)
 def healthcheck():
     response = perform_checks()
     healthy =  all(response.itervalues())
