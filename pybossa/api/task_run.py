@@ -106,7 +106,6 @@ class TaskRunAPI(APIBase):
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
-            print data.keys()
             # inst = self._create_instance_from_request(data)
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
