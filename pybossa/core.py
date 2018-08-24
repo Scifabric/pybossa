@@ -118,7 +118,7 @@ def configure_app(app):
     # Enable Slave bind in case is missing using Master node
     if not app.config.get('SQLALCHEMY_BINDS'):
         app.config['SQLALCHEMY_BINDS'] = {}
-    if app.config.get('SQLALCHEMY_BINDS') is None:
+    if app.config['SQLALCHEMY_BINDS'].get('slave') is None:
         print "Slave binds are misssing, adding Master as slave too."
         master = app.config.get('SQLALCHEMY_DATABASE_URI')
         app.config['SQLALCHEMY_BINDS']['slave'] = master
