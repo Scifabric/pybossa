@@ -1,9 +1,10 @@
 from werkzeug.exceptions import BadRequest
 from collections import defaultdict
 from pybossa.util import (convert_est_to_utc,
-    get_user_pref_db_clause, get_valid_user_preferences)
+    get_user_pref_db_clause)
 import re
 import json
+import app_settings
 
 def get_task_filters(args):
     """
@@ -246,9 +247,11 @@ def validate_user_preferences(user_pref):
         not all(x in ['languages', 'locations'] for x in user_pref.iterkeys()):
             raise ValueError('invalid user preference keys')
 
-    valid_user_preferences = get_valid_user_preferences()
+    valid_user_preferences = app_settings.upref_mdata.get_valid_user_preferences() \
+        if app_settings.upref_mdata else {}
     valid_languages = valid_user_preferences.get('languages')
     valid_locations = valid_user_preferences.get('locations')
+
 
     lang = user_pref.get('languages')
     loc = user_pref.get('locations')

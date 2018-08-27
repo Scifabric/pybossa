@@ -165,6 +165,4 @@ import flask_profiler
 from pybossa.anonymizer import Anonymizer
 anonymizer = Anonymizer()
 
-private_instance_params = {}
-
 talisman = None

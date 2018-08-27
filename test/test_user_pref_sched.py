@@ -493,3 +493,33 @@ class TestNTaskAvailable(sched.Helper):
         tasks[1].user_pref = {'languages': ['de']}
         task_repo.save(tasks[0])
         assert n_available_tasks_for_user(project, 500) == 2
+
+
+    @with_context
+    def test_task_5(self):
+
+        from pybossa import data_access
+
+        owner = UserFactory.create(id=500)
+        user = UserFactory.create(id=501, info=dict(data_access=["L1"]))
+        patch_data_access_levels = dict(
+            valid_access_levels=[("L1", "L1"), ("L2", "L2")],
+            valid_user_levels_for_project_task_level=dict(L1=[], L2=["L1"]),
+            valid_task_levels_for_user_level=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"]),
+            valid_project_levels_for_task_level=dict(L1=["L1"], L2=["L1", "L2"]),
+            valid_task_levels_for_project_level=dict(L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"])
+        )
+
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner, info=dict(project_users=[owner.id]))
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=2, info=dict(data_access=["L1"]))
+        tasks[0].info['data_access'] = ["L1"]
+        task_repo.save(tasks[0])
+        tasks[1].info['data_access'] = ["L1"]
+        task_repo.save(tasks[1])
+        tasks[2].info['data_access'] = ["L2"]
+        task_repo.save(tasks[2])
+
+        with patch.object(data_access, 'data_access_levels', patch_data_access_levels):
+            assert n_available_tasks_for_user(project, 501) == 3

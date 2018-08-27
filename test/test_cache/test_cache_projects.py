@@ -658,12 +658,14 @@ class TestProjectsCache(Test):
         assert pargs == valid_args, pargs
 
     @with_context
-    @patch('pybossa.cache.task_browse_helpers.get_valid_user_preferences')
-    def test_task_browse_user_pref_args(self, upref_choices):
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata.get_valid_user_preferences')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_task_browse_user_pref_args(self, upref_mdata, get_valid_user_preferences):
         """Test task browse user preference works with valid user_pref settings"""
         from pybossa.cache.task_browse_helpers import parse_tasks_browse_args
 
-        upref_choices.return_value = dict(languages=["en", "sp"],
+        upref_mdata = True
+        get_valid_user_preferences.return_value = dict(languages=["en", "sp"],
                                     locations=["us", "uk"])
         args = dict(
             task_id=12345, pcomplete_from=0,

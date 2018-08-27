@@ -179,7 +179,7 @@ class Project(db.Model, DomainObject):
 
     def set_project_users(self, users):
         from pybossa.cache.users import get_users_access_levels
-        from pybossa.util import can_assign_user
+        from pybossa.data_access import can_assign_user
 
         valid_users = set([])
         proj_levels = self.info.get('data_access', [])

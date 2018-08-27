@@ -51,8 +51,6 @@ from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
 
-# dict containing list of valid user preferences
-valid_user_preferences = {}
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -970,16 +968,6 @@ def get_user_pref_db_clause(user_pref):
     return ' OR '.join(sql_strings)
 
 
-def get_valid_user_preferences():
-    from pybossa.core import upref_mdata_choices
-
-    if not valid_user_preferences and \
-        current_app.config.upref_mdata:
-            for user_pref, values in upref_mdata_choices.iteritems():
-                valid_user_preferences[user_pref] = [v[0] for v in values]
-    return valid_user_preferences
-
-
 def validate_required_fields(data):
     invalid_fields = []
     required_fields = current_app.config.get("TASK_REQUIRED_FIELDS", {})
@@ -1023,94 +1011,3 @@ def delete_import_csv_file(path):
         delete_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
     else:
         os.remove(path)
-
-
-def access_control_enabled():
-    return (current_app.config.get('ENABLE_ACCESS_CONTROL') and
-            current_app.config['DATA_ACCESS'] and
-            current_app.config['DEFAULT_LEVELS'] and
-            current_app.config['DEFAULT_USER_LEVELS'] and
-            current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'] and
-            current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'])
-
-
-def access_controller(fn):
-    def wrapper(*args, **kwargs):
-        if access_control_enabled():
-            return fn(*args, **kwargs)
-    return wrapper
-
-
-def get_valid_project_levels_for_task(task):
-    task_level = (task.info or {}).get('data_access')
-    return set(current_app.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'].get(task_level, []))
-
-
-def get_valid_task_levels_for_project(project):
-    assigned_project_levels = (project.info or {}).get('data_access', [])
-    return set([
-        level for apl in assigned_project_levels
-        for level in current_app.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'].get(apl, [])
-    ])
-
-
-def can_add_task_to_project(task, project):
-    task_levels = get_valid_project_levels_for_task(task)
-    project_levels = get_valid_task_levels_for_project(project)
-    return bool(task_levels & project_levels)
-
-
-def private_instance_levels():
-    from pybossa.core import private_instance_params
-
-    access_levels = private_instance_params.get('data_access', [])
-    access_levels = [level[0] for level in access_levels]
-
-    default_levels = private_instance_params.get('default_levels', [])
-    default_user_levels = private_instance_params.get('default_user_levels', [])
-    return access_levels, default_levels, default_user_levels
-
-
-def valid_access_levels(levels):
-    """check if levels are valid levels"""
-
-    access_levels, _, _ = private_instance_levels()
-    return [l for l in levels if l in access_levels] == levels
-
-
-def can_assign_user(levels, user_levels):
-    """check if user be assigned to an object(project/task) based on
-    whether user_levels matches objects levels """
-
-    access_levels, default_levels, default_user_levels = private_instance_levels()
-    if not (valid_access_levels(levels) and valid_access_levels(user_levels)):
-        return False
-
-    all_user_levels = get_all_access_levels(user_levels, default_user_levels)
-    all_levels = get_all_access_levels(levels, default_levels)
-    return bool(all_levels.intersection(all_user_levels))
-
-
-def get_all_access_levels(levels, default_levels):
-    """based on access level for an object(project/task/user), obtain
-    all access levels considering default_levels for an objects"""
-
-    all_levels = set(levels)
-    for level in levels:
-        for dlevel in default_levels[level]:
-            all_levels.add(dlevel)
-    return all_levels
-
-
-def get_data_access_db_clause(access_levels):
-
-    if not valid_access_levels(access_levels):
-        return
-
-    _, default_levels, _ = private_instance_levels()
-    levels = set([level for level in access_levels])
-    for level in access_levels:
-        for dlevels in default_levels.get(level):
-            levels.add(dlevels)
-    sql_clauses = [' info->\'data_access\' @> \'["{}"]\''.format(level) for level in levels]
-    return ' OR '.join(sql_clauses)

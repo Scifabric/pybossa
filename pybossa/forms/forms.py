@@ -45,7 +45,8 @@ from validator import TimeFieldsValidator
 from pybossa.core import enable_strong_password
 from pybossa.util import get_file_path_for_import_csv
 from flask import flash
-from pybossa.core import private_instance_params
+import pybossa.data_access as data_access
+import app_settings
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -110,9 +111,12 @@ class ProjectUpdateForm(ProjectForm):
                         pb_validator.CheckPasswordStrength(
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)])
-    if private_instance_params:
+    if data_access.data_access_levels:
         data_access = Select2Field(
-            lazy_gettext('Access Level(s)'), choices=private_instance_params['data_access'], default=[])
+            lazy_gettext('Access Level(s)'),
+            [validators.Required()],
+            choices=data_access.data_access_levels['valid_access_levels'],
+            default=[])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))
@@ -648,14 +652,15 @@ class UserPrefMetadataForm(Form):
         choices=[], default="")
     user_type = SelectField(
         lazy_gettext('Type of user'), [validators.Required()], choices=[], default="")
-    if private_instance_params:
+    if data_access.data_access_levels:
         data_access = Select2Field(
-            lazy_gettext('Data Access(s)'), choices=private_instance_params['data_access'], default="")
+            lazy_gettext('Data Access(s)'), [validators.Required()],
+            choices=data_access.data_access_levels['valid_access_levels'], default="")
     review = TextAreaField(
         lazy_gettext('Additional comments'), default="")
 
     def set_upref_mdata_choices(self):
-        from pybossa.core import upref_mdata_choices
+        upref_mdata_choices = app_settings.upref_mdata.get_upref_mdata_choices()
         self.languages.choices = upref_mdata_choices['languages']
         self.locations.choices = upref_mdata_choices['locations']
         self.timezone.choices = upref_mdata_choices['timezones']

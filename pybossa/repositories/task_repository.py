@@ -31,8 +31,8 @@ from sqlalchemy import text
 from pybossa.cache.task_browse_helpers import get_task_filters
 import json
 from datetime import datetime, timedelta
-from pybossa.util import access_controller, can_add_task_to_project
 from flask import current_app
+from pybossa.data_access import data_access_levels, can_add_task_to_project
 
 
 class TaskRepository(Repository):
@@ -391,14 +391,17 @@ class TaskRepository(Repository):
         if row:
             return row[0]
 
-    @access_controller
     def _can_add_task_to_project(self, action, element):
         from pybossa.core import project_repo
+
+        if not data_access_levels:
+            return
+
         if isinstance(element, Task) and (action in [self.SAVE_ACTION, self.UPDATE_ACTION]):
             project = project_repo.get(element.project_id)
             if not can_add_task_to_project(element, project):
-                # Create custom exception class for access control violations
-                raise Exception('Invalid or insufficient permission')
+                raise Exception('Invalid or insufficient access levels')
+
 
     def _validate_can_be(self, action, element):
         from flask import current_app

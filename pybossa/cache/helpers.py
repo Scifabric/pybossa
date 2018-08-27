@@ -24,6 +24,7 @@ from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
 from pybossa.cache import users as cached_users
+from pybossa.data_access import get_data_access_db_clause_for_task_assignment
 
 session = db.slave_session
 
@@ -166,6 +167,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     submitted by the user and user preference set under user profile.
     """
     from pybossa.sched import Schedulers
+
+    allowed_task_levels_clause = get_data_access_db_clause_for_task_assignment(user_id)
     n_tasks = 0
     if user_id is None or user_id <= 0:
         return n_tasks
@@ -177,7 +180,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
                AND project_id=:project_id
-               AND state !='completed'; '''
+               AND state !='completed' {}; '''.format(allowed_task_levels_clause)
     else:
         user_pref_list = cached_users.get_user_preferences(user_id)
         sql = '''
@@ -185,8 +188,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                WHERE NOT EXISTS
                (SELECT task_id FROM task_run WHERE project_id=:project_id AND
                user_id=:user_id AND task_id=task.id)
-               AND project_id=:project_id AND (user_pref IS NULL OR {0})
-               AND state !='completed' ; '''.format(user_pref_list)
+               AND project_id=:project_id AND (user_pref IS NULL OR {})
+               AND state !='completed' {} ; '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
         result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id))

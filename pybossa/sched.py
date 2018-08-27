@@ -31,6 +31,8 @@ from werkzeug.exceptions import BadRequest, Forbidden
 import random
 from pybossa.cache import users as cached_users
 from flask import current_app
+from pybossa import data_access
+
 
 session = db.slave_session
 
@@ -250,6 +252,8 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     a lock on the task and return the task to the user. If offset is nonzero,
     skip that amount of available tasks before returning to the user.
     """
+
+    allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     sql = text('''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -260,10 +264,12 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
-           AND task.project_id=:project_id AND task.state !='completed'
+           AND task.project_id=:project_id
+           AND task.state !='completed'
+           {}
            group by task.id HAVING COUNT(task_run.task_id) < n_answers
            ORDER BY priority_0 DESC, {} LIMIT :limit;
-           '''.format('random()' if rand_within_priority else 'id ASC'))
+           '''.format(allowed_task_levels_clause, 'random()' if rand_within_priority else 'id ASC'))
 
     return sql
 
@@ -280,8 +286,10 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
+
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
+    allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -293,10 +301,11 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
-           AND ({0})
+           AND ({})
            AND task.state !='completed'
-           group by task.id ORDER BY priority_0 DESC, {1}
-           LIMIT :limit; '''.format(user_pref_list, secondary_order)
+           {}
+           group by task.id ORDER BY priority_0 DESC, {}
+           LIMIT :limit; '''.format(user_pref_list, allowed_task_levels_clause, secondary_order)
     return text(sql)
 
 

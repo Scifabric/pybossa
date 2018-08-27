@@ -70,7 +70,6 @@ def create_app(run_as_server=True):
         Sentry(app)
     if run_as_server:  # pragma: no cover
         setup_scheduled_jobs(app)
-    setup_private_instance_params(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -89,7 +88,6 @@ def create_app(run_as_server=True):
     plugin_manager.init_app(app)
     plugin_manager.install_plugins()
     import pybossa.model.event_listeners
-    setup_upref_mdata(app)
     anonymizer.init_app(app)
     setup_task_presenter_editor(app)
     setup_schedulers(app)
@@ -108,9 +106,6 @@ def configure_app(app):
             app.config.from_pyfile(config_path)
     else:
         config_path = os.path.abspath(os.environ.get('PYBOSSA_SETTINGS'))
-
-    config_upref_mdata = os.path.join(os.path.dirname(config_path), 'settings_upref_mdata.py')
-    app.config.upref_mdata = True if os.path.exists(config_upref_mdata) else False
 
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
@@ -768,20 +763,6 @@ def setup_profiler(app):
         flask_profiler.init_app(app)
 
 
-def setup_upref_mdata(app):
-    """Setup user preference and metadata choices for user accounts"""
-    global upref_mdata_choices
-    upref_mdata_choices = dict(languages=[], locations=[],
-                               timezones=[], user_types=[])
-    if app.config.upref_mdata:
-        from settings_upref_mdata import (upref_languages, upref_locations,
-                mdata_timezones, mdata_user_types)
-        upref_mdata_choices['languages'] = upref_languages()
-        upref_mdata_choices['locations'] = upref_locations()
-        upref_mdata_choices['timezones'] = mdata_timezones()
-        upref_mdata_choices['user_types'] = mdata_user_types()
-
-
 def setup_task_presenter_editor(app):
     if app.config.get('DISABLE_TASK_PRESENTER_EDITOR'):
         from pybossa.api.project import ProjectAPI
@@ -800,14 +781,3 @@ def setup_http_signer(app):
     from pybossa.http_signer import HttpSigner
     secret = app.config.get('SIGNATURE_SECRET')
     http_signer = HttpSigner(secret, 'X-Pybossa-Signature')
-
-
-def setup_private_instance_params(app):
-    global private_instance_params
-
-    private_instance_params = dict(data_access=app.config['DATA_ACCESS']) \
-        if app.config.get('DATA_ACCESS') else {}
-    if private_instance_params and app.config.get('DEFAULT_LEVELS'):
-        private_instance_params['default_levels'] = app.config['DEFAULT_LEVELS']
-    if private_instance_params and app.config.get('DEFAULT_USER_LEVELS'):
-        private_instance_params['default_user_levels'] = app.config['DEFAULT_USER_LEVELS']

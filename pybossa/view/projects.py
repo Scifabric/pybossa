@@ -86,8 +86,10 @@ from pybossa.error import ErrorStatus
 from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
-from pybossa.util import get_valid_user_preferences
 from datetime import datetime
+from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
+    ensure_data_access_assignment_from_form)
+import app_settings
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -575,7 +577,6 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    from pybossa.core import private_instance_params
 
     sync_enabled = current_app.config.get('SYNC_ENABLED')
     project, owner, ps = project_by_shortname(short_name)
@@ -598,8 +599,7 @@ def update(short_name):
             new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
-            if private_instance_params:
-                new_project.info['data_access'] = form.data_access.data
+            ensure_data_access_assignment_from_form(new_project.info, form)
 
         if form.password.data:
             new_project.set_password(form.password.data)
@@ -637,8 +637,7 @@ def update(short_name):
         if project.category_id is None:
             project.category_id = categories[0].id
         form.populate_obj(project)
-        if private_instance_params:
-            form.data_access.data = project.info.get('data_access', [])
+        ensure_data_access_assignment_to_form(project.info, form)
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
@@ -702,13 +701,14 @@ def update(short_name):
                     target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
                     server_url=current_app.config.get('SERVER_URL'),
                     sync_enabled=sync_enabled,
-                    private_instance=bool(private_instance_params))
+                    private_instance=bool(data_access_levels))
     return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/')
 @login_required
 def details(short_name):
+
     project, owner, ps = project_by_shortname(short_name)
     num_available_tasks = n_available_tasks(project.id, current_user.id)
     num_completed_tasks_by_user = n_completed_tasks_by_user(project.id, current_user.id)
@@ -718,13 +718,12 @@ def details(short_name):
     num_remaining_task_runs = cached_projects.n_remaining_task_runs(project.id)
     num_expected_task_runs = cached_projects.n_expected_task_runs(project.id)
 
-    if project.needs_password():
-        redirect_to_password = _check_if_redirect_to_password(project)
-        if redirect_to_password:
-            return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
+    # all projects require password check
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
 
+    ensure_authorized_to('read', project)
     template = '/projects/project.html'
     pro = pro_features()
 
@@ -762,7 +761,6 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    from pybossa.core import private_instance_params
 
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Settings")
@@ -782,7 +780,7 @@ def settings(short_name):
                     n_volunteers=ps.n_volunteers,
                     title=title,
                     pro_features=pro,
-                    private_instance=bool(private_instance_params))
+                    private_instance=bool(data_access_levels))
     return handle_content_type(response)
 
 
@@ -1283,7 +1281,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                 for col in disp_info_columns:
                     task['info'][col] = task_info.get(col, '')
 
-        valid_user_preferences = get_valid_user_preferences()
+        valid_user_preferences = app_settings.upref_mdata.get_valid_user_preferences() \
+            if app_settings.upref_mdata else {}
         language_options = valid_user_preferences.get('languages')
         location_options = valid_user_preferences.get('locations')
         rdancy_upd_exp = current_app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)
@@ -2879,14 +2878,12 @@ def notify_redundancy_updates(tasks_not_updated):
 def assign_users(short_name):
     """Assign users to project based on projects data access levels."""
 
-    from pybossa.core import private_instance_params
-
     project, owner, ps = project_by_shortname(short_name)
     access_levels = project.info.get('data_access', None)
-    if not private_instance_params or not access_levels:
+    if not data_access_levels or not access_levels:
         flash('Cannot assign users to a project without data access levels', 'warning')
         return redirect_content_type(
-            url_for('.settings', short_name=short_name))
+            url_for('.settings', short_name=project.short_name))
 
     users = cached_users.get_users_for_data_access(access_levels)
     if not users:
@@ -2902,6 +2899,7 @@ def assign_users(short_name):
                                                                 ps)
     if request.method == 'GET':
         project_users = project.get_project_users()
+        project_users = map(str, project_users)
 
         response = dict(
             template='/projects/assign_users.html',
@@ -2914,12 +2912,13 @@ def assign_users(short_name):
         )
         return handle_content_type(response)
 
-    users = request.form.getlist('select_users')
-    project.set_project_users(users)
+    project_users = request.form.getlist('select_users')
+    project_users = map(int, project_users)
+    project.set_project_users(project_users)
     project_repo.save(project)
     auditlogger.log_event(project, current_user, 'update', 'project.assign_users',
               'N/A', users)
-    if not users:
+    if not project_users:
         msg = gettext('Users unassigned or no user assigned to project')
     else:
         msg = gettext('Users assigned to project')
