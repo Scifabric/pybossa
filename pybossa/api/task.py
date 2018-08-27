@@ -28,6 +28,7 @@ from werkzeug.exceptions import BadRequest, Conflict
 from pybossa.model.task import Task
 from pybossa.model.project import Project
 from pybossa.core import result_repo
+from pybossa.util import sign_task
 from api_base import APIBase
 from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.util import get_user_id_or_ip, validate_required_fields
@@ -78,3 +79,9 @@ class TaskAPI(APIBase):
         project = Project(**get_project_data(item.project_id))
         pwd_manager = get_pwd_manager(project)
         return not pwd_manager.password_needed(project, get_user_id_or_ip())
+
+    def _sign_item(self, item):
+        project_id = item['project_id']
+        if current_user.admin or \
+           current_user.id in get_project_data(project_id)['owners_ids']:
+            sign_task(item)

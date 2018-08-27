@@ -46,6 +46,8 @@ from pybossa.core import csrf, ratelimits, sentinel, anonymizer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
+from pybossa.data_access import access_controller
+from pybossa.util import sign_task
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
 from task import TaskAPI
@@ -133,6 +135,12 @@ register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', p
 register_api(ProjectByNameAPI, 'api_projectbyname', '/projectbyname', pk='key', pk_type='string')
 
 
+@access_controller
+def add_task_signature(tasks):
+    for task in tasks:
+        sign_task(task)
+
+
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
@@ -160,6 +168,7 @@ def new_task(project_id):
                     guard.extend_task_presented_timestamp_expiry(task, user_id_or_ip)
 
             data = [task.dictize() for task in tasks]
+            add_task_signature(data)
             if len(data) == 0:
                 response = make_response(json.dumps({}))
             elif len(data) == 1:
