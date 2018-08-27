@@ -53,7 +53,7 @@ class TestS3Uploader(Test):
         assert_raises(RuntimeError, validate_directory, 'hello$world')
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_upload_from_string(self, set_contents):
         with patch.dict(self.flask_app.config, self.default_config):
             url = s3_upload_from_string('bucket', u'hello world', 'test.txt')
@@ -67,7 +67,7 @@ class TestS3Uploader(Test):
                       'bucket', u'hellow world', 'test.txt')
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_upload_from_string_return_key(self, set_contents):
         with patch.dict(self.flask_app.config, self.default_config):
             key = s3_upload_from_string('bucket', u'hello world', 'test.txt',
@@ -75,7 +75,7 @@ class TestS3Uploader(Test):
             assert key == 'test.txt', key
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_upload_from_storage(self, set_contents):
         with patch.dict(self.flask_app.config, self.default_config):
             stream = StringIO('Hello world!')
@@ -86,7 +86,7 @@ class TestS3Uploader(Test):
             assert url == 'https://s3.storage.com/bucket/test.txt', url
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.generate_url')
     def test_upload_remove_query_params(self, generate_url, set_content):
         with patch.dict(self.flask_app.config, self.default_config):
