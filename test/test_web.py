@@ -1742,7 +1742,7 @@ class TestWeb(web.Helper):
         p = project_repo.get(project.id)
         assert p.info['thumbnail'] is not None
         assert p.info['container'] is not None
-        thumbnail_url = 'http://localhost/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
+        thumbnail_url = 'https://localhost/uploads/%s/%s' % (p.info['container'], p.info['thumbnail'])
         assert p.info['thumbnail_url'] == thumbnail_url
 
     @with_context
@@ -1762,7 +1762,7 @@ class TestWeb(web.Helper):
         u = user_repo.get(owner.id)
         assert u.info['avatar'] is not None
         assert u.info['container'] is not None
-        avatar_url = 'http://localhost/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
+        avatar_url = 'https://localhost/uploads/%s/%s' % (u.info['container'], u.info['avatar'])
         assert u.info['avatar_url'] == avatar_url, u.info['avatar_url']
 
     @with_context
