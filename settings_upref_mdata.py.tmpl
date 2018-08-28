@@ -1,5 +1,7 @@
 import pycountry
 
+valid_user_preferences = {}
+
 def upref_languages():
     langs = [("Afrikaans", "Afrikaans"),
         ("Albanian", "Albanian"),
@@ -71,6 +73,7 @@ def mdata_user_types():
         ("Researcher", "Researcher"),
         ("Analyst", "Analyst"),
         ("Curator", "Curator")]
+
     return types
 
 
@@ -108,3 +111,18 @@ def mdata_timezones():
         ("UTC", "Universal Coordinated Time"),
         ("VST", "Vietnam Standard Time")]
     return tz
+
+def get_upref_mdata_choices():
+    upref_mdata_choices = dict(
+        languages=upref_languages(),
+        locations=upref_locations(),
+        timezones=mdata_timezones(),
+        user_types=mdata_user_types())
+    return upref_mdata_choices
+
+def get_valid_user_preferences():
+    if not valid_user_preferences:
+        upref_mdata_choices = get_upref_mdata_choices()
+        for user_pref, values in upref_mdata_choices.iteritems():
+            valid_user_preferences[user_pref] = [v[0] for v in values]
+    return valid_user_preferences
