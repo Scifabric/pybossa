@@ -5,19 +5,19 @@ requirements = [
     "beautifulsoup4>=4.3.2, <5.0",
     "blinker>=1.3, <2.0",
     "Flask-Babel>=0.9, <0.10",
-    "Flask-Login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    "flask-login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
     "misaka>=1.0.0, <2.0.0",
     "Flask-Misaka>=0.2.0, <0.4.0",
     "Flask-OAuthlib>=0.9.1, <0.9.2",
-    "Flask-SQLAlchemy>=2.0, <2.1",
+    "Flask-SQLAlchemy>=2.3, <2.4",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
-    "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
+    "Flask>=1.0.2, <1.0.3",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",
     "rsa>=3.4.2",
     "markdown>=2.4, <3.0",
-    "psycopg2>=2.5.2, <3.0",
+    "psycopg2-binary>=2.7.5, <3.0",
     "python-dateutil>=2.2, <3.0",
     "raven>=6.9.0, <7.0.0",
     "pyOpenSSL>=16.2",                  # fix for python below 2.7.9
@@ -69,7 +69,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '2.10.1',
+    version = '2.10.2',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

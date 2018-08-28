@@ -32,12 +32,12 @@ import time
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
-from flask.ext.login import login_required, login_user, logout_user, \
+from flask_login import login_required, login_user, logout_user, \
     current_user
 from rq import Queue
 
 import pybossa.model as model
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter
@@ -263,7 +263,14 @@ def signout():
 def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
-    return url_for_app_type('.confirm_account', key=key, _external=True)
+    scheme = current_app.config.get('PREFERRED_URL_SCHEME')
+    if (scheme):
+        return url_for_app_type('.confirm_account',
+                                key=key,
+                                _scheme=scheme,
+                                _external=True)
+    else:
+        return url_for_app_type('.confirm_account', key=key, _external=True)
 
 
 @blueprint.route('/confirm-email')

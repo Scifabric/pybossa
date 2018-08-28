@@ -36,7 +36,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter" % project.short_name
 
         res = self.app.get(url)
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = 'https://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
@@ -123,7 +123,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter" % project.short_name
 
         res = self.app.post(url, data={})
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = 'https://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
@@ -214,7 +214,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         url = "/project/%s/tasks/autoimporter/delete" % project.short_name
 
         res = self.app.post(url, data={})
-        redirect_url = 'http://localhost/account/signin?next='
+        redirect_url = 'https://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 

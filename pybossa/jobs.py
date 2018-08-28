@@ -20,7 +20,7 @@ from datetime import datetime
 import math
 import requests
 from flask import current_app, render_template
-from flask.ext.mail import Message
+from flask_mail import Message
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel
@@ -466,7 +466,7 @@ def warn_old_project_owners():
     from smtplib import SMTPRecipientsRefused
     from pybossa.core import mail, project_repo
     from pybossa.cache.projects import clean
-    from flask.ext.mail import Message
+    from flask_mail import Message
 
     projects = get_non_updated_projects()
 

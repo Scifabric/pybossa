@@ -24,7 +24,7 @@ from pybossa.core import user_repo
 from pybossa.exporter.json_export import JsonExporter
 from mock import patch, MagicMock
 from flask import current_app, render_template, url_for
-from flask.ext.mail import Message
+from flask_mail import Message
 
 #@patch('pybossa.jobs.uploader')
 class TestExportAccount(Test):

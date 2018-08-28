@@ -22,7 +22,7 @@ from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
 import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
-from flask.ext.babel import gettext
+from flask_babel import gettext
 
 import operator
 import time

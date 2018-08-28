@@ -18,7 +18,7 @@
 
 import requests
 from StringIO import StringIO
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from pybossa.util import unicode_csv_reader
 
 from .base import BulkTaskImport, BulkImportException

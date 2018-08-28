@@ -33,6 +33,7 @@ REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_KEYPREFIX = 'pybossa_cache'
 WTF_CSRF_ENABLED = False
+WTF_CSRF_SSL_STRICT = False
 TESTING = True
 CSRF_ENABLED = False
 MAIL_SERVER = 'localhost'

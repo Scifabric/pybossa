@@ -27,8 +27,8 @@ from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
 from flask import Markup
-from flask.ext.login import login_required, current_user
-from flask.ext.babel import gettext
+from flask_login import login_required, current_user
+from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from rq import Queue
 

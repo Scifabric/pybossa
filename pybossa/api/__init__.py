@@ -33,7 +33,7 @@ import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask import current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload
