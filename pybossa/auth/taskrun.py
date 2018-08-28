@@ -48,6 +48,7 @@ class TaskRunAuth(object):
             user_id=taskrun.user_id,
             user_ip=taskrun.user_ip,
             external_uid=taskrun.external_uid) <= 0
+
         if not authorized:
             raise abort(403)
         return authorized
