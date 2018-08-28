@@ -263,7 +263,14 @@ def signout():
 def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
-    return url_for_app_type('.confirm_account', key=key, _external=True)
+    scheme = current_app.config.get('PREFERRED_URL_SCHEME')
+    if (scheme):
+        return url_for_app_type('.confirm_account',
+                                key=key,
+                                _scheme=scheme,
+                                _external=True)
+    else:
+        return url_for_app_type('.confirm_account', key=key, _external=True)
 
 
 @blueprint.route('/confirm-email')
