@@ -759,7 +759,7 @@ class TestWeb(web.Helper):
             signer.dumps.assert_called_with(data, salt='account-validation')
             render.assert_any_call('/account/email/validate_account.md',
                                    user=data,
-                                   confirm_url='http://localhost/account/register/confirmation?key=')
+                                   confirm_url='https://localhost/account/register/confirmation?key=')
             assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
             mail_data = queue.enqueue.call_args[0][1]
             assert 'subject' in mail_data.keys()
