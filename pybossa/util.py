@@ -516,7 +516,9 @@ def get_avatar_url(upload_method, avatar, container, external):
                        container=container)
     else:
         filename = container + '/' + avatar
-        return url_for('uploads.uploaded_file', filename=filename,
+        return url_for('uploads.uploaded_file',
+                       filename=filename,
+                       _scheme=current_app.config.get('PREFERRED_URL_SCHEME'),
                        _external=external)
 
 
