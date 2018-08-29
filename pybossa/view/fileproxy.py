@@ -43,7 +43,7 @@ def check_allowed(user_id, task_id, project_id, file_url):
     if not task or task.project_id != project_id:
         raise BadRequest('Task does not exist')
 
-    if file_url.split('?')[0] not in task.info.values():
+    if file_url not in task.info.values():
         raise Forbidden('Invalid task content')
 
     if current_user.admin:
@@ -66,14 +66,13 @@ def check_allowed(user_id, task_id, project_id, file_url):
 def encrypted_file(store, bucket, project_id, path):
     """Proxy encrypted task file in a cloud storage"""
     conn_args = current_app.config.get('S3_TASK_REQUEST', {})
-    full_url = request.url
     signature = request.args.get('task-signature')
     if not signature:
         raise Forbidden('FORBIDDEN')
     payload = signer.loads(signature, max_age=SIGNATURE_MAX_AGE)
     task_id = payload['task_id']
 
-    check_allowed(current_user.id, task_id, project_id, full_url)
+    check_allowed(current_user.id, task_id, project_id, request.path)
 
     ## download file
     try:

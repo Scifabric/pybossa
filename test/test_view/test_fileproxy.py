@@ -38,9 +38,6 @@ class TestFileproxy(web.Helper):
         create_connection.return_value = conn
         return key
 
-    def get_full_url(self, path):
-        return 'http://localhost{}'.format(path)
-
     @with_context
     def test_proxy_no_signature(self):
         project = ProjectFactory.create()
@@ -69,7 +66,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create()
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
         owner = project.owner
 
@@ -95,7 +92,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create(owner=owner)
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
 
         signature = signer.dumps({'task_id': task.id})
@@ -136,7 +133,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create()
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
 
         signature = signer.dumps({'task_id': task.id})
@@ -154,7 +151,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create()
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
 
         signature = signer.dumps({'task_id': task.id})
@@ -179,7 +176,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create(owner=owner)
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
 
         signature = signer.dumps({'task_id': task.id})
@@ -198,7 +195,7 @@ class TestFileproxy(web.Helper):
         project = ProjectFactory.create(owner=owner)
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
         task = TaskFactory.create(project=project, info={
-            'url': self.get_full_url(url)
+            'url': url
         })
 
         signature = signer.dumps({'task_id': task.id})
