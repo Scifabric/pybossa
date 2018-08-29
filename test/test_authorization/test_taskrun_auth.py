@@ -200,11 +200,12 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_update_anonymous_taskrun(self):
-        """Test admins cannot update anonymously posted taskruns"""
+        """Test admins can update anonymously posted taskruns
+        when no result is associated."""
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
-        assert_raises(Forbidden,
-                      ensure_authorized_to, 'update', anonymous_taskrun)
+        assert_not_raises(Exception,
+                          ensure_authorized_to, 'update', anonymous_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -218,24 +219,27 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update_other_users_taskrun(self):
-        """Test authenticated user cannot update any user taskrun"""
+        """Test authenticated user cannot update any user taskrun
+        except own."""
         own_taskrun = TaskRunFactory.create()
         other_users_taskrun = TaskRunFactory.create()
 
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
-        assert_raises(Forbidden, ensure_authorized_to, 'update', own_taskrun)
+        assert_not_raises(Exception, ensure_authorized_to, 'update', own_taskrun)
         assert_raises(Forbidden,
                       ensure_authorized_to, 'update', other_users_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_update_user_taskrun(self):
-        """Test admins cannot update taskruns posted by authenticated users"""
+        """Test admins can update taskruns posted by authenticated
+        when there is no result associated."""
         user_taskrun = TaskRunFactory.create()
 
         assert self.mock_admin.id != user_taskrun.user.id
-        assert_raises(Forbidden, ensure_authorized_to, 'update', user_taskrun)
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'update', user_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
