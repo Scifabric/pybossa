@@ -1339,7 +1339,7 @@ class TestAdmin(web.Helper):
         announcement0 = data['announcements'][0]
         assert announcement0['body'] == 'Announcement body text'
         assert announcement0['title'] == 'Announcement title'
-        assert announcement0['id'] == 1
+        assert announcement0['id'] == 1, str(data)
 
 
     @with_context

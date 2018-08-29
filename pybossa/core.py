@@ -26,7 +26,7 @@ from flask.ext.babel import gettext
 from flask.ext.assets import Bundle
 from flask_json_multidict import get_json_multidict
 from flask_talisman import Talisman
-from pybossa import default_settings as settings
+from pybossa import default_settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
@@ -36,6 +36,7 @@ from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
 from datetime import timedelta
+import app_settings
 
 
 def create_app(run_as_server=True):
@@ -96,16 +97,10 @@ def create_app(run_as_server=True):
 
 def configure_app(app):
     """Configure web app."""
-    app.config.from_object(settings)
-    app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
-    # parent directory
-    if not os.environ.get('PYBOSSA_SETTINGS'):  # pragma: no cover
-        here = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
-        if os.path.exists(config_path):  # pragma: no cover
-            app.config.from_pyfile(config_path)
-    else:
-        config_path = os.path.abspath(os.environ.get('PYBOSSA_SETTINGS'))
+    app.config.from_object(default_settings)
+    if app_settings.config_path:
+        app.config.from_pyfile(app_settings.config_path)
+    app.config.upref_mdata = bool(app_settings.upref_mdata)
 
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):

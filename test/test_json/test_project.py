@@ -48,7 +48,7 @@ class TestJsonProject(web.Helper):
             url = '/project/new'
             res = self.app_get_json(url, follow_redirects=True)
             data = json.loads(res.data)
-            keys = sorted(['errors', 'form', 'template', 'title'])
+            keys = sorted(['errors', 'form', 'template', 'title', 'message'])
             assert keys == sorted(data.keys()), data
             assert data.get('form').get('csrf') is not None, data
 

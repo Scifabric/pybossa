@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-
 import json
 from sqlalchemy import text
 from pybossa.core import db
@@ -31,12 +30,8 @@ import pybossa.model as model
 from functools import wraps
 from factories import reset_all_pk_sequences
 import random
-import os
 from mock import MagicMock
 
-
-os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
-os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 flask_app = create_app(run_as_server=False)
 

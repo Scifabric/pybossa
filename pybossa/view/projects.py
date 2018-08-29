@@ -348,7 +348,8 @@ def new():
     def respond(errors):
         response = dict(template='projects/new.html',
                         title=gettext("Create a Project"),
-                        form=form, errors=errors)
+                        form=form, errors=errors,
+                        message=current_app.config.get('PROJECT_CREATE_MESSAGE'))
         return handle_content_type(response)
 
     def _description_from_long_description():
