@@ -57,7 +57,7 @@ class TaskRunAuth(object):
         return True
 
     def _update(self, user, taskrun):
-        return False
+        return self._delete(user, taskrun)
 
     def _delete(self, user, taskrun):
         if user.is_anonymous():
