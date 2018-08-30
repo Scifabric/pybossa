@@ -200,7 +200,7 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             'host': host,
             'auth_headers': [('a', 'b')]
         },
-        'ENABLE_ACCESS_CONTROL': True,
+        'ENABLE_ENCRYPTION': True,
         'S3_BUCKET': 'test_bucket',
         'FILE_ENCRYPTION_KEY': 'testkey'
     }

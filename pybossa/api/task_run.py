@@ -60,7 +60,7 @@ class TaskRunAPI(APIBase):
         user_id = current_user.id
         self.check_can_post(project_id, task_id, user_id)
         info = data.get('info')
-        with_encryption = app.config.get('ENABLE_ACCESS_CONTROL')
+        with_encryption = app.config.get('ENABLE_ENCRYPTION')
         if info is None:
             return
         path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
