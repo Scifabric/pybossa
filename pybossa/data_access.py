@@ -32,13 +32,14 @@ def access_controller(return_value=None):
     return decorator
 
 
-@access_controller(return_value=True)
 def get_valid_project_levels_for_task(task):
-    task_level = (task.info or {}).get('data_access')
-    return set(data_access_levels['valid_project_levels_for_task_level'].get(task_level, []))
+    task_levels = (task.info or {}).get('data_access', [])
+    return set([
+        level for l in task_levels
+        for level in data_access_levels['valid_project_levels_for_task_level'].get(l, [])
+    ])
 
 
-@access_controller(return_value=True)
 def get_valid_task_levels_for_project(project):
     assigned_project_levels = (project.info or {}).get('data_access', [])
     return set([
@@ -99,11 +100,9 @@ def get_data_access_db_clause(access_levels):
     return ' OR '.join(sql_clauses)
 
 
+@access_controller(return_value='')
 def get_data_access_db_clause_for_task_assignment(user_id):
     from pybossa.cache.users import get_user_access_levels_by_id
-
-    if not data_access_levels:
-        return ''
 
     user_levels = get_user_access_levels_by_id(user_id)
     if not valid_access_levels(user_levels):

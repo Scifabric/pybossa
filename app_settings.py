@@ -45,5 +45,4 @@ def _load_config():
         config_path = None
     return config_path, config, upref_mdata_path, upref_mdata
 
-
 config_path, config, upref_mdata_path, upref_mdata = _load_config()

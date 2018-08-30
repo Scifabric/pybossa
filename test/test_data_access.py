@@ -73,7 +73,7 @@ class TestAccessLevels(Test):
         with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
             self.patch_data_access_levels['valid_project_levels_for_task_level'] = {'A': ['B']}
             assert data_access.get_valid_project_levels_for_task(task) == set()
-            task.info['data_access'] = 'A'
+            task.info['data_access'] = ['A']
             assert data_access.get_valid_project_levels_for_task(task) == set(['B'])
 
 
@@ -105,11 +105,11 @@ class TestAccessLevels(Test):
             with assert_raises(Exception):
                 data_access.ensure_task_assignment_to_project(task, project)
             project.info['data_access'] = []
-            task.info['data_access'] = 'A'
+            task.info['data_access'] = ['A']
             with assert_raises(Exception):
                 data_access.ensure_task_assignment_to_project(task, project)
             project.info['data_access'] = ['A', 'B']
-            task.info['data_access'] = 'A'
+            task.info['data_access'] = ['A']
             with assert_raises(Exception):
                 data_access.ensure_task_assignment_to_project(task, project)
             project.info['ext_conf'] = {'data_access': {'tracking_id': '123'}}
@@ -128,7 +128,7 @@ class TestAccessLevels(Test):
                 'data_access': ['A'],
                 'ext_conf': {'data_access': {'tracking_id': '123'}}
             })
-            TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
+            TaskFactory.create(project_id=project.id, info={'data_access': ['A']})
 
 
     @with_context
@@ -141,4 +141,4 @@ class TestAccessLevels(Test):
             self.patch_data_access_levels['valid_task_levels_for_project_level'] = {'B': ['C']}
             project = ProjectFactory.create(info={'data_access': ['B']})
             with assert_raises(Exception):
-                TaskFactory.create(project_id=project.id, info={'data_access': 'A'})
+                TaskFactory.create(project_id=project.id, info={'data_access': ['A']})
