@@ -21,8 +21,13 @@ from pybossa.core import db
 
 
 def _exists_materialized_view(view):
-    sql = text('''SELECT EXISTS (SELECT relname FROM pg_class WHERE
-               relname = :view);''')
+    sql = text('''SELECT EXISTS (
+                SELECT relname
+                FROM pg_catalog.pg_class c JOIN pg_namespace n
+                ON n.oid = c.relnamespace
+                WHERE c.relkind = 'm'
+                AND n.nspname = current_schema()
+                AND c.relname = :view);''')
     results = db.slave_session.execute(sql, dict(view=view))
     for result in results:
         return result.exists
