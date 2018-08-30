@@ -46,7 +46,6 @@ from pybossa.core import csrf, ratelimits, sentinel, anonymizer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
-from pybossa.data_access import access_controller
 from pybossa.util import sign_task
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
@@ -135,10 +134,10 @@ register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', p
 register_api(ProjectByNameAPI, 'api_projectbyname', '/projectbyname', pk='key', pk_type='string')
 
 
-@access_controller
 def add_task_signature(tasks):
-    for task in tasks:
-        sign_task(task)
+    if current_app.config.get('ENABLE_ENCRYPTION'):
+        for task in tasks:
+            sign_task(task)
 
 
 @jsonpify

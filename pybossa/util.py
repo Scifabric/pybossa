@@ -50,7 +50,6 @@ from flask import safe_join
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
-from pybossa.data_access import access_controller
 
 
 def last_flashed_message():
@@ -1019,8 +1018,8 @@ def delete_import_csv_file(path):
         os.remove(path)
 
 
-@access_controller
 def sign_task(task):
-    from pybossa.core import signer
-    signature = signer.dumps({'task_id': task['id']})
-    task['signature'] = signature
+    if current_app.config.get('ENABLE_ENCRYPTION'):
+        from pybossa.core import signer
+        signature = signer.dumps({'task_id': task['id']})
+        task['signature'] = signature
