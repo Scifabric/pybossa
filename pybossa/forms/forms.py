@@ -21,7 +21,7 @@ from flask import current_app
 from flask import request
 from flask.ext.babel import lazy_gettext
 from flask_wtf import Form
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
@@ -589,7 +589,9 @@ class CategoryForm(Form):
 ### Common forms
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
+    avatar = FileField(lazy_gettext('Avatar'),
+                       validators=[FileRequired(),
+                                   FileAllowed(['png', 'jpg', 'jpeg', 'gif'])])
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
