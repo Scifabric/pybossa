@@ -34,6 +34,9 @@ def _load_config():
     upref_mdata_path, upref_mdata = None, {}
     if os.environ.get('PYBOSSA_SETTINGS'):
         config_path = os.path.abspath(os.environ.get('PYBOSSA_SETTINGS'))
+    else:
+        here = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(here, 'settings_local.py')
     if config_path and os.path.exists(config_path):
         config = _load_module_file_as_dict(config_path)
         upref_mdata_path = os.path.join(os.path.dirname(config_path), 'settings_upref_mdata.py')
