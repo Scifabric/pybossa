@@ -17,7 +17,8 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
-from sqlalchemy.schema import Column, ForeignKey
+import sqlalchemy
+from sqlalchemy.schema import Column, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.ext.mutable import MutableList
@@ -65,3 +66,9 @@ class Task(db.Model, DomainObject):
             return float(len(self.task_runs)) / self.n_answers
         else:  # pragma: no cover
             return float(0)
+
+    __table_args__ = (
+        Index('task_info_idx', sqlalchemy.text('md5(info::text)')),
+    )
+
+Index('task_project_id_idx', Task.project_id)

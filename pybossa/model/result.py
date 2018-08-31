@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import Integer, Text, Boolean
-from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.schema import Column, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -46,3 +46,7 @@ class Result(db.Model, DomainObject):
     last_version = Column(Boolean, default=True)
     #: Value of the Result.
     info = Column(JSONB)
+
+
+Index('result_project_id_idx', Result.project_id)
+Index('result_task_id_idx', Result.task_id)

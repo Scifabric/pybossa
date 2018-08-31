@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Text
+from sqlalchemy import Integer, Text, Index
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -58,3 +58,8 @@ class TaskRun(db.Model, DomainObject):
             whatever information should be recorded -- up to task presenter
         }
     '''
+
+Index('task_run_task_id_idx', TaskRun.task_id)
+Index('task_run_user_id_idx', TaskRun.user_id)
+Index('task_run_project_id_idx', TaskRun.project_id)
+Index('unique_user_id_task_id_idx', TaskRun.task_id, TaskRun.user_id, TaskRun.user_ip, TaskRun.external_uid, unique=True)
