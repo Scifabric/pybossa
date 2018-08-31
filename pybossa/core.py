@@ -100,7 +100,6 @@ def configure_app(app):
     app.config.from_object(default_settings)
     if app_settings.config_path:
         app.config.from_pyfile(app_settings.config_path)
-    app.config.upref_mdata = bool(app_settings.upref_mdata)
 
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
