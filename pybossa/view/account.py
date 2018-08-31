@@ -432,7 +432,6 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True):
-
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
@@ -450,8 +449,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
 
-    if 'info' in user_data:
-        copy_data_access_levels(new_user.info, user_data)
+    copy_data_access_levels(new_user.info, user_data.get('data_access'))
     user_repo.save(new_user)
     if not ldap_disabled:
         flash(gettext('Thanks for signing-up'), 'success')

@@ -125,4 +125,5 @@ class UserAPI(APIBase):
             raise Forbidden
 
     def _validate_instance(self, user):
-        data_access.ensure_valid_access_levels(user)
+        access_levels = user.info.get('data_access')
+        data_access.ensure_valid_access_levels(access_levels)
