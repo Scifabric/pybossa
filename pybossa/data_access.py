@@ -150,22 +150,22 @@ def ensure_task_assignment_to_project(task, project):
 
 
 @access_controller()
-def ensure_valid_access_levels(obj):
-    access_levels = obj.info.get('data_access', [])
+def ensure_valid_access_levels(access_levels):
     if not valid_access_levels(access_levels):
         raise ValueError(u'Invalid access levels {}'.format(', '.join(access_levels)))
 
 
 @access_controller()
-def copy_data_access_levels(target, source):
-    ensure_valid_access_levels(source)
-    target['data_access'] = source['data_access']
+def copy_data_access_levels(target, access_levels):
+    ensure_valid_access_levels(access_levels)
+    target['data_access'] = access_levels
 
 
 def ensure_user_assignment_to_project(project):
     from pybossa.cache.users import get_users_access_levels
 
-    ensure_valid_access_levels(project)
+    access_levels = project.info.get('data_access')
+    ensure_valid_access_levels(access_levels)
     if not project.info.get('project_users'):
         return
 
