@@ -112,7 +112,7 @@ class TestAccessLevels(Test):
             task.info['data_access'] = ['A']
             with assert_raises(Exception):
                 data_access.ensure_task_assignment_to_project(task, project)
-            project.info['ext_conf'] = {'data_access': {'tracking_id': '123'}}
+            project.info['ext_config'] = {'data_access': {'tracking_id': '123'}}
             data_access.ensure_task_assignment_to_project(task, project)
 
 
@@ -126,7 +126,7 @@ class TestAccessLevels(Test):
             self.patch_data_access_levels['valid_task_levels_for_project_level'] = {'A': ['B']}
             project = ProjectFactory.create(info={
                 'data_access': ['A'],
-                'ext_conf': {'data_access': {'tracking_id': '123'}}
+                'ext_config': {'data_access': {'tracking_id': '123'}}
             })
             TaskFactory.create(project_id=project.id, info={'data_access': ['A']})
 
