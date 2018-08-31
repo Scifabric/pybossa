@@ -30,17 +30,13 @@ from pybossa.encryption import AESWithGCM
 from pybossa.sched import has_lock
 
 
-
 blueprint = Blueprint('files', __name__)
 
 
-SIGNATURE_MAX_AGE = 5 * 60
-
-
-def check_allowed(user_id, task_id, project_id, file_url):
+def check_allowed(user_id, task_id, project, file_url):
     task = task_repo.get_task(task_id)
 
-    if not task or task.project_id != project_id:
+    if not task or task.project_id != project['id']:
         raise BadRequest('Task does not exist')
 
     if file_url not in task.info.values():
@@ -49,13 +45,11 @@ def check_allowed(user_id, task_id, project_id, file_url):
     if current_user.admin:
         return True
 
-    project = get_project_data(task.project_id)
-    timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
-
-    if has_lock(task_id, user_id, timeout):
+    if has_lock(task_id, user_id,
+                project['info'].get('timeout', ContributionsGuard.STAMP_TTL)):
         return True
 
-    if user_id in project.owners_ids:
+    if user_id in project['owners_ids']:
         return True
 
     raise Forbidden('FORBIDDEN')
@@ -69,10 +63,14 @@ def encrypted_file(store, bucket, project_id, path):
     signature = request.args.get('task-signature')
     if not signature:
         raise Forbidden('FORBIDDEN')
-    payload = signer.loads(signature, max_age=SIGNATURE_MAX_AGE)
+
+    project = get_project_data(project_id)
+    timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
+
+    payload = signer.loads(signature, max_age=timeout)
     task_id = payload['task_id']
 
-    check_allowed(current_user.id, task_id, project_id, request.path)
+    check_allowed(current_user.id, task_id, project, request.path)
 
     ## download file
     try:

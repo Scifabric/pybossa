@@ -16,7 +16,7 @@ class AESWithGCM(object):
         strings with the following structure:
 
         - the first byte of the string is the lenght of the IV in bytes
-        - the remaining is the concatenation of IV + cyphertext + tag
+        - the remaining is the concatenation of IV + ciphertext + tag
 
         @param key: the secret key, unhashed
         @param iv_length: length of the initialization vector. Only needed for
@@ -34,7 +34,7 @@ class AESWithGCM(object):
         _hash.update(key)
         return _hash.digest()
 
-    def get_cypher(self, iv, tag=None):
+    def get_cipher(self, iv, tag=None):
         backend = default_backend()
         mode = modes.GCM(iv, tag)
         algo = algorithms.AES(self.key)
@@ -45,18 +45,18 @@ class AESWithGCM(object):
         @param string: a byte string to encrypt
         """
         iv = os.urandom(self.iv_length)
-        encryptor = self.get_cypher(iv).encryptor()
+        encryptor = self.get_cipher(iv).encryptor()
         ct = encryptor.update(string) + encryptor.finalize()
         tag = encryptor.tag
         encrypted = six.int2byte(self.iv_length) + iv + ct + tag
         return base64.b64encode(encrypted)
 
-    def _split_cyphertext(self, string):
+    def _split_ciphertext(self, string):
         iv_length = six.byte2int(string[0])
         iv = string[1:iv_length + 1]
-        cyphertext = string[iv_length + 1:-self.tag_length]
+        ciphertext = string[iv_length + 1:-self.tag_length]
         tag = string[-self.tag_length:]
-        return iv, cyphertext, tag
+        return iv, ciphertext, tag
 
     def decrypt(self, string):
         '''
@@ -64,6 +64,6 @@ class AESWithGCM(object):
         Return a byte string
         '''
         decoded = base64.b64decode(string)
-        iv, cyphertext, tag = self._split_cyphertext(decoded)
-        decryptor = self.get_cypher(iv, tag).decryptor()
-        return decryptor.update(cyphertext) + decryptor.finalize()
+        iv, ciphertext, tag = self._split_ciphertext(decoded)
+        decryptor = self.get_cipher(iv, tag).decryptor()
+        return decryptor.update(ciphertext) + decryptor.finalize()
