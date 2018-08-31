@@ -572,7 +572,7 @@ class TestPybossaUtil(Test):
 class TestIsReservedName(object):
     from flask import Flask
     from pybossa.core import setup_blueprints, create_app
-    app = create_app(run_as_server=False)
+    from default import flask_app as app
 
     def test_returns_true_for_reserved_name_for_app_blueprint(self):
         with self.app.app_context():

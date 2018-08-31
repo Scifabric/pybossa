@@ -18,6 +18,7 @@
 # Cache global variables for timeouts
 
 from default import Test, db, with_context
+from mock import patch
 from nose.tools import assert_raises
 from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository, ProjectRepository
@@ -589,10 +590,12 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
 
     @with_context
-    def test_save_fails_if_integrity_error(self):
+    @patch('pybossa.core.project_repo')
+    def test_save_fails_if_integrity_error(self, mock_project_repo):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
+        mock_project_repo.get.return_value = None
         task = TaskFactory.build(project_id=None, project=None)
 
         assert_raises(DBIntegrityError, self.task_repo.save, task)
@@ -635,10 +638,12 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
 
     @with_context
-    def test_update_fails_if_integrity_error(self):
+    @patch('pybossa.core.project_repo')
+    def test_update_fails_if_integrity_error(self, mock_project_repo):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
 
+        mock_project_repo.get.return_value = None
         task = TaskFactory.create()
         task.project_id = None
 

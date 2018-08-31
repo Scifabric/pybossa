@@ -8,8 +8,8 @@ python:
 # git submodules workaround
 git:
   submodules: false
-env:
-- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
+# env:
+# - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
 services:
 - redis-server
 addons:
@@ -34,7 +34,7 @@ before_script:
 script:
     - alembic -c alembictest.ini stamp head
     - alembic -c alembictest.ini upgrade head
-    - nosetests test/
+    - ./run_tests
 #notifications:
 #  slack:
 #    secure: lgJj/SealCb3hZsMvclA9VQGwx9TJrtK6ccOZiiHZpJa5in0UkRwE6ymrZ5wqwUagAVwOLYVKHdmrtPMPsaOqavnzq9ItJFqSRo8T5ZgKK+m+X9l88ROn7+QfJyPUkpblhSXMm6+s7duBjdM/no80lA4GEoNWD5G5uQwjJWQSWk=
