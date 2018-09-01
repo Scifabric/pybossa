@@ -28,20 +28,24 @@ class Sentinel(object):
             self.init_app(app)
 
     def init_app(self, app):
-        redis_db = app.config.get('REDIS_DB') or 0
+        conn_kwargs = {
+            'db': app.config.get('REDIS_DB') or 0,
+            'password': app.config.get('REDIS_PWD')
+        }
         if app.config.get('REDIS_MASTER_DNS') and \
             app.config.get('REDIS_SLAVE_DNS') and \
             app.config.get('REDIS_PORT'):
+            conn_kwargs['socket_timeout'] = 0.1
             self.master = StrictRedis(host=app.config['REDIS_MASTER_DNS'],
-                port=app.config['REDIS_PORT'], db=redis_db)
+                port=app.config['REDIS_PORT'], **conn_kwargs)
             self.slave = StrictRedis(host=app.config['REDIS_SLAVE_DNS'],
-                port=app.config['REDIS_PORT'], db=redis_db)
+                port=app.config['REDIS_PORT'], **conn_kwargs)
         else:
             self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
-                                                      socket_timeout=0.1)
+                                                socket_timeout=0.1)
             redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
-            self.master = self.connection.master_for(redis_master, db=redis_db)
-            self.slave = self.connection.slave_for(redis_master, db=redis_db)
+            self.master = self.connection.master_for(redis_master, **conn_kwargs)
+            self.slave = self.connection.slave_for(redis_master, **conn_kwargs)
 
 
 def scan_iter(conn, match, count=None):
