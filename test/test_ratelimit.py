@@ -24,7 +24,7 @@ API endpoints like userprogress or vmcp.
 """
 import json
 
-from default import flask_app, sentinel
+from default import flask_app, sentinel, with_context, rebuild_db
 from factories import ProjectFactory, UserFactory
 from mock import patch
 
@@ -138,3 +138,19 @@ class TestAPI(object):
 
         url = '/api/project/1/userprogress'
         self.check_limit(url, 'get', 'project')
+
+    @with_context
+    @patch('pybossa.api.api_base.APIBase._db_query')
+    def test_06_project_get_user_id(self, mock):
+        """Test API.project GET rate limit by user id."""
+        rebuild_db()
+        mock.return_value = {}
+        user1 = UserFactory.create(id=500)
+        user2 = UserFactory.create(id=501)
+        users = [user1, user2]
+        url = '/api/project?api_key=%s'
+        action = 'get'
+        with patch.dict(flask_app.config, {'RATE_LIMIT_BY_USER_ID': True}):
+            for user in users:
+                _url = url % user.api_key
+                self.check_limit(_url, action, 'project')
