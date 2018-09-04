@@ -73,8 +73,15 @@ def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 
+def default_scope_func():
+    if current_app.config.get('RATE_LIMIT_BY_USER_ID'):
+        if current_user.is_authenticated():
+            return current_user.id
+    return anonymizer.ip(request.remote_addr or '127.0.0.1')
+
+
 def ratelimit(limit, per, send_x_headers=True,
-              scope_func=lambda: anonymizer.ip(request.remote_addr or '127.0.0.1'),
+              scope_func=default_scope_func,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
     """
