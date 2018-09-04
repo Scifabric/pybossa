@@ -340,6 +340,7 @@ def setup_blueprints(app):
     from pybossa.view.uploads import blueprint as uploads
     from pybossa.view.amazon import blueprint as amazon
     from pybossa.view.diagnostics import blueprint as diagnostics
+    from pybossa.view.fileproxy import blueprint as fileproxy
 
     blueprints = [{'handler': home, 'url_prefix': '/'},
                   {'handler': api,  'url_prefix': '/api'},
@@ -354,6 +355,7 @@ def setup_blueprints(app):
                   {'handler': uploads, 'url_prefix': '/uploads'},
                   {'handler': amazon, 'url_prefix': '/amazon'},
                   {'handler': diagnostics, 'url_prefix': '/diagnostics'},
+                  {'handler': fileproxy, 'url_prefix': '/fileproxy'}
                   ]
 
     for bp in blueprints:

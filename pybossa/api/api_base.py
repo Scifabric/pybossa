@@ -166,6 +166,7 @@ class APIBase(MethodView):
             if not items:
                 raise Forbidden('Forbidden')
             ensure_authorized_to('read', query_result[0])
+            self._sign_item(items[0])
             items = items[0]
         return json.dumps(items)
 
@@ -555,3 +556,7 @@ class APIBase(MethodView):
         on the items to return
         """
         return True
+
+    def _sign_item(self, item):
+        """Apply custom signature"""
+        pass

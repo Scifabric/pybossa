@@ -24,6 +24,7 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from flask import current_app
 
 from pybossa.core import db, signer
+from pybossa.contributions_guard import ContributionsGuard
 from pybossa.model import DomainObject, make_timestamp, make_uuid
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

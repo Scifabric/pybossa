@@ -5,11 +5,13 @@ from tempfile import NamedTemporaryFile
 from urlparse import urlparse
 import boto
 from boto.s3.key import Key
+from six import BytesIO
 from flask import current_app as app
 from werkzeug.utils import secure_filename
 import magic
 from werkzeug.exceptions import BadRequest, InternalServerError
 from pybossa.cloud_store_api.connection import create_connection
+from pybossa.encryption import AESWithGCM
 
 allowed_mime_types = ['application/pdf',
                       'text/csv',
@@ -58,7 +60,7 @@ def tmp_file_from_string(string):
 
 def s3_upload_from_string(s3_bucket, string, filename, headers=None,
                           directory='', file_type_check=True,
-                          return_key_only=False, conn_name=DEFAULT_CONN):
+                          return_key_only=False, conn_name=DEFAULT_CONN, with_encryption=False):
     """
     Upload a string to s3
     """
@@ -66,12 +68,12 @@ def s3_upload_from_string(s3_bucket, string, filename, headers=None,
     headers = headers or {}
     return s3_upload_tmp_file(
             s3_bucket, tmp_file, filename, headers, directory, file_type_check,
-            return_key_only, conn_name)
+            return_key_only, conn_name, with_encryption)
 
 
 def s3_upload_file_storage(s3_bucket, source_file, headers=None, directory='',
                            file_type_check=True, return_key_only=False,
-                           conn_name=DEFAULT_CONN):
+                           conn_name=DEFAULT_CONN, with_encryption=False):
     """
     Upload a werzkeug FileStorage content to s3
     """
@@ -82,19 +84,26 @@ def s3_upload_file_storage(s3_bucket, source_file, headers=None, directory='',
     source_file.save(tmp_file.name)
     return s3_upload_tmp_file(
             s3_bucket, tmp_file, filename, headers, directory, file_type_check,
-            return_key_only, conn_name)
+            return_key_only, conn_name, with_encryption)
 
 
 def s3_upload_tmp_file(s3_bucket, tmp_file, filename,
                        headers, directory='', file_type_check=True,
-                       return_key_only=False, conn_name=DEFAULT_CONN):
+                       return_key_only=False, conn_name=DEFAULT_CONN,
+                       with_encryption=False):
     """
     Upload the content of a temporary file to s3 and delete the file
     """
     try:
         if file_type_check:
             check_type(tmp_file.name)
-        url = s3_upload_file(s3_bucket, tmp_file.name, filename, headers,
+        content =  tmp_file.read()
+        if with_encryption:
+            secret = app.config.get('FILE_ENCRYPTION_KEY')
+            cipher = AESWithGCM(secret)
+            content = cipher.encrypt(content)
+        fp = BytesIO(content)
+        url = s3_upload_file(s3_bucket, fp, filename, headers,
                              directory, return_key_only, conn_name)
     finally:
         os.unlink(tmp_file.name)
@@ -108,7 +117,7 @@ def form_upload_directory(directory, filename):
     return "/".join(part for part in parts if part)
 
 
-def s3_upload_file(s3_bucket, source_file_name, target_file_name,
+def s3_upload_file(s3_bucket, source_file, target_file_name,
                    headers, directory="", return_key_only=False,
                    conn_name=DEFAULT_CONN):
     """
@@ -129,8 +138,8 @@ def s3_upload_file(s3_bucket, source_file_name, target_file_name,
     assert(len(upload_key) < 256)
     key = bucket.new_key(upload_key)
 
-    key.set_contents_from_filename(
-        source_file_name, headers=headers,
+    key.set_contents_from_file(
+        source_file, headers=headers,
         policy='bucket-owner-full-control')
 
     if return_key_only:

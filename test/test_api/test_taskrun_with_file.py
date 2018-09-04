@@ -24,6 +24,7 @@ from factories import ProjectFactory, TaskFactory
 from pybossa.core import db
 from pybossa.model.task_run import TaskRun
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
+from pybossa.encryption import AESWithGCM
 
 
 class TestTaskrunWithFile(TestAPI):
@@ -61,7 +62,7 @@ class TestTaskrunWithFile(TestAPI):
             assert success.status_code == 200, success.data
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_taskrun_with_upload(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -98,7 +99,7 @@ class TestTaskrunWithFile(TestAPI):
             assert url == expected, url
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_taskrun_with_no_upload(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -124,13 +125,12 @@ class TestTaskrunWithFile(TestAPI):
             assert res['info']['test__upload_url']['test'] == 'not a file'
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_taskrun_multipart(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
             task = TaskFactory.create(project=project)
             self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
-
             data = dict(
                 project_id=project.id,
                 task_id=task.id,
@@ -163,7 +163,7 @@ class TestTaskrunWithFile(TestAPI):
             assert url == expected, url
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_taskrun_multipart_error(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()
@@ -200,8 +200,9 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             'host': host,
             'auth_headers': [('a', 'b')]
         },
-        'PRIVATE_INSTANCE': True,
-        'S3_BUCKET': 'test_bucket'
+        'ENABLE_ENCRYPTION': True,
+        'S3_BUCKET': 'test_bucket',
+        'FILE_ENCRYPTION_KEY': 'testkey'
     }
 
     def setUp(self):
@@ -209,7 +210,7 @@ class TestTaskrunWithSensitiveFile(TestAPI):
         db.session.query(TaskRun).delete()
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     @patch('pybossa.api.task_run.s3_upload_from_string', wraps=s3_upload_from_string)
     def test_taskrun_with_upload(self, upload_from_string, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
@@ -248,9 +249,18 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
             assert url == expected, url
 
+            aes = AESWithGCM('testkey')
+            # first call
+            first_call = set_content.call_args_list[0]
+            args, kwargs = first_call
+            encrypted = args[0].read()
+            content = aes.decrypt(encrypted)
+            assert encrypted != content
+            assert content == 'abc'
+
             upload_from_string.assert_called()
-            args, kwargs = upload_from_string.call_args
-            _, content, _ = args
+            args, kwargs = set_content.call_args
+            content = aes.decrypt(args[0].read())
             actual_content = json.loads(content)
 
             args = {
@@ -266,7 +276,7 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             assert actual_content['another_field'] == 42
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
     def test_taskrun_multipart(self, set_content):
         with patch.dict(self.flask_app.config, self.patch_config):
             project = ProjectFactory.create()

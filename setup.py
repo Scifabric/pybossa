@@ -68,7 +68,8 @@ requirements = [
     "wtforms-components>=0.10.3, <0.10.4",
     "yacryptopan",
     "Faker",
-    "flask-talisman>=0.5.0, <0.6.0"
+    "flask-talisman>=0.5.0, <0.6.0",
+    "cryptography>=2.3.1, <2.4.0"
 ]
 
 setup(

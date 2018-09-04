@@ -1016,3 +1016,10 @@ def delete_import_csv_file(path):
         delete_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
     else:
         os.remove(path)
+
+
+def sign_task(task):
+    if current_app.config.get('ENABLE_ENCRYPTION'):
+        from pybossa.core import signer
+        signature = signer.dumps({'task_id': task['id']})
+        task['signature'] = signature
