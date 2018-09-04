@@ -35,7 +35,6 @@ class Sentinel(object):
         if app.config.get('REDIS_MASTER_DNS') and \
             app.config.get('REDIS_SLAVE_DNS') and \
             app.config.get('REDIS_PORT'):
-            conn_kwargs['socket_timeout'] = 0.1
             self.master = StrictRedis(host=app.config['REDIS_MASTER_DNS'],
                 port=app.config['REDIS_PORT'], **conn_kwargs)
             self.slave = StrictRedis(host=app.config['REDIS_SLAVE_DNS'],
