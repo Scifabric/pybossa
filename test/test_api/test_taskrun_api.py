@@ -777,6 +777,69 @@ class TestTaskrunAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
+    def test_taskrun_update_with_result(self):
+        """Test TaskRun API update with result works"""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        non_owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project, n_answers=2)
+        anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
+        user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
+
+        task_run = dict(project_id=project.id, task_id=task.id, info='another result')
+        datajson = json.dumps(task_run)
+
+        # anonymous user
+        # No one can update anonymous TaskRuns
+        url = '/api/taskrun/%s' % anonymous_taskrun.id
+        res = self.app.put(url, data=datajson)
+        assert anonymous_taskrun, anonymous_taskrun
+        assert_equal(anonymous_taskrun.user, None)
+        error_msg = 'Should not be allowed to update'
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+
+        # real user but not allowed as not owner!
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, non_owner.api_key)
+        res = self.app.put(url, data=datajson)
+        error_msg = 'Should not be able to update TaskRuns of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # real user
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
+        out = self.app.get(url, follow_redirects=True)
+        task = json.loads(out.data)
+        datajson = json.loads(datajson)
+        datajson['link'] = task['link']
+        datajson['links'] = task['links']
+        datajson = json.dumps(datajson)
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # PUT with not JSON data
+        res = self.app.put(url, data=task_run)
+        err = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(task_run))
+        err = json.loads(res.data)
+        assert_equal(res.status, '415 UNSUPPORTED MEDIA TYPE', error_msg)
+
+        # PUT with fake data
+        task_run['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(task_run))
+        err = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # root user
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, admin.api_key)
+        res = self.app.put(url, data=datajson)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
 
     @with_context
     def test_taskrun_update(self):
@@ -818,16 +881,18 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
-        assert_equal(res.status, '403 FORBIDDEN', res.data)
+        assert res.status_code == 200
+        assert out['info'] == 'another result'
+        # assert_equal(res.status, '403 FORBIDDEN', res.data)
 
         # PUT with not JSON data
         res = self.app.put(url, data=task_run)
         err = json.loads(res.data)
-        assert res.status_code == 403, err
+        assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'Forbidden', err
+        assert err['exception_cls'] == 'ValueError', err
 
         # PUT with not allowed args
         res = self.app.put(url + "&foo=bar", data=json.dumps(task_run))
@@ -842,17 +907,18 @@ class TestTaskrunAPI(TestAPI):
         task_run['wrongfield'] = 13
         res = self.app.put(url, data=json.dumps(task_run))
         err = json.loads(res.data)
-        assert res.status_code == 403, err
+        assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'Forbidden', err
+        assert err['exception_cls'] == 'TypeError', err
         task_run.pop('wrongfield')
 
         # root user
         url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, admin.api_key)
         res = self.app.put(url, data=datajson)
-        assert_equal(res.status, '403 FORBIDDEN', res.data)
+        assert res.status_code == 200
+        #assert_equal(res.status, '403 FORBIDDEN', res.data)
 
 
     @with_context

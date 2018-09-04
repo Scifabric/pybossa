@@ -181,6 +181,17 @@ class TestTaskrunAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
+    def test_anonymous_user_update_anoymous_taskrun_result(self):
+        """Test anonymous users cannot update an anonymously posted taskrun
+        with result"""
+        task = TaskFactory.create(n_answers=1)
+        anonymous_taskrun = AnonymousTaskRunFactory.create(task=task)
+
+        assert_raises(Unauthorized,
+                      ensure_authorized_to, 'update', anonymous_taskrun)
+
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_update_anoymous_taskrun(self):
         """Test anonymous users cannot update an anonymously posted taskrun"""
         anonymous_taskrun = AnonymousTaskRunFactory.create()
@@ -191,7 +202,8 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update_anonymous_taskrun(self):
-        """Test authenticated users cannot update an anonymously posted taskrun"""
+        """Test authenticated users cannot update an anonymously
+        posted taskrun"""
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Forbidden,
@@ -199,12 +211,24 @@ class TestTaskrunAuthorization(Test):
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
-    def test_admin_update_anonymous_taskrun(self):
-        """Test admins cannot update anonymously posted taskruns"""
-        anonymous_taskrun = AnonymousTaskRunFactory.create()
+    def test_admin_update_anonymous_taskrun_result(self):
+        """Test admins cannot update anonymously posted taskruns
+        when there is a result associated."""
+        task = TaskFactory.create(n_answers=1)
+        anonymous_taskrun = AnonymousTaskRunFactory.create(task=task)
 
         assert_raises(Forbidden,
                       ensure_authorized_to, 'update', anonymous_taskrun)
+
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_update_anonymous_taskrun(self):
+        """Test admins can update anonymously posted taskruns
+        when no result is associated."""
+        anonymous_taskrun = AnonymousTaskRunFactory.create()
+
+        assert_not_raises(Exception,
+                          ensure_authorized_to, 'update', anonymous_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -218,9 +242,27 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_update_other_users_taskrun(self):
-        """Test authenticated user cannot update any user taskrun"""
+        """Test authenticated user cannot update any user taskrun
+        except own."""
         own_taskrun = TaskRunFactory.create()
         other_users_taskrun = TaskRunFactory.create()
+
+        assert self.mock_authenticated.id == own_taskrun.user.id
+        assert self.mock_authenticated.id != other_users_taskrun.user.id
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'update', own_taskrun)
+        assert_raises(Forbidden,
+                      ensure_authorized_to, 'update', other_users_taskrun)
+
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    def test_authenticated_user_update_other_users_taskrun_result(self):
+        """Test authenticated user cannot update any user taskrun
+        when task runs have associated results."""
+        task = TaskFactory.create(n_answers=1)
+        own_taskrun = TaskRunFactory.create(task=task)
+        task2 = TaskFactory.create(n_answers=1)
+        other_users_taskrun = TaskRunFactory.create(task=task2)
 
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
@@ -231,11 +273,25 @@ class TestTaskrunAuthorization(Test):
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_update_user_taskrun(self):
-        """Test admins cannot update taskruns posted by authenticated users"""
+        """Test admins can update taskruns posted by authenticated
+        when there is no result associated."""
         user_taskrun = TaskRunFactory.create()
 
         assert self.mock_admin.id != user_taskrun.user.id
-        assert_raises(Forbidden, ensure_authorized_to, 'update', user_taskrun)
+        assert_not_raises(Exception, ensure_authorized_to,
+                          'update', user_taskrun)
+
+    @with_context
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    def test_admin_update_user_taskrun_with_result(self):
+        """Test admins cannot update taskruns posted by authenticated
+        when there is a result associated."""
+        task = TaskFactory.create(n_answers=1)
+        user_taskrun = TaskRunFactory.create(task=task)
+
+        assert self.mock_admin.id != user_taskrun.user.id
+        assert_raises(Forbidden, ensure_authorized_to,
+                      'update', user_taskrun)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_anonymous)
