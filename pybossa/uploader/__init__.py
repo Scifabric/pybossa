@@ -121,3 +121,6 @@ class Uploader(object):
     def file_exists(self, name, container):  #pragma: no cover
         """Override by the uploader handler."""
         pass
+
+    def send_file(self, filename):
+        pass
