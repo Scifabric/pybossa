@@ -50,7 +50,7 @@ from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
                           get_avatar_url, admin_or_subadmin_required,
-                          s3_get_file_contents, fuzzyboolean)
+                          s3_get_file_contents, fuzzyboolean, is_own_url_or_else)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -946,19 +946,20 @@ def delete_autoimporter(short_name):
 def password_required(short_name):
     project, owner, ps = project_by_shortname(short_name)
     form = PasswordForm(request.form)
+    next_url = is_own_url_or_else(request.args.get('next'), url_for('home.home'))
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
         cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
         if passwd_mngr.validates(password, project):
-            response = make_response(redirect(request.args.get('next')))
+            response = make_response(redirect(next_url))
             return passwd_mngr.update_response(response, project, get_user_id_or_ip())
         flash(gettext('Sorry, incorrect password'))
     return render_template('projects/password.html',
                             project=project,
                             form=form,
                             short_name=short_name,
-                            next=request.args.get('next'))
+                            next=next_url)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')

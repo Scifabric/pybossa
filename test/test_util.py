@@ -297,6 +297,16 @@ class TestPybossaUtil(Test):
         assert data.get('code') is None, err_msg
 
     @with_context
+    def test_is_own_url(self):
+        assert util.is_own_url('/home')
+        assert util.is_own_url('{}/home'.format(self.flask_app.config.get('SERVER_NAME')))
+        assert util.is_own_url('https://{}/home'.format(self.flask_app.config.get('SERVER_NAME')))
+        assert util.is_own_url(util.url_for('home.home'))
+        url = util.url_for('home.home', _external=True)
+        assert util.is_own_url(url), url
+        assert not util.is_own_url('https://google.com')
+
+    @with_context
     @patch('pybossa.util.request')
     @patch('pybossa.util.render_template')
     @patch('pybossa.util.jsonify')
