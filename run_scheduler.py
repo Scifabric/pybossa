@@ -7,16 +7,20 @@ from flask import Flask
 from time import sleep
 import app_settings
 
+
 def run_scheduler():
     setup_loghandlers('DEBUG')
-    db = app_settings.config.get('REDIS_DB', 0)
+    conn_kwargs = {
+        'db': app_settings.config.get('REDIS_DB') or 0,
+        'password': app_settings.config.get('REDIS_PWD')
+    }
     if all(app_settings.config.get(attr) for attr in
         ['REDIS_MASTER_DNS', 'REDIS_PORT']):
         master = StrictRedis(host=app_settings.config['REDIS_MASTER_DNS'],
-            port=app_settings.config['REDIS_PORT'], db=db)
+            port=app_settings.config['REDIS_PORT'], **conn_kwargs)
     else:
         sentinel = Sentinel(app_settings.config['REDIS_SENTINEL'])
-        master = sentinel.master_for(app_settings.config['REDIS_MASTER'], db=db)
+        master = sentinel.master_for(app_settings.config['REDIS_MASTER'], **conn_kwargs)
     scheduler = Scheduler(connection=master)
     while True:
         try:
