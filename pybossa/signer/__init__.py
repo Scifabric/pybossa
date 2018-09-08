@@ -31,6 +31,7 @@ class Signer(object):
     def init_app(self, app):
         key = app.config['ITSDANGEROUSKEY']
         self.signer = URLSafeTimedSerializer(key)
+        self.pwd_hash_args = app.config.get('PWD_HASH_ARGS', {})
 
 
     def loads(self, string, **kwargs):
@@ -42,7 +43,7 @@ class Signer(object):
 
 
     def generate_password_hash(self, password):
-        return generate_password_hash(password)
+        return generate_password_hash(password, **self.pwd_hash_args)
 
 
     def check_password_hash(self, passwd_hash, password):
