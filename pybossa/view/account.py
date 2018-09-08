@@ -43,7 +43,7 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
-from pybossa.util import redirect_content_type
+from pybossa.util import redirect_content_type, is_own_url_or_else
 from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
 from pybossa.cache import users as cached_users, delete_memoized
@@ -128,9 +128,10 @@ def signin():
             else:
                 _email_two_factor_auth(user)
                 url_token = otp.generate_url_token(user.email_addr)
+                next_url = is_own_url_or_else(request.args.get('next'), url_for('home.home'))
                 return redirect_content_type(url_for('account.otpvalidation',
                                              token=url_token,
-                                             next=request.args.get('next')))
+                                             next=next_url))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
@@ -180,11 +181,12 @@ def signin():
                 auth['facebook'] = True
             if ('google' in current_app.blueprints):  # pragma: no cover
                 auth['google'] = True
+        next_url = is_own_url_or_else(request.args.get('next'), url_for('home.home'))
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,
                         auth=auth,
-                        next=request.args.get('next'))
+                        next=next_url)
         return handle_content_type(response)
     else:
         # User already signed in, so redirect to home page
@@ -195,12 +197,13 @@ def _sign_in_user(user):
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
     user_repo.update(user)
+    next_url = (is_own_url_or_else(request.args.get('next'), url_for('home.home')) or
+                url_for('home.home'))
     if (current_app.config.get('MAILCHIMP_API_KEY') and
             newsletter.ask_user_to_subscribe(user)):
         return redirect_content_type(url_for('account.newsletter_subscribe',
-                                             next=request.args.get('next')))
-    return redirect_content_type(request.args.get("next") or
-                                 url_for("home.home"))
+                                             next=next_url))
+    return redirect_content_type(next_url)
 
 
 def _email_two_factor_auth(user, invalid_token=False):

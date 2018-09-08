@@ -134,6 +134,16 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
+def is_own_url(url):
+    from urlparse import urlparse
+    if not url:
+        return True
+    domain = urlparse(url).netloc
+    return (not domain) or domain.startswith(current_app.config.get('SERVER_NAME', '-'))
+
+def is_own_url_or_else(url, default):
+    return url if is_own_url(url) else default
+
 def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:

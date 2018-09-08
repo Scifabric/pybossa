@@ -1186,12 +1186,13 @@ class TestWeb(web.Helper):
             user = db.session.query(User).get(1)
             user.valid_email = False
             db.session.commit()
+            url_for.return_value = '/home'
             fake_signer.loads.return_value = dict(fullname=user.fullname,
                                                   name=user.name,
                                                   email_addr=user.email_addr)
             self.app.get('/account/register/confirmation?key=valid-key')
 
-            url_for.assert_called_with('account.newsletter_subscribe', next=None)
+            url_for.assert_called_with('account.newsletter_subscribe', next='/home')
 
             newsletter.ask_user_to_subscribe.return_value = False
             self.app.get('/account/register/confirmation?key=valid-key')
