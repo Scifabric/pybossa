@@ -83,15 +83,20 @@ class ProjectReportCsvExporter(CsvExporter):
         if csv_task_generator is not None:
             with tempfile.NamedTemporaryFile() as datafile, \
                  tempfile.NamedTemporaryFile(delete=False) as zipped_datafile:
-                for line in csv_task_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                csv_task_generator.close()  # delete temp csv file
-                _zip = self._zip_factory(zipped_datafile.name)
-                _zip.write(
-                    datafile.name,
-                    secure_filename('%s_%s.csv' % (name, ty)))
-                _zip.close()
-            return dict(filepath=zipped_datafile.name,
-                        filename=self.download_name(project, ty),
-                        delete=True)
+                try:
+                    for line in csv_task_generator:
+                        datafile.write(str(line))
+                    datafile.flush()
+                    csv_task_generator.close()  # delete temp csv file
+                    _zip = self._zip_factory(zipped_datafile.name)
+                    _zip.write(
+                        datafile.name,
+                        secure_filename('%s_%s.csv' % (name, ty)))
+                    _zip.close()
+                    return dict(filepath=zipped_datafile.name,
+                                filename=self.download_name(project, ty),
+                                delete=True)
+                except Exception:
+                    if os.path.exists(zipped_datafile.name):
+                        os.remove(zipped_datafile.name)
+                    raise
