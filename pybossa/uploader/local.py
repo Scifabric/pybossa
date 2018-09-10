@@ -25,6 +25,7 @@ This module exports:
 """
 from pybossa.uploader import Uploader
 import os
+from flask import send_from_directory
 from werkzeug import secure_filename
 
 
@@ -91,3 +92,5 @@ class LocalUploader(Uploader):
         return os.path.join(
                 self.get_container_path(container), filename)
 
+    def send_file(self, filename):
+        return send_from_directory(self.upload_folder, filename)

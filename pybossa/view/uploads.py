@@ -21,7 +21,7 @@ PYBOSSA Uploads view for LocalUploader application.
 This module serves uploaded content like avatars.
 
 """
-from flask import Blueprint, send_from_directory
+from flask import Blueprint
 from pybossa.core import uploader
 
 
@@ -31,4 +31,4 @@ blueprint = Blueprint('uploads', __name__)
 @blueprint.route('/<path:filename>')
 def uploaded_file(filename):  # pragma: no cover
     """Return uploaded file."""
-    return send_from_directory(uploader.upload_folder, filename)
+    return uploader.send_file(filename)

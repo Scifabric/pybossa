@@ -19,6 +19,7 @@
 
 from default import Test, with_context
 from pybossa.uploader.cloud_store import CloudStoreUploader
+from pybossa.uploader.cloud_proxy import CloudProxyUploader
 from mock import patch, PropertyMock, call, MagicMock
 from werkzeug.datastructures import FileStorage
 from io import StringIO
@@ -149,3 +150,52 @@ class TestCloudUploader(Test):
         }
         url = u.external_url_handler(None, None, values)
         assert url.endswith('{}/static/img/placeholder.project.png'.format(self.flask_app.config['SERVER_NAME'])), url
+
+
+class TestCloudProxyUploader(Test):
+
+    conn_args = {
+        'host': 's3.com',
+        'headers': True
+    }
+
+    @with_context
+    @patch('pybossa.uploader.cloud_store.create_connection')
+    def test_cloud_proxy_uploader(self, create_connection):
+        mock_conn = MagicMock()
+        mock_bucket = MagicMock()
+        mock_key = MagicMock()
+        mock_conn.get_bucket.return_value = mock_bucket
+        mock_bucket.get_key.return_value = mock_key
+
+        create_connection.return_value = mock_conn
+        u = CloudProxyUploader()
+
+        mock_key.get_contents_as_string.return_value = 'hello world'
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
+            response = u.send_file('test.png')
+            assert response.status_code == 200
+            assert response.data == 'hello world'
+
+    @with_context
+    @patch('pybossa.uploader.cloud_store.create_connection')
+    def test_cloud_proxy_uploader_not_found(self, create_connection):
+        mock_conn = MagicMock()
+        mock_bucket = MagicMock()
+        mock_key = MagicMock()
+        mock_conn.get_bucket.return_value = mock_bucket
+        mock_bucket.get_key.return_value = mock_key
+
+        create_connection.return_value = mock_conn
+        u = CloudProxyUploader()
+
+        mock_key.get_contents_as_string.side_effect = Exception
+        with patch.dict(self.flask_app.config, {
+                'UPLOAD_BUCKET': 'testbucket',
+                'S3_UPLOAD': self.conn_args
+            }):
+            response = u.send_file('test.png')
+            assert response.status_code == 404

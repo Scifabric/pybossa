@@ -145,20 +145,22 @@ def setup_uploader(app):
     """Setup uploader."""
     global uploader
 
-    if app.config.get('UPLOAD_METHOD') == 'local':
+    upload_method = app.config.get('UPLOAD_METHOD')
+    if upload_method == 'local':
         from pybossa.uploader.local import LocalUploader
         uploader = LocalUploader()
-        uploader.init_app(app)
-    if app.config.get('UPLOAD_METHOD') == 'rackspace':  # pragma: no cover
+    if upload_method == 'rackspace':  # pragma: no cover
         from pybossa.uploader.rackspace import RackspaceUploader
         uploader = RackspaceUploader()
         app.url_build_error_handlers.append(uploader.external_url_handler)
-        uploader.init_app(app)
-    if app.config.get('UPLOAD_METHOD') == 'cloud':  # pragma: no cover
+    if upload_method == 'cloud':  # pragma: no cover
         from pybossa.uploader.cloud_store import CloudStoreUploader
         uploader = CloudStoreUploader()
         app.url_build_error_handlers.append(uploader.external_url_handler)
-        uploader.init_app(app)
+    if upload_method == 'cloudproxy':  #pragma: no cover
+        from pybossa.uploader.cloud_proxy import CloudProxyUploader
+        uploader = CloudProxyUploader()
+    uploader.init_app(app)
 
 
 def setup_exporter(app):
