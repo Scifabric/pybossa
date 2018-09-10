@@ -20,7 +20,7 @@
 Exporter module for exporting tasks and tasks results out of PYBOSSA
 """
 
-from contextlib import closing
+from contextlib import closing, contextmanager
 import copy
 import os
 import zipfile
@@ -35,6 +35,13 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from flatten_json import flatten
 from werkzeug.datastructures import FileStorage
+
+
+@contextmanager
+def make_zip_context(zip_result):
+    yield zip_result
+    if isinstance(zip_result, dict) and zip_result.get('delete'):
+        os.remove(zip_result['filepath'])
 
 
 class Exporter(object):
@@ -166,22 +173,21 @@ class Exporter(object):
         generate one on the fly and upload it."""
         filename = self.download_name(project, ty)
         self.delete_existing_zip(project, ty)
-        self._make_zip(project, ty)
-        if isinstance(uploader, local.LocalUploader):
-            filepath = self._download_path(project)
-            res = send_file(filename_or_fp=safe_join(filepath, filename),
-                            mimetype='application/octet-stream',
-                            as_attachment=True,
-                            attachment_filename=filename)
-            # fail safe mode for more encoded filenames.
-            # It seems Flask and Werkzeug do not support RFC 5987
-            # http://greenbytes.de/tech/tc2231/#encoding-2231-char
-            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
-            return res
-        else:
-            return redirect(url_for('rackspace', filename=filename,
-                                    container=self._container(project),
-                                    _external=True))
+        with make_zip_context(self._make_zip(project, ty)) as zip_result:
+            if (not zip_result) and isinstance(uploader, local.LocalUploader):
+                filepath = self._download_path(project)
+                zip_result = dict(filepath=safe_join(filepath, filename),
+                                  filename=filename)
+            if zip_result:
+                res = send_file(filename_or_fp=zip_result['filepath'],
+                                mimetype='application/octet-stream',
+                                as_attachment=True,
+                                attachment_filename=zip_result['filename'])
+                return res
+            else:
+                return redirect(url_for('rackspace', filename=filename,
+                                        container=self._container(project),
+                                        _external=True))
 
     def response_zip(self, project, ty):
         return self.get_zip(project, ty)
