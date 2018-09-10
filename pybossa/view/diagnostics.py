@@ -18,7 +18,7 @@
 """Healthcheck for PYBOSSA."""
 import json
 
-from flask import Blueprint, Response
+from flask import Blueprint, Response, current_app
 
 from pybossa.core import sentinel, db, talisman
 
@@ -55,6 +55,7 @@ def perform_check(check):
         check()
         return True
     except Exception:
+        current_app.logger.exception('Healthcheck error')
         return False
 
 
