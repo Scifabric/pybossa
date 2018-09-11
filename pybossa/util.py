@@ -908,12 +908,14 @@ def mail_with_enabled_users(message):
     return True
 
 
-def grant_access_with_api_key():
+def grant_access_with_api_key(secure_app):
     from pybossa.core import user_repo
     import pybossa.model as model
     from flask import _request_ctx_stack
 
-    apikey = request.args.get('api_key', None)
+    apikey = None
+    if not secure_app:
+        apikey = request.args.get('api_key', None)
     if 'Authorization' in request.headers:
         apikey = request.headers.get('Authorization')
     if apikey:

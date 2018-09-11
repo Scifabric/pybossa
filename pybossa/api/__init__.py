@@ -89,8 +89,9 @@ def index():  # pragma: no cover
 @blueprint.before_request
 def _api_authentication_with_api_key():
     """ Allow API access with valid api_key."""
-    if current_app.config.get('SECURE_APP_ACCESS', False):
-        grant_access_with_api_key()
+    secure_app_access = current_app.config.get('SECURE_APP_ACCESS', False)
+    if secure_app_access:
+        grant_access_with_api_key(secure_app_access)
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
