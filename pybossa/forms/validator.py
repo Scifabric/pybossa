@@ -137,7 +137,7 @@ class CheckPasswordStrength(object):
 
     def __init__(
             self, message=None, min_len=8,
-            max_len=15, uppercase=True,
+            max_len=None, uppercase=True,
             lowercase=True, numeric=True,
             special=True):
         self.min_len = min_len

@@ -249,6 +249,16 @@ class TestRegisterForm(Test):
         form = RegisterForm(**self.fill_in_data)
         assert form.validate()
 
+    @with_context
+    def test_generate_password(self):
+        data = dict(**self.fill_in_data)
+        data.pop('password')
+        data.pop('confirm')
+        form = RegisterForm(**data)
+        assert not form.validate()
+        form.generate_password()
+        assert form.validate()
+
 
 class TestBulkTaskLocalCSVForm(Test):
 

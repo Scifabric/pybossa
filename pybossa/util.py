@@ -39,6 +39,7 @@ import json
 import base64
 import hashlib
 import hmac
+import random
 import simplejson
 import time
 from flask.ext.babel import lazy_gettext
@@ -833,17 +834,44 @@ def check_password_strength(
         required_chars.append(r'[!@$%^&*#]')
 
     pwd_len = len(password)
-    if pwd_len < min_len or pwd_len > max_len:
-        message = lazy_gettext(
-                    u'Password must be between {0} and {1} characters'
-                    .format(min_len, max_len))
-        return False, message
+    if min_len and pwd_len < min_len:
+        return False, lazy_gettext(
+            u'Password must be longer than {} characters'.format(min_len)
+        )
+
+    if max_len and pwd_len > max_len:
+        return False, lazy_gettext(
+            u'Password must be shorter than {} characters'.format(max_len)
+        )
 
     valid = all(re.search(ch, password) for ch in required_chars)
     if not valid:
         return False, message
     else:
         return True, None
+
+
+def sample(population, at_least, at_most):
+    rnd = random.SystemRandom()
+    n = rnd.randint(at_least, at_most + 1)
+    return [rnd.choice(population) for x in range(n)]
+
+
+def generate_password():
+    used = []
+    chars = range(ord('a'), ord('z') + 1)
+    lowers = [chr(x) for x in chars]
+    uppers = [x.upper() for x in lowers]
+    digits = [str(x) for x in range(0, 10)]
+    special = '!@$%^&*#'
+
+    used.extend(sample(lowers, 3, 6))
+    used.extend(sample(uppers, 3, 6))
+    used.extend(sample(digits, 2, 4))
+    used.extend(sample(special, 2, 4))
+    rnd = random.SystemRandom()
+    rnd.shuffle(used)
+    return ''.join(used)
 
 
 def get_s3_bucket_name(url):

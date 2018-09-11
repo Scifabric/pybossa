@@ -282,6 +282,7 @@ class UserImporter(object):
         form_data['project_slug'] = form_data.pop('project_slugs', [])
 
         form = RegisterFormWithUserPrefMetadata(MultiDict(form_data))
+        form.generate_password()
         form.set_upref_mdata_choices()
         form.project_slug.choices = get_project_choices()
         return form.validate(), form.errors
