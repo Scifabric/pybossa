@@ -428,7 +428,8 @@ class RegisterForm(Form):
                            "characters long", username_length=USER_NAME_MAX_LENGTH)
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('User name'),
-                         [validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
+                         [
+                          validators.Length(min=3, max=USER_NAME_MAX_LENGTH, message=err_msg),
                           pb_validator.NotAllowedChars(),
                           pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
                           pb_validator.ReservedName('account', current_app)])
@@ -452,8 +453,8 @@ class RegisterForm(Form):
         password = PasswordField(
                         lazy_gettext('New Password'),
                         [validators.Required(err_msg),
-                            validators.EqualTo('confirm', err_msg_2),
-                            pb_validator.CheckPasswordStrength()])
+                         validators.EqualTo('confirm', err_msg_2),
+                         pb_validator.CheckPasswordStrength()])
     else:
         password = PasswordField(
                         lazy_gettext('New Password'),
@@ -463,6 +464,13 @@ class RegisterForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
     project_slug = SelectMultipleField(lazy_gettext('Project'), choices=[])
     consent = BooleanField(default='checked', false_values=("False", "false", '', '0', 0))
+
+    def generate_password(self):
+        if self.data['password']:
+            return
+        password = util.generate_password()
+        self.password.data = password
+        self.confirm.data = password
 
 
 class UpdateProfileForm(Form):

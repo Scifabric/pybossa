@@ -344,6 +344,8 @@ def register():
     form.project_slug.choices = get_project_choices()
     msg = "I accept receiving emails from %s" % current_app.config.get('BRAND')
     form.consent.label = msg
+    if request.method == 'POST':
+        form.generate_password()
     if request.method == 'POST' and form.validate():
         if app_settings.upref_mdata:
             user_pref, metadata = get_user_pref_and_metadata(form.name.data, form)
