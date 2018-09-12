@@ -560,8 +560,9 @@ def setup_hooks(app):
     def _api_authentication():
         """ Attempt API authentication on a per-request basis."""
 
-        if not app.config.get('SECURE_APP_ACCESS', False):
-            grant_access_with_api_key()
+        secure_app_access = app.config.get('SECURE_APP_ACCESS', False)
+        if not secure_app_access:
+            grant_access_with_api_key(secure_app_access)
 
         # Handle forms
         request.body = request.form

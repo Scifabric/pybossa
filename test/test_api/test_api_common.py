@@ -394,18 +394,22 @@ class TestApiCommon(TestAPI):
         admin = UserFactory.create()
         with patch.dict(self.flask_app.config,
             {'SECURE_APP_ACCESS': True}):
-            # no completedtask yet, should return zero
             url = '/api/completedtask?project_id=1&api_key=api-key1'
             res = self.app.get(url)
+            assert res.status_code == 401, res.data
+            url = '/api/completedtask?project_id=1'
+            headers = {'Authorization': 'api-key1'}
+            res = self.app.get(url, headers=headers)
             data = json.loads(res.data)
+            # no completedtask yet, should return zero
             assert len(data) == 0, data
 
             #  task is completed
             task_runs = TaskRunFactory.create_batch(2, task=task)
             task.state = 'completed'
             task_repo.update(task)
-            url = '/api/completedtask?project_id=1&api_key=api-key1'
-            res = self.app.get(url)
+            url = '/api/completedtask?project_id=1'
+            res = self.app.get(url, headers=headers)
             data = json.loads(res.data)
 
             # correct result
@@ -419,7 +423,7 @@ class TestApiCommon(TestAPI):
             assert res.status_code == 401, err_msg
 
             url = "/project/%s?api_key=api-key1" % project.short_name
-            res = self.app.get(url, follow_redirects=True)
+            res = self.app.get(url, follow_redirects=True, headers=headers)
             err_msg = 'app access should not be allowed with SECURE_APP_ACCESS enabled'
             assert "Sign in" in res.data, err_msg
 
