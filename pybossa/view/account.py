@@ -65,6 +65,7 @@ from pybossa.sched import release_user_locks
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_from_form,
     copy_data_access_levels)
 import app_settings
+from flask import make_response
 
 blueprint = Blueprint('account', __name__)
 
@@ -572,7 +573,10 @@ def _show_own_profile(user, form, can_update):
                     private_instance=bool(data_access_levels),
                     upref_mdata_enabled=bool(app_settings.upref_mdata))
 
-    return handle_content_type(response)
+    response = make_response(handle_content_type(response))
+    response.headers['Cache-Control'] = 'no-store'
+    response.headers['Pragma'] = 'no-cache'
+    return response
 
 
 columns = {
