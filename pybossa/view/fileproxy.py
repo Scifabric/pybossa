@@ -95,4 +95,6 @@ def encrypted_file(store, bucket, project_id, path):
 
     response.headers.add('Content-Encoding', _key.content_encoding)
     response.headers.add('Content-Disposition', _key.content_disposition)
+    response.headers.add('Cache-Control', 'no-store')
+    response.headers.add('Pragma', 'no-cache')
     return response
