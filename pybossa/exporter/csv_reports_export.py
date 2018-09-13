@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
+import os
 import tempfile
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import project_repo, uploader
@@ -80,25 +81,22 @@ class ProjectReportCsvExporter(CsvExporter):
         name = self._project_name_latin_encoded(project)
         csv_task_generator = self._respond_csv(ty, project.id)
         if csv_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in csv_task_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                csv_task_generator.close()  # delete temp csv file
-                zipped_datafile = tempfile.NamedTemporaryFile()
+            with tempfile.NamedTemporaryFile() as datafile, \
+                 tempfile.NamedTemporaryFile(delete=False) as zipped_datafile:
                 try:
+                    for line in csv_task_generator:
+                        datafile.write(str(line))
+                    datafile.flush()
+                    csv_task_generator.close()  # delete temp csv file
                     _zip = self._zip_factory(zipped_datafile.name)
                     _zip.write(
                         datafile.name,
                         secure_filename('%s_%s.csv' % (name, ty)))
                     _zip.close()
-                    container = "user_%d" % project.owner_id
-                    _file = FileStorage(
-                        filename=self.download_name(project, ty),
-                        stream=zipped_datafile)
-                    uploader.upload_file(_file, container=container)
-                finally:
-                    zipped_datafile.close()
-            finally:
-                datafile.close()
+                    return dict(filepath=zipped_datafile.name,
+                                filename=self.download_name(project, ty),
+                                delete=True)
+                except Exception:
+                    if os.path.exists(zipped_datafile.name):
+                        os.remove(zipped_datafile.name)
+                    raise

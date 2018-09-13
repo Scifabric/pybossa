@@ -22,7 +22,7 @@ CSV Exporter module for exporting tasks and tasks results out of PyBossa
 
 import tempfile
 from pybossa.exporter.csv_export import CsvExporter
-from pybossa.core import uploader, project_repo, user_repo
+from pybossa.core import project_repo, user_repo
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from pybossa.cache.helpers import n_available_tasks

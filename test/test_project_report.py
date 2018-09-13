@@ -2,7 +2,10 @@ from helper import web
 from default import db, with_context
 from factories import ProjectFactory, UserFactory, TaskFactory, TaskRunFactory
 from pybossa.repositories import UserRepository, ProjectRepository
+from pybossa import exporter
+from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from mock import patch
+from nose.tools import assert_raises
 
 project_repo = ProjectRepository(db)
 from pybossa.core import user_repo
@@ -92,29 +95,29 @@ class TestProjectReport(web.Helper):
         assert res.status_code == 200, res.data
 
     @with_context
-    @patch('pybossa.exporter.csv_reports_export.uploader.file_exists', return_value=True)
-    def test_project_report_delete_existing_report(self, mock_zip_exists):
+    @patch.object(exporter.os, 'remove')
+    def test_project_report_delete_existing_report(self, mock_os_remove):
         """Test project report is generated with deleting existing report zip"""
         self.register()
         self.signin()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
         url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.data
+        res = self.app.get(url)
+        assert mock_os_remove.called
 
     @with_context
-    @patch('pybossa.exporter.isinstance', return_value=False)
-    @patch('pybossa.exporter.url_for')
-    def test_project_report_nonlocal_uploader(self, url_for, mock_no_up):
+    @patch.object(exporter.os, 'remove')
+    def test_project_report_cleanup_on_error(self, mock_os_remove):
+        def _new_get_csv(*args, **kwargs):
+            yield ''
+            raise Exception('test')
         self.register()
         self.signin()
-        rv = 'http://store/object'
-        url_for.return_value = rv
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
-        res = self.app.get(url, follow_redirects=False)
-        url_for.assert_called()
-        assert res.status_code == 302, res.status_code
-        assert rv in res.data
+        prce = ProjectReportCsvExporter()
+        with patch.object(prce, '_get_csv', _new_get_csv):
+            with assert_raises(Exception):
+                prce._make_zip(project, None)
+        assert mock_os_remove.called

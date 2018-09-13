@@ -1071,7 +1071,6 @@ def push_notification(project_id, **kwargs):
 
 def mail_project_report(info, current_user_email_addr):
     from pybossa.core import project_csv_exporter
-    from pybossa.core import uploader
 
     try:
         zipfile = None
