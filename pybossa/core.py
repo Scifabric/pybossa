@@ -35,7 +35,6 @@ from pybossa.util import datetime_filter, grant_access_with_api_key
 from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
-from datetime import timedelta
 import app_settings
 
 
@@ -113,9 +112,6 @@ def configure_app(app):
         master = app.config.get('SQLALCHEMY_DATABASE_URI')
         app.config['SQLALCHEMY_BINDS']['slave'] = master
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
-
-    if app.config.get('PERMANENT_SESSION_LIFETIME'):
-        app.permanent_session_lifetime = timedelta(minutes=int(app.config['PERMANENT_SESSION_LIFETIME']))
 
 
 def setup_json_serializer(app):
