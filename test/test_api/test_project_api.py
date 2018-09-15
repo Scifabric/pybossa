@@ -1311,7 +1311,7 @@ class TestProjectAPI(TestAPI):
             info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
         new_project = json.dumps(new_project)
 
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.post('/api/project', headers=headers,
                                 data=new_project)
             data = json.loads(res.data)['info']
@@ -1359,7 +1359,7 @@ class TestProjectAPI(TestAPI):
             info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
         new_project = json.dumps(new_project)
 
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.post('/api/project', headers=headers,
                                 data=new_project, follow_redirects=True)
             error = json.loads(res.data)
@@ -1395,7 +1395,7 @@ class TestProjectAPI(TestAPI):
             info=dict(passwd_hash='hello', data_access=project_levels, project_users=project_users))
         new_project = json.dumps(new_project)
 
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.post('/api/project', headers=headers,
                                 data=new_project, follow_redirects=True)
 
@@ -1427,7 +1427,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 200, 'without data access, user should get project with project password'
 
         # with data_access, user should not be able to get project unless user is assigned to project
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.get(u'api/project/{}?api_key={}'.format(project.id, user_l1.api_key))
             assert_equal(res.status, '403 FORBIDDEN', 'without data access, user should get project with project password')
 
