@@ -20,6 +20,7 @@
 import json
 from helper import web
 from default import db, with_context
+from helper.gig_helper import make_subadmin
 from factories import ProjectFactory, BlogpostFactory
 from mock import patch
 
@@ -54,13 +55,11 @@ class TestBlogpostView(web.Helper):
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
-        print res.data
-        assert res.status_code == 200, res.status_code
-        assert 'titleone' in res.data
-        assert 'titletwo' in res.data
+        assert res.status_code == 401, res.status_code
 
         # As authenticated
         self.register()
+        self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert 'titleone' in res.data
@@ -86,19 +85,11 @@ class TestBlogpostView(web.Helper):
         # As anonymous
         self.set_proj_passwd_cookie(project)
         res = self.app_get_json(url)
-        assert res.status_code == 200, res.status_code
-        data = json.loads(res.data)
-        assert 'api_key' not in data['owner'].keys()
-        assert 'email_addr' not in data['owner'].keys()
-        assert 'google_user_id' not in data['owner'].keys()
-        assert 'facebook_user_id' not in data['owner'].keys()
-        assert 'twitter_user_id' not in data['owner'].keys()
-        assert len(data['blogposts']) == 2
-        for blogpost in data['blogposts']:
-            assert blogpost['title'] in ['titleone', 'titletwo']
+        assert res.status_code == 401, res.status_code
 
         # As authenticated
         self.register()
+        self.signin()
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
@@ -161,11 +152,11 @@ class TestBlogpostView(web.Helper):
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert res.status_code == 401, res.status_code
 
         # As authenticated
         self.register()
+        self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert 'title' in res.data
@@ -181,10 +172,11 @@ class TestBlogpostView(web.Helper):
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 404, res.status_code
+        assert res.status_code == 401, res.status_code
 
         # As authenticated
         self.register()
+        self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
