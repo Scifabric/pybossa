@@ -52,6 +52,8 @@ class TaskRunAPI(APIBase):
     __class__ = TaskRun
     reserved_keys = set(['id', 'created', 'finish_time'])
 
+    immutable_keys = set(['project_id', 'task_id'])
+
     def _preprocess_post_data(self, data):
         if current_user.is_anonymous():
             raise Forbidden('')

@@ -38,6 +38,8 @@ class ResultAPI(APIBase):
     reserved_keys = set(['id', 'created', 'project_id',
                          'task_run_ids', 'last_version'])
 
+    immutable_keys = set(['project_id', 'task_id'])
+
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:

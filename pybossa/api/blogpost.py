@@ -35,6 +35,8 @@ class BlogpostAPI(APIBase):
 
     reserved_keys = set(['id', 'created', 'updated', 'user_id'])
 
+    immutable_keys = set(['project_id'])
+
     __class__ = Blogpost
 
     def _forbidden_attributes(self, data):
