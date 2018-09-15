@@ -88,7 +88,7 @@ from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from datetime import datetime
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
-    ensure_data_access_assignment_from_form)
+    ensure_data_access_assignment_from_form, allow_by_subadmin_role)
 import app_settings
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -190,8 +190,9 @@ def project_by_shortname(short_name):
 def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
     project, owner, ps = project_by_shortname(project_short_name)
-    if not current_user.admin and not current_user.subadmin \
-            and not current_user.id in project.owners_ids:
+    if not current_user.admin \
+        and not allow_by_subadmin_role(current_user) \
+        and not current_user.id in project.owners_ids:
         return abort(403)
     return project, owner, ps
 
@@ -945,6 +946,7 @@ def delete_autoimporter(short_name):
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
     form = PasswordForm(request.form)
     next_url = is_own_url_or_else(request.args.get('next'), url_for('home.home'))
     if request.method == 'POST' and form.validate():
@@ -966,6 +968,7 @@ def password_required(short_name):
 @login_required
 def task_presenter(short_name, task_id):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
@@ -1048,13 +1051,12 @@ def presenter(short_name):
         return resp
 
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
@@ -1087,14 +1089,13 @@ def presenter(short_name):
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
     title = project_title(project, "Tutorial")
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
@@ -1112,13 +1113,12 @@ def export(short_name, task_id):
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists and current_user has valid access to it
     project, owner, ps = allow_deny_project_info(short_name)
+    ensure_authorized_to('read', project)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     # Check if the task belongs to the project and exists
     task = task_repo.get_task_by(project_id=project.id, id=task_id)
@@ -1135,13 +1135,12 @@ def export(short_name, task_id):
 def export_statuses(short_name, task_id):
     """Return a file with all TaskRun statuses for a given Task"""
     project, owner, ps = allow_deny_project_info(short_name)
+    ensure_authorized_to('read', project)
 
     if project.needs_password():
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     task = task_repo.get_task(task_id)
 
@@ -1190,8 +1189,6 @@ def tasks(short_name):
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     pro = pro_features()
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -1225,6 +1222,7 @@ def tasks(short_name):
 @login_required
 def tasks_browse(short_name, page=1, records_per_page=10):
     project, owner, ps = allow_deny_project_info(short_name)
+    ensure_authorized_to('read', project)
 
     title = project_title(project, "Tasks")
     pro = pro_features()
@@ -1584,6 +1582,7 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = allow_deny_project_info(short_name)
+    ensure_authorized_to('read', project)
     supported_tables = ['task', 'task_run', 'result', 'consensus']
 
     title = project_title(project, gettext("Export"))
@@ -1773,6 +1772,7 @@ def export_projects():
 def show_stats(short_name):
     """Returns Project Stats"""
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
     n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     n_pending_tasks = ps.n_tasks-n_completed_tasks
     title = project_title(project, "Statistics")
@@ -1782,8 +1782,6 @@ def show_stats(short_name):
         redirect_to_password = _check_if_redirect_to_password(project)
         if redirect_to_password:
             return redirect_to_password
-    else:
-        ensure_authorized_to('read', project)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
@@ -2108,6 +2106,7 @@ def task_timeout(short_name):
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
 
     if current_user.is_authenticated() and current_user.id == owner.id:
         blogposts = blog_repo.filter_by(project_id=project.id)
@@ -2144,6 +2143,7 @@ def show_blogposts(short_name):
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
 
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
@@ -2195,6 +2195,7 @@ def new_blogpost(short_name):
         return handle_content_type(response)
 
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
 
 
     form = BlogpostForm(request.form)
@@ -2881,6 +2882,8 @@ def assign_users(short_name):
     """Assign users to project based on projects data access levels."""
 
     project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     access_levels = project.info.get('data_access', None)
     if not data_access_levels or not access_levels:
         flash('Cannot assign users to a project without data access levels', 'warning')
@@ -2893,8 +2896,6 @@ def assign_users(short_name):
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
     form = DataAccessForm(request.body)
-    ensure_authorized_to('read', project)
-    ensure_authorized_to('update', project)
 
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
