@@ -28,19 +28,6 @@ from factories import UserFactory
 
 class TestUserAPI(Test):
 
-    patch_config = {
-        'ENABLE_ACCESS_CONTROL': True,
-        'DATA_ACCESS': [("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
-        'VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL': dict(
-            L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-        'VALID_TASK_LEVELS_FOR_USER_LEVEL': dict(
-            L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
-        'VALID_PROJECT_LEVELS_FOR_TASK_LEVEL': dict(
-            L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
-        'VALID_TASK_LEVELS_FOR_PROJECT_LEVEL': dict(
-            L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
-    }
-
     @with_context
     def test_user_get(self):
         """Test API User GET"""
@@ -553,7 +540,7 @@ class TestUserAPI(Test):
         data_access_levels = dict(valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")])
 
         url = 'api/user/%s' % user.id
-        with patch.object(data_access, 'data_access_levels', data_access_levels):
+        with patch.dict(data_access.data_access_levels, data_access_levels):
             user_levels = ["BAD"]
             res = self.app.put(url + '?api_key=%s' % admin.api_key,
                                data=json.dumps(dict(name='new', info=dict(data_access=user_levels))))

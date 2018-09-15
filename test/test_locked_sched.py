@@ -221,7 +221,7 @@ class TestLockedSched(sched.Helper):
         task4 = TaskFactory.create(project=project2, info=dict(question='q4', data_access=["L2"]), n_answers=1)
 
         self.set_proj_passwd_cookie(project, user_l2)
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.get('api/project/{}/newtask?api_key={}'
                                .format(project.id, user_l2.api_key))
             assert res.status_code == 200, res.status_code
@@ -264,7 +264,7 @@ class TestLockedSched(sched.Helper):
         task4 = TaskFactory.create(project=project, info=dict(question='q4', data_access=["L2"]), n_answers=1)
 
         self.set_proj_passwd_cookie(project, user_l4)
-        with patch.object(data_access, 'data_access_levels', self.patch_data_access_levels):
+        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.get('api/project/{}/newtask?api_key={}'
                                .format(project.id, user_l4.api_key))
             assert res.status_code == 200, res.status_code
