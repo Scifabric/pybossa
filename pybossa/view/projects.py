@@ -962,7 +962,8 @@ def password_required(short_name):
                             project=project,
                             form=form,
                             short_name=short_name,
-                            next=next_url)
+                            next=next_url,
+                            pro_features=pro_features())
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')

@@ -272,7 +272,8 @@ def setup_error_email(app):
     """Setup error email."""
     from logging.handlers import SMTPHandler
     ADMINS = app.config.get('ADMINS', '')
-    if not app.debug and ADMINS:  # pragma: no cover
+    alert = app.config.get('MAIL_ALERTS', False)
+    if not app.debug and alerts and ADMINS:  # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
                                    'server-error@no-reply.com',
                                    ADMINS, 'error')
