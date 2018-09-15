@@ -944,6 +944,7 @@ def delete_autoimporter(short_name):
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
+@login_required
 def password_required(short_name):
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)

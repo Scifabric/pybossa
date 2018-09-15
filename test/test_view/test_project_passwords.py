@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import json
 
 from default import Test, db, with_context
 from factories import ProjectFactory, TaskFactory, UserFactory, BlogpostFactory
@@ -47,35 +48,40 @@ class TestProjectPassword(Helper):
     def test_password_view_func_post(self, redirect):
         """Test when posting to /project/short_name/password and password is correct
         the user is redirected to where they came from"""
+        user = UserFactory.create()
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
+        headers = {'Authorization': user.api_key}
         redirect_url = '/project/%s/task/%s' % (project.short_name, task.id)
         url = '/project/%s/password?next=%s' % (project.short_name, redirect_url)
 
-        res = self.app.post(url, data={'password': 'mysecret'})
+        res = self.app.post(url, data={'password': 'mysecret'}, headers=headers)
         redirect.assert_called_with(redirect_url)
 
     @with_context
     def test_password_view_func_post_wrong_passwd(self):
         """Test when posting to /project/short_name/password and password is incorrect
         an error message is flashed"""
+        user = UserFactory.create()
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         project.set_password('mysecret')
         project_repo.update(project)
+        headers = {'Authorization': user.api_key}
         url = '/project/%s/password?next=/project/%s/task/%s' % (
             project.short_name, project.short_name, task.id)
 
-        res = self.app.post(url, data={'password': 'bad_passwd'})
+        res = self.app.post(url, data={'password': 'bad_passwd'}, headers=headers)
         assert 'Sorry, incorrect password' in res.data, "No error message shown"
 
     @with_context
     def test_password_view_func_no_project(self):
         """Test when receiving a request to a non-existing project, return 404"""
-        get_res = self.app.get('/project/noapp/password')
-        post_res = self.app.post('/project/noapp/password')
+        user = UserFactory.create()
+        get_res = self.app.get('/project/noapp/password?api_key=%s' % user.api_key)
+        post_res = self.app.post('/project/noapp/password?api_key=%s' % user.api_key)
 
         assert get_res.status_code == 404, get_res.status_code
         assert post_res.status_code == 404, post_res.status_code
@@ -121,10 +127,18 @@ class TestProjectPassword(Helper):
         mock_user.subadmin = False
         configure_mock_current_user_from(user, mock_user)
 
-        res = self.app.get('/project/%s/newtask?api_key=%s' % (project.short_name, user.api_key), follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        headers_json = {'Authorization': user.api_key, 'Content-Type': 'application/json'}
+        headers = {'Authorization': user.api_key}
+        res = self.app.get('/project/%s/newtask' % project.short_name, headers=headers_json)
+        data = json.loads(res.data)
+        next_url = data['next']
+        res = self.app.get(next_url, headers=headers)
+        assert 'Enter the password to contribute' in res.data, res.data
 
-        res = self.app.get('/project/%s/task/1?api_key=%s' % (project.short_name, user.api_key), follow_redirects=True)
+        res = self.app.get('/project/%s/task/1' % project.short_name, headers=headers_json)
+        data = json.loads(res.data)
+        next_url = data['next']
+        res = self.app.get(next_url, headers=headers)
         assert 'Enter the password to contribute' in res.data
 
     @with_context
