@@ -92,6 +92,8 @@ class APIBase(MethodView):
 
     allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
 
+    immutable_keys = set([])
+
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
         if caching.get(cls_name):
@@ -413,18 +415,19 @@ class APIBase(MethodView):
         data = dict()
         if new_upload is None:
             data = json.loads(request.data)
-            self._forbidden_attributes(data)
-            self._restricted_attributes(data)
-            # Remove hateoas links
-            data = self.hateoas.remove_links(data)
+            new_data = data
         else:
-            self._forbidden_attributes(request.form)
-            self._restricted_attributes(request.form)
+            new_data = request.form
+        self._forbidden_attributes(new_data)
+        self._restricted_attributes(new_data)
+        # Remove hateoas links
+        data = self.hateoas.remove_links(data)
         # may be missing the id as we allow partial updates
         self.__class__(**data)
         old = self.__class__(**existing.dictize())
         for key in data:
-            setattr(existing, key, data[key])
+            if key not in self.immutable_keys:
+                setattr(existing, key, data[key])
         if new_upload:
             existing.media_url = new_upload['media_url']
             existing.info['container'] = new_upload['info']['container']

@@ -44,6 +44,8 @@ class TaskAPI(APIBase):
     __class__ = Task
     reserved_keys = set(['id', 'created', 'state', 'fav_user_ids'])
 
+    immutable_keys = set(['project_id'])
+
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
