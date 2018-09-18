@@ -1918,18 +1918,20 @@ def task_n_answers(short_name):
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
                       'N/A', default_form.default_n_answers.data)
+            msg = gettext('Redundancy updated!')
+            flash(msg, 'success')
         elif form.validate():
             tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
-            notify_redundancy_updates(tasks_not_updated)
-            # Log it
-            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                                  'N/A', form.n_answers.data)
-        if default_form.validate() or form.validate():
             if tasks_not_updated:
+                notify_redundancy_updates(tasks_not_updated)
                 flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
             else:
                 msg = gettext('Redundancy updated!')
                 flash(msg, 'success')
+            # Log it
+            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
+                                  'N/A', form.n_answers.data)
+        if default_form.validate() or form.validate():
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
             flash(gettext('Please correct the errors'), 'error')
