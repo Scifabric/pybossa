@@ -205,5 +205,9 @@ def ensure_user_assignment_to_project(project):
 
 
 @when_no_data_access(otherwise_return=False)
-def allow_by_subadmin_role(user):
+def subadmins_are_privileged(user):
+    """Check if an action can be performed by a given user by subadmin
+    permission. To be used for those actions that subadmin are privileged
+    for when data access is not enabled
+    """
     return user.subadmin

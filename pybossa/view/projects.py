@@ -88,7 +88,7 @@ from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from datetime import datetime
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
-    ensure_data_access_assignment_from_form, allow_by_subadmin_role)
+    ensure_data_access_assignment_from_form, subadmins_are_privileged)
 import app_settings
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -191,7 +191,7 @@ def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
     project, owner, ps = project_by_shortname(project_short_name)
     if not current_user.admin \
-        and not allow_by_subadmin_role(current_user) \
+        and not subadmins_are_privileged(current_user) \
         and not current_user.id in project.owners_ids:
         return abort(403)
     return project, owner, ps
