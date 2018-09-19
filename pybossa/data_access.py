@@ -21,15 +21,36 @@ from functools import wraps
 import app_settings
 
 
-def access_controller(return_value=None):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if data_access_levels:
-                return func(*args, **kwargs)
-            return return_value
-        return wrapper
+data_access_levels = {}
+
+
+if app_settings.config.get('ENABLE_ACCESS_CONTROL'):
+    data_access_levels = dict(
+        valid_access_levels=app_settings.config['VALID_ACCESS_LEVELS'],
+        valid_user_levels_for_project_task_level=app_settings.config['VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL'],
+        valid_task_levels_for_user_level=app_settings.config['VALID_TASK_LEVELS_FOR_USER_LEVEL'],
+        valid_project_levels_for_task_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'],
+        valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL']
+    )
+
+
+def execute_if(this_is_true, otherwise_return=None):
+    def decorator(otherwise_return=otherwise_return):
+        def decorated(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                if this_is_true:
+                    return func(*args, **kwargs)
+                return otherwise_return
+            return wrapper
+        return decorated
     return decorator
+
+
+when_data_access = execute_if(data_access_levels)
+
+
+when_no_data_access = execute_if(not data_access_levels)
 
 
 def get_valid_project_levels_for_task(task):
@@ -56,7 +77,7 @@ def valid_access_levels(levels):
     return all(l in access_levels for l in levels)
 
 
-@access_controller(return_value=True)
+@when_data_access(otherwise_return=True)
 def can_assign_user(levels, user_levels):
     """check if user be assigned to an object(project/task) based on
     whether user_levels matches objects levels """
@@ -100,7 +121,7 @@ def get_data_access_db_clause(access_levels):
     return ' OR '.join(sql_clauses)
 
 
-@access_controller(return_value='')
+@when_data_access(otherwise_return='')
 def get_data_access_db_clause_for_task_assignment(user_id):
     from pybossa.cache.users import get_user_access_levels_by_id
 
@@ -119,7 +140,7 @@ def get_data_access_db_clause_for_task_assignment(user_id):
     return sql_clause
 
 
-@access_controller()
+@when_data_access()
 def ensure_data_access_assignment_to_form(obj, form):
     access_levels = obj.get('data_access', [])
     if not valid_access_levels(access_levels):
@@ -127,7 +148,7 @@ def ensure_data_access_assignment_to_form(obj, form):
     form.data_access.data = access_levels
 
 
-@access_controller()
+@when_data_access()
 def ensure_data_access_assignment_from_form(obj, form):
     access_levels = form.data_access.data
     if not valid_access_levels(access_levels):
@@ -135,7 +156,7 @@ def ensure_data_access_assignment_from_form(obj, form):
     obj['data_access'] = access_levels
 
 
-@access_controller()
+@when_data_access()
 def ensure_task_assignment_to_project(task, project):
     if not project.info.get('ext_config', {}).get('data_access', {}).get('tracking_id'):
         raise Exception('Required Project > Settings > External Configurations are missing.')
@@ -149,13 +170,13 @@ def ensure_task_assignment_to_project(task, project):
         raise Exception('Invalid or insufficient permission.')
 
 
-@access_controller()
+@when_data_access()
 def ensure_valid_access_levels(access_levels):
     if not valid_access_levels(access_levels):
         raise ValueError(u'Invalid access levels {}'.format(', '.join(access_levels)))
 
 
-@access_controller()
+@when_data_access()
 def copy_data_access_levels(target, access_levels):
     ensure_valid_access_levels(access_levels)
     target['data_access'] = access_levels
@@ -183,12 +204,10 @@ def ensure_user_assignment_to_project(project):
             .format(', '.join(map(str, invalid_user_ids))))
 
 
-data_access_levels = {}
-if app_settings.config.get('ENABLE_ACCESS_CONTROL'):
-    data_access_levels = dict(
-        valid_access_levels=app_settings.config['VALID_ACCESS_LEVELS'],
-        valid_user_levels_for_project_task_level=app_settings.config['VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL'],
-        valid_task_levels_for_user_level=app_settings.config['VALID_TASK_LEVELS_FOR_USER_LEVEL'],
-        valid_project_levels_for_task_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'],
-        valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL']
-    )
+@when_no_data_access(otherwise_return=False)
+def subadmins_are_privileged(user):
+    """Check if an action can be performed by a given user by subadmin
+    permission. To be used for those actions that subadmin are privileged
+    for when data access is not enabled
+    """
+    return user.subadmin

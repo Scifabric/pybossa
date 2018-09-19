@@ -169,5 +169,13 @@ class TestNewtaskPasswd(TestAPI):
             assert c
 
             url = '/project/%s/newtask?api_key=%s' % (project.short_name, user.api_key)
-            res = self.app.get(url, follow_redirects=True)
+            res = self.app.get(url)
+            assert res.status_code == 302
+            headers = {'Content-Type': 'application/json'}
+            res = self.app.get(url, headers=headers)
+            next_url = json.loads(res.data)['next']
+            print next_url
+            headers = {'Authorization': user.api_key}
+            res = self.app.get(next_url, headers=headers)
+
             assert 'Enter the password to contribute to this project' in res.data, res.data
