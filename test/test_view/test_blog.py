@@ -108,7 +108,6 @@ class TestBlogpostView(web.Helper):
         res = self.app_get_json(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
-        assert 'api_key' in data['owner'].keys()
         assert 'email_addr' in data['owner'].keys()
         assert 'google_user_id' in data['owner'].keys()
         assert 'facebook_user_id' in data['owner'].keys()
