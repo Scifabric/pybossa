@@ -90,6 +90,7 @@ from datetime import datetime
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
     ensure_data_access_assignment_from_form, subadmins_are_privileged)
 import app_settings
+from copy import deepcopy
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -128,9 +129,9 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
     """Sanitize project and owner data."""
     if current_user.is_authenticated() and owner.id == current_user.id:
         if isinstance(project, Project):
-            project_sanitized = project.dictize()   # Project object
+            project_sanitized = deepcopy(project.dictize())   # Project object
         else:
-            project_sanitized = project             # dict object
+            project_sanitized = deepcopy(project)             # dict object
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
@@ -145,6 +146,12 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
             else:
                 project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
+
+    # remove project, owner creds so that they're unavailable under json response
+    project_sanitized['info'].pop('passwd_hash', None)
+    project_sanitized.pop('secret_key', None)
+    owner_sanitized.pop('api_key', None)
+
     if ps:
         project_sanitized['n_tasks'] = ps.n_tasks
         project_sanitized['n_task_runs'] = ps.n_tasks

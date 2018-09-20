@@ -353,8 +353,6 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         err_msg = 'Field should not be private'
         assert 'id' in data['owner'], err_msg
-        assert 'api_key' in data['owner'], err_msg
-        assert 'secret_key' in data['project'], err_msg
         assert res.status_code == 200, res.status_code
 
         # We use a string here to check that it works too
@@ -389,8 +387,6 @@ class TestWeb(web.Helper):
         assert 'userStats' in data, err_msg
         err_msg = 'Field should not be private'
         assert 'id' in data['owner'], err_msg
-        assert 'api_key' in data['owner'], err_msg
-        assert 'secret_key' in data['project'], err_msg
         assert res.status_code == 200, res.status_code
 
         url = '/project/%s/stats' % project.short_name
@@ -409,8 +405,6 @@ class TestWeb(web.Helper):
         assert 'userStats' in data, err_msg
         err_msg = 'Field should not be private'
         assert 'id' in data['owner'], err_msg
-        assert 'api_key' in data['owner'], err_msg
-        assert 'secret_key' in data['project'], err_msg
         assert res.status_code == 200, res.status_code
         err_msg = 'there should not have geo data'
         assert data['userStats'].get('geo') == None, err_msg
@@ -2289,9 +2283,7 @@ class TestWeb(web.Helper):
         assert 'template' in data, res.data
         assert 'title' in data, res.data
         # private information
-        assert 'api_key' in data['owner'], res.data
         assert 'email_addr' in data['owner'], res.data
-        assert 'secret_key' in data['project'], res.data
         assert 'owner_id' in data['project'], res.data
 
         res = self.app_get_json('/project/sampleapp/settings')
@@ -4299,8 +4291,6 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         assert 'template' in data, err_msg
         assert 'title' in data, err_msg
-        assert 'api_key' in data['owner'], err_msg
-        assert 'secret_key' in data['project'], err_msg
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
