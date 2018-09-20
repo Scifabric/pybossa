@@ -88,11 +88,11 @@ class TestBulkTaskLocalCSVImport(object):
 
     @with_context
     def test_import_users_with_missing_required_header_fullname_password_metadata_returns_error(self):
-        """Test user csv file for import has missing required headers fullname, password, metadata"""
+        """Test user csv file for import has missing required headers fullname, metadata"""
         with patch('pybossa.importers.usercsv.io.open',
             mock_open(read_data=u'name,email_addr\na,a@a.com\n'), create=True):
             assert_raises(BulkImportException, self.importer.count_users)
-            msg = 'The file you uploaded has missing header(s): fullname, password, metadata'
+            msg = 'The file you uploaded has missing header(s): fullname, metadata'
             try:
                 self.importer.count_users()
             except BulkImportException as e:
@@ -104,7 +104,7 @@ class TestBulkTaskLocalCSVImport(object):
         with patch('pybossa.importers.usercsv.io.open',
             mock_open(read_data=u'name,fullname,email_addr,password,metadata\na,a,a@a.com,,a\n'), create=True):
             assert_raises(BulkImportException, self.importer.count_users)
-            msg = 'Missing password value, Missing user_type in metadata'
+            msg = 'Missing user_type in metadata'
             try:
                 self.importer.count_users()
             except BulkImportException as e:

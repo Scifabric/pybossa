@@ -307,8 +307,7 @@ class UserImporter(object):
                     failed_users += 1
                     current_app.logger.error(u'Failed to import user {}, {}'
                         .format(full_name, form.errors))
-                    for k in errors.keys():
-                        invalid_values.add(k)
+                    invalid_values.update(form.errors.keys())
                     continue
                 user_data['metadata']['admin'] = current_user.name
                 user_data['password'] = form.password.data
