@@ -35,11 +35,10 @@ class CategorySyncer(Syncer):
         target = self.get_target(name=category.name)
 
         if not target:
-            params = {'api_key': self.target_key}
             payload = self._build_payload(category)
             current_app.logger.info(
                     'Syncing category: {}'.format(payload))
-            res =  self._create(payload, params)
+            res =  self._create(payload, self.target_key)
             if res.reason == 'FORBIDDEN':
                 raise SyncUnauthorized(self.__class__.__name__)
             return res

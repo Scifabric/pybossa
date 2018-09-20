@@ -70,10 +70,12 @@ class Syncer(object):
 
         if not params:
             params = {}
+        headers = {
+            'Authorization': self.target_key
+        }
 
-        params['api_key'] = self.target_key
         params['all'] = 1
-        res = requests.get(url, params=params)
+        res = requests.get(url, params=params, headers=headers)
 
         if res.ok:
             data = json.loads(res.content)
@@ -116,11 +118,12 @@ class Syncer(object):
         """
         raise NotImplemented
 
-    def _create(self, payload, params):
+    def _create(self, payload, api_key):
         url = '{}/api/{}'.format(
             self.target_url, self._api_endpoint)
+        headers = {'Authorization': api_key}
         res = requests.post(
-            url, json=payload, params=params, auth=http_signer)
+            url, json=payload, headers=headers, auth=http_signer)
         return res
 
     def cache_target(self, target, target_id):
