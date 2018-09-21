@@ -258,7 +258,7 @@ class UserImporter(object):
         """Get all importer names."""
         return self._importers.keys()
 
-    def _valid_user_data(self, user_data):
+    def _create_user_form(self, user_data):
         from pybossa.view.account import get_project_choices
         from pybossa.forms.forms import RegisterFormWithUserPrefMetadata
 
@@ -278,14 +278,14 @@ class UserImporter(object):
         form_data['locations'] = upref.get('locations', [])
         form_data['user_type'] = mdata.get('user_type')
         form_data.pop('info', None)
-        form_data['confirm'] = user_data['password']
+        form_data['confirm'] = user_data.get('password')
         form_data['project_slug'] = form_data.pop('project_slugs', [])
 
         form = RegisterFormWithUserPrefMetadata(MultiDict(form_data))
         form.generate_password()
         form.set_upref_mdata_choices()
         form.project_slug.choices = get_project_choices()
-        return form.validate(), form.errors
+        return form
 
     def create_users(self, user_repo, **form_data):
         """Create users from a remote source using an importer object and
@@ -302,15 +302,15 @@ class UserImporter(object):
             if not found:
                 full_name = user_data['fullname']
                 project_slugs = user_data.get('project_slugs')
-                valid, errors = self._valid_user_data(user_data)
-                if not valid:
+                form = self._create_user_form(user_data)
+                if not form.validate():
                     failed_users += 1
                     current_app.logger.error(u'Failed to import user {}, {}'
-                        .format(full_name, errors))
-                    for k in errors.keys():
-                        invalid_values.add(k)
+                        .format(full_name, form.errors))
+                    invalid_values.update(form.errors.keys())
                     continue
                 user_data['metadata']['admin'] = current_user.name
+                user_data['password'] = form.password.data
                 create_account(user_data, project_slugs=project_slugs)
                 n += 1
         if n > 0:

@@ -54,7 +54,7 @@ class BulkUserImport(object):
     importer_id = None
     default_vals = dict(
         user_pref={}, metadata={}, project_slugs=[], data_access=[])
-    reqd_headers = ["name", "fullname", "email_addr", "password", "metadata"]
+    reqd_headers = ["name", "fullname", "email_addr", "metadata"]
     def users(self):
         """Return a generator with all the users imported."""
         raise NotImplementedError
@@ -70,10 +70,8 @@ class BulkUserImport(object):
         valid_headers = ["name", "fullname", "email_addr", "password",
                          "project_slugs", "user_pref", "metadata",
                          "data_access"]
-        res = [h in valid_headers for h in headers]
-        if False in res:
-            invalid_headers = []
-            [invalid_headers.append(headers[i]) for i, r in enumerate(res) if r == False]
+        invalid_headers = [h for h in headers if h not in valid_headers]
+        if invalid_headers:
             msg = 'The file you uploaded has incorrect header(s): {0}'.format(','.join(invalid_headers))
             raise BulkImportException(msg)
 
