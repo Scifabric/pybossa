@@ -263,8 +263,8 @@ class UserImporter(object):
         from pybossa.forms.forms import RegisterFormWithUserPrefMetadata
 
         form_data = copy.deepcopy(user_data)
-        upref = form_data.get('user_pref', {})
-        mdata = form_data.get('metadata', {})
+        upref = form_data.pop('user_pref', {})
+        mdata = form_data.pop('metadata', {})
 
         if not isinstance(upref, dict):
             err = dict(user_pref='incorrect value')
@@ -277,7 +277,7 @@ class UserImporter(object):
         form_data['languages'] = upref.get('languages', [])
         form_data['locations'] = upref.get('locations', [])
         form_data['user_type'] = mdata.get('user_type')
-        form_data.get('info', None)
+        form_data.pop('info', None)
         form_data['confirm'] = user_data.get('password')
         form_data['project_slug'] = form_data.pop('project_slugs', [])
 
