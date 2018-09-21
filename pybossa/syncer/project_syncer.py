@@ -41,15 +41,14 @@ class ProjectSyncer(Syncer):
 
     def sync(self, project):
         target = self.get_target(short_name=project.short_name)
-        params = {'api_key': self.target_key}
         payload = self._build_payload(project, target)
 
         if not target:
-            return self._create(payload, params)
+            return self._create(payload, self.target_key)
         elif self.is_sync_enabled(target):
             target_id = target['id']
             self.cache_target(target, project.short_name)
-            res = self._sync(payload, target_id, params)
+            res = self._sync(payload, target_id, self.target_key)
             if res.reason == 'FORBIDDEN':
                 raise SyncUnauthorized(self.__class__.__name__)
         else:
@@ -61,18 +60,18 @@ class ProjectSyncer(Syncer):
         target = self.get_target_cache(project.short_name)
 
         if target:
-            params = {'api_key': self.target_key}
             payload = dict(info=target['info'])
             target_id = target['id']
-            res = self._sync(payload, target_id, params)
+            res = self._sync(payload, target_id, self.target_key)
             self.delete_target_cache(project.short_name)
             return res
 
-    def _sync(self, payload, target_id, params):
+    def _sync(self, payload, target_id, api_key):
         url = '{}/api/project/{}'.format(
                 self.target_url, target_id)
+        headers = {'Authorization': api_key}
         res = requests.put(
-            url, json=payload, params=params, auth=http_signer)
+            url, json=payload, headers=headers, auth=http_signer)
         return res
 
     def _build_payload(self, project, target=None):
@@ -141,10 +140,10 @@ class ProjectSyncer(Syncer):
 
     def get_user_email(self, user_id):
         url = '{}/api/user/{}'.format(self.target_url, user_id)
-        params = {'api_key': self.target_key}
+        headers = {'Authorization': self.target_key}
 
         try:
-            res = requests.get(url, params=params)
+            res = requests.get(url, headers=headers)
             user = json.loads(res.content)
             return user['email_addr']
         except:
