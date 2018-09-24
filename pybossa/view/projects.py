@@ -129,9 +129,9 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
     """Sanitize project and owner data."""
     if current_user.is_authenticated() and owner.id == current_user.id:
         if isinstance(project, Project):
-            project_sanitized = deepcopy(project.dictize())   # Project object
+            project_sanitized = project.dictize()   # Project object
         else:
-            project_sanitized = deepcopy(project)             # dict object
+            project_sanitized = project             # dict object
         owner_sanitized = cached_users.get_user_summary(owner.name)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
@@ -146,6 +146,7 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
             else:
                 project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized = deepcopy(project_sanitized)
 
     # remove project, owner creds so that they're unavailable under json response
     project_sanitized['info'].pop('passwd_hash', None)
@@ -2891,7 +2892,6 @@ def notify_redundancy_updates(tasks_not_updated):
 @admin_or_subadmin_required
 def assign_users(short_name):
     """Assign users to project based on projects data access levels."""
-
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -2908,10 +2908,9 @@ def assign_users(short_name):
 
     form = DataAccessForm(request.body)
 
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user,
-                                                                ps)
     if request.method == 'GET':
+        project_sanitized, owner_sanitized = sanitize_project_owner(
+            project, owner, current_user, ps)
         project_users = project.get_project_users()
         project_users = map(str, project_users)
 
