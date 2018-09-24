@@ -133,7 +133,6 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
         else:
             project_sanitized = project             # dict object
         owner_sanitized = cached_users.get_user_summary(owner.name)
-        project_sanitized = deepcopy(project_sanitized)
     else:   # anonymous or different owner
         if request.headers.get('Content-Type') == 'application/json':
             if isinstance(project, Project):
@@ -147,6 +146,7 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
             else:
                 project_sanitized = project             # dict object
         owner_sanitized = cached_users.public_get_user_summary(owner.name)
+    project_sanitized = deepcopy(project_sanitized)
 
     # remove project, owner creds so that they're unavailable under json response
     project_sanitized['info'].pop('passwd_hash', None)
