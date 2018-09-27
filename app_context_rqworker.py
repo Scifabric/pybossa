@@ -18,11 +18,36 @@
 
 #!/usr/bin/env python
 import sys
+import time
+from traceback import print_exc
+
 from rq import Queue, Connection, Worker
 
 from pybossa.core import create_app, sentinel
 
 app = create_app(run_as_server=False)
+
+def retry(max_count):
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            count = 0
+            while count < max_count:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    print_exc(e)
+                    count += 1
+                    time.sleep(5**count)
+
+        return decorated
+    return decorator
+
+
+@retry(3)
+def run_worker(queues):
+    w = Worker(queues)
+    w.work()
+
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rqworker
@@ -30,5 +55,4 @@ with app.app_context():
     with Connection(sentinel.master):
         qs = map(Queue, sys.argv[1:]) or [Queue()]
 
-        w = Worker(qs)
-        w.work()
+        run_worker(qs)
