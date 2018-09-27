@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 #!/usr/bin/env python
+from contextlib import contextmanager
 import sys
 import time
 from traceback import print_exc
@@ -43,10 +44,19 @@ def retry(max_count):
     return decorator
 
 
+@contextmanager
+def get_worker(queues):
+    worker = Worker(queues)
+    try:
+        yield worker
+    finally:
+        worker.register_death()
+
+
 @retry(3)
 def run_worker(queues):
-    w = Worker(queues)
-    w.work()
+    with get_worker(queues) as w:
+        w.work()
 
 
 # Provide queue names to listen to as arguments to this script,
