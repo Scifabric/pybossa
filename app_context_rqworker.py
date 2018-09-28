@@ -17,12 +17,47 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 #!/usr/bin/env python
+from contextlib import contextmanager
 import sys
+import time
+from traceback import print_exc
+
 from rq import Queue, Connection, Worker
 
 from pybossa.core import create_app, sentinel
 
 app = create_app(run_as_server=False)
+
+def retry(max_count):
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            count = 0
+            while count < max_count:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    print_exc(e)
+                    count += 1
+                    time.sleep(5**count)
+
+        return decorated
+    return decorator
+
+
+@contextmanager
+def get_worker(queues):
+    worker = Worker(queues)
+    try:
+        yield worker
+    finally:
+        worker.register_death()
+
+
+@retry(3)
+def run_worker(queues):
+    with get_worker(queues) as w:
+        w.work()
+
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rqworker
@@ -30,5 +65,4 @@ with app.app_context():
     with Connection(sentinel.master):
         qs = map(Queue, sys.argv[1:]) or [Queue()]
 
-        w = Worker(qs)
-        w.work()
+        run_worker(qs)
