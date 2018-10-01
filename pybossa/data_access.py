@@ -30,7 +30,8 @@ if app_settings.config.get('ENABLE_ACCESS_CONTROL'):
         valid_user_levels_for_project_task_level=app_settings.config['VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL'],
         valid_task_levels_for_user_level=app_settings.config['VALID_TASK_LEVELS_FOR_USER_LEVEL'],
         valid_project_levels_for_task_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'],
-        valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL']
+        valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'],
+        valid_access_levels_for_user_types = app_settings.config['VALID_ACCESS_LEVELS_FOR_USER_TYPES']
     )
 
 
@@ -211,3 +212,8 @@ def subadmins_are_privileged(user):
     for when data access is not enabled
     """
     return user.subadmin
+
+@when_data_access()
+def valid_user_type_based_data_access(user_type, access_levels):
+    valid_data_access = data_access_levels['valid_access_levels_for_user_types'].get(user_type)
+    return all(l in valid_data_access for l in access_levels), valid_data_access
