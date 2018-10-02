@@ -31,6 +31,7 @@ import os
 from datetime import datetime
 from pybossa.core import user_repo
 from rq.timeouts import JobTimeoutException
+import app_settings
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
@@ -381,12 +382,19 @@ def warm_up_stats():  # pragma: no cover
                                           n_task_runs_site,
                                           get_top5_projects_24_hours,
                                           get_top5_users_24_hours)
+    current_app.logger.info('warm_up_stats - n_auth_users')
     n_auth_users()
-    n_anon_users()
+    if not app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        n_anon_users()
+    current_app.logger.info('warm_up_stats - n_tasks_site')
     n_tasks_site()
+    current_app.logger.info('warm_up_stats - n_total_tasks_site')
     n_total_tasks_site()
+    current_app.logger.info('warm_up_stats - n_task_runs_site')
     n_task_runs_site()
+    current_app.logger.info('warm_up_stats - get_top5_projects_24_hours')
     get_top5_projects_24_hours()
+    current_app.logger.info('warm_up_stats - get_top5_users_24_hours')
     get_top5_users_24_hours()
 
     return True
@@ -424,12 +432,16 @@ def warm_cache():  # pragma: no cover
     # Cache top projects
     projects = cached_projects.get_top()
     for p in projects:
+        current_app.logger.info(u'warm_project - top projects. id {} short_name{}'
+            .format(p['id'], p['short_name']))
         warm_project(p['id'], p['short_name'])
 
     # Cache 3 pages
     to_cache = 3 * app.config['APPS_PER_PAGE']
     projects = rank(cached_projects.get_all_featured('featured'))[:to_cache]
     for p in projects:
+        current_app.logger.info(u'warm_project - ranked project. id {} short_name{}'
+            .format(p['id'], p['short_name']))
         warm_project(p['id'], p['short_name'], featured=True)
 
     # Categories
@@ -437,16 +449,21 @@ def warm_cache():  # pragma: no cover
     for c in categories:
         projects = rank(cached_projects.get_all(c['short_name']))[:to_cache]
         for p in projects:
+            current_app.logger.info(u'warm_project - categories->rank project. id {} short_name{}'
+                .format(p['id'], p['short_name']))
             warm_project(p['id'], p['short_name'])
     # Users
+    current_app.logger.info('warm_project - get_leaderboard')
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
-        # print "Getting stats for %s" % user['name']
-        print user_repo
         u = user_repo.get_by_name(user['name'])
+        current_app.logger.info(u'warm_project - user get_user_summary: name {}'.format(user['name']))
         cached_users.get_user_summary(user['name'])
+        current_app.logger.info(u'warm_project - user projects_contributed_cached: id {}'.format(u.id))
         cached_users.projects_contributed_cached(u.id)
+        current_app.logger.info(u'warm_project - user published_projects_cached: id {}'.format(u.id))
         cached_users.published_projects_cached(u.id)
+        current_app.logger.info(u'warm_project - user draft_projects_cached: id {}'.format(u.id))
         cached_users.draft_projects_cached(u.id)
 
     return True

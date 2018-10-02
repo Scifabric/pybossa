@@ -18,11 +18,15 @@
 
 #!/usr/bin/env python
 from contextlib import contextmanager
+import logging
 import sys
 import time
 from traceback import print_exc
 
 from rq import Queue, Connection, Worker
+from rq.worker import logger
+
+logger.setLevel(logging.DEBUG)
 
 from pybossa.core import create_app, sentinel
 

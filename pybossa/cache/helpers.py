@@ -36,21 +36,21 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     submitted by the user.
     """
     if user_id and not user_ip:
-        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
-                       (SELECT task_id FROM task_run WHERE
-                       project_id=:project_id AND user_id=:user_id
-                       AND task_id=task.id)
-                       AND project_id=:project_id AND state !='completed';''')
+        query = text('''SELECT COUNT(*) AS n_tasks FROM task
+                        WHERE project_id=:project_id AND state !='completed'
+                        AND id NOT IN
+                        (SELECT task_id FROM task_run WHERE
+                        project_id=:project_id AND user_id=:user_id);''')
         result = session.execute(query, dict(project_id=project_id,
                                              user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
-        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
-                       (SELECT task_id FROM task_run WHERE
-                       project_id=:project_id AND user_ip=:user_ip
-                       AND task_id=task.id)
-                       AND project_id=:project_id AND state !='completed';''')
+        query = text('''SELECT COUNT(*) AS n_tasks FROM task
+                        WHERE project_id=:project_id AND state !='completed'
+                        AND id NOT IN
+                        (SELECT task_id FROM task_run WHERE
+                        project_id=:project_id AND user_ip=:user_ip);''')
 
         result = session.execute(query, dict(project_id=project_id,
                                              user_ip=user_ip))
@@ -64,22 +64,24 @@ def oldest_available_task(project_id, user_id, user_ip=None):
     """Return the timestamp of the oldest task with the highest priority that a user can contribute to.
     """
     if user_id and not user_ip:
-        query = text('''SELECT created FROM task WHERE NOT EXISTS
-                       (SELECT task_id FROM task_run WHERE
-                       project_id=:project_id AND user_id=:user_id
-                       AND task_id=task.id)
-                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+        query = text('''SELECT created FROM task
+                        WHERE project_id=:project_id AND state !='completed'
+                        AND id NOT IN
+                        (SELECT task_id FROM task_run WHERE
+                        project_id=:project_id AND user_id=:user_id)
+                        ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
         return session.scalar(query, dict(project_id=project_id,
                                              user_id=user_id))
     else:
         # Anonymous access isn't supported, therefore the else statement will never execute. Maybe in the future?
         if not user_ip:
             user_ip = '127.0.0.1'
-        query = text('''SELECT created FROM task WHERE NOT EXISTS
-                       (SELECT task_id FROM task_run WHERE
-                       project_id=:project_id AND user_ip=:user_ip
-                       AND task_id=task.id)
-                       AND project_id=:project_id AND state !='completed' ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
+        query = text('''SELECT created FROM task
+                        WHERE project_id=:project_id AND state !='completed'
+                        AND id NOT IN
+                        (SELECT task_id FROM task_run WHERE
+                        project_id=:project_id AND user_ip=:user_ip)
+                        ORDER BY priority_0 DESC, created ASC LIMIT 1;''')
 
         return session.scalar(query, dict(project_id=project_id,
                                              user_ip=user_ip))
@@ -175,21 +177,22 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     scheduler = project.info.get('sched', 'default')
     if scheduler != Schedulers.user_pref:
         sql = '''
-               SELECT COUNT(id) AS n_tasks FROM task
-               WHERE NOT EXISTS
-               (SELECT task_id FROM task_run WHERE project_id=:project_id AND
-               user_id=:user_id AND task_id=task.id)
-               AND project_id=:project_id
-               AND state !='completed' {}; '''.format(allowed_task_levels_clause)
+               SELECT COUNT(*) AS n_tasks FROM task
+               WHERE project_id=:project_id AND state !='completed'
+               AND id NOT IN
+               (SELECT task_id FROM task_run WHERE
+               project_id=:project_id AND user_id=:user_id) {}
+               ; '''.format(allowed_task_levels_clause)
     else:
         user_pref_list = cached_users.get_user_preferences(user_id)
         sql = '''
-               SELECT COUNT(id) AS n_tasks FROM task
-               WHERE NOT EXISTS
-               (SELECT task_id FROM task_run WHERE project_id=:project_id AND
-               user_id=:user_id AND task_id=task.id)
-               AND project_id=:project_id AND (user_pref IS NULL OR {})
-               AND state !='completed' {} ; '''.format(user_pref_list, allowed_task_levels_clause)
+               SELECT COUNT(*) AS n_tasks FROM task
+               WHERE project_id=:project_id AND state !='completed'
+               AND id NOT IN
+               (SELECT task_id FROM task_run WHERE
+               project_id=:project_id AND user_id=:user_id)
+               AND (user_pref IS NULL OR {}) {} ;
+               '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
         result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id))
