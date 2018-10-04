@@ -22,6 +22,7 @@ import re
 import requests
 
 from pybossa.util import is_reserved_name, check_password_strength
+from pybossa.data_access import valid_user_type_based_data_access
 
 
 class Unique(object):
@@ -192,4 +193,19 @@ class TimeFieldsValidator(object):
         values = [form.data[fld] for fld in self.fields]
         values.append(field.data)
         if any(values) and not all(values):
+            raise ValidationError(self.message)
+
+class UserTypeValiadator(object):
+    def __init__(self, message=None):
+        if not message:
+            message = message = lazy_gettext(u'Invalid data access')
+        self.message = message
+
+    def __call__(self, form, field):
+        user_type = form.user_type.data
+        access_levels = field.data
+        valid, valid_data_access = valid_user_type_based_data_access(user_type, access_levels)
+        if not valid:
+            self.message = lazy_gettext(u'Invalid data access {}. Valid data access(s) for user type {} are {}'
+                .format(','.join(access_levels), user_type, ', '.join(valid_data_access)))
             raise ValidationError(self.message)

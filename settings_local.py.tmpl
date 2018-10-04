@@ -404,3 +404,10 @@ VALID_TASK_LEVELS_FOR_PROJECT_LEVEL = dict(
 
 ENABLE_ENCRYPTION = False
 ENCRYPTION_KEY = abcde
+
+# Valid data access levels depending on user types
+VALID_ACCESS_LEVELS_FOR_USER_TYPES = {
+    'Researcher': ["L1", "L2", "L3", "L4"],
+    'Analyst': ["L2", "L3", "L4"],
+    'Curator': ["L4"]
+}
