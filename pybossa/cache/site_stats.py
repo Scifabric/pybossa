@@ -22,6 +22,7 @@ from flask import current_app
 
 from pybossa.core import db
 from pybossa.cache import cache, memoize, ONE_DAY, ONE_WEEK
+import app_settings
 
 session = db.slave_session
 
@@ -39,6 +40,9 @@ def n_auth_users():
 @cache(timeout=ONE_DAY, key_prefix="site_n_anon_users")
 def n_anon_users():
     """Return number of anonymous users."""
+    if app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        return 0
+
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
                AS n_anon FROM task_run;''')
 
@@ -83,9 +87,7 @@ def n_results_site():
     """Return number of results in the server."""
     sql = text('''
                SELECT COUNT(id) AS n_results FROM result
-               WHERE info IS NOT NULL
-               AND cast(info AS TEXT) != 'null'
-               AND cast(info AS TEXT) != '';
+               WHERE info IS NOT NULL;
                ''')
     results = session.execute(sql)
     for row in results:
@@ -100,8 +102,7 @@ def get_top5_projects_24_hours():
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                COUNT(task_run.project_id) AS n_answers FROM project, task_run
                WHERE project.id=task_run.project_id
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
+               AND DATE(task_run.finish_time) > current_timestamp - interval '1 day'
                GROUP BY project.id
                ORDER BY n_answers DESC LIMIT 5;''')
 
@@ -122,8 +123,7 @@ def get_top5_users_24_hours():
                "user".restrict,
                COUNT(task_run.project_id) AS n_answers FROM "user", task_run
                WHERE "user".restrict=false AND "user".id=task_run.user_id
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
+               AND DATE(task_run.finish_time) > current_timestamp - interval '1 day'
                GROUP BY "user".id
                ORDER BY n_answers DESC LIMIT 5;''')
 

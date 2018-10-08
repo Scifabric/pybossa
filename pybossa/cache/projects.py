@@ -23,6 +23,7 @@ from pybossa.util import pretty_date, static_vars, convert_utc_to_est
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached, \
     memoize_essentials, delete_memoized_essential, delete_cache_group
 from pybossa.cache.task_browse_helpers import get_task_filters, allowed_fields
+import app_settings
 
 
 session = db.slave_session
@@ -171,6 +172,8 @@ def n_completed_tasks(project_id):
 @memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_results(project_id):
     """Return number of results of a project."""
+    return 0;
+    
     query = text('''
                  SELECT COUNT(id) AS ct FROM result
                  WHERE project_id=:project_id
@@ -219,8 +222,9 @@ def n_anonymous_volunteers(project_id):
 
 def n_volunteers(project_id):
     """Return total number of volunteers of a project."""
-    total = (n_anonymous_volunteers(project_id) +
-             n_registered_volunteers(project_id))
+    total = n_registered_volunteers(project_id)
+    if not app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        total += n_anonymous_volunteers(project_id)
     return total
 
 

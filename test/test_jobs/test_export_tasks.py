@@ -113,3 +113,20 @@ class TestExport(Test):
 
         attachment = message.attachments[0]
         assert attachment.filename == '{}_task_run_json.zip'.format(filename)
+
+        filters = dict(task_id=1,hide_completed=True,pcomplete_from='2018-01-01T00:00:00.0001',
+            pcomplete_to='2018-12-12T00:00:00.0001', priority_from=0.0, priority_to=0.5,
+            created_from='2018-01-01T00:00:00.0001', created_to='2018-12-12T00:00:00.0001')
+
+        filters = {'display_info_columns': [], 'pcomplete_from': 0.0, 'pcomplete_to': 0.45}
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'csv', filters)
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject
+
+        export_tasks(user.email_addr, project.short_name, 'task', False, 'json', filters)
+        args, kwargs = mail.send.call_args
+        message = args[0]
+        assert message.recipients[0] == user.email_addr, message.recipients
+        assert message.subject == 'Data exported for your project: test_project', message.subject

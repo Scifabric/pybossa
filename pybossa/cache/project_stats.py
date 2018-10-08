@@ -28,6 +28,7 @@ import operator
 import time
 import datetime
 import os
+import app_settings
 
 
 session = db.slave_session
@@ -94,6 +95,10 @@ def stats_users(project_id, period=None):
     results = session.execute(sql, params)
     for row in results:
         users['n_auth'] = row[0]
+
+    if app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        users['n_anon'] = 0
+        return users, anon_users, auth_users
 
     # Get all Anonymous Users
     sql = text('''SELECT task_run.user_ip AS user_ip,
@@ -209,6 +214,9 @@ def stats_dates(project_id, period='15 day'):
         return obj
 
     dates = _fill_empty_days(dates.keys(), dates)
+    if app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        dates_auth = dates # all users are auth users
+        return dates, dates_anon, dates_auth
 
     # Get all answers per date for auth
     sql = text('''
@@ -306,6 +314,10 @@ def stats_hours(project_id, period='2 week'):
     results = session.execute(sql, params)
     for row in results:
         max_hours = row.max
+
+    if app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        return hours, hours_anon, hours_auth, max_hours, max_hours_anon, \
+            max_hours_auth
 
     # Get hour stats for Anonymous users
     sql = text('''

@@ -140,3 +140,21 @@ class TestAccessLevels(Test):
             with assert_raises(Exception):
                 task = Task(project_id=project.id, info={'data_access': ['A']})
                 task_repo.save(task)
+
+    @with_context
+    def test_user_type_based_access_levels(self):
+        data = [dict(user_type='Researcher', access_levels=["L1"]),
+            dict(user_type='Curator', access_levels=["L3", "L4"]),
+            dict(user_type='Curator', access_levels=["L1"])]
+
+        patched_levels = self.patched_levels(
+            valid_access_levels_for_user_types=dict(Researcher=["L1"], Curator=["L3", "L4"])
+        )
+
+        with patch.dict(data_access.data_access_levels, patched_levels):
+            res = data_access.valid_user_type_based_data_access(data[0]['user_type'], data[0]['access_levels'])[0]
+            assert res
+            res = data_access.valid_user_type_based_data_access(data[1]['user_type'], data[1]['access_levels'])[0]
+            assert res
+            res = data_access.valid_user_type_based_data_access(data[2]['user_type'], data[2]['access_levels'])[0]
+            assert not res
