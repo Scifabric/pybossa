@@ -44,11 +44,11 @@ import simplejson
 import time
 from flask.ext.babel import lazy_gettext
 import re
-import boto
 import os
 from werkzeug.utils import secure_filename
 from flask import safe_join
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
+from pybossa.cloud_store_api.connection import create_connection
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
 
@@ -968,7 +968,7 @@ def can_have_super_user_access(user):
 
 
 def s3_get_file_contents(s3_bucket, s3_path,
-                         headers=None, encoding='utf-8'):
+                         headers=None, encoding='utf-8', conn=''):
     """Get the conents of a file from S3.
 
     :param s3_bucket: AWS S3 bucket
@@ -979,7 +979,7 @@ def s3_get_file_contents(s3_bucket, s3_path,
     :return: File contents as a string with the
         specified encoding
     """
-    conn = boto.connect_s3()
+    conn = create_connection(**current_app.config.get(conn, {}))
     bucket = conn.get_bucket(s3_bucket, validate=False)
     key = bucket.get_key(s3_path)
     return key.get_contents_as_string(
