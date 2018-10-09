@@ -744,8 +744,6 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
 
 
 def generate_invitation_email_for_admins_subadmins(user, access_type):
-    if not user or not access_type:
-        return None
 
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
@@ -762,6 +760,14 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
                                   admin_manual_url=admin_manual_url,
                                   server_url=server_url,
                                   is_qa=is_qa)
+    return msg
+
+def generate_notification_email_when_new_admin(user, admins_emails):
+    subject = 'A new admin has been created. \n'
+    body = 'The new admin added is {}.'.format(user.fullname)
+    msg = dict(subject=subject,
+                recipients=admins_emails,
+                body=body)
     return msg
 
 
