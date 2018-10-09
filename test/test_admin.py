@@ -495,17 +495,18 @@ class TestAdmin(web.Helper):
         assert err['status_code'] == 404, err
 
         # Add user.id=2 to admin group
-        msg = { 'body': 'The new admin added is Juan Jose.', 'recipients': [u'johndoe@example.com', u'juan@juan.com'], 'subject': 'A new admin has been created. \n'}
-        template = ""
-        template += u"\n    <h1>Admin access on PYBOSSA</h1>\n    "
-        template += "<p>Hello, Juan Jose!</p>\n    <p>You've been granted Admin privileges on PYBOSSA\n     "
-        template += "at <a href=None>None</a>.</p>\n    <p>Reference manual for admins and subadmins on PYBOSSA platform is available at <a href=None>None</a></p>\n" 
-        
-        msg2 = {'bcc': [u'johndoe@example.com'], 'html': template, 'recipients': [u'juan@juan.com'], 'subject': 'Account access update on PYBOSSA'}
-        
+     
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
-        expected = [call(send_mail_mock, msg), call(send_mail_mock, msg2 )]
-        mail_queue_mock.enqueue.assert_has_calls(expected)
+      
+        first_call = mail_queue_mock.enqueue.call_args_list[0]
+        args, kwargs = first_call 
+        assert args[1]['subject'] == 'A new admin has been created. \n'
+
+        second_call = mail_queue_mock.enqueue.call_args_list[1]
+        args, kwargs = second_call 
+        assert args[1]['subject'] == 'Account access update on PYBOSSA'
+
+
         assert "Current Users with Admin privileges" in res.data
         err_msg = "User.id=2 should be listed as an admin"
         assert "Juan Jose" in res.data, err_msg
