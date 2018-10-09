@@ -19,7 +19,7 @@
 import json
 from helper import web
 from default import db, with_context
-from mock import patch, call
+from mock import patch
 from collections import namedtuple
 from bs4 import BeautifulSoup
 from pybossa.model.user import User
