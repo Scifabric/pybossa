@@ -763,8 +763,8 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
     return msg
 
 def generate_notification_email_when_new_admin(user, admins_emails):
-    subject = 'A new admin has been created. \n'
-    body = 'The new admin added is {}.'.format(user.fullname)
+    subject = 'Admin permissions have been granted.'
+    body = 'Admin permissions have been granted to {}.'.format(user.fullname)
     msg = dict(subject=subject,
                 recipients=admins_emails,
                 body=body)

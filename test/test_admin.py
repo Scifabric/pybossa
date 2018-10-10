@@ -495,17 +495,15 @@ class TestAdmin(web.Helper):
         assert err['status_code'] == 404, err
 
         # Add user.id=2 to admin group
-     
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
       
         first_call = mail_queue_mock.enqueue.call_args_list[0]
         args, kwargs = first_call 
-        assert args[1]['subject'] == 'A new admin has been created. \n'
+        assert args[1]['subject'] == 'Admin permissions have been granted.'
 
         second_call = mail_queue_mock.enqueue.call_args_list[1]
         args, kwargs = second_call 
         assert args[1]['subject'] == 'Account access update on PYBOSSA'
-
 
         assert "Current Users with Admin privileges" in res.data
         err_msg = "User.id=2 should be listed as an admin"
