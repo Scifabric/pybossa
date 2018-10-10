@@ -40,7 +40,7 @@ from pybossa.model.announcement import Announcement
 from pybossa.util import admin_required, UnicodeWriter, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
-from pybossa.util import generate_notification_email_when_new_admin
+from pybossa.util import generate_notification_email_for_admins
 from pybossa.util import generate_invitation_email_for_admins_subadmins
 from pybossa.util import generate_manage_user_email
 from pybossa.util import can_update_user_info, can_have_super_user_access
@@ -266,7 +266,7 @@ def add_admin(user_id=None):
             user.admin = True
 
             admins_emails = [user.email_addr for user in user_repo.filter_by(admin=True)]
-            admins_msg = generate_notification_email_when_new_admin(user, admins_emails)
+            admins_msg = generate_notification_email_for_admins(user, admins_emails, "Admin")
             mail_queue.enqueue(send_mail, admins_msg)
             user_repo.update(user)
 

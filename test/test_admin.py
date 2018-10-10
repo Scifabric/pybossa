@@ -499,7 +499,7 @@ class TestAdmin(web.Helper):
       
         first_call = mail_queue_mock.enqueue.call_args_list[0]
         args, kwargs = first_call 
-        assert args[1]['subject'] == 'Admin permissions have been granted.'
+        assert args[1]['subject'] == 'Admin permissions have been granted on PYBOSSA'
 
         second_call = mail_queue_mock.enqueue.call_args_list[1]
         args, kwargs = second_call 
