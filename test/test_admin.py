@@ -476,9 +476,8 @@ class TestAdmin(web.Helper):
         # assert warning in res.data, err_msg
 
     @with_context
-    @patch('pybossa.view.admin.send_mail')
     @patch('pybossa.view.admin.mail_queue')
-    def test_13_admin_user_add_del(self, mail_queue_mock, send_mail_mock ):
+    def test_13_admin_user_add_del(self, mail_queue_mock):
         """Test ADMIN add/del user to admin group works"""
         self.register()
         self.signout()
