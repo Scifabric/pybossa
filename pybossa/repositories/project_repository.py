@@ -27,6 +27,8 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 from werkzeug.exceptions import BadRequest
+import pandas.io.sql as sqlio
+import pandas as pd
 
 
 class ProjectRepository(Repository):
@@ -167,151 +169,134 @@ class ProjectRepository(Repository):
         uploader.delete_file(json_taskruns_filename, container)
         uploader.delete_file(csv_taskruns_filename, container)
 
-    def get_projects_report(self):
-        sql = text(
+    def get_projects_report(self, base_url):
+        sql_completed_tasks = text(
             '''
-            WITH completed_tasks AS
-              (
-                 SELECT
-                    task.project_id,
-                    COUNT(DISTINCT task.id) AS value,
-                    MAX(task_run.finish_time) AS ft
-                 FROM task INNER JOIN task_run on task.id = task_run.task_id
-                 WHERE task.state = 'completed'
-                 GROUP BY task.project_id
-              ), all_tasks AS
-              (
-                 SELECT
-                    project_id,
-                    COUNT(task.id) AS value
-                 FROM task
-                 GROUP BY project_id
-              ), workers AS
-              (
-                 SELECT DISTINCT
-                    project_id,
-                    user_id,
-                    "user".fullname,
-                    "user".email_addr
-                 FROM task_run INNER JOIN "user" ON task_run.user_id = "user".id
-              ), n_workers AS
-              (
-                 SELECT
-                    project_id,
-                    COUNT(user_id) as value
-                 FROM workers
-                 GROUP BY project_id
-              ),
-              n_taskruns AS (
-                 SELECT project_id,
-                        COUNT(id) AS value
-                 FROM task_run
-                 GROUP BY project_id
-              ),
-              pending_taskruns AS (
-                 SELECT project_id,
-                        SUM(task.n_answers - COALESCE(t.actual_answers, 0)) AS value
-                 FROM task
-                 LEFT JOIN (
-                    SELECT task_id,
-                           COUNT(id) AS actual_answers
-                    FROM task_run
-                    GROUP BY task_id) AS t
-                 ON task.id = t.task_id
-                 WHERE task.state = 'ongoing'
-                 GROUP BY project_id
-              )
-              SELECT
-                 project.id,
-                 project.name,
-                 project.short_name,
-                 project.description,
-                 project.long_description,
-                 project.created,
-                 u.name as owner_name,
-                 u.email_addr as owner_email,
-                 category.name as category_name,
-                 project.allow_anonymous_contributors,
-                 (
-                    COALESCE(project.info::json ->> 'passwd_hash', 'null') != 'null'
-                 )
-                 as password_protected,
-                 project.webhook,
-                 COALESCE(project.info::json ->> 'sched', 'default') as scheduler,
-                 completed_tasks.ft,
-                 CASE
-                    WHEN
-                       all_tasks.value = 0
-                       OR completed_tasks.value IS NULL
-                    THEN
-                       0
-                    ELSE
-                       completed_tasks.value * 100 / all_tasks.value
-                 END
-                 as percent_complete,
-                 COALESCE(all_tasks.value, 0) AS n_tasks,
-                 COALESCE(all_tasks.value, 0) - COALESCE(completed_tasks.value, 0) AS pending_tasks,
-                 COALESCE(n_workers.value, 0) as n_workers,
-                 (
-                    SELECT
-                       n_answers
-                    FROM
-                       task
-                    WHERE
-                       project_id = project.id
-                    ORDER BY
-                       task.id DESC LIMIT 1
-                 )
-                 as n_answers,
-                 (
-                    SELECT
-                       string_agg(concat('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|')
-                    FROM
-                       workers
-                    WHERE
-                       project.id = workers.project_id
-                 )
-                 as workers,
-                 project.updated,
-                 COALESCE((
-                    SELECT created
-                    FROM task
-                    WHERE project_id = project.id
-                    AND state != 'completed'
-                    ORDER BY priority_0 DESC, created ASC
-                    LIMIT 1
-                 ), 'null') AS oldest_available,
-                 COALESCE((
-                    SELECT MAX(finish_time)
-                    FROM task_run
-                    WHERE project_id = project.id
-                 ), 'null') AS last_submission,
-                 COALESCE(n_taskruns.value, 0) AS n_taskruns,
-                 COALESCE(pending_taskruns.value, 0) AS pending_taskruns
-              FROM
-                 project
-                 INNER JOIN
-                    "user" as u
-                    on project.owner_id = u.id
-                 INNER JOIN
-                    category
-                    on project.category_id = category.id
-                 LEFT OUTER JOIN
-                    completed_tasks
-                    ON project.id = completed_tasks.project_id
-                 LEFT OUTER JOIN
-                    all_tasks
-                    ON project.id = all_tasks.project_id
-                 LEFT OUTER JOIN
-                    n_workers
-                    ON project.id = n_workers.project_id
-                 LEFT OUTER JOIN
-                    n_taskruns
-                    ON project.id = n_taskruns.project_id
-                 LEFT OUTER JOIN
-                    pending_taskruns
-                    ON project.id = pending_taskruns.project_id;
+            SELECT
+               task.project_id,
+               COUNT(DISTINCT task.id) AS completed_tasks,
+               MAX(task_run.finish_time) AS finish_time
+            FROM task INNER JOIN task_run on task.id = task_run.task_id
+            WHERE task.state = 'completed'
+            GROUP BY task.project_id
+            ORDER BY project_id;
             '''
-        )
+            )
 
-        return self.db.session.execute(sql)
+        sql_total_tasks = text(
+            '''
+             SELECT
+                project_id,
+                COUNT(task.id) AS n_tasks
+             FROM task
+             GROUP BY project_id
+            ORDER BY project_id;
+            '''
+            )
+
+        sql_n_workers = text(
+            '''
+            SELECT
+                project_id,
+                count(distinct user_id) as n_workers
+            FROM task_run INNER JOIN "user"
+            ON task_run.user_id = "user".id
+            GROUP BY project_id
+            ORDER BY project_id;
+            '''
+            )
+
+        sql_n_taskruns = text(
+            '''
+            SELECT project_id,
+                COUNT(id) AS n_taskruns
+            FROM task_run
+            GROUP BY project_id
+            ORDER BY project_id;
+            '''
+            )
+
+        sql_n_pending_taskruns = text(
+            '''
+            SELECT project_id,
+                SUM(task.n_answers - COALESCE(t.actual_answers, 0)) AS n_pending_taskruns
+            FROM task
+            LEFT JOIN (
+            SELECT task_id,
+                   COUNT(id) AS actual_answers
+            FROM task_run
+            GROUP BY task_id) AS t
+            ON task.id = t.task_id
+            WHERE task.state = 'ongoing'
+            GROUP BY project_id
+            ORDER BY project_id;
+            '''
+            )
+
+        sql_last_submission = text(
+            '''
+            SELECT project_id,
+            MAX(finish_time) as last_submission
+            FROM task_run
+            GROUP BY project_id
+            ORDER BY project_id;
+            '''
+            )
+
+        sql_project_details = text(
+            '''
+            SELECT project.id AS project_id,
+            project.name AS name,
+            project.short_name AS short_name,
+            project.long_description AS long_description,
+            project.created AS created,
+            category.name AS category_name,
+            "user".name AS owner_name,
+            "user".email_addr AS owner_email,
+            project.updated AS updated
+            FROM project JOIN category
+            ON project.category_id = category.id
+            JOIN "user" ON project.owner_id = "user".id
+            ORDER BY project_id;
+            '''
+            )
+
+        # query database to get different report data
+        completed_tasks = sqlio.read_sql_query(sql_completed_tasks, self.db.engine)
+        total_tasks = sqlio.read_sql_query(sql_total_tasks, self.db.engine)
+        n_workers = sqlio.read_sql_query(sql_n_workers, self.db.engine)
+        n_taskruns = sqlio.read_sql_query(sql_n_taskruns, self.db.engine)
+        n_pending_taskruns = sqlio.read_sql_query(sql_n_pending_taskruns, self.db.engine)
+        last_submission = sqlio.read_sql_query(sql_last_submission, self.db.engine)
+        project_details = sqlio.read_sql_query(sql_project_details, self.db.engine)
+
+        # join data frames
+        data = pd.DataFrame(project_details)
+        data_frames = [completed_tasks, total_tasks, n_workers, n_taskruns, n_pending_taskruns, last_submission]
+        for df in data_frames:
+            data = pd.merge(data, df, on='project_id', how='left')
+
+        # round up values
+        data['n_tasks'].fillna(0, inplace=True)
+        data['completed_tasks'].fillna(0, inplace=True)
+        data['n_tasks'] = data['n_tasks'].astype(int)
+        data['completed_tasks'] = data['completed_tasks'].astype(int)
+
+        # compute percentage tasks complete
+        data['percent_complete'] = 0
+        data.loc[(data['n_tasks'] > 0) & (data['completed_tasks'] > 0), 'percent_complete'] = data['completed_tasks'] * 100 / data['n_tasks']
+        data['percent_complete'] = data['percent_complete'].astype(int)
+
+        # compute pending tasks
+        data['n_pending_tasks'] = data['n_tasks'] - data['completed_tasks']
+
+        # url column for each project
+        data['url'] = ''
+        data['url'] = base_url + data['short_name'].astype('unicode')
+
+        # manage report columns; reorder
+        data = data[[
+            'project_id', 'name', 'url', 'short_name', 'long_description', 'created', 'owner_name',
+            'category_name', 'finish_time', 'percent_complete', 'n_tasks', 'n_pending_tasks',
+            'n_workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns']]
+        return data
