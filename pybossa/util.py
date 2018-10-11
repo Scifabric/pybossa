@@ -766,18 +766,14 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
 
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
-    admin_manual_label = current_app.config.get('ADMIN_MANUAL_LABEL')
-    admin_manual_url = current_app.config.get('ADMIN_MANUAL_URL')
     brand = current_app.config.get('BRAND')
-
+    
     subject = 'Admin permissions have been granted on {}'.format(brand)
     msg = dict(subject=subject,
                 recipients=admins_emails)
     msg['html'] = render_template('/account/email/adminnotification.html',
                                   username=user.fullname,
                                   access_type=access_type,
-                                  admin_manual_label=admin_manual_label,
-                                  admin_manual_url=admin_manual_url,
                                   server_url=server_url,
                                   is_qa=is_qa)            
     return msg
