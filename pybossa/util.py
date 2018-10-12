@@ -744,8 +744,6 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
 
 
 def generate_invitation_email_for_admins_subadmins(user, access_type):
-    if not user or not access_type:
-        return None
 
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
@@ -762,6 +760,22 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
                                   admin_manual_url=admin_manual_url,
                                   server_url=server_url,
                                   is_qa=is_qa)
+    return msg
+
+def generate_notification_email_for_admins(user, admins_emails, access_type):
+
+    is_qa = current_app.config.get('IS_QA')
+    server_url = current_app.config.get('SERVER_URL')
+    brand = current_app.config.get('BRAND')
+    
+    subject = 'Admin permissions have been granted on {}'.format(brand)
+    msg = dict(subject=subject,
+                recipients=admins_emails)
+    msg['html'] = render_template('/account/email/adminnotification.html',
+                                  username=user.fullname,
+                                  access_type=access_type,
+                                  server_url=server_url,
+                                  is_qa=is_qa)            
     return msg
 
 

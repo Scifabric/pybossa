@@ -476,7 +476,8 @@ class TestAdmin(web.Helper):
         # assert warning in res.data, err_msg
 
     @with_context
-    def test_13_admin_user_add_del(self):
+    @patch('pybossa.view.admin.mail_queue')
+    def test_13_admin_user_add_del(self, mail_queue_mock):
         """Test ADMIN add/del user to admin group works"""
         self.register()
         self.signout()
@@ -494,9 +495,19 @@ class TestAdmin(web.Helper):
 
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
+      
+        first_call = mail_queue_mock.enqueue.call_args_list[0]
+        args, kwargs = first_call 
+        assert args[1]['subject'] == 'Admin permissions have been granted on PYBOSSA'
+
+        second_call = mail_queue_mock.enqueue.call_args_list[1]
+        args, kwargs = second_call 
+        assert args[1]['subject'] == 'Account access update on PYBOSSA'
+
         assert "Current Users with Admin privileges" in res.data
         err_msg = "User.id=2 should be listed as an admin"
         assert "Juan Jose" in res.data, err_msg
+
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
         assert "Current Users with Admin privileges" not in res.data
