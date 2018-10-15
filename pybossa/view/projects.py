@@ -521,7 +521,7 @@ def task_presenter_editor(short_name):
             s3_bucket = current_app.config.get('S3_PRESENTER_BUCKET')
             s3_presenter = s3_presenters[tmpl_name]
             tmpl_string = s3_get_file_contents(s3_bucket, s3_presenter,
-                                               conn='S3_PRESENTERS')
+                                               conn='S3_PRES_CONN')
             tmpl = render_template_string(tmpl_string, project=project)
         else:
             tmpl_uri = 'projects/snippets/{}.html'.format(tmpl_name)
