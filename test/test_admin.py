@@ -498,11 +498,13 @@ class TestAdmin(web.Helper):
       
         first_call = mail_queue_mock.enqueue.call_args_list[0]
         args, kwargs = first_call 
-        assert args[1]['subject'] == 'Admin permissions have been granted on PYBOSSA'
+        assert args[1]['subject'] == 'Admin permissions have been granted on PYBOSSA', args[1]['subject']
+        assert args[1]['bcc'] == [u'johndoe@example.com'] , args[1]
 
         second_call = mail_queue_mock.enqueue.call_args_list[1]
         args, kwargs = second_call 
-        assert args[1]['subject'] == 'Account access update on PYBOSSA'
+        assert args[1]['subject'] == 'Account access update on PYBOSSA', args[1]['subject']
+        assert args[1]['recipients'] == [u'juan@juan.com'] , args[1]
 
         assert "Current Users with Admin privileges" in res.data
         err_msg = "User.id=2 should be listed as an admin"
