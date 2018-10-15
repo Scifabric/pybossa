@@ -172,14 +172,14 @@ class ProjectRepository(Repository):
     def get_projects_report(self, base_url):
         sql_completed_tasks = text(
             '''
-            SELECT
-               task.project_id,
-               COUNT(DISTINCT task.id) AS completed_tasks,
-               MAX(task_run.finish_time) AS finish_time
-            FROM task INNER JOIN task_run on task.id = task_run.task_id
-            WHERE task.state = 'completed'
-            GROUP BY task.project_id
-            ORDER BY project_id;
+                SELECT
+                   task.project_id,
+                   COUNT(DISTINCT task.id) AS completed_tasks,
+                   MAX(task_run.finish_time) AS finish_time
+                FROM task INNER JOIN task_run on task.id = task_run.task_id
+                WHERE task.state = 'completed'
+                GROUP BY task.project_id
+                ORDER BY project_id;
             '''
             )
 
@@ -209,7 +209,8 @@ class ProjectRepository(Repository):
         sql_n_taskruns = text(
             '''
             SELECT project_id,
-                COUNT(id) AS n_taskruns
+                COUNT(id) AS n_taskruns,
+                MAX(finish_time) as last_submission
             FROM task_run
             GROUP BY project_id
             ORDER BY project_id;
@@ -228,16 +229,6 @@ class ProjectRepository(Repository):
             GROUP BY task_id) AS t
             ON task.id = t.task_id
             WHERE task.state = 'ongoing'
-            GROUP BY project_id
-            ORDER BY project_id;
-            '''
-            )
-
-        sql_last_submission = text(
-            '''
-            SELECT project_id,
-            MAX(finish_time) as last_submission
-            FROM task_run
             GROUP BY project_id
             ORDER BY project_id;
             '''
@@ -267,12 +258,11 @@ class ProjectRepository(Repository):
         n_workers = sqlio.read_sql_query(sql_n_workers, self.db.engine)
         n_taskruns = sqlio.read_sql_query(sql_n_taskruns, self.db.engine)
         n_pending_taskruns = sqlio.read_sql_query(sql_n_pending_taskruns, self.db.engine)
-        last_submission = sqlio.read_sql_query(sql_last_submission, self.db.engine)
         project_details = sqlio.read_sql_query(sql_project_details, self.db.engine)
 
         # join data frames
         data = pd.DataFrame(project_details)
-        data_frames = [completed_tasks, total_tasks, n_workers, n_taskruns, n_pending_taskruns, last_submission]
+        data_frames = [completed_tasks, total_tasks, n_workers, n_taskruns, n_pending_taskruns]
         for df in data_frames:
             data = pd.merge(data, df, on='project_id', how='left')
 
@@ -280,7 +270,6 @@ class ProjectRepository(Repository):
         data['n_tasks'].fillna(0, inplace=True)
         data['completed_tasks'].fillna(0, inplace=True)
         data['n_tasks'] = data['n_tasks'].astype(int)
-        data['completed_tasks'] = data['completed_tasks'].astype(int)
 
         # compute percentage tasks complete
         data['percent_complete'] = 0
@@ -291,7 +280,6 @@ class ProjectRepository(Repository):
         data['n_pending_tasks'] = data['n_tasks'] - data['completed_tasks']
 
         # url column for each project
-        data['url'] = ''
         data['url'] = base_url + data['short_name'].astype('unicode')
 
         # manage report columns; reorder
