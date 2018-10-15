@@ -770,7 +770,8 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     
     subject = 'Admin permissions have been granted on {}'.format(brand)
     msg = dict(subject=subject,
-                bcc=admins_emails)
+                bcc=admins_emails,
+                to=user.email_addr)
     msg['html'] = render_template('/account/email/adminnotification.html',
                                   username=user.fullname,
                                   access_type=access_type,
