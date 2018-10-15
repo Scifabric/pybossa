@@ -263,11 +263,11 @@ def add_admin(user_id=None):
                 return redirect_content_type(url_for(".users"))
 
             ensure_authorized_to('update', user)
-            user.admin = True
 
-            admins_emails = [user.email_addr for user in user_repo.filter_by(admin=True)]
+            admins_emails = [u.email_addr for u in user_repo.filter_by(admin=True)]
             admins_msg = generate_notification_email_for_admins(user, admins_emails, "Admin")
             mail_queue.enqueue(send_mail, admins_msg)
+            user.admin = True
             user_repo.update(user)
 
             msg = generate_invitation_email_for_admins_subadmins(user, "Admin")
