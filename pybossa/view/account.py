@@ -381,6 +381,9 @@ def register():
         return handle_content_type(data)
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
+    del form.password
+    del form.confirm
+
     data = dict(template='account/register.html',
                 title=gettext("Register"), form=form)
     return handle_content_type(data)
