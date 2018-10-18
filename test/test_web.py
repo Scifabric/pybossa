@@ -619,7 +619,8 @@ class TestWeb(web.Helper):
         assert data.get('form'), err_msg
         for field in expected_fields:
             err_msg = "%s form field is missing"
-            assert field in data.get('form').keys(), err_msg
+            if (field != 'confirm' and field != 'password'):
+                assert field in data.get('form').keys(), err_msg
         err_msg = "There should be a CSRF field"
         assert data.get('form').get('csrf'), err_msg
         err_msg = "There should be no errors"
@@ -723,7 +724,7 @@ class TestWeb(web.Helper):
             csrf = self.get_csrf('/account/register')
 
             userdict = {'fullname': 'a', 'name': 'name',
-                        'email_addr': None, 'password': 'p'}
+                        'email_addr': None}
 
             res = self.app.post('/account/register', data=json.dumps(userdict),
                                 content_type='application/json',
@@ -735,8 +736,6 @@ class TestWeb(web.Helper):
             assert errors.get('email_addr'), err_msg
             err_msg = "There should be an error with fullname"
             assert errors.get('fullname'), err_msg
-            err_msg = "There should be an error with password"
-            assert errors.get('password'), err_msg
             err_msg = "There should NOT be an error with name"
             assert errors.get('name') is None, err_msg
 
@@ -873,8 +872,7 @@ class TestWeb(web.Helper):
         with patch.dict(self.flask_app.config, {'WTF_CSRF_ENABLED': True}):
             self.gig_account_creator_register_signin(with_csrf=True)
             csrf = self.get_csrf('/account/register')
-            data = dict(fullname="John Doe", name="johndoe", password='daniel',
-                        email_addr="new@mailcom", confirm='')
+            data = dict(fullname="John Doe", name="johndoe", email_addr="new@mailcom")
             res = self.app.post('/account/register', data=json.dumps(data),
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf},
@@ -882,8 +880,6 @@ class TestWeb(web.Helper):
             cookie = self.check_cookie(res, 'remember_token')
             err_msg = "User should not be logged in"
             assert cookie is False, err_msg
-            errors = json.loads(res.data)
-            assert errors.get('form').get('errors').get('password'), err_msg
 
 
     @with_context
@@ -1036,7 +1032,6 @@ class TestWeb(web.Helper):
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)
         assert data['status'] == 'error'
-        assert data['form']['errors']['password'][0] == 'Passwords must match'
 
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
