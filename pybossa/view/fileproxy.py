@@ -59,10 +59,12 @@ def check_allowed(user_id, task_id, project, file_url):
 @login_required
 def encrypted_file(store, bucket, project_id, path):
     """Proxy encrypted task file in a cloud storage"""
+    current_app.logger.info('Project id {} decrypt file. {}'.format(project_id, path))
     conn_args = current_app.config.get('S3_TASK_REQUEST', {})
     signature = request.args.get('task-signature')
     if not signature:
-        raise Forbidden('FORBIDDEN')
+        current_app.logger.exception('Project id {} no signature {}'.format(project_id, path))
+        raise Forbidden('No signature')
 
     project = get_project_data(project_id)
     timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
@@ -80,6 +82,7 @@ def encrypted_file(store, bucket, project_id, path):
         _key = _bucket.get_key(key, validate=False)
         content = _key.get_contents_as_string()
     except S3ResponseError as e:
+        current_app.logger.exception('Project id {} get task file {} {}'.format(project_id, path, e))
         if e.error_code == 'NoSuchKey':
             raise NotFound('File Does Not Exist')
         else:

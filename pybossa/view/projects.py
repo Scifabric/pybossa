@@ -2862,6 +2862,8 @@ def ext_config(short_name):
                 ext_conf[form_name] = form.data
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
+                current_app.logger.info('Project id {} external configurations set. {} {}'.format(
+                    project.id, form_name, form.data))
 
     template_forms = [(name, disp, cl(MultiDict(ext_conf.get(name, {}))))
                       for name, disp, cl in form_classes]
@@ -2904,6 +2906,8 @@ def assign_users(short_name):
 
     users = cached_users.get_users_for_data_access(access_levels)
     if not users:
+        current_app.logger.info(
+            'Project id {} no user matching data access level {} for this project.'.format(project.id, access_levels))
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
@@ -2934,8 +2938,10 @@ def assign_users(short_name):
               'N/A', users)
     if not project_users:
         msg = gettext('Users unassigned or no user assigned to project')
+        current_app.logger.info('Project id {} users unassigned from project.'.format(project.id))
     else:
         msg = gettext('Users assigned to project')
+        current_app.logger.info('Project id {} users assigned to project. users {}'.format(project.id, project_users))
 
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
