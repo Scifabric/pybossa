@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Module with data access helper functions."""
 from functools import wraps
+from werkzeug.exceptions import BadRequest
 
 import app_settings
 
@@ -128,7 +129,7 @@ def get_data_access_db_clause_for_task_assignment(user_id):
 
     user_levels = get_user_access_levels_by_id(user_id)
     if not valid_access_levels(user_levels):
-        raise Exception('Invalid user access level')
+        raise BadRequest('Invalid user access level')
 
     valid_task_levels_for_user_level = data_access_levels['valid_task_levels_for_user_level']
     levels = set([level for level in user_levels])
@@ -145,7 +146,7 @@ def get_data_access_db_clause_for_task_assignment(user_id):
 def ensure_data_access_assignment_to_form(obj, form):
     access_levels = obj.get('data_access', [])
     if not valid_access_levels(access_levels):
-        raise Exception('Invalid access levels')
+        raise BadRequest('Invalid access levels')
     form.data_access.data = access_levels
 
 
@@ -153,22 +154,22 @@ def ensure_data_access_assignment_to_form(obj, form):
 def ensure_data_access_assignment_from_form(obj, form):
     access_levels = form.data_access.data
     if not valid_access_levels(access_levels):
-        raise Exception('Invalid access levels')
+        raise BadRequest('Invalid access levels')
     obj['data_access'] = access_levels
 
 
 @when_data_access()
 def ensure_task_assignment_to_project(task, project):
     if not project.info.get('ext_config', {}).get('data_access', {}).get('tracking_id'):
-        raise Exception('Required Project > Settings > External Configurations are missing.')
+        raise BadRequest('Required Project > Settings > External Configurations are missing.')
     task_levels = get_valid_project_levels_for_task(task)
     if not task_levels:
-        raise Exception('Task is missing data access level.')
+        raise BadRequest('Task is missing data access level.')
     project_levels = get_valid_task_levels_for_project(project)
     if not project_levels:
-        raise Exception('Project data access levels are not configured.')
+        raise BadRequest('Project data access levels are not configured.')
     if not bool(task_levels & project_levels):
-        raise Exception('Invalid or insufficient permission.')
+        raise BadRequest('Task and project data access levels mismatch.')
 
 
 @when_data_access()
