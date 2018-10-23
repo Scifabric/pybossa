@@ -52,3 +52,14 @@ class Helper(web.Helper):
                   .update({"state": "ongoing"})
         db.session.commit()
         db.session.remove()
+
+    def get_headers_jwt(self, project):
+        """Return headesr JWT token."""
+        # Get JWT token
+        url = 'api/auth/project/%s/token' % project.short_name
+
+        res = self.app.get(url, headers={'Authorization': project.secret_key})
+
+        authorization_token = 'Bearer %s' % res.data
+
+        return {'Authorization': authorization_token}
