@@ -35,6 +35,7 @@ from pybossa.util import get_user_id_or_ip, validate_required_fields
 from pybossa.core import task_repo
 from pybossa.cache.projects import get_project_data
 import json
+import copy
 
 
 class TaskAPI(APIBase):
@@ -42,7 +43,8 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
-    reserved_keys = set(['id', 'created', 'state', 'fav_user_ids'])
+    reserved_keys = set(['id', 'created', 'state', 'fav_user_ids',
+        'calibration'])
 
     immutable_keys = set(['project_id'])
 
@@ -54,6 +56,8 @@ class TaskAPI(APIBase):
     def _update_attribute(self, new, old):
         if (new.state == 'completed') and (old.n_answers <= new.n_answers):
             new.state = 'ongoing'
+        if not new.gold_answers:
+            new.calibration = 0
 
     def _preprocess_post_data(self, data):
         project_id = data["project_id"]
@@ -72,6 +76,13 @@ class TaskAPI(APIBase):
         if invalid_fields:
             raise BadRequest('Missing or incorrect required fields: {}'
                             .format(','.join(invalid_fields)))
+        if data.get('gold_answers'):
+            try:
+                gold_answers = data['gold_answers']
+                if type(gold_answers) is dict:
+                    data['calibration'] = 1
+            except Exception as e:
+                raise BadRequest('Invalid gold_answers')
 
     def _verify_auth(self, item):
         if not current_user.is_authenticated():
@@ -87,3 +98,14 @@ class TaskAPI(APIBase):
         if current_user.admin or \
            current_user.id in get_project_data(project_id)['owners_ids']:
             sign_task(item)
+
+    def _select_attributes(self, data):
+        project_id = data['project_id']
+        if current_user.admin or \
+            (current_user.subadmin and
+                current_user.id in get_project_data(project_id)['owners_ids']):
+            pass
+        else:
+            data.pop('gold_answers', None)
+            data.pop('calibration', None)
+        return data

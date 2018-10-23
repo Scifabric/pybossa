@@ -57,6 +57,8 @@ class Task(db.Model, DomainObject):
     exported = Column(Boolean, default=False)
     #: Task.user_pref field in JSONB with user preference data for the task.
     user_pref = Column(JSONB)
+    #: Task.gold_answers field in JSONB to record golden answers for fields under Task.info.
+    gold_answers = Column(JSONB)
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 

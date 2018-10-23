@@ -21,6 +21,7 @@ from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from default import with_context
+from nose.tools import assert_equal
 
 class TestBulkTaskLocalCSVImport(object):
 
@@ -57,3 +58,13 @@ class TestBulkTaskLocalCSVImport(object):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar\n1,2\naaa,bbb\n'), create=True):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 2, number_of_tasks
+
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
+    def test_gold_answers_import(self, s3_get):
+        expected_t1_gold_ans = {u'ans': u'3', u'ans2': u'4'}
+        expected_t2_gold_ans = {u'ans': u'a1', u'ans2': u'a2'}
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar,ans_gold,ans2_gold\n1,2,3,4\naaa,bbb,a1,a2\n'), create=True):
+            [t1, t2] = self.importer.tasks()
+            assert_equal(t1['gold_answers'], expected_t1_gold_ans), t1
+            assert_equal(t2['gold_answers'], expected_t2_gold_ans), t2
