@@ -358,11 +358,12 @@ class Pagination(object):
 
     """Class to paginate domain objects."""
 
-    def __init__(self, page, per_page, total_count):
+    def __init__(self, page, per_page, total_count, curr_page_count=0):
         """Init method."""
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
+        self.curr_page_count = curr_page_count
 
     @property
     def pages(self):
@@ -767,7 +768,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     brand = current_app.config.get('BRAND')
-    
+
     subject = 'Admin permissions have been granted on {}'.format(brand)
     msg = dict(subject=subject,
                recipients=[user.email_addr],
@@ -776,7 +777,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
                                   username=user.fullname,
                                   access_type=access_type,
                                   server_url=server_url,
-                                  is_qa=is_qa)            
+                                  is_qa=is_qa)
     return msg
 
 
