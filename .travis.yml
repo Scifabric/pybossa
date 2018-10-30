@@ -1,4 +1,4 @@
-sudo: false
+sudo: required
 dist: trusty
 group: edge
 language: python
@@ -15,8 +15,10 @@ services:
 addons:
   postgresql: "9.5"
 before_install:
+- sudo mount -o remount,size=50% /var/ramfs # https://github.com/travis-ci/travis-ci/issues/9036
+- sudo rm -f /etc/boto.cfg # https://github.com/travis-ci/travis-ci/issues/7940
+- sudo apt-get update -y && sudo apt-get install -y libxml2-dev libxmlsec1-dev # python-saml deps
 - git submodule update --init --recursive
-  #- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..

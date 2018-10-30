@@ -86,3 +86,30 @@ FLASK_PROFILER = {
 	    "^/static/.*"
 	]
 }
+BSSO_SETTINGS = {
+    "strict": True,
+    "debug": True,
+    "sp": {
+        "entityId": "test",
+        "assertionConsumerService": {
+            "url": "http://localhost:5000/bloomberg/login",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        },
+        "singleLogoutService": {
+            "url": "http://localhost:5000/login/callback",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "NameIDFormat": "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
+    },
+    "idp": {
+        "entityId": "https://test.com",
+        "singleSignOnService": {
+            "url": "https://test.com",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "singleLogoutService": {
+            "url": "https://test.com",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        }
+    }
+}
