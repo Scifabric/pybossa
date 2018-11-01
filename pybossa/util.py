@@ -358,12 +358,11 @@ class Pagination(object):
 
     """Class to paginate domain objects."""
 
-    def __init__(self, page, per_page, total_count, curr_page_count=0):
+    def __init__(self, page, per_page, total_count):
         """Init method."""
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
-        self.curr_page_count = curr_page_count
 
     @property
     def pages(self):
@@ -373,7 +372,8 @@ class Pagination(object):
     @property
     def has_prev(self):
         """Return if it has a previous page."""
-        return self.page > 1
+        return self.page > 1 and self.page <= self.pages
+
 
     @property
     def has_next(self):
@@ -402,6 +402,16 @@ class Pagination(object):
                     next=self.has_next,
                     prev=self.has_prev)
 
+    @property
+    def curr_page_count(self):
+        """Returns count on curr page"""
+        if self.has_next:
+            return self.per_page
+        elif self.has_prev:
+            curr_count = self.total_count % self.per_page
+            return self.per_page if not curr_count else curr_count
+        else:
+            return 0
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     """Unicode CSV reader."""

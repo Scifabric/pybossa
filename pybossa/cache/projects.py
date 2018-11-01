@@ -60,15 +60,9 @@ def get_top(n=4):
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
     tasks = []
-    n_tasks_curr_page = 0
-
-    n_total_tasks = task_count(project_id, args)
-    if not n_total_tasks:
-        return n_total_tasks, n_tasks_curr_page, tasks
-
-    n_tasks_curr_page = task_count_curr_page(project_id, args)
-    if not n_tasks_curr_page:
-        return n_total_tasks, n_tasks_curr_page, tasks
+    total_count = task_count(project_id, args)
+    if not total_count:
+        return total_count, tasks
 
     filters, filter_params = get_task_filters(args)
     sql = text('''
@@ -105,40 +99,8 @@ def browse_tasks(project_id, args):
                     finish_time=finish_time, created=created)
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
-    return n_total_tasks, n_tasks_curr_page, tasks
+    return total_count, tasks
 
-
-def task_count_curr_page(project_id, args):
-    """Return the count of tasks in a project matching the given filters."""
-    filters, filter_params = get_task_filters(args)
-    order_by = args.get('order_by') or 'id ASC'
-
-    sql = text('''
-                SELECT COUNT(*) AS total_count
-                FROM task WHERE task.id IN
-                (
-                SELECT task.id FROM task LEFT OUTER JOIN
-                    (
-                    SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
-                    MAX(finish_time) as ft FROM task_run
-                    WHERE project_id=:project_id GROUP BY task_id
-                    ) AS log_counts
-                    ON task.id=log_counts.task_id
-                    WHERE task.project_id=:project_id {}
-                    ORDER BY {}
-                    LIMIT :limit OFFSET :offset
-                )
-               '''.format(filters, order_by))
-    limit = args.get('records_per_page') or 10
-    offset = args.get('offset') or 0
-
-    results = session.execute(sql, dict(project_id=project_id,
-                                            limit=limit,
-                                            offset=offset,
-                                        **filter_params))
-
-    row = results.first()
-    return row.total_count if row else 0
 
 def task_count(project_id, args):
     """Return the count of tasks in a project matching the given filters."""

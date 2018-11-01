@@ -503,8 +503,18 @@ class TestPybossaUtil(Test):
         assert p.pages == 2, err_msg
         p.total_count = 7
         assert p.pages == 2, err_msg
-        p.total_count = 10
+        p.page = 1
+        assert p.curr_page_count == 5, "rows on curr page to be 5"
+        p.page = 2
+        assert p.curr_page_count == 2, "rows on curr page to be 2"
+        p.page = 1000
+        assert p.curr_page_count == 0, "rows on curr page to be 0"
 
+        p.total_count = 10
+        p.page = 2
+        assert p.curr_page_count == 5, "rows on curr page to be 5"
+
+        p.page = 1
         err_msg = "It should return False"
         assert p.has_prev is False, err_msg
         err_msg = "It should return True"
