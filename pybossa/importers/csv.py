@@ -27,6 +27,7 @@ from werkzeug.datastructures import FileStorage
 import io, time, json
 from flask import current_app as app
 from pybossa.util import get_import_csv_file
+import re
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -87,8 +88,15 @@ class BulkTaskCSVImport(BulkTaskImport):
                                 task_data[headers[idx]] = {}
                         else:
                             task_data[headers[idx]] = cell
+                    elif headers[idx].endswith('_gold'):
+                        if 'gold_answers' not in task_data:
+                            task_data['gold_answers'] = {}
+                        field_name = re.sub('_gold$', '', headers[idx])
+                        task_data['gold_answers'][field_name] = cell
                     else:
                         task_data["info"][headers[idx]] = cell
+                if 'gold_answers' in task_data:
+                    task_data['calibration'] = 1
                 yield task_data
 
     def _check_no_duplicated_headers(self, headers):

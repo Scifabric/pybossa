@@ -29,6 +29,8 @@ from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.model.counter import Counter
+from helper.gig_helper import make_subadmin, make_admin
+
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -1060,3 +1062,101 @@ class TestTaskAPI(TestAPI):
         assert len(items) == 9
         items = db.session.query(Counter).filter_by(task_id=created_task.get('id')).all()
         assert len(items) == 0
+
+    @with_context
+    def test_create_update_gold_answers(self):
+        [admin, subadminowner, subadmin, reguser] = UserFactory.create_batch(4)
+        make_admin(admin)
+        make_subadmin(subadminowner)
+        make_subadmin(subadmin)
+
+        project = ProjectFactory.create(owner=subadminowner)
+        admin_headers = dict(Authorization=admin.api_key)
+        task_info = dict(field_1='one', field_2='two')
+        gold_answers = dict(field_3='some ans', field_4='some ans 2')
+
+        # POST gold_answers successful
+        data = dict(project_id=project.id, info=task_info, gold_answers=gold_answers,
+            n_answers=2)
+        res = self.app.post('/api/task', data=json.dumps(data), headers=admin_headers)
+        assert res.data, res
+        jdata = json.loads(res.data)
+        assert_equal(jdata['info'], task_info), jdata
+        assert_equal(jdata['gold_answers'], gold_answers), jdata
+        assert jdata['calibration'] == 1, 'calibration should have been set with updating gold_answers'
+
+        # GET task by subadmin not owner user does not get gold answers,
+        # whereas admin/subadmin gets gold answers
+        subadminowner_headers = dict(Authorization=subadminowner.api_key)
+        subadmin_headers = dict(Authorization=subadmin.api_key)
+        reguser_headers = dict(Authorization=reguser.api_key)
+        res = self.app.get('/api/task/1', headers=admin_headers)
+        jdata = json.loads(res.data)
+        assert_equal(jdata['gold_answers'], gold_answers), jdata
+        res = self.app.get('/api/task/1', headers=subadminowner_headers)
+        jdata = json.loads(res.data)
+        assert_equal(jdata['gold_answers'], gold_answers), jdata
+        res = self.app.get('/api/task/1', headers=subadmin_headers)
+        jdata = json.loads(res.data)
+        assert 'gold_answers' not in jdata, jdata
+        assert 'calibration' not in jdata, jdata
+        # regular users should not receive gold_answers and calibration info
+        res = self.app.get('/api/task/1', headers=reguser_headers)
+        jdata = json.loads(res.data)
+        assert 'gold_answers' not in jdata, jdata
+        assert 'calibration' not in jdata, jdata
+
+        # PUT request updates gold answers
+        updated_gold_answers = dict(field_3='some ans - updated', field_5='one more ans')
+        data = dict(project_id=project.id, gold_answers=updated_gold_answers)
+        res = self.app.put('/api/task/1', data=json.dumps(data), headers=subadminowner_headers)
+        jdata = json.loads(res.data)
+        gold_answers.update(updated_gold_answers)
+        assert_equal(jdata['gold_answers'], updated_gold_answers), jdata
+
+        # Beyond redundancy, submitting task runs to task with gold_answers
+        # is permitted. such task run submissions should not mark task as complete
+        task = task_repo.get_task(jdata['id'])
+        n_taskruns = 8
+        taskruns = TaskRunFactory.create_batch(n_taskruns, project=project, task=task)
+        assert task.state == 'ongoing', 'Gold task state should be ongoing beyond task submissions > task redundancy'
+        assert len(taskruns) == n_taskruns, 'For gold task, number of task runs submissions can be beyond task redundancy'
+        assert task.exported == False, 'Gold tasks to be marked exported as False upon task run submission'
+
+        task.exported = True
+        taskruns = TaskRunFactory.create_batch(1, project=project, task=task)
+        assert task.exported == False, 'Gold tasks to be marked exported as False upon task run submission'
+
+        # reset gold answer
+        data = dict(project_id=project.id, gold_answers={})
+        res = self.app.put('/api/task/1', data=json.dumps(data), headers=subadminowner_headers)
+        jdata = json.loads(res.data)
+        assert_equal(jdata['gold_answers'], {}), jdata
+        assert jdata['calibration'] == 0, 'Calibration should be reset upon gold_answers reset'
+
+    @with_context
+    @patch('pybossa.api.task.task_repo.find_duplicate')
+    @patch('pybossa.api.task.validate_required_fields')
+    def test_task_post_api_exceptions(self, inv_field, dup):
+        """Get a list of tasks using a list of project_ids."""
+        [admin, subadminowner] = UserFactory.create_batch(2)
+        make_admin(admin)
+        make_subadmin(subadminowner)
+
+        project = ProjectFactory.create(owner=subadminowner)
+        admin_headers = dict(Authorization=admin.api_key)
+        task_info = dict(field_1='one', field_2='two')
+        gold_answers = dict(field_3='some ans')
+        data = dict(project_id=project.id, info=task_info, gold_answers=gold_answers,
+            n_answers=2)
+
+        dup.return_value = True
+        res = self.app.post('/api/task', data=json.dumps(data), headers=admin_headers)
+        res_data = json.loads(res.data)
+        assert json.loads(res_data['exception_msg'])['reason'] == 'DUPLICATE_TASK', res
+
+        dup.return_value = False
+        inv_field = True
+        res = self.app.post('/api/task', data=json.dumps(data), headers=admin_headers)
+        res_data = json.loads(res.data)
+        assert res_data['exception_msg'] == 'Missing or incorrect required fields: ', res

@@ -313,6 +313,7 @@ class TaskRepository(Repository):
                    FROM task, task_run
                    WHERE task_run.task_id=task.id
                    AND task.project_id=:project_id
+                   AND task.calibration!=1
                    GROUP BY task.id
                    having COUNT(task_run.id) >=:n_answers);
                    ''')

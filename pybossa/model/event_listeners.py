@@ -34,7 +34,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.model.counter import Counter
-from pybossa.core import result_repo, db
+from pybossa.core import result_repo, db, task_repo
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
@@ -249,6 +249,17 @@ def on_taskrun_submit(mapper, conn, target):
     project_public['action_updated'] = 'TaskCompleted'
 
     add_user_contributed_to_feed(conn, target.user_id, project_public)
+
+    # golden tasks never complete; bypass update to task.state
+    # mark task as exported false for each task run submissions
+    task = task_repo.get_task(id=target.task_id)
+    if task and task.calibration:
+        if task.exported:
+            sql_query = ("""UPDATE task SET exported=False \
+                           WHERE id=%s;""") % (task.id)
+            conn.execute(sql_query)
+        return
+
     if is_task_completed(conn, target.task_id, target.project_id) and _published:
         update_task_state(conn, target.task_id)
         update_feed(project_public)
