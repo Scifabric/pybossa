@@ -59,9 +59,14 @@ def get_top(n=4):
 @static_vars(allowed_fields=allowed_fields)
 def browse_tasks(project_id, args):
     """Cache browse tasks view for a project."""
+    tasks = []
+    total_count = task_count(project_id, args)
+    if not total_count:
+        return total_count, tasks
+
     filters, filter_params = get_task_filters(args)
     sql = text('''
-               SELECT COUNT(*) OVER() as total_count, task.id,
+               SELECT task.id,
                coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
                priority_0, task.created
                FROM task LEFT OUTER JOIN
@@ -82,8 +87,6 @@ def browse_tasks(project_id, args):
                                         offset=offset,
                                         **filter_params))
 
-    tasks = []
-    total_count = 0
     for row in results:
         # TODO: use Jinja filters to format date
         def format_date(date):
@@ -94,27 +97,28 @@ def browse_tasks(project_id, args):
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0,
                     finish_time=finish_time, created=created)
-        if total_count == 0:
-            total_count = row.total_count
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return total_count, tasks
 
 
-def task_count(project_id, filters):
+def task_count(project_id, args):
     """Return the count of tasks in a project matching the given filters."""
-    conditions, filter_params = get_task_filters(filters)
+    filters, filter_params = get_task_filters(args)
     sql = text('''
-               SELECT COUNT(*) OVER() as total_count, task.id,
-               coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
-               priority_0, task.created
-               FROM task LEFT OUTER JOIN
-               (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
-               MAX(finish_time) as ft FROM task_run
-               WHERE project_id=:project_id GROUP BY task_id) AS log_counts
-               ON task.id=log_counts.task_id
-               WHERE task.project_id=:project_id {} LIMIT 1'''
-               .format(conditions))
+                SELECT COUNT(*) AS total_count
+                FROM task WHERE task.id IN
+                (
+                SELECT task.id FROM task LEFT OUTER JOIN
+                    (
+                    SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
+                    MAX(finish_time) as ft FROM task_run
+                    WHERE project_id=:project_id GROUP BY task_id
+                    ) AS log_counts
+                    ON task.id=log_counts.task_id
+                    WHERE task.project_id=:project_id {}
+                )
+               '''.format(filters))
 
     results = session.execute(sql, dict(project_id=project_id,
                                         **filter_params))
@@ -173,7 +177,7 @@ def n_completed_tasks(project_id):
 def n_results(project_id):
     """Return number of results of a project."""
     return 0;
-    
+
     query = text('''
                  SELECT COUNT(id) AS ct FROM result
                  WHERE project_id=:project_id

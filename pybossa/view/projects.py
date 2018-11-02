@@ -98,7 +98,7 @@ blueprint = Blueprint('project', __name__)
 blueprint_projectid = Blueprint('projectid', __name__)
 
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
-MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 1000
+MAX_NUM_SYNCHRONOUS_TASKS_DELETE = 100
 DEFAULT_TASK_TIMEOUT = ContributionsGuard.STAMP_TTL
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
@@ -1261,12 +1261,11 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         args["records_per_page"] = per_page
         args["offset"] = offset
         start_time = time.time()
-        (count, page_tasks) = cached_projects.browse_tasks(project.get('id'), args)
+        total_count, page_tasks = cached_projects.browse_tasks(project.get('id'), args)
         current_app.logger.debug("Browse Tasks data loading took %s seconds"
                                  % (time.time()-start_time))
         first_task_id = cached_projects.first_task_id(project.get('id'))
-
-        pagination = Pagination(page, per_page, count)
+        pagination = Pagination(page, per_page, total_count)
 
         project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                     owner,

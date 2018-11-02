@@ -372,7 +372,8 @@ class Pagination(object):
     @property
     def has_prev(self):
         """Return if it has a previous page."""
-        return self.page > 1
+        return self.page > 1 and self.page <= self.pages
+
 
     @property
     def has_next(self):
@@ -401,6 +402,16 @@ class Pagination(object):
                     next=self.has_next,
                     prev=self.has_prev)
 
+    @property
+    def curr_page_count(self):
+        """Returns count on curr page"""
+        if self.has_next:
+            return self.per_page
+        elif self.has_prev:
+            curr_count = self.total_count % self.per_page
+            return self.per_page if not curr_count else curr_count
+        else:
+            return 0
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     """Unicode CSV reader."""
@@ -767,7 +778,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     brand = current_app.config.get('BRAND')
-    
+
     subject = 'Admin permissions have been granted on {}'.format(brand)
     msg = dict(subject=subject,
                recipients=[user.email_addr],
@@ -776,7 +787,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
                                   username=user.fullname,
                                   access_type=access_type,
                                   server_url=server_url,
-                                  is_qa=is_qa)            
+                                  is_qa=is_qa)
     return msg
 
 
