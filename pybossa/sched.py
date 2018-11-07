@@ -59,9 +59,12 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         Schedulers.user_pref: get_user_pref_task,
         'depth_first_all': get_depth_first_all_task}
     scheduler = sched_map.get(sched, sched_map['default'])
+    present_gold_task = not random.randint(0, 10)
+
     return scheduler(project_id, user_id, user_ip, external_uid,
                      offset=offset, limit=limit, orderby=orderby, desc=desc,
-                     rand_within_priority=rand_within_priority)
+                     rand_within_priority=rand_within_priority,
+                     present_gold_task=present_gold_task)
 
 
 def can_post(project_id, task_id, user_id):
@@ -203,7 +206,8 @@ def locked_scheduler(query_factory):
     def template_get_locked_task(project_id, user_id=None, user_ip=None,
                                  external_uid=None, limit=1, offset=0,
                                  orderby='priority_0', desc=True,
-                                 rand_within_priority=False):
+                                 rand_within_priority=False,
+                                 present_gold_task=False):
         if offset > 2:
             raise BadRequest()
         if offset == 1:
@@ -219,21 +223,24 @@ def locked_scheduler(query_factory):
             .format(project_id, user_count))
 
         sql = query_factory(project_id, user_id, user_ip, external_uid,
-                            limit, offset, orderby, desc, rand_within_priority)
+                            limit, offset, orderby, desc, rand_within_priority,
+                            present_gold_task)
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
                                          limit=user_count + 5))
 
         for task_id, taskcount, n_answers, timeout in rows:
             timeout = timeout or TIMEOUT
-            remaining = n_answers - taskcount
+            remaining = float('inf') if present_gold_task else n_answers - taskcount
             if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
                 save_task_id_project_id(task_id, project_id, 2 * timeout)
                 register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
+
+                task_type = 'gold task' if present_gold_task and rows.rowcount else 'task'
                 current_app.logger.info(
-                    'Project {} - user {} obtained task {}, timeout: {}'
-                    .format(project_id, user_id, task_id, timeout))
+                    'Project {} - user {} obtained {} {}, timeout: {}'
+                    .format(project_id, user_id, task_type, task_id, timeout))
                 return [session.query(Task).get(task_id)]
 
         return []
@@ -244,7 +251,8 @@ def locked_scheduler(query_factory):
 @locked_scheduler
 def get_locked_task(project_id, user_id=None, user_ip=None,
                     external_uid=None, limit=1, offset=0,
-                    orderby='priority_0', desc=True, rand_within_priority=False):
+                    orderby='priority_0', desc=True, rand_within_priority=False,
+                    present_gold_task=False):
     """ Select a new task to be returned to the contributor.
 
     For each incomplete task, check if the number of users working on the task
@@ -252,8 +260,10 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     a lock on the task and return the task to the user. If offset is nonzero,
     skip that amount of available tasks before returning to the user.
     """
-
+    having_clause = 'HAVING COUNT(task_run.task_id) < n_answers' if  not present_gold_task else ''
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
+    order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
+
     sql = text('''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -267,9 +277,12 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            AND task.project_id=:project_id
            AND task.state !='completed'
            {}
-           group by task.id HAVING COUNT(task_run.task_id) < n_answers
-           ORDER BY priority_0 DESC, {} LIMIT :limit;
-           '''.format(allowed_task_levels_clause, 'random()' if rand_within_priority else 'id ASC'))
+           group by task.id
+           {}
+           ORDER BY task.calibration {}, priority_0 DESC, {} LIMIT :limit;
+           '''.format(allowed_task_levels_clause,
+                having_clause, order_by_calib,
+                'random()' if rand_within_priority else 'id ASC'))
 
     return sql
 
@@ -277,7 +290,8 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
 @locked_scheduler
 def get_user_pref_task(project_id, user_id=None, user_ip=None,
                        external_uid=None, limit=1, offset=0,
-                       orderby='priority_0', desc=True, rand_within_priority=False):
+                       orderby='priority_0', desc=True, rand_within_priority=False,
+                       present_gold_task=False):
     """ Select a new task based on user preference set under user profile.
 
     For each incomplete task, check if the number of users working on the task
@@ -290,6 +304,8 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
+    order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
+
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
               (SELECT info->'timeout'
@@ -304,8 +320,13 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
            AND ({})
            AND task.state !='completed'
            {}
-           group by task.id ORDER BY priority_0 DESC, {}
-           LIMIT :limit; '''.format(user_pref_list, allowed_task_levels_clause, secondary_order)
+           group by task.id
+           ORDER BY task.calibration {}, priority_0 DESC,
+           {}
+           LIMIT :limit;
+           '''.format(user_pref_list,
+           allowed_task_levels_clause,
+           order_by_calib, secondary_order)
     return text(sql)
 
 

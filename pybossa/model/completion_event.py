@@ -1,8 +1,12 @@
-from pybossa.core import db, project_repo
-
+from pybossa.core import db, project_repo, task_repo
 
 def mark_if_complete(task_id, project_id):
     project = project_repo.get(project_id)
+    task = task_repo.get_task(task_id)
+    # gold tasks never complete
+    if task and task.calibration == 1:
+        return
+
     if project.published and is_task_completed(task_id):
         update_task_state(task_id)
 
