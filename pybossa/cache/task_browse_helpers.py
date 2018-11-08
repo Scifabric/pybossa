@@ -1,9 +1,12 @@
-from werkzeug.exceptions import BadRequest
 from collections import defaultdict
+import json
+import re
+from sqlalchemy.sql import text
+from werkzeug.exceptions import BadRequest
+from pybossa.cache import memoize, ONE_WEEK
+from pybossa.core import db
 from pybossa.util import (convert_est_to_utc,
     get_user_pref_db_clause)
-import re
-import json
 import app_settings
 
 def get_task_filters(args):
@@ -129,20 +132,15 @@ def is_valid_searchable_column(column_name):
     return is_valid
 
 
+@memoize(ONE_WEEK)
 def get_searchable_columns(project_id):
-    from pybossa.core import task_repo
-    tasks = task_repo.filter_tasks_by(project_id=project_id,
-                                      limit=1,
-                                      desc=True)
-    if not tasks:
-        return []
-
-    info = tasks[0].info
-    if not isinstance(info, dict):
-        return []
-
-    columns = [key for key in info if is_valid_searchable_column(key)]
-    return sorted(columns)
+    sql = text('''SELECT distinct jsonb_object_keys(info) AS col
+                  FROM task
+                  WHERE jsonb_typeof(info) = 'object'
+                  AND project_id=:project_id;''')
+    results = db.slave_session.execute(sql, dict(project_id=project_id))
+    return sorted(
+        row.col for row in results if is_valid_searchable_column(row.col))
 
 
 allowed_fields = {
