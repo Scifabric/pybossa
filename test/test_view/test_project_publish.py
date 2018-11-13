@@ -96,6 +96,12 @@ class TestProjectPublicationView(web.Helper):
         mock_webhook_repo.assert_called_with(self.project)
         mock_result_repo.assert_called_with(self.project)
 
+        # Try again
+        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+                             follow_redirects=True)
+        assert 'Project already published' in resp.data
+
+
     @with_context
     @patch('pybossa.view.projects.auditlogger')
     def test_it_logs_the_event_in_auditlog(self, fake_logger):
