@@ -50,6 +50,7 @@ class GlobalStatsAPI(APIBase):
         n_projects = cached_projects.n_published() + cached_projects.n_count('draft')
         data = dict(n_projects=n_projects,
                     n_users=n_users,
+                    n_tasks=stats.n_total_tasks_site(),
                     n_task_runs=stats.n_task_runs_site(),
                     n_pending_tasks=n_pending_tasks,
                     n_results=stats.n_results_site(),
