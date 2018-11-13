@@ -309,7 +309,6 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
-            raise
             content_type = request.headers.get('Content-Type')
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
