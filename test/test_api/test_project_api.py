@@ -1092,3 +1092,19 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s?api_key=%s' % (project.id, owner.api_key)
         res = self.app.delete(url)
         clean_project_mock.assert_called_with(project.id)
+
+    @with_context
+    def test_project_filter_by_category_works(self):
+        """Test API project filter by category works."""
+        category = CategoryFactory.create()
+        projects_published = ProjectFactory.create_batch(2,
+                                                         published=True,
+                                                         category=category)
+        projects_not_published = ProjectFactory.create_batch(2,
+                                                             published=False,
+                                                             category=category)
+        res = self.app.get('/api/project?category_id=%s' % category.id)
+        data = json.loads(res.data)
+        assert len(data) == 2, data
+        assert data[0]['id'] == projects_published[0].id
+        assert data[1]['id'] == projects_published[1].id
