@@ -155,9 +155,8 @@ class APIBase(MethodView):
                 ensure_authorized_to('read', item)
                 items.append(datum)
             except (Forbidden, Unauthorized):
-                # Remove last added item, as it is 401 or 403
-                if len(items) > 0:
-                    items.pop()
+                # pass as it is 401 or 403
+                pass
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
@@ -310,6 +309,7 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            raise
             content_type = request.headers.get('Content-Type')
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
