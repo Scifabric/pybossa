@@ -1713,16 +1713,20 @@ def publish(short_name):
         template_args = {"project": project_sanitized,
                          "pro_features": pro,
                          "csrf": generate_csrf()}
-        response = dict(template = '/projects/publish.html', **template_args)
+        response = dict(template='/projects/publish.html', **template_args)
         return handle_content_type(response)
 
-    project.published = True
-    project_repo.save(project)
-    task_repo.delete_taskruns_from_project(project)
-    result_repo.delete_results_from_project(project)
-    webhook_repo.delete_entries_from_project(project)
-    auditlogger.log_event(project, current_user, 'update', 'published', False, True)
-    flash(gettext('Project published! Volunteers will now be able to help you!'))
+    if project.published is False:
+        project.published = True
+        project_repo.save(project)
+        task_repo.delete_taskruns_from_project(project)
+        result_repo.delete_results_from_project(project)
+        webhook_repo.delete_entries_from_project(project)
+        auditlogger.log_event(project, current_user,
+                              'update', 'published', False, True)
+        flash(gettext('Project published! Volunteers will now be able to help you!'))
+    else:
+        flash(gettext('Project already published'))
     return redirect(url_for('.details', short_name=project.short_name))
 
 
