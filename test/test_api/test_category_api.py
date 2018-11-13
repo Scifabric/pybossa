@@ -23,7 +23,10 @@ from test_api import TestAPI
 from factories import UserFactory, CategoryFactory, ProjectFactory
 
 from pybossa.repositories import ProjectRepository
+from mock import MagicMock, patch
+
 project_repo = ProjectRepository(db)
+
 
 class TestCategoryAPI(TestAPI):
 
@@ -307,3 +310,23 @@ class TestCategoryAPI(TestAPI):
         url = '/api/category/?api_key=%s' % admin.api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
+
+    @with_context
+    @patch('pybossa.api.api_base.caching')
+    def test_category_cache_post_is_refreshed(self, caching_mock):
+        """Test API category cache is updated after POST."""
+        clean_category_mock = MagicMock()
+        caching_mock.get.return_value = dict(refresh=clean_category_mock)
+        owner = UserFactory.create()
+        name = u'Category'
+        category = dict(
+            name=name,
+            short_name='category',
+            description=u'description')
+        data = json.dumps(category)
+        # no api-key
+        url = '/api/category?api_key=%s' % owner.api_key
+        res = self.app.post(url, data=data)
+        cat = json.loads(res.data)
+        clean_category_mock.assert_called, res.data
+        assert cat['name'] == name
