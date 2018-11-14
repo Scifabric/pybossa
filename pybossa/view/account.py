@@ -194,11 +194,12 @@ def signin():
         return redirect_content_type(url_for("home.home"))
 
 
-def _sign_in_user(user):
+def _sign_in_user(user, next_url=None):
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
     user_repo.update(user)
-    next_url = (is_own_url_or_else(request.args.get('next'), url_for('home.home')) or
+    next_url = (next_url or
+                is_own_url_or_else(request.args.get('next'), url_for('home.home')) or
                 url_for('home.home'))
     if (current_app.config.get('MAILCHIMP_API_KEY') and
             newsletter.ask_user_to_subscribe(user)):

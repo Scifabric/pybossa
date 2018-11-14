@@ -68,7 +68,8 @@ requirements = [
     "yacryptopan",
     "Faker",
     "flask-talisman>=0.5.0, <0.6.0",
-    "cryptography>=2.3.1, <2.4.0"
+    "cryptography>=2.3.1, <2.4.0",
+    "python-saml>=2.4.0, <2.5.0"
 ]
 
 setup(

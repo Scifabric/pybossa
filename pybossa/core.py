@@ -341,10 +341,12 @@ def setup_blueprints(app):
     from pybossa.view.amazon import blueprint as amazon
     from pybossa.view.diagnostics import blueprint as diagnostics
     from pybossa.view.fileproxy import blueprint as fileproxy
+    from pybossa.view.bloomberg import blueprint as bloomberg
 
     blueprints = [{'handler': home, 'url_prefix': '/'},
                   {'handler': api,  'url_prefix': '/api'},
                   {'handler': account, 'url_prefix': '/account'},
+                  {'handler': bloomberg, 'url_prefix': '/bloomberg'},
                   {'handler': projects, 'url_prefix': '/project'},
                   {'handler': projectids, 'url_prefix': '/projectid'},
                   {'handler': admin, 'url_prefix': '/admin'},
