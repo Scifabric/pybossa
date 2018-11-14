@@ -53,7 +53,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         """Import CSV tasks."""
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                      'n_answers', 'user_pref'])
+                      'n_answers', 'user_pref', 'expiration'])
         field_header_index = []
         row_number = 0
         for row in csvreader:

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
+from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text, DateTime
 import sqlalchemy
 from sqlalchemy.schema import Column, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
@@ -59,6 +59,8 @@ class Task(db.Model, DomainObject):
     user_pref = Column(JSONB)
     #: Task.gold_answers field in JSONB to record golden answers for fields under Task.info.
     gold_answers = Column(JSONB)
+    #: Task.expiration field to determine when a task should no longer be scheduled. As UTC timestamp without timezone
+    expiration = Column(DateTime, nullable=True)
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 
