@@ -1,5 +1,3 @@
-import pycountry
-
 valid_user_preferences = {}
 
 def upref_languages():
@@ -60,11 +58,18 @@ def upref_languages():
     return langs
 
 
+countries = [
+    'Bonaire',
+    'Kiribati',
+    'Vanuatu',
+    'Wallis and Futuna'
+]
+
+
 def upref_locations():
     cts = []
-    for ct in pycountry.countries:
-        name = ct.name.encode('ascii', 'ignore').replace("'", "")
-        cts.append((name, name))
+    for ct in countries:
+        cts.append((ct, ct))
     return sorted(cts)
 
 
