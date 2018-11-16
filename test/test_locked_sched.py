@@ -31,8 +31,8 @@ from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
 from default import with_context
 import json
-
 from mock import patch
+from helper.gig_helper import make_admin, make_subadmin
 
 
 class TestLockedSched(sched.Helper):
@@ -277,3 +277,66 @@ class TestLockedSched(sched.Helper):
             assert res.status_code == 200, res.status_code
             data = json.loads(res.data)
             assert not data, 'user_l4 with L4 access should not have obtained any task under user pref scheduler'
+
+    @with_context
+    @patch('pybossa.sched.random.randint')
+    def test_locked_sched_gold_task(self, mock_random):
+        """ Test gold tasks presented with locked scheduler """
+
+        [admin, owner, user] = UserFactory.create_batch(3)
+        make_admin(admin)
+        make_subadmin(owner)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        tasks = TaskFactory.create_batch(4, project=project, n_answers=1)
+        gold_task = tasks[3]
+        gold_task.calibration = 1; gold_task.gold_answers = dict(field_3='someans')
+
+        # gold task to be presented to the user when available with randomness
+        # set to a value (to zero) that means gold task to be presented
+        mock_random.return_value = 0
+        # user #1
+        self.set_proj_passwd_cookie(project, user)
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, user.api_key))
+        assert res.status_code == 200, res.status_code
+        resp = json.loads(res.data)
+        assert resp['id'] == gold_task.id, \
+            'task presented to regular user under locked sched should be gold task'
+        # submit answer for gold task
+        task_run = dict(project_id=project.id, task_id=gold_task.id, info='hi there!')
+        res = self.app.post('api/taskrun?api_key={}'.format(user.api_key),
+                            data=json.dumps(task_run))
+        assert res.status_code == 200, res.status_code
+
+        # user #2 also gets gold_task even when redundancy was set to 1
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
+        assert res.status_code == 200, res.status_code
+        resp = json.loads(res.data)
+        assert resp['id'] == gold_task.id, \
+            'task presented to owner under locked sched should be gold task'
+
+        # after two task run submissions for gold task, state is unchanged to ongoing
+        task_run = dict(project_id=project.id, task_id=gold_task.id, info='hi there!')
+        res = self.app.post('api/taskrun?api_key={}'.format(owner.api_key),
+                            data=json.dumps(task_run))
+        assert res.status_code == 200, res.status_code
+        res = self.app.get('api/task/{}?api_key={}'
+                           .format(gold_task.id, admin.api_key))
+        assert res.status_code == 200, res.status_code
+        resp = json.loads(res.data)
+        assert resp['id'] == gold_task.id and resp['state'] == 'ongoing', \
+            'gold task state should be unchanged to ongoing'
+
+        # user #3 don't receive gold_task when randomness is not zero
+        mock_random.return_value = 1
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, admin.api_key))
+        assert res.status_code == 200, res.status_code
+        resp = json.loads(res.data)
+        assert resp['id'] == tasks[0].id, \
+            'task presented should not be gold task'
