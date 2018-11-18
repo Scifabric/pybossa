@@ -24,6 +24,7 @@ from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository, ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.model.task import Task
+import json
 
 project_repo = ProjectRepository(db)
 
@@ -808,6 +809,31 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         for task in tasks:
             assert task.state == 'ongoing', task.state
 
+    @with_context
+    def test_update_tasks_redundancy_updates_state_when_updating_redundancy_to_task_group(self):
+        """Test update_tasks_redundancy changes only the corresponding tasks to 'complete'
+        if a user_pref is applied """
+
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(1, project=project, n_answers=2)
+        TaskRunFactory.create_batch(1, task=tasks[0])
+        tasks2 = TaskFactory.create_batch(2, project=project, n_answers=2, user_pref= {"languages": ["japanese"]})
+        TaskRunFactory.create_batch(1, task=tasks2[1])
+
+        assert tasks[0].state == 'ongoing', tasks[0].state
+        assert tasks2[0].state == 'ongoing', tasks2[0].state
+        filters = json.loads('{"filter_by_upref": {"languages": ["japanese"]}}')
+        self.task_repo.update_tasks_redundancy(project, 1, filters)
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
+        assert tasks[0].n_answers == 2, tasks[0].n_answers
+        assert tasks[0].state == 'ongoing', tasks[0].state
+
+        assert tasks[1].n_answers == 1, tasks[1].n_answers
+        assert tasks[1].state == 'ongoing', tasks[1].state
+
+        assert tasks[2].n_answers == 1, tasks[2].n_answers
+        assert tasks[2].state == 'completed', tasks[2].state
+           
 
     @with_context
     def test_update_tasks_redundancy_updates_state_when_decrementing(self):

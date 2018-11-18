@@ -315,10 +315,9 @@ class TaskRepository(Repository):
                    AND task.project_id=:project_id
                    AND task.calibration!=1
                    GROUP BY task.id
-                   having COUNT(task_run.id) >=:n_answers);
+                   having COUNT(task_run.id) >= task.n_answers);
                    ''')
-        self.db.session.execute(sql, dict(n_answers=n_answers,
-                                          project_id=project_id))
+        self.db.session.execute(sql, dict(project_id=project_id))
         # Set state to completed
         sql = text('''
                    UPDATE task SET state='completed'
