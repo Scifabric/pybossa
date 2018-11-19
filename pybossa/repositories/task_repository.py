@@ -300,12 +300,12 @@ class TaskRepository(Repository):
                                           project_id=project.id,
                                           task_expiration=task_expiration,
                                           **params))
-        self.update_task_state(project.id, n_answers)
+        self.update_task_state(project.id)
         self.db.session.commit()
         cached_projects.clean_project(project.id)
         return tasks_not_updated
 
-    def update_task_state(self, project_id, n_answers):
+    def update_task_state(self, project_id):
         # Create temp tables for completed tasks
         sql = text('''
                    CREATE TEMP TABLE complete_tasks ON COMMIT DROP AS (
@@ -315,10 +315,9 @@ class TaskRepository(Repository):
                    AND task.project_id=:project_id
                    AND task.calibration!=1
                    GROUP BY task.id
-                   having COUNT(task_run.id) >=:n_answers);
+                   having COUNT(task_run.id) >= task.n_answers);
                    ''')
-        self.db.session.execute(sql, dict(n_answers=n_answers,
-                                          project_id=project_id))
+        self.db.session.execute(sql, dict(project_id=project_id))
         # Set state to completed
         sql = text('''
                    UPDATE task SET state='completed'
