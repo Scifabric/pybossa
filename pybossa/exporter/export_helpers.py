@@ -78,6 +78,7 @@ def browse_tasks_export(obj, project_id, expanded, filters):
     if obj == 'task':
         sql = text('''
                    SELECT {0}
+                        , {1}
                      FROM task
                      LEFT OUTER JOIN (
                        SELECT task_id
@@ -147,7 +148,6 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                      )
     else:
         return
-        
     return session.execute(sql, dict(project_id=project_id, **filter_params))
 
 
