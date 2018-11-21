@@ -56,7 +56,6 @@ class TestTaskCsvExporter(Test):
                          'taskrun__c__nested_y',
                          'taskrun__c__nested_y__double_nested',
                          'taskrun__c__nested_z']
-
         assert keys == expected_keys
 
     @with_context
@@ -98,23 +97,55 @@ class TestExporters(Test):
     def _check_func_called_with_params(call_params, expected_params):
         params = set([param[0][0].filename for param in call_params])
         return not len(params - expected_params)
+    
+    @staticmethod
+    def _compare_object_keys(obj_keys, expected_keys):
+        assert len(obj_keys) == len(expected_keys), len(expected_keys)
+        for key in expected_keys:
+            assert key in obj_keys, key
+
 
     @with_context
+    @patch('pybossa.exporter.csv_export.pd.DataFrame')
     @patch('pybossa.exporter.csv_export.uploader')
     @patch('pybossa.exporter.json_export.uploader')
-    def test_exporters_generates_zip(self, json_uploader, csv_uploader):
+    def test_exporters_generates_zip(self, json_uploader, csv_uploader, dataframe ):
         """Test that CsvExporter and JsonExporter generate zip works."""
-
         user = UserFactory.create(admin=True)
         project = ProjectFactory.create(name='test_project')
-        task = TaskFactory.create(project=project)
-        task_run = TaskRunFactory.create(project=project, task=task)
+        expected_gold_answer = {'best_job': 'software developer', 'best_boss': 'Juan'}
+
+        task1 = TaskFactory.create(project=project, gold_answers = expected_gold_answer)
+        task2 = TaskFactory.create(project=project)
+
+        task_run = TaskRunFactory.create(project=project, task=task1)
+        task_run = TaskRunFactory.create(project=project, task=task2)
+
         csv_exporter = CsvExporter()
         json_exporter = JsonExporter()
         csv_exporter.pregenerate_zip_files(project)
+        call_dataframe = dataframe.call_args_list
         call_csv_params = csv_uploader.upload_file.call_args_list
         expected_csv_params = set(['1_project1_task_run_csv.zip', '1_project1_result_csv.zip', '1_project1_task_csv.zip'])
         assert self._check_func_called_with_params(call_csv_params, expected_csv_params)
+
+        task1_data = call_dataframe[0][0][0][0]
+        task2_data = call_dataframe[0][0][0][1]
+
+        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum',
+         'calibration', 'created', 'state', 'gold_answers_best_job', 'gold_answers_best_boss', 'exported', 'project_id', 'id', 'priority_0']
+        obj_keys = task1_data.keys()
+
+        self._compare_object_keys(obj_keys, expected_headers)
+        assert task1_data['gold_answers_best_job'] == expected_gold_answer['best_job']
+        assert task1_data['gold_answers_best_boss'] == expected_gold_answer['best_boss']
+
+        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum',
+         'calibration', 'created', 'state', 'gold_answers', 'exported', 'project_id', 'id', 'priority_0']
+        obj_keys = task2_data.keys()
+
+        self._compare_object_keys(obj_keys, expected_headers)
+        assert task2_data['gold_answers'] == None
 
         json_exporter.pregenerate_zip_files(project)
         call_json_params = json_uploader.upload_file.call_args_list
