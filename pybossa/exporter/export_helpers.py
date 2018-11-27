@@ -58,6 +58,10 @@ TASK_FIELDS = [
     'task.user_pref   AS {}user_pref'
 ]
 
+TASK_GOLD_FIELD = [
+   'task.gold_answers AS {}gold_answers'
+]
+
 session = db.slave_session
 
 
@@ -74,6 +78,7 @@ def browse_tasks_export(obj, project_id, expanded, filters):
     if obj == 'task':
         sql = text('''
                    SELECT {0}
+                        , {1}
                      FROM task
                      LEFT OUTER JOIN (
                        SELECT task_id
@@ -85,8 +90,9 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                        ) AS log_counts
                        ON task.id = log_counts.task_id
                      WHERE project_id = :project_id
-                     {1}
+                     {2}
                    '''.format(_field_mapreducer(TASK_FIELDS, ''),
+                              _field_mapreducer(TASK_GOLD_FIELD, ''),
                               conditions)
                   )
     elif obj == 'task_run':
@@ -95,6 +101,7 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                       SELECT {0}
                            , {1}
                            , {2}
+                           , {3}
                         FROM task_run
                         LEFT JOIN task
                           ON task_run.task_id = task.id
@@ -110,15 +117,17 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                         LEFT JOIN "user"
                           ON task_run.user_id = "user".id
                         WHERE task_run.project_id = :project_id
-                        {3}
+                        {4}
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
                                  _field_mapreducer(TASK_FIELDS, 'task__'),
                                  _field_mapreducer(USER_FIELDS, 'user__'),
+                                 _field_mapreducer(TASK_GOLD_FIELD, 'task__'),
                                  conditions)
                      )
         else:
            sql = text('''
                       SELECT {0}
+                           , {1}
                         FROM task_run
                         LEFT JOIN task
                           ON task_run.task_id = task.id
@@ -132,13 +141,13 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                           ) AS log_counts
                           ON task_run.task_id = log_counts.task_id
                         WHERE task_run.project_id = :project_id
-                        {1}
+                        {2}
                       '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
+                                 _field_mapreducer(TASK_GOLD_FIELD, 'task__'),
                                  conditions)
                      )
     else:
         return
-
     return session.execute(sql, dict(project_id=project_id, **filter_params))
 
 
@@ -186,6 +195,5 @@ def browse_tasks_export_count(obj, project_id, expanded, filters):
                  )
     else:
         return
-
     return session.execute(
             sql, dict(project_id=project_id, **filter_params)).scalar()
