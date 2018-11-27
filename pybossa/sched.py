@@ -229,15 +229,15 @@ def locked_scheduler(query_factory):
                                          user_id=user_id,
                                          limit=user_count + 5))
 
-        for task_id, taskcount, n_answers, timeout in rows:
+        for task_id, taskcount, n_answers, calibration, timeout in rows:
             timeout = timeout or TIMEOUT
-            remaining = float('inf') if present_gold_task else n_answers - taskcount
+            remaining = float('inf') if calibration else n_answers - taskcount
             if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
                 save_task_id_project_id(task_id, project_id, 2 * timeout)
                 register_active_user(project_id, user_id, sentinel.master, ttl=timeout)
 
-                task_type = 'gold task' if present_gold_task and rows.rowcount else 'task'
+                task_type = 'gold task' if calibration else 'task'
                 current_app.logger.info(
                     'Project {} - user {} obtained {} {}, timeout: {}'
                     .format(project_id, user_id, task_type, task_id, timeout))
@@ -265,7 +265,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
 
     sql = text('''
-           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
               (SELECT info->'timeout'
                FROM project
                WHERE id=:project_id) as timeout
@@ -307,7 +307,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
 
     sql = '''
-           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers,
+           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
               (SELECT info->'timeout'
                FROM project
                WHERE id=:project_id) as timeout

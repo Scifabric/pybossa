@@ -88,7 +88,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                                 task_data[headers[idx]] = {}
                         else:
                             task_data[headers[idx]] = cell
-                    elif headers[idx].endswith('_gold'):
+                    elif headers[idx].endswith('_gold') and cell:
                         if 'gold_answers' not in task_data:
                             task_data['gold_answers'] = {}
                         field_name = re.sub('_gold$', '', headers[idx])
