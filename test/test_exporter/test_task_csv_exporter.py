@@ -97,7 +97,7 @@ class TestExporters(Test):
     def _check_func_called_with_params(call_params, expected_params):
         params = set([param[0][0].filename for param in call_params])
         return not len(params - expected_params)
-    
+
     @staticmethod
     def _compare_object_keys(obj_keys, expected_keys):
         assert len(obj_keys) == len(expected_keys), len(expected_keys)
@@ -132,16 +132,17 @@ class TestExporters(Test):
         task1_data = call_dataframe[0][0][0][0]
         task2_data = call_dataframe[0][0][0][1]
 
-        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum',
-         'calibration', 'created', 'state', 'gold_answers_best_job', 'gold_answers_best_boss', 'exported', 'project_id', 'id', 'priority_0']
+        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum', 'calibration',
+            'created', 'state', 'gold_answers_best_job', 'gold_answers_best_boss', 'exported',
+            'project_id', 'id', 'priority_0', 'expiration']
         obj_keys = task1_data.keys()
 
         self._compare_object_keys(obj_keys, expected_headers)
         assert task1_data['gold_answers_best_job'] == expected_gold_answer['best_job']
         assert task1_data['gold_answers_best_boss'] == expected_gold_answer['best_boss']
 
-        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum',
-         'calibration', 'created', 'state', 'gold_answers', 'exported', 'project_id', 'id', 'priority_0']
+        expected_headers = ['info', 'fav_user_ids', 'user_pref', 'n_answers', 'quorum', 'calibration',
+            'created', 'state', 'gold_answers', 'exported', 'project_id', 'id', 'priority_0', 'expiration']
         obj_keys = task2_data.keys()
 
         self._compare_object_keys(obj_keys, expected_headers)
