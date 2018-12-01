@@ -252,6 +252,24 @@ class ProjectRepository(Repository):
             '''
             )
 
+        sql_worker_details = text(
+            '''
+            SELECT project.id AS project_id,
+            STRING_AGG(CONCAT('(', workers.user_id, ';', workers.fullname, ';', workers.email_addr, ')'), '|')
+            AS workers FROM project JOIN
+            (
+                SELECT DISTINCT
+                project_id, user_id,
+                "user".fullname, "user".email_addr
+                FROM task_run INNER JOIN "user"
+                ON task_run.user_id = "user".id ORDER BY project_id
+            ) workers ON
+            project.id = workers.project_id
+            GROUP BY project.id
+            ORDER BY project.id;
+            '''
+            )
+
         # query database to get different report data
         completed_tasks = sqlio.read_sql_query(sql_completed_tasks, self.db.engine)
         total_tasks = sqlio.read_sql_query(sql_total_tasks, self.db.engine)
@@ -259,10 +277,12 @@ class ProjectRepository(Repository):
         n_taskruns = sqlio.read_sql_query(sql_n_taskruns, self.db.engine)
         n_pending_taskruns = sqlio.read_sql_query(sql_n_pending_taskruns, self.db.engine)
         project_details = sqlio.read_sql_query(sql_project_details, self.db.engine)
+        worker_details = sqlio.read_sql_query(sql_worker_details, self.db.engine)
 
         # join data frames
         data = pd.DataFrame(project_details)
-        data_frames = [completed_tasks, total_tasks, n_workers, n_taskruns, n_pending_taskruns]
+        data_frames = [completed_tasks, total_tasks, n_workers, worker_details,
+            n_taskruns, n_pending_taskruns]
         for df in data_frames:
             data = pd.merge(data, df, on='project_id', how='left')
 
@@ -286,5 +306,5 @@ class ProjectRepository(Repository):
         data = data[[
             'project_id', 'name', 'url', 'short_name', 'long_description', 'created', 'owner_name',
             'category_name', 'finish_time', 'percent_complete', 'n_tasks', 'n_pending_tasks',
-            'n_workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns']]
+            'n_workers', 'workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns']]
         return data
