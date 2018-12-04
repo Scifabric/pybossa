@@ -224,12 +224,6 @@ def published_projects_cached(user_id):
     return published_projects(user_id)
 
 
-@memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def published_projects_cached(user_id):
-    """Return published projects (cached version)."""
-    return published_projects(user_id)
-
-
 def public_published_projects(user_id):
     """Return projects that user_id has contributed to. Public information only"""
     unsanitized_projects = published_projects(user_id)
@@ -489,3 +483,9 @@ def get_user_access_levels_by_id(user_id):
 
 def delete_user_access_levels_by_id(user_id):
     delete_memoized(get_user_access_levels_by_id, user_id)
+
+
+def delete_published_projects(user_id):
+    """Delete from cache the users (un)published project."""
+    delete_memoized(draft_projects_cached, user_id)
+    delete_memoized(published_projects_cached, user_id)

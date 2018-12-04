@@ -24,6 +24,8 @@ from helper import web
 from helper.gig_helper import make_subadmin
 from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository, WebhookRepository, ResultRepository
 from pybossa.view.projects import render_template
+from pybossa.cache import projects as cached_projects
+
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -48,8 +50,8 @@ class TestProjectPublicationView(web.Helper):
     @patch('pybossa.view.projects.ensure_authorized_to')
     def test_it_checks_permissions_over_project(self, fake_auth):
         project = project_repo.get(self.project_id)
-        post_resp = self.app.get('/project/%s/publish' % project.short_name)
-        get_resp = self.app.post('/project/%s/publish' % project.short_name)
+        post_resp = self.app.get('/project/%s/1/publish' % project.short_name)
+        get_resp = self.app.post('/project/%s/1/publish' % project.short_name)
 
         call_args = fake_auth.call_args_list
 
@@ -63,7 +65,7 @@ class TestProjectPublicationView(web.Helper):
     def test_template_returned_when_get(self):
         project = project_repo.get(self.project_id)
         TaskFactory.create(project=project)
-        url = '/project/%s/publish' % project.short_name
+        url = '/project/%s/1/publish' % project.short_name
         res = self.app_get_json(url, follow_redirects=True)
         data = json.loads(res.data)
         assert data['template'] == '/projects/publish.html'
@@ -72,7 +74,7 @@ class TestProjectPublicationView(web.Helper):
     def test_it_changes_project_to_published_after_post(self):
         project = project_repo.get(self.project_id)
         TaskFactory.create(project=project)
-        resp = self.app.post('/project/%s/publish' % project.short_name,
+        resp = self.app.post('/project/%s/1/publish' % project.short_name,
                              follow_redirects=True)
 
         project = project_repo.get(project.id)
@@ -91,8 +93,8 @@ class TestProjectPublicationView(web.Helper):
         TaskRunFactory.create(task=task)
         result = result_repo.get_by(project_id=task.project_id)
         assert not result, "There should not be a result"
-        resp = self.app.post('/project/%s/publish' % project.short_name,
-                             follow_redirects=True)
+        resp = self.app.post('/project/%s/1/publish' % project.short_name,
+                             follow_redirects=True, data={'force_reset': 'on'})
 
         taskruns = task_repo.filter_task_runs_by(project_id=project.id)
 
@@ -107,7 +109,7 @@ class TestProjectPublicationView(web.Helper):
     def test_it_logs_the_event_in_auditlog(self, fake_logger):
         project = project_repo.get(self.project_id)
         TaskFactory.create(project=project)
-        resp = self.app.post('/project/%s/publish' % project.short_name,
+        resp = self.app.post('/project/%s/1/publish' % project.short_name,
                              follow_redirects=True)
 
         assert fake_logger.log_event.called, "Auditlog not called"
@@ -116,7 +118,7 @@ class TestProjectPublicationView(web.Helper):
     def test_published_get(self):
         project = ProjectFactory.create(info=dict())
         make_subadmin(project.owner)
-        url = '/project/%s/publish?api_key=%s' % (project.short_name,
+        url = '/project/%s/1/publish?api_key=%s' % (project.short_name,
                                                   project.owner.api_key)
         # Without tasks should return 403
         res = self.app.get(url)
@@ -141,7 +143,7 @@ class TestProjectPublicationView(web.Helper):
             project = ProjectFactory.create(info=dict())
             make_subadmin(project.owner)
 
-            url = '/project/%s/publish?api_key=%s' % (project.short_name,
+            url = '/project/%s/1/publish?api_key=%s' % (project.short_name,
                                                       project.owner.api_key)
             # Without tasks should return 403
             res = self.app.get(url)
@@ -151,3 +153,37 @@ class TestProjectPublicationView(web.Helper):
             TaskFactory.create(project=project)
             res = self.app.get(url)
             assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_unpublish_project(self):
+        project = ProjectFactory.create(info=dict(published=True,
+            task_presenter='task presenter'))
+        make_subadmin(project.owner)
+        task = TaskFactory.create(project=project, n_answers=1)
+        TaskRunFactory.create(task=task)
+        orig_taskruns = cached_projects.n_task_runs(project.id)
+
+        #unpublish project
+        url = '/project/%s/1/publish?api_key=%s' % (project.short_name,
+                                                  project.owner.api_key)
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert 'Are you sure you want to publish this project?' in res.data, \
+            'Confirmation message to publish project should be provided'
+        assert 'Force remove taskruns and results' in res.data, \
+            'Option to remove taskruns and results should be provided'
+
+        resp = self.app.post('/project/%s/0/publish' % project.short_name,
+                             follow_redirects=True)
+        assert res.status_code == 200, 'Failed to unpublish project'
+        project = project_repo.get(project.id)
+        assert not project.published, 'Project should not be published'
+
+        #publish an unpublished project
+        resp = self.app.post('/project/%s/1/publish' % project.short_name,
+                             follow_redirects=True, data={'force_reset': 'off'})
+        assert res.status_code == 200, 'Failed to publish project'
+        project = project_repo.get(project.id)
+        assert project.published, 'Project should be published'
+        taskruns_when_published = cached_projects.n_task_runs(project.id)
+        assert taskruns_when_published == orig_taskruns, 'Publish project should not have deleted taskruns'

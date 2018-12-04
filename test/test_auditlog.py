@@ -412,7 +412,7 @@ class TestAuditlogWEB(web.Helper):
         TaskFactory.create(project=project)
         short_name = project.short_name
 
-        url = "/project/%s/publish" % short_name
+        url = "/project/%s/1/publish" % short_name
 
         attribute = 'published'
 

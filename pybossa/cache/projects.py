@@ -39,6 +39,7 @@ def get_top(n=4):
                FROM task_run, project
                WHERE project_id IS NOT NULL
                AND project.id=project_id
+               AND project.published=True
                AND (project.info->>'passwd_hash') IS NULL
                GROUP BY project.id ORDER BY total DESC LIMIT :limit;''')
     results = session.execute(sql, dict(limit=n))
@@ -601,14 +602,15 @@ def get_project_data(project_id):
 
 def reset():
     """Clean the cache"""
-    delete_cached("index_front_page")
-    delete_cached('front_page_featured_projects')
     delete_cached('front_page_top_projects')
     delete_cached('number_featured_projects')
     delete_cached('number_published_projects')
     delete_cached('number_draft_projects')
+    delete_memoized(get_all_projects)
     delete_memoized(get_all_featured)
     delete_memoized(get_all_draft)
+    delete_memoized(text_search)
+    delete_memoized(n_total_tasks)
     delete_memoized(n_count)
     delete_memoized(get_all)
 

@@ -2333,28 +2333,43 @@ def auditlog(short_name):
                            pro_features=pro)
 
 
-@blueprint.route('/<short_name>/publish', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/<int:published>/publish', methods=['GET', 'POST'])
 @login_required
-def publish(short_name):
-
+def publish(short_name, published):
     project, owner, ps = project_by_shortname(short_name)
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
                                                                 ps)
     pro = pro_features()
     ensure_authorized_to('publish', project)
+    published = bool(published)
     if request.method == 'GET':
         template_args = {"project": project_sanitized,
                          "pro_features": pro,
-                         "csrf": generate_csrf()}
+                         "csrf": generate_csrf(),
+                         "published": published}
         response = dict(template = '/projects/publish.html', **template_args)
         return handle_content_type(response)
 
-    project.published = True
-    project_repo.save(project)
-    task_repo.delete_taskruns_from_project(project)
-    result_repo.delete_results_from_project(project)
-    webhook_repo.delete_entries_from_project(project)
+    if published != project.published:
+        project.published = published
+        project_repo.save(project)
+        cached_users.delete_published_projects(current_user.id)
+        cached_projects.reset()
+
+    if not published:
+        auditlogger.log_event(project, current_user, 'update', 'published', True, False)
+        flash(gettext('Project unpublished! Volunteers cannot contribute to the project now.'))
+        return redirect(url_for('.details', short_name=project.short_name))
+
+    force_reset = request.form.get("force_reset") == 'on'
+    if force_reset:
+        task_repo.delete_taskruns_from_project(project)
+        result_repo.delete_results_from_project(project)
+        webhook_repo.delete_entries_from_project(project)
+        cached_projects.delete_n_task_runs(project.id)
+        cached_projects.delete_n_results(project.id)
+
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
     return redirect(url_for('.details', short_name=project.short_name))
