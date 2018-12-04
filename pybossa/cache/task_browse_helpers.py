@@ -16,8 +16,7 @@ def get_task_filters(args):
     """
     filters = ''
     params = {}
-    
-    args = args || {}
+    args = args or {}
 
     if args.get('task_id'):
         params['task_id'] = args['task_id']
