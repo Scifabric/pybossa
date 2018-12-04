@@ -16,54 +16,55 @@ def get_task_filters(args):
     """
     filters = ''
     params = {}
-    if args.get('task_id'):
-        params['task_id'] = args['task_id']
-        filters += ' AND task.id = :task_id'
-    if args.get('hide_completed') and args.get('hide_completed') is True:
-        filters += " AND task.state='ongoing'"
-    if args.get('pcomplete_from') is not None:
-        params['pcomplete_from'] = args['pcomplete_from']
-        filters += " AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from"
-    if args.get('pcomplete_to') is not None:
-        params['pcomplete_to'] = args['pcomplete_to']
-        filters += " AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to"
-    if args.get('priority_from') is not None:
-        params['priority_from'] = args['priority_from']
-        filters += " AND priority_0 >= :priority_from"
-    if args.get('priority_to') is not None:
-        params['priority_to'] = args['priority_to']
-        filters += " AND priority_0 <= :priority_to"
-    if args.get('created_from'):
-        datestring = convert_est_to_utc(args['created_from']).isoformat()
-        params['created_from'] = datestring
-        filters += " AND task.created >= :created_from"
-    if args.get('created_to'):
-        datestring = convert_est_to_utc(args['created_to']).isoformat()
-        params['created_to'] = datestring
-        filters += " AND task.created <= :created_to"
-    if args.get('ftime_from'):
-        datestring = convert_est_to_utc(args['ftime_from']).isoformat()
-        params['ftime_from'] = datestring
-        filters += " AND ft >= :ftime_from"
-    if args.get('ftime_to'):
-        datestring = convert_est_to_utc(args['ftime_to']).isoformat()
-        params['ftime_to'] = datestring
-        filters += " AND ft <= :ftime_to"
-    if args.get('state'):
-        params['state'] = args['state']
-        filters += " AND state = :state"
-    if args.get('order_by'):
-        args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
-    if args.get('filter_by_field'):
-        filter_query, filter_params = _get_task_info_filters(
-            args['filter_by_field'])
-        filters += filter_query
-        params.update(**filter_params)
-    if args.get('filter_by_upref'):
-        user_pref = args['filter_by_upref']
-        if user_pref['languages'] or user_pref['locations']:
-            user_pref_db_clause = get_user_pref_db_clause(user_pref)
-            filters += " AND ( {} )".format(user_pref_db_clause)
+    if args:
+        if args.get('task_id'):
+            params['task_id'] = args['task_id']
+            filters += ' AND task.id = :task_id'
+        if args.get('hide_completed') and args.get('hide_completed') is True:
+            filters += " AND task.state='ongoing'"
+        if args.get('pcomplete_from') is not None:
+            params['pcomplete_from'] = args['pcomplete_from']
+            filters += " AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from"
+        if args.get('pcomplete_to') is not None:
+            params['pcomplete_to'] = args['pcomplete_to']
+            filters += " AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to"
+        if args.get('priority_from') is not None:
+            params['priority_from'] = args['priority_from']
+            filters += " AND priority_0 >= :priority_from"
+        if args.get('priority_to') is not None:
+            params['priority_to'] = args['priority_to']
+            filters += " AND priority_0 <= :priority_to"
+        if args.get('created_from'):
+            datestring = convert_est_to_utc(args['created_from']).isoformat()
+            params['created_from'] = datestring
+            filters += " AND task.created >= :created_from"
+        if args.get('created_to'):
+            datestring = convert_est_to_utc(args['created_to']).isoformat()
+            params['created_to'] = datestring
+            filters += " AND task.created <= :created_to"
+        if args.get('ftime_from'):
+            datestring = convert_est_to_utc(args['ftime_from']).isoformat()
+            params['ftime_from'] = datestring
+            filters += " AND ft >= :ftime_from"
+        if args.get('ftime_to'):
+            datestring = convert_est_to_utc(args['ftime_to']).isoformat()
+            params['ftime_to'] = datestring
+            filters += " AND ft <= :ftime_to"
+        if args.get('state'):
+            params['state'] = args['state']
+            filters += " AND state = :state"
+        if args.get('order_by'):
+            args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
+        if args.get('filter_by_field'):
+            filter_query, filter_params = _get_task_info_filters(
+                args['filter_by_field'])
+            filters += filter_query
+            params.update(**filter_params)
+        if args.get('filter_by_upref'):
+            user_pref = args['filter_by_upref']
+            if user_pref['languages'] or user_pref['locations']:
+                user_pref_db_clause = get_user_pref_db_clause(user_pref)
+                filters += " AND ( {} )".format(user_pref_db_clause)
     return filters, params
 
 

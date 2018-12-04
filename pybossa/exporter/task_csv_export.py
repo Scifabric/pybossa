@@ -148,24 +148,6 @@ class TaskCsvExporter(CsvExporter):
     def _handle_row(self, writer, t, headers):
         writer.writerow(self._format_csv_row(self.merge_objects(t),
                                              headers=headers))
-
-    def _get_csv(self, out, writer, table, project_id, expanded=False):
-        if table == 'task':
-            query_filter = task_repo.filter_tasks_by
-        elif table == 'task_run':
-            query_filter = task_repo.filter_task_runs_by
-        else:
-            return
-
-        objs = query_filter(project_id=project_id, yielded=True)
-        headers = self._get_all_headers(objs, expanded)
-        writer.writerow(headers)
-
-        for obj in objs:
-            self._handle_row(writer, obj, headers)
-        out.seek(0)
-        yield out.read()
-
     def _get_csv_with_filters(self, out, writer, table, project_id,
                               expanded, filters):
         objs = browse_tasks_export(table, project_id, expanded, filters)
@@ -224,12 +206,8 @@ class TaskCsvExporter(CsvExporter):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
 
-        if filters:
-            return self._get_csv_with_filters(
+        return self._get_csv_with_filters(
                     out, writer, ty, project_id, expanded, filters)
-        else:
-            return self._get_csv(
-                    out, writer, ty, project_id, expanded)
 
     def response_zip(self, project, ty, expanded=False):
         return self.get_zip(project, ty, expanded)
