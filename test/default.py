@@ -78,7 +78,7 @@ def delete_materialized_views():
                FROM pg_class WHERE relname LIKE '%dashboard%';''')
     results = db.session.execute(sql)
     for row in results:
-        sql = 'drop materialized view if exists %s cascade' % row.relname
+        sql = 'drop materialized view if exists "%s" cascade' % row.relname
         db.session.execute(sql)
         db.session.commit()
     sql = text('''SELECT relname
@@ -86,7 +86,7 @@ def delete_materialized_views():
     results = db.session.execute(sql)
     for row in results:
         if "_idx" not in row.relname:
-            sql = 'drop materialized view if exists %s cascade' % row.relname
+            sql = 'drop materialized view if exists "%s" cascade' % row.relname
             db.session.execute(sql)
             db.session.commit()
 

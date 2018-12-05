@@ -29,7 +29,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0, info=None):
     sql = text('''SELECT * from users_rank WHERE rank <= :top_users 
                ORDER BY rank;''')
     if info:
-        sql = text('''SELECT * from {} WHERE rank <= :top_users 
+        sql = text('''SELECT * from "{}" WHERE rank <= :top_users 
                     ORDER BY rank;'''.format(materialized_view))
 
     results = db.session.execute(sql, dict(top_users=top_users))
@@ -38,7 +38,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0, info=None):
     if user_id:
         sql = text('''SELECT * from users_rank where id=:user_id;''')
         if info:
-            sql = text('''SELECT * from {} where
+            sql = text('''SELECT * from "{}" where
                        id=:user_id;'''.format(materialized_view))
         results = db.session.execute(sql, dict(user_id=user_id))
         user = None
@@ -49,7 +49,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0, info=None):
                        WHERE rank >= :low AND rank <= :top order by rank;
                        ''')
             if info:
-                sql = text('''SELECT * from {} 
+                sql = text('''SELECT * from "{}" 
                            WHERE rank >= :low AND rank <= :top order by rank;
                            '''.format(materialized_view))
             low = user['rank'] - window
