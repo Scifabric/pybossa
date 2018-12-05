@@ -139,7 +139,6 @@ class TestLeaderboard(Test):
         for r in results:
             assert r.restrict is False, r
 
-
     @with_context
     def test_leaderboard_foo_key_current_user(self):
         """Test JOB leaderboard returns users for foo key with current user."""
@@ -163,6 +162,28 @@ class TestLeaderboard(Test):
         for r in results:
             assert r.restrict is False, r
 
+    @with_context
+    def test_leaderboard_foo_dash_key_current_user(self):
+        """Test JOB leaderboard returns users for foo-dash key with current user."""
+        users = []
+        for score in range(1, 11):
+            users.append(UserFactory.create(info={'foo-dash': score}))
+
+        users.append(UserFactory.create(restrict=True, info={'foo-dash': 11}))
+
+        leaderboard(info='foo-dash')
+        top_users = get_leaderboard(user_id=users[0].id, info='foo-dash')
+        assert len(top_users) == 11, len(top_users)
+        score = 10
+        for user in top_users[0:10]:
+            user['score'] == score, user
+            score = score - 1
+        assert top_users[-1]['name'] == users[0].name
+        assert top_users[-1]['score'] == users[0].info.get('foo-dash')
+
+        results = db.session.execute('select * from "users_rank_foo-dash"');
+        for r in results:
+            assert r.restrict is False, r
 
     @with_context
     def test_leaderboard_foo_key_current_user_window(self):
