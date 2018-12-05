@@ -212,28 +212,28 @@ class TestLeaderboard(Test):
             assert r.restrict is False, r
 
 
-    #@with_context
-    #def test_format_anon_week(self):
-    #    """Test format anon week works."""
-    #    AnonymousTaskRunFactory.create()
-    #    leaderboard()
-    #    res = format_anon_week()
-    #    assert len(res['labels']) == 1
-    #    day = datetime.utcnow().strftime('%Y-%m-%d')
-    #    assert res['labels'][0] == day
-    #    assert len(res['series']) == 1
-    #    assert res['series'][0][0] == 1, res['series'][0][0]
+    @with_context
+    def test_leaderboard_foo_dash_key_current_user_window(self):
+        """Test JOB leaderboard returns users for foo-dash key with current user and
+        window."""
+        UserFactory.create_batch(10, info={'foo-dash': 0})
+        UserFactory.create_batch(10, info={'foo-dash': 2})
+        UserFactory.create_batch(10, info={'foo-dash': 2}, restrict=True)
+        users = []
+        for score in range(11, 22):
+            users.append(UserFactory.create(info={'foo-dash': score}))
+        myself = UserFactory.create(info={'foo-dash': 1})
 
-    #@with_context
-    #@patch('pybossa.leaderboard.data.db')
-    #def test_format_anon_week_empty(self, db_mock):
-    #    """Test format anon week empty works."""
-    #    db_mock.slave_session.execute.return_value = []
-    #    TaskRunFactory.create()
-    #    leaderboard()
-    #    res = format_anon_week()
-    #    assert len(res['labels']) == 1
-    #    day = datetime.utcnow().strftime('%Y-%m-%d')
-    #    assert res['labels'][0] == day
-    #    assert len(res['series']) == 1
-    #    assert res['series'][0][0] == 0, res['series'][0][0]
+        leaderboard(info='foo-dash')
+
+        top_users = get_leaderboard(user_id=myself.id, info='foo-dash', window=5)
+
+        assert len(top_users) == 20 + 5 + 1 + 5, len(top_users)
+        assert top_users[25]['name'] == myself.name
+        assert top_users[25]['score'] == myself.info.get('foo-dash')
+        assert top_users[24]['score'] >= myself.info.get('foo-dash')
+        assert top_users[26]['score'] <= myself.info.get('foo-dash')
+
+        results = db.session.execute('select * from "users_rank_foo-dash"');
+        for r in results:
+            assert r.restrict is False, r
