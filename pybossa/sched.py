@@ -18,7 +18,7 @@
 """Scheduler module for PYBOSSA tasks."""
 from functools import wraps
 from sqlalchemy.sql import func, desc, text
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, or_
 from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -32,6 +32,7 @@ import random
 from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
+from datetime import datetime
 
 
 session = db.slave_session
@@ -118,6 +119,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
     query = session.query(Task, func.sum(Counter.n_task_runs).label('n_task_runs'))\
                    .filter(Task.id==Counter.task_id)\
                    .filter(Counter.task_id.in_(tmp))\
+                   .filter(or_(Task.expiration == None, Task.expiration > datetime.utcnow()))\
                    .group_by(Task.id)\
                    .order_by('n_task_runs ASC')\
 
@@ -189,9 +191,12 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
         else:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, external_uid=external_uid)
 
-    query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
+    query = session.query(Task)\
+                   .filter(and_(~Task.id.in_(subquery.subquery()),
                                             Task.project_id == project_id,
-                                            Task.state != 'completed'))
+                                            Task.state != 'completed'))\
+                   .filter(or_(Task.expiration == None, Task.expiration > datetime.utcnow()))
+
     if completed is False:
         query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
                                                 Task.project_id == project_id))
@@ -275,6 +280,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
+           AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
            {}
            group by task.id
@@ -318,6 +324,7 @@ def get_user_pref_task(project_id, user_id=None, user_ip=None,
            user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
            AND ({})
+           AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
            {}
            group by task.id
