@@ -50,7 +50,7 @@ class CompletedTaskRunAPI(APIBase):
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
-        """Get taskruns for all completed tasks. Need admin access"""
+        """Get taskruns for all completed tasks and gold tasks. Need admin access"""
         try:
             if not (current_user.is_authenticated() and current_user.admin):
                 raise Unauthorized("Insufficient privilege to the request")
@@ -58,11 +58,11 @@ class CompletedTaskRunAPI(APIBase):
             # set filter from args
             filters = {}
             for k in request.args.keys():
-                if k not in ['limit', 'offset', 'api_key']:
+                if k not in ['limit', 'offset', 'api_key', 'last_id']:
                     # 'exported' column belongs to Task class
                     # ignore it for attr check in TaskRun class
                     # but add it to filter so that its checked
-                    # against Task class in filter_completed_task_runs_by
+                    # against Task class in filter_completed_taskruns_gold_taskruns_by
                     if k not in ['exported']:
                         # Raise an error if the k arg is not a column
                         getattr(self.__class__, k)
@@ -70,9 +70,10 @@ class CompletedTaskRunAPI(APIBase):
 
             # set limit, offset
             limit, offset, orderby = self._set_limit_and_offset()
-            # query database to obtain the requested data
-            query = task_repo.filter_completed_task_runs_by(limit=limit, offset=offset, **filters)
-            json_response = self._create_json_response(query, oid)
+            last_id = request.args.get('last_id', 0)
+            results = task_repo.filter_completed_taskruns_gold_taskruns_by(
+                limit=limit, offset=offset, last_id=last_id, **filters)
+            json_response = self._create_json_response(results, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(

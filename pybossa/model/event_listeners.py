@@ -174,6 +174,11 @@ def is_task_completed(conn, task_id, project_id):
 
 
 def update_task_state(conn, task_id):
+    task = task_repo.get_task(id=task_id)
+    if task and task.calibration == 1:
+        set_task_export(task_id)
+        return
+
     sql_query = ("UPDATE task SET state=\'completed\' \
                  where id=%s") % task_id
     conn.execute(sql_query)
@@ -328,3 +333,9 @@ def decrease_task_counter(mapper, conn, target):
                  VALUES (TIMESTAMP '%s', %s, %s, -1)"
                  % (make_timestamp(), target.project_id, target.task_id))
     conn.execute(sql_query)
+
+def set_task_export(task_id):
+    sql_query = ("UPDATE task SET exported = False \
+                 where id = :task_id")
+    db.session.execute(sql_query, dict(task_id=task_id))
+    db.session.commit()

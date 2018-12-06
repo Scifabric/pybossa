@@ -5,6 +5,7 @@ def mark_if_complete(task_id, project_id):
     task = task_repo.get_task(task_id)
     # gold tasks never complete
     if task and task.calibration == 1:
+        set_task_export(task_id)
         return
 
     if project.published and is_task_completed(task_id):
@@ -23,6 +24,13 @@ def is_task_completed(task_id):
 
 def update_task_state(task_id):
     sql_query = ("UPDATE task SET state='completed' \
+                 where id = :task_id")
+    db.session.execute(sql_query, dict(task_id=task_id))
+    db.session.commit()
+
+
+def set_task_export(task_id):
+    sql_query = ("UPDATE task SET exported = False \
                  where id = :task_id")
     db.session.execute(sql_query, dict(task_id=task_id))
     db.session.commit()
