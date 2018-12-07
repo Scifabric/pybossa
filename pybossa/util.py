@@ -746,6 +746,11 @@ def generate_invitation_email_for_new_user(user, project_slugs=None):
     msg = dict(subject='New account with {}'.format(brand),
                recipients=[user['email_addr']],
                bcc=bcc)
+    msg['body'] = render_template('/account/email/newaccount_invite.md',
+                                  user=user, project_urls=project_urls,
+                                  user_manual_label=user_manual_label,
+                                  user_manual_url=user_manual_url,
+                                  server_url=server_url, is_qa=is_qa)
     msg['html'] = render_template('/account/email/newaccount_invite.html',
                                   user=user, project_urls=project_urls,
                                   user_manual_label=user_manual_label,
@@ -764,6 +769,13 @@ def generate_invitation_email_for_admins_subadmins(user, access_type):
     msg = dict(subject='Account access update on {}'.format(brand),
                recipients=[user.email_addr],
                bcc=[current_user.email_addr])
+    msg['body'] = render_template('/account/email/adminsubadmin_invite.md',
+                                  username=user.fullname,
+                                  access_type=access_type,
+                                  admin_manual_label=admin_manual_label,
+                                  admin_manual_url=admin_manual_url,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
     msg['html'] = render_template('/account/email/adminsubadmin_invite.html',
                                   username=user.fullname,
                                   access_type=access_type,
@@ -783,6 +795,11 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     msg = dict(subject=subject,
                recipients=[user.email_addr],
                bcc=admins_emails)
+    msg['body'] = render_template('/account/email/adminnotification.md',
+                                  username=user.fullname,
+                                  access_type=access_type,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
     msg['html'] = render_template('/account/email/adminnotification.html',
                                   username=user.fullname,
                                   access_type=access_type,
@@ -818,6 +835,10 @@ def generate_manage_user_email(user, operation):
     if current_app.config.get('IS_QA'):
         msg_header = msg_header + ' (QA Version)'
 
+    msg['body'] = render_template('/account/email/manageuser.md',
+                                  username=msg_to,
+                                  msgHeader=msg_header,
+                                  msgText=msg_text)
     msg['html'] = render_template('/account/email/manageuser.html',
                                   username=msg_to,
                                   msgHeader=msg_header,
