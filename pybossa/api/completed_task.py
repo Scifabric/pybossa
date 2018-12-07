@@ -49,7 +49,7 @@ class CompletedTaskAPI(APIBase):
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, oid):
-        """Get all completed tasks. Need admin access"""
+        """Get all completed tasks and gold tasks. Need admin access"""
         try:
             if not (current_user.is_authenticated() and current_user.admin):
                 raise Unauthorized("Insufficient privilege to the request")
@@ -59,21 +59,17 @@ class CompletedTaskAPI(APIBase):
             filters = {}
             filters['state'] = 'completed'
             for k in request.args.keys():
-                if k not in ['limit', 'offset', 'api_key']:
-                    # 'exported' column belongs to Task class
-                    # ignore it for attr check in TaskRun class
-                    # but add it to filter so that its checked
-                    # against Task class in filter_completed_task_runs_by
-                    if k not in ['exported']:
-                        # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)
+                if k not in ['limit', 'offset', 'api_key', 'last_id']:
+                    # Raise an error if the k arg is not a column
+                    getattr(self.__class__, k)
                     filters[k] = request.args[k]
 
             # set limit, offset
             limit, offset, orderby = self._set_limit_and_offset()
-            # query database to obtain the requested data
-            query = task_repo.filter_tasks_by(limit=limit, offset=offset, **filters)
-            json_response = self._create_json_response(query, oid)
+            last_id = request.args.get('last_id', 0)
+            results = task_repo.filter_completed_tasks_gold_tasks_by(
+                limit=limit, offset=offset, last_id=last_id, **filters)
+            json_response = self._create_json_response(results, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(

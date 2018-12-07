@@ -33,6 +33,7 @@ import json
 from datetime import datetime, timedelta
 from flask import current_app
 from pybossa.data_access import ensure_task_assignment_to_project
+from sqlalchemy import or_
 
 
 class TaskRepository(Repository):
@@ -57,29 +58,44 @@ class TaskRepository(Repository):
         return self._filter_by(Task, limit, offset, yielded, last_id,
                               fulltextsearch, desc, **filters)
 
-    def filter_completed_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
-        # exported col is present in Task table
-        # anything passed under filters will be
-        # searched in TaskRun table instead of Task
-        # exclude exported flag from filters and make
-        # it explicitly searchable against Task table
+    def filter_completed_tasks_gold_tasks_by(self, limit=None, offset=0,
+        last_id=None, yielded=False, desc=False, **filters):
+
         exp = filters.pop('exported', None)
+        filters.pop('state', None) # exclude state param
+        if exp is not None:
+            query = self.db.session.query(Task).\
+                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
+                filter(Task.exported == exp).\
+                filter_by(**filters)
+        else:
+            query = self.db.session.query(Task).\
+                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
+                filter_by(**filters)
+
+        results = self._filter_query(query, Task, limit, offset, last_id, yielded, desc)
+        return results
+
+    def filter_completed_taskruns_gold_taskruns_by(self, limit=None, offset=0,
+        last_id=None, yielded=False, desc=False, **filters):
+
+        exp = filters.pop('exported', None)
+        filters.pop('state', None) # exclude state param
         if exp is not None:
             query = self.db.session.query(TaskRun).join(Task).\
                 filter(TaskRun.task_id == Task.id).\
-                filter(Task.state == u'completed').\
+                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
                 filter(Task.exported == exp).\
                 filter_by(**filters)
         else:
             query = self.db.session.query(TaskRun).join(Task).\
                 filter(TaskRun.task_id == Task.id).\
-                filter(Task.state == u'completed').\
+                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
                 filter_by(**filters)
 
-        query = query.order_by(TaskRun.id).limit(limit).offset(offset)
-        if yielded:
-            return query.yield_per(1)
-        return query.all()
+        results = self._filter_query(query, Task, limit, offset, last_id, yielded, desc)
+        return results
+
 
     def count_tasks_with(self, **filters):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)
