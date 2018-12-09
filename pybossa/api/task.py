@@ -54,10 +54,14 @@ class TaskAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _update_attribute(self, new, old):
-        if (new.state == 'completed') and (old.n_answers <= new.n_answers):
-            new.state = 'ongoing'
-        if not new.gold_answers:
-            new.calibration = 0
+        gold_task = bool(new.gold_answers)
+        if (new.state == 'completed'):
+            n_taskruns = len(new.task_runs)
+            if gold_task or (old.n_answers < new.n_answers and
+                n_taskruns < new.n_answers):
+                new.state = 'ongoing'
+        new.calibration = int(gold_task)
+        new.exported = gold_task
 
     def _preprocess_post_data(self, data):
         project_id = data["project_id"]
@@ -81,6 +85,7 @@ class TaskAPI(APIBase):
                 gold_answers = data['gold_answers']
                 if type(gold_answers) is dict:
                     data['calibration'] = 1
+                    data['exported'] = True
             except Exception as e:
                 raise BadRequest('Invalid gold_answers')
 

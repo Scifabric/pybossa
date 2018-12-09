@@ -1084,6 +1084,7 @@ class TestTaskAPI(TestAPI):
         assert_equal(jdata['info'], task_info), jdata
         assert_equal(jdata['gold_answers'], gold_answers), jdata
         assert jdata['calibration'] == 1, 'calibration should have been set with updating gold_answers'
+        assert jdata['exported'] == True, 'exported should be True with new gold task'
 
         # GET task by subadmin not owner user does not get gold answers,
         # whereas admin/subadmin gets gold answers

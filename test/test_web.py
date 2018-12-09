@@ -2781,6 +2781,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/%s/results.json' % (project.short_name, 1),
                            follow_redirects=True)
         data = json.loads(res.data)
+        data = data['taskruns_info']
         assert len(data) == 10, data
         for tr in data:
             assert tr['info']['answer'] == 1, tr

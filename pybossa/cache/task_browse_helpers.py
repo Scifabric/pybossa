@@ -54,6 +54,10 @@ def get_task_filters(args):
     if args.get('state'):
         params['state'] = args['state']
         filters += " AND state = :state"
+    if 'gold_task' in args:
+        params['calibration'] = args['gold_task']
+        filters += " AND calibration = :calibration"
+
     if args.get('order_by'):
         args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
     if args.get('filter_by_field'):
@@ -205,7 +209,8 @@ def parse_tasks_browse_args(args):
         parsed_args['display_columns'] = json.loads(args['display_columns'])
     if not isinstance(parsed_args.get('display_columns'), list):
         parsed_args['display_columns'] = ['task_id', 'priority', 'pcomplete',
-                                          'created', 'finish_time', 'actions']
+                                          'created', 'finish_time', 'gold_task',
+                                          'actions']
     if 'display_info_columns' in args:
         display_info_columns = json.loads(args['display_info_columns'])
         if not isinstance(display_info_columns, list):
@@ -239,6 +244,12 @@ def parse_tasks_browse_args(args):
         if args['state'] not in ['ongoing', 'completed']:
             raise ValueError('invalid task state: %s'.format(args['state']))
         parsed_args['state'] = args['state']
+
+    if args.get('gold_task'):
+        if args['gold_task'] == 'Y':
+            parsed_args['gold_task'] = 1
+        if args['gold_task'] == 'N':
+            parsed_args['gold_task'] = 0
 
     return parsed_args
 
