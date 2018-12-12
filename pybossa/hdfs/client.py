@@ -2,7 +2,6 @@ from subprocess import check_call, CalledProcessError
 
 from flask import current_app
 from hdfs.ext.kerberos import KerberosClient
-from requests import Session
 
 
 class HDFSKerberos(KerberosClient):
@@ -21,7 +20,7 @@ class HDFSKerberos(KerberosClient):
         except CalledProcessError:
             return True
 
-    def reinit(self, principal):
+    def reinit(self):
         current_app.logger.info('running kinit')
         try:
             principal = self.proxy or self.user
@@ -32,7 +31,7 @@ class HDFSKerberos(KerberosClient):
 
     def get_ticket(self):
         if self.should_reinit():
-            self.reinit(principal)
+            self.reinit()
 
     def put(self, path, content):
         self.get_ticket()
