@@ -113,7 +113,7 @@ def encrypted_file(store, bucket, project_id, path):
     return response
 
 
-@blueprint.route('/hdfs/<int:project_id>/<string:cluster>/<path:path>')
+@blueprint.route('/hdfs/<string:cluster>/<int:project_id>/<path:path>')
 @no_cache
 @login_required
 def hdfs_file(project_id, cluster, path):
@@ -145,6 +145,7 @@ def hdfs_file(project_id, cluster, path):
 def get_secret_from_vault(project_encryption):
     config = current_app.config['VAULT_CONFIG']
     res = requests.get(config['url'].format(**project_encryption), **config['request'])
+    res.raise_for_status()
     data = res.json()
     try:
         return get_path(data, config['response'])
