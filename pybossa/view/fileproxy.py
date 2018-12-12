@@ -117,6 +117,8 @@ def encrypted_file(store, bucket, project_id, path):
 @no_cache
 @login_required
 def hdfs_file(project_id, cluster, path):
+    if not current_app.config.get('HDFS_CONFIG'):
+        raise NotFound('Not Found')
     signature = request.args.get('task-signature')
     if not signature:
         raise Forbidden('No signature')

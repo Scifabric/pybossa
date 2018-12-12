@@ -231,14 +231,25 @@ class TestHDFSproxy(web.Helper):
     }
 
     @with_context
-    def test_proxy_no_signature(self):
+    def test_proxy_no_config(self):
         project = ProjectFactory.create()
         owner = project.owner
 
         url = '/fileproxy/hdfs/test/%s/file.pdf?api_key=%s' \
              % (project.id, owner.api_key)
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 404, res.status_code
+
+    @with_context
+    def test_proxy_no_signature(self):
+        project = ProjectFactory.create()
+        owner = project.owner
+
+        url = '/fileproxy/hdfs/test/%s/file.pdf?api_key=%s' \
+             % (project.id, owner.api_key)
+        with patch.dict(self.flask_app.config, self.app_config):
+            res = self.app.get(url, follow_redirects=True)
+            assert res.status_code == 403, res.status_code
 
     @with_context
     def test_proxy_no_task(self):
@@ -249,8 +260,9 @@ class TestHDFSproxy(web.Helper):
 
         url = '/fileproxy/hdfs/test/%s/file.pdf?api_key=%s&task-signature=%s' \
             % (project.id, owner.api_key, signature)
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 400, res.status_code
+        with patch.dict(self.flask_app.config, self.app_config):
+            res = self.app.get(url, follow_redirects=True)
+            assert res.status_code == 400, res.status_code
 
     @with_context
     @patch('pybossa.view.fileproxy.HDFSKerberos.get')

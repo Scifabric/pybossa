@@ -24,13 +24,13 @@ class HDFSKerberos(KerberosClient):
     def reinit(self, principal):
         current_app.logger.info('running kinit')
         try:
+            principal = self.proxy or self.user
             check_call(['kinit', '-kt', self.keytab, principal])
         except CalledProcessError as e:
             current_app.logger.exception(e.output)
             raise
 
     def get_ticket(self):
-        principal = self.proxy or self.user
         if self.should_reinit():
             self.reinit(principal)
 
