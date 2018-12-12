@@ -26,7 +26,7 @@ from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
 from pybossa.cache.users import get_project_report_userdata
 from pybossa.uploader import local
-from flask import url_for, safe_join, send_file, redirect, current_app
+from flask import url_for, safe_join, redirect, current_app
 
 
 class ProjectReportCsvExporter(CsvExporter):
