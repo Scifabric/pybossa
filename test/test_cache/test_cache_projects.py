@@ -26,7 +26,7 @@ from pybossa.core import result_repo
 from pybossa.model.project import Project
 from pybossa.cache.project_stats import update_stats
 from nose.tools import nottest
-from pybossa.cache.task_browse_helpers import get_task_filters
+from pybossa.cache.task_browse_helpers import get_task_filters, parse_tasks_browse_args
 
 class TestProjectsCache(Test):
 
@@ -662,8 +662,6 @@ class TestProjectsCache(Test):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_task_browse_user_pref_args(self, upref_mdata, get_valid_user_preferences):
         """Test task browse user preference works with valid user_pref settings"""
-        from pybossa.cache.task_browse_helpers import parse_tasks_browse_args
-
         upref_mdata = True
         get_valid_user_preferences.return_value = dict(languages=["en", "sp"],
                                     locations=["us", "uk"])
@@ -710,3 +708,29 @@ class TestProjectsCache(Test):
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters
         assert params == expected_params, params
+
+    def test_task_browse_gold_task_filters(self):
+        filters = dict(task_id=1,hide_completed=True, gold_task='Y', order_by='task_id')
+        expected_filter_query = " AND task.id = :task_id AND task.state='ongoing' AND calibration = :calibration"
+        expected_params = {'task_id': 1, 'calibration': 'Y'}
+        filters, params = get_task_filters(filters)
+        assert filters == expected_filter_query, filters
+        assert params == expected_params, params
+
+        filters = dict(task_id=1,hide_completed=True, gold_task='N', order_by='task_id')
+        expected_params = {'task_id': 1, 'calibration': 'N'}
+        filters, params = get_task_filters(filters)
+        assert filters == expected_filter_query, filters
+        assert params == expected_params, params
+
+        args = dict(task_id=12345, gold_task='Y')
+        valid_args = dict(task_id=12345, gold_task=1, order_by_dict={},
+            display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
+        pargs = parse_tasks_browse_args(args)
+        assert pargs == valid_args, pargs
+
+        args = dict(task_id=12345, gold_task='N')
+        valid_args = dict(task_id=12345, gold_task=0, order_by_dict={},
+            display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
+        pargs = parse_tasks_browse_args(args)
+        assert pargs == valid_args, pargs

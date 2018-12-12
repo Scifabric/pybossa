@@ -69,7 +69,7 @@ def browse_tasks(project_id, args):
     sql = text('''
                SELECT task.id,
                coalesce(ct, 0) as n_task_runs, task.n_answers, ft,
-               priority_0, task.created
+               priority_0, task.created, task.calibration
                FROM task LEFT OUTER JOIN
                (SELECT task_id, CAST(COUNT(id) AS FLOAT) AS ct,
                MAX(finish_time) as ft FROM task_run
@@ -97,7 +97,8 @@ def browse_tasks(project_id, args):
         created = format_date(row.created)
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
                     n_answers=row.n_answers, priority_0=row.priority_0,
-                    finish_time=finish_time, created=created)
+                    finish_time=finish_time, created=created,
+                    calibration=row.calibration)
         task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
         tasks.append(task)
     return total_count, tasks

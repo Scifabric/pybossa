@@ -1135,7 +1135,9 @@ def export(short_name, task_id):
     task = task_repo.get_task_by(project_id=project.id, id=task_id)
     if task:
         taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=project.id)
-        results = [tr.dictize() for tr in taskruns]
+        taskruns_info = [tr.dictize() for tr in taskruns]
+        gold_answers = task.gold_answers if task.calibration and task.gold_answers else {}
+        results = dict(taskruns_info=taskruns_info, gold_answers=gold_answers)
         return Response(json.dumps(results), mimetype='application/json')
     else:
         return abort(404)
