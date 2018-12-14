@@ -21,7 +21,7 @@ from mock import patch
 from default import db, with_context
 from factories import ProjectFactory, TaskFactory, UserFactory, TaskRunFactory
 from helper import web
-from helper.gig_helper import make_subadmin
+from helper.gig_helper import make_subadmin, make_admin
 from pybossa.repositories import UserRepository, ProjectRepository, TaskRepository, WebhookRepository, ResultRepository
 from pybossa.view.projects import render_template
 from pybossa.cache import projects as cached_projects
@@ -187,3 +187,54 @@ class TestProjectPublicationView(web.Helper):
         assert project.published, 'Project should be published'
         taskruns_when_published = cached_projects.n_task_runs(project.id)
         assert taskruns_when_published == orig_taskruns, 'Publish project should not have deleted taskruns'
+
+    @with_context
+    def test_newtask_unpublish_project(self):
+        """Test user obtains newtask with published projects only; 404 with unpublished projects"""
+        project = ProjectFactory.create(info=dict(published=True,
+            task_presenter='task presenter'))
+        admin, subadmin_coowner, regular_coowner, user = UserFactory.create_batch(4)
+        make_admin(admin)
+        make_subadmin(subadmin_coowner)
+        tasks = TaskFactory.create_batch(10, project=project, n_answers=1)
+
+
+        self.set_proj_passwd_cookie(project, user)
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, user.api_key))
+        task = json.loads(res.data)
+        assert res.status_code == 200 and task['id'] == tasks[0].id, 'User should have obtained new task'
+
+        # submit answer for the task
+        task_run = dict(project_id=project.id, task_id=task['id'], info='hi there!')
+        res = self.app.post('api/taskrun?api_key={}'.format(user.api_key),
+                            data=json.dumps(task_run))
+        assert res.status_code == 200, res.status_code
+
+        #unpublish project
+        project.published = False
+        project.owners_ids.append(regular_coowner.id)
+        project.owners_ids.append(subadmin_coowner.id)
+        project_repo.save(project)
+        project = project_repo.get(project.id)
+        assert not project.published, 'Project should not be published'
+
+        # for unpublished project, obtaining newtask would succeed for admin
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, admin.api_key))
+        assert res.status_code == 200, 'newtask to unpublished project should succeed for admin'
+
+        # for unpublished project, obtaining newtask would succeed for subadmin coowner
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, subadmin_coowner.api_key))
+        assert res.status_code == 200, 'newtask to unpublished project should succeed for admin'
+
+        # for unpublished project, obtaining newtask would succeed for regular coowner
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, regular_coowner.api_key))
+        assert res.status_code == 200, 'newtask to unpublished project should succeed for admin'
+
+        # for unpublished project, obtaining newtask would fail for regular user
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, user.api_key))
+        assert res.status_code == 404, 'newtask to unpublished project should return 404'

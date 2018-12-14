@@ -140,7 +140,6 @@ def add_task_signature(tasks):
         for task in tasks:
             sign_task(task)
 
-
 @jsonpify
 @blueprint.route('/project/<project_id>/newtask')
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
@@ -186,8 +185,8 @@ def new_task(project_id):
 def _retrieve_new_task(project_id):
 
     project = project_repo.get(project_id)
-
-    if project is None:
+    if project is None or not(project.published or current_user.admin
+        or current_user.id in project.owners_ids):
         raise NotFound
 
     if current_user.is_anonymous():
