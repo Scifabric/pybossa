@@ -26,7 +26,8 @@ allowed_mime_types = ['application/pdf',
                       'image/png',
                       'image/bmp',
                       'image/x-ms-bmp',
-                      'image/gif']
+                      'image/gif',
+                      'application/zip']
 
 
 DEFAULT_CONN = 'S3_DEFAULT'
