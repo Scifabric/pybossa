@@ -13,6 +13,7 @@ def form_builder(form_name, form_config):
     return new_form
 
 
-def build_field(field_type, description, validators):
+def build_field(field_type, description, validators, kwargs=None):
+    kwargs = kwargs or {}
     field_class = getattr(wtforms, field_type)
-    return field_class(lazy_gettext(description))
+    return field_class(lazy_gettext(description), **kwargs)
