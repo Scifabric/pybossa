@@ -2853,7 +2853,7 @@ def ext_config(short_name):
         form_classes.append((form_name, display, form))
 
     if request.method == 'POST':
-        for form_name, _, form_class in form_classes:
+        for form_name, display, form_class in form_classes:
             if form_name in request.body:
                 form = form_class()
                 if not form.validate():
@@ -2863,6 +2863,7 @@ def ext_config(short_name):
                 project_repo.save(project)
                 current_app.logger.info('Project id {} external configurations set. {} {}'.format(
                     project.id, form_name, form.data))
+                flash(gettext('Configuration for {} was updated').format(display), 'success')
 
     template_forms = [(name, disp, cl(MultiDict(ext_conf.get(name, {}))))
                       for name, disp, cl in form_classes]

@@ -133,13 +133,13 @@ def hdfs_file(project_id, cluster, path):
     try:
         content = client.get('/{}'.format(path))
         project_encryption = project['info'].get('ext_config', {}).get('encryption', {})
-        if project_encryption:
+        if project_encryption and all(project_encryption.values()):
             secret = get_secret_from_vault(project_encryption)
             cipher = AESWithGCM(secret)
             content = cipher.decrypt(content)
     except Exception:
         current_app.logger.exception('Project id {} get task file {}'.format(project_id, path))
-        raise InternalServerError('An error Occurred')
+        raise InternalServerError('An Error Occurred')
 
     return Response(content)
 
