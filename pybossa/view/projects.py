@@ -2252,7 +2252,7 @@ def update_blogpost(short_name, id):
         raise abort(404)
 
     def respond():
-        return render_template('projects/update_blogpost.html',
+        return render_template('projects/new_blogpost.html',
                                title=gettext("Edit a post"),
                                form=form, project=project, owner=owner,
                                blogpost=blogpost,
