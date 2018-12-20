@@ -1836,7 +1836,7 @@ def show_stats(short_name):
             users=users_stats['n_auth'],
             taskruns=users_stats['n_auth'],
             pct_taskruns=auth_pct_taskruns,
-            top10=users_stats['auth']['top10']))
+            all_users=users_stats['auth']['all_users']))
 
     projectStats = dict(
         userStats=users_stats['users'],
