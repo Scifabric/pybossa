@@ -65,6 +65,7 @@ from pybossa.importers import BulkImportException
 from pybossa.cache.users import get_users_for_report
 from collections import OrderedDict
 import app_settings
+from datetime import datetime
 
 blueprint = Blueprint('admin', __name__)
 
@@ -596,15 +597,25 @@ def dashboard():
         current_app.logger.error(e)
         return abort(500)
 
+def log_duration(start, func=None):
+    diff = datetime.now() - start
+    msg = 'management dashboard. {} : {} milliseconds'.format(func, diff.total_seconds() * 1000)
+    current_app.logger.info(msg)
+
 
 @blueprint.route('/management_dashboard/')
 @login_required
 @admin_required
 def management_dashboard():
+    start = datetime.now()
     project_chart = site_stats.project_chart()
+    log_duration(start, 'project_chart'); start = datetime.now()
     category_chart = site_stats.category_chart()
+    log_duration(start, 'category_chart'); start = datetime.now()
     task_chart = site_stats.task_chart()
+    log_duration(start, 'task_chart'); start = datetime.now()
     submission_chart = site_stats.submission_chart()
+    log_duration(start, 'submission_chart')
     current_app.logger.info(task_chart)
 
     timed_stats_funcs = [
@@ -623,13 +634,19 @@ def management_dashboard():
     ]
 
     timed_stats = OrderedDict()
+    start = datetime.now()
     for func in timed_stats_funcs:
         timed_stats[func.__doc__] = OrderedDict()
         for days in [30, 60, 90, 350, 'all']:
             timed_stats[func.__doc__][days] = func(days)
+            log_duration(start, func.__doc__); start = datetime.now()
 
-    current_stats = OrderedDict((func.__doc__, func())
-                                for func in current_stats_funcs)
+    # current_stats = OrderedDict((func.__doc__, func())    #TODO : uncomment later
+    #                             for func in current_stats_funcs)
+    current_stats = OrderedDict()
+    for func in current_stats_funcs:
+        current_stats[func.__doc__] = func()
+        log_duration(start, func.__doc__); start = datetime.now()
 
     return render_template('admin/management_dashboard.html',
                            timed_stats=timed_stats,
