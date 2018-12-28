@@ -305,6 +305,6 @@ class ProjectRepository(Repository):
         # manage report columns; reorder
         data = data[[
             'project_id', 'name', 'url', 'short_name', 'long_description', 'created', 'owner_name',
-            'category_name', 'finish_time', 'percent_complete', 'n_tasks', 'n_pending_tasks',
+            'owner_email', 'category_name', 'finish_time', 'percent_complete', 'n_tasks', 'n_pending_tasks',
             'n_workers', 'workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns']]
         return data
