@@ -32,7 +32,7 @@ class HelpingMaterialAuth(object):
         return getattr(self, action)(user, helpingmaterial, project_id)
 
     def _create(self, user, helpingmaterial=None, project_id=None):
-        if user.is_anonymous() or (helpingmaterial is None and project_id is None):
+        if user.is_anonymous or (helpingmaterial is None and project_id is None):
             return False
         project = self._get_project(helpingmaterial, project_id)
         if helpingmaterial is None:
@@ -44,7 +44,7 @@ class HelpingMaterialAuth(object):
             project = self._get_project(helpingmaterial, project_id)
             if project:
                 return (project.published or self._is_admin_or_owner(user, project))
-            if user.is_anonymous() or (helpingmaterial is None and project_id is None):
+            if user.is_anonymous or (helpingmaterial is None and project_id is None):
                 return False
             return self._is_admin_or_owner(user, project)
         else:
@@ -52,13 +52,13 @@ class HelpingMaterialAuth(object):
 
     def _update(self, user, helpingmaterial, project_id=None):
         project = self._get_project(helpingmaterial, project_id)
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self._is_admin_or_owner(user, project)
 
     def _delete(self, user, helpingmaterial, project_id=None):
         project = self._get_project(helpingmaterial, project_id)
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self._is_admin_or_owner(user, project)
 
@@ -68,5 +68,5 @@ class HelpingMaterialAuth(object):
         return self.project_repo.get(project_id)
 
     def _is_admin_or_owner(self, user, project):
-        return (not user.is_anonymous() and
+        return (not user.is_anonymous and
                 (project.owner_id == user.id or user.admin))

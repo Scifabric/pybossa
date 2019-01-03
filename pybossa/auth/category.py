@@ -41,4 +41,4 @@ class CategoryAuth(object):
         return self._only_admin(user)
 
     def _only_admin(self, user):
-        return user.is_authenticated() and user.admin
+        return user.is_authenticated and user.admin

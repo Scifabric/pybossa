@@ -74,20 +74,20 @@ class DomainObject(object):
     def undictize(cls, dict_):
         raise NotImplementedError()
 
-    def __str__(self):  # pragma: no cover
-        return self.__unicode__().encode('utf8')
+    # def __str__(self):  # pragma: no cover
+    #     return self.__unicode__().encode('utf8')
 
-    def __unicode__(self): # pragma: no cover
-        repr = '<%s' % self.__class__.__name__
-        table = class_mapper(self.__class__).mapped_table
-        for col in table.c:
-            try:
-                repr += ' %s=%s' % (col.name, getattr(self, col.name))
-            except Exception as inst:
-                repr += ' %s=%s' % (col.name, inst)
+    # def __unicode__(self):  # pragma: no cover
+    #     repr = '<%s' % self.__class__.__name__
+    #     table = class_mapper(self.__class__).mapped_table
+    #     for col in table.c:
+    #         try:
+    #             repr += ' %s=%s' % (col.name, getattr(self, col.name))
+    #         except Exception as inst:
+    #             repr += ' %s=%s' % (col.name, inst)
 
-        repr += '>'
-        return repr
+    #     repr += '>'
+    #     return repr
 
 def make_timestamp():
     now = datetime.datetime.utcnow()

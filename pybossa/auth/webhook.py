@@ -36,7 +36,7 @@ class WebhookAuth(object):
         return False
 
     def _read(self, user, webhook=None, project_id=None):
-        if user.is_anonymous() or (webhook is None and project_id is None):
+        if user.is_anonymous or (webhook is None and project_id is None):
             return False
         project = self._get_project(webhook, project_id)
         return user.admin or user.id in project.owners_ids
