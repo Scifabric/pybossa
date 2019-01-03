@@ -29,7 +29,7 @@ requirements = [
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
-    "redis>=2.9, <2.10",
+    "redis>=3.0.1, <3.0.2",
     "coverage",
     "nose-cov",
     "mock",
