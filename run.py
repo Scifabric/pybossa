@@ -19,7 +19,7 @@ from pybossa.core import create_app
 
 if __name__ == "__main__":  # pragma: no cover
     app = create_app()
-    #logging.basicConfig(level=logging.NOTSET)
+    # logging.basicConfig(level=logging.NOTSET)
     app.run(host=app.config['HOST'], port=app.config['PORT'],
             debug=app.config.get('DEBUG', True))
 else:
