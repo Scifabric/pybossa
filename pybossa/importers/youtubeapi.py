@@ -19,7 +19,7 @@ from .base import BulkTaskImport, BulkImportException
 from flask_babel import gettext
 from apiclient.discovery import build
 from apiclient.errors import HttpError
-from urlparse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs
 import json
 import re
 
