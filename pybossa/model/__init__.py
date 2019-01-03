@@ -78,13 +78,13 @@ class DomainObject(object):
         return self.__unicode__().encode('utf8')
 
     def __unicode__(self): # pragma: no cover
-        repr = u'<%s' % self.__class__.__name__
+        repr = '<%s' % self.__class__.__name__
         table = class_mapper(self.__class__).mapped_table
         for col in table.c:
             try:
-                repr += u' %s=%s' % (col.name, getattr(self, col.name))
-            except Exception, inst:
-                repr += u' %s=%s' % (col.name, inst)
+                repr += ' %s=%s' % (col.name, getattr(self, col.name))
+            except Exception as inst:
+                repr += ' %s=%s' % (col.name, inst)
 
         repr += '>'
         return repr
