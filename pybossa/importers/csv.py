@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import requests
-from StringIO import StringIO
+from io import StringIO
 from flask_babel import gettext
 from pybossa.util import unicode_csv_reader
 
@@ -156,7 +156,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
             try:
                 csv_file = FileStorage(io.open(csv_filename, encoding='utf-8-sig'))
                 break
-            except IOError, e:
+            except IOError as e:
                 time.sleep(2)
                 retry += 1
 
