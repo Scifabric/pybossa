@@ -61,8 +61,8 @@ def oauth_authorized():  # pragma: no cover
     resp = facebook.oauth.authorized_response()
     next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
-        flash(u'You denied the request to sign in.', 'error')
-        flash(u'Reason: ' + request.args['error_reason'] +
+        flash('You denied the request to sign in.', 'error')
+        flash('Reason: ' + request.args['error_reason'] +
               ' ' + request.args['error_description'], 'error')
         next_url = (request.args.get('next') or
                     url_for_app_type('home.home', _hash_last_flash=True))

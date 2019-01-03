@@ -29,7 +29,7 @@ from flask_login import current_user
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.util import get_user_id_or_ip, get_avatar_url
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo
 from pybossa.core import uploader
@@ -62,7 +62,7 @@ class TaskRunAPI(APIBase):
         self._add_created_timestamp(taskrun, task, guard)
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 
@@ -105,7 +105,7 @@ class TaskRunAPI(APIBase):
         if (content_type in request.headers.get('Content-Type') and
                 cls_name in self.allowed_classes_upload):
             data = dict()
-            for key in request.form.keys():
+            for key in list(request.form.keys()):
                 if key in ['project_id', 'task_id']:
                     data[key] = int(request.form[key])
                 elif key == 'info':
@@ -148,7 +148,7 @@ class TaskRunAPI(APIBase):
         cls_name = self.__class__.__name__.lower()
         if cls_name in self.allowed_classes_upload:
             if type(obj.info) == dict:
-                keys = obj.info.keys()
+                keys = list(obj.info.keys())
                 if 'file_name' in keys and 'container' in keys:
                     ensure_authorized_to('delete', obj)
                     uploader.delete_file(obj.info['file_name'],

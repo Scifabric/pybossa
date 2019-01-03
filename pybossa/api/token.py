@@ -28,7 +28,7 @@ from flask import Response
 from flask_login import current_user
 from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
-from api_base import APIBase, error
+from .api_base import APIBase, error
 from pybossa.auth import ensure_authorized_to
 
 

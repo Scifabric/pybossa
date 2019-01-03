@@ -963,7 +963,7 @@ def add_metadata(name):
 def get_user_pref_and_metadata(user_name, form):
     user_pref = {}
     metadata = {}
-    if not any(value for value in form.data.values()):
+    if not any(value for value in list(form.data.values())):
         return user_pref, metadata
 
     if form.validate():

@@ -40,7 +40,7 @@ class Task(db.Model, DomainObject):
     #: Project.ID that this task is associated with.
     project_id = Column(Integer, ForeignKey('project.id', ondelete='CASCADE'), nullable=False)
     #: Task.state: ongoing or completed.
-    state = Column(UnicodeText, default=u'ongoing')
+    state = Column(UnicodeText, default='ongoing')
     quorum = Column(Integer, default=0)
     #: If the task is a calibration task
     calibration = Column(Integer, default=0)

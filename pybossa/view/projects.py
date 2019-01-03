@@ -22,7 +22,7 @@ import json
 import os
 import math
 import requests
-from StringIO import StringIO
+from io import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
@@ -376,7 +376,7 @@ def task_presenter_editor(short_name):
             flash(Markup(msg), 'info')
 
             wrap = lambda i: "projects/presenters/%s.html" % i
-            pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
+            pres_tmpls = list(map(wrap, current_app.config.get('PRESENTERS')))
 
             project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -684,10 +684,10 @@ def import_task(short_name):
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
         if importer_type is None:
             template_wrap = lambda i: "projects/tasks/gdocs-%s.html" % i
-            task_tmpls = map(template_wrap, template_tasks)
+            task_tmpls = list(map(template_wrap, template_tasks))
             template_args['task_tmpls'] = task_tmpls
             importer_wrap = lambda i: "projects/tasks/%s.html" % i
-            template_args['available_importers'] = map(importer_wrap, all_importers)
+            template_args['available_importers'] = list(map(importer_wrap, all_importers))
             template_args['template'] = '/projects/task_import_options.html'
             return handle_content_type(template_args)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
@@ -755,7 +755,7 @@ def setup_autoimporter(short_name):
     if request.method == 'GET':
         if importer_type is None:
             wrap = lambda i: "projects/tasks/%s.html" % i
-            template_args['available_importers'] = map(wrap, all_importers)
+            template_args['available_importers'] = list(map(wrap, all_importers))
             return render_template('projects/task_autoimport_options.html',
                                    **template_args)
     return render_template('/projects/importers/%s.html' % importer_type,
@@ -1181,7 +1181,7 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
-            print inst
+            print(inst)
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
@@ -2052,7 +2052,7 @@ def export_project_report(short_name):
             return res
         except Exception as e:
             current_app.logger.exception(
-                    u'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
                     .format(project.short_name, ty, e))
             flash(gettext('Error generating project report.'), 'error')
         return abort(500)

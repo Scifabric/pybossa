@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * helpingmaterial
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.helpingmaterial import HelpingMaterial
 from flask_login import current_user
 from werkzeug.exceptions import BadRequest
@@ -37,7 +37,7 @@ class HelpingMaterialAPI(APIBase):
     __class__ = HelpingMaterial
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 

@@ -23,10 +23,10 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.core import task_repo
-from flask_login import current_user, request
-from flask import Response, abort
+from flask_login import current_user
+from flask import Response, abort, request
 from werkzeug.exceptions import MethodNotAllowed, NotFound, Unauthorized
 from pybossa.core import ratelimits
 from pybossa.util import jsonpify, fuzzyboolean
@@ -53,7 +53,7 @@ class FavoritesAPI(APIBase):
             uid = current_user.id
             limit, offset, orderby = self._set_limit_and_offset()
             last_id = request.args.get('last_id')
-            print last_id
+            print(last_id)
             desc = request.args.get('desc') if request.args.get('desc') else False
             desc = fuzzyboolean(desc)
 
@@ -78,7 +78,7 @@ class FavoritesAPI(APIBase):
         try:
             self.valid_args()
             data = json.loads(request.data)
-            if (len(data.keys()) != 1) or ('task_id' not in data.keys()):
+            if (len(list(data.keys())) != 1) or ('task_id' not in list(data.keys())):
                 raise AttributeError
             if current_user.is_anonymous():
                 raise Unauthorized
