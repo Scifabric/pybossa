@@ -184,8 +184,8 @@ def number_of_created_tasks(days=30):
     sql = text('''
         SELECT count(id) FROM task
         WHERE
-        clock_timestamp() - to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-            < interval ':days days';
+        to_timestamp(created, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            > NOW() - interval ':days days';
         ''')
     return session.execute(sql, dict(days=days)).scalar()
 
@@ -256,35 +256,30 @@ def avg_time_to_complete_task(days=30):
 
 
 @memoize(ONE_WEEK)
-def avg_task_per_job(days=0):
+def avg_task_per_job():
     """Average number of tasks per job"""
     sql = text('''
-        SELECT AVG(ct) FROM (SELECT
-            project.id, count(task.id) AS ct
-            FROM project LEFT OUTER JOIN task
-            ON project.id = task.project_id
-            WHERE to_timestamp(task.created, 'YYYY-MM-DD"T"HH24-MI-SS.US') <
-                clock_timestamp() - interval ':days days'
-            GROUP BY project.id) as t;
+        SELECT AVG(ct) FROM (
+            SELECT project_id, count(task.id) AS ct
+            FROM task
+            GROUP BY project_id
+        ) AS t WHERE ct > 0;
         ''')
-    return session.execute(sql, dict(days=days)).scalar()
+    return session.execute(sql).scalar()
 
 
 @memoize(ONE_WEEK)
-def tasks_per_category(days=0):
+def tasks_per_category():
     """Average number of tasks per category"""
     sql = text('''
-        SELECT AVG(ct) FROM (SELECT
-            category.id, count(task.id) AS ct
-            FROM category LEFT OUTER JOIN project
-            ON project.category_id = category.id
-            LEFT OUTER JOIN task
-            ON task.project_id = project.id
-            WHERE to_timestamp(task.created, 'YYYY-MM-DD"T"HH24-MI-SS.US') <
-                  clock_timestamp() - interval ':days days'
-            GROUP BY category.id) as t;
+        SELECT AVG(ct) FROM (
+            SELECT p.category_id, COUNT(t.id) AS ct
+            FROM project p LEFT OUTER JOIN task t
+            ON p.id = t.project_id
+            GROUP BY p.category_id
+        ) AS t WHERE ct > 0;
     ''')
-    return session.execute(sql, dict(days=days)).scalar() or 'N/A'
+    return session.execute(sql).scalar() or 'N/A'
 
 
 @memoize(ONE_WEEK)
