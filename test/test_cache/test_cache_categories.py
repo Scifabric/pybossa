@@ -49,5 +49,5 @@ class TestCategoriesCache(Test):
         used_categories = cached_categories.get_used()
 
         for field in fields:
-            assert field in used_categories[0].keys()
-        assert len(fields) == len(used_categories[0].keys())
+            assert field in list(used_categories[0].keys())
+        assert len(fields) == len(list(used_categories[0].keys()))

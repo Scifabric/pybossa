@@ -190,25 +190,25 @@ class TestCkanModule(Test, object):
     }
 
     task_datastore = {
-        u'help': u'Adds a ...',
-        u'success': True,
-        u'result': {
-            u'fields': [{u'type': u'json', u'id': u'info'},
-                        {u'type': u'int', u'id': u'user_id'},
-                        {u'type': u'int', u'id': u'task_id'},
-                        {u'type': u'timestamp', u'id': u'created'},
-                        {u'type': u'timestamp', u'id': u'finish_time'},
-                        {u'type': u'int', u'id': u'calibration'},
-                        {u'type': u'int', u'id': u'project_id'},
-                        {u'type': u'text', u'id': u'user_ip'},
-                        {u'type': u'int', u'id': u'TaskRun_task'},
-                        {u'type': u'int', u'id': u'TaskRun_user'},
-                        {u'type': u'int', u'id': u'timeout'},
-                        {u'type': u'int', u'id': u'id'}],
-            u'method': u'insert',
-            u'indexes': u'id',
-            u'primary_key': u'id',
-            u'resource_id': task_resource_id}}
+        'help': 'Adds a ...',
+        'success': True,
+        'result': {
+            'fields': [{'type': 'json', 'id': 'info'},
+                        {'type': 'int', 'id': 'user_id'},
+                        {'type': 'int', 'id': 'task_id'},
+                        {'type': 'timestamp', 'id': 'created'},
+                        {'type': 'timestamp', 'id': 'finish_time'},
+                        {'type': 'int', 'id': 'calibration'},
+                        {'type': 'int', 'id': 'project_id'},
+                        {'type': 'text', 'id': 'user_ip'},
+                        {'type': 'int', 'id': 'TaskRun_task'},
+                        {'type': 'int', 'id': 'TaskRun_user'},
+                        {'type': 'int', 'id': 'timeout'},
+                        {'type': 'int', 'id': 'id'}],
+            'method': 'insert',
+            'indexes': 'id',
+            'primary_key': 'id',
+            'resource_id': task_resource_id}}
 
     task_upsert = {"help": "Updates",
                    "success": True,

@@ -30,7 +30,7 @@ class TestModelCategory(Test):
     def test_category_public_attributes(self):
         """Test CATEGORY public attributes works."""
         cat = CategoryFactory.create()
-        assert cat.public_attributes().sort() == cat.dictize().keys().sort()
+        assert cat.public_attributes().sort() == list(cat.dictize().keys()).sort()
 
     @with_context
     def test_blogpost_public_json(self):
@@ -40,6 +40,6 @@ class TestModelCategory(Test):
         err_msg = "There should be info keys"
         with patch.dict(self.flask_app.config, {'CATEGORY_INFO_PUBLIC_FIELDS': ['public']}):
             json = cat.to_public_json()
-            assert json['info'].keys().sort() == Category().public_info_keys().sort(), err_msg
-            assert 'public' in json['info'].keys()
-            assert 'secret' not in json['info'].keys()
+            assert list(json['info'].keys()).sort() == Category().public_info_keys().sort(), err_msg
+            assert 'public' in list(json['info'].keys())
+            assert 'secret' not in list(json['info'].keys())

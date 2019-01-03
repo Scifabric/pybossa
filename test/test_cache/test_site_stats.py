@@ -175,7 +175,7 @@ class TestSiteStatsCache(Test):
         top5 = stats.get_top5_projects_24_hours()
 
         for field in fields:
-            assert field in top5[0].keys()
+            assert field in list(top5[0].keys())
 
     @with_context
     def test_get_top5_users_24_hours_returns_best_5_users_only(self):

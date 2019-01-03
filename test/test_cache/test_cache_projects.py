@@ -82,7 +82,7 @@ class TestProjectsCache(Test):
         featured = cached_projects.get_featured()[0]
 
         for field in fields:
-            assert featured.has_key(field), "%s not in project info" % field
+            assert field in featured, "%s not in project info" % field
 
 
     @with_context
@@ -133,7 +133,7 @@ class TestProjectsCache(Test):
         retrieved_project = cached_projects.get(project.category.short_name)[0]
 
         for field in fields:
-            assert retrieved_project.has_key(field), "%s not in project info" % field
+            assert field in retrieved_project, "%s not in project info" % field
 
 
     @with_context
@@ -159,7 +159,7 @@ class TestProjectsCache(Test):
         draft = cached_projects.get_draft()[0]
 
         for field in fields:
-            assert draft.has_key(field), "%s not in project info" % field
+            assert field in draft, "%s not in project info" % field
             if field == 'info':
                 assert sorted(draft['info'].keys()) == sorted(Project().public_info_keys())
 
@@ -541,7 +541,7 @@ class TestProjectsCache(Test):
         pro_owned_projects = cached_projects.get_from_pro_user()
 
         for field in fields:
-            assert field in pro_owned_projects[0].keys(), field
+            assert field in list(pro_owned_projects[0].keys()), field
 
 
     @with_context

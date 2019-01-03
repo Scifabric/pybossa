@@ -127,11 +127,11 @@ class TestCategoryAPI(TestAPI):
         """Test API Category creation and auth"""
         admin = UserFactory.create()
         user = UserFactory.create()
-        name = u'Category'
+        name = 'Category'
         category = dict(
             name=name,
             short_name='category',
-            description=u'description')
+            description='description')
         data = json.dumps(category)
         # no api-key
         url = '/api/category'
@@ -250,7 +250,7 @@ class TestCategoryAPI(TestAPI):
         data = dict(
             name='Category3',
             short_name='category3',
-            description=u'description3')
+            description='description3')
 
         datajson = json.dumps(data)
         res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (cat.id, admin.api_key),
@@ -318,11 +318,11 @@ class TestCategoryAPI(TestAPI):
         clean_category_mock = MagicMock()
         caching_mock.get.return_value = dict(refresh=clean_category_mock)
         owner = UserFactory.create()
-        name = u'Category'
+        name = 'Category'
         category = dict(
             name=name,
             short_name='category',
-            description=u'description')
+            description='description')
         data = json.dumps(category)
         # no api-key
         url = '/api/category?api_key=%s' % owner.api_key

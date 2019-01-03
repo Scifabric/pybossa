@@ -208,7 +208,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_project()
         project = db.session.query(Project).first()
-        print project
+        print(project)
         project.published = True
         db.session.commit()
         self.update_project()
@@ -435,7 +435,7 @@ class TestAdmin(web.Helper):
         self.signin()
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        print res.data
+        print(res.data)
         assert "juan jose" in res.data, "username should be searchable"
         # check with uppercase
         data = {'user': 'juan'}
@@ -719,7 +719,7 @@ class TestAdmin(web.Helper):
         self.create()
         tasks = db.session.query(Task).filter_by(project_id=1).all()
         assert len(tasks) > 0, "len(app.tasks) > 0"
-        res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.signin(email='root@root.com', password='tester' + 'root')
         res = self.app.get('/project/test-app/tasks/delete',
                            follow_redirects=True)
         err_msg = "Admin user should get 200 in GET"
@@ -850,7 +850,7 @@ class TestAdmin(web.Helper):
         data = json.loads(res.data)
         assert "Category added" in data.get('flash'), err_msg
         assert data.get('status') == 'success', err_msg
-        assert category['name'] in data.get('n_projects_per_category').keys(), err_msg
+        assert category['name'] in list(data.get('n_projects_per_category').keys()), err_msg
 
         # Create the same category again should fail
         res = self.app_post_json(url, data=category)
@@ -1044,7 +1044,7 @@ class TestAdmin(web.Helper):
         url = '/admin/categories/del/%s' % obj.id
         category = obj.dictize()
         res = self.app_post_json(url, data=category)
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         err_msg = "Category should not be deleted"
         assert "Sorry" in data.get('flash'), data
@@ -1108,7 +1108,7 @@ class TestAdmin(web.Helper):
         category = obj.dictize()
         del category['info']
         res = self.app.post(url, data=category, follow_redirects=True)
-        print res.data
+        print(res.data)
         err_msg = "Category should not be deleted"
         assert "Category deleted" not in res.data, err_msg
         assert category['name'] in res.data, err_msg
@@ -1175,7 +1175,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_project()
         res = self.app_get_json(url)
-        print res.data
+        print(res.data)
         err_msg = "It should return 200"
         data = json.loads(res.data)
         assert res.status_code == 200, err_msg
@@ -1208,7 +1208,7 @@ class TestAdmin(web.Helper):
                 'new_users_week', 'template', 'new_task_runs_week',
                 'returning_users_week', 'active_users_last_week', 'wait']
         for key in keys:
-            assert key in data.keys(), data
+            assert key in list(data.keys()), data
 
 
     @with_context
@@ -1288,7 +1288,7 @@ class TestAdmin(web.Helper):
                 'new_users_week', 'template', 'new_task_runs_week',
                 'returning_users_week', 'active_users_last_week', 'wait']
         for key in keys:
-            assert key in data.keys(), data
+            assert key in list(data.keys()), data
 
     @with_context
     def test_announcement_json(self):
@@ -1296,14 +1296,14 @@ class TestAdmin(web.Helper):
         url = '/admin/announcement'
         self.register()
         res = self.app_get_json(url)
-        print res.data
+        print(res.data)
         err_msg = "It should return 200"
         data = json.loads(res.data)
         assert res.status_code == 200, err_msg
-        assert "announcements" in data.keys(), data
-        assert "csrf" in data.keys(), data
-        assert "template" in data.keys(), data
-        assert "title" in data.keys(), data
+        assert "announcements" in list(data.keys()), data
+        assert "csrf" in list(data.keys()), data
+        assert "template" in list(data.keys()), data
+        assert "title" in list(data.keys()), data
         # create an announcement in DB
         announcement = AnnouncementFactory.create()
         res = self.app_get_json(url)
@@ -1416,7 +1416,7 @@ class TestAdmin(web.Helper):
         """Test announcement delete"""
         self.register()
         user = user_repo.get(1)
-        print user.admin
+        print(user.admin)
         announcement = AnnouncementFactory.create()
         url = "/admin/announcement/1/delete"
 

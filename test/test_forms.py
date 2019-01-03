@@ -166,7 +166,7 @@ class TestRegisterForm(Test):
         form = RegisterForm(**self.fill_in_data)
 
         assert not form.validate()
-        assert u'This name is used by the system.' in form.errors['name'], form.errors
+        assert 'This name is used by the system.' in form.errors['name'], form.errors
 
     @with_context
     def test_register_form_unique_email(self):
@@ -352,14 +352,14 @@ class TestRegisterFormWithUserPrefMetadata(Test):
                         'work_hours_to':
                             ['Work Hours From, Work Hours To, and Timezone must be filled out for submission'],
                         'locations':
-                            [u"'someloc' is not a valid choice for this field"],
+                            ["'someloc' is not a valid choice for this field"],
                         'user_type':
-                            [u'Not a valid choice'],
+                            ['Not a valid choice'],
                         'languages':
-                            [u"'somelang' is not a valid choice for this field"],
+                            ["'somelang' is not a valid choice for this field"],
                         'work_hours_from':
                             ['Work Hours From, Work Hours To, and Timezone must be filled out for submission'],
                         'timezone':
-                            [u'Not a valid choice', 'Work Hours From, Work Hours To, and Timezone must be filled out for submission']
+                            ['Not a valid choice', 'Work Hours From, Work Hours To, and Timezone must be filled out for submission']
                         }
         assert form.errors == expected_form_errors

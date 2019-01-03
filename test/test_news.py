@@ -20,7 +20,7 @@ from pybossa.news import get_news, notify_news_admins
 from pybossa.core import sentinel
 from factories import UserFactory
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:  # pragma: no cover
     import pickle
 

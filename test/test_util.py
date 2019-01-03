@@ -217,7 +217,7 @@ class TestPybossaUtil(Test):
         assert res.get('form').get('csrf') == 'yourcsrf', err_msg
         err_msg = "There should be the keys of the form"
         keys = ['foo', 'errors', 'csrf']
-        assert res.get('form').keys().sort() == keys.sort(), err_msg
+        assert list(res.get('form').keys()).sort() == keys.sort(), err_msg
 
     @with_context
     @patch('pybossa.util.request')
@@ -522,7 +522,7 @@ class TestPybossaUtil(Test):
         err_msg = "Each cell should be encoded as Unicode"
         for row in util.unicode_csv_reader(fake_csv):
             for item in row:
-                assert isinstance(item, unicode), err_msg
+                assert isinstance(item, str), err_msg
 
     def test_UnicodeWriter(self):
         """Test UnicodeWriter class works."""
@@ -691,24 +691,24 @@ class TestUsernameFromFullnameFunction(object):
         assert obtained == expected_username, obtained
 
     def test_it_removes_whitespaces_unicode(self):
-        name = u"john benjamin toshack"
-        expected_username = u"johnbenjamintoshack"
+        name = "john benjamin toshack"
+        expected_username = "johnbenjamintoshack"
 
         obtained = util.username_from_full_name(name)
 
         assert obtained == expected_username, obtained
 
     def test_it_removes_capital_letters_unicode(self):
-        name = u"JOHN"
-        expected_username = u"john"
+        name = "JOHN"
+        expected_username = "john"
 
         obtained = util.username_from_full_name(name)
 
         assert obtained == expected_username, obtained
 
     def test_it_removes_non_ascii_chars_unicode(self):
-        name = u"ßetaÑapa"
-        expected_username = u"etaapa"
+        name = "ßetaÑapa"
+        expected_username = "etaapa"
 
         obtained = util.username_from_full_name(name)
 
@@ -720,10 +720,10 @@ class TestRankProjects(object):
     def test_it_gives_priority_to_projects_with_an_avatar(self):
         projects = [
             {'info': {},
-             'n_tasks': 4, 'short_name': 'noavatar', 'name': u'with avatar',
+             'n_tasks': 4, 'short_name': 'noavatar', 'name': 'with avatar',
              'overall_progress': 0, 'n_volunteers': 1},
-            {'info': {u'container': u'user_7', u'thumbnail': u'avatar.png'},
-             'n_tasks': 4, 'short_name': 'avatar', 'name': u'without avatar',
+            {'info': {'container': 'user_7', 'thumbnail': 'avatar.png'},
+             'n_tasks': 4, 'short_name': 'avatar', 'name': 'without avatar',
              'overall_progress': 100, 'n_volunteers': 1}]
         ranked = util.rank(projects)
 
@@ -734,13 +734,13 @@ class TestRankProjects(object):
         projects = [{'info': {},
                      'n_tasks': 4,
                      'short_name': 'uncompleted',
-                     'name': u'uncompleted',
+                     'name': 'uncompleted',
                      'overall_progress': 0,
                      'n_volunteers': 1},
                     {'info': {},
                      'n_tasks': 4,
                      'short_name': 'completed',
-                     'name': u'completed',
+                     'name': 'completed',
                      'overall_progress': 100,
                      'n_volunteers': 1}]
         ranked = util.rank(projects)
@@ -751,20 +751,20 @@ class TestRankProjects(object):
     def test_it_penalizes_projects_with_test_in_the_name_or_short_name(self):
         projects = [{'info': {},
                      'n_tasks': 4,
-                     'name': u'my test 123',
-                     'short_name': u'123',
+                     'name': 'my test 123',
+                     'short_name': '123',
                      'overall_progress': 0,
                      'n_volunteers': 1},
                     {'info': {},
                      'n_tasks': 246,
-                     'name': u'123',
-                     'short_name': u'mytest123',
+                     'name': '123',
+                     'short_name': 'mytest123',
                      'overall_progress': 0,
                      'n_volunteers': 1},
                     {'info': {},
                      'n_tasks': 246,
-                     'name': u'real',
-                     'short_name': u'real',
+                     'name': 'real',
+                     'short_name': 'real',
                      'overall_progress': 0,
                      'n_volunteers': 1}]
         ranked = util.rank(projects)
@@ -774,19 +774,19 @@ class TestRankProjects(object):
     def test_rank_by_number_of_tasks(self):
         projects = [
             {'info': {},
-             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'n_tasks': 1, 'name': 'last', 'short_name': 'a',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 11, 'name': u'fourth', 'short_name': u'b',
+             'n_tasks': 11, 'name': 'fourth', 'short_name': 'b',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 21, 'name': u'third', 'short_name': u'c',
+             'n_tasks': 21, 'name': 'third', 'short_name': 'c',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 51, 'name': u'second', 'short_name': u'd',
+             'n_tasks': 51, 'name': 'second', 'short_name': 'd',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 101, 'name': u'first', 'short_name': u'e',
+             'n_tasks': 101, 'name': 'first', 'short_name': 'e',
              'overall_progress': 0, 'n_volunteers': 1}]
         ranked = util.rank(projects)
 
@@ -799,22 +799,22 @@ class TestRankProjects(object):
     def test_rank_by_number_of_crafters(self):
         projects = [
             {'info': {},
-             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'n_tasks': 1, 'name': 'last', 'short_name': 'a',
              'overall_progress': 0, 'n_volunteers': 0},
             {'info': {},
-             'n_tasks': 1, 'name': u'fifth', 'short_name': u'b',
+             'n_tasks': 1, 'name': 'fifth', 'short_name': 'b',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 1, 'name': u'fourth', 'short_name': u'b',
+             'n_tasks': 1, 'name': 'fourth', 'short_name': 'b',
              'overall_progress': 0, 'n_volunteers': 11},
             {'info': {},
-             'n_tasks': 1, 'name': u'third', 'short_name': u'c',
+             'n_tasks': 1, 'name': 'third', 'short_name': 'c',
              'overall_progress': 0, 'n_volunteers': 21},
             {'info': {},
-             'n_tasks': 1, 'name': u'second', 'short_name': u'd',
+             'n_tasks': 1, 'name': 'second', 'short_name': 'd',
              'overall_progress': 0, 'n_volunteers': 51},
             {'info': {},
-             'n_tasks': 1, 'name': u'first', 'short_name': u'e',
+             'n_tasks': 1, 'name': 'first', 'short_name': 'e',
              'overall_progress': 0, 'n_volunteers': 101}]
         ranked = util.rank(projects)
 
@@ -832,25 +832,25 @@ class TestRankProjects(object):
         three_days_ago = today - timedelta(3)
         four_days_ago = today - timedelta(4)
         projects = [{'info': {},
-                     'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+                     'n_tasks': 1, 'name': 'last', 'short_name': 'a',
                      'overall_progress': 0, 'n_volunteers': 1,
                      'last_activity_raw': four_days_ago.strftime(
                          '%Y-%m-%dT%H:%M:%S.%f')},
                     {'info': {},
-                     'n_tasks': 1, 'name': u'fourth', 'short_name': u'c',
+                     'n_tasks': 1, 'name': 'fourth', 'short_name': 'c',
                      'overall_progress': 0, 'n_volunteers': 1,
                      'last_activity_raw': three_days_ago.strftime(
                          '%Y-%m-%dT%H:%M:%S')},
                     {'info': {},
-                     'n_tasks': 1, 'name': u'third', 'short_name': u'd',
+                     'n_tasks': 1, 'name': 'third', 'short_name': 'd',
                      'overall_progress': 0, 'n_volunteers': 1,
                      'updated': two_days_ago.strftime('%Y-%m-%dT%H:%M:%S.%f')},
                     {'info': {},
-                     'n_tasks': 1, 'name': u'second', 'short_name': u'e',
+                     'n_tasks': 1, 'name': 'second', 'short_name': 'e',
                      'overall_progress': 0, 'n_volunteers': 1,
                      'updated': yesterday.strftime('%Y-%m-%dT%H:%M:%S')},
                     {'info': {},
-                     'n_tasks': 1, 'name': u'first', 'short_name': u'e',
+                     'n_tasks': 1, 'name': 'first', 'short_name': 'e',
                      'overall_progress': 0, 'n_volunteers': 1,
                      'updated': today.strftime('%Y-%m-%dT%H:%M:%S.%f')}]
         ranked = util.rank(projects)
@@ -864,19 +864,19 @@ class TestRankProjects(object):
     def test_rank_by_chosen_attribute(self):
         projects = [
             {'info': {},
-             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'n_tasks': 1, 'name': 'last', 'short_name': 'a',
              'overall_progress': 0, 'n_volunteers': 10},
             {'info': {},
-             'n_tasks': 11, 'name': u'fourth', 'short_name': u'b',
+             'n_tasks': 11, 'name': 'fourth', 'short_name': 'b',
              'overall_progress': 0, 'n_volunteers': 25},
             {'info': {},
-             'n_tasks': 21, 'name': u'third', 'short_name': u'c',
+             'n_tasks': 21, 'name': 'third', 'short_name': 'c',
              'overall_progress': 0, 'n_volunteers': 15},
             {'info': {},
-             'n_tasks': 51, 'name': u'second', 'short_name': u'd',
+             'n_tasks': 51, 'name': 'second', 'short_name': 'd',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 101, 'name': u'first', 'short_name': u'e',
+             'n_tasks': 101, 'name': 'first', 'short_name': 'e',
              'overall_progress': 0, 'n_volunteers': 5}]
         ranked = util.rank(projects, order_by='n_volunteers')
 
@@ -889,19 +889,19 @@ class TestRankProjects(object):
     def test_rank_by_chosen_attribute_reversed(self):
         projects = [
             {'info': {},
-             'n_tasks': 1, 'name': u'last', 'short_name': u'a',
+             'n_tasks': 1, 'name': 'last', 'short_name': 'a',
              'overall_progress': 0, 'n_volunteers': 1},
             {'info': {},
-             'n_tasks': 11, 'name': u'fourth', 'short_name': u'b',
+             'n_tasks': 11, 'name': 'fourth', 'short_name': 'b',
              'overall_progress': 0, 'n_volunteers': 5},
             {'info': {},
-             'n_tasks': 21, 'name': u'third', 'short_name': u'c',
+             'n_tasks': 21, 'name': 'third', 'short_name': 'c',
              'overall_progress': 0, 'n_volunteers': 10},
             {'info': {},
-             'n_tasks': 51, 'name': u'second', 'short_name': u'd',
+             'n_tasks': 51, 'name': 'second', 'short_name': 'd',
              'overall_progress': 0, 'n_volunteers': 20},
             {'info': {},
-             'n_tasks': 101, 'name': u'first', 'short_name': u'e',
+             'n_tasks': 101, 'name': 'first', 'short_name': 'e',
              'overall_progress': 0, 'n_volunteers': 30}]
         ranked = util.rank(projects, order_by='n_volunteers', desc=True)
 

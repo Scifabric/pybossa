@@ -59,7 +59,7 @@ class TestJsonProject(web.Helper):
 
             # With errors and CSRF
             csrf = self.get_csrf(url)
-            print csrf
+            print(csrf)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf})
             data = json.loads(res.data)
             assert data.get('errors'), data
@@ -70,7 +70,7 @@ class TestJsonProject(web.Helper):
             # New Project
             project = dict(name='project1', short_name='project1', long_description='lore ipsum')
             csrf = self.get_csrf(url)
-            print csrf
+            print(csrf)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
             assert data.get('status') == SUCCESS, data

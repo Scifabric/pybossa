@@ -58,7 +58,7 @@ class TestSetupScheduledJobs(object):
         schedule_job(a_job, self.scheduler)
         schedule_job(another_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
-        job_func_names = [job.func_name for job in sched_jobs]
+        job_func_names = [job.__name__ for job in sched_jobs]
         module_name = 'test_jobs.test_schedule_jobs'
 
         assert len(sched_jobs) == 2, sched_jobs

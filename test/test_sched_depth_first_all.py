@@ -196,7 +196,7 @@ class TestSched(sched.Helper):
             assert self.is_unique(at['id'], assigned_tasks), err_msg
         # Check that there are task runs saved with the external UID
         answers = task_repo.filter_task_runs_by(external_uid='1xa')
-        print answers
+        print(answers)
         err_msg = "There should be the same amount of task_runs than tasks"
         assert len(answers) == len(assigned_tasks), err_msg
         assigned_tasks_ids = sorted([at['id'] for at in assigned_tasks])
@@ -242,7 +242,7 @@ class TestSched(sched.Helper):
             assert self.is_unique(at['id'], assigned_tasks), err_msg
         # Check that there are task runs saved with the external UID
         answers = task_repo.filter_task_runs_by(external_uid='1xa')
-        print answers
+        print(answers)
         err_msg = "There should be the same amount of task_runs than tasks"
         assert len(answers) == len(assigned_tasks), err_msg
         assigned_tasks_ids = sorted([at['id'] for at in assigned_tasks])
@@ -1146,7 +1146,7 @@ class TestSched(sched.Helper):
         data = json.loads(res.data)
 
         err_msg = "User should get a task"
-        assert 'project_id' in data.keys(), err_msg
+        assert 'project_id' in list(data.keys()), err_msg
         assert data['project_id'] == project_id, err_msg
         assert data['id'] == all_tasks[0].id, err_msg
         assert data['state'] == 'completed', err_msg
@@ -1179,8 +1179,8 @@ class TestSched(sched.Helper):
         err_msg = "User should get a task"
         i = 0
         for t in data:
-            print t['id']
-            assert 'project_id' in t.keys(), err_msg
+            print(t['id'])
+            assert 'project_id' in list(t.keys()), err_msg
             assert t['project_id'] == project_id, err_msg
             assert t['id'] == all_tasks[i].id, (err_msg, t, all_tasks[i].id)
             assert t['state'] == 'completed', err_msg

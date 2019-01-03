@@ -22,7 +22,7 @@ import json
 import os
 import shutil
 import zipfile
-from StringIO import StringIO
+from io import StringIO
 from default import db, Fixtures, with_context, with_context_settings, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call, MagicMock
@@ -79,7 +79,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         keys = ['featured', 'template']
         for key in keys:
-            assert key in data.keys(), data
+            assert key in list(data.keys()), data
         assert len(data['featured']) == 1, data
         assert data['featured'][0]['short_name'] == project.short_name
 
@@ -257,8 +257,8 @@ class TestWeb(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         assert res.status_code == 200, err_msg
-        assert "announcements" in data.keys(), data
-        assert "template" in data.keys(), data
+        assert "announcements" in list(data.keys()), data
+        assert "template" in list(data.keys()), data
         # create an announcement in DB
         announcement = AnnouncementFactory.create()
         res = self.app_get_json(url)
@@ -353,7 +353,7 @@ class TestWeb(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         err_msg = 'Field missing in JSON response'
-        assert 'avg_contrib_time' in data, (err_msg, data.keys())
+        assert 'avg_contrib_time' in data, (err_msg, list(data.keys()))
         assert 'n_completed_tasks' in data, err_msg
         assert 'n_tasks' in data, err_msg
         assert 'n_volunteers' in data, err_msg
@@ -541,7 +541,7 @@ class TestWeb(web.Helper):
 
         self.create()
         res = self.app_get_json('/account/')
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -552,7 +552,7 @@ class TestWeb(web.Helper):
         assert data['pagination']['per_page'] == 24, err_msg
         # page 1 should also work
         res = self.app_get_json('/account/page/1')
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -580,13 +580,13 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
 
         form = RegisterForm()
-        expected_fields = form.data.keys()
+        expected_fields = list(form.data.keys())
 
         err_msg = "There should be a form"
         assert data.get('form'), err_msg
         for field in expected_fields:
             err_msg = "%s form field is missing"
-            assert field in data.get('form').keys(), err_msg
+            assert field in list(data.get('form').keys()), err_msg
         err_msg = "There should be a CSRF field"
         assert data.get('form').get('csrf'), err_msg
         err_msg = "There should be no errors"
@@ -634,7 +634,7 @@ class TestWeb(web.Helper):
 
             data = json.dumps(userdict)
             data += "}"
-            print data
+            print(data)
             res = self.app.post('/account/register', data=data,
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf})
@@ -728,10 +728,10 @@ class TestWeb(web.Helper):
                                confirm_url='https://localhost/account/register/confirmation?key=')
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
-        assert 'subject' in mail_data.keys()
-        assert 'recipients' in mail_data.keys()
-        assert 'body' in mail_data.keys()
-        assert 'html' in mail_data.keys()
+        assert 'subject' in list(mail_data.keys())
+        assert 'recipients' in list(mail_data.keys())
+        assert 'body' in list(mail_data.keys())
+        assert 'html' in list(mail_data.keys())
 
     @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
@@ -762,10 +762,10 @@ class TestWeb(web.Helper):
                                    confirm_url='https://localhost/account/register/confirmation?key=')
             assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
             mail_data = queue.enqueue.call_args[0][1]
-            assert 'subject' in mail_data.keys()
-            assert 'recipients' in mail_data.keys()
-            assert 'body' in mail_data.keys()
-            assert 'html' in mail_data.keys()
+            assert 'subject' in list(mail_data.keys())
+            assert 'recipients' in list(mail_data.keys())
+            assert 'body' in list(mail_data.keys())
+            assert 'html' in list(mail_data.keys())
 
 
     @with_context
@@ -791,10 +791,10 @@ class TestWeb(web.Helper):
                                confirm_url='https://localhost/account/register/confirmation?key=')
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
-        assert 'subject' in mail_data.keys()
-        assert 'recipients' in mail_data.keys()
-        assert 'body' in mail_data.keys()
-        assert 'html' in mail_data.keys()
+        assert 'subject' in list(mail_data.keys())
+        assert 'recipients' in list(mail_data.keys())
+        assert 'body' in list(mail_data.keys())
+        assert 'html' in list(mail_data.keys())
         assert mail_data['recipients'][0] == data['email_addr']
         user = db.session.query(User).get(1)
         msg = "Confirmation email flag not updated"
@@ -874,10 +874,10 @@ class TestWeb(web.Helper):
                                confirm_url='https://localhost/account/register/confirmation?key=')
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
-        assert 'subject' in mail_data.keys()
-        assert 'recipients' in mail_data.keys()
-        assert 'body' in mail_data.keys()
-        assert 'html' in mail_data.keys()
+        assert 'subject' in list(mail_data.keys())
+        assert 'recipients' in list(mail_data.keys())
+        assert 'body' in list(mail_data.keys())
+        assert 'html' in list(mail_data.keys())
         assert mail_data['recipients'][0] == data['email_addr']
         user = db.session.query(User).get(1)
         msg = "Confirmation email flag not updated"
@@ -912,10 +912,10 @@ class TestWeb(web.Helper):
                                confirm_url='https://localhost/account/register/confirmation?key=')
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
         mail_data = queue.enqueue.call_args[0][1]
-        assert 'subject' in mail_data.keys()
-        assert 'recipients' in mail_data.keys()
-        assert 'body' in mail_data.keys()
-        assert 'html' in mail_data.keys()
+        assert 'subject' in list(mail_data.keys())
+        assert 'recipients' in list(mail_data.keys())
+        assert 'body' in list(mail_data.keys())
+        assert 'html' in list(mail_data.keys())
         assert mail_data['recipients'][0] == data['email_addr']
         user = db.session.query(User).get(1)
         msg = "Confirmation email flag not updated"
@@ -1029,7 +1029,7 @@ class TestWeb(web.Helper):
                     email_addr="johndoe@example.com")
         res = self.app.post('/account/register', data=data,
                             follow_redirects=True)
-        print dir(mockredirect)
+        print(dir(mockredirect))
         mockredirect.assert_called_with('/')
 
     @with_context
@@ -1182,8 +1182,8 @@ class TestWeb(web.Helper):
         err_msg = "There should be a form with two keys email & password"
         csrf = data.get('csrf')
         assert data.get('title') == "Sign in", data
-        assert 'email' in data.get('form').keys(), (err_msg, data)
-        assert 'password' in data.get('form').keys(), (err_msg, data)
+        assert 'email' in list(data.get('form').keys()), (err_msg, data)
+        assert 'password' in list(data.get('form').keys()), (err_msg, data)
 
         res = self.signin(email='', content_type="application/json",
                           follow_redirects=False, csrf=csrf)
@@ -1496,7 +1496,7 @@ class TestWeb(web.Helper):
         user = user_repo.get_by(email_addr='johndoe2@example.com')
         url = '/account/%s/update' % user.name
         assert data.get('next') == url, res.data
-        flash = u"Your profile has been updated!"
+        flash = "Your profile has been updated!"
         err_msg = "There should be a flash message"
         assert data.get('flash') == flash, (data, err_msg)
         err_msg = "It should return the same updated data"
@@ -1790,27 +1790,27 @@ class TestWeb(web.Helper):
 
         data = json.loads(res.data)['project']
 
-        assert 'id' in data.keys(), data.keys()
-        assert 'description' in data.keys(), data.keys()
-        assert 'info' in data.keys(), data.keys()
-        assert 'long_description' in data.keys(), data.keys()
-        assert 'n_tasks' in data.keys(), data.keys()
-        assert 'n_volunteers' in data.keys(), data.keys()
-        assert 'name' in data.keys(), data.keys()
-        assert 'overall_progress' in data.keys(), data.keys()
-        assert 'short_name' in data.keys(), data.keys()
-        assert 'created' in data.keys(), data.keys()
-        assert 'long_description' in data.keys(), data.keys()
-        assert 'last_activity' in data.keys(), data.keys()
-        assert 'last_activity_raw' in data.keys(), data.keys()
-        assert 'n_task_runs' in data.keys(), data.keys()
-        assert 'n_results' in data.keys(), data.keys()
-        assert 'owner' in data.keys(), data.keys()
-        assert 'updated' in data.keys(), data.keys()
-        assert 'featured' in data.keys(), data.keys()
-        assert 'owner_id' in data.keys(), data.keys()
-        assert 'n_completed_tasks' in data.keys(), data.keys()
-        assert 'n_blogposts' in data.keys(), data.keys()
+        assert 'id' in list(data.keys()), list(data.keys())
+        assert 'description' in list(data.keys()), list(data.keys())
+        assert 'info' in list(data.keys()), list(data.keys())
+        assert 'long_description' in list(data.keys()), list(data.keys())
+        assert 'n_tasks' in list(data.keys()), list(data.keys())
+        assert 'n_volunteers' in list(data.keys()), list(data.keys())
+        assert 'name' in list(data.keys()), list(data.keys())
+        assert 'overall_progress' in list(data.keys()), list(data.keys())
+        assert 'short_name' in list(data.keys()), list(data.keys())
+        assert 'created' in list(data.keys()), list(data.keys())
+        assert 'long_description' in list(data.keys()), list(data.keys())
+        assert 'last_activity' in list(data.keys()), list(data.keys())
+        assert 'last_activity_raw' in list(data.keys()), list(data.keys())
+        assert 'n_task_runs' in list(data.keys()), list(data.keys())
+        assert 'n_results' in list(data.keys()), list(data.keys())
+        assert 'owner' in list(data.keys()), list(data.keys())
+        assert 'updated' in list(data.keys()), list(data.keys())
+        assert 'featured' in list(data.keys()), list(data.keys())
+        assert 'owner_id' in list(data.keys()), list(data.keys())
+        assert 'n_completed_tasks' in list(data.keys()), list(data.keys())
+        assert 'n_blogposts' in list(data.keys()), list(data.keys())
 
     @with_context
     def test_update_project_json_as_user(self):
@@ -2007,13 +2007,13 @@ class TestWeb(web.Helper):
         url = '/project/category/featured/'
         res = self.app_get_json(url, follow_redirects=True)
         data = json.loads(res.data)
-        assert 'pagination' in data.keys(), data
-        assert 'active_cat' in data.keys(), data
-        assert 'categories' in data.keys(), data
-        assert 'projects' in data.keys(), data
+        assert 'pagination' in list(data.keys()), data
+        assert 'active_cat' in list(data.keys()), data
+        assert 'categories' in list(data.keys()), data
+        assert 'projects' in list(data.keys()), data
         assert data['pagination']['next'] is False, data
         assert data['pagination']['prev'] is False, data
-        assert data['pagination']['total'] == 1L, data
+        assert data['pagination']['total'] == 1, data
         assert data['active_cat']['name'] == 'Featured', data
         assert len(data['projects']) == 1, data
         assert data['projects'][0]['id'] == project.id, data
@@ -2203,7 +2203,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     def test_10b_application_long_description_allows_markdown(self, mock):
         """Test WEB long description markdown is supported"""
-        markdown_description = u'Markdown\n======='
+        markdown_description = 'Markdown\n======='
         self.register()
         self.new_project(long_description=markdown_description)
 
@@ -2525,7 +2525,7 @@ class TestWeb(web.Helper):
     def test_delete_project_deletes_task_zip_files_too(self, uploader):
         """Test WEB delete project also deletes zip files for task and taskruns"""
         Fixtures.create()
-        self.signin(email=u'tester@tester.com', password=u'tester')
+        self.signin(email='tester@tester.com', password='tester')
         res = self.app.post('/project/test-app/delete', follow_redirects=True)
         expected = [call('1_test-app_task_json.zip', 'user_2'),
                     call('1_test-app_task_csv.zip', 'user_2'),
@@ -2775,13 +2775,13 @@ class TestWeb(web.Helper):
         res = self.app_get_json('/project/category/draft/')
         data = json.loads(res.data)
         project = project_repo.get(1)
-        assert 'pagination' in data.keys(), data
-        assert 'active_cat' in data.keys(), data
-        assert 'categories' in data.keys(), data
-        assert 'projects' in data.keys(), data
+        assert 'pagination' in list(data.keys()), data
+        assert 'active_cat' in list(data.keys()), data
+        assert 'categories' in list(data.keys()), data
+        assert 'projects' in list(data.keys()), data
         assert data['pagination']['next'] is False, data
         assert data['pagination']['prev'] is False, data
-        assert data['pagination']['total'] == 1L, data
+        assert data['pagination']['total'] == 1, data
         assert data['active_cat']['name'] == 'Draft', data
         assert len(data['projects']) == 1, data
         assert data['projects'][0]['id'] == project.id, data
@@ -2942,7 +2942,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
-        print res.data
+        print(res.data)
 
         assert fake_guard_instance.stamp.called
 
@@ -2989,7 +2989,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         res = self.app_get_json('/project/%s/task/%s' % (project1_short_name, task2_id))
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert 'flash' in data, err_msg
         assert 'owner' in data, err_msg
@@ -3242,22 +3242,22 @@ class TestWeb(web.Helper):
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
         fake_response = {
-            u'access_token': u'access_token',
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': 'access_token',
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
         fake_user = {
-            u'family_name': u'Doe', u'name': u'John Doe',
-            u'picture': u'https://goo.gl/img.jpg',
-            u'locale': u'en',
-            u'gender': u'male',
-            u'email': u'john@gmail.com',
-            u'birthday': u'0000-01-15',
-            u'link': u'https://plus.google.com/id',
-            u'given_name': u'John',
-            u'id': u'111111111111111111111',
-            u'verified_email': True}
+            'family_name': 'Doe', 'name': 'John Doe',
+            'picture': 'https://goo.gl/img.jpg',
+            'locale': 'en',
+            'gender': 'male',
+            'email': 'john@gmail.com',
+            'birthday': '0000-01-15',
+            'link': 'https://plus.google.com/id',
+            'given_name': 'John',
+            'id': '111111111111111111111',
+            'verified_email': True}
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
@@ -3271,22 +3271,22 @@ class TestWeb(web.Helper):
     def test_40_google_oauth_creation(self):
         """Test WEB Google OAuth detects same user name/email works"""
         fake_response = {
-            u'access_token': u'access_token',
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': 'access_token',
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
         fake_user = {
-            u'family_name': u'Doe', u'name': u'John Doe',
-            u'picture': u'https://goo.gl/img.jpg',
-            u'locale': u'en',
-            u'gender': u'male',
-            u'email': u'john@gmail.com',
-            u'birthday': u'0000-01-15',
-            u'link': u'https://plus.google.com/id',
-            u'given_name': u'John',
-            u'id': u'111111111111111111111',
-            u'verified_email': True}
+            'family_name': 'Doe', 'name': 'John Doe',
+            'picture': 'https://goo.gl/img.jpg',
+            'locale': 'en',
+            'gender': 'male',
+            'email': 'john@gmail.com',
+            'birthday': '0000-01-15',
+            'link': 'https://plus.google.com/id',
+            'given_name': 'John',
+            'id': '111111111111111111111',
+            'verified_email': True}
 
         self.register()
         self.signout()
@@ -3301,25 +3301,25 @@ class TestWeb(web.Helper):
     def test_39_facebook_oauth_creation(self):
         """Test WEB Facebook OAuth creation of user works"""
         fake_response = {
-            u'access_token': u'access_token',
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': 'access_token',
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
         fake_user = {
-            u'username': u'teleyinex',
-            u'first_name': u'John',
-            u'last_name': u'Doe',
-            u'verified': True,
-            u'name': u'John Doe',
-            u'locale': u'en_US',
-            u'gender': u'male',
-            u'email': u'johndoe@example.com',
-            u'quotes': u'"quote',
-            u'link': u'http://www.facebook.com/johndoe',
-            u'timezone': 1,
-            u'updated_time': u'2011-11-11T12:33:52+0000',
-            u'id': u'11111'}
+            'username': 'teleyinex',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'verified': True,
+            'name': 'John Doe',
+            'locale': 'en_US',
+            'gender': 'male',
+            'email': 'johndoe@example.com',
+            'quotes': '"quote',
+            'link': 'http://www.facebook.com/johndoe',
+            'timezone': 1,
+            'updated_time': '2011-11-11T12:33:52+0000',
+            'id': '11111'}
 
         from pybossa.view import facebook
         response_user = facebook.manage_user(fake_response['access_token'],
@@ -3333,25 +3333,25 @@ class TestWeb(web.Helper):
     def test_40_facebook_oauth_creation(self):
         """Test WEB Facebook OAuth detects same user name/email works"""
         fake_response = {
-            u'access_token': u'access_token',
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': 'access_token',
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
         fake_user = {
-            u'username': u'teleyinex',
-            u'first_name': u'John',
-            u'last_name': u'Doe',
-            u'verified': True,
-            u'name': u'John Doe',
-            u'locale': u'en_US',
-            u'gender': u'male',
-            u'email': u'johndoe@example.com',
-            u'quotes': u'"quote',
-            u'link': u'http://www.facebook.com/johndoe',
-            u'timezone': 1,
-            u'updated_time': u'2011-11-11T12:33:52+0000',
-            u'id': u'11111'}
+            'username': 'teleyinex',
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'verified': True,
+            'name': 'John Doe',
+            'locale': 'en_US',
+            'gender': 'male',
+            'email': 'johndoe@example.com',
+            'quotes': '"quote',
+            'link': 'http://www.facebook.com/johndoe',
+            'timezone': 1,
+            'updated_time': '2011-11-11T12:33:52+0000',
+            'id': '11111'}
 
         self.register()
         self.signout()
@@ -3366,14 +3366,14 @@ class TestWeb(web.Helper):
     def test_39_twitter_oauth_creation(self):
         """Test WEB Twitter OAuth creation of user works"""
         fake_response = {
-            u'access_token': {u'oauth_token': u'oauth_token',
-                              u'oauth_token_secret': u'oauth_token_secret'},
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': {'oauth_token': 'oauth_token',
+                              'oauth_token_secret': 'oauth_token_secret'},
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
-        fake_user = {u'screen_name': u'johndoe',
-                     u'user_id': u'11111'}
+        fake_user = {'screen_name': 'johndoe',
+                     'user_id': '11111'}
 
         from pybossa.view import twitter
         response_user = twitter.manage_user(fake_response['access_token'],
@@ -3391,14 +3391,14 @@ class TestWeb(web.Helper):
     def test_40_twitter_oauth_creation(self):
         """Test WEB Twitter OAuth detects same user name/email works"""
         fake_response = {
-            u'access_token': {u'oauth_token': u'oauth_token',
-                              u'oauth_token_secret': u'oauth_token_secret'},
-            u'token_type': u'Bearer',
-            u'expires_in': 3600,
-            u'id_token': u'token'}
+            'access_token': {'oauth_token': 'oauth_token',
+                              'oauth_token_secret': 'oauth_token_secret'},
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'id_token': 'token'}
 
-        fake_user = {u'screen_name': u'johndoe',
-                     u'user_id': u'11111'}
+        fake_user = {'screen_name': 'johndoe',
+                     'user_id': '11111'}
 
         self.register()
         self.signout()
@@ -3462,7 +3462,7 @@ class TestWeb(web.Helper):
         import io
         self.register()
         user = user_repo.get_by(name='johndoe')
-        print user
+        print(user)
         url = '/account/johndoe/update'
         csrf = self.get_csrf(url)
         payload = {'avatar': (io.BytesIO(b"abcdef"), 'test.jpg'),
@@ -3681,7 +3681,7 @@ class TestWeb(web.Helper):
         assert data.get('form').get('csrf'), data
         keys = ['current_password', 'new_password', 'confirm']
         for key in keys:
-            assert key in data.get('form').keys(), data
+            assert key in list(data.get('form').keys()), data
 
         res = self.app_get_json('/account/reset-password?key=%s' % (key))
         assert 403 == res.status_code
@@ -4029,7 +4029,7 @@ class TestWeb(web.Helper):
         self.signout()
         res = self.app_get_json('/project/sampleapp/tasks/')
         data = json.loads(res.data)
-        print res.data
+        print(res.data)
         err_msg = 'Field missing in data'
         assert 'autoimporter_enabled' in data, err_msg
         assert 'last_activity' in data, err_msg
@@ -4177,7 +4177,7 @@ class TestWeb(web.Helper):
         self.update_project()
         project = db.session.query(Project).first()
         for key in _info:
-            assert key in project.info.keys(), \
+            assert key in list(project.info.keys()), \
                 "The key %s is lost and it should be here" % key
         assert project.name == "Sample Project", "The project has not been updated"
         error_msg = "The project description has not been updated"
@@ -4192,7 +4192,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for the root user"
-        print res.data
+        print(res.data)
         assert "Root Message" in res.data, error_msg
         error_msg = "There should be a message for the user"
         assert "User Message" in res.data, error_msg
@@ -4326,7 +4326,7 @@ class TestWeb(web.Helper):
                     'personal_data.zip')
 
         uri = "/uploads/user_%s/random_sec_personal_data.zip" % user.id
-        print uri
+        print(uri)
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
@@ -4470,38 +4470,38 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_export_task_json_support_non_latin1_project_names(self):
-        project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        project = ProjectFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         self.clear_temp_container(project.owner_id)
         res = self.app.get('project/%s/tasks/export?type=task&format=json' % project.short_name,
                            follow_redirects=True)
-        filename = secure_filename(unidecode(u'Измени Киев!'))
+        filename = secure_filename(unidecode('Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
     def test_export_taskrun_json_support_non_latin1_project_names(self):
-        project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        project = ProjectFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % project.short_name,
                            follow_redirects=True)
-        filename = secure_filename(unidecode(u'Измени Киев!'))
+        filename = secure_filename(unidecode('Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
     def test_export_task_csv_support_non_latin1_project_names(self):
-        project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        project = ProjectFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         TaskFactory.create(project=project)
         res = self.app.get('/project/%s/tasks/export?type=task&format=csv' % project.short_name,
                            follow_redirects=True)
-        filename = secure_filename(unidecode(u'Измени Киев!'))
+        filename = secure_filename(unidecode('Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
     def test_export_taskrun_csv_support_non_latin1_project_names(self):
-        project = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        project = ProjectFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         task = TaskFactory.create(project=project)
         TaskRunFactory.create(task=task)
         res = self.app.get('/project/%s/tasks/export?type=task_run&format=csv' % project.short_name,
                            follow_redirects=True)
-        filename = secure_filename(unidecode(u'Измени Киев!'))
+        filename = secure_filename(unidecode('Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
@@ -4628,7 +4628,7 @@ class TestWeb(web.Helper):
             task_run_ids = d['task_run_ids']
             fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
             fl['task_run_ids'] = task_run_ids
-            for tk in fl.keys():
+            for tk in list(fl.keys()):
                 expected_key = "%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
@@ -4642,14 +4642,14 @@ class TestWeb(web.Helper):
             result_dict_flat = flatten(result_dict,
                                        root_keys_to_ignore='task_run_ids')
             result_dict_flat['task_run_ids'] = task_run_ids
-            for k in result_dict_flat.keys():
+            for k in list(result_dict_flat.keys()):
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
                                         et[keys.index(slug)])
                 if result_dict_flat[k] is not None:
-                    assert unicode(result_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    assert str(result_dict_flat[k]) == et[keys.index(slug)], err_msg
                 else:
-                    assert u'' == et[keys.index(slug)], err_msg
+                    assert '' == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_result_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -4721,18 +4721,18 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            print t
+            print(t)
             d = t.dictize()
             task_run_ids = d['task_run_ids']
             fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
             fl['task_run_ids'] = task_run_ids
             # keys.append('result_id')
-            print fl
-            for tk in fl.keys():
+            print(fl)
+            for tk in list(fl.keys()):
                 expected_key = "%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)
             err_msg = "All the result.info column names should be included"
-            for tk in t.info.keys():
+            for tk in list(t.info.keys()):
                 expected_key = "info_%s" % tk
                 assert expected_key in keys, err_msg
 
@@ -4744,18 +4744,18 @@ class TestWeb(web.Helper):
             result_dict_flat = flatten(result_dict,
                                        root_keys_to_ignore='task_run_ids')
             result_dict_flat['task_run_ids'] = task_run_ids
-            for k in result_dict_flat.keys():
+            for k in list(result_dict_flat.keys()):
                 slug = '%s' % k
                 err_msg = "%s != %s" % (result_dict_flat[k],
                                         et[keys.index(slug)])
                 if result_dict_flat[k] is not None:
-                    assert unicode(result_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    assert str(result_dict_flat[k]) == et[keys.index(slug)], err_msg
                 else:
-                    assert u'' == et[keys.index(slug)], err_msg
-            for k in result_dict['info'].keys():
+                    assert '' == et[keys.index(slug)], err_msg
+            for k in list(result_dict['info'].keys()):
                 slug = 'info_%s' % k
                 err_msg = "%s != %s" % (result_dict['info'][k], et[keys.index(slug)])
-                assert unicode(result_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                assert str(result_dict_flat[slug]) == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_result_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -4822,13 +4822,13 @@ class TestWeb(web.Helper):
                 d = copy.deepcopy(t.dictize())
                 if d['info']:
                     d['info'].pop('geojson', None)
-                for tk in flatten(d).keys():
+                for tk in list(flatten(d).keys()):
                     expected_key = "%s" % tk
                     assert expected_key in keys, (expected_key, err_msg)
                 err_msg = "All the task.info column names should be included except geojson"
                 info_keys = None
                 if t.info:
-                    info_keys = copy.deepcopy(t.info.keys())
+                    info_keys = copy.deepcopy(list(t.info.keys()))
                     info_keys.pop(info_keys.index('geojson'))
                     for tk in info_keys:
                         expected_key = "info_%s" % tk
@@ -4841,17 +4841,17 @@ class TestWeb(web.Helper):
                 if task_dict['info']:
                     task_dict['info'].pop('geojson', None)
                     task_dict_flat = copy.deepcopy(flatten(task_dict))
-                    for k in task_dict_flat.keys():
+                    for k in list(task_dict_flat.keys()):
                         slug = '%s' % k
                         err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
                         if task_dict_flat[k] is not None:
-                            assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                            assert str(task_dict_flat[k]) == et[keys.index(slug)], err_msg
                         else:
-                            assert u'' == et[keys.index(slug)], err_msg
-                    for k in task_dict['info'].keys():
+                            assert '' == et[keys.index(slug)], err_msg
+                    for k in list(task_dict['info'].keys()):
                         slug = 'info_%s' % k
                         err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
-                        assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                        assert str(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -4949,7 +4949,7 @@ class TestWeb(web.Helper):
             self.clear_temp_container(project.owner_id)
             for i in range(0, 5):
                 task = TaskFactory.create(project=project,
-                                          info={u'answer':[{u'eñe': i}]})
+                                          info={'answer':[{'eñe': i}]})
             uri = '/project/%s/tasks/export' % project.short_name
 
             res = self.app.get(uri, follow_redirects=True)
@@ -4991,7 +4991,7 @@ class TestWeb(web.Helper):
                                                                len(project.tasks))
             for t in project.tasks:
                 err_msg = "All the task column names should be included"
-                for tk in flatten(t.info['answer'][0]).keys():
+                for tk in list(flatten(t.info['answer'][0]).keys()):
                     expected_key = "%s" % tk
                     assert expected_key in keys, (expected_key, err_msg)
 
@@ -5000,17 +5000,17 @@ class TestWeb(web.Helper):
                 task = db.session.query(Task).get(task_id)
                 task_dict_flat = flatten(task.info['answer'][0])
                 task_dict = task.dictize()
-                for k in task_dict_flat.keys():
+                for k in list(task_dict_flat.keys()):
                     slug = '%s' % k
                     err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
                     if task_dict_flat[k] is not None:
-                        assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                        assert str(task_dict_flat[k]) == et[keys.index(slug)], err_msg
                     else:
-                        assert u'' == et[keys.index(slug)], err_msg
+                        assert '' == et[keys.index(slug)], err_msg
                 for datum in task_dict['info']['answer']:
-                    for k in datum.keys():
+                    for k in list(datum.keys()):
                         slug = '%s' % k
-                        assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                        assert str(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -5037,7 +5037,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create()
         self.clear_temp_container(project.owner_id)
         for i in range(0, 5):
-            task = TaskFactory.create(project=project, info={u'eñe': i})
+            task = TaskFactory.create(project=project, info={'eñe': i})
         uri = '/project/%s/tasks/export' % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "Export All Tasks and Task Runs"
@@ -5078,11 +5078,11 @@ class TestWeb(web.Helper):
                                                            len(project.tasks))
         for t in project.tasks:
             err_msg = "All the task column names should be included"
-            for tk in flatten(t.dictize()).keys():
+            for tk in list(flatten(t.dictize()).keys()):
                 expected_key = "%s" % tk
                 assert expected_key in keys, (expected_key, err_msg)
             err_msg = "All the task.info column names should be included"
-            for tk in t.info.keys():
+            for tk in list(t.info.keys()):
                 expected_key = "info_%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)
 
@@ -5091,17 +5091,17 @@ class TestWeb(web.Helper):
             task = db.session.query(Task).get(task_id)
             task_dict_flat = flatten(task.dictize())
             task_dict = task.dictize()
-            for k in task_dict_flat.keys():
+            for k in list(task_dict_flat.keys()):
                 slug = '%s' % k
                 err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
                 if task_dict_flat[k] is not None:
-                    assert unicode(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    assert str(task_dict_flat[k]) == et[keys.index(slug)], err_msg
                 else:
-                    assert u'' == et[keys.index(slug)], err_msg
-            for k in task_dict['info'].keys():
+                    assert '' == et[keys.index(slug)], err_msg
+            for k in list(task_dict['info'].keys()):
                 slug = 'info_%s' % k
                 err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
-                assert unicode(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                assert str(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -5195,7 +5195,7 @@ class TestWeb(web.Helper):
         assert len(exported_task_runs) == len(project.task_runs), err_msg
 
         for t in project.tasks[0].task_runs:
-            for tk in flatten(t.dictize()).keys():
+            for tk in list(flatten(t.dictize()).keys()):
                 expected_key = "%s" % tk
                 assert expected_key in keys, expected_key
 
@@ -5207,9 +5207,9 @@ class TestWeb(web.Helper):
                 slug = '%s' % k
                 err_msg = "%s != %s" % (task_run_dict[k], et[keys.index(slug)])
                 if task_run_dict[k] is not None:
-                    assert unicode(task_run_dict[k]) == et[keys.index(slug)], err_msg
+                    assert str(task_run_dict[k]) == et[keys.index(slug)], err_msg
                 else:
-                    assert u'' == et[keys.index(slug)], err_msg
+                    assert '' == et[keys.index(slug)], err_msg
         # Task runs are exported as an attached file
         content_disposition = 'attachment; filename=%d_project1_task_run_csv.zip' % project.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -5539,29 +5539,29 @@ class TestWeb(web.Helper):
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None
             if 'epicollect' in importer:
-                assert 'epicollect_form' in data['form'].keys(), data
-                assert 'epicollect_project' in data['form'].keys(), data
+                assert 'epicollect_form' in list(data['form'].keys()), data
+                assert 'epicollect_project' in list(data['form'].keys()), data
             if 'csv' in importer:
-                assert 'csv_url' in data['form'].keys(), data
+                assert 'csv_url' in list(data['form'].keys()), data
             if importer == 's3':
-                assert 'files' in data['form'].keys(), data
-                assert 'bucket' in data['form'].keys(), data
+                assert 'files' in list(data['form'].keys()), data
+                assert 'bucket' in list(data['form'].keys()), data
             if 'twitter' in importer:
-                assert 'max_tweets' in data['form'].keys(), data
-                assert 'source' in data['form'].keys(), data
-                assert 'user_credentials' in data['form'].keys(), data
+                assert 'max_tweets' in list(data['form'].keys()), data
+                assert 'source' in list(data['form'].keys()), data
+                assert 'user_credentials' in list(data['form'].keys()), data
             if 'youtube' in importer:
-                assert 'playlist_url' in data['form'].keys(), data
+                assert 'playlist_url' in list(data['form'].keys()), data
             if 'gdocs' in importer:
-                assert 'googledocs_url' in data['form'].keys(), data
+                assert 'googledocs_url' in list(data['form'].keys()), data
             if 'dropbox' in importer:
-                assert 'files' in data['form'].keys(), data
+                assert 'files' in list(data['form'].keys()), data
             if 'flickr' in importer:
-                assert 'album_id' in data['form'].keys(), data
+                assert 'album_id' in list(data['form'].keys()), data
             if 'localCSV' in importer:
-                assert 'form_name' in data['form'].keys(), data
+                assert 'form_name' in list(data['form'].keys()), data
             if 'iiif' in importer:
-                assert 'manifest_uri' in data['form'].keys(), data
+                assert 'manifest_uri' in list(data['form'].keys()), data
 
         for importer in importers:
             if 'epicollect' in importer:
@@ -5573,7 +5573,7 @@ class TestWeb(web.Helper):
                 data = dict(csv_url='http://data.com')
                 res = self.app_post_json(url + importer, data=data)
                 data = json.loads(res.data)
-                print data
+                print(data)
                 assert data['flash'] == "SUCCESS", data
             if 's3' in importer:
                 data = dict(files='data', bucket='bucket')
@@ -5832,7 +5832,7 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
-        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
+        assert {'Bar': '2', 'Foo': '1'} == task.info
         assert task.priority_0 == 3
         assert "1 new task was imported successfully" in res.data
 
@@ -5851,7 +5851,7 @@ class TestWeb(web.Helper):
         err_msg = "There should be only 2 tasks"
         assert len(project.tasks) == 2, (err_msg, project.tasks)
         n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
@@ -5873,7 +5873,7 @@ class TestWeb(web.Helper):
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
-        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
+        assert {'Bar': '2', 'Foo': '1'} == task.info
         assert task.priority_0 == 3
         assert "1 new task was imported successfully" in res.data
 
@@ -5891,7 +5891,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         assert len(project.tasks) == 2, "There should be only 2 tasks"
         n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
@@ -5905,7 +5905,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         assert len(project.tasks) == 2, "There should be only 2 tasks"
         n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
@@ -5950,7 +5950,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         assert len(project.tasks) == 2, "There should be only 2 tasks"
         n = 0
-        epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
+        epi_tasks = [{'DeviceID': 23}, {'DeviceID': 24}]
         for t in project.tasks:
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
@@ -5994,11 +5994,11 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data, err_msg
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
-            u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
-            u'url_b': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
-            u'link': u'https://www.flickr.com/photos/32985084@N00/8947115130',
-            u'title': u'Title'}
+            'url': 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
+            'url_m': 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
+            'url_b': 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
+            'link': 'https://www.flickr.com/photos/32985084@N00/8947115130',
+            'title': 'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
@@ -6016,10 +6016,10 @@ class TestWeb(web.Helper):
     @with_context
     def test_bulk_dropbox_import_works(self):
         """Test WEB bulk Dropbox import works"""
-        dropbox_file_data = (u'{"bytes":286,'
-                             u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
-                             u'"name":"test.txt",'
-                             u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        dropbox_file_data = ('{"bytes":286,'
+                             '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
+                             '"name":"test.txt",'
+                             '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
         self.register()
         self.new_project()
         project = db.session.query(Project).first()
@@ -6032,9 +6032,9 @@ class TestWeb(web.Helper):
         err_msg = "Tasks should be imported"
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'link_raw': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1',
-            u'link': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0',
-            u'filename': u'test.txt'}
+            'link_raw': 'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1',
+            'link': 'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0',
+            'filename': 'test.txt'}
         assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
@@ -6045,14 +6045,14 @@ class TestWeb(web.Helper):
         tweet_data = {
             'statuses': [
                 {
-                    u'created_at': 'created',
-                    u'favorite_count': 77,
-                    u'coordinates': 'coords',
-                    u'id_str': u'1',
-                    u'id': 1,
-                    u'retweet_count': 44,
-                    u'user': {'screen_name': 'fulanito'},
-                    u'text': 'this is a tweet #match'
+                    'created_at': 'created',
+                    'favorite_count': 77,
+                    'coordinates': 'coords',
+                    'id_str': '1',
+                    'id': 1,
+                    'retweet_count': 44,
+                    'user': {'screen_name': 'fulanito'},
+                    'text': 'this is a tweet #match'
                 }
             ]
         }
@@ -6073,15 +6073,15 @@ class TestWeb(web.Helper):
         err_msg = "Tasks should be imported"
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'created_at': 'created',
-            u'favorite_count': 77,
-            u'coordinates': 'coords',
-            u'id_str': u'1',
-            u'id': 1,
-            u'retweet_count': 44,
-            u'user': {'screen_name': 'fulanito'},
-            u'user_screen_name': 'fulanito',
-            u'text': 'this is a tweet #match'
+            'created_at': 'created',
+            'favorite_count': 77,
+            'coordinates': 'coords',
+            'id_str': '1',
+            'id': 1,
+            'retweet_count': 44,
+            'user': {'screen_name': 'fulanito'},
+            'user_screen_name': 'fulanito',
+            'text': 'this is a tweet #match'
         }
         assert tasks[0].info == expected_info, tasks[0].info
 
@@ -6101,9 +6101,9 @@ class TestWeb(web.Helper):
         err_msg = "Tasks should be imported"
         tasks = db.session.query(Task).filter_by(project_id=project.id).all()
         expected_info = {
-            u'url': u'https://mybucket.s3.amazonaws.com/myfile.txt',
-            u'filename': u'myfile.txt',
-            u'link': u'https://mybucket.s3.amazonaws.com/myfile.txt'
+            'url': 'https://mybucket.s3.amazonaws.com/myfile.txt',
+            'filename': 'myfile.txt',
+            'link': 'https://mybucket.s3.amazonaws.com/myfile.txt'
         }
         assert tasks[0].info == expected_info, tasks[0].info
 
@@ -6115,17 +6115,17 @@ class TestWeb(web.Helper):
                     email_addr='john@john.com',
                     info={})
 
-        user.info = dict(facebook_token=u'facebook')
+        user.info = dict(facebook_token='facebook')
         msg, method = get_user_signup_method(user)
         err_msg = "Should return 'facebook' but returned %s" % method
         assert method == 'facebook', err_msg
 
-        user.info = dict(google_token=u'google')
+        user.info = dict(google_token='google')
         msg, method = get_user_signup_method(user)
         err_msg = "Should return 'google' but returned %s" % method
         assert method == 'google', err_msg
 
-        user.info = dict(twitter_token=u'twitter')
+        user.info = dict(twitter_token='twitter')
         msg, method = get_user_signup_method(user)
         err_msg = "Should return 'twitter' but returned %s" % method
         assert method == 'twitter', err_msg
@@ -6160,7 +6160,7 @@ class TestWeb(web.Helper):
 
         # Owner
         tasks = db.session.query(Task).filter_by(project_id=1).all()
-        res = self.signin(email=u'tester@tester.com', password=u'tester')
+        res = self.signin(email='tester@tester.com', password='tester')
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner user should get 200 in GET"
         assert res.status == '200 OK', err_msg
@@ -6172,7 +6172,7 @@ class TestWeb(web.Helper):
         assert len(tasks) == 0, "len(project.tasks) != 0"
 
         # Admin
-        res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.signin(email='root@root.com', password='tester' + 'root')
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin user should get 200 in GET"
         assert res.status_code == 200, err_msg
@@ -6231,7 +6231,7 @@ class TestWeb(web.Helper):
     def test_delete_tasks_removes_existing_zip_files(self, uploader):
         """Test WEB delete tasks also deletes zip files for task and taskruns"""
         Fixtures.create()
-        self.signin(email=u'tester@tester.com', password=u'tester')
+        self.signin(email='tester@tester.com', password='tester')
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         expected = [call('1_test-app_task_json.zip', 'user_2'),
                     call('1_test-app_task_csv.zip', 'user_2'),
@@ -6345,7 +6345,7 @@ class TestWeb(web.Helper):
         err_msg = "There should be a Global Statistics page of the project"
         data = json.loads(res.data)
         keys = ['projects', 'show_locs', 'stats', 'tasks', 'top5_projects_24_hours', 'top5_users_24_hours', 'users']
-        assert keys.sort() == data.keys().sort(), keys
+        assert keys.sort() == list(data.keys()).sort(), keys
 
 
     @with_context
@@ -6731,7 +6731,7 @@ class TestWeb(web.Helper):
             res = self.app_get_json(new_url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
-            assert 'sched' in data['form'].keys(), data
+            assert 'sched' in list(data['form'].keys()), data
 
             res = self.app_post_json(new_url, data=dict(sched=sched))
             data = json.loads(res.data)
@@ -6842,7 +6842,7 @@ class TestWeb(web.Helper):
             res = self.app_get_json(new_url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
-            assert 'n_answers' in data['form'].keys(), data
+            assert 'n_answers' in list(data['form'].keys()), data
 
             res = self.app_post_json(new_url, data=dict(n_answers=n_answers))
             data = json.loads(res.data)
@@ -7009,8 +7009,8 @@ class TestWeb(web.Helper):
             res = self.app_get_json(new_url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
-            assert 'priority_0' in data['form'].keys(), data
-            assert 'task_ids' in data['form'].keys(), data
+            assert 'priority_0' in list(data['form'].keys()), data
+            assert 'task_ids' in list(data['form'].keys()), data
             res = self.app_post_json(new_url, data=dict(task_ids=task_ids,
                                                         priority_0=priority_0))
             data = json.loads(res.data)
@@ -7325,8 +7325,8 @@ class TestWeb(web.Helper):
         err_msg = "There should be a form with two keys email & password"
         csrf = data['form'].get('csrf')
         assert data.get('title') == "Sign in", data
-        assert 'email' in data.get('form').keys(), (err_msg, data)
-        assert 'password' in data.get('form').keys(), (err_msg, data)
+        assert 'email' in list(data.get('form').keys()), (err_msg, data)
+        assert 'password' in list(data.get('form').keys()), (err_msg, data)
 
         OTP = '1234'
         otp_secret = OtpAuth.return_value
@@ -7393,8 +7393,8 @@ class TestWeb(web.Helper):
         err_msg = "There should be a form with two keys email & password"
         csrf = data['form'].get('csrf')
         assert data.get('title') == "Sign in", data
-        assert 'email' in data.get('form').keys(), (err_msg, data)
-        assert 'password' in data.get('form').keys(), (err_msg, data)
+        assert 'email' in list(data.get('form').keys()), (err_msg, data)
+        assert 'password' in list(data.get('form').keys()), (err_msg, data)
 
         OTP = '1234'
         otp_secret = OtpAuth.return_value
@@ -7423,7 +7423,7 @@ class TestWeb(web.Helper):
         self.create()
         project = db.session.query(Project).get(1)
 
-        order_by = u'n_volunteers'
+        order_by = 'n_volunteers'
         desc = True
         query = 'orderby=%s&desc=%s' % (order_by, desc)
 
@@ -7555,31 +7555,31 @@ class TestWeb(web.Helper):
         url = '/account/%s/' % contributor.name
         res = self.app_get_json(url)
         data = json.loads(res.data)
-        assert 'projects' in data.keys(), data.keys()
+        assert 'projects' in list(data.keys()), list(data.keys())
         assert len(data['projects']) == 1, len(data['projects'])
         tmp = data['projects'][0]
-        for key in info.keys():
-            assert key not in tmp['info'].keys()
+        for key in list(info.keys()):
+            assert key not in list(tmp['info'].keys())
 
         url = '/account/%s/' % owner.name
         res = self.app_get_json(url)
         data = json.loads(res.data)
         assert len(data['projects']) == 0, len(data['projects'])
-        assert 'projects_created' in data.keys(), data.keys()
+        assert 'projects_created' in list(data.keys()), list(data.keys())
         assert len(data['projects_created']) == 1, len(data['projects_created'])
         tmp = data['projects_created'][0]
-        for key in info.keys():
-            assert key not in tmp['info'].keys()
+        for key in list(info.keys()):
+            assert key not in list(tmp['info'].keys())
 
         url = '/account/%s/?api_key=%s' % (owner.name,
                                            owner.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
-        assert 'projects_published' in data.keys(), data.keys()
+        assert 'projects_published' in list(data.keys()), list(data.keys())
         assert len(data['projects_published']) == 1, len(data['projects_published'])
         tmp = data['projects_published'][0]
-        for key in info.keys():
-            assert key in tmp['info'].keys()
+        for key in list(info.keys()):
+            assert key in list(tmp['info'].keys())
 
     @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)

@@ -85,7 +85,7 @@ class TestProjectReport(web.Helper):
         TaskRunFactory.create(task=task)
         url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app_get_json(url, follow_redirects=True)
-        print res
+        print(res)
 
     @with_context
     @patch('pybossa.exporter.csv_reports_export.uploader.file_exists', return_value=True)
