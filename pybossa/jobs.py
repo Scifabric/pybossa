@@ -43,7 +43,7 @@ def schedule_job(function, scheduler):
         repeat=None,
         timeout=function['timeout'])
     for sj in scheduled_jobs:
-        if (function['name'].__name__ in sj.func_name and
+        if (function['name'].__name__ in sj.__name__ and
             sj.args == function['args'] and
             sj.kwargs == function['kwargs']):
             job.cancel()
@@ -178,7 +178,7 @@ def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
-        print "Export project id %d" % _id
+        print("Export project id %d" % _id)
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
@@ -367,7 +367,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
 @with_cache_disabled
 def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
-    print "Running on the background warm_up_stats"
+    print("Running on the background warm_up_stats")
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
@@ -434,7 +434,7 @@ def warm_cache():  # pragma: no cover
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'])
     for user in users:
         # print "Getting stats for %s" % user['name']
-        print user_repo
+        print(user_repo)
         u = user_repo.get_by_name(user['name'])
         cached_users.get_user_summary(user['name'])
         cached_users.projects_contributed_cached(u.id)
@@ -680,10 +680,10 @@ def send_weekly_stats_project(project_id):
 
     # Max number of completed tasks
     n_completed_tasks = 0
-    xy = zip(*dates_stats[3]['values'])
+    xy = list(zip(*dates_stats[3]['values']))
     n_completed_tasks = max(xy[1])
     # Most active day
-    xy = zip(*dates_stats[0]['values'])
+    xy = list(zip(*dates_stats[0]['values']))
     active_day = [xy[0][xy[1].index(max(xy[1]))], max(xy[1])]
     active_day[0] = datetime.fromtimestamp(active_day[0]/1000).strftime('%A')
     body = render_template('/account/email/weeklystats.md',
@@ -721,7 +721,7 @@ def news():
     from pybossa.core import sentinel
     from pybossa.news import get_news, notify_news_admins, FEED_KEY
     try:
-        import cPickle as pickle
+        import pickle as pickle
     except ImportError:  # pragma: no cover
         import pickle
     urls = ['https://github.com/Scifabric/pybossa/releases.atom',
