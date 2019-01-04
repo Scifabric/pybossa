@@ -18,6 +18,7 @@
 
 from sqlalchemy.sql import text
 from pybossa.cache import cache, delete_cached
+from pybossa.cache import projects as cached_projects
 from pybossa.core import db, timeouts
 import pybossa.model as model
 
@@ -30,6 +31,14 @@ def get_all():
     """Return all categories"""
     data = session.query(model.category.Category).all()
     return data
+
+
+@cache(key_prefix="categories_visible",
+       timeout=timeouts.get('CATEGORY_TIMEOUT'))
+def get_visible():
+    """Return visible categories"""
+    data = session.query(model.category.Category).all()
+    return [c for c in data if cached_projects.n_count(c.short_name) > 0]
 
 
 @cache(key_prefix="categories_used",
@@ -53,3 +62,4 @@ def reset():
     """Clean the cache"""
     delete_cached('categories_all')
     delete_cached('categories_used')
+    delete_cached('categories_visible')
