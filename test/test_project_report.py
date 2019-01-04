@@ -70,7 +70,7 @@ class TestProjectReport(web.Helper):
         project = ProjectFactory.create(owner=user)
         url = '/project/%s/projectreport/export?type=project&format=csv' % project.short_name
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 200, res.data
+        assert res.status_code == 200, res.status_code
 
     @with_context
     def test_project_report_with_task_details(self):

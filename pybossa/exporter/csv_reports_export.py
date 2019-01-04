@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 import tempfile
+import pandas as pd
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import project_repo, uploader
 from pybossa.util import UnicodeWriter
@@ -81,26 +82,21 @@ class ProjectReportCsvExporter(CsvExporter):
             project_header = ['Id', 'Name', 'Short Name', 'Total Tasks',
                               'First Task Submission', 'Last Task Submission',
                               'Average Time Spend Per Task', 'Task Redundancy']
-            writer.writerow(project_section)
-            writer.writerow(project_header)
             project_data = get_project_report_projectdata(id)
-            writer.writerow(project_data)
+            project_csv = pd.DataFrame([project_data],
+                                      columns=project_header).to_csv(index=False)
 
-            writer.writerow(empty_row)
             user_section = ['User Statistics']
             user_header = ['Id', 'Name', 'Fullname', 'Total Tasks Completed',
                            'Percent Tasks Completed', 'First Task Submission',
                            'Last Task Submission', 'Average Time Per Task']
-            writer.writerow(user_section)
             users_project_data = get_project_report_userdata(id)
+            users_csv = 'No user data\n'
             if users_project_data:
-                writer.writerow(user_header)
-                for user_data in users_project_data:
-                    writer.writerow(user_data)
-            else:
-                writer.writerow(['No user data'])
-
-            return self._get_csv(out, writer)
+                users_csv = pd.DataFrame([users_project_data],
+                                         columns=user_header).to_csv(index=False)
+            csv_txt = 'Project Statistics\n{}\n{}'.format(project_csv, users_csv)
+            return csv_txt
 
     def _make_zip(self, project, ty):
         name = self._project_name_latin_encoded(project)
@@ -108,10 +104,8 @@ class ProjectReportCsvExporter(CsvExporter):
         if csv_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
-                for line in csv_task_generator:
-                    datafile.write(str(line))
+                datafile.write(str(csv_task_generator).encode('utf-8'))
                 datafile.flush()
-                csv_task_generator.close()  # delete temp csv file
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     _zip = self._zip_factory(zipped_datafile.name)
