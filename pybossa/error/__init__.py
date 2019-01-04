@@ -59,11 +59,13 @@ class ErrorStatus(object):
 
         """
         exception_cls = e.__class__.__name__
+        if exception_cls == 'JSONDecodeError':
+            exception_cls = 'ValueError'
         if self.error_status.get(exception_cls):
             status = self.error_status.get(exception_cls)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             status = 500
-        if exception_cls in ('BadRequest', 'Forbidden','Unauthorized'):
+        if exception_cls in ('BadRequest', 'Forbidden', 'Unauthorized'):
             if message is None:
                 message = e.description
         else:

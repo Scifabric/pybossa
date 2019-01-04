@@ -244,7 +244,7 @@ class TestCategoryAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'JSONDecodeError', err
+        assert err['exception_cls'] == 'ValueError', err
 
         # With wrong args in the URL
         data = dict(
