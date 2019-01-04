@@ -893,7 +893,7 @@ class TestTaskAPI(TestAPI):
         url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
-        assert res.data == '', res.data
+        assert res.data == b'', res.data
 
         #### root user
         url = '/api/task/%s?api_key=%s' % (root_task.id, admin.api_key)

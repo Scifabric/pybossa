@@ -559,7 +559,7 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/auth/project/%s/token' % project.short_name
         headers = {'Authorization': project.secret_key}
         token = self.app.get(url, headers=headers)
-        headers['Authorization'] = 'Bearer %s' % token.data
+        headers['Authorization'] = b'Bearer %s' % token.data
         external_uid = 'as2d-4cab-3daf-234a-2344x'
 
         task = TaskFactory.create(project=project)
@@ -658,7 +658,7 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/auth/project/%s/token' % project.short_name
         headers = {'Authorization': project.secret_key}
         token = self.app.get(url, headers=headers)
-        headers['Authorization'] = 'Bearer %s' % token.data
+        headers['Authorization'] = b'Bearer %s' % token.data
         task = TaskFactory.create(project=project)
 
         # As anon add a taskrun for the current task
