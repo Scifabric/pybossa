@@ -52,7 +52,7 @@ class Newsletter(object):
     def get_email_hash(self, email):
         """Return MD5 user email hash."""
         self.md5 = hashlib.md5()
-        self.md5.update(email)
+        self.md5.update(str(email).encode('utf-8'))
         return self.md5.hexdigest()
 
     def is_user_subscribed(self, email, list_id=None):
