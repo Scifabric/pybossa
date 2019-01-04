@@ -265,9 +265,9 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
         return redirect(url_for('.index'))
 
     pagination = Pagination(page, per_page, count)
-    categories = cached_cat.get_used_categories()
+    categories = cached_cat.get_used()
     categories = sorted(categories,
-                        key=lambda category: category.name)
+                        key=lambda category: category['name'])
     # Check for pre-defined categories featured and draft
     featured_cat = Category(name='Featured',
                             short_name='featured',

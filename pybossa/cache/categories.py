@@ -32,15 +32,6 @@ def get_all():
     return data
 
 
-@cache(key_prefix="categories_with_projects",
-       timeout=timeouts.get('CATEGORY_TIMEOUT'))
-def get_used_categories():
-    """Return all categories"""
-    all_ = get_all()
-    used = [c['id'] for c in get_used()]
-    return [c for c in all_ if c.id in used]
-
-
 @cache(key_prefix="categories_used",
        timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_used():
