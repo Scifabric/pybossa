@@ -736,7 +736,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
-        assert "Sign in" in res.data, res.data
+        assert "Sign in" in str(res.data), res.data
 
     @with_context
     def test_project_auditlog_access_owner(self):
