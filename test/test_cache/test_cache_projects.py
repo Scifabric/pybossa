@@ -695,15 +695,15 @@ class TestProjectsCache(Test):
 
     @with_context
     def test_task_browse_get_task_filters(self):
-        filters = dict(task_id=1,hide_completed=True,pcomplete_from='2018-01-01T00:00:00.0001',
-            pcomplete_to='2018-12-12T00:00:00.0001', priority_from=0.0, priority_to=0.5,
+        filters = dict(task_id=1,hide_completed=True,pcomplete_from='0.5',
+            pcomplete_to='0.7', priority_from=0.0, priority_to=0.5,
             created_from='2018-01-01T00:00:00.0001', created_to='2018-12-12T00:00:00.0001',
             ftime_from='2018-01-01T00:00:00.0001', ftime_to='2018-12-12T00:00:00.0001',
             order_by='task_id', filter_by_field=[(u'CompanyName', u'starts with', u'abc')],
             filter_by_upref=dict(languages=['en'], locations=['us']), state='ongoing')
-        expected_filter_query = ' AND task.id = :task_id AND task.state=\'ongoing\' AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to AND priority_0 >= :priority_from AND priority_0 <= :priority_to AND task.created >= :created_from AND task.created <= :created_to AND ft >= :ftime_from AND ft <= :ftime_to AND state = :state AND (COALESCE(task.info->>\'CompanyName\', \'\') ilike :filter_by_field_0 escape \'\\\') AND ( task.user_pref @> \'{"languages": ["en"]}\' OR task.user_pref @> \'{"locations": ["us"]}\' )'
+        expected_filter_query = ' AND task.id = :task_id AND task.state=\'ongoing\' AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from AND LEAST(coalesce(ct, 0)/task.n_answers, 1.0) <= :pcomplete_to AND priority_0 >= :priority_from AND priority_0 <= :priority_to AND task.created >= :created_from AND task.created <= :created_to AND ft >= :ftime_from AND ft <= :ftime_to AND state = :state AND (COALESCE(task.info->>\'CompanyName\', \'\') ilike :filter_by_field_0 escape \'\\\') AND ( task.user_pref @> \'{"languages": ["en"]}\' OR task.user_pref @> \'{"locations": ["us"]}\' )'
 
-        expected_params = {'task_id': 1, 'pcomplete_from': '2018-01-01T00:00:00.0001', 'pcomplete_to': '2018-12-12T00:00:00.0001', 'ftime_to': '2018-12-12T05:00:00.000100+00:00', 'created_from': '2018-01-01T05:00:00.000100+00:00', 'ftime_from': '2018-01-01T05:00:00.000100+00:00', 'state':'ongoing', 'priority_to': 0.5, 'priority_from': 0.0, 'filter_by_field_0': 'abc%', 'created_to': '2018-12-12T05:00:00.000100+00:00'}
+        expected_params = {'task_id': 1, 'pcomplete_from': '0.5', 'pcomplete_to': '0.7', 'ftime_to': '2018-12-12T05:00:00.000100+00:00', 'created_from': '2018-01-01T05:00:00.000100+00:00', 'ftime_from': '2018-01-01T05:00:00.000100+00:00', 'state':'ongoing', 'priority_to': 0.5, 'priority_from': 0.0, 'filter_by_field_0': 'abc%', 'created_to': '2018-12-12T05:00:00.000100+00:00'}
 
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters
@@ -734,3 +734,16 @@ class TestProjectsCache(Test):
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
+
+    @with_context
+    def test_browse_completed(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, info={}, n_answers=2)
+        TaskRunFactory.create_batch(3, task=task)
+
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {
+            'pcomplete_to': 100
+        })
+
+        assert count == 1
+        assert cached_tasks[0]['id'] == task.id
