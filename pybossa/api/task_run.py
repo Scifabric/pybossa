@@ -84,7 +84,7 @@ class TaskRunAPI(APIBase):
 
     def _add_user_info(self, taskrun):
         if taskrun.external_uid is None:
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 taskrun.user_ip = anonymizer.ip(request.remote_addr or
                                                 '127.0.0.1')
             else:
@@ -121,7 +121,7 @@ class TaskRunAPI(APIBase):
             if request.files.get('file') is None:
                 raise AttributeError
             _file = request.files['file']
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 container = "user_%s" % current_user.id
             else:
                 container = "anonymous"

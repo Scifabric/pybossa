@@ -117,7 +117,7 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
 def zip_enabled(project, user):
     """Return if the user can download a ZIP file."""
     if project.zip_download is False:
-        if user.is_anonymous():
+        if user.is_anonymous:
             return abort(401)
         if (user.is_authenticated and
             (user.id not in project.owners_ids and

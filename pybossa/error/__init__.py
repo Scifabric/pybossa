@@ -63,12 +63,14 @@ class ErrorStatus(object):
         else: # pragma: no cover
             status = 500
         if exception_cls in ('BadRequest', 'Forbidden','Unauthorized'):
-            e.message = e.description
+            message = e.description
+        else:
+            message = str(e)
         error = dict(action=action.upper(),
                      status="failed",
                      status_code=status,
                      target=target,
                      exception_cls=exception_cls,
-                     exception_msg=str(e.message))
+                     exception_msg=str(message))
         return Response(json.dumps(error), status=status,
                         mimetype='application/json')

@@ -125,7 +125,7 @@ class TestAnnouncementAPI(TestAPI):
         # As anon
         url = '/api/announcement'
         res = self.app.post(url, data=json.dumps(payload))
-        data = json.loads(res.data)
+        data = json.loads(str(res.data, 'utf-8'))
         assert res.status_code == 401, data
         assert data['status_code'] == 401, data
 

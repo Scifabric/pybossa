@@ -79,7 +79,7 @@ def get_user_summary(name, current_user=None):
         user['total'] = get_total_users()
         if user['restrict']:
             if (current_user and
-                current_user.is_authenticated() and
+                current_user.is_authenticated and
                (current_user.id == user['id'])):
                 return user
             else:

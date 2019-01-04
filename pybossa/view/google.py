@@ -50,7 +50,7 @@ def login():  # pragma: no cover
 @google.oauth.tokengetter
 def get_google_token():  # pragma: no cover
     """Get Google Token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return session.get('oauth_token')
     else:
         return (current_user.info['google_token']['oauth_token'], '')

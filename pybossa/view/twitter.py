@@ -49,7 +49,7 @@ def login():  # pragma: no cover
 @twitter.oauth.tokengetter
 def get_twitter_token():  # pragma: no cover
     """Get Twitter token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return None
 
     return((current_user.info['twitter_token']['oauth_token'],
@@ -146,7 +146,7 @@ def manage_user_login(user, user_data, next_url):
 
 
 def manage_user_no_login(access_token, next_url):
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user = user_repo.get(current_user.id)
         user.info['twitter_token'] = access_token
         user_repo.save(user)
