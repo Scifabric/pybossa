@@ -28,7 +28,7 @@ def get_task_filters(args):
         filters += " AND (coalesce(ct, 0)/task.n_answers) >= :pcomplete_from"
     if args.get('pcomplete_to') is not None:
         params['pcomplete_to'] = args['pcomplete_to']
-        filters += " AND (coalesce(ct, 0)/task.n_answers) <= :pcomplete_to"
+        filters += " AND LEAST(coalesce(ct, 0)/task.n_answers, 1.0) <= :pcomplete_to"
     if args.get('priority_from') is not None:
         params['priority_from'] = args['priority_from']
         filters += " AND priority_0 >= :priority_from"

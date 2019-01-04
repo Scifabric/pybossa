@@ -734,3 +734,16 @@ class TestProjectsCache(Test):
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
+
+    @with_context
+    def test_browse_completed(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, info={}, n_answers=2)
+        TaskRunFactory.create_batch(3, task=task)
+
+        count, cached_tasks = cached_projects.browse_tasks(project.id, {
+            'pcomplete_to': 100
+        })
+
+        assert count == 1
+        assert cached_tasks[0]['id'] == task.id
