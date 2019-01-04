@@ -43,6 +43,7 @@ class ErrorStatus(object):
                     "Forbidden": 403,
                     "NotFound": 404,
                     "MethodNotAllowed": 405,
+                    "JSONDecodeError": 415,
                     "TypeError": 415,
                     "ValueError": 415,
                     "DataError": 415,

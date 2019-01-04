@@ -174,13 +174,13 @@ class TestCategoryAPI(TestAPI):
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', wrong=15)
         res = self.app.post(url + '?api_key=' + admin.api_key,
-                            data=data)
+                            data=json.dumps(data))
         err = json.loads(res.data)
         err_msg = "ValueError exception should be raised"
         assert res.status_code == 415, err
         assert err['action'] == 'POST', err
         assert err['status'] == 'failed', err
-        assert err['exception_cls'] == "ValueError", err_msg
+        assert err['exception_cls'] == "TypeError", (err_msg, err)
         # Now with a JSON object but not valid
         data = json.dumps(data)
         res = self.app.post(url + '?api_key=' + user.api_key,
@@ -244,7 +244,7 @@ class TestCategoryAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'ValueError', err
+        assert err['exception_cls'] == 'JSONDecodeError', err
 
         # With wrong args in the URL
         data = dict(
