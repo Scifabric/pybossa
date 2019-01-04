@@ -39,7 +39,7 @@ class TestExportUsers(web.Helper):
         data = json.loads(res.data)
 
         for attribute in self.exportable_attributes:
-            assert attribute in data[0], data
+            assert attribute in str(data)[0], data
 
     @with_context
     def test_json_returns_all_users(self):
@@ -58,10 +58,10 @@ class TestExportUsers(web.Helper):
         data = res.data
         json_data = json.loads(data)
 
-        assert "Juan Jose" in data, data
-        assert "Manolita" in data, data
-        assert "Juan Jose2" in data, data
-        assert restricted.name not in data, data
+        assert "Juan Jose" in str(data), data
+        assert "Manolita" in str(data), data
+        assert "Juan Jose2" in str(data), data
+        assert restricted.name not in str(data), data
         assert len(json_data) == 3
 
     @with_context
@@ -75,8 +75,8 @@ class TestExportUsers(web.Helper):
         data = res.data
 
         for attribute in self.exportable_attributes:
-            assert attribute in data, data
-        assert restricted.name not in data, data
+            assert attribute in str(data), str(data)
+        assert restricted.name not in str(data), str(data)
 
     @with_context
     def test_csv_returns_all_users(self):
@@ -91,15 +91,9 @@ class TestExportUsers(web.Helper):
         self.signin()
 
         res = self.app.get('/admin/users/export?format=csv',
-                            follow_redirects=True)
+                           follow_redirects=True)
         data = res.data
-        assert restricted.name not in data
-        csv_content = io.StringIO(data)
-        csvreader = unicode_csv_reader(csv_content)
-
-        # number of users is -1 because the first row in csv are the headers
-        number_of_users = -1
-        for row in csvreader:
-            number_of_users += 1
-
-        assert number_of_users == 3, number_of_users
+        assert restricted.name not in str(data.decode('utf-8'))
+        import pandas as pd
+        df = pd.DataFrame.from_csv(io.StringIO(data.decode('utf-8')))
+        assert df.shape[0] == 3, df.shape[0]

@@ -60,7 +60,7 @@ class TestAdmin(web.Helper):
         res = self.app.get("/admin", follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "There should be an index page for admin users and projects"
-        assert "Settings" in res.data, err_msg
+        assert "Settings" in str(res.data), err_msg
         divs = ['featured-apps', 'users', 'categories', 'users-list']
         for div in divs:
             err_msg = "There should be a button for managing %s" % div
@@ -87,7 +87,7 @@ class TestAdmin(web.Helper):
         res = self.app.get("/admin", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
     @with_context
     def test_01_admin_index_anonymous_json(self):
@@ -95,7 +95,7 @@ class TestAdmin(web.Helper):
         res = self.app_get_json("/admin/", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
 
     @with_context
@@ -142,7 +142,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signin()
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Manage featured projects" in res.data, res.data
+        assert "Manage featured projects" in str(res.data), res.data
 
     @with_context
     def test_03_2_admin_featured_apps_as_admin_json(self):
@@ -162,7 +162,7 @@ class TestAdmin(web.Helper):
     def test_04_admin_featured_apps_as_anonymous(self):
         """Test ADMIN featured projects works as an anonymous user"""
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Please sign in to access this page" in res.data, res.data
+        assert "Please sign in to access this page" in str(res.data), res.data
 
     @with_context
     def test_04_2_admin_featured_apps_as_anonymous_json(self):
@@ -170,8 +170,8 @@ class TestAdmin(web.Helper):
         res = self.app_get_json('/admin/featured')
         assert res.status_code == 302, res.status_code
         err_msg = 'private information leaked'
-        assert 'categories' not in res.data, err_msg
-        assert 'projects' not in res.data, err_msg
+        assert 'categories' not in str(res.data), err_msg
+        assert 'projects' not in str(res.data), err_msg
 
     @with_context
     def test_05_admin_featured_apps_as_user(self):
@@ -193,8 +193,8 @@ class TestAdmin(web.Helper):
         res = self.app_get_json('/admin/featured')
         assert res.status == "403 FORBIDDEN", res.status
         err_msg = 'private information leaked'
-        assert 'categories' not in res.data, err_msg
-        assert 'projects' not in res.data, err_msg
+        assert 'categories' not in str(res.data), err_msg
+        assert 'projects' not in str(res.data), err_msg
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
@@ -215,7 +215,7 @@ class TestAdmin(web.Helper):
 
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Sample Project" not in res.data,\
+        assert "Sample Project" not in str(res.data),\
             "The project should not be listed in the front page"\
             " as it is not featured"
         # Only projects that have been published can be featured
@@ -225,8 +225,8 @@ class TestAdmin(web.Helper):
         db.session.add(project)
         db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Featured" in res.data, res.data
-        assert "Sample Project" in res.data, res.data
+        assert "Featured" in str(res.data), res.data
+        assert "Sample Project" in str(res.data), res.data
 
 
         # Add it to the Featured list
@@ -236,7 +236,7 @@ class TestAdmin(web.Helper):
         assert f['featured'] is True, f
         # Check can be removed from featured
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Remove from Featured" in res.data,\
+        assert "Remove from Featured" in str(res.data),\
             "The project should have a button to remove from featured"
         # A retry should fail
         res = self.app.post('/admin/featured/1')
@@ -252,7 +252,7 @@ class TestAdmin(web.Helper):
         assert f['featured'] is False, f
         # Check that can be added to featured
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Add to Featured" in res.data,\
+        assert "Add to Featured" in str(res.data),\
             "The project should have a button to add to featured"
         # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
@@ -281,7 +281,7 @@ class TestAdmin(web.Helper):
         res = self.app.get('/', follow_redirects=True)
         err_msg = ("The project should not be listed in the front page"
                    "as it is not featured")
-        assert "Create" in res.data, err_msg
+        assert "Create" in str(res.data), err_msg
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.status)
@@ -306,32 +306,32 @@ class TestAdmin(web.Helper):
         self.signout()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create" in res.data,\
+        assert "Create" in str(res.data),\
             "The project should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
         # Try to add the project to the featured list
         res = self.app.post('/admin/featured/1', follow_redirects=True)
         err_msg = ("The user should not be able to POST to this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
         # Try to remove it again from the Featured list
         res = self.app.delete('/admin/featured/1', follow_redirects=True)
         err_msg = ("The user should not be able to DELETE to this page"
                    " but the returned status is %s" % res.data)
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
     @with_context
     def test_09_admin_users_as_admin(self):
         """Test ADMIN users works as an admin user"""
         self.register()
         res = self.app.get('/admin/users', follow_redirects=True)
-        assert "Manage Admin Users" in res.data, res.data
+        assert "Manage Admin Users" in str(res.data), res.data
 
     @with_context
     def test_09_admin_users_as_admin_json(self):
@@ -351,9 +351,9 @@ class TestAdmin(web.Helper):
         """Test ADMIN users does not list himself works"""
         self.register()
         res = self.app.get('/admin/users', follow_redirects=True)
-        assert "Manage Admin Users" in res.data, res.data
-        assert "Current Users with Admin privileges" not in res.data, res.data
-        assert "John" not in res.data, res.data
+        assert "Manage Admin Users" in str(res.data), res.data
+        assert "Current Users with Admin privileges" not in str(res.data), res.data
+        assert "John" not in str(res.data), res.data
 
     @with_context
     def test_11_admin_user_not_listed_in_search(self):
@@ -361,9 +361,9 @@ class TestAdmin(web.Helper):
         self.register()
         data = {'user': 'john'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "Manage Admin Users" in res.data, res.data
-        assert "Current Users with Admin privileges" not in res.data, res.data
-        assert "John" not in res.data, res.data
+        assert "Manage Admin Users" in str(res.data), res.data
+        assert "Current Users with Admin privileges" not in str(res.data), res.data
+        assert "John" not in str(res.data), res.data
 
     @with_context
     def test_11_admin_user_not_listed_in_search_json(self):
@@ -436,21 +436,21 @@ class TestAdmin(web.Helper):
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
         print(res.data)
-        assert "juan jose" in res.data, "username should be searchable"
+        assert "juan jose" in str(res.data), "username should be searchable"
         # check with uppercase
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
         err_msg = "username search should be case insensitive"
-        assert "juan jose" in res.data, err_msg
+        assert "juan jose" in str(res.data), err_msg
         # search fullname
         data = {'user': 'jose'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "juan jose" in res.data, "fullname should be searchable"
+        assert "juan jose" in str(res.data), "fullname should be searchable"
         # check with uppercase
         data = {'user': 'jose'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
         err_msg = "fullname search should be case insensitive"
-        assert "juan jose" in res.data, err_msg
+        assert "juan jose" in str(res.data), err_msg
         # warning should be issued for non-found users
         # TODO: Update theme to use pybossaNotify and test this.
         # TODO: This however is tested in the json endpoint.
@@ -459,7 +459,7 @@ class TestAdmin(web.Helper):
         # warning = ("We didn't find a user matching your query: <strong>%s</strong>" %
         #            data['user'])
         # err_msg = "a flash message should be returned for non-found users"
-        # assert warning in res.data, err_msg
+        # assert warning in str(res.data), err_msg
 
     @with_context
     def test_13_admin_user_add_del(self):
@@ -480,14 +480,14 @@ class TestAdmin(web.Helper):
 
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
-        assert "Current Users with Admin privileges" in res.data
+        assert "Current Users with Admin privileges" in str(res.data)
         err_msg = "User.id=2 should be listed as an admin"
-        assert "Juan Jose" in res.data, err_msg
+        assert "Juan Jose" in str(res.data), err_msg
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
-        assert "Current Users with Admin privileges" not in res.data
+        assert "Current Users with Admin privileges" not in str(res.data)
         err_msg = "User.id=2 should be listed as an admin"
-        assert "Juan Jose" not in res.data, err_msg
+        assert "Juan Jose" not in str(res.data), err_msg
         # Delete a non existant user should return an error
         res = self.app.get("/admin/users/del/5000", follow_redirects=True)
         err = json.loads(res.data)
@@ -542,11 +542,11 @@ class TestAdmin(web.Helper):
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         err_msg = "User should be redirected to signin"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
         err_msg = "User should be redirected to signin"
-        assert "Please sign in to access this page" in res.data, err_msg
+        assert "Please sign in to access this page" in str(res.data), err_msg
 
     @with_context
     def test_15_admin_user_add_del_authenticated(self):
@@ -582,12 +582,12 @@ class TestAdmin(web.Helper):
         self.signin()
         # The user is redirected to '/admin/' if no format is specified
         res = self.app.get('/admin/users/export', follow_redirects=True)
-        assert 'Featured Projects' in res.data, res.data
-        assert 'Administrators' in res.data, res.data
+        assert 'Featured Projects' in str(res.data), res.data
+        assert 'Administrators' in str(res.data), res.data
         res = self.app.get('/admin/users/export?firmit=',
                            follow_redirects=True)
-        assert 'Featured Projects' in res.data, res.data
-        assert 'Administrators' in res.data, res.data
+        assert 'Featured Projects' in str(res.data), res.data
+        assert 'Administrators' in str(res.data), res.data
         # A 415 error is raised if the format is not supported (is not either
         # json or csv)
         res = self.app.get('/admin/users/export?format=bad',
@@ -674,12 +674,12 @@ class TestAdmin(web.Helper):
         err_msg = "Admin users should be able to get the settings page for any project"
         assert res.status == "200 OK", err_msg
         res = self.update_project(method="GET")
-        assert "Update" in res.data,\
+        assert "Update" in str(res.data),\
             "The project should be updated by admin users"
         res = self.update_project(new_name="Root",
                                   new_short_name="rootsampleapp")
         res = self.app.get('/project/rootsampleapp', follow_redirects=True)
-        assert "Root" in res.data, "The app should be updated by admin users"
+        assert "Root" in str(res.data), "The app should be updated by admin users"
 
         app = db.session.query(Project)\
                 .filter_by(short_name="rootsampleapp").first()
@@ -691,7 +691,7 @@ class TestAdmin(web.Helper):
                                   new_long_description="New Long Desc")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         err_msg = "The long description should have been updated"
-        assert "New Long Desc" in res.data, err_msg
+        assert "New Long Desc" in str(res.data), err_msg
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
@@ -706,11 +706,11 @@ class TestAdmin(web.Helper):
         # Sign in with the root user
         self.signin()
         res = self.delete_project(method="GET")
-        assert "Yes, delete it" in res.data,\
+        assert "Yes, delete it" in str(res.data),\
             "The project should be deleted by admin users"
         res = self.delete_project()
         err_msg = "The project should be deleted by admin users"
-        assert "Project deleted!" in res.data, err_msg
+        assert "Project deleted!" in str(res.data), err_msg
 
     @with_context
     def test_21_admin_delete_tasks(self):
@@ -813,13 +813,13 @@ class TestAdmin(web.Helper):
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category should be added"
-        assert "Category added" in res.data, err_msg
-        assert category['name'] in res.data, err_msg
+        assert "Category added" in str(res.data), err_msg
+        assert category['name'] in str(res.data), err_msg
 
         # Create the same category again should fail
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category form validation should work"
-        assert "Please correct the errors" in res.data, err_msg
+        assert "Please correct the errors" in str(res.data), err_msg
 
     @with_context
     def test_23_admin_add_category_json(self):
@@ -965,7 +965,7 @@ class TestAdmin(web.Helper):
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Category should be listed for admin user"
-        assert _name in res.data, err_msg
+        assert _name in str(res.data), err_msg
         # Check 404
         url_404 = '/admin/categories/update/5000'
         res = self.app.get(url_404, follow_redirects=True)
@@ -973,14 +973,14 @@ class TestAdmin(web.Helper):
         # Admin POST
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category should be updated"
-        assert "Category updated" in res.data, err_msg
-        assert category['name'] in res.data, err_msg
+        assert "Category updated" in str(res.data), err_msg
+        assert category['name'] in str(res.data), err_msg
         updated_category = db.session.query(Category).get(obj.id)
         assert updated_category.name == obj.name, err_msg
         # With not valid form
         category['name'] = None
         res = self.app.post(url, data=category, follow_redirects=True)
-        assert "Please correct the errors" in res.data, err_msg
+        assert "Please correct the errors" in str(res.data), err_msg
 
     @with_context
     def test_25_admin_delete_category_json(self):
@@ -1088,12 +1088,12 @@ class TestAdmin(web.Helper):
         self.signin(email=self.root_addr, password=self.root_password)
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Category should be listed for admin user"
-        assert category['name'] in res.data, err_msg
+        assert category['name'] in str(res.data), err_msg
         # Admin POST
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category should be deleted"
-        assert "Category deleted" in res.data, err_msg
-        assert category['name'] not in res.data, err_msg
+        assert "Category deleted" in str(res.data), err_msg
+        assert category['name'] not in str(res.data), err_msg
         output = db.session.query(Category).get(obj.id)
         assert output is None, err_msg
         # Non existant category
@@ -1110,8 +1110,8 @@ class TestAdmin(web.Helper):
         res = self.app.post(url, data=category, follow_redirects=True)
         print(res.data)
         err_msg = "Category should not be deleted"
-        assert "Category deleted" not in res.data, err_msg
-        assert category['name'] in res.data, err_msg
+        assert "Category deleted" not in str(res.data), err_msg
+        assert category['name'] in str(res.data), err_msg
         output = db.session.query(Category).get(obj.id)
         assert output.id == category['id'], err_msg
 
@@ -1121,7 +1121,7 @@ class TestAdmin(web.Helper):
         url = '/admin/dashboard/'
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should require login"
-        assert "Sign in" in res.data, err_msg
+        assert "Sign in" in str(res.data), err_msg
 
     @with_context
     def test_admin_dashboard_json(self):
@@ -1129,7 +1129,7 @@ class TestAdmin(web.Helper):
         url = '/admin/dashboard/'
         res = self.app_get_json(url, follow_redirects=True)
         err_msg = "It should require login"
-        assert "Sign in" in res.data, err_msg
+        assert "Sign in" in str(res.data), err_msg
 
 
     @with_context
@@ -1166,7 +1166,7 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
-        assert "No data" in res.data, res.data
+        assert "No data" in str(res.data), res.data
 
     @with_context
     def test_admin_dashboard_admin_user_json(self):
@@ -1231,8 +1231,8 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
-        assert "No data" not in res.data, res.data
-        assert "New Users" in res.data, res.data
+        assert "No data" not in str(res.data), res.data
+        assert "New Users" in str(res.data), res.data
 
     @with_context
     @patch('pybossa.view.admin.DASHBOARD_QUEUE')
@@ -1255,8 +1255,8 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "It should return 200"
         assert res.status_code == 200, err_msg
-        assert "No data" not in res.data, res.data
-        assert "New Users" in res.data, res.data
+        assert "No data" not in str(res.data), res.data
+        assert "New Users" in str(res.data), res.data
         assert mock.enqueue.called
 
     @with_context
