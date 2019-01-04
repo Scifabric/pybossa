@@ -24,7 +24,7 @@ class TestCoowners(web.Helper):
         self.new_project()
 
         res = self.app.get('/project/sampleapp/coowners', follow_redirects=True)
-        assert "Manage Co-owners" in res.data, res.data
+        assert "Manage Co-owners" in str(res.data), res.data
 
     @with_context
     def test_01_admin_and_owner_add_del_coowner(self):
@@ -39,22 +39,22 @@ class TestCoowners(web.Helper):
 
         res = self.app.get('/project/sampleapp/add_coowner/John3',
                            follow_redirects=True)
-        assert "John3" in res.data, res.data
+        assert "John3" in str(res.data), str(res.data)
 
         res = self.app.get('/project/sampleapp/del_coowner/John3',
                            follow_redirects=True)
-        assert "John3" not in res.data, res.data
+        assert "John3" not in str(res.data), str(res.data)
 
         self.signout()
         self.signin()
 
         res = self.app.get('/project/sampleapp/add_coowner/John3',
                            follow_redirects=True)
-        assert "John3" in res.data, res.data
+        assert "John3" in str(res.data), str(res.data)
 
         res = self.app.get('/project/sampleapp/del_coowner/John3',
                            follow_redirects=True)
-        assert "John3" not in res.data, res.data
+        assert "John3" not in str(res.data), str(res.data)
 
     @with_context
     def test_02_nonadmin_notowner_authenticated_user_cannot_add_del_coowners(self):
@@ -72,7 +72,7 @@ class TestCoowners(web.Helper):
         self.new_task(1)
         res = self.app.get('/project/sampleapp/add_coowner/John2',
                            follow_redirects=True)
-        assert "John2" in res.data, res.data
+        assert "John2" in str(res.data), str(res.data)
         self.signout()
 
         self.signin(email="john3@john.com", password="passwd")
@@ -85,8 +85,8 @@ class TestCoowners(web.Helper):
         self.signin()
         res = self.app.get('/project/sampleapp/coowners',
                            follow_redirects=True)
-        assert "John2" in res.data, res.data
-        assert "John3" not in res.data, res.data
+        assert "John2" in str(res.data), str(res.data)
+        assert "John3" not in str(res.data), str(res.data)
 
     @with_context
     def test_03_misc(self):
@@ -105,26 +105,26 @@ class TestCoowners(web.Helper):
 
         res = self.app.get('/project/sampleapp/add_coowner/John2',
                            follow_redirects=True)
-        assert "User is already an owner" in res.data, res.data
+        assert "User is already an owner" in str(res.data), str(res.data)
 
         res = self.app.get('/project/sampleapp/del_coowner/John2',
                            follow_redirects=True)
-        assert "Cannot remove project creator" in res.data, res.data
+        assert "Cannot remove project creator" in str(res.data), str(res.data)
 
         res = self.app.get('/project/sampleapp/add_coowner/John3',
                            follow_redirects=True)
-        assert "John3" in res.data, res.data
+        assert "John3" in str(res.data), str(res.data)
 
         self.signout()
         self.signin(email="john3@john.com", password="passwd")
 
         res = self.app.get('/project/sampleapp/del_coowner/John2',
                            follow_redirects=True)
-        assert "Cannot remove project creator" in res.data, res.data
+        assert "Cannot remove project creator" in str(res.data), str(res.data)
 
         res = self.app.get('/project/sampleapp/del_coowner/John4',
                            follow_redirects=True)
-        assert "User is not a project owner" in res.data, res.data
+        assert "User is not a project owner" in str(res.data), str(res.data)
 
     @with_context
     def test_coowner_can(self):
@@ -139,25 +139,25 @@ class TestCoowners(web.Helper):
         self.new_task(1)
         res = self.app.get('/project/sampleapp/add_coowner/John2',
                            follow_redirects=True)
-        assert "John2" in res.data, res.data
+        assert "John2" in str(res.data), str(res.data)
         self.signout()
 
         self.signin(email="john2@john.com", password="passwd")
 
         # coowner can browse tasks in a draft project
         res = self.app.get('/project/sampleapp/tasks/browse')
-        assert 'Browse tasks' in res.data, res.data
+        assert 'Browse tasks' in str(res.data), str(res.data)
         # coowner can modify task presenter
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor')
-        assert 'Task Presenter Editor' in res.data, res.data
+        assert 'Task Presenter Editor' in str(res.data), str(res.data)
         # coowner can delete tasks
         res = self.app.post('/project/sampleapp/tasks/delete',
                             follow_redirects=True)
-        assert 'Tasks and taskruns with no associated results have been deleted' in res.data, res.data
+        assert 'Tasks and taskruns with no associated results have been deleted' in str(res.data), str(res.data)
         # coowner can delete the project
         res = self.app.post('/project/sampleapp/delete',
                             follow_redirects=True)
-        assert 'Project deleted' in res.data, res.data
+        assert 'Project deleted' in str(res.data), str(res.data)
 
     @with_context
     def test_user_search(self):
@@ -173,13 +173,13 @@ class TestCoowners(web.Helper):
         res = self.app.post('/project/sampleapp/coowners',
                             data=data,
                             follow_redirects=True)
-        assert "We didn&#39;t find a user matching your query" in res.data, res.data
+        assert "We didn&#39;t find a user matching your query" in str(res.data), str(res.data)
 
         data = {'user': 'John3'}
         res = self.app.post('/project/sampleapp/coowners',
                             data=data,
                             follow_redirects=True)
-        assert "/project/sampleapp/add_coowner/John3" in res.data, res.data
+        assert "/project/sampleapp/add_coowner/John3" in str(res.data), str(res.data)
 
     @with_context
     def test_coowner_invalid(self):
