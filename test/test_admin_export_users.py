@@ -24,22 +24,22 @@ from factories import UserFactory
 from helper import web
 
 
-
 class TestExportUsers(web.Helper):
 
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                             'created', 'locale', 'admin')
+                             'created', 'locale', 'admin', 'consent',
+                             'restrict')
 
     @with_context
     def test_json_contains_all_attributes(self):
         self.register()
 
         res = self.app.get('/admin/users/export?format=json',
-                            follow_redirects=True)
-        data = json.loads(res.data)
+                           follow_redirects=True)
+        data = json.loads(res.data.decode('utf-8'))
 
         for attribute in self.exportable_attributes:
-            assert attribute in str(data)[0], data
+            assert attribute in data[0].keys(), data
 
     @with_context
     def test_json_returns_all_users(self):
