@@ -554,11 +554,12 @@ def get_disqus_sso_payload(user):
         else:
             data = simplejson.dumps({})
         # encode the data to base64
-        message = base64.b64encode(data)
+        message = base64.b64encode(data.encode('utf-8'))
         # generate a timestamp for signing the message
         timestamp = int(time.time())
         # generate our hmac signature
-        sig = hmac.HMAC(DISQUS_SECRET_KEY, '%s %s' % (message, timestamp),
+        tmp = '{} {}'.format(message, timestamp).encode('utf-8')
+        sig = hmac.HMAC(DISQUS_SECRET_KEY.encode('utf-8'), tmp,
                         hashlib.sha1).hexdigest()
 
         return message, timestamp, sig, DISQUS_PUBLIC_KEY

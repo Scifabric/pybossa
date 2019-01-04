@@ -56,13 +56,13 @@ class TestDisqusSSO(TestAPI):
         with patch.dict(self.flask_app.config, patch_dict):
             res = self.app.get(url)
             data = json.loads(res.data)
-            assert res.status_code == 200, res.status_code
+            assert res.status_code == 200, (res.data, res.status_code)
             assert data['remote_auth_s3'] is not None, data
             assert data['api_key'] is not None, data
 
     @with_context
     def test_auth_no_keys(self):
-        """Test with user authenticated."""
+        """Test auth with no keys."""
         url = 'api/disqus/sso'
         user = UserFactory.create()
 
@@ -75,7 +75,7 @@ class TestDisqusSSO(TestAPI):
 
     @with_context
     def test_anon_no_keys(self):
-        """Test with user authenticated."""
+        """Test anon with no keys."""
         url = 'api/disqus/sso'
 
         res = self.app.get(url)

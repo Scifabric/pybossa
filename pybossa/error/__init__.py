@@ -51,7 +51,7 @@ class ErrorStatus(object):
                     "DBIntegrityError": 415,
                     "TooManyRequests": 429}
 
-    def format_exception(self, e, target, action):
+    def format_exception(self, e, target, action, message=None):
         """
         Format the exception to a valid JSON object.
 
@@ -64,9 +64,11 @@ class ErrorStatus(object):
         else: # pragma: no cover
             status = 500
         if exception_cls in ('BadRequest', 'Forbidden','Unauthorized'):
-            message = e.description
+            if message is None:
+                message = e.description
         else:
-            message = str(e)
+            if message is None:
+                message = str(e)
         error = dict(action=action.upper(),
                      status="failed",
                      status_code=status,

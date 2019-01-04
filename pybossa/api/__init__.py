@@ -282,5 +282,5 @@ def get_disqus_sso_api():
         else:
             raise MethodNotAllowed
     except MethodNotAllowed as e:
-        e.message = "Disqus keys are missing"
-        return error.format_exception(e, target='DISQUS_SSO', action='GET')
+        return error.format_exception(e, target='DISQUS_SSO', action='GET',
+                                      message="Disqus keys are missing")
