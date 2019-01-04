@@ -309,13 +309,13 @@ class TestAutoimporterBehaviour(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert expected_text in res.data
-        assert 'CSV' in res.data
-        assert 'Google Drive Spreadsheet' in res.data
-        assert 'EpiCollect Plus Project' in res.data
-        assert 'Flickr' in res.data
-        assert 'Twitter' in res.data
-        assert 'Dropbox' not in res.data
+        assert expected_text in str(res.data)
+        assert 'CSV' in str(res.data)
+        assert 'Google Drive Spreadsheet' in str(res.data)
+        assert 'EpiCollect Plus Project' in str(res.data)
+        assert 'Flickr' in str(res.data)
+        assert 'Twitter' in str(res.data)
+        assert 'Dropbox' not in str(res.data)
 
 
     @with_context
@@ -329,7 +329,7 @@ class TestAutoimporterBehaviour(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert 'Flickr' not in res.data
+        assert 'Flickr' not in str(res.data)
 
 
     @with_context
@@ -405,7 +405,7 @@ class TestAutoimporterBehaviour(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert "You currently have the following autoimporter" in res.data
+        assert "You currently have the following autoimporter" in str(res.data)
 
 
     @with_context
@@ -464,4 +464,4 @@ class TestAutoimporterBehaviour(web.Helper):
         res = self.app.get(url)
         login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
 
-        assert login_url in res.data
+        assert login_url in str(res.data)
