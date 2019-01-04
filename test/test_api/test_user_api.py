@@ -42,7 +42,7 @@ class TestUserAPI(Test):
         user = data[0]
         assert len(data) == 3, data
         for datum in data:
-            assert ['locale', 'name'] == list(datum.keys()), list(datum.keys())
+            assert sorted(['locale', 'name']) == sorted(list(datum.keys())), list(datum.keys())
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -514,4 +514,3 @@ class TestUserAPI(Test):
         assert private_user['email_addr'] == user_with_privacy_enabled.email_addr, private_user
         assert private_user['id'] == user_with_privacy_enabled.id, private_user
         assert private_user['info'] == user_with_privacy_enabled.info, private_user
-
