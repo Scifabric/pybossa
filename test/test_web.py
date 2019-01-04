@@ -2113,7 +2113,7 @@ class TestWeb(web.Helper):
         self.create_categories()
         res = self.app.get('/project/category/featured', follow_redirects=True)
         assert "Projects" in res.data, res.data
-        assert Fixtures.cat_1 in res.data, res.data
+        assert Fixtures.cat_1 not in res.data, res.data
 
     @with_context
     def test_06_applications_2(self):
