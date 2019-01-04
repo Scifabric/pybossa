@@ -339,8 +339,7 @@ class TestApiCommon(TestAPI):
         project = ProjectFactory.create()
         res = self.app.get('/api/project/%s?callback=mycallback' % project.id)
         err_msg = "mycallback should be included in the response"
-        print((res.data))
-        assert "mycallback" in res.data, err_msg
+        assert "mycallback" in str(res.data), err_msg
         err_msg = "Status code should be 200"
         assert res.status_code == 200, err_msg
 
