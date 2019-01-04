@@ -124,7 +124,7 @@ def jwt_authorize_project(project, payload):
             return handle_error(INVALID_HEADER_MISSING)
         parts = payload.split()
 
-        if parts[0].lower() != b'bearer':
+        if str(parts[0].lower()).encode('utf-8') != b'bearer':
             return handle_error(INVALID_HEADER_BEARER)
         elif len(parts) == 1:
             return handle_error(INVALID_HEADER_TOKEN)

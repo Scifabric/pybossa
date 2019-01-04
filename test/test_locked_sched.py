@@ -179,6 +179,8 @@ class TestLockedSched(sched.Helper):
         rec_task2 = json.loads(res.data)
 
         # users get different tasks
+        print(rec_task1)
+        print(rec_task2)
         assert rec_task1['info'] != rec_task2['info']
 
         tr = {
