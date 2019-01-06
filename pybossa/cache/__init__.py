@@ -49,6 +49,15 @@ HALF_HOUR = 30 * 60
 FIVE_MINUTES = 5 * 60
 ONE_WEEK = 7 * ONE_DAY
 
+management_dashboard_stats = [
+    'project_chart', 'category_chart', 'task_chart',
+    'submission_chart', 'number_of_active_jobs',
+    'number_of_created_jobs', 'number_of_created_tasks',
+    'number_of_completed_tasks', 'avg_time_to_complete_task',
+    'number_of_active_users', 'categories_with_new_projects',
+    'avg_task_per_job', 'tasks_per_category'
+]
+
 
 def get_key_to_hash(*args, **kwargs):
     """Return key to hash for *args and **kwargs."""

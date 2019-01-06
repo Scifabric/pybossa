@@ -23,6 +23,9 @@ from factories import (UserFactory, ProjectFactory, AnonymousTaskRunFactory,
                        TaskRunFactory, TaskFactory, CategoryFactory)
 from pybossa.repositories import ResultRepository
 from mock import patch, Mock
+from pybossa.cache import management_dashboard_stats, delete_cache_group
+from pybossa.jobs import get_management_dashboard_stats, send_mail
+from flask import current_app
 
 result_repo = ResultRepository(db)
 
@@ -411,3 +414,33 @@ class TestSiteStatsCache(Test):
         assert tasks['series'][0][24] == expected_tasks, "{} tasks created in last 24 months".format(expected_tasks)
         taskruns = stats.submission_chart()
         assert taskruns['series'][0][24] == expected_taskruns, "{} taskruns created in last 24 months".format(expected_taskruns)
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    def test_management_dashboard_stats(self, mail):
+        """Test management dashboard stats"""
+
+        # reset cache and built just one stats, avg_time_to_complete_task
+        map(delete_cache_group, management_dashboard_stats)
+        date_15m_old = (datetime.datetime.utcnow() -  datetime.timedelta(minutes=15)).isoformat()
+        date_now = datetime.datetime.utcnow()
+
+        expected_avg_time = '15m 00s'
+        for i in range(5):
+            TaskRunFactory.create(created=date_15m_old, finish_time=date_now)
+
+        avg_time = stats.avg_time_to_complete_task()
+        assert avg_time == expected_avg_time, \
+            "Average time to complete tasks in last 30 days should be {}".format(expected_avg_time)
+
+        stats_cached = stats.management_dashboard_stats_cached()
+        assert not stats_cached, 'management dashboard stats should be reported as unavailable'
+        if not stats_cached:
+            user_email = 'john@got.com'
+            get_management_dashboard_stats(user_email)
+            subject = 'Management Dashboard Statistics'
+            msg = 'Management dashboard statistics is now available. It can be accessed by refreshing management dashboard page.'
+            body = (u'Hello,\n\n{}\nThe {} team.'
+                    .format(msg, current_app.config.get('BRAND')))
+            mail_dict = dict(recipients=[user_email], subject=subject, body=body)
+            mail.assert_called_with(mail_dict)

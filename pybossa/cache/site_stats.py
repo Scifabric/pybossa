@@ -23,6 +23,8 @@ from flask import current_app
 from pybossa.core import db
 from pybossa.cache import cache, memoize, ONE_DAY, ONE_WEEK
 import app_settings
+from pybossa.cache import sentinel, management_dashboard_stats
+from pybossa.cache import get_cache_group_key, delete_cache_group
 
 session = db.slave_session
 
@@ -146,7 +148,7 @@ def allow_all_time(func):
     return wrapper
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['number_of_created_jobs'])
 @allow_all_time
 def number_of_created_jobs(days=30):
     """Number of created jobs"""
@@ -159,7 +161,7 @@ def number_of_created_jobs(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['number_of_active_jobs'])
 @allow_all_time
 def number_of_active_jobs(days=30):
     """Number of jobs with submissions"""
@@ -177,7 +179,7 @@ def number_of_active_jobs(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['number_of_created_tasks'])
 @allow_all_time
 def number_of_created_tasks(days=30):
     """Number of created tasks"""
@@ -190,38 +192,37 @@ def number_of_created_tasks(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_DAY)
+@memoize(ONE_WEEK, cache_group_keys=['number_of_completed_tasks'])
 @allow_all_time
 def number_of_completed_tasks(days=30):
     """Number of completed tasks"""
     sql = text('''
-        WITH completed AS (SELECT task.id FROM task JOIN task_run
-            ON task.id = task_run.task_id
-            WHERE task.state = 'completed'
-            GROUP BY task.id
-            HAVING clock_timestamp() -
-                   to_timestamp(MAX(finish_time), 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                   < interval ':days days')
-        SELECT count(id) FROM completed;
+        WITH taskruns AS (
+            SELECT DISTINCT task_id FROM task_run
+            WHERE to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            >= NOW() -  interval ':days days')
+        SELECT COUNT(*) FROM task JOIN taskruns
+        ON task.id = taskruns.task_id
+        WHERE task.state = 'completed';
         ''')
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['number_of_active_users'])
 @allow_all_time
 def number_of_active_users(days=30):
     """Number of active users"""
     sql = text('''
-        WITH active_users AS (SELECT DISTINCT(user_id) as id FROM task_run
-            WHERE clock_timestamp() -
-                  to_timestamp(task_run.finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                  < interval ':days days')
+        WITH active_users AS (
+            SELECT DISTINCT(user_id) as id FROM task_run
+            WHERE to_timestamp(task_run.finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            > NOW() - interval ':days days')
         SELECT COUNT(id) FROM active_users;
     ''')
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['categories_with_new_projects'])
 @allow_all_time
 def categories_with_new_projects(days=30):
     """Categories with new projects"""
@@ -238,24 +239,29 @@ def categories_with_new_projects(days=30):
     return session.execute(sql, dict(days=days)).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['avg_time_to_complete_task'])
 @allow_all_time
 def avg_time_to_complete_task(days=30):
     """Average time to complete a task"""
-    sql = text('''SELECT
-        to_char(
-            AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')),
+    sql = text('''
+        WITH taskruns AS (
+            SELECT finish_time, created FROM task_run
+            WHERE to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+            > NOW() -  interval ':days days'
+        )
+        SELECT to_char(
+            AVG(
+                to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
+                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')
+            ),
             'MI"m" SS"s"'
         )
-        AS average_time
-        FROM task_run WHERE clock_timestamp() -
-            to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US')
-            < interval ':days days';''')
+        AS average_time from taskruns;
+    ''')
     return session.execute(sql, dict(days=days)).scalar() or 'N/A'
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['avg_task_per_job'])
 def avg_task_per_job():
     """Average number of tasks per job"""
     sql = text('''
@@ -268,7 +274,7 @@ def avg_task_per_job():
     return session.execute(sql).scalar()
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['tasks_per_category'])
 def tasks_per_category():
     """Average number of tasks per category"""
     sql = text('''
@@ -282,7 +288,7 @@ def tasks_per_category():
     return session.execute(sql).scalar() or 'N/A'
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['project_chart'])
 def project_chart():
     """
     Fetch data for a monthly chart of the number of projects
@@ -306,7 +312,7 @@ def project_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['category_chart'])
 def category_chart():
     """
     Fetch data for a monthly chart of the number of categories
@@ -330,7 +336,7 @@ def category_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['task_chart'])
 def task_chart():
     """
     Fetch data for a monthly chart of the number of tasks
@@ -350,7 +356,7 @@ def task_chart():
     return dict(labels=labels, series=[series])
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_WEEK, cache_group_keys=['submission_chart'])
 def submission_chart():
     """
     Fetch data for a monthly chart of the number of submissions
@@ -368,3 +374,13 @@ def submission_chart():
     labels = [date.strftime('%b %Y') for _, date in rows]
     series = [count for count, _ in rows]
     return dict(labels=labels, series=[series])
+
+
+def management_dashboard_stats_cached():
+    stats_cached = all([bool(list(sentinel.slave.smembers(get_cache_group_key((ms)))))
+        for ms in management_dashboard_stats])
+
+    if not stats_cached:
+        # reset stats for any missing stat
+        map(delete_cache_group, management_dashboard_stats)
+    return stats_cached

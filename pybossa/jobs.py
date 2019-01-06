@@ -32,6 +32,9 @@ from datetime import datetime
 from pybossa.core import user_repo
 from rq.timeouts import JobTimeoutException
 import app_settings
+from pybossa.cache import sentinel, management_dashboard_stats
+from pybossa.cache import settings, site_stats
+from collections import OrderedDict
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
@@ -1203,3 +1206,42 @@ def delete_file(fname, container):
     """Delete file."""
     from pybossa.core import uploader
     return uploader.delete_file(fname, container)
+
+
+def get_management_dashboard_stats(user_email):
+    """Rebuild management dashboard stats, notify user about its availability"""
+    project_chart = site_stats.project_chart()
+    category_chart = site_stats.category_chart()
+    task_chart = site_stats.task_chart()
+    submission_chart = site_stats.submission_chart()
+
+    timed_stats_funcs = [
+        site_stats.number_of_active_jobs,
+        site_stats.number_of_created_jobs,
+        site_stats.number_of_created_tasks,
+        site_stats.number_of_completed_tasks,
+        site_stats.avg_time_to_complete_task,
+        site_stats.number_of_active_users,
+        site_stats.categories_with_new_projects
+    ]
+
+    current_stats_funcs = [
+        site_stats.avg_task_per_job,
+        site_stats.tasks_per_category
+    ]
+
+    timed_stats = OrderedDict()
+    for func in timed_stats_funcs:
+        timed_stats[func.__doc__] = OrderedDict()
+        for days in [30, 60, 90, 350, 'all']:
+            timed_stats[func.__doc__][days] = func(days)
+
+    current_stats = OrderedDict((func.__doc__, func())
+                                for func in current_stats_funcs)
+
+    subject = 'Management Dashboard Statistics'
+    msg = 'Management dashboard statistics is now available. It can be accessed by refreshing management dashboard page.'
+    body = (u'Hello,\n\n{}\nThe {} team.'
+            .format(msg, current_app.config.get('BRAND')))
+    mail_dict = dict(recipients=[user_email], subject=subject, body=body)
+    send_mail(mail_dict)
