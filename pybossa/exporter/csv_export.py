@@ -25,7 +25,6 @@ from pybossa.exporter import Exporter
 from pybossa.core import uploader, task_repo
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
-from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import pandas as pd
