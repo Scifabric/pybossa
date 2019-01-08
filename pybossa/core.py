@@ -20,7 +20,7 @@ import os
 import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
-    flash, _app_ctx_stack, abort
+    flash, _app_ctx_stack, abort, redirect
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
@@ -34,6 +34,9 @@ from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
 
+
+def daniel():
+    return abort(404)
 
 def create_app(run_as_server=True):
     """Create web app."""
@@ -322,10 +325,17 @@ def setup_blueprints(app):
     # from rq_dashboard import RQDashboard
     import rq_dashboard
     app.config.from_object(rq_dashboard.default_settings)
+    rq_dashboard.blueprint.before_request(is_admin)
     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
                            redis_conn=sentinel.master)
-    # RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
-    #             redis_conn=sentinel.master)
+
+
+def is_admin():
+    """Check if user is admin."""
+    if current_user.is_anonymous:
+        return abort(401)
+    if current_user.admin is False:
+        return abort(403)
 
 
 def setup_external_services(app):
