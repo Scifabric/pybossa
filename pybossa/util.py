@@ -293,43 +293,6 @@ def utf_8_encoder(unicode_csv_data):
         yield line.encode('utf-8')
 
 
-class UnicodeWriter:
-
-    """A CSV writer which will write rows to CSV file "f"."""
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        """Init method."""
-        # Redirect output to a queue
-        self.queue = io.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        """Write row."""
-        line = []
-        for s in row:
-            if (type(s) == dict):
-                line.append(json.dumps(s))
-            else:
-                line.append(str(s).encode("utf-8"))
-        self.writer.writerow(line)
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):  # pragma: no cover
-        """Write rows."""
-        for row in rows:
-            self.writerow(row)
-
-
 def get_user_signup_method(user):
     """Return which OAuth sign up method the user used."""
     msg = 'Sorry, there is already an account with the same e-mail.'
