@@ -20,7 +20,6 @@ import tempfile
 import pandas as pd
 from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import project_repo, uploader
-from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from pybossa.cache.projects import get_project_report_projectdata
@@ -74,7 +73,6 @@ class ProjectReportCsvExporter(CsvExporter):
 
     def _respond_csv(self, ty, id, info_only=False):
         out = tempfile.TemporaryFile()
-        writer = UnicodeWriter(out)
         empty_row = []
         p = project_repo.get(id)
         if p is not None:
