@@ -37,7 +37,7 @@ import pandas as pd
 
 from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
-from pybossa.util import admin_required, UnicodeWriter, handle_content_type
+from pybossa.util import admin_required, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
