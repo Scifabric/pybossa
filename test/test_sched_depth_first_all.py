@@ -47,7 +47,7 @@ class TestSched(sched.Helper):
 
         res = self.app.get(url, headers={'Authorization': project.secret_key})
 
-        authorization_token = 'Bearer %s' % res.data
+        authorization_token = b'Bearer %s' % res.data
 
         return {'Authorization': authorization_token}
 
