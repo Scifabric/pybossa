@@ -20,6 +20,7 @@ import requests
 from io import StringIO
 from flask_babel import gettext
 from pybossa.util import unicode_csv_reader
+import pandas as pd
 
 from .base import BulkTaskImport, BulkImportException
 from werkzeug.datastructures import FileStorage
@@ -45,31 +46,31 @@ class BulkTaskCSVImport(BulkTaskImport):
         """Get data from URL."""
         return self.url
 
-    def _import_csv_tasks(self, csvreader):
+    def _import_csv_tasks(self, csv_df):
         """Import CSV tasks."""
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
         field_header_index = []
         row_number = 0
-        for row in csvreader:
-            if not headers:
-                headers = row
-                self._check_no_duplicated_headers(headers)
-                self._check_no_empty_headers(headers)
-                field_headers = set(headers) & fields
-                for field in field_headers:
-                    field_header_index.append(headers.index(field))
-            else:
-                row_number += 1
-                self._check_valid_row_length(row, row_number, headers)
-                task_data = {"info": {}}
-                for idx, cell in enumerate(row):
-                    if idx in field_header_index:
-                        task_data[headers[idx]] = cell
-                    else:
-                        task_data["info"][headers[idx]] = cell
-                yield task_data
+
+        headers = list(csv_df.columns)
+        self._check_no_duplicated_headers(headers)
+        self._check_no_empty_headers(headers)
+        field_headers = set(headers) & fields
+        for field in field_headers:
+            field_header_index.append(headers.index(field))
+
+        for index, row in csv_df.iterrows():
+            row_number += 1
+            self._check_valid_row_length(list(row), row_number, headers)
+            task_data = {"info": {}}
+            for idx, cell in enumerate(list(row)):
+                if idx in field_header_index:
+                    task_data[headers[idx]] = cell
+                else:
+                    task_data["info"][headers[idx]] = cell
+            yield task_data
 
     def _check_no_duplicated_headers(self, headers):
         if len(headers) != len(set(headers)):
@@ -79,11 +80,11 @@ class BulkTaskCSVImport(BulkTaskImport):
 
     def _check_no_empty_headers(self, headers):
         stripped_headers = [header.strip() for header in headers]
-        if "" in stripped_headers:
-            position = stripped_headers.index("")
-            msg = gettext("The file you uploaded has an empty header on "
-                          "column %(pos)s.", pos=(position+1))
-            raise BulkImportException(msg)
+        for h in stripped_headers:
+            if "Unnamed" in h:
+                position = stripped_headers.index(h)
+                msg = "The file you uploaded has an empty header on column {}.".format(position+1)
+                raise BulkImportException(msg)
 
     def _check_valid_row_length(self, row, row_number, headers):
         if len(headers) != len(row):
@@ -104,8 +105,9 @@ class BulkTaskCSVImport(BulkTaskImport):
 
         r.encoding = 'utf-8'
         csvcontent = StringIO(r.text)
-        csvreader = unicode_csv_reader(csvcontent)
-        return self._import_csv_tasks(csvreader)
+        # csv_df = unicode_csv_reader(csvcontent)
+        csv_df = pd.read_csv(csvcontent)
+        return self._import_csv_tasks(csv_df)
 
 
 class BulkTaskGDImport(BulkTaskCSVImport):
@@ -166,8 +168,8 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read())
-        csvreader = unicode_csv_reader(csvcontent)
-        return list(self._import_csv_tasks(csvreader))
+        csv_df = unicode_csv_reader(csvcontent)
+        return list(self._import_csv_tasks(csv_df))
 
     def tasks(self):
         """Get tasks from a given URL."""
