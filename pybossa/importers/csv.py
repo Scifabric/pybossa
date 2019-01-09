@@ -61,9 +61,10 @@ class BulkTaskCSVImport(BulkTaskImport):
         for field in field_headers:
             field_header_index.append(headers.index(field))
 
+        self._check_valid_row_length(csv_df)
+
         for index, row in csv_df.iterrows():
             row_number += 1
-            self._check_valid_row_length(list(row), row_number, headers)
             task_data = {"info": {}}
             for idx, cell in enumerate(list(row)):
                 if idx in field_header_index:
@@ -86,10 +87,9 @@ class BulkTaskCSVImport(BulkTaskImport):
                 msg = "The file you uploaded has an empty header on column {}.".format(position+1)
                 raise BulkImportException(msg)
 
-    def _check_valid_row_length(self, row, row_number, headers):
-        if len(headers) != len(row):
-            msg = gettext("The file you uploaded has an extra value on "
-                          "row %s." % (row_number+1))
+    def _check_valid_row_length(self, df):
+        if type(df.index) is not pd.RangeIndex:
+            msg = "The file you uploaded has an extra value on a row."
             raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
