@@ -606,7 +606,7 @@ def dashboard():
 @admin_required
 def management_dashboard():
     if not site_stats.management_dashboard_stats_cached():
-        flash('Management dashboard statistics would be available in some time. Please check after receiving notification', 'warning')
+        flash('Management dashboard is calculating the statistics. Please return to this page after receiving notification.', 'warning')
         DASHBOARD_QUEUE.enqueue(get_management_dashboard_stats, current_user.email_addr)
         return redirect_content_type(url_for('admin.index'))
 
