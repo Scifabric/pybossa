@@ -47,6 +47,21 @@ class TestProjectTimeout(Helper):
         assert dom.find(id='seconds')['value'] == '30'
 
     @with_context
+    def test_set_timeout_value(self):
+        project = ProjectFactory.create()
+        vals = [
+            ({'minutes': 10, 'seconds': 30}, 630),
+            ({'minutes': 1, 'seconds': 1}, 61),
+            ({'minutes': 0, 'seconds': 30}, 30),
+            ({'minutes': 10, 'seconds': 0}, 600),
+        ]
+        for data, val in vals:
+            url = '/project/%s/tasks/timeout?api_key=%s' % (project.short_name, project.owner.api_key)
+            self.app.post(url, data=data)
+            timeout = project.info['timeout']
+            assert timeout == val, timeout
+
+    @with_context
     def test_set_timeout_too_low(self):
         project = ProjectFactory.create()
         data = {'minutes': 0, 'seconds': 20}
@@ -69,3 +84,12 @@ class TestProjectTimeout(Helper):
         url = '/project/%s/tasks/timeout?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app.post(url, data=data)
         assert 'Timeout should be between 30 seconds and 120 minuntes' in res.data
+
+    @with_context
+    def test_set_timeout_invalid(self):
+        project = ProjectFactory.create()
+        data = {'minutes': 30}
+        url = '/project/%s/tasks/timeout?api_key=%s' % (project.short_name, project.owner.api_key)
+        res = self.app.post(url, data=data)
+        print(res.data)
+        assert 'Please correct the errors' in res.data
