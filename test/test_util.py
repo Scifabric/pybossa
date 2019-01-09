@@ -71,8 +71,9 @@ class TestPybossaUtil(Test):
 
         with patch.dict(self.flask_app.config, patch_dict):
             message, timestamp, sig, pub_key = util.get_disqus_sso_payload(user)
-            mock_b64encode.assert_called_with(data)
-            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+            mock_b64encode.assert_called_with(data.encode('utf-8'))
+            tmp = '{} {}'.format(data, timestamp)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY.encode('utf-8'), tmp.encode('utf-8'),
                                          hashlib.sha1)
             assert timestamp
             assert sig
@@ -108,8 +109,10 @@ class TestPybossaUtil(Test):
 
         with patch.dict(self.flask_app.config, patch_dict):
             message, timestamp, sig, pub_key = util.get_disqus_sso_payload(None)
-            mock_b64encode.assert_called_with(data)
-            mock_hmac.assert_called_with(DISQUS_SECRET_KEY, '%s %s' % (data, timestamp),
+            mock_b64encode.assert_called_with(data.encode('utf-8'))
+            tmp = '{} {}'.format(data, timestamp)
+            mock_hmac.assert_called_with(DISQUS_SECRET_KEY.encode('utf-8'),
+                                         tmp.encode('utf-8'),
                                          hashlib.sha1)
             assert timestamp
             assert sig
@@ -405,12 +408,13 @@ class TestPybossaUtil(Test):
     @patch('pybossa.util.last_flashed_message')
     def test_last_flashed_message_hashed(self, last_flash):
         """Test the last flash message is hashed."""
-        message_and_status = [ 'foo', 'bar' ]
+        message_and_status = ['foo', 'bar']
         last_flash.return_value = message_and_status
-        expected = base64.b64encode(json.dumps({
+        tmp = json.dumps({
             'flash': message_and_status[1],
             'status': message_and_status[0]
-        }))
+        })
+        expected = base64.b64encode(tmp.encode('utf-8'))
         hashed_flash = util.hash_last_flash_message()
         assert hashed_flash == expected
 
@@ -515,31 +519,6 @@ class TestPybossaUtil(Test):
                         next=False,
                         prev=True)
         assert expected == p.to_json(), err_msg
-
-    def test_unicode_csv_reader(self):
-        """Test unicode_csv_reader works."""
-        fake_csv = ['one, two, three']
-        err_msg = "Each cell should be encoded as Unicode"
-        for row in util.unicode_csv_reader(fake_csv):
-            for item in row:
-                assert isinstance(item, str), err_msg
-
-    def test_UnicodeWriter(self):
-        """Test UnicodeWriter class works."""
-        tmp = tempfile.NamedTemporaryFile()
-        uw = util.UnicodeWriter(tmp)
-        fake_csv = ['one, two, three, {"i": 1}']
-        for row in csv.reader(fake_csv):
-            # change it for a dict
-            row[3] = dict(i=1)
-            uw.writerow(row)
-        tmp.seek(0)
-        err_msg = "It should be the same CSV content"
-        with open(tmp.name, 'rb') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                for item in row:
-                    assert item in fake_csv[0], err_msg
 
     def test_publish_channel_private(self):
         """Test publish_channel private method works."""
@@ -668,7 +647,7 @@ class TestUsernameFromFullnameFunction(object):
 
     def test_it_removes_whitespaces(self):
         name = "john benjamin toshack"
-        expected_username = "johnbenjamintoshack"
+        expected_username = b"johnbenjamintoshack"
 
         obtained = util.username_from_full_name(name)
 
@@ -676,15 +655,15 @@ class TestUsernameFromFullnameFunction(object):
 
     def test_it_removes_capital_letters(self):
         name = "JOHN"
-        expected_username = "john"
+        expected_username = b'john'
 
         obtained = util.username_from_full_name(name)
 
-        assert obtained == expected_username, obtained
+        assert obtained == expected_username, (obtained, expected_username)
 
     def test_it_removes_non_ascii_chars(self):
         name = "ßetaÑapa"
-        expected_username = "etaapa"
+        expected_username = b"etaapa"
 
         obtained = util.username_from_full_name(name)
 
@@ -692,7 +671,7 @@ class TestUsernameFromFullnameFunction(object):
 
     def test_it_removes_whitespaces_unicode(self):
         name = "john benjamin toshack"
-        expected_username = "johnbenjamintoshack"
+        expected_username = b"johnbenjamintoshack"
 
         obtained = util.username_from_full_name(name)
 
@@ -700,7 +679,7 @@ class TestUsernameFromFullnameFunction(object):
 
     def test_it_removes_capital_letters_unicode(self):
         name = "JOHN"
-        expected_username = "john"
+        expected_username = b"john"
 
         obtained = util.username_from_full_name(name)
 
@@ -708,7 +687,7 @@ class TestUsernameFromFullnameFunction(object):
 
     def test_it_removes_non_ascii_chars_unicode(self):
         name = "ßetaÑapa"
-        expected_username = "etaapa"
+        expected_username = b"etaapa"
 
         obtained = util.username_from_full_name(name)
 
