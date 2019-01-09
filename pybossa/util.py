@@ -283,7 +283,7 @@ def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
                             dialect=dialect, **kwargs)
     for row in csv_reader:
         # decode UTF-8 back to Unicode, cell by cell:
-        yield [str(cell, 'utf-8') for cell in row]
+        yield [cell.encode('utf-8') for cell in row]
 
 
 def utf_8_encoder(unicode_csv_data):
@@ -379,9 +379,9 @@ def is_reserved_name(blueprint, name):
 def username_from_full_name(username):
     """Takes a username that may contain several words with capital letters and
     returns a single word username, no spaces, all lowercases."""
-    if type(username) == str:
-        return username.decode('ascii', 'ignore').lower().replace(' ', '')
-    return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')
+    username = username.replace(' ', '')
+    username = username.lower()
+    return username.encode('ascii', 'ignore')
 
 
 def rank(projects, order_by=None, desc=False):

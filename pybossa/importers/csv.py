@@ -19,7 +19,6 @@
 import requests
 from io import StringIO
 from flask_babel import gettext
-from pybossa.util import unicode_csv_reader
 import pandas as pd
 
 from .base import BulkTaskImport, BulkImportException
@@ -105,7 +104,6 @@ class BulkTaskCSVImport(BulkTaskImport):
 
         r.encoding = 'utf-8'
         csvcontent = StringIO(r.text)
-        # csv_df = unicode_csv_reader(csvcontent)
         csv_df = pd.read_csv(csvcontent)
         return self._import_csv_tasks(csv_df)
 
@@ -168,7 +166,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read())
-        csv_df = unicode_csv_reader(csvcontent)
+        csv_df = pd.read_csv(csvcontent)
         return list(self._import_csv_tasks(csv_df))
 
     def tasks(self):
