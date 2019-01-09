@@ -176,7 +176,7 @@ class TestBulkTaskCSVImport(object):
         tasks = self.importer.tasks()
         task = next(tasks)
 
-        assert task == {"info": {'Bar': '2', 'Foo': '1', 'Baz': '3'}}, task
+        assert task == {"info": {'Bar': 2, 'Foo': 1, 'Baz': 3}}, task
 
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
@@ -188,8 +188,8 @@ class TestBulkTaskCSVImport(object):
         tasks = self.importer.tasks()
         task = next(tasks)
 
-        assert task == {'info': {'Foo': '1', 'Bar': '2'},
-                        'priority_0': '3'}, task
+        assert task == {'info': {'Foo': 1, 'Bar': 2},
+                        'priority_0': 3}, task
 
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
         csv_file = FakeResponse(text='Foo\nM\xc3\xbcnchen', status_code=200,
