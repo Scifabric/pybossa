@@ -2081,23 +2081,21 @@ def task_timeout(short_name):
     ensure_authorized_to('update', project)
     pro = pro_features()
     if request.method == 'GET':
-        timeout = project.info.get('timeout')
-        if timeout is not None:
-            form.timeout.data = timeout / 60
+        timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
+        form.minutes.data, form.seconds.data = divmod(timeout, 60)
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
                                project=project,
                                owner=owner,
                                pro_features=pro)
-    elif request.method == 'POST' and form.validate():
+    if form.validate() and form.in_range():
         project = project_repo.get_by_shortname(short_name=project.short_name)
         if project.info.get('timeout'):
             old_timeout = project.info['timeout']
         else:
             old_timeout = DEFAULT_TASK_TIMEOUT
-        if form.timeout.data:
-            project.info['timeout'] = form.timeout.data * 60
+        project.info['timeout'] = form.minutes.data*60 + form.seconds.data or 0
         project_repo.save(project)
         # Log it
         if old_timeout != project.info.get('timeout'):
@@ -2108,7 +2106,11 @@ def task_timeout(short_name):
 
         return redirect(url_for('.tasks', short_name=project.short_name))
     else:
-        flash(gettext('Please correct the errors'), 'error')
+        if not form.in_range():
+            flash(gettext('Timeout should be between {} seconds and {} minuntes')
+                          .format(form.min_seconds, form.max_minutes), 'error')
+        else:
+            flash(gettext('Please correct the errors'), 'error')
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
