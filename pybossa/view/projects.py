@@ -2465,42 +2465,6 @@ def webhook_handler(short_name, oid=None):
                            pro_features=pro)
 
 
-@blueprint.route('/<short_name>/results')
-def results(short_name):
-    """Results page for the project."""
-
-    project, owner, ps = project_by_shortname(short_name)
-
-    title = project_title(project, "Results")
-
-    ensure_authorized_to('read', project)
-
-    pro = pro_features()
-
-    title = project_title(project, None)
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user,
-                                                                ps)
-
-    template_args = {"project": project_sanitized,
-                     "title": title,
-                     "owner": owner_sanitized,
-                     "n_tasks": ps.n_tasks,
-                     "n_task_runs": ps.n_task_runs,
-                     "overall_progress": ps.overall_progress,
-                     "last_activity": ps.last_activity,
-                     "n_completed_tasks": ps.n_completed_tasks,
-                     "n_volunteers": ps.n_volunteers,
-                     "pro_features": pro,
-                     "n_results": ps.n_results}
-
-    response = dict(template = '/projects/results.html', **template_args)
-
-    return handle_content_type(response)
-
-
 @blueprint.route('/<short_name>/resetsecretkey', methods=['POST'])
 @login_required
 def reset_secret_key(short_name):
