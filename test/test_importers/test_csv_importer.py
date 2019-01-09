@@ -38,9 +38,11 @@ class TestBulkTaskCSVImport(object):
                                   encoding='utf-8')
         request.return_value = empty_file
 
-        number_of_tasks = self.importer.count_tasks()
-
-        assert number_of_tasks is 0, number_of_tasks
+        try:
+            number_of_tasks = self.importer.count_tasks()
+        except BulkImportException as e:
+            msg = "The file you uploaded is a malformed CSV."
+            assert msg == str(e), str(e)
 
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
@@ -154,7 +156,7 @@ class TestBulkTaskCSVImport(object):
                                 headers={'content-type': 'text/plain'},
                                 encoding='utf-8')
         request.return_value = csv_file
-        msg = "The file you uploaded has an extra value on row 2."
+        msg = "The file you uploaded is a malformed CSV."
 
         raised = False
         try:

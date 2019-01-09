@@ -89,7 +89,7 @@ class BulkTaskCSVImport(BulkTaskImport):
 
     def _check_valid_row_length(self, df):
         if type(df.index) is not pd.RangeIndex:
-            msg = "The file you uploaded has an extra value on a row."
+            msg = "The file you uploaded is a malformed CSV."
             raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
