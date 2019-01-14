@@ -4741,32 +4741,28 @@ class TestWeb(web.Helper):
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'project1_result.csv', zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = unicode_csv_reader(csv_content)
+        if six.PY2:
+            csv_content = StringIO(zip.read(extracted_filename))
+        else:
+            csv_content = BytesIO(zip.read(extracted_filename))
+        csvreader = pd.read_csv(csv_content)
         project = db.session.query(Project)\
                     .filter_by(short_name=project.short_name)\
                     .first()
         exported_results = []
-        n = 0
-        for row in csvreader:
-            if n != 0:
-                exported_results.append(row)
-            else:
-                keys = row
-            n = n + 1
         err_msg = "The number of exported results is different from Project Results"
-        assert len(exported_results) == len(project.tasks), err_msg
+        assert csvreader.shape[0] == len(project.tasks), err_msg
         results = db.session.query(Result)\
                     .filter_by(project_id=project.id).all()
+
+        keys = list(csvreader.columns)
         for t in results:
             err_msg = "All the result column names should be included"
-            print(t)
             d = t.dictize()
             task_run_ids = d['task_run_ids']
             fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
             fl['task_run_ids'] = task_run_ids
             # keys.append('result_id')
-            print(fl)
             for tk in list(fl.keys()):
                 expected_key = "%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)
@@ -5917,7 +5913,7 @@ class TestWeb(web.Helper):
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
-        assert {'Bar': '2', 'Foo': '1'} == task.info
+        assert {'Bar': 2, 'Foo': 1} == task.info
         assert task.priority_0 == 3
         assert "1 new task was imported successfully" in str(res.data)
 
@@ -5935,7 +5931,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         assert len(project.tasks) == 2, "There should be only 2 tasks"
         n = 0
-        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
+        csv_tasks = [{'Foo': 1, 'Bar': 2}, {'Foo': 4, 'Bar': 5}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
@@ -5949,7 +5945,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         assert len(project.tasks) == 2, "There should be only 2 tasks"
         n = 0
-        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
+        csv_tasks = [{'Foo': 1, 'Bar': 2}, {'Foo': 4, 'Bar': 5}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1

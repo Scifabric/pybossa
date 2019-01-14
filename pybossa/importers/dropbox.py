@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import string
 import json
 
 from .base import BulkTaskImport
@@ -44,7 +43,7 @@ class BulkTaskDropboxImport(BulkTaskImport):
         """Extract file information."""
         _file = json.loads(_file)
         info = {'filename': _file['name'],
-                'link_raw': string.replace(_file['link'], 'dl=0', 'raw=1'),
+                'link_raw': _file['link'].replace('dl=0', 'raw=1'),
                 'link': _file['link']}
         if self._is_image_file(_file['name']):
             extra_fields = {'url_m': info['link_raw'],
@@ -89,8 +88,8 @@ class BulkTaskDropboxImport(BulkTaskImport):
 
     def _create_raw_cors_link(self, url):
         """Create RAW CORS link."""
-        new_url = string.replace(url, 'www.dropbox.com',
-                                 'dl.dropboxusercontent.com')
+        new_url = url.replace('www.dropbox.com',
+                              'dl.dropboxusercontent.com')
         if new_url.endswith('?dl=0'):
             new_url = new_url[:-5]
         return new_url
