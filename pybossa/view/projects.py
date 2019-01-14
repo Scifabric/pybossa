@@ -672,8 +672,10 @@ def import_task(short_name):
             try:
                 return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
+                raise
                 flash(err_msg, 'error')
             except Exception as inst:  # pragma: no cover
+                raise
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
@@ -1181,7 +1183,6 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
-            print(inst)
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))

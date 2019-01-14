@@ -42,11 +42,11 @@ class CsvExporter(Exporter):
         dataframe = self._respond_csv(ty, project.id)
         if dataframe is not None:
             info_dataframe = self._respond_csv(ty, project.id, info_only=True)
-            datafile = tempfile.NamedTemporaryFile()
-            info_datafile = tempfile.NamedTemporaryFile()
+            datafile = tempfile.NamedTemporaryFile(mode='w')
+            info_datafile = tempfile.NamedTemporaryFile(mode='w')
             try:
-                dataframe.to_csv(datafile, index=False,
-                                 encoding='utf-8')
+                dataframe.to_csv(
+                    datafile, index=False, encoding='utf-8')
                 info_dataframe.to_csv(
                     info_datafile, index=False, encoding='utf-8')
                 datafile.flush()

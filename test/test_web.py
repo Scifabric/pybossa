@@ -22,7 +22,9 @@ import json
 import os
 import shutil
 import zipfile
-from io import StringIO
+import six
+import pandas as pd
+from io import StringIO, BytesIO
 from default import db, Fixtures, with_context, with_context_settings, FakeResponse, mock_contributions_guard
 from helper import web
 from mock import patch, Mock, call, MagicMock
@@ -108,10 +110,13 @@ class TestWeb(web.Helper):
         template_folder = os.path.join(APP_ROOT, '..', 'pybossa',
                                        self.flask_app.template_folder)
         file_name = os.path.join(template_folder, "home", "_results.html")
-        with open(file_name, "w") as f:
-            f.write("foobar")
+        mode = "w+b"
+        if six.PY2:
+            mode = "w"
+        with open(file_name, mode) as f:
+            f.write(b"foobar")
         res = self.app.get('/results')
-        assert "foobar" in str(res.data), res.data
+        assert b"foobar" in str(res.data), res.data
         os.remove(file_name)
 
 
@@ -123,8 +128,11 @@ class TestWeb(web.Helper):
         template_folder = os.path.join(APP_ROOT, '..', 'pybossa',
                                        self.flask_app.template_folder)
         file_name = os.path.join(template_folder, "home", "_results.html")
-        with open(file_name, "w") as f:
-            f.write("foobar")
+        mode = "w+b"
+        if six.PY2:
+            mode = "w"
+        with open(file_name, mode) as f:
+            f.write(b"foobar")
         res = self.app_get_json('/results')
         data = json.loads(res.data)
         assert data.get('template') == '/home/_results.html', data
@@ -135,7 +143,7 @@ class TestWeb(web.Helper):
     def test_00000_results_not_found(self):
         """Test WEB results page returns 404 when no template is found works."""
         res = self.app.get('/results')
-        assert res.status_code == 404, res.status_code
+        assert res.status_code == 404, res.data
 
     @with_context
     def test_leaderboard(self):
@@ -2312,7 +2320,7 @@ class TestWeb(web.Helper):
         # Issue the error for the project.short_name
         res = self.new_project(short_name='$#/|')
         err_msg = "A project must have a short_name without |/$# chars"
-        assert b'$#&amp;\/| and space symbols are forbidden' in str(res.data), err_msg
+        assert 'space symbols are forbidden' in str(res.data), err_msg
 
         # Now Unique checks
         self.new_project()
@@ -2723,9 +2731,9 @@ class TestWeb(web.Helper):
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
 
-        assert '<a href="/project/category/cat/page/2/" rel="nofollow">' in page1.data
+        assert '<a href="/project/category/cat/page/2/" rel="nofollow">' in str(page1.data)
         assert page2.status_code == 200, page2.status_code
-        assert '<a href="/project/category/cat/" rel="nofollow">' in page2.data
+        assert '<a href="/project/category/cat/" rel="nofollow">' in str(page2.data)
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -3160,8 +3168,8 @@ class TestWeb(web.Helper):
             newtask_response = self.app.get(newtask_url)
             task_response = self.app.get(task_url, follow_redirects=True)
 
-            assert message not in newtask_response.data, newtask_response.data
-            assert message not in task_response.data, task_response.data
+            assert message not in str(newtask_response.data), newtask_response.data
+            assert message not in str(task_response.data), task_response.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -4240,7 +4248,11 @@ class TestWeb(web.Helper):
 
         uri = "/uploads/user_%s/personal_data.zip" % user.id
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
         assert len(zip.namelist()) == 1, err_msg
@@ -4328,7 +4340,11 @@ class TestWeb(web.Helper):
         uri = "/uploads/user_%s/random_sec_personal_data.zip" % user.id
         print(uri)
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
         assert len(zip.namelist()) == 1, err_msg
@@ -4392,7 +4408,11 @@ class TestWeb(web.Helper):
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=result&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
         assert len(zip.namelist()) == 1, err_msg
@@ -4450,7 +4470,10 @@ class TestWeb(web.Helper):
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = "/project/%s/tasks/export?type=task&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
         assert len(zip.namelist()) == 1, err_msg
@@ -4526,7 +4549,11 @@ class TestWeb(web.Helper):
         # Now get the tasks in JSON format
         uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
         assert len(zip.namelist()) == 1, err_msg
@@ -4550,7 +4577,11 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=task&format=json" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         extracted_filename = zip.namelist()[0]
 
         exported_task_runs = json.loads(zip.read(extracted_filename))
@@ -4597,7 +4628,11 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
         assert len(zip.namelist()) == 2, err_msg
@@ -4694,7 +4729,11 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
         assert len(zip.namelist()) == 2, err_msg
@@ -4794,7 +4833,11 @@ class TestWeb(web.Helper):
             # Now get the tasks in CSV format
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
-            zip = zipfile.ZipFile(StringIO(res.data))
+            if six.PY2:
+                zip = zipfile.ZipFile(StringIO(str(res.data)))
+            else:
+                zip = zipfile.ZipFile(BytesIO(res.data))
+
             # Check only one file in zipfile
             err_msg = "filename count in ZIP is not 2"
             assert len(zip.namelist()) == 2, err_msg
@@ -4802,21 +4845,14 @@ class TestWeb(web.Helper):
             extracted_filename = zip.namelist()[0]
             assert extracted_filename == 'project1_task.csv', zip.namelist()[0]
 
-            csv_content = StringIO(zip.read(extracted_filename))
-            csvreader = unicode_csv_reader(csv_content)
+            csv_content = zip.read(extracted_filename)
+            csvreader = pd.read_csv(csv_content)
             project = db.session.query(Project)\
                         .filter_by(short_name=project.short_name)\
                         .first()
-            exported_tasks = []
-            n = 0
-            for row in csvreader:
-                if n != 0:
-                    exported_tasks.append(row)
-                else:
-                    keys = row
-                n = n + 1
+            keys = list(csvreader.columns)
             err_msg = "The number of exported tasks is different from Project Tasks"
-            assert len(exported_tasks) == len(project.tasks), err_msg
+            assert csvreader.shape[0] == len(project.tasks), err_msg
             for t in project.tasks:
                 err_msg = "All the task column names should be included"
                 d = copy.deepcopy(t.dictize())
@@ -4891,9 +4927,13 @@ class TestWeb(web.Helper):
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
             file_name = '/tmp/task_%s.zip' % project.short_name
-            with open(file_name, 'w') as f:
-                f.write(res.data)
-            zip = zipfile.ZipFile(file_name, 'r')
+            if six.PY2:
+                with open(file_name, 'w') as f:
+                    f.write(res.data)
+            else:
+                with open(file_name, 'w+b') as f:
+                    f.write(res.data)
+            zip = zipfile.ZipFile(file_name)
             zip.extractall('/tmp')
             # Check only one file in zipfile
             err_msg = "filename count in ZIP is not 2"
@@ -4960,8 +5000,12 @@ class TestWeb(web.Helper):
             uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
             res = self.app.get(uri, follow_redirects=True)
             file_name = '/tmp/task_%s.zip' % project.short_name
-            with open(file_name, 'w') as f:
-                f.write(res.data)
+            if six.PY2:
+                with open(file_name, 'w') as f:
+                    f.write(res.data)
+            else:
+                with open(file_name, 'w+b') as f:
+                    f.write(res.data)
             zip = zipfile.ZipFile(file_name, 'r')
             zip.extractall('/tmp')
             # Check only one file in zipfile
@@ -4973,22 +5017,15 @@ class TestWeb(web.Helper):
 
             csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
 
-            csvreader = unicode_csv_reader(csv_content)
+            csvreader = pd.read_csv(csv_content)
             project = db.session.query(Project)\
                         .filter_by(short_name=project.short_name)\
                         .first()
-            exported_tasks = []
-            n = 0
-            for row in csvreader:
-                if n != 0:
-                    exported_tasks.append(row)
-                else:
-                    keys = row
-                n = n + 1
-            err_msg = "The number of exported tasks is different from Project Tasks"
-            assert len(exported_tasks) == len(project.tasks), (err_msg,
-                                                               len(exported_tasks),
-                                                               len(project.tasks))
+
+            assert csvreader.shape[0] == len(project.tasks), (err_msg,
+                                                              len(exported_tasks),
+                                                              len(project.tasks))
+            keys = list(csvreader.columns)
             for t in project.tasks:
                 err_msg = "All the task column names should be included"
                 for tk in list(flatten(t.info['answer'][0]).keys()):
@@ -5047,8 +5084,12 @@ class TestWeb(web.Helper):
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         file_name = '/tmp/task_%s.zip' % project.short_name
-        with open(file_name, 'w') as f:
-            f.write(res.data)
+        if six.PY2:
+            with open(file_name, 'w') as f:
+                f.write(res.data)
+        else:
+            with open(file_name, 'w+b') as f:
+                f.write(res.data)
         zip = zipfile.ZipFile(file_name, 'r')
         zip.extractall('/tmp')
         # Check only one file in zipfile
@@ -5114,6 +5155,10 @@ class TestWeb(web.Helper):
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
         extracted_filename = zip.namelist()[0]
 
         csv_content = StringIO(zip.read(extracted_filename))
@@ -5130,16 +5175,15 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=task&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
         extracted_filename = zip.namelist()[0]
 
         csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = unicode_csv_reader(csv_content)
-        is_empty = True
-        for line in csvreader:
-            is_empty = False, line
-
-        assert is_empty
+        csvreader = pd.read_csv(csv_content)
+        csvreader.shape[0] > 0, csvreader.shape
 
     @with_context
     def test_53_export_task_runs_csv(self):
@@ -5167,32 +5211,31 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task_run&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
+        if six.PY2:
+            zip = zipfile.ZipFile(StringIO(str(res.data)))
+        else:
+            zip = zipfile.ZipFile(BytesIO(res.data))
+
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 2"
         assert len(zip.namelist()) == 2, err_msg
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
+        print(extracted_filename)
         assert extracted_filename == 'project1_task_run.csv', zip.namelist()[0]
         extracted_filename_info_only = zip.namelist()[1]
         assert extracted_filename_info_only == 'project1_task_run_info_only.csv', zip.namelist()[1]
-
-        csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = unicode_csv_reader(csv_content)
+        zip_data = zip.read(str(extracted_filename))
+        csv_content = StringIO(zip_data.decode('utf-8'))
+        # csvreader = unicode_csv_reader(csv_content)
+        csv_df = pd.read_csv(csv_content)
         project = db.session.query(Project)\
             .filter_by(short_name=project.short_name)\
             .first()
         exported_task_runs = []
-        n = 0
-        for row in csvreader:
-            if n != 0:
-                exported_task_runs.append(row)
-            else:
-                keys = row
-            n = n + 1
-        err_msg = "The number of exported task runs is different \
-                   from Project Tasks Runs: %s != %s" % (len(exported_task_runs), len(project.task_runs))
-        assert len(exported_task_runs) == len(project.task_runs), err_msg
+        assert csv_df.shape[0] == len(project.task_runs), err_msg
+
+        keys = list(csv_df.columns)
 
         for t in project.tasks[0].task_runs:
             for tk in list(flatten(t.dictize()).keys()):
@@ -5832,7 +5875,8 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
-        assert {'Bar': '2', 'Foo': '1'} == task.info
+        assert task is not None, task
+        assert {'Bar': 2, 'Foo': 1} == task.info, task.info
         assert task.priority_0 == 3
         assert "1 new task was imported successfully" in str(res.data)
 
@@ -5851,7 +5895,7 @@ class TestWeb(web.Helper):
         err_msg = "There should be only 2 tasks"
         assert len(project.tasks) == 2, (err_msg, project.tasks)
         n = 0
-        csv_tasks = [{'Foo': '1', 'Bar': '2'}, {'Foo': '4', 'Bar': '5'}]
+        csv_tasks = [{'Foo': 1, 'Bar': 2}, {'Foo': 4, 'Bar': 5}]
         for t in project.tasks:
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1

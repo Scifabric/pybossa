@@ -70,14 +70,20 @@ class JsonExporter(Exporter):
         zipped_datafile = tempfile.NamedTemporaryFile()
         _zip = self._zip_factory(zipped_datafile.name)
         try:
-            datafile = tempfile.NamedTemporaryFile()
+            datafile = tempfile.NamedTemporaryFile(mode='w')
             try:
                 datafile.write(json.dumps(data))
                 datafile.flush()
                 _zip.write(datafile.name,
                            secure_filename('%s_%s.%s' % (name, ty, ext)))
+            except:
+                print("error")
+                raise
             finally:
                 datafile.close()
+        except:
+            print("error2")
+            raise
         finally:
             _zip.close()
             if user_id:

@@ -37,7 +37,10 @@ class UserRepository(Repository):
         return self.db.session.query(User).get(id)
 
     def get_by_name(self, name):
-        return self.db.session.query(User).filter_by(name=name).first()
+        tmp = name
+        if type(name) == bytes:
+            tmp = name.decode('utf-8')
+        return self.db.session.query(User).filter_by(name=tmp).first()
 
     def get_by(self, **attributes):
         return self.db.session.query(User).filter_by(**attributes).first()
