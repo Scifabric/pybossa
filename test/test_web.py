@@ -7152,8 +7152,8 @@ class TestWeb(web.Helper):
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/project/%s/newtask' % project.short_name)
 
-        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
-        assert message in str(res.data)
+        message = "contributed to all the tasks for this project, but this project still needs more volunteers"
+        assert message in str(res.data), (message, str(res.data))
         self.signout()
 
     @with_context
