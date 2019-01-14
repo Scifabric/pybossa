@@ -33,6 +33,7 @@ from itsdangerous import BadSignature
 from pybossa.util import get_user_signup_method, unicode_csv_reader
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
+from pandas.errors import EmptyDataError
 from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -5150,20 +5151,17 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(short_name='no_tasks_here')
         uri = "/project/%s/tasks/export?type=result&format=csv" % project.short_name
         res = self.app.get(uri, follow_redirects=True)
-        zip = zipfile.ZipFile(StringIO(res.data))
         if six.PY2:
             zip = zipfile.ZipFile(StringIO(str(res.data)))
         else:
             zip = zipfile.ZipFile(BytesIO(res.data))
         extracted_filename = zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = unicode_csv_reader(csv_content)
-        is_empty = True
-        for line in csvreader:
-            is_empty = False, line
-
-        assert is_empty
+        if six.PY2:
+            csv_content = StringIO(zip.read(extracted_filename))
+        else:
+            csv_content = BytesIO(zip.read(extracted_filename))
+        assert_raises(EmptyDataError, pd.read_csv, csv_content)
 
     @with_context
     def test_export_task_csv_no_tasks_returns_empty_file(self):
