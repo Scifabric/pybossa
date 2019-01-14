@@ -117,7 +117,7 @@ class TestWeb(web.Helper):
         with open(file_name, mode) as f:
             f.write(b"foobar")
         res = self.app.get('/results')
-        assert b"foobar" in str(res.data), res.data
+        assert b"foobar" in res.data, res.data
         os.remove(file_name)
 
 
@@ -4941,22 +4941,12 @@ class TestWeb(web.Helper):
 
             csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
 
-            csvreader = unicode_csv_reader(csv_content)
             project = db.session.query(Project)\
                         .filter_by(short_name=project.short_name)\
                         .first()
             exported_tasks = []
-            n = 0
-            for row in csvreader:
-                if n != 0:
-                    exported_tasks.append(row)
-                else:
-                    keys = row
-                n = n + 1
+            assert_raises(EmptyDataError, pd.read_csv, csv_content)
             err_msg = "The number of exported tasks should be 0 as there are no keys"
-            assert len(exported_tasks) == 0, (err_msg,
-                                              len(exported_tasks),
-                                              0)
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -5029,7 +5019,8 @@ class TestWeb(web.Helper):
                     expected_key = "%s" % tk
                     assert expected_key in keys, (expected_key, err_msg)
 
-            for et in exported_tasks:
+            for index, et in csvreader.iterrows():
+                et = list(et)
                 task_id = et[keys.index('task_id')]
                 task = db.session.query(Task).get(task_id)
                 task_dict_flat = flatten(task.info['answer'][0])
@@ -5038,13 +5029,13 @@ class TestWeb(web.Helper):
                     slug = '%s' % k
                     err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
                     if task_dict_flat[k] is not None:
-                        assert str(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                        assert task_dict_flat[k] == et[keys.index(slug)], err_msg
                     else:
                         assert '' == et[keys.index(slug)], err_msg
                 for datum in task_dict['info']['answer']:
                     for k in list(datum.keys()):
                         slug = '%s' % k
-                        assert str(task_dict_flat[slug]) == et[keys.index(slug)], err_msg
+                        assert task_dict_flat[slug] == et[keys.index(slug)], err_msg
             # Tasks are exported as an attached file
             content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % project.id
             assert res.headers.get('Content-Disposition') == content_disposition, res.headers
@@ -5175,9 +5166,11 @@ class TestWeb(web.Helper):
             zip = zipfile.ZipFile(BytesIO(res.data))
         extracted_filename = zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = pd.read_csv(csv_content)
-        csvreader.shape[0] > 0, csvreader.shape
+        if six.PY2:
+            csv_content = StringIO(zip.read(extracted_filename))
+        else:
+            csv_content = BytesIO(zip.read(extracted_filename))
+        assert_raises(EmptyDataError, pd.read_csv, csv_content)
 
     @with_context
     def test_53_export_task_runs_csv(self):
