@@ -29,10 +29,10 @@ class TestFacebook(Test):
         super(TestFacebook, self).setUp()
         self.user_data = {
             "id": 1234567890,
-            "email": "me@facebook.com",
-            "first_name": "Mauricio",
-            "last_name": "Perez Sanchez",
-            "name": "Mauricio Perez Sanchez"
+            "email": 'me@facebook.com',
+            "first_name": 'Mauricio',
+            "last_name": 'Perez Sanchez',
+            "name": 'Mauricio Perez Sanchez'
         }
         self.name = username_from_full_name(self.user_data['name'])
         newsletter.app = None
@@ -43,7 +43,7 @@ class TestFacebook(Test):
         token = 't'
         user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=token), user
@@ -56,7 +56,8 @@ class TestFacebook(Test):
         new_token = 'new_token'
         user = manage_user(new_token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        print(user.name, self.name)
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=new_token), user
@@ -69,7 +70,7 @@ class TestFacebook(Test):
         token = 't'
         user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=token), user
@@ -83,8 +84,9 @@ class TestFacebook(Test):
         manage_user(token, self.user_data)
         new_token = 'new_token'
         user = manage_user(new_token, self.user_data)
+        print(user.email_addr, self.user_data['email'])
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
         assert user.info['facebook_token'] == dict(oauth_token=new_token), user
@@ -97,7 +99,7 @@ class TestFacebook(Test):
         token = 't'
         user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
 
@@ -112,7 +114,7 @@ class TestFacebook(Test):
         token = 't'
         user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
-        assert user.name == self.name, user
+        assert user.name == self.name.decode('utf-8'), user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
         err_msg = "It should not be called."

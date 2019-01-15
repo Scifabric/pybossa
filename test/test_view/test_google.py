@@ -44,7 +44,6 @@ class TestGoogle(Test):
         print(user.name, user.email_addr)
         new_token = "new_t"
         user = manage_user(new_token, user_data)
-        print(user.name, user.email_addr)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user

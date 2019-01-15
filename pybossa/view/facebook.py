@@ -95,6 +95,10 @@ def manage_user(access_token, user_data):
                         user_repo.get_by(email_addr=user_data['email']) is not None)
 
         if not user_exists and not email_exists:
+            if type(user_data.get('email')) == bytes:
+                user_data['email'] = user_data['email'].decode('utf-8')
+            if type(name) == bytes:
+                name = name.decode('utf-8')
             if not user_data.get('email'):
                 user_data['email'] = name
             user = User(fullname=user_data['name'],
