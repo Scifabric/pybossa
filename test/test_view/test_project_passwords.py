@@ -25,12 +25,8 @@ project_repo = ProjectRepository(db)
 
 
 def configure_mock_current_user_from(user, mock):
-    def is_anonymous():
-        return user is None
-    def is_authenticated():
-        return True
-    mock.is_anonymous.return_value = is_anonymous()
-    mock.is_authenticated.return_value = True
+    mock.is_anonymous = False
+    mock.is_authenticated = True
     mock.admin = user.admin if user != None else None
     mock.id = user.id if user != None else None
     return mock
@@ -67,7 +63,7 @@ class TestProjectPassword(Test):
             project.short_name, project.short_name, task.id)
 
         res = self.app.post(url, data={'password': 'bad_passwd'})
-        assert 'Sorry, incorrect password' in res.data, "No error message shown"
+        assert 'Sorry, incorrect password' in str(res.data), "No error message shown"
 
     @with_context
     def test_password_view_func_no_project(self):
@@ -88,10 +84,10 @@ class TestProjectPassword(Test):
         project_repo.update(project)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'Enter the password to contribute' in str(res.data)
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'Enter the password to contribute' in str(res.data)
 
     @with_context
     def test_password_not_required_for_anonymous_contributors(self):
@@ -101,10 +97,10 @@ class TestProjectPassword(Test):
         TaskFactory.create(project=project)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
     @with_context
     @patch('pybossa.password_manager.current_user')
@@ -119,10 +115,10 @@ class TestProjectPassword(Test):
         configure_mock_current_user_from(user, mock_user)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'Enter the password to contribute' in str(res.data)
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        assert 'Enter the password to contribute' in str(res.data)
 
     @with_context
     @patch('pybossa.password_manager.current_user')
@@ -135,10 +131,10 @@ class TestProjectPassword(Test):
         configure_mock_current_user_from(user, mock_user)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
     @with_context
     @patch('pybossa.password_manager.current_user')
@@ -147,6 +143,8 @@ class TestProjectPassword(Test):
         protected project is able to do it"""
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
+        mock_user.is_authenticated = True
+        mock_user.is_anonymous = False
         assert mock_user.admin
         project = ProjectFactory.create()
         TaskFactory.create(project=project)
@@ -154,10 +152,10 @@ class TestProjectPassword(Test):
         project_repo.update(project)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data), res.data
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
     @with_context
     @patch('pybossa.password_manager.current_user')
@@ -174,10 +172,10 @@ class TestProjectPassword(Test):
         project_repo.update(project)
 
         res = self.app.get('/project/%s/newtask' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data), res.data
 
         res = self.app.get('/project/%s/task/1' % project.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        assert 'Enter the password to contribute' not in str(res.data)
 
     @with_context
     def test_endpoints_with_password_protection(self):
@@ -195,7 +193,7 @@ class TestProjectPassword(Test):
         for endpoint in endpoints_requiring_password:
             res = self.app.get('/project/%s%s' % (project.short_name, endpoint),
                                follow_redirects=True)
-            assert 'Enter the password to contribute' in res.data, endpoint
+            assert 'Enter the password to contribute' in str(res.data), endpoint
 
     @with_context
     @patch('pybossa.view.projects.ensure_authorized_to')
@@ -239,4 +237,4 @@ class TestProjectPassword(Test):
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         err_msg = "User should be redirected to sign in."
-        assert "Sign in" in res.data, err_msg
+        assert "Sign in" in str(res.data), err_msg
