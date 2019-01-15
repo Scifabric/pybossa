@@ -105,6 +105,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         r.encoding = 'utf-8'
         csvcontent = StringIO(r.text)
         csv_df = pd.read_csv(csvcontent)
+        csv_df.fillna('')
         return self._import_csv_tasks(csv_df)
 
 
@@ -167,6 +168,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read())
         csv_df = pd.read_csv(csvcontent)
+        csv_df.fillna('')
         return list(self._import_csv_tasks(csv_df))
 
     def tasks(self):

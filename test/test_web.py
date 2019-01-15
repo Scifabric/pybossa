@@ -4612,13 +4612,13 @@ class TestWeb(web.Helper):
                                          n_answers=1)
         for task in tasks:
             TaskRunFactory.create(project=project,
-                                  info=[["2001", "1000"], [None, None]],
+                                  info=[[2001, 1000], [None, None]],
                                   task=task)
 
         # Get results and update them
         results = result_repo.filter_by(project_id=project.id)
         for result in results:
-            result.info = [["2001", "1000"], [None, None]]
+            result.info = [[2001, 1000], [None, None]]
             result_repo.update(result)
 
         uri = '/project/%s/tasks/export' % project.short_name
@@ -4641,21 +4641,17 @@ class TestWeb(web.Helper):
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'project1_result.csv', zip.namelist()[0]
 
-        csv_content = StringIO(zip.read(extracted_filename))
-        csvreader = unicode_csv_reader(csv_content)
+        if six.PY2:
+            csv_content = StringIO(zip.read(extracted_filename))
+        else:
+            csv_content = BytesIO(zip.read(extracted_filename))
+        csvreader = pd.read_csv(csv_content)
+        keys = list(csvreader.columns)
         project = db.session.query(Project)\
                     .filter_by(short_name=project.short_name)\
                     .first()
-        exported_results = []
-        n = 0
-        for row in csvreader:
-            if n != 0:
-                exported_results.append(row)
-            else:
-                keys = row
-            n = n + 1
         err_msg = "The number of exported results is different from Project Results"
-        assert len(exported_results) == len(project.tasks), err_msg
+        assert csvreader.shape[0] == len(project.tasks), err_msg
         results = db.session.query(Result)\
                     .filter_by(project_id=project.id).all()
         for t in results:
@@ -4670,7 +4666,10 @@ class TestWeb(web.Helper):
             err_msg = "All the result.info column names should be included"
             assert type(t.info) == list
 
-        for et in exported_results:
+        csvreader.fillna('', inplace=True)
+
+        for index, row in csvreader.iterrows():
+            et = row
             result_id = et[keys.index('id')]
             result = db.session.query(Result).get(result_id)
             result_dict = result.dictize()
@@ -4680,10 +4679,14 @@ class TestWeb(web.Helper):
             result_dict_flat['task_run_ids'] = task_run_ids
             for k in list(result_dict_flat.keys()):
                 slug = '%s' % k
-                err_msg = "%s != %s" % (result_dict_flat[k],
-                                        et[keys.index(slug)])
+                err_msg = "%s != %s, %s" % (result_dict_flat[k],
+                                            et[keys.index(slug)],
+                                            k)
                 if result_dict_flat[k] is not None:
-                    assert str(result_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    if k == 'task_run_ids':
+                        assert '{}'.format(result_dict_flat[k]) == et[keys.index(slug)], err_msg
+                    else:
+                        assert result_dict_flat[k] == et[keys.index(slug)], err_msg
                 else:
                     assert '' == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
@@ -4843,7 +4846,12 @@ class TestWeb(web.Helper):
             assert extracted_filename == 'project1_task.csv', zip.namelist()[0]
 
             csv_content = zip.read(extracted_filename)
+            if six.PY2:
+                csv_content = StringIO(csv_content)
+            else:
+                csv_content = BytesIO(csv_content)
             csvreader = pd.read_csv(csv_content)
+            csvreader.fillna('', inplace=True)
             project = db.session.query(Project)\
                         .filter_by(short_name=project.short_name)\
                         .first()
@@ -4867,7 +4875,7 @@ class TestWeb(web.Helper):
                         expected_key = "info_%s" % tk
                         assert expected_key in keys, (expected_key, err_msg)
 
-            for et in exported_tasks:
+            for index, et in csvreader.iterrows():
                 task_id = et[keys.index('id')]
                 task = db.session.query(Task).get(task_id)
                 task_dict = copy.deepcopy(task.dictize())
@@ -4876,9 +4884,10 @@ class TestWeb(web.Helper):
                     task_dict_flat = copy.deepcopy(flatten(task_dict))
                     for k in list(task_dict_flat.keys()):
                         slug = '%s' % k
-                        err_msg = "%s != %s" % (task_dict_flat[k], et[keys.index(slug)])
+                        err_msg = "%s != %s, %s" % (task_dict_flat[k],
+                                                    et[keys.index(slug)], k)
                         if task_dict_flat[k] is not None:
-                            assert str(task_dict_flat[k]) == et[keys.index(slug)], err_msg
+                            assert task_dict_flat[k] == et[keys.index(slug)], err_msg
                         else:
                             assert '' == et[keys.index(slug)], err_msg
                     for k in list(task_dict['info'].keys()):
@@ -5089,20 +5098,13 @@ class TestWeb(web.Helper):
 
         csv_content = codecs.open('/tmp/' + extracted_filename, 'r', 'utf-8')
 
-        csvreader = unicode_csv_reader(csv_content)
+        csvreader = pd.read_csv(csv_content)
         project = db.session.query(Project)\
                     .filter_by(short_name=project.short_name)\
                     .first()
         exported_tasks = []
-        n = 0
-        for row in csvreader:
-            if n != 0:
-                exported_tasks.append(row)
-            else:
-                keys = row
-            n = n + 1
-        err_msg = "The number of exported tasks is different from Project Tasks"
-        assert len(exported_tasks) == len(project.tasks), (err_msg,
+        keys = list(csvreader.columns)
+        assert csvreader.shape[0] == len(project.tasks), (err_msg,
                                                            len(exported_tasks),
                                                            len(project.tasks))
         for t in project.tasks:

@@ -215,11 +215,16 @@ def otpvalidation(token):
         return redirect_content_type(url_for('account.signin'))
     form = OTPForm(request.body)
     user_otp = form.otp.data
+    if type(email) == bytes:
+        email = email.decode('utf-8')
     user = user_repo.get_by(email_addr=email)
     current_app.logger.info('validating otp for user email: {}'.format(email))
     if request.method == 'POST' and form.validate():
         otp_code = otp.retrieve_user_otp_secret(email)
+        if type(otp_code) == bytes:
+            otp_code = otp_code.decode('utf-8')
         if otp_code is not None:
+            print(otp_code, user_otp)
             if otp_code == user_otp:
                 msg = gettext('OTP verified. You are logged in to the system')
                 flash(msg, 'success')
