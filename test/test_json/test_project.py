@@ -35,9 +35,9 @@ class TestJsonProject(web.Helper):
         """Test JSON PROJECT (GET/POST) New works."""
         url = '/project/new'
         res = self.app_get_json(url, follow_redirects=True)
-        assert "Sign in" in res.data, res.data
+        assert "Sign in" in str(res.data), res.data
         res = self.app_post_json(url, follow_redirects=True)
-        assert "Sign in" in res.data, res.data
+        assert "Sign in" in str(res.data), res.data
 
     @with_context
     def test_project_new_auth(self):
