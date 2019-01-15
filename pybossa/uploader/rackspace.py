@@ -75,14 +75,14 @@ class RackspaceUploader(Uploader):
                                 etag=chksum)
             return True
         except Exception as e:
-            print "Uploader exception"  # TODO: Log this!
+            print("Uploader exception")  # TODO: Log this!
             traceback.print_exc()
             attempt += 1
             if (attempt < 3):
                 time.sleep(1)   # Wait one second and try again
                 return self._upload_file_to_rackspace(file, container, attempt)
             else:
-                print "Tried to upload two times. Failed!"   # TODO: Log this!
+                print("Tried to upload two times. Failed!")   # TODO: Log this!
                 raise
 
     def _upload_file(self, file, container):

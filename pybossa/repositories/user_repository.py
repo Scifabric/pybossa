@@ -87,7 +87,7 @@ class UserRepository(Repository):
 
     def fake_user_id(self, user):
         faker = Faker()
-        cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
+        cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY').encode('utf-8'))
         task_runs = self.db.session.query(TaskRun).filter_by(user_id=user.id)
         for tr in task_runs:
             tr.user_id = None
