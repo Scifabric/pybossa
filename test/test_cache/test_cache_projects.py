@@ -453,6 +453,7 @@ class TestProjectsCache(Test):
     def test_n_count_calls_n_draft(self, _n_draft, pickle):
         """Test CACHE PROJECTS n_count calls _n_draft when called with argument
         'draft'"""
+        pickle.dumps.return_value = 'str'
         cached_projects.n_count('draft')
 
         _n_draft.assert_called_with()

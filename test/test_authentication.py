@@ -81,7 +81,7 @@ class TestJwtAuthorization(Test):
         """Test JWT bearer and no token."""
         mymock.side_effect = handle_error
         project = ProjectFactory.create()
-        bearer = b'Bearer '
+        bearer = 'Bearer '
         res = jwt_authorize_project(project, bearer)
         assert res == INVALID_HEADER_TOKEN, res
 
@@ -91,7 +91,7 @@ class TestJwtAuthorization(Test):
         """Test JWT bearer token and something else."""
         mymock.side_effect = handle_error
         project = ProjectFactory.create()
-        bearer = b'Bearer %s algo' % project.secret_key
+        bearer = 'Bearer {} algo'.format(project.secret_key).encode('utf-8')
         res = jwt_authorize_project(project, bearer)
         assert res == INVALID_HEADER_BEARER_TOKEN, res
 
@@ -103,7 +103,7 @@ class TestJwtAuthorization(Test):
         mymock.side_effect = handle_error
         mydecode.return_value = dict(project_id=99999, short_name='something')
         project = ProjectFactory.create()
-        bearer = b'Bearer %s' % project.secret_key
+        bearer = 'Bearer %s' % project.secret_key
         res = jwt_authorize_project(project, bearer)
         assert res == WRONG_PROJECT_SIGNATURE, res
 
@@ -113,7 +113,7 @@ class TestJwtAuthorization(Test):
         """Test JWT decode error."""
         mymock.side_effect = handle_error
         project = ProjectFactory.create()
-        bearer = b'Bearer %s%s' % (project.secret_key, "a")
+        bearer = 'Bearer %s%s' % (project.secret_key, "a")
         res = jwt_authorize_project(project, bearer)
         assert res == DECODE_ERROR_SIGNATURE, res
 
@@ -126,6 +126,6 @@ class TestJwtAuthorization(Test):
                             'project_id': project.id},
                             project.secret_key, algorithm='HS256')
         mymock.side_effect = handle_error
-        bearer = b'Bearer %s' % (token)
+        bearer = 'Bearer {}'.format(token.decode('utf-8'))
         res = jwt_authorize_project(project, bearer)
         assert res is True, res

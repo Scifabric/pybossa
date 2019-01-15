@@ -101,7 +101,7 @@ class TestCacheMemoizeFunctions(object):
         my_func()
         key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
 
-        assert list(test_sentinel.master.keys()) == [key], list(test_sentinel.master.keys())
+        assert list(test_sentinel.master.keys()) == [key.encode('utf-8')], list(test_sentinel.master.keys())
 
 
     def test_cache_gets_function_from_cache_after_first_call(self):
@@ -218,7 +218,7 @@ class TestCacheMemoizeFunctions(object):
             return 'my_func was called'
         key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
         my_func()
-        assert list(test_sentinel.master.keys()) == [key]
+        assert list(test_sentinel.master.keys()) == [key.encode('utf-8')]
 
         delete_succedeed = delete_cached('my_cached_func')
         assert delete_succedeed is True, delete_succedeed

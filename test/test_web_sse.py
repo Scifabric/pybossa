@@ -25,7 +25,7 @@ from mock import patch, MagicMock
 
 class TestWebSse(web.Helper):
 
-    fake_sse_response = "data: This is the first message.\n\n"
+    fake_sse_response = b"data: This is the first message.\n\n"
 
     @with_context
     def test_stream_uri_private_anon(self):
@@ -34,7 +34,7 @@ class TestWebSse(web.Helper):
         private_uri = '/project/%s/privatestream' % project.short_name
         res = self.app.get(private_uri, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'Please sign in to access this page' in res.data, res.data
+        assert 'Please sign in to access this page' in str(res.data), res.data
 
     @with_context
     def test_stream_uri_private_auth(self):
