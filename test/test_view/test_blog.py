@@ -53,16 +53,16 @@ class TestBlogpostView(web.Helper):
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'titleone' in res.data
-        assert 'titletwo' in res.data
+        assert 'titleone' in str(res.data)
+        assert 'titletwo' in str(res.data)
 
         # As authenticated
         self.register()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'titleone' in res.data
-        assert 'titletwo' in res.data
-        assert 'titlethree' not in res.data
+        assert 'titleone' in str(res.data)
+        assert 'titletwo' in str(res.data)
+        assert 'titlethree' not in str(res.data)
 
     @with_context
     def test_json_blogposts_get_all(self):
@@ -156,13 +156,13 @@ class TestBlogpostView(web.Helper):
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert 'title' in str(res.data)
 
         # As authenticated
         self.register()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert 'title' in str(res.data)
 
     @with_context
     def test_blogpost_get_one_draft(self):
@@ -187,7 +187,7 @@ class TestBlogpostView(web.Helper):
                                              user.api_key)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert 'title' in str(res.data)
 
 
     @with_context
@@ -249,13 +249,13 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data, res
+        assert "Please sign in to access this page" in str(res.data), res
 
         res = self.app.post(url,
                             data={'title':'blogpost title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "Please sign in to access this page" in str(res.data)
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost == None, blogpost
@@ -331,7 +331,7 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data, res.data
+        assert "Please sign in to access this page" in str(res.data), res.data
 
         res = self.app.post(url,
                             data={'id':blogpost.id,
@@ -339,7 +339,7 @@ class TestBlogpostView(web.Helper):
                                   'body':'new body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "Please sign in to access this page" in str(res.data)
 
         blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
@@ -426,7 +426,7 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert "Please sign in to access this page" in res.data
+        assert "Please sign in to access this page" in str(res.data)
 
         blogpost = blog_repo.get_by()
         assert blogpost is not None
