@@ -30,7 +30,7 @@ class TestGoogle(Test):
         token = 't'
         user = manage_user(token, user_data)
         assert user.email_addr == user_data['email'], user
-        assert user.name == user_data['name'], user
+        assert user.name == user_data['name'], user.name
         assert user.fullname == user_data['name'], user
         assert user.google_user_id == user_data['id'], user
         assert user.info['google_token'] == dict(oauth_token=token), user
@@ -40,9 +40,11 @@ class TestGoogle(Test):
         """Test GOOGLE manage_user with an existing user registered with Google"""
         user_data = dict(id='1', name='google', email='g@g.com')
         token = 't'
-        manage_user(token, user_data)
+        user = manage_user(token, user_data)
+        print(user.name, user.email_addr)
         new_token = "new_t"
         user = manage_user(new_token, user_data)
+        print(user.name, user.email_addr)
         assert user.email_addr == user_data['email'], user
         assert user.name == user_data['name'], user
         assert user.fullname == user_data['name'], user
