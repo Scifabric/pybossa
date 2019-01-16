@@ -1,7 +1,7 @@
 sudo: false
 dist: trusty
 group: edge
-language: minimal
+language: python
 group: edge
 python:
 - '3.6.7'
