@@ -14,7 +14,7 @@ requirements = [
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=1.0.2, <1.0.3",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
-    "itsdangerous>=0.24, <1.0",
+    "itsdangerous>=1.1.0, <1.2.0",
     "rsa>=3.4.2",
     "markdown>=2.4, <3.0",
     "psycopg2-binary>=2.7.5, <3.0",
@@ -37,7 +37,7 @@ requirements = [
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.13, <0.15",
-    "rq-scheduler>=0.5.1, <0.5.2",
+    "rq-scheduler>=0.9, <0.9.2",
     "rq-dashboard >= 0.3.12",
     "unidecode>=0.04.16, <0.05",
     "flask-plugins",
