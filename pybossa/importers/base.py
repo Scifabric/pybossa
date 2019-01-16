@@ -16,9 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class BulkImportException(Exception):
 
     """Generic Bulk Importer Exception Error."""
+
+    def __init__(self, msg, err='error'):
+        self.message = msg
 
     pass
 
