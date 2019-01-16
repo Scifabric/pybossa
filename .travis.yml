@@ -17,6 +17,7 @@ addons:
 before_install:
 - git submodule update --init --recursive
   #- sudo apt-get update -y && sudo apt-get install -y swig libffi-dev dbus libdbus-1-dev libdbus-glib-1-dev
+- df -h
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 - cd pybossa && ln -s themes/default/translations && cd ..
