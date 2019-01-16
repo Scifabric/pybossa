@@ -50,18 +50,27 @@ class TestSetupScheduledJobs(object):
         schedule_job(a_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
 
-        assert len(sched_jobs) == 1, sched_jobs
-        assert sched_jobs[0].meta['interval'] == 7 , sched_jobs[0].meta
+        t = 0
+        job = None
+        for j in sched_jobs:
+            job = j
+            t += 1
+        assert t == 1, sched_jobs
+        assert job.meta['interval'] == 7 , job.meta
         a_job['interval'] = 1
 
     def test_adds_several_jobs_(self):
         schedule_job(a_job, self.scheduler)
         schedule_job(another_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
-        job_func_names = [job.__name__ for job in sched_jobs]
+        job_func_names = [job.func_name for job in sched_jobs]
         module_name = 'test_jobs.test_schedule_jobs'
 
-        assert len(sched_jobs) == 2, sched_jobs
+        jobs = []
+        for job in self.scheduler.get_jobs():
+            jobs.append(job)
+
+        assert len(jobs) == 2, len(jobs)
         assert module_name + '.a_function' in job_func_names, job_func_names
         assert module_name + '.another_function' in job_func_names, job_func_names
 
@@ -70,13 +79,18 @@ class TestSetupScheduledJobs(object):
         schedule_job(a_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
 
-        assert len(sched_jobs) == 1, sched_jobs
+        jobs = []
+        for job in sched_jobs:
+            jobs.append(job)
+
+        assert len(jobs) == 1, sched_jobs
 
     def test_returns_log_messages(self):
         success_message = schedule_job(a_job, self.scheduler)
-        failure_message = schedule_job(a_job, self.scheduler)
+        s_m = 'Scheduled a_function([], {}) to run every 1 seconds'
+        assert success_message == s_m, (success_message, s_m)
 
-        assert success_message == 'Scheduled a_function([], {}) to run every 1 seconds'
+        failure_message = schedule_job(a_job, self.scheduler)
         assert failure_message == 'WARNING: Job a_function([], {}) is already scheduled'
 
     def test_failed_attempt_to_schedule_does_not_polute_redis(self):
