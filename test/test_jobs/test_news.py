@@ -47,7 +47,7 @@ class TestNews(Test):
         tmp = get_news()
         assert len(tmp) == 1, len(tmp)
         err_msg = "Notify user should be notified"
-        assert self.get_notify_users(user) == '1', err_msg
+        assert self.get_notify_users(user) == b'1', err_msg
 
     @with_context
     @patch('feedparser.parse')
@@ -61,7 +61,7 @@ class TestNews(Test):
         tmp = get_news()
         assert len(tmp) == 1, len(tmp)
         err_msg = "Notify user should be notified"
-        assert self.get_notify_users(user) == '1', err_msg
+        assert self.get_notify_users(user) == b'1', err_msg
 
     @with_context
     @patch('feedparser.parse')

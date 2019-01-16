@@ -737,12 +737,14 @@ def news():
         tmp = get_news(score)
         if (d.entries and (len(tmp) == 0)
            or (tmp[0]['updated'] != d.entries[0]['updated'])):
-            sentinel.master.zadd(FEED_KEY, float(score),
-                                 pickle.dumps(d.entries[0]))
+            mapping = dict()
+            mapping[pickle.dumps(d.entries[0])] = float(score)
+            sentinel.master.zadd(FEED_KEY, mapping)
             notify = True
         score += 1
     if notify:
         notify_news_admins()
+
 
 def check_failed():
     """Check the jobs that have failed and requeue them."""
