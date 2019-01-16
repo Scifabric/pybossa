@@ -35,6 +35,9 @@ import app_settings
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
 from collections import OrderedDict
+import json
+from StringIO import StringIO
+from zipfile import ZipFile
 
 MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
@@ -1166,30 +1169,20 @@ def export_userdata(user_id, admin_addr, **kwargs):
     user = user_repo.get(user_id)
     user_data = user.dictize()
     del user_data['passwd_hash']
-    pdf = json_exporter._make_zip(None, '', 'personal_data', user_data, user_id,
-                                  'personal_data.zip')
-    upload_method = current_app.config.get('UPLOAD_METHOD')
 
-    attachments = []
-    personal_data_link = None
-    if upload_method == 'local':
-        filename = uploader.get_file_path('user_%s' % user_id, pdf)
-        with open(filename) as fp:
-            attachment = Attachment(pdf, "application/zip",
-                                    fp.read())
-        attachments = [attachment]
-    else:
-        personal_data_link = url_for(upload_method,
-                                    filename="user_%s/%s" % (user_id, pdf))
-
+    buffer = StringIO()
+    with ZipFile(buffer, 'w') as zf:
+        zf.writestr('personal_data.json', json.dumps(user_data))
+    buffer.seek(0)
+    attachments = [Attachment('personal_data.zip', 'application/zip', buffer.read())]
     body = render_template('/account/email/exportdata.md',
                            user=user.dictize(),
-                           personal_data_link=personal_data_link,
+                           personal_data_link=None,
                            config=current_app.config)
 
     html = render_template('/account/email/exportdata.html',
                            user=user.dictize(),
-                           personal_data_link=personal_data_link,
+                           personal_data_link=None,
                            config=current_app.config)
     subject = 'Your personal data'
     bcc = [admin_addr]
