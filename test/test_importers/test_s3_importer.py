@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import string
 from pybossa.importers.s3 import BulkTaskS3Import
 from default import with_context
 
@@ -88,7 +87,7 @@ class TestBulkTaskS3Import(object):
         file_data = 'myfile.extension'
 
         for ext in image_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {
                 'files': [data],
                 'bucket': 'mybucket'
@@ -125,7 +124,7 @@ class TestBulkTaskS3Import(object):
         file_data = 'myfile.extension'
 
         for ext in video_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {
                 'files': [data],
                 'bucket': 'mybucket'
@@ -144,7 +143,7 @@ class TestBulkTaskS3Import(object):
         file_data = 'myfile.extension'
 
         for ext in audio_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {
                 'files': [data],
                 'bucket': 'mybucket'

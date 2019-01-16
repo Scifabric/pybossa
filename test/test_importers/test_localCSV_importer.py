@@ -17,6 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from mock import patch, Mock, mock_open
+from nose.tools import assert_raises
+from pybossa.importers import BulkImportException
 from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
 
 class TestBulkTaskLocalCSVImport(object):
@@ -36,8 +38,7 @@ class TestBulkTaskLocalCSVImport(object):
 
     def test_count_tasks_returns_0_row(self):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data='Foo,Bar\n'), create=True):
-            number_of_tasks = self.importer.count_tasks()
-            assert number_of_tasks is 0, number_of_tasks
+            assert_raises(BulkImportException, self.importer.count_tasks)
 
     def test_count_tasks_returns_1_row(self):
         with patch('pybossa.importers.csv.io.open', mock_open(read_data='Foo,Bar\n1,2\n'), create=True):
