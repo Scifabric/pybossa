@@ -44,7 +44,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         try:
             self.importer.count_tasks()
         except BulkImportException as e:
-            assert e[0] == msg, e
+            assert e.message == msg, e
 
     @with_context
     def test_tasks_raises_exception_if_file_forbidden(self, request):
@@ -59,7 +59,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         try:
             self.importer.tasks()
         except BulkImportException as e:
-            assert e[0] == msg, e
+            assert e.message == msg, e
 
     @with_context
     def test_count_tasks_raises_exception_if_not_json(self, request):
@@ -74,7 +74,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         try:
             self.importer.count_tasks()
         except BulkImportException as e:
-            assert e[0] == msg, e
+            assert e.message == msg, e
 
     @with_context
     def test_tasks_raises_exception_if_not_json(self, request):
@@ -89,7 +89,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         try:
             self.importer.tasks()
         except BulkImportException as e:
-            assert e[0] == msg, e
+            assert e.message == msg, e
 
     @with_context
     def test_count_tasks_returns_number_of_tasks_in_project(self, request):
