@@ -778,7 +778,7 @@ def check_failed():
                                  subject=subject, body=body)
                 send_mail(mail_dict)
                 ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
-                sentinel.master.setex(KEY, ttl, True)
+                sentinel.master.setex(KEY, ttl, 1)
     if count > 0:
         return "JOBS: %s You have failed the system." % job_ids
     else:
