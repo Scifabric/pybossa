@@ -33,21 +33,21 @@ def create_importer_with_form_data(**form_data):
     importer.client.api = Mock()
     return importer
 
+@with_context
+def create_status(_id):
+    return {
+        'created_at': 'created',
+        'favorite_count': 77,
+        'coordinates': 'coords',
+        'id_str': str(_id),
+        'id': _id,
+        'retweet_count': 44,
+        'user': {'screen_name': 'fulanito'},
+        'text': 'this is a tweet #match'
+    }
+
 
 class TestBulkTaskTwitterImportSearch(object):
-
-    @with_context
-    def create_status(_id):
-        return {
-            'created_at': 'created',
-            'favorite_count': 77,
-            'coordinates': 'coords',
-            'id_str': str(_id),
-            'id': _id,
-            'retweet_count': 44,
-            'user': {'screen_name': 'fulanito'},
-            'text': 'this is a tweet #match'
-        }
 
     no_results = {
         'statuses': []
@@ -245,7 +245,7 @@ class TestBulkTaskTwitterImportSearch(object):
         try:
             importer.tasks()
         except BulkImportException as e:
-            assert e.message == "Rate limit for Twitter API reached. Please, try again in 15 minutes.", e.message
+            assert str(e) == "Rate limit for Twitter API reached. Please, try again in 15 minutes.", e.message
 
     @with_context
     def test_metadata_is_used_for_twitter_api_call_if_present(self):
@@ -303,84 +303,86 @@ class TestBulkTaskTwitterImportSearch(object):
         assert metadata == expected_metadata, metadata
 
 
+def create_status_alt(_id):
+    return {
+        'contributors': None,
+        'truncated': False,
+        'text': 'Burning news! PYBOSSA v1.2.1 released! This version gets all new @PYBOSSA releases in your admin page! https://t.co/WkOXc3YL6s',
+        'is_quote_status': False,
+        'in_reply_to_status_id': None,
+        'id': _id,
+        'favorite_count': 0,
+        'source': '<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
+        'retweeted': False,
+        'coordinates': None,
+        'entities': {},
+        'in_reply_to_screen_name': None,
+        'id_str': str(_id),
+        'retweet_count': 0,
+        'in_reply_to_user_id': None,
+        'favorited': False,
+        'user': {
+            'follow_request_sent': False,
+            'has_extended_profile': False,
+            'profile_use_background_image': True,
+            'default_profile_image': False,
+            'id': 497181885,
+            'profile_background_image_url_https': 'https://abs.twimg.com/images/themes/theme1/bg.png',
+            'verified': False,
+            'profile_text_color': '333333',
+            'profile_image_url_https': 'https://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+            'profile_sidebar_fill_color': 'DDEEF6',
+            'entities': {},
+            'followers_count': 700,
+            'profile_sidebar_border_color': 'C0DEED',
+            'id_str': '497181885',
+            'profile_background_color': 'C0DEED',
+            'listed_count': 41,
+            'is_translation_enabled': False,
+            'utc_offset': 3600,
+            'statuses_count': 887,
+            'description': 'The open source crowdsourcing platform for research built by @Scifabric',
+            'friends_count': 731,
+            'location': 'Madrid, Spain',
+            'profile_link_color': 'EE7147',
+            'profile_image_url': 'http://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
+            'following': True,
+            'geo_enabled': True,
+            'profile_banner_url': 'https://pbs.twimg.com/profile_banners/497181885/1401885123',
+            'profile_background_image_url': 'http://abs.twimg.com/images/themes/theme1/bg.png',
+            'screen_name': 'PYBOSSA',
+            'lang': 'en',
+            'profile_background_tile': False,
+            'favourites_count': 185,
+            'name': 'PYBOSSA',
+            'notifications': False,
+            'url': 'http://t.co/ASSBcIRZjY',
+            'created_at': 'Sun Feb 19 18:17:39 +0000 2012',
+            'contributors_enabled': False,
+            'time_zone': 'Amsterdam',
+            'protected': False,
+            'default_profile': False,
+            'is_translator': False
+        },
+        'geo': None,
+        'in_reply_to_user_id_str': None,
+        'possibly_sensitive': False,
+        'lang': 'en',
+        'created_at': 'Thu Dec 03 15:09:07 +0000 2015',
+        'in_reply_to_status_id_str': None,
+        'place': None,
+        'extended_entities': {}
+    }
+
+
 class TestBulkTaskTwitterImportFromAccount(object):
 
-    def create_status(_id):
-        return {
-            'contributors': None,
-            'truncated': False,
-            'text': 'Burning news! PYBOSSA v1.2.1 released! This version gets all new @PYBOSSA releases in your admin page! https://t.co/WkOXc3YL6s',
-            'is_quote_status': False,
-            'in_reply_to_status_id': None,
-            'id': _id,
-            'favorite_count': 0,
-            'source': '<a href="https://about.twitter.com/products/tweetdeck" rel="nofollow">TweetDeck</a>',
-            'retweeted': False,
-            'coordinates': None,
-            'entities': {},
-            'in_reply_to_screen_name': None,
-            'id_str': str(_id),
-            'retweet_count': 0,
-            'in_reply_to_user_id': None,
-            'favorited': False,
-            'user': {
-                'follow_request_sent': False,
-                'has_extended_profile': False,
-                'profile_use_background_image': True,
-                'default_profile_image': False,
-                'id': 497181885,
-                'profile_background_image_url_https': 'https://abs.twimg.com/images/themes/theme1/bg.png',
-                'verified': False,
-                'profile_text_color': '333333',
-                'profile_image_url_https': 'https://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
-                'profile_sidebar_fill_color': 'DDEEF6',
-                'entities': {},
-                'followers_count': 700,
-                'profile_sidebar_border_color': 'C0DEED',
-                'id_str': '497181885',
-                'profile_background_color': 'C0DEED',
-                'listed_count': 41,
-                'is_translation_enabled': False,
-                'utc_offset': 3600,
-                'statuses_count': 887,
-                'description': 'The open source crowdsourcing platform for research built by @Scifabric',
-                'friends_count': 731,
-                'location': 'Madrid, Spain',
-                'profile_link_color': 'EE7147',
-                'profile_image_url': 'http://pbs.twimg.com/profile_images/446669937927389184/vkDC_c3s_normal.png',
-                'following': True,
-                'geo_enabled': True,
-                'profile_banner_url': 'https://pbs.twimg.com/profile_banners/497181885/1401885123',
-                'profile_background_image_url': 'http://abs.twimg.com/images/themes/theme1/bg.png',
-                'screen_name': 'PYBOSSA',
-                'lang': 'en',
-                'profile_background_tile': False,
-                'favourites_count': 185,
-                'name': 'PYBOSSA',
-                'notifications': False,
-                'url': 'http://t.co/ASSBcIRZjY',
-                'created_at': 'Sun Feb 19 18:17:39 +0000 2012',
-                'contributors_enabled': False,
-                'time_zone': 'Amsterdam',
-                'protected': False,
-                'default_profile': False,
-                'is_translator': False
-            },
-            'geo': None,
-            'in_reply_to_user_id_str': None,
-            'possibly_sensitive': False,
-            'lang': 'en',
-            'created_at': 'Thu Dec 03 15:09:07 +0000 2015',
-            'in_reply_to_status_id_str': None,
-            'place': None,
-            'extended_entities': {}
-        }
 
     no_results = []
 
-    one_status = [create_status(0)]
+    one_status = [create_status_alt(0)]
 
-    five_statuses = [create_status(i+1) for i in range(5)]
+    five_statuses = [create_status_alt(i+1) for i in range(5)]
 
     @with_context
     def test_count_tasks_returns_number_of_tweets_requested(self):
