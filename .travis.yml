@@ -4,7 +4,7 @@ group: edge
 language: python
 group: edge
 python:
-- '3.6.7'
+- '3.6'
 # git submodules workaround
 git:
   submodules: false
