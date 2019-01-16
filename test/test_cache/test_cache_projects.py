@@ -465,6 +465,7 @@ class TestProjectsCache(Test):
     def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
         """Test CACHE PROJECTS n_count calls _n_featured when called with
         argument 'featured'"""
+        pickle.dumps.return_value = 'str'
         cached_projects.n_count('featured')
 
         _n_featured.assert_called_with()
