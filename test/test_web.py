@@ -30,7 +30,7 @@ from helper import web
 from mock import patch, Mock, call, MagicMock
 from flask import redirect
 from itsdangerous import BadSignature
-from pybossa.util import get_user_signup_method, unicode_csv_reader
+from pybossa.util import get_user_signup_method
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
 from pandas.errors import EmptyDataError
@@ -5216,7 +5216,6 @@ class TestWeb(web.Helper):
         assert extracted_filename_info_only == 'project1_task_run_info_only.csv', zip.namelist()[1]
         zip_data = zip.read(str(extracted_filename))
         csv_content = StringIO(zip_data.decode('utf-8'))
-        # csvreader = unicode_csv_reader(csv_content)
         csv_df = pd.read_csv(csv_content)
         project = db.session.query(Project)\
             .filter_by(short_name=project.short_name)\

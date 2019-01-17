@@ -19,7 +19,6 @@
 import json
 import io
 from default import with_context
-from pybossa.util import unicode_csv_reader
 from factories import UserFactory
 from helper import web
 
