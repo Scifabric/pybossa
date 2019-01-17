@@ -15,6 +15,7 @@ FACEBOOK_APP_SECRET='secret'
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 ITSDANGEROUSKEY = 'its-dangerous-key'
+REDIS_SOCKET_TIMEOUT = 1.0
 LOGO = 'logo.png'
 PORT=5001
 MAIL_SERVER = 'localhost'
