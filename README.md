@@ -24,14 +24,25 @@ PYBOSSA integrates with other data collection products such as Amazon S3, Twitte
 Google Spreadsheets, Flickr, Raspberry Pi, etc. Through all these integrations
 PYBOSSA allows data capture for further analysis made by users in a transparent and easy way.
 
+- 📘 Documentation: [https://docs.pybossa.com](https://docs.pybossa.com)
+- 👥 Community: 
+- 🎬 Video: [Intro](https://www.youtube.com/watch?v=oH8fJAhRDJM)
+- 🐦 Twitter: [@PyBossa](https://twitter.com/pybossa)
+- 💬 Chat: [Gitter](https://gitter.im/Scifabric/pybossa)
+- 📦 [PYBOSSA extras](https://github.com/Scifabric/)
+- 👉 [Play with PYBOSSA online](https://crowdcrafting.og¡rg)
+
 # PYBOSSA for python 3
 
 We've finally migrated PYBOSSA to python 3. We're not going to merge into master until we test it in production a bit
 more, so please, help us by testing it. All you have to do is basically, check out the python3 branch (migrate-python3) and run
 it. Then, any bug, issue you find, you just report it and we will be happy to help you.
 
+## Get professional support
 
-## Supporting PYBOSSA
+You can hire us to help you with your PYBOSSA project. Go to our website, and [contact us](https://scifabric.com/).
+
+### Supporting PYBOSSA
 
 PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome 
 [backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out 
