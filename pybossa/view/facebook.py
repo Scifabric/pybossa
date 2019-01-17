@@ -95,7 +95,7 @@ def manage_user(access_token, user_data):
                         user_repo.get_by(email_addr=user_data['email']) is not None)
 
         if not user_exists and not email_exists:
-            if type(user_data.get('email')) == bytes:
+            if type(user_data.get('email')) == bytes:  # pragma: no cover
                 user_data['email'] = user_data['email'].decode('utf-8')
             if type(name) == bytes:  # pragma: no cover
                 name = name.decode('utf-8')
