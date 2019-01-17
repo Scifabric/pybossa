@@ -25,12 +25,11 @@ Google Spreadsheets, Flickr, Raspberry Pi, etc. Through all these integrations
 PYBOSSA allows data capture for further analysis made by users in a transparent and easy way.
 
 - 📘 Documentation: [https://docs.pybossa.com](https://docs.pybossa.com)
-- 👥 Community: 
 - 🎬 Video: [Intro](https://www.youtube.com/watch?v=oH8fJAhRDJM)
 - 🐦 Twitter: [@PyBossa](https://twitter.com/pybossa)
 - 💬 Chat: [Gitter](https://gitter.im/Scifabric/pybossa)
 - 📦 [PYBOSSA extras](https://github.com/Scifabric/)
-- 👉 [Play with PYBOSSA online](https://crowdcrafting.og¡rg)
+- 👉 [Play with PYBOSSA online](https://crowdcrafting.org)
 
 # PYBOSSA for python 3
 
