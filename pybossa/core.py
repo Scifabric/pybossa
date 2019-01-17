@@ -121,7 +121,7 @@ def setup_sse(app):
     if app.config['SSE']:
         msg = "WARNING: async mode is required as Server Sent Events are enabled."
         app.logger.warning(msg)
-    else:
+    else:  # pragma: no cover
         msg = "INFO: async mode is disabled."
         app.logger.info(msg)
 
