@@ -5,14 +5,15 @@ requirements = [
     "beautifulsoup4>=4.7.0, <5.0",
     "blinker>=1.4, <2.0",
     "Flask-Babel>=0.9, <0.9.1",
-    "flask-login>=0.4.1, <0.4.3",  # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
-    "Flask-Mail>=0.9.0, <1.0",
+    "flask-Login>=0.4.1, <0.4.3",  # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    "Flask-Mail>=0.9.1, <1.0",
     "misaka>=1.0.0, <2.0.0",
     "Flask-Misaka>=0.3.0, <0.4.0",
     "Flask-OAuthlib>=0.9.1, <0.9.8",
     "Flask-SQLAlchemy>=2.3.2, <2.4",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=1.0.2, <1.0.3",           # was pinned to Flask==0.10.1
+    "Flask-Cors==3.0.2",
     "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=1.1.0, <1.2.0",
     "rsa>=3.4.2",
@@ -46,7 +47,7 @@ requirements = [
     "feedparser",
     "twitter>=1.17.1, <1.18",
     "google-api-python-client>=1.5.0, <1.6.0",
-    "Flask-Assets",
+    "Flask-Assets>=0.12",
     "jsmin",
     "libsass",
     "pyjwt",
@@ -55,7 +56,7 @@ requirements = [
     "webassets>=0.12.1, <0.12.2",
     "readability-lxml>=0.6.2, <1.0",
     "pybossa-onesignal",
-    "pandas>=0.20.2, <0.20.3",
+    "pandas>=0.23.4, <0.23.5",
     "flatten-json",
     "otpauth>=1.0.1, <1.0.2",
     "Flask-SimpleLDAP >=1.1.2, <1.1.3",
@@ -78,10 +79,6 @@ setup(
     # Keep in mind that dependency_links are not used when installing with requirements.txt
     # and need to be added redundant to requirements.txt in this case!
     # Example:
-    # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/Scifabric/flatten.git@5d57cc6336df277822305ad70b86adf8c6a1c947#egg=flatten_json',
-                        ],
-
     # metadata for upload to PyPI
     author = 'Scifabric LTD',
     author_email = 'info@scifabric.com',
