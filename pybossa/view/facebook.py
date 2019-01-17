@@ -97,7 +97,7 @@ def manage_user(access_token, user_data):
         if not user_exists and not email_exists:
             if type(user_data.get('email')) == bytes:
                 user_data['email'] = user_data['email'].decode('utf-8')
-            if type(name) == bytes:
+            if type(name) == bytes:  # pragma: no cover
                 name = name.decode('utf-8')
             if not user_data.get('email'):
                 user_data['email'] = name
