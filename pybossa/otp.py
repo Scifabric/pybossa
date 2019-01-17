@@ -59,7 +59,7 @@ def _create_url_token_key(token):
 
 
 def generate_url_token(user_email):
-    if six.PY2:
+    if six.PY2:  # pragma: no cover
         token = uuid.uuid4().get_hex()
     else:
         token = uuid.uuid4().hex
