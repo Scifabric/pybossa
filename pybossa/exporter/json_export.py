@@ -76,14 +76,8 @@ class JsonExporter(Exporter):
                 datafile.flush()
                 _zip.write(datafile.name,
                            secure_filename('%s_%s.%s' % (name, ty, ext)))
-            except:
-                print("error")
-                raise
             finally:
                 datafile.close()
-        except:
-            print("error2")
-            raise
         finally:
             _zip.close()
             if user_id:
