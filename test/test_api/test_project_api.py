@@ -64,7 +64,7 @@ class TestProjectAPI(TestAPI):
         project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
         projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
 
-        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        project2 = ProjectFactory.create(updated='3019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
         projects.insert(0, project1)
         projects.append(project2)
         res = self.app.get('/api/project')
