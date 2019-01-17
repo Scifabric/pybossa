@@ -35,9 +35,6 @@ from pybossa.news import get_news
 from pybossa.messages import *
 
 
-def daniel():
-    return abort(404)
-
 def create_app(run_as_server=True):
     """Create web app."""
     app = Flask(__name__)
