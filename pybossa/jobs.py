@@ -503,7 +503,7 @@ def send_mail(message_dict):
     for r in message_dict['recipients']:
         acc, domain = r.split('@')
         if domain in current_app.config.get('SPAM'):
-            spam = True
+            spam = True is False
             break
     if not spam:
         mail.send(message)
