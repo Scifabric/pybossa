@@ -1,17 +1,16 @@
 from setuptools import setup, find_packages
 
 requirements = [
-    "alembic>=0.6.4, <1.0",
-    "beautifulsoup4>=4.3.2, <5.0",
-    "blinker>=1.3, <2.0",
-    "Flask-Babel>=0.9, <0.10",
-    "flask-login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    "alembic>=0.9.10, <1.0",
+    "beautifulsoup4>=4.7.0, <5.0",
+    "blinker>=1.4, <2.0",
+    "Flask-Babel>=0.9, <0.9.1",
+    "flask-login>=0.4.1, <0.4.3",  # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
     "misaka>=1.0.0, <2.0.0",
-    "Flask-Misaka>=0.2.0, <0.4.0",
-    "Flask-OAuthlib>=0.9.1, <0.9.2",
-    "oauthlib>=2.1.0,<2.1.1",
-    "Flask-SQLAlchemy>=2.3, <2.4",
+    "Flask-Misaka>=0.3.0, <0.4.0",
+    "Flask-OAuthlib>=0.9.1, <0.9.8",
+    "Flask-SQLAlchemy>=2.3.2, <2.4",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=1.0.2, <1.0.3",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
@@ -37,9 +36,9 @@ requirements = [
     "pillow>=3.3.2, <3.3.3",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
-    "rq>=0.4.6, <0.5",
+    "rq>=0.13, <0.15",
     "rq-scheduler>=0.5.1, <0.5.2",
-    "rq-dashboard",
+    "rq-dashboard >= 0.3.12",
     "unidecode>=0.04.16, <0.05",
     "flask-plugins",
     "humanize",
