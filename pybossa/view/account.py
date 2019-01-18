@@ -696,10 +696,9 @@ def _handle_profile_update(user, update_form):
                           be updated.' % account['email_addr'])
             flash(fls, 'info')
             return True
-        else:
-            if domain in current_app.config.get('SPAM'):
-                fls = gettext('Use a valid email account')
-                flash(fls, 'info')
+        if acc_conf_dis is False and domain in current_app.config.get('SPAM'):
+            fls = gettext('Use a valid email account')
+            flash(fls, 'info')
             return False
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
