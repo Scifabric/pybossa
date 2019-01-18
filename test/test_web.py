@@ -7740,4 +7740,4 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data=data, follow_redirects=True)
 
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
-        assert b'Use a valid email account' in str(res.data), res.data
+        assert 'Use a valid email account' in str(res.data), res.data
