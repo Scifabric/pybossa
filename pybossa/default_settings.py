@@ -158,3 +158,6 @@ CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
 
 # Instruct PYBOSSA to generate absolute paths or not for avatars
 AVATAR_ABSOLUTE = True
+
+# Spam accounts to avoid
+SPAM = []

@@ -499,7 +499,14 @@ def warn_old_project_owners():
 def send_mail(message_dict):
     """Send email."""
     message = Message(**message_dict)
-    mail.send(message)
+    spam = False
+    for r in message_dict['recipients']:
+        acc, domain = r.split('@')
+        if domain in current_app.config.get('SPAM'):
+            spam = True
+            break
+    if not spam:
+        mail.send(message)
 
 
 def import_tasks(project_id, from_auto=False, **form_data):
