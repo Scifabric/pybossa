@@ -76,3 +76,4 @@ FLASK_PROFILER = {
 	]
 }
 AVATAR_ABSOLUTE = True
+SPAM = ['fake.com']

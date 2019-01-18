@@ -7686,3 +7686,26 @@ class TestWeb(web.Helper):
         user = user_repo.get_by(name='johndoe')
         invalid_upref = dict(languages=['ch'], locations=['jp'])
         assert user.user_pref != invalid_upref, "Invalid preferences should not be updated"
+
+    @with_context
+    @patch('pybossa.view.account.send_mail', autospec=True)
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_validate_email_once(self, signer, render, queue, send_mail):
+        """Test validate email only once."""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        user = UserFactory.create()
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        url = '/account/{}/update?api_key={}'.format(user.name, user.api_key)
+        data = {'id': user.id, 'fullname': user.fullname,
+                'name': user.name,
+                'locale': user.locale,
+                'email_addr': 'new@fake.com',
+                'btn': 'Profile'}
+        res = self.app.post(url, data=data, follow_redirects=True)
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        assert b'Use a valid email account' in str(res.data), res.data
