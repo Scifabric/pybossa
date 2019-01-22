@@ -120,6 +120,30 @@ class TestModelEventListeners(Test):
         mock_update_feed.assert_called_with(obj)
 
     @with_context
+    @patch('pybossa.model.event_listeners.add_user_contributed_to_feed')
+    @patch('pybossa.model.event_listeners.is_task_completed')
+    def test_on_taskrun_submit_gold_and_published_projects(self, mock_is_task, mock_add_user):
+        """Test on_taskrun_submit only set exported = False for published projects"""
+        target = MagicMock()
+        task = TaskFactory.create(id=3, exported=True, n_answers=1, calibration=1)
+        target.exported = task.exported
+        target.task_id = task.id
+        target.calibration = task.calibration
+        conn = MagicMock()
+        tmp = Project(id=1, name='name', short_name='short_name',
+                      info=dict(container=1, thumbnail="avatar.png"),
+                      published=True,
+                      webhook='http://localhost.com')
+        conn.execute.return_value = [tmp]
+
+        on_taskrun_submit(None, conn, target)
+        assert not mock_is_task.called
+        expected_sql_query = ("""UPDATE task SET exported=False \
+                           WHERE id=%s;""") % (task.id)
+        conn.execute.assert_called_with(expected_sql_query)
+    
+
+    @with_context
     @patch('pybossa.model.event_listeners.push_webhook')
     @patch('pybossa.model.event_listeners.create_result', return_value=1)
     @patch('pybossa.model.event_listeners.update_task_state')
@@ -135,9 +159,10 @@ class TestModelEventListeners(Test):
         """Test on_taskrun_submit is called."""
         conn = MagicMock()
         target = MagicMock()
+        task = TaskFactory.create(id=4)
         target.id = 1
         target.project_id = 1
-        target.task_id = 2
+        target.task_id = 4
         target.user_id = 3
         tmp = Project(id=1, name='name', short_name='short_name',
                       info=dict(container=1, thumbnail="avatar.png"),
@@ -149,12 +174,11 @@ class TestModelEventListeners(Test):
         obj['action_updated'] = 'TaskCompleted'
         mock_add_user.assert_called_with(conn, target.user_id, obj)
         mock_update_task.assert_called_with(conn, target.task_id)
-        mock_update_feed.assert_called_once_with(obj)
+        mock_update_feed.assert_called_with(obj)
         obj_with_webhook = tmp.to_public_json()
         obj_with_webhook['webhook'] = tmp.webhook
         obj_with_webhook['action_updated'] = 'TaskCompleted'
         mock_push.assert_called_with(obj_with_webhook, target.task_id, 1)
-
 
     @with_context
     @patch('pybossa.model.event_listeners.update_feed')

@@ -98,6 +98,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                         task_data["info"][headers[idx]] = cell
                 if 'gold_answers' in task_data:
                     task_data['calibration'] = 1
+                    task_data['exported'] = True
                 yield task_data
 
     def _check_no_duplicated_headers(self, headers):
