@@ -258,8 +258,8 @@ def on_taskrun_submit(mapper, conn, target):
     # golden tasks never complete; bypass update to task.state
     # mark task as exported false for each task run submissions
     task = task_repo.get_task(id=target.task_id)
-    if task and task.calibration:
-        if task.exported:
+    if task.calibration:
+        if task.exported and _published:
             sql_query = ("""UPDATE task SET exported=False \
                            WHERE id=%s;""") % (task.id)
             conn.execute(sql_query)
