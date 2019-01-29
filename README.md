@@ -66,7 +66,7 @@ Database Migration scripts, as new changes could introduce new tables,
 columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/install/#updating-pybossa) from the
 documentation**
 
-See [installation instructions](http://docs.pybossa.com/install/).
+See [installation instructions](https://docs.pybossa.com/installation/guide/#updating-pybossa).
 
 # Testing
 
@@ -83,10 +83,6 @@ Just run:
 [![BrowserStack](http://i.imgur.com/Pg0utrk.png)](http://browserstack.com/)
 
 Thanks to the support of [BrowserStack](http://browserstack.com/) we can do real cross browser testing on multiple desktop and mobile platforms.
-
-# Useful Links
-
-* [Documentation](http://docs.pybossa.com/)
 
 # Contributing
 
