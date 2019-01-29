@@ -42,6 +42,10 @@ def export_consensus(project, obj, filetype, expanded, filters):
 
 
 def csv_formatter(data, filename):
+    for row in data:
+        for k, v in row.items():
+            if isinstance(v, (dict, list)):
+                row[k] = json.dumps(v)
     df = pd.DataFrame(data)
     df.to_csv(filename, index=False, encoding='utf-8')
 
