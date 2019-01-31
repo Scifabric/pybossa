@@ -36,7 +36,6 @@ class TestConsensusExporter(Test):
         with export_consensus(project, 'tsk', 'csv', True, None) as fp:
             zipfile = ZipFile(fp)
             filename = zipfile.namelist()[0]
-            content = zipfile.read(filename)
             df = DataFrame.from_csv(StringIO(zipfile.read(filename)))
         row = df.to_dict(orient='records')[0]
         assert json.loads(row['task_run__info'])[task_run.user.name] == {'hello': u'你好'}
