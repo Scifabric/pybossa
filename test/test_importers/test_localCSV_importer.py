@@ -62,8 +62,8 @@ class TestBulkTaskLocalCSVImport(object):
     @with_context
     @patch('pybossa.importers.csv.get_import_csv_file')
     def test_gold_answers_import(self, s3_get):
-        expected_t1_gold_ans = {u'ans': u'3', u'ans2': u'4'}
-        expected_t2_gold_ans = {u'ans': u'a1', u'ans2': u'a2'}
+        expected_t1_gold_ans = {u'ans': u'3', u'ans2': u'4', u'ans3': u'5'}
+        expected_t2_gold_ans = {u'ans': u'a1', u'ans2': u'a2', u'ans3': u'a3'}
         with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar,ans_gold,ans2_gold,ans3_priv_gold\n1,2,3,4,5\naaa,bbb,a1,a2,a3\n'), create=True):
             [t1, t2] = self.importer.tasks()
             assert_equal(t1['gold_answers'], expected_t1_gold_ans), t1

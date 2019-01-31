@@ -38,6 +38,7 @@ import json
 from pybossa.util import delete_import_csv_file
 from pybossa.cloud_store_api.s3 import upload_json_data
 import hashlib
+from flask import url_for
 
 
 def validate_s3_bucket(task):
@@ -135,21 +136,23 @@ class Importer(object):
         s3_conn_type = current_app.config.get('S3_CONN_TYPE')
         if private_fields:
             file_name = 'task_private_data.json'
+            values = dict(store=s3_conn_type, bucket=s3_bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            private_fields__upload_url = url_for('fileproxy.encrypted_file', **values)
             upload_json_data(
                 json_data=private_fields, upload_path=path,
                 file_name=file_name, encryption=encryption,
                 conn_name='S3_TASK_REQUEST')
-            task['info']['private_fields__upload_url'] = '/fileproxy/encrypted/{}/{}/{}/{}'\
-                .format(s3_conn_type, s3_bucket, path, file_name)
+            task['info']['private_fields__upload_url'] = private_fields__upload_url
 
         if private_gold_answers:
             file_name = 'task_private_gold_answer.json'
+            values = dict(store=s3_conn_type, bucket=s3_bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            gold_answers_url = url_for('fileproxy.encrypted_file', **values)
             upload_json_data(
                 json_data=private_gold_answers, upload_path=path,
                 file_name=file_name, encryption=encryption,
                 conn_name='S3_TASK_REQUEST')
-            task['gold_answers'] = '/fileproxy/encrypted/{}/{}/{}/{}'\
-                .format(s3_conn_type, s3_bucket, path, file_name)
+            task['gold_answers'] = gold_answers_url
 
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""

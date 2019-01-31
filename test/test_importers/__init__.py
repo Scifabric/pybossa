@@ -181,16 +181,17 @@ class TestImporterPublicMethods(Test):
         project = ProjectFactory.create()
         form_data = dict(type='localCSV', csv_filename='fakefile.csv')
 
-        result = self.importer.create_tasks(task_repo, project, **form_data)
-        importer_factory.assert_called_with(**form_data)
-        upload_from_string.assert_called()
-        assert result.message == '1 new task was imported successfully ', result
+        with patch.dict(self.flask_app.config, { 'S3_BUCKET': 'mybucket', 'S3_CONN_TYPE': 'dev' }):
+            result = self.importer.create_tasks(task_repo, project, **form_data)
+            importer_factory.assert_called_with(**form_data)
+            upload_from_string.assert_called()
+            assert result.message == '1 new task was imported successfully ', result
 
-        # validate task created has private fields url, gold_answers url
-        # calibration and exported flag set
-        tasks = task_repo.filter_tasks_by(project_id=project.id)
-        assert len(tasks) == 1, len(tasks)
-        task = tasks[0]
-        assert task.info['private_fields__upload_url'] == 'https:/s3/task.json'
-        assert task.gold_answers == 'https:/s3/task.json'
-        assert task.calibration and task.exported
+            # validate task created has private fields url, gold_answers url
+            # calibration and exported flag set
+            tasks = task_repo.filter_tasks_by(project_id=project.id)
+            assert len(tasks) == 1, len(tasks)
+            task = tasks[0]
+            assert task.info['private_fields__upload_url'] == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_data.json'
+            assert task.gold_answers == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_gold_answer.json'
+            assert task.calibration and task.exported
