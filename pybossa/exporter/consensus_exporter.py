@@ -47,7 +47,8 @@ def csv_formatter(data, filename):
             if isinstance(v, (dict, list)):
                 row[k] = json.dumps(v)
     df = pd.DataFrame(data)
-    df.to_csv(filename, index=False, encoding='utf-8')
+    cols = sorted(df.columns)
+    df[cols].to_csv(filename, index=False, encoding='utf-8')
 
 
 def json_formatter(data, fp):
@@ -80,6 +81,8 @@ def format_consensus(rows):
     local_user_cache = {}
     for row in rows:
         data = OrderedDict(row)
+        task_info = flatten(data['task_info'], prefix='task_info')
+        data.update(task_info)
         consensus = data.pop('consensus') or OrderedDict()
         consensus = flatten(consensus, level=2,
                             ignore=['contributorsMetConsensus'])
