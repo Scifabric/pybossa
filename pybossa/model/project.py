@@ -173,7 +173,9 @@ class Project(db.Model, DomainObject):
                     '*/', search_backward_stop, match.start())
                 if comment_end < 0:
                     continue
-            headers.add(match.group(1))
+            header = match.group(1)
+            if not header.endswith('__upload_url'):
+                headers.add(header)
             search_backward_stop = match.end()
 
         return headers
