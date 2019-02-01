@@ -81,7 +81,7 @@ def format_consensus(rows):
     local_user_cache = {}
     for row in rows:
         data = OrderedDict(row)
-        task_info = flatten(data['task_info'], prefix='task_info')
+        task_info = flatten(data.get('task_info', {}), prefix='task_info')
         data.update(task_info)
         consensus = data.pop('consensus') or OrderedDict()
         consensus = flatten(consensus, level=2,

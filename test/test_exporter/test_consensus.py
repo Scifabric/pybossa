@@ -33,6 +33,19 @@ class TestConsensusExporter(Test):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, info={'test': 2}, n_answers=1)
         task_run = TaskRunFactory.create(task=task, info={'hello': u'你好'})
+        with export_consensus(project, 'tsk', 'csv', False, None) as fp:
+            zipfile = ZipFile(fp)
+            filename = zipfile.namelist()[0]
+            df = DataFrame.from_csv(StringIO(zipfile.read(filename)))
+        row = df.to_dict(orient='records')[0]
+        assert json.loads(row['task_run__info'])[task_run.user.name] == {'hello': u'你好'}
+
+
+    @with_context
+    def test_export_consesus_metadata(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, info={'test': 2}, n_answers=1)
+        task_run = TaskRunFactory.create(task=task, info={'hello': u'你好'})
         with export_consensus(project, 'tsk', 'csv', True, None) as fp:
             zipfile = ZipFile(fp)
             filename = zipfile.namelist()[0]
