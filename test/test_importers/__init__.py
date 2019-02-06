@@ -192,6 +192,6 @@ class TestImporterPublicMethods(Test):
             tasks = task_repo.filter_tasks_by(project_id=project.id)
             assert len(tasks) == 1, len(tasks)
             task = tasks[0]
-            assert task.info['private_fields__upload_url'] == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_data.json'
+            assert task.info['private_json__upload_url'] == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_data.json'
             assert task.gold_answers == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_gold_answer.json'
             assert task.calibration and task.exported

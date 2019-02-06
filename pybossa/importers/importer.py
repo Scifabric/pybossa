@@ -137,12 +137,12 @@ class Importer(object):
         if private_fields:
             file_name = 'task_private_data.json'
             values = dict(store=s3_conn_type, bucket=s3_bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
-            private_fields__upload_url = url_for('fileproxy.encrypted_file', **values)
+            private_json__upload_url = url_for('fileproxy.encrypted_file', **values)
             upload_json_data(
                 json_data=private_fields, upload_path=path,
                 file_name=file_name, encryption=encryption,
                 conn_name='S3_TASK_REQUEST')
-            task['info']['private_fields__upload_url'] = private_fields__upload_url
+            task['info']['private_json__upload_url'] = private_json__upload_url
 
         if private_gold_answers:
             file_name = 'task_private_gold_answer.json'
