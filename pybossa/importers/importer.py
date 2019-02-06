@@ -130,15 +130,15 @@ class Importer(object):
             return
 
         encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
-        s3_bucket = current_app.config.get("S3_BUCKET")
+        bucket = current_app.config.get("S3_REQUEST_BUCKET")
         task_hash = hashlib.md5(json.dumps(task)).hexdigest()
         path = "{}/{}".format(project_id, task_hash)
         s3_conn_type = current_app.config.get('S3_CONN_TYPE')
         if private_fields:
             file_name = 'task_private_data.json'
-            values = dict(store=s3_conn_type, bucket=s3_bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
             private_json__upload_url = url_for('fileproxy.encrypted_file', **values)
-            upload_json_data(
+            upload_json_data(bucket=bucket,
                 json_data=private_fields, upload_path=path,
                 file_name=file_name, encryption=encryption,
                 conn_name='S3_TASK_REQUEST')
@@ -146,9 +146,9 @@ class Importer(object):
 
         if private_gold_answers:
             file_name = 'task_private_gold_answer.json'
-            values = dict(store=s3_conn_type, bucket=s3_bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
             gold_answers_url = url_for('fileproxy.encrypted_file', **values)
-            upload_json_data(
+            upload_json_data(bucket=bucket,
                 json_data=private_gold_answers, upload_path=path,
                 file_name=file_name, encryption=encryption,
                 conn_name='S3_TASK_REQUEST')
