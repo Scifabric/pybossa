@@ -179,8 +179,12 @@ def delete_file_from_s3(s3_bucket, s3_url, conn_name=DEFAULT_CONN):
         app.logger.exception('S3: unable to delete file {0}'.format(s3_url))
 
 
-def upload_json_data(json_data, upload_path, file_name, encryption, conn_name, upload_root_dir=None):
+def upload_json_data(json_data, upload_path, file_name, encryption,
+    conn_name, upload_root_dir=None, bucket=None):
     content = json.dumps(json_data, ensure_ascii=False)
-    return s3_upload_from_string(app.config.get("S3_BUCKET"),
-        content, file_name, directory=upload_path, conn_name=conn_name,
+    if not bucket:
+        bucket = app.config.get("S3_BUCKET")
+
+    return s3_upload_from_string(bucket, content, file_name,
+        directory=upload_path, conn_name=conn_name,
         with_encryption=encryption, upload_root_dir=upload_root_dir)
