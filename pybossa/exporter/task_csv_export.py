@@ -24,7 +24,8 @@ from pybossa.exporter.csv_export import CsvExporter
 from pybossa.core import uploader, task_repo
 from pybossa.util import UnicodeWriter
 from export_helpers import browse_tasks_export
-
+from consensus_exporter import flatten
+from itertools import chain, starmap
 
 class TaskCsvExporter(CsvExporter):
     """CSV Exporter for exporting ``Task``s and ``TaskRun``s
@@ -148,11 +149,44 @@ class TaskCsvExporter(CsvExporter):
     def _handle_row(self, writer, t, headers):
         writer.writerow(self._format_csv_row(self.merge_objects(t),
                                              headers=headers))
+
+    def _flatten_json_iterative(self,dictionary):
+        """Flatten objects"""
+
+        def _flatten(parent_key, parent_value):
+            """Unpack one level of nesting in json"""
+            # Unpack one level only!!!
+            
+            if isinstance(parent_value, dict):
+                for key, value in parent_value.items():
+                    new_key = u'{}{}{}'.format(parent_key, '_', key) 
+                    yield new_key, value
+            elif isinstance(parent_value, list):
+                for i, value in enumerate(parent_value, start=1): 
+                    new_key = u'{}{}{}'.format(parent_key, '_', str(i)) 
+                    yield new_key, value
+            else:
+                yield parent_key, parent_value    
+                
+        while True:
+            # Continue flattening the json until all values are not dictionary or list
+            dictionary = dict(chain.from_iterable(starmap(_flatten, dictionary.items())))
+
+            if not any(isinstance(value, dict) for value in dictionary.values()) and \
+            not any(isinstance(value, list) for value in dictionary.values()):
+                break
+
+        return dictionary
+
     def _get_csv_with_filters(self, out, writer, table, project_id,
                               expanded, filters):
         objs = browse_tasks_export(table, project_id, expanded, filters)
         rows = [obj for obj in objs]
-
+        for row in rows:
+            if (row['info']):
+                info = self._flatten_json_iterative(row['info'])            
+                row['info'].update(info)
+                          
         headers = self._get_all_headers(objs=rows,
                                         expanded=expanded,
                                         table=table,
