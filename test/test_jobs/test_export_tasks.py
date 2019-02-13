@@ -75,9 +75,9 @@ class TestExport(Test):
         user = UserFactory.create(admin=True)
         project = ProjectFactory.create(name='test_project')
         task = TaskFactory.create(project=project)
-        task_run = TaskRunFactory.create(project=project, task=task,\
-        info={'text': u'Test String', 'object': {'a':1}, \
-        'list': [{'name':u'Julia', 'lastName': u'Rivera'},{'name':u'Lola', 'lastName': u'Santos'}]})
+        TaskRunFactory.create(project=project, task=task,
+            info={'text': u'Test String', 'object': {'a': 1},
+            'list': [{'name': u'Julia', 'lastName': u'Rivera'}, {'name': u'Lola', 'lastName': u'Santos'}]})
 
         export_tasks(user.email_addr, project.short_name, 'task', False, 'csv')
         args, kwargs = mail.send.call_args
@@ -112,16 +112,16 @@ class TestExport(Test):
         zfp = zipfile.ZipFile(fp, "r")
         file_objects = zfp.infolist()
         contents = [zfp.read(file_object) for file_object in file_objects]
-        expected_headers = ['task_run__calibration', 'task_run__created', \
-        'task_run__external_uid', 'task_run__finish_time',\
-        'task_run__id', 'task_run__info', 'task_run__info__list',\
-        'task_run__info__list_1_lastName', 'task_run__info__list_1_name',\
-        'task_run__info__list_2_lastName', 'task_run__info__list_2_name',\
-        'task_run__info__object', 'task_run__info__object__a',\
-        'task_run__info__object_a', 'task_run__info__text',\
-        'task_run__project_id', 'task_run__task__gold_answers',\
-        'task_run__task_id', 'task_run__timeout', 'task_run__user_id',\
-        'task_run__user_ip']
+        expected_headers = [
+            'task_run__calibration', 'task_run__created',
+            'task_run__external_uid', 'task_run__finish_time',
+            'task_run__id', 'task_run__info', 'task_run__info__list',
+            'task_run__info__list__0__lastName', 'task_run__info__list__0__name',
+            'task_run__info__list__1__lastName', 'task_run__info__list__1__name',
+            'task_run__info__object', 'task_run__info__object__a',
+            'task_run__info__text', 'task_run__project_id', 'task_run__task__gold_answers',
+            'task_run__task_id', 'task_run__timeout', 'task_run__user_id',
+            'task_run__user_ip']
         assert all(header in contents[0] for header in expected_headers)
               
         export_tasks(user.email_addr, project.short_name, 'task_run', False, 'json')
