@@ -24,7 +24,7 @@ from pybossa.core import user_repo
 from pybossa.exporter.json_export import JsonExporter
 from mock import patch, MagicMock
 from flask import current_app, render_template, url_for
-from flask.ext.mail import Message
+from flask_mail import Message
 
 #@patch('pybossa.jobs.uploader')
 class TestExportAccount(Test):
@@ -52,6 +52,20 @@ class TestExportAccount(Test):
 
         upload_method = 'uploads.uploaded_file'
 
+        personal_data_link = url_for(upload_method,
+                                     filename="user_%s/%s_sec_personal_data.zip"
+                                     % (user.id, 'random'),
+                                     _external=True)
+        personal_projects_link = url_for(upload_method,
+                                         filename="user_%s/%s_sec_user_projects.zip"
+                                         % (user.id, 'random'),
+                                         _external=True)
+        personal_contributions_link = url_for(upload_method,
+                                              filename="user_%s/%s_sec_user_contributions.zip"
+                                              % (user.id, 'random'),
+                                              _external=True)
+
+
         body = render_template('/account/email/exportdata.md',
                            user=user.dictize(),
                            personal_data_link='',
@@ -69,6 +83,7 @@ class TestExportAccount(Test):
                      bcc=[admin_addr],
                      attachments=['the_attachment_file'])
         m1.assert_called_with(mail_dict)
+        assert 'https' in personal_contributions_link
 
     @with_context
     @patch('pybossa.core.uploader.delete_file')

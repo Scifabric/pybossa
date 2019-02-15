@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2018 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@
 
 import inspect
 from flask import abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.core import announcement_repo, task_repo, project_repo, result_repo
 from pybossa.core import project_stats_repo
 from pybossa.auth.errcodes import *

@@ -19,7 +19,6 @@ from tempfile import NamedTemporaryFile
 
 from flask import current_app
 from flask import request
-from flask.ext.babel import lazy_gettext
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
@@ -28,6 +27,7 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
 from wtforms import SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
 from wtforms.widgets import HiddenInput
+from flask_babel import lazy_gettext
 
 import validator as pb_validator
 from pybossa import util
@@ -35,7 +35,7 @@ from pybossa.core import project_repo, user_repo, task_repo
 from pybossa.core import uploader
 from pybossa.uploader import local
 from flask import safe_join
-from flask.ext.login import current_user
+from flask_login import current_user
 import os
 import json
 from pybossa.forms.fields.time_field import TimeField
@@ -47,6 +47,7 @@ from pybossa.util import get_file_path_for_import_csv
 from flask import flash
 import pybossa.data_access as data_access
 import app_settings
+from iiif_prezi.loader import ManifestReader
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -377,9 +378,16 @@ class BulkTaskIIIFImportForm(Form):
     manifest_uri = TextField(lazy_gettext('URL'),
                              [validators.Required(message=msg_required),
                              validators.URL(message=msg_url)])
+    version = SelectField(lazy_gettext('Presentation API version'), choices=[
+        (ctx, ctx) for ctx in ManifestReader.contexts
+    ], default='2.1')
 
     def get_import_data(self):
-        return {'type': 'iiif', 'manifest_uri': self.manifest_uri.data}
+        return {
+            'type': 'iiif',
+            'manifest_uri': self.manifest_uri.data,
+            'version': self.version.data
+        }
 
 
 class GenericBulkTaskImportForm(object):

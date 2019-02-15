@@ -141,9 +141,10 @@ class TestModelEventListeners(Test):
         expected_sql_query = ("""UPDATE task SET exported=False \
                            WHERE id=%s;""") % (task.id)
         conn.execute.assert_called_with(expected_sql_query)
-    
+
 
     @with_context
+    @patch('pybossa.model.event_listeners.sched.after_save')
     @patch('pybossa.model.event_listeners.push_webhook')
     @patch('pybossa.model.event_listeners.create_result', return_value=1)
     @patch('pybossa.model.event_listeners.update_task_state')
@@ -155,7 +156,8 @@ class TestModelEventListeners(Test):
                                      mock_is_task,
                                      mock_update_task,
                                      mock_create_result,
-                                     mock_push):
+                                     mock_push,
+                                     mock_sched_after_save):
         """Test on_taskrun_submit is called."""
         conn = MagicMock()
         target = MagicMock()
@@ -174,7 +176,8 @@ class TestModelEventListeners(Test):
         obj['action_updated'] = 'TaskCompleted'
         mock_add_user.assert_called_with(conn, target.user_id, obj)
         mock_update_task.assert_called_with(conn, target.task_id)
-        mock_update_feed.assert_called_with(obj)
+        mock_update_feed.assert_called_once_with(obj)
+        mock_sched_after_save.assert_called_once_with(target, conn)
         obj_with_webhook = tmp.to_public_json()
         obj_with_webhook['webhook'] = tmp.webhook
         obj_with_webhook['action_updated'] = 'TaskCompleted'
@@ -237,7 +240,7 @@ class TestModelEventListeners(Test):
         assert counter.n_task_runs == 0, counter
         assert counter.task_id == task.id, counter
         assert counter.project_id == task.project.id, counter
-        
+
     @with_context
     def test_counter_works_add_counter(self):
         """Test event listener when adding a task run adds a counter."""

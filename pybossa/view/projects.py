@@ -27,8 +27,8 @@ from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
 from flask import Markup, jsonify
-from flask.ext.login import login_required, current_user
-from flask.ext.babel import gettext
+from flask_login import login_required, current_user
+from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from rq import Queue
 from werkzeug.datastructures import MultiDict
@@ -681,7 +681,10 @@ def update(short_name):
                 project.info['container'] = container
                 upload_method = current_app.config.get('UPLOAD_METHOD')
                 thumbnail_url = get_avatar_url(upload_method,
-                                               _file.filename, container)
+                                               _file.filename,
+                                               container,
+                                               current_app.config.get('AVATAR_ABSOLUTE')
+                                               )
                 project.info['thumbnail_url'] = thumbnail_url
                 project_repo.save(project)
                 flash(gettext('Your project thumbnail has been updated! It may \
@@ -1719,7 +1722,7 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
-            print inst
+            # print inst
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
@@ -2431,11 +2434,10 @@ def webhook_handler(short_name, oid=None):
         tmp = webhook_repo.get(oid)
         if tmp:
             webhook_queue.enqueue(webhook, project.webhook,
-                                  tmp.payload, tmp.id)
+                                  tmp.payload, tmp.id, True)
             return json.dumps(tmp.dictize())
         else:
             abort(404)
-
 
     ensure_authorized_to('read', Webhook, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
@@ -2445,14 +2447,14 @@ def webhook_handler(short_name, oid=None):
     if request.method == 'GET' and request.args.get('all'):
         for wh in responses:
             webhook_queue.enqueue(webhook, project.webhook,
-                                  wh.payload, wh.id)
+                                  wh.payload, wh.id, True)
         flash('All webhooks enqueued')
 
     if request.method == 'GET' and request.args.get('failed'):
         for wh in responses:
             if wh.response_status_code != 200:
                 webhook_queue.enqueue(webhook, project.webhook,
-                                      wh.payload, wh.id)
+                                      wh.payload, wh.id, True)
         flash('All webhooks enqueued')
 
     project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)

@@ -1,4 +1,4 @@
-from flask.ext.babel import lazy_gettext
+from flask_babel import lazy_gettext
 from flask_wtf import Form
 import wtforms
 

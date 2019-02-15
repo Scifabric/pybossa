@@ -31,7 +31,7 @@ from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 import dateutil.parser
 from functools import wraps
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from math import ceil
@@ -42,7 +42,7 @@ import hmac
 import random
 import simplejson
 import time
-from flask.ext.babel import lazy_gettext
+from flask_babel import lazy_gettext
 import re
 import os
 from werkzeug.utils import secure_filename
@@ -644,7 +644,7 @@ def fuzzyboolean(value):
     raise ValueError("Invalid literal for boolean(): {}".format(value))
 
 
-def get_avatar_url(upload_method, avatar, container):
+def get_avatar_url(upload_method, avatar, container, external):
     """Return absolute URL for avatar."""
     upload_method = upload_method.lower()
     if upload_method in ['rackspace', 'cloud']:
@@ -653,11 +653,13 @@ def get_avatar_url(upload_method, avatar, container):
                        container=container)
     else:
         filename = container + '/' + avatar
-        return url_for('uploads.uploaded_file', filename=filename,
-                       _external=True)
+        return url_for('uploads.uploaded_file',
+                       filename=filename,
+                       _scheme=current_app.config.get('PREFERRED_URL_SCHEME'),
+                       _external=external)
 
 
-def get_disqus_sso(user): # pragma: no cover
+def get_disqus_sso(user):  # pragma: no cover
     # create a JSON packet of our data attributes
     # return a script tag to insert the sso message."""
     message, timestamp, sig, pub_key = get_disqus_sso_payload(user)

@@ -46,7 +46,6 @@ class JsonExporter(Exporter):
 
     def _make_zip(self, project, ty, name=None, data=None, user_id=None,
                   zipname=None):
-        print data
         if data:
             return self.handle_zip(name, data, ty,
                                    user_id, project,

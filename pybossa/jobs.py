@@ -20,7 +20,7 @@ from datetime import datetime
 import math
 import requests
 from flask import current_app, render_template
-from flask.ext.mail import Message, Attachment
+from flask_mail import Message, Attachment
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users
@@ -193,7 +193,7 @@ def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
-        print "Export project id %d" % _id
+        # print "Export project id %d" % _id
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
@@ -382,7 +382,7 @@ def get_project_stats(_id, short_name):  # pragma: no cover
 @with_cache_disabled
 def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
-    print "Running on the background warm_up_stats"
+    # print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
@@ -497,29 +497,36 @@ def get_non_updated_projects():
 
 def warn_old_project_owners():
     """E-mail the project owners not updated in the last 3 months."""
+    from smtplib import SMTPRecipientsRefused
     from pybossa.core import mail, project_repo
     from pybossa.cache.projects import clean
-    from flask.ext.mail import Message
+    from flask_mail import Message
 
     projects = get_non_updated_projects()
 
     with mail.connect() as conn:
         for project in projects:
-            subject = ('Your %s project: %s has been inactive'
-                       % (current_app.config.get('BRAND'), project.name))
-            body = render_template('/account/email/inactive_project.md',
-                                   project=project)
-            html = render_template('/account/email/inactive_project.html',
-                                   project=project)
-            msg = Message(recipients=[project.owner.email_addr],
-                          subject=subject,
-                          body=body,
-                          html=html)
-            conn.send(msg)
-            project.contacted = True
-            project.published = False
-            clean(project.id)
-            project_repo.update(project)
+            if (project.owner.consent and project.owner.subscribed):
+                subject = ('Your %s project: %s has been inactive'
+                           % (current_app.config.get('BRAND'), project.name))
+                body = render_template('/account/email/inactive_project.md',
+                                       project=project)
+                html = render_template('/account/email/inactive_project.html',
+                                       project=project)
+                msg = Message(recipients=[project.owner.email_addr],
+                              subject=subject,
+                              body=body,
+                              html=html)
+                try:
+                    conn.send(msg)
+                    project.contacted = True
+                    project.published = False
+                    clean(project.id)
+                    project_repo.update(project)
+                except SMTPRecipientsRefused:
+                    return False
+            else:
+                return False
     return True
 
 
@@ -553,6 +560,13 @@ def send_mail(message_dict, mail_all=False):
     """Send email."""
     if mail_all or mail_with_enabled_users(message_dict):
         message = Message(**message_dict)
+    spam = False
+    for r in message_dict['recipients']:
+        acc, domain = r.split('@')
+        if domain in current_app.config.get('SPAM', []):
+            spam = True
+            break
+    if not spam:
         mail.send(message)
 
 
@@ -831,7 +845,7 @@ def export_tasks(current_user_email_addr, short_name,
         raise
 
 
-def webhook(url, payload=None, oid=None):
+def webhook(url, payload=None, oid=None, rerun=False):
     """Post to a webhook."""
     from flask import current_app
     from readability.readability import Document
@@ -846,7 +860,12 @@ def webhook(url, payload=None, oid=None):
             webhook = Webhook(project_id=payload['project_id'],
                               payload=payload)
         if url:
-            response = requests.post(url, data=json.dumps(payload), headers=headers)
+            params = dict()
+            if rerun:
+                params['rerun'] = True
+            response = requests.post(url, params=params,
+                                     data=json.dumps(payload),
+                                     headers=headers)
             webhook.response = Document(response.text).summary()
             webhook.response_status_code = response.status_code
         else:
@@ -1157,6 +1176,9 @@ def delete_account(user_id, admin_addr, **kwargs):
     if current_app.config.get('DISQUS_SECRET_KEY'):
         body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
     recipients = [email]
+    if current_app.config.get('ADMINS'):
+        for em in current_app.config.get('ADMINS'):
+            recipients.append(em)
     bcc = [admin_addr]
     mail_dict = dict(recipients=recipients, bcc=bcc, subject=subject, body=body)
     send_mail(mail_dict, mail_all=True)

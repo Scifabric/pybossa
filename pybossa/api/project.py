@@ -25,7 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 import copy
 from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
 from flask import current_app, request
-from flask.ext.login import current_user
+from flask_login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
@@ -55,9 +55,14 @@ class ProjectAPI(APIBase):
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
-        if not inst.category_id:
-            default_category = get_categories()[0]
-            inst.category_id = default_category.id
+        category_ids = [c.id for c in get_categories()]
+        default_category = get_categories()[0]
+        inst.category_id = default_category.id
+        if 'category_id' in data.keys():
+            if int(data.get('category_id')) in category_ids:
+                inst.category_id = data.get('category_id')
+            else:
+                raise BadRequest("category_id does not exist")
         return inst
 
     def _update_object(self, obj):
@@ -120,6 +125,7 @@ class ProjectAPI(APIBase):
         public = Project().public_attributes()
         public.append('link')
         public.append('links')
+        public.append('stats')
         for key in tmp.keys():
             if key not in public:
                 del tmp[key]

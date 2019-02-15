@@ -18,7 +18,7 @@
 
 from collections import defaultdict
 from flask import current_app
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
 from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
@@ -29,9 +29,8 @@ from .iiif import BulkTaskIIIFImporter
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
-from flask import current_app
 from pybossa.util import check_password_strength, valid_or_no_s3_bucket
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.datastructures import MultiDict
 import copy
 import json

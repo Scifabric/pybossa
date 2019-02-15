@@ -28,7 +28,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 """
 import json
 from flask import request, abort, Response, current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, BadRequest
 from werkzeug.exceptions import MethodNotAllowed
@@ -46,6 +46,7 @@ from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
 from pybossa.cache.projects import clean_project
 from pybossa.cache.users import delete_user_summary_id
+from pybossa.cache.categories import reset
 
 repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                   'get': 'get_task', 'save': 'save', 'update': 'update',
@@ -77,7 +78,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
         }
 
 caching = {'Project': {'refresh': clean_project},
-           'User': {'refresh': delete_user_summary_id}}
+           'User': {'refresh': delete_user_summary_id},
+           'Category': {'refresh': reset}}
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -90,14 +92,20 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    allowed_classes_upload = ['blogpost', 'helpingmaterial', 'announcement']
+    allowed_classes_upload = ['blogpost',
+                              'helpingmaterial',
+                              'announcement',
+                              'taskrun']
 
     immutable_keys = set([])
 
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
         if caching.get(cls_name):
-            caching.get(cls_name)['refresh'](oid)
+           if cls_name != 'Category':
+              caching.get(cls_name)['refresh'](oid)
+           else:
+              caching.get(cls_name)['refresh']
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -159,9 +167,8 @@ class APIBase(MethodView):
                 ensure_authorized_to('read', item)
                 items.append(datum)
             except (Forbidden, Unauthorized):
-                # Remove last added item, as it is 401 or 403
-                if len(items) > 0:
-                    items.pop()
+                # pass as it is 401 or 403
+                pass
             except Exception:  # pragma: no cover
                 raise
         if oid is not None:
@@ -208,6 +215,12 @@ class APIBase(MethodView):
                 for tr in task_runs:
                     obj['task_runs'].append(tr.dictize())
 
+        stats = request.args.get('stats')
+        if stats:
+            if item.__class__.__name__ == 'Project':
+                stats = project_stats_repo.filter_by()
+                obj['stats'] = stats[0].dictize() if stats else {}
+
         links, link = self.hateoas.create_links(item)
         if links:
             obj['links'] = links
@@ -239,7 +252,7 @@ class APIBase(MethodView):
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
-                         'participated', 'full']:
+                         'participated', 'full', 'stats']:
                 # Raise an error if the k arg is not a column
                 if self.__class__ == Task and k == 'external_uid':
                     pass
@@ -296,6 +309,7 @@ class APIBase(MethodView):
         """
         try:
             cls_name = self.__class__.__name__
+            data = None
             self.valid_args()
             data = self._file_upload(request)
             if data is None:
@@ -313,6 +327,12 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            content_type = request.headers.get('Content-Type')
+            if (cls_name == 'TaskRun'
+                    and 'multipart/form-data' in content_type
+                    and data):
+                uploader.delete_file(data['info']['file_name'],
+                                     data['info']['container'])
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -521,20 +541,26 @@ class APIBase(MethodView):
                 container = "user_%s" % current_user.id
             else:
                 ensure_authorized_to('create', self.__class__,
-                                    project_id=tmp['project_id'])
+                                     project_id=tmp['project_id'])
                 project = project_repo.get(tmp['project_id'])
                 upload_method = current_app.config.get('UPLOAD_METHOD')
                 if request.files.get('file') is None:
                     raise AttributeError
                 _file = request.files['file']
-                if current_user.admin:
-                    container = "user_%s" % project.owner.id
+                if current_user.is_authenticated():
+                    if current_user.admin:
+                        container = "user_%s" % project.owner.id
+                    else:
+                        container = "user_%s" % current_user.id
                 else:
-                    container = "user_%s" % current_user.id
+                    container = "anonymous"
             uploader.upload_file(_file,
                                  container=container)
+            avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
             file_url = get_avatar_url(upload_method,
-                                      _file.filename, container)
+                                      _file.filename,
+                                      container,
+                                      avatar_absolute)
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()

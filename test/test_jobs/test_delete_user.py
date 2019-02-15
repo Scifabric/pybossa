@@ -37,7 +37,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
             body += '\nWe could not delete your Mailchimp account, please contact us to fix this issue.'
 
             admin_addr = 'admin@pybossa.com'
@@ -67,7 +67,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
 
             admin_addr = 'admin@pybossa.com'
             recipients = [user.email_addr]
@@ -100,7 +100,7 @@ class TestDeleteAccount(Test):
             user_id = user.id
             brand = 'PYBOSSA'
             subject = '[%s]: Your account has been deleted' % brand
-            body = """Hi,\n Your account and personal data has been deleted from %s.""" % brand
+            body = """Hi,\nYour account and personal data has been deleted from %s.""" % brand
             body += '\nDisqus does not provide an API method to delete your account. You will have to do it by hand yourself in the disqus.com site.'
 
             admin_addr = 'admin@pybossa.com'

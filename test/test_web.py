@@ -524,8 +524,7 @@ class TestWeb(web.Helper):
 
         res = self.app_get_json(url)
         data = json.loads(res.data)
-        print data
-        err_msg = 'Field missing in JSON response'
+        err_msg = ('Field missing in JSON response', data)
         assert 'avg_contrib_time' in data, err_msg
         assert 'n_completed_tasks' in data, err_msg
         assert 'n_tasks' in data, err_msg
@@ -536,7 +535,7 @@ class TestWeb(web.Helper):
         assert 'project' in data, err_msg
         assert 'projectStats' in data, err_msg
         assert 'userStats' in data, err_msg
-        err_msg = 'Field should be private'
+        err_msg = ('Field should be private', data)
         assert 'id' not in data['owner'], err_msg
         assert 'api_key' not in data['owner'], err_msg
         assert 'secret_key' not in data['project'], err_msg
@@ -570,7 +569,6 @@ class TestWeb(web.Helper):
 
         self.create()
         res = self.app_get_json('/account/')
-        print res.data
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -581,7 +579,6 @@ class TestWeb(web.Helper):
         assert data['pagination']['per_page'] == 24, err_msg
         # page 1 should also work
         res = self.app_get_json('/account/page/1')
-        print res.data
         data = json.loads(res.data)
         assert res.status_code == 200, res.status_code
         err_msg = "There should be a Community page"
@@ -672,7 +669,6 @@ class TestWeb(web.Helper):
 
             data = json.dumps(userdict)
             data += "}"
-            print data
             res = self.app.post('/account/register', data=data,
                                 content_type='application/json',
                                 headers={'X-CSRFToken': csrf})
@@ -1011,7 +1007,6 @@ class TestWeb(web.Helper):
         res = self.app_post_json('/account/register', data=data)
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = json.loads(res.data)
-        print(data)
         assert data['status'] == 'sent'
         assert data['template'] == 'account/account_validation.html'
         assert data['title'] == 'Account validation'
@@ -1085,7 +1080,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signin()
         res = self.app.post('/account/register', data=data)
-        print dir(redirect)
+        print((dir(redirect)))
         mockredirect.assert_called_with('/')
 
     @with_context
@@ -2239,7 +2234,7 @@ class TestWeb(web.Helper):
         self.signin(email="perico@example.com", password="p4ssw0rd")
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         assert_raises(ValueError, json.loads, res.data)
-        print res.data
+        print(res.data)
         assert "Sample Project" in res.data, res
         assert "Enter the password to contribute to this project" in res.data, err_msg
         res = self.app.get('/project/sampleapp/settings')
@@ -2884,7 +2879,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
 
         res = self.app_get_json('project/%s/tasks/browse' % (project.short_name))
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         err_msg = 'key missing'
         assert 'n_completed_tasks' in data, err_msg
@@ -3174,7 +3169,7 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         task = db.session.query(Task).filter(Project.id == project.id).first()
         res = self.app_get_json('project/%s/task/%s' % (project.short_name, task.id))
-        print res.data
+        print(res.data)
 
         assert fake_guard_instance.stamp.called
 
@@ -3705,7 +3700,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signin()
         user = user_repo.get_by(name='johndoe')
-        print user
+        print(user)
         url = '/account/johndoe/update'
         csrf = self.get_csrf(url)
         payload = {'avatar': (io.BytesIO(b"abcdef"), 'test.jpg'),
@@ -4306,7 +4301,7 @@ class TestWeb(web.Helper):
         })
         res = self.app_get_json('/project/sampleapp/tasks/')
         data = json.loads(res.data)
-        print res.data
+        print(res.data)
         err_msg = 'Field missing in data'
         assert 'autoimporter_enabled' in data, err_msg
         assert 'last_activity' in data, err_msg
@@ -4476,7 +4471,7 @@ class TestWeb(web.Helper):
         self.signin()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for admin"
-        print res.data
+        print(res.data)
         assert announcement.title in res.data, error_msg
         assert announcement.body in res.data, error_msg
         self.signout()
@@ -4485,7 +4480,7 @@ class TestWeb(web.Helper):
         self.signin()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should not be a message for subadmin"
-        print res.data
+        print(res.data)
         assert announcement.title in res.data, error_msg
         assert announcement.body in res.data, error_msg
 
@@ -4496,7 +4491,7 @@ class TestWeb(web.Helper):
         announcement = AnnouncementFactory.create(published=True, info={'level': 30})
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should not be a message for anonymous user"
-        print res.data
+        print(res.data)
         assert announcement.title not in res.data, error_msg
         assert announcement.body not in res.data, error_msg
 
@@ -4596,7 +4591,7 @@ class TestWeb(web.Helper):
                     'personal_data.zip')
 
         uri = "/uploads/user_%s/random_sec_personal_data.zip" % user.id
-        print uri
+        print(uri)
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
@@ -5050,13 +5045,13 @@ class TestWeb(web.Helper):
                     .filter_by(project_id=project.id).all()
         for t in results:
             err_msg = "All the result column names should be included"
-            print t
+            print(t)
             d = t.dictize()
             task_run_ids = d['task_run_ids']
             fl = flatten(t.dictize(), root_keys_to_ignore='task_run_ids')
             fl['task_run_ids'] = task_run_ids
             # keys.append('result_id')
-            print fl
+            print(fl)
             for tk in fl.keys():
                 expected_key = "%s" % tk
                 assert expected_key in keys, (err_msg, expected_key, keys)
@@ -5960,7 +5955,7 @@ class TestWeb(web.Helper):
                 data = dict(csv_url='http://data.com')
                 res = self.app_post_json(url + importer, data=data)
                 data = json.loads(res.data)
-                print data
+                print(data)
                 assert data['flash'] == "SUCCESS", data
             if 's3' in importer:
                 data = dict(files='data', bucket='bucket')
@@ -6204,7 +6199,7 @@ class TestWeb(web.Helper):
         queue.enqueue.assert_called_once_with(import_tasks, project.id, 'John Doe', **data)
         msg = "trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
-        print res.data
+        print(res.data)
         assert msg in res.data
 
     @with_context
@@ -6987,6 +6982,53 @@ class TestWeb(web.Helper):
                            content_type='application/json')
         # should redirect to login
         assert res.status_code == 302, res.status_code
+
+    @with_context
+    def test_72_profile_url_json_restrict(self):
+        """Test JSON WEB public user profile restrict works"""
+
+        user = UserFactory.create(restrict=True)
+        admin = UserFactory.create(admin=True)
+        other = UserFactory.create()
+
+        url = '/account/profile?api_key=%s' % user.api_key
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is not None, data
+        userDict = data.get('user')
+        assert userDict['id'] == user.id, userDict
+        assert userDict['restrict'] is True, userDict
+
+        # As admin should return nothing
+        url = '/account/%s/?api_key=%s' % (user.name, admin.api_key)
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is None, data
+        assert data.get('title') == 'User data is restricted'
+        assert data.get('can_update') is False
+        assert data.get('projects_created') == []
+        assert data.get('projects') == [], data
+
+        # As another user should return nothing
+        url = '/account/%s/?api_key=%s' % (user.name, other.api_key)
+
+        res = self.app.get(url,
+                           content_type='application/json')
+        assert res.status_code == 200, res.status_code
+        data = json.loads(res.data)
+        assert data.get('user') is None, data
+        assert data.get('title') == 'User data is restricted'
+        assert data.get('can_update') is False
+        assert data.get('projects_created') == []
+        assert data.get('projects') == [], data
+
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -8361,7 +8403,7 @@ class TestWeb(web.Helper):
 
         url = '/account/%s/?api_key=%s' % (contributor.name, owner.api_key)
         res = self.app_get_json(url)
-        print res.data
+        print(res.data)
         data = json.loads(res.data)
         assert 'projects' in data.keys(), data.keys()
         assert len(data['projects']) == 1, len(data['projects'])
@@ -8491,6 +8533,7 @@ class TestWeb(web.Helper):
         assert user.user_pref != invalid_upref, "Invalid preferences should not be updated"
 
     @with_context
+<<<<<<< HEAD
     def test_task_redundancy_update_tasks_created_within_max_date_range(self):
         """Test task redundancy update applies to tasks created within days as per configured under REDUNDANCY_UPDATE_EXPIRATION"""
 
@@ -8674,3 +8717,26 @@ class TestWeb(web.Helper):
             data = json.loads(res.data)
             assert data.get('status') == 'success', data
             assert "Users unassigned or no user assigned to project" in data.get('flash'), data
+=======
+    @patch('pybossa.view.account.send_mail', autospec=True)
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_validate_email_once(self, signer, render, queue, send_mail):
+        """Test validate email only once."""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        user = UserFactory.create()
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        url = '/account/{}/update?api_key={}'.format(user.name, user.api_key)
+        data = {'id': user.id, 'fullname': user.fullname,
+                'name': user.name,
+                'locale': user.locale,
+                'email_addr': 'new@fake.com',
+                'btn': 'Profile'}
+        res = self.app.post(url, data=data, follow_redirects=True)
+
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        assert b'Use a valid email account' in str(res.data), res.data
+>>>>>>> 2dd429f94b791aebcca4d7577ee6c9386fefebd0

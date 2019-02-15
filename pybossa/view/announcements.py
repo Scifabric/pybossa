@@ -18,7 +18,7 @@
 """Announcements view for PYBOSSA."""
 from flask import Blueprint, current_app
 from flask import render_template
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.cache import users as cached_users
 from pybossa.util import handle_content_type
 from pybossa.core import announcement_repo

@@ -25,7 +25,8 @@ from pybossa.sched import (
     acquire_lock,
     has_lock,
     get_task_id_and_duration_for_project_user,
-    get_task_id_project_id_key
+    get_task_id_project_id_key,
+    get_locked_task
 )
 from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
@@ -48,6 +49,49 @@ class TestLockedSched(sched.Helper):
         valid_task_levels_for_project_level=dict(
             L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
     )
+
+    @with_context
+    def test_get_locked_task(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        t1 = get_locked_task(project.id)
+        t2 = get_locked_task(project.id, 1)
+        assert t1[0].id == task1.id
+        assert t2[0].id == task1.id
+        t3 = get_locked_task(project.id, 2)
+        t4 = get_locked_task(project.id, 3)
+        assert t3[0].id == task2.id
+        assert t4[0].id == task2.id
+
+        t5 = get_locked_task(project.id)
+        assert t5[0].id == task1.id
+
+        t6 = get_locked_task(project.id, 4)
+        assert not t6
+
+    @with_context
+    def test_get_locked_task_offset(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+        task3 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        t1 = get_locked_task(project.id, 1)
+        assert t1[0].id == task1.id
+        t2 = get_locked_task(project.id, 1, offset=1)
+        assert t2[0].id == task2.id
+        t3 = get_locked_task(project.id, 1, offset=2)
+        assert not t3
 
     @with_context
     def test_taskrun_submission(self):
@@ -340,3 +384,123 @@ class TestLockedSched(sched.Helper):
         resp = json.loads(res.data)
         assert resp['id'] == tasks[0].id, \
             'task presented should not be gold task'
+
+    def test_anonymous_taskrun_submission(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
+
+        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        rec_task1 = json.loads(res.data)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
+        rec_task2 = json.loads(res.data)
+
+        # users get different tasks
+        assert rec_task1['info'] != rec_task2['info']
+
+        tr = {
+            'project_id': project.id,
+            'task_id': task1.id,
+            'info': 'hello'
+        }
+
+        # submit answer for the right task
+        res = self.app.post('api/taskrun', data=json.dumps(tr))
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_anonymous_taskrun_submission_external_uid(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+        task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
+
+        headers = self.get_headers_jwt(project)
+
+        res = self.app.get('api/project/{}/newtask?external_uid={}'
+                           .format(project.id, '1xa'), headers=headers)
+        rec_task1 = json.loads(res.data)
+
+        res = self.app.get('api/project/{}/newtask?external_uid={}'
+                           .format(project.id, '2xa'), headers=headers)
+        rec_task2 = json.loads(res.data)
+
+        # users get different tasks
+        assert rec_task1['info'] != rec_task2['info']
+
+        tr = {
+            'project_id': project.id,
+            'task_id': task1.id,
+            'info': 'hello'
+        }
+
+        # submit answer for the right task
+        res = self.app.post('api/taskrun?external_uid=1xa', data=json.dumps(tr),
+                            headers=headers)
+        assert res.status_code == 200, res.status_code
+
+    @with_context
+    def test_one_task(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+
+        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        rec_task1 = json.loads(res.data)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
+        rec_task2 = json.loads(res.data)
+        assert not rec_task2
+
+    @with_context
+    def test_lock_expiration(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task1 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
+        # fake expired user lock
+        acquire_lock(task1.id, 1000, 2, -10)
+
+        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        rec_task1 = json.loads(res.data)
+
+        assert rec_task1['info'] == 'task 1'
+
+    @with_context
+    def test_invalid_offset(self):
+        owner = UserFactory.create(id=500)
+
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = 'locked'
+        project_repo.save(project)
+
+        task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
+        task1 = TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        res = self.app.get('api/project/{}/newtask?api_key={}&offset=3'
+                           .format(project.id, owner.api_key))
+
+        assert res.status_code == 400, res.data

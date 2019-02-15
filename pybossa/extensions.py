@@ -50,7 +50,7 @@ sentinel = Sentinel()
 user_cache = None
 
 # DB
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 db.slave_session = db.session
 
@@ -69,15 +69,15 @@ from pybossa.signer import Signer
 signer = Signer()
 
 # Mail
-from flask.ext.mail import Mail
+from flask_mail import Mail
 mail = Mail()
 
 # Login Manager
-from flask.ext.login import LoginManager
+from flask_login import LoginManager
 login_manager = LoginManager()
 
 # Debug Toolbar
-from flask.ext.debugtoolbar import DebugToolbarExtension
+from flask_debugtoolbar import DebugToolbarExtension
 debug_toolbar = DebugToolbarExtension()
 
 # OAuth providers
@@ -94,11 +94,11 @@ from pybossa.oauth_providers import Flickr
 flickr = Flickr()
 
 # Markdown support
-from flask.ext.misaka import Misaka
+from flask_misaka import Misaka
 misaka = Misaka()
 
 # Babel
-from flask.ext.babel import Babel
+from flask_babel import Babel
 babel = Babel()
 
 # Uploader
@@ -126,10 +126,10 @@ newsletter = Newsletter()
 from importers import Importer
 importer = Importer()
 
-from flask.ext.plugins import PluginManager
+from flask_plugins import PluginManager
 plugin_manager = PluginManager()
 
-from flask.ext.assets import Environment
+from flask_assets import Environment
 assets = Environment()
 
 from flask.json import JSONEncoder as BaseEncoder

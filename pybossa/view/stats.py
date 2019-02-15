@@ -22,7 +22,7 @@ from flask import Blueprint
 from pybossa.cache import site_stats
 from pybossa.cache import projects as cached_projects
 from pybossa.util import handle_content_type
-from flask.ext.login import login_required
+from flask_login import login_required
 
 blueprint = Blueprint('stats', __name__)
 

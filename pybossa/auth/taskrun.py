@@ -45,6 +45,8 @@ class TaskRunAuth(object):
 
     def _create(self, user, taskrun):
         project = self.project_repo.get(taskrun.project_id)
+        if project is None:
+            return False
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
             return False
@@ -54,6 +56,7 @@ class TaskRunAuth(object):
             user_id=taskrun.user_id,
             user_ip=taskrun.user_ip,
             external_uid=taskrun.external_uid) <= 0
+
         if not authorized:
             raise abort(403)
         return authorized
@@ -64,7 +67,7 @@ class TaskRunAuth(object):
         return user.is_authenticated()
 
     def _update(self, user, taskrun):
-        return False
+        return self._delete(user, taskrun)
 
     def _delete(self, user, taskrun):
         if user.is_anonymous():
