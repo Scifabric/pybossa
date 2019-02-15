@@ -22,6 +22,7 @@ from default import Test, with_context
 from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
 from pybossa.core import db
+from pybossa.cloud_store_api.s3 import s3_upload_from_string
 task_repo = TaskRepository(db)
 
 
@@ -164,3 +165,33 @@ class TestImporterPublicMethods(Test):
         assert 'flickr' in importer.get_autoimporter_names()
         assert 'twitter' in importer.get_autoimporter_names()
         assert 'dropbox' not in importer.get_autoimporter_names()
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    @patch('pybossa.importers.csv.data_access_levels')
+    def test_create_tasks_creates_private_regular_and_gold_fields(self,
+        mock_data_access, mock_del, upload_from_string, importer_factory):
+        mock_importer = Mock()
+        mock_data_access = True
+        mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
+            'private_gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True}]
+
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+
+        with patch.dict(self.flask_app.config, { 'S3_REQUEST_BUCKET': 'mybucket', 'S3_CONN_TYPE': 'dev' }):
+            result = self.importer.create_tasks(task_repo, project, **form_data)
+            importer_factory.assert_called_with(**form_data)
+            upload_from_string.assert_called()
+            assert result.message == '1 new task was imported successfully ', result
+
+            # validate task created has private fields url, gold_answers url
+            # calibration and exported flag set
+            tasks = task_repo.filter_tasks_by(project_id=project.id)
+            assert len(tasks) == 1, len(tasks)
+            task = tasks[0]
+            assert task.info['private_json__upload_url'] == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_data.json'
+            assert task.gold_answers == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_gold_answer.json'
+            assert task.calibration and task.exported

@@ -91,7 +91,7 @@ class TestS3Uploader(Test):
     def test_upload_remove_query_params(self, generate_url, set_content):
         with patch.dict(self.flask_app.config, self.default_config):
             generate_url.return_value = 'https://s3.storage.com/bucket/key?query_1=aaaa&query_2=bbbb'
-            url = s3_upload_file('bucket', 'a_file', 'a_file', {})
+            url = s3_upload_file('bucket', 'a_file', 'a_file', {}, 'dev')
             assert url == 'https://s3.storage.com/bucket/key'
 
     @with_context

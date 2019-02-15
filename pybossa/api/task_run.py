@@ -44,6 +44,7 @@ from pybossa.sched import can_post, after_save
 from pybossa.model.completion_event import mark_if_complete
 from pybossa.core import uploader
 from pybossa.auth import ensure_authorized_to, is_authorized
+from pybossa.cloud_store_api.s3 import upload_json_data
 
 
 class TaskRunAPI(APIBase):
@@ -67,6 +68,7 @@ class TaskRunAPI(APIBase):
         self.check_can_post(project_id, task_id, user_id)
         info = data.get('info')
         with_encryption = app.config.get('ENABLE_ENCRYPTION')
+        upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
         if info is None:
             return
         path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
@@ -74,7 +76,9 @@ class TaskRunAPI(APIBase):
         _upload_files_from_request(info, request.files, path, with_encryption)
         if with_encryption:
             data['info'] = {
-                'pyb_answer_url': _upload_task_run(info, path)
+                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
+                    file_name='pyb_answer.json', encryption=with_encryption,
+                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
             }
 
     def check_can_post(self, project_id, task_id, user_ip_or_id):
@@ -221,13 +225,15 @@ def _upload_files_from_json(task_run_info, upload_path, with_encryption):
         if key.endswith('__upload_url'):
             filename = value.get('filename')
             content = value.get('content')
+            upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
             if filename is None or content is None:
                 continue
             out_url = s3_upload_from_string(app.config.get("S3_BUCKET"),
                                             content,
                                             filename,
                                             directory=upload_path, conn_name='S3_TASKRUN',
-                                            with_encryption = with_encryption)
+                                            with_encryption=with_encryption,
+                                            upload_root_dir=upload_root_dir)
             task_run_info[key] = out_url
 
 
@@ -239,13 +245,5 @@ def _upload_files_from_request(task_run_info, files, upload_path, with_encryptio
         s3_url = s3_upload_file_storage(app.config.get("S3_BUCKET"),
                                         file_obj,
                                         directory=upload_path, conn_name='S3_TASKRUN',
-                                        with_encryption = with_encryption)
+                                        with_encryption=with_encryption)
         task_run_info[key] = s3_url
-
-
-def _upload_task_run(task_run, upload_path):
-    content = json.dumps(task_run, ensure_ascii=False)
-    return s3_upload_from_string(app.config.get("S3_BUCKET"),
-                                 content, 'pyb_answer.json',
-                                 directory=upload_path, conn_name='S3_TASKRUN',
-                                 with_encryption = True)

@@ -35,6 +35,9 @@ from werkzeug.datastructures import MultiDict
 import copy
 import json
 from pybossa.util import delete_import_csv_file
+from pybossa.cloud_store_api.s3 import upload_json_data
+import hashlib
+from flask import url_for
 
 
 def validate_s3_bucket(task):
@@ -119,6 +122,37 @@ class Importer(object):
         self._importers['youtube'] = BulkTaskYoutubeImport
         self._importer_constructor_params['youtube'] = youtube_params
 
+    def upload_private_data(self, task, project_id):
+        private_fields = task.pop('private_fields', None)
+        private_gold_answers = task.pop('private_gold_answers', None)
+        if not (private_fields or private_gold_answers):
+            return
+
+        encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
+        bucket = current_app.config.get("S3_REQUEST_BUCKET")
+        task_hash = hashlib.md5(json.dumps(task)).hexdigest()
+        path = "{}/{}".format(project_id, task_hash)
+        s3_conn_type = current_app.config.get('S3_CONN_TYPE')
+        if private_fields:
+            file_name = 'task_private_data.json'
+            values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            private_json__upload_url = url_for('fileproxy.encrypted_file', **values)
+            upload_json_data(bucket=bucket,
+                json_data=private_fields, upload_path=path,
+                file_name=file_name, encryption=encryption,
+                conn_name='S3_TASK_REQUEST')
+            task['info']['private_json__upload_url'] = private_json__upload_url
+
+        if private_gold_answers:
+            file_name = 'task_private_gold_answer.json'
+            values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+            gold_answers_url = url_for('fileproxy.encrypted_file', **values)
+            upload_json_data(bucket=bucket,
+                json_data=private_gold_answers, upload_path=path,
+                file_name=file_name, encryption=encryption,
+                conn_name='S3_TASK_REQUEST')
+            task['gold_answers'] = gold_answers_url
+
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
@@ -154,6 +188,7 @@ class Importer(object):
         validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
         for task_data in tasks:
+            self.upload_private_data(task_data, project.id)
             task = Task(project_id=project.id, n_answers=n_answers)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.find_duplicate(project_id=project.id,

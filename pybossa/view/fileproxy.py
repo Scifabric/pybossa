@@ -33,7 +33,7 @@ from pybossa.hdfs.client import HDFSKerberos
 from pybossa.sched import has_lock
 
 
-blueprint = Blueprint('files', __name__)
+blueprint = Blueprint('fileproxy', __name__)
 
 
 def no_cache(view_func):
