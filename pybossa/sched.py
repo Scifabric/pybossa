@@ -71,10 +71,14 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
                      present_gold_task=present_gold_task)
 
 
+def is_locking_scheduler(sched):
+    return sched in [Schedulers.locked, Schedulers.user_pref, 'default']
+
+
 def can_read_task(task, user):
     project_id = task.project_id
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
+    if is_locking_scheduler(scheduler):
         return has_read_access(user) or has_lock(task.id, user.id,
                                                  timeout)
     else:
@@ -83,7 +87,7 @@ def can_read_task(task, user):
 
 def can_post(project_id, task_id, user_id_or_ip):
     scheduler = get_project_scheduler(project_id, session)
-    if scheduler == 'locked':
+    if is_locking_scheduler(scheduler):
         user_id = user_id_or_ip['user_id'] or \
                 user_id_or_ip['external_uid'] or \
                 user_id_or_ip['user_ip'] or \
@@ -100,7 +104,7 @@ def after_save(task_run, conn):
           task_run.external_uid or \
           task_run.user_ip or \
           '127.0.0.1'
-    if scheduler == 'locked':
+    if is_locking_scheduler(scheduler):
         release_lock(task_run.task_id, uid, TIMEOUT)
 
 
@@ -222,8 +226,8 @@ def locked_scheduler(query_factory):
                                  rand_within_priority=False,
                                  present_gold_task=False):
         if offset > 2:
-            raise BadRequest()
-        if offset == 1:
+            raise BadRequest('')
+        if offset > 0:
             return None
         task_id, lock_seconds = get_task_id_and_duration_for_project_user(project_id, user_id)
         if lock_seconds > 10:
@@ -481,8 +485,7 @@ def sched_variants():
             ('depth_first', 'Depth First'),
             (Schedulers.locked, 'Locked'),
             (Schedulers.user_pref, 'User Preference Scheduler'),
-            ('depth_first_all', 'Depth First All'),
-            ('locked', 'Locked')
+            ('depth_first_all', 'Depth First All')
             ]
 
 

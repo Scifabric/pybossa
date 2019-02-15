@@ -7005,13 +7005,12 @@ class TestWeb(web.Helper):
         # As admin should return nothing
         url = '/account/%s/?api_key=%s' % (user.name, admin.api_key)
 
-        res = self.app.get(url,
-                           content_type='application/json')
+        res = self.app.get(url, content_type='application/json')
         assert res.status_code == 200, res.status_code
         data = json.loads(res.data)
         assert data.get('user') is None, data
         assert data.get('title') == 'User data is restricted'
-        assert data.get('can_update') is False
+        assert data.get('can_update') is True
         assert data.get('projects_created') == []
         assert data.get('projects') == [], data
 
@@ -8533,7 +8532,6 @@ class TestWeb(web.Helper):
         assert user.user_pref != invalid_upref, "Invalid preferences should not be updated"
 
     @with_context
-<<<<<<< HEAD
     def test_task_redundancy_update_tasks_created_within_max_date_range(self):
         """Test task redundancy update applies to tasks created within days as per configured under REDUNDANCY_UPDATE_EXPIRATION"""
 
@@ -8717,7 +8715,8 @@ class TestWeb(web.Helper):
             data = json.loads(res.data)
             assert data.get('status') == 'success', data
             assert "Users unassigned or no user assigned to project" in data.get('flash'), data
-=======
+
+    @with_context
     @patch('pybossa.view.account.send_mail', autospec=True)
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
@@ -8739,4 +8738,3 @@ class TestWeb(web.Helper):
 
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert b'Use a valid email account' in str(res.data), res.data
->>>>>>> 2dd429f94b791aebcca4d7577ee6c9386fefebd0

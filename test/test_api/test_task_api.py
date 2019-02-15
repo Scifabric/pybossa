@@ -440,7 +440,7 @@ class TestTaskAPI(TestAPI):
         assert task['result'] == None, task
 
         # Stats
-        res = self.app.get("/api/task?limit=1&stats=True")
+        res = self.app.get('/api/task?limit=1&all=1&stats=True&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert 'stats' not in data[0].keys()

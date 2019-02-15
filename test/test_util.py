@@ -943,13 +943,13 @@ class TestRankProjects(object):
         util.get_avatar_url('local', '1.png', '1', True)
         mock_url_for.assert_called_with('uploads.uploaded_file',
                                         _external=True,
-                                        _scheme='https',
+                                        _scheme='http',
                                         filename='1/1.png')
 
         util.get_avatar_url('local', '1.png', '1', False)
         mock_url_for.assert_called_with('uploads.uploaded_file',
                                         _external=False,
-                                        _scheme='https',
+                                        _scheme='http',
                                         filename='1/1.png')
 
 

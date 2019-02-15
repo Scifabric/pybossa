@@ -500,7 +500,8 @@ def redirect_profile():
             form_data = cached_users.get_user_pref_metadata(current_user.name)
             form = UserPrefMetadataForm(**form_data)
             form.set_upref_mdata_choices()
-        return _show_own_profile(current_user, form, current_user)
+        can_update = can_update_user_info(current_user, current_user)
+        return _show_own_profile(current_user, form, current_user, can_update)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
 
@@ -536,12 +537,12 @@ def _show_public_profile(user, form, can_update):
         user_dict = cached_users.get_user_summary(user.name)
     else:
         user_dict = cached_users.public_get_user_summary(user.name)
-    if current_user.admin:
+    if user_dict and current_user.admin:
         user_dict['email_addr'] = user.email_addr
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_created = cached_users.public_published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
-    percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
+    percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1) if user_dict else None
 
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)

@@ -560,14 +560,14 @@ def send_mail(message_dict, mail_all=False):
     """Send email."""
     if mail_all or mail_with_enabled_users(message_dict):
         message = Message(**message_dict)
-    spam = False
-    for r in message_dict['recipients']:
-        acc, domain = r.split('@')
-        if domain in current_app.config.get('SPAM', []):
-            spam = True
-            break
-    if not spam:
-        mail.send(message)
+        spam = False
+        for r in message_dict['recipients']:
+            acc, domain = r.split('@')
+            if domain in current_app.config.get('SPAM', []):
+                spam = True
+                break
+        if not spam:
+            mail.send(message)
 
 
 def delete_bulk_tasks(data):

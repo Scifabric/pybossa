@@ -40,6 +40,7 @@ import app_settings
 
 def create_app(run_as_server=True):
     """Create web app."""
+    setup_logging(run_as_server)
     app = Flask(__name__.split('.')[0])
     configure_app(app)
     global talisman
@@ -47,7 +48,6 @@ def create_app(run_as_server=True):
         'default-src': ['*', '\'unsafe-inline\'', '\'unsafe-eval\'', 'data:',
                         'blob:']
     }, force_https=app.config.get('FORCE_HTTPS', True))
-    setup_logging(app, run_as_server)
     setup_assets(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
@@ -281,14 +281,11 @@ def setup_error_email(app):
         app.logger.addHandler(mail_handler)
 
 
-def setup_logging(app, run_as_server=True):
-    """ Setup logging. """
-    if run_as_server:
-        log_config = app.config.get('LOG_DICT_CONFIG')
-        if log_config:
-            from logging.config import dictConfig
-            app.logger  # see issue https://github.com/pallets/flask/issues/2023
-            dictConfig(log_config)
+def setup_logging(run_as_server=True):
+    log_config = app_settings.config.get('LOG_DICT_CONFIG')
+    if log_config:
+        from logging.config import dictConfig
+        dictConfig(log_config)
 
 
 def setup_login_manager(app):

@@ -452,10 +452,12 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
 
     @with_context
+    @patch('pybossa.api.task_run.can_post')
     @patch('pybossa.api.task_run.ContributionsGuard')
-    def test_taskrun_authenticated_post(self, guard):
+    def test_taskrun_authenticated_post(self, guard, mock_can_post):
         """Test API TaskRun creation and auth for authenticated users"""
         guard.return_value = mock_contributions_guard(True)
+        mock_can_post.return_value = True
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -470,12 +472,12 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
-        assert tmp.status_code == 403, err_msg
-        assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid project_id', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
-        assert err['target'] == 'taskrun', err_msg
+        assert tmp.status_code == 403, (err, err_msg)
+        assert err['status'] == 'failed', (err, err_msg)
+        assert err['status_code'] == 403, (err, err_msg)
+        assert err['exception_msg'] == 'Invalid project_id', (err, err_msg)
+        assert err['exception_cls'] == 'Forbidden', (err, err_msg)
+        assert err['target'] == 'taskrun', (err, err_msg)
 
         # With wrong task_id
         data['project_id'] = task.project_id
@@ -484,12 +486,12 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the task_id is wrong"
         err = json.loads(tmp.data)
-        assert tmp.status_code == 403, err_msg
-        assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid task_id', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
-        assert err['target'] == 'taskrun', err_msg
+        assert tmp.status_code == 403, (err, err_msg)
+        assert err['status'] == 'failed', (err, err_msg)
+        assert err['status_code'] == 403, (err, err_msg)
+        assert err['exception_msg'] == 'Invalid task_id', (err, err_msg)
+        assert err['exception_cls'] == 'Forbidden', (err, err_msg)
+        assert err['target'] == 'taskrun', (err, err_msg)
 
         # Now with everything fine
         data = dict(
@@ -1172,289 +1174,3 @@ class TestTaskrunAPI(TestAPI):
 
         assert result is None, result
         # assert result is not None, result
-
-
-    @with_context
-    def test_taskrun_post_file(self):
-        """Test API TASKRUN file upload as authenticated user."""
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        # As an authenticated user
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-        # Without requesting the task first
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-        assert data['exception_msg'] == 'You must request a task first!'
-
-        fname = '%s/user_%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                                   user.id,
-                                   'test_file.jpg')
-        assert os.path.isfile(fname) is False, fname
-
-        # Succeeds after requesting a task
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-
-        res = self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id,
-                                                                   user.api_key))
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 200, data
-        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                              data['info']['container'],
-                              data['info']['file_name'])
-        assert os.path.isfile(fname) is True, fname
-        assert data['info']['container'] == 'user_%s' % user.id, data
-        assert data['info']['foo'] == 'bar', data
-
-        # Delete taskrun
-        # Owner with valid args can delete
-        url = '/api/taskrun/%s?api_key=%s' % (data['id'], user.api_key)
-        res = self.app.delete(url)
-        assert_equal(res.status, '204 NO CONTENT', res.data)
-
-        # wrong project_id
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=-1,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-
-        # Wrong attribute
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       wrong=img)
-
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 415, data
-
-        # reserved key
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img,
-                       id=3)
-
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 400, data
-        assert data['exception_msg'] == 'Reserved keys in payload', data
-
-    @with_context
-    def test_taskrun_post_file_anon(self):
-        """Test API TASKRUN file upload as anon user."""
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-        # As an anon user
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-        # Without requesting the task first
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-        assert data['exception_msg'] == 'You must request a task first!'
-
-        fname = '%s/anonymous/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                                     'test_file.jpg')
-        assert os.path.isfile(fname) is False, fname
-
-        # Succeeds after requesting a task
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-
-        res = self.app.get('/api/project/%s/newtask' % project.id)
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 200, data
-        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                              data['info']['container'],
-                              data['info']['file_name'])
-        assert os.path.isfile(fname) is True, fname
-        assert data['info']['container'] == 'anonymous', data
-
-        # wrong project_id
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=-1,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 403, data
-
-
-        # reserved key
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       file=img)
-
-
-    @with_context
-    def test_taskrun_post_no_filename(self):
-        """Test API TASKRUN post file without a name."""
-        # Succeeds after requesting a task
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        img = (io.BytesIO(b'test'), 'blob')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img)
-
-        res = self.app.get('/api/project/%s/newtask' % project.id)
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 200, data
-        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                              data['info']['container'],
-                              data['info']['file_name'])
-        assert os.path.isfile(fname) is True, fname
-        assert data['info']['container'] == 'anonymous', data
-        assert 'blob' not in data['media_url']
-
-    @with_context
-    def test_taskrun_post_no_info(self):
-        """Test API TASKRUN post file without info."""
-        # Succeeds after requesting a task
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        # With no info data
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       file=img)
-
-        res = self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id,
-                                                                   user.api_key))
-        url = '/api/taskrun?api_key=%s' % user.api_key
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 200, data
-        fname = '%s/%s/%s' % (self.flask_app.config['UPLOAD_FOLDER'],
-                              data['info']['container'],
-                              data['info']['file_name'])
-        assert os.path.isfile(fname) is True, fname
-        assert data['info']['container'] == 'user_%s' % user.id, data
-
-    @with_context
-    def test_taskrun_post_anon_no_info(self):
-        """Test API TASKRUN post file without info."""
-        # Succeeds after requesting a task
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        # Wrong attribute
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       wrong=img)
-
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 415, data
-
-    @with_context
-    def test_taskrun_post_anon_reserved(self):
-        """Test API TASKRUN post file reserved keys in payload."""
-        # Succeeds after requesting a task
-        admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner)
-        project2 = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-
-        img = (io.BytesIO(b'test'), 'test_file.jpg')
-
-        payload = dict(project_id=project.id,
-                       task_id=task.id,
-                       info=json.dumps(dict(foo="bar")),
-                       file=img,
-                       id=3)
-
-
-        url = '/api/taskrun'
-        res = self.app.post(url, data=payload,
-                            content_type="multipart/form-data")
-        data = json.loads(res.data)
-        assert res.status_code == 400, data
-        assert data['exception_msg'] == 'Reserved keys in payload', data

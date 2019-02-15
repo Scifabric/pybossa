@@ -105,9 +105,9 @@ class TestProjectPublicationView(web.Helper):
         mock_result_repo.assert_called_with(project)
 
         # Try again
-        resp = self.app.post('/project/%s/publish' % self.project.short_name,
+        resp = self.app.post('/project/%s/1/publish' % project.short_name,
                              follow_redirects=True)
-        assert 'Project already published' in resp.data
+        assert 'Project published' in resp.data, resp.data
 
 
     @with_context

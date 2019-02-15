@@ -30,7 +30,7 @@ from pybossa.sched import (
 )
 from pybossa.core import sentinel
 from pybossa.contributions_guard import ContributionsGuard
-from default import with_context
+from default import with_context, flask_app
 import json
 from mock import patch
 from helper.gig_helper import make_admin, make_subadmin
@@ -54,7 +54,7 @@ class TestLockedSched(sched.Helper):
     def test_get_locked_task(self):
         owner = UserFactory.create(id=500)
         project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
+        project.info['sched'] = Schedulers.locked
         project_repo.save(project)
 
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
@@ -79,7 +79,7 @@ class TestLockedSched(sched.Helper):
     def test_get_locked_task_offset(self):
         owner = UserFactory.create(id=500)
         project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
+        project.info['sched'] = Schedulers.locked
         project_repo.save(project)
 
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
@@ -89,9 +89,9 @@ class TestLockedSched(sched.Helper):
         t1 = get_locked_task(project.id, 1)
         assert t1[0].id == task1.id
         t2 = get_locked_task(project.id, 1, offset=1)
-        assert t2[0].id == task2.id
+        assert t2 is None
         t3 = get_locked_task(project.id, 1, offset=2)
-        assert not t3
+        assert t3 is None
 
     @with_context
     def test_taskrun_submission(self):
@@ -109,36 +109,40 @@ class TestLockedSched(sched.Helper):
         self.set_proj_passwd_cookie(project, user)
         res = self.app.get('api/project/{}/newtask?api_key={}'
                            .format(project.id, user.api_key))
-        rec_task1 = json.loads(res.data)
+        user_rec_task = json.loads(res.data)
 
         res = self.app.get('api/project/{}/newtask?api_key={}'
                            .format(project.id, owner.api_key))
-        rec_task2 = json.loads(res.data)
+        owner_rec_task = json.loads(res.data)
 
         # users get different tasks
-        assert rec_task1['info'] != rec_task2['info']
+        assert user_rec_task['info'] != owner_rec_task['info']
+
+        user_task = task1 if task1.id == user_rec_task['id'] else task2
+        owner_task = task1 if task1.id == owner_rec_task['id'] else task2
 
         # submit answer for the wrong task
         # stamp contribution guard first
         guard = ContributionsGuard(sentinel.master)
-        guard.stamp(task1, {'user_id': owner.id})
+        guard._remove_task_stamped(owner_task, {'user_id': owner.id})
 
         tr = {
             'project_id': project.id,
-            'task_id': task1.id,
+            'task_id': owner_task.id,
             'info': 'hello'
         }
         res = self.app.post('api/taskrun?api_key={}'.format(owner.api_key),
                             data=json.dumps(tr))
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 403, (res.status_code, res.data)
 
         # submit answer for the right task
-        tr['task_id'] = task2.id
+        guard.stamp(owner_task, {'user_id': owner.id})
+        tr['task_id'] = owner_task.id
         res = self.app.post('api/taskrun?api_key={}'.format(owner.api_key),
                             data=json.dumps(tr))
         assert res.status_code == 200, res.status_code
 
-        tr['task_id'] = task1.id
+        tr['task_id'] = user_task.id
         res = self.app.post('api/taskrun?api_key={}'.format(user.api_key),
                             data=json.dumps(tr))
         assert res.status_code == 200, res.status_code
@@ -385,95 +389,98 @@ class TestLockedSched(sched.Helper):
         assert resp['id'] == tasks[0].id, \
             'task presented should not be gold task'
 
-    def test_anonymous_taskrun_submission(self):
-        owner = UserFactory.create(id=500)
+    # @with_context
+    # def test_anonymous_taskrun_submission(self):
+    #     owner = UserFactory.create(id=500)
 
-        project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
-        project_repo.save(project)
+    #     project = ProjectFactory.create(owner=owner)
+    #     project.info['sched'] = Schedulers.locked
+    #     project_repo.save(project)
 
-        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
-        task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
+    #     task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+    #     task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
 
-        res = self.app.get('api/project/{}/newtask'.format(project.id))
-        rec_task1 = json.loads(res.data)
+    #     res = self.app.get('api/project/{}/newtask'.format(project.id))
+    #     rec_task1 = json.loads(res.data)
 
-        res = self.app.get('api/project/{}/newtask?api_key={}'
-                           .format(project.id, owner.api_key))
-        rec_task2 = json.loads(res.data)
+    #     res = self.app.get('api/project/{}/newtask?api_key={}'
+    #                        .format(project.id, owner.api_key))
+    #     rec_task2 = json.loads(res.data)
 
-        # users get different tasks
-        assert rec_task1['info'] != rec_task2['info']
+    #     # users get different tasks
+    #     assert rec_task1['info'] != rec_task2['info']
 
-        tr = {
-            'project_id': project.id,
-            'task_id': task1.id,
-            'info': 'hello'
-        }
+    #     tr = {
+    #         'project_id': project.id,
+    #         'task_id': task1.id,
+    #         'info': 'hello'
+    #     }
 
-        # submit answer for the right task
-        res = self.app.post('api/taskrun', data=json.dumps(tr))
-        assert res.status_code == 200, res.status_code
+    #     # submit answer for the right task
+    #     res = self.app.post('api/taskrun', data=json.dumps(tr))
+    #     assert res.status_code == 200, res.status_code
 
-    @with_context
-    def test_anonymous_taskrun_submission_external_uid(self):
-        owner = UserFactory.create(id=500)
+    # @with_context
+    # def test_anonymous_taskrun_submission_external_uid(self):
+    #     owner = UserFactory.create(id=500)
 
-        project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
-        project_repo.save(project)
+    #     project = ProjectFactory.create(owner=owner)
+    #     project.info['sched'] = Schedulers.locked
+    #     project_repo.save(project)
 
-        task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
-        task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
+    #     task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
+    #     task2 = TaskFactory.create(project=project, info='task 2', n_answers=1)
 
-        headers = self.get_headers_jwt(project)
+    #     headers = self.get_headers_jwt(project)
 
-        res = self.app.get('api/project/{}/newtask?external_uid={}'
-                           .format(project.id, '1xa'), headers=headers)
-        rec_task1 = json.loads(res.data)
+    #     res = self.app.get('api/project/{}/newtask?external_uid={}'
+    #                        .format(project.id, '1xa'), headers=headers)
+    #     rec_task1 = json.loads(res.data)
 
-        res = self.app.get('api/project/{}/newtask?external_uid={}'
-                           .format(project.id, '2xa'), headers=headers)
-        rec_task2 = json.loads(res.data)
+    #     res = self.app.get('api/project/{}/newtask?external_uid={}'
+    #                        .format(project.id, '2xa'), headers=headers)
+    #     rec_task2 = json.loads(res.data)
 
-        # users get different tasks
-        assert rec_task1['info'] != rec_task2['info']
+    #     # users get different tasks
+    #     assert rec_task1['info'] != rec_task2['info']
 
-        tr = {
-            'project_id': project.id,
-            'task_id': task1.id,
-            'info': 'hello'
-        }
+    #     tr = {
+    #         'project_id': project.id,
+    #         'task_id': task1.id,
+    #         'info': 'hello'
+    #     }
 
-        # submit answer for the right task
-        res = self.app.post('api/taskrun?external_uid=1xa', data=json.dumps(tr),
-                            headers=headers)
-        assert res.status_code == 200, res.status_code
+    #     # submit answer for the right task
+    #     res = self.app.post('api/taskrun?external_uid=1xa', data=json.dumps(tr),
+    #                         headers=headers)
+    #     assert res.status_code == 200, (res.status_code, res.body)
 
     @with_context
     def test_one_task(self):
         owner = UserFactory.create(id=500)
 
         project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
+        project.info['sched'] = Schedulers.locked
         project_repo.save(project)
 
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=1)
 
-        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
         rec_task1 = json.loads(res.data)
 
         res = self.app.get('api/project/{}/newtask?api_key={}'
                            .format(project.id, owner.api_key))
         rec_task2 = json.loads(res.data)
-        assert not rec_task2
+        assert rec_task1['id'] == task1.id
+        assert rec_task2['id'] == rec_task1['id']
 
     @with_context
     def test_lock_expiration(self):
         owner = UserFactory.create(id=500)
 
         project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
+        project.info['sched'] = Schedulers.locked
         project_repo.save(project)
 
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
@@ -484,17 +491,18 @@ class TestLockedSched(sched.Helper):
         # fake expired user lock
         acquire_lock(task1.id, 1000, 2, -10)
 
-        res = self.app.get('api/project/{}/newtask'.format(project.id))
+        res = self.app.get('api/project/{}/newtask?api_key={}'
+                           .format(project.id, owner.api_key))
         rec_task1 = json.loads(res.data)
 
-        assert rec_task1['info'] == 'task 1'
+        assert rec_task1['info'] == 'task 1', rec_task1
 
     @with_context
     def test_invalid_offset(self):
         owner = UserFactory.create(id=500)
 
         project = ProjectFactory.create(owner=owner)
-        project.info['sched'] = 'locked'
+        project.info['sched'] = Schedulers.locked
         project_repo.save(project)
 
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)

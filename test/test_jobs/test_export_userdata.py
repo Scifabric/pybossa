@@ -83,7 +83,7 @@ class TestExportAccount(Test):
                      bcc=[admin_addr],
                      attachments=['the_attachment_file'])
         m1.assert_called_with(mail_dict)
-        assert 'https' in personal_contributions_link
+        assert 'http' in personal_contributions_link, personal_contributions_link
 
     @with_context
     @patch('pybossa.core.uploader.delete_file')

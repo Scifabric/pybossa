@@ -29,7 +29,7 @@ class TestSendMailJob(object):
     def test_send_mail_craetes_message(self, Message, mail):
         mail_dict = dict(subject='Hello', recipients=['pepito@hotmail.con'],
                          body='Hello Pepito!')
-        send_mail(mail_dict)
+        send_mail(mail_dict, mail_all=True)
         Message.assert_called_once_with(**mail_dict)
         assert mail.send.called
 
@@ -39,7 +39,7 @@ class TestSendMailJob(object):
     def test_send_mail_sends_mail(self, Message, mail):
         mail_dict = dict(subject='Hello', recipients=['pepito@hotmail.con'],
                          body='Hello Pepito!')
-        send_mail(mail_dict)
+        send_mail(mail_dict, mail_all=True)
 
         mail.send.assert_called_once_with(Message())
         assert mail.send.called
@@ -50,7 +50,7 @@ class TestSendMailJob(object):
     def test_send_mail_filters_spam(self, Message, mail):
         mail_dict = dict(subject='Hello', recipients=['pepito@fake.com'],
                          body='Hello Pepito!')
-        send_mail(mail_dict)
+        send_mail(mail_dict, mail_all=True)
 
         assert mail.send.called is False
 
@@ -61,6 +61,6 @@ class TestSendMailJob(object):
         mail_dict = dict(subject='Hello', recipients=['juan@good.com',
                                                       'pepito@fake.com'],
                          body='Hello Pepito!')
-        send_mail(mail_dict)
+        send_mail(mail_dict, mail_all=True)
 
         assert mail.send.called is False

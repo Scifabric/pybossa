@@ -128,9 +128,7 @@ class TestProjectAPI(TestAPI):
             assert key not in data[0].keys()
 
         # Stats
-        from pdb import set_trace
-        set_trace()
-        res = self.app.get("/api/project?limit=1&stats=True&api_key=" + user.api_key)
+        res = self.app.get("/api/project?limit=1&all=1&stats=True&api_key=" + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert 'stats' in data[0].keys()
@@ -1485,8 +1483,11 @@ class TestProjectAPI(TestAPI):
             assert data['short_name'] == project.short_name
 
 
+    @with_context
     def test_project_filter_by_category_works(self):
         """Test API project filter by category works."""
+        users = UserFactory.create_batch(1, info=dict())
+        make_subadmin(users[0])
         category = CategoryFactory.create()
         projects_published = ProjectFactory.create_batch(2,
                                                          published=True,
@@ -1494,8 +1495,7 @@ class TestProjectAPI(TestAPI):
         projects_not_published = ProjectFactory.create_batch(2,
                                                              published=False,
                                                              category=category)
-        res = self.app.get('/api/project?category_id=%s' % category.id)
+        headers = [('Authorization', users[0].api_key)]
+        res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers)
         data = json.loads(res.data)
-        assert len(data) == 2, data
-        assert data[0]['id'] == projects_published[0].id
-        assert data[1]['id'] == projects_published[1].id
+        assert len(data) == 4, data
