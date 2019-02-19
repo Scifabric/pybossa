@@ -164,8 +164,8 @@ class Importer(object):
         import_headers = importer.headers()
         mismatch_headers = []
 
+        msg = ''
         if import_headers:
-            msg = None
             if not project:
                 msg = gettext('Could not load project info')
             else:
@@ -200,7 +200,7 @@ class Importer(object):
                         n += 1
                     except Exception as e:
                         current_app.logger.exception(msg)
-                        validator.add_error(e.message)
+                        validator.add_error(str(e))
 
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')

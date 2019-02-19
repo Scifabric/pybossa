@@ -839,7 +839,7 @@ def import_task(short_name):
                 flash(gettext(unicode(e)), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
             except Exception as e:
-                msg = 'Oops! Looks like there was an error!'
+                msg = u'Oops! Looks like there was an error! {}'.format(e)
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
