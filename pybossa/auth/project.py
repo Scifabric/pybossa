@@ -66,8 +66,6 @@ class ProjectAuth(object):
         return self.only_admin_or_subadminowner(user, project)
 
     def _delete(self, user, project):
-        if self.result_repo.get_by(project_id=project.id):
-            return False
         return self.only_admin_or_subadminowner(user, project)
 
     def _publish(self, user, project):
