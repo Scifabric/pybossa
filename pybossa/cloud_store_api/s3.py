@@ -171,6 +171,7 @@ def get_file_from_s3(s3_bucket, path, conn_name=DEFAULT_CONN, decrypt=False):
         cipher = AESWithGCM(secret)
         content = cipher.decrypt(content)
     temp_file.write(content)
+    temp_file.seek(0)
     return temp_file
 
 

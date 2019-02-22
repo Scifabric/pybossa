@@ -22,6 +22,7 @@ import boto
 from default import Test, with_context
 from pybossa.cloud_store_api.s3 import *
 from pybossa.cloud_store_api.connection import ProxiedKey
+from pybossa.encryption import AESWithGCM
 from nose.tools import assert_raises
 from werkzeug.exceptions import BadRequest
 from werkzeug.datastructures import FileStorage
@@ -111,11 +112,25 @@ class TestS3Uploader(Test):
             logger.assert_called()
 
     @with_context
-    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_to_filename')
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_as_string')
     def test_get_file_from_s3(self, get_contents):
+        get_contents.return_value = 'abcd'
         with patch.dict(self.flask_app.config, self.default_config):
             get_file_from_s3('test_bucket', '/the/key')
             get_contents.assert_called()
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.get_contents_as_string')
+    def test_decrypts_file_from_s3(self, get_contents):
+        config = self.default_config.copy()
+        config['FILE_ENCRYPTION_KEY'] = 'abcd'
+        config['ENABLE_ENCRYPTION'] = True
+        cipher = AESWithGCM('abcd')
+        get_contents.return_value = cipher.encrypt('hello world')
+        with patch.dict(self.flask_app.config, config):
+            fp = get_file_from_s3('test_bucket', '/the/key', decrypt=True)
+            content = fp.read()
+            assert content == 'hello world'
 
     @with_context
     def test_no_checksum_key(self):
