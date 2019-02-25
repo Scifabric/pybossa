@@ -33,7 +33,6 @@ from pybossa.util import is_reserved_name
 from pybossa.core import auditlog_repo, result_repo, http_signer
 from pybossa.auditlogger import AuditLogger
 from pybossa.data_access import ensure_user_assignment_to_project
-from pybossa.data_access import project_restricted_keys
 
 auditlogger = AuditLogger(auditlog_repo, caller='api')
 
@@ -52,9 +51,6 @@ class ProjectAPI(APIBase):
                          'published', 'secret_key'])
     private_keys = set(['secret_key'])
     restricted_keys = set()
-    pr_keys = project_restricted_keys()
-    if pr_keys:
-        restricted_keys.add(pr_keys)
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
