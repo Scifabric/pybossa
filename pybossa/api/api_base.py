@@ -96,7 +96,7 @@ class APIBase(MethodView):
                               'helpingmaterial',
                               'announcement']
 
-    immutable_keys = set([])
+    immutable_keys = set(['short_name'])
 
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
@@ -441,6 +441,9 @@ class APIBase(MethodView):
         for key in data:
             if key not in self.immutable_keys:
                 setattr(existing, key, data[key])
+            elif not (getattr(existing, key) == data[key]):
+                raise Forbidden('Cannot change {} via API'.format(key))
+
         if new_upload:
             existing.media_url = new_upload['media_url']
             existing.info['container'] = new_upload['info']['container']

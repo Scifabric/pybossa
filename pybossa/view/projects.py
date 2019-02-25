@@ -353,7 +353,6 @@ def project_cat_index(category, page):
 def new():
     ensure_authorized_to('create', Project)
     form = ProjectForm(request.body)
-
     def respond(errors):
         response = dict(template='projects/new.html',
                         title=gettext("Create a Project"),
@@ -591,6 +590,7 @@ def update(short_name):
 
     sync_enabled = current_app.config.get('SYNC_ENABLED')
     project, owner, ps = project_by_shortname(short_name)
+
     def handle_valid_form(form):
         project, owner, ps = project_by_shortname(short_name)
 
@@ -600,7 +600,6 @@ def update(short_name):
         old_project.info = old_info
         if form.id.data == new_project.id:
             new_project.name = form.name.data
-            new_project.short_name = form.short_name.data
             new_project.description = form.description.data
             new_project.long_description = form.long_description.data
             new_project.hidden = form.hidden.data

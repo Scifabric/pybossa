@@ -2519,10 +2519,10 @@ class TestWeb(web.Helper):
         assert "Project updated!" in res.data, res.data
         err_msg = "Project name not updated %s" % project.name
         assert project.name == "New Sample Project", err_msg
-        err_msg = "Project short name not updated %s" % project.short_name
-        assert project.short_name == "newshortname", err_msg
+
         err_msg = "Project description not updated %s" % project.description
         assert project.description == "New description", err_msg
+
         err_msg = "Project long description not updated %s" % project.long_description
         assert project.long_description == "New long desc", err_msg
 
@@ -2643,9 +2643,6 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
 
         res = self.update_project(new_name="")
-        assert "This field is required" in res.data
-
-        res = self.update_project(new_short_name="")
         assert "This field is required" in res.data
 
         res = self.update_project(new_description="")
@@ -7855,13 +7852,6 @@ class TestWeb(web.Helper):
         assert mock_rank.call_args_list[2][0][0][0]['name'] == project.name
         assert mock_rank.call_args_list[2][0][1] == order_by
         assert mock_rank.call_args_list[2][0][2] == desc
-
-    @with_context
-    @patch('pybossa.view.projects.rank', autospec=True)
-    def test_project_index_historical_contributions(self, mock_rank):
-        url = 'project/category/historical_contributions'
-        self.app.get(url, follow_redirects=True)
-        assert not mock_rank.called
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',

@@ -8,6 +8,7 @@ python:
 # git submodules workaround
 git:
   submodules: false
+  depth: false
 # env:
 # - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
 services:
