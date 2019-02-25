@@ -1085,7 +1085,7 @@ def get_file_path_for_import_csv(csv_file):
         with_encryption = current_app.config.get('ENABLE_ENCRYPTION')
         path = s3_upload_file_storage(s3_bucket, csv_file, directory=container,
             file_type_check=False, return_key_only=True,
-            with_encryption=with_encryption)
+            with_encryption=with_encryption, conn_name='S3_IMPORT')
     else:
         tmpfile = NamedTemporaryFile(delete=False)
         path = tmpfile.name
