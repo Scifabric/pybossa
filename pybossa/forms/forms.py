@@ -646,7 +646,8 @@ class GenericUserImportForm(object):
 
 
 class UserPrefMetadataForm(Form):
-    """Form for admins to add metadata for users."""
+    """Form for admins to add metadata for users or for users to update their
+    own metadata"""
     languages = Select2Field(
         lazy_gettext('Language(s)'), choices=[],default="")
     locations = Select2Field(
@@ -675,6 +676,10 @@ class UserPrefMetadataForm(Form):
     review = TextAreaField(
         lazy_gettext('Additional comments'), default="")
 
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        self._disabled = {}
+
     def set_upref_mdata_choices(self):
         upref_mdata_choices = app_settings.upref_mdata.get_upref_mdata_choices()
         self.languages.choices = upref_mdata_choices['languages']
@@ -682,6 +687,11 @@ class UserPrefMetadataForm(Form):
         self.timezone.choices = upref_mdata_choices['timezones']
         self.user_type.choices = upref_mdata_choices['user_types']
 
+    def set_disabled(self, disabled):
+        self._disabled = {getattr(self, disabled_field['name']): disabled_field['reason'] for disabled_field in (disabled or [])}
+    
+    def is_disabled(self, field):
+        return self._disabled.get(field, False)
 
 class TransferOwnershipForm(Form):
     email_addr = EmailField(lazy_gettext('Email of the new owner'))

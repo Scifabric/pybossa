@@ -517,7 +517,9 @@ def profile(name):
         form = UserPrefMetadataForm(**form_data)
         form.set_upref_mdata_choices()
     can_update = can_update_user_info(current_user, user)
-
+    if form and isinstance(can_update, dict):
+        form.set_disabled(can_update['disabled'])
+        can_update = True
     if user.id != current_user.id:
         return _show_public_profile(user, form, can_update)
     else:
