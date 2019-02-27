@@ -116,12 +116,12 @@ class TestImportTasksJob(Test):
     @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.importer')
     def test_create_tasks_throws_exception(self, importer, send_mail):
-        importer.create_tasks.side_effect = Exception()
+        importer.create_tasks.side_effect = Exception('Very bad very bad')
         uploader_name = 'Cersei Lannister'
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name
-        msg = (u'Import tasks to your project {0} by {1} failed'
+        msg = (u'Import tasks to your project {0} by {1} failed. Error: Very bad very bad'
                .format(project.name, uploader_name))
         with patch.dict(self.flask_app.config, {'BRAND': 'GOT'}):
             body = (u'Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'

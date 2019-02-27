@@ -755,8 +755,8 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         send_mail(mail_dict)
         raise
     except Exception as e:
-        msg = (u'Import tasks to your project {0} by {1} failed'
-               .format(project.name, current_user_fullname))
+        msg = (u'Import tasks to your project {} by {} failed. Error: {}'
+               .format(project.name, current_user_fullname, str(e)))
         subject = 'Tasks Import to your project %s' % project.name
         body = (u'Hello,\n\n{0}\n\nPlease contact {1} administrator,\nThe {1} team.'
                 .format(msg, current_app.config.get('BRAND')))

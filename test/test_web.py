@@ -6247,6 +6247,27 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.csv.requests.get')
+    @patch('pybossa.repositories.task_repository.ensure_task_assignment_to_project')
+    def test_bulk_csv_import_error(self, ensure, Mock, mock):
+        """Test WEB bulk import works"""
+        ensure.side_effect = Exception('Task is missing data access level.')
+        csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
+                                headers={'content-type': 'text/plain'},
+                                encoding='utf-8')
+        Mock.return_value = csv_file
+        self.register()
+        self.signin()
+        self.new_project()
+        project = db.session.query(Project).first()
+        url = '/project/%s/tasks/import' % (project.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                    'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        assert "1 task import failed due to Task is missing data access level" in res.data
+
+    @with_context
+    @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.csv.requests.get')
     def test_bulk_gdocs_import_works(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,

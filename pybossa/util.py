@@ -1079,12 +1079,13 @@ def validate_required_fields(data):
 def get_file_path_for_import_csv(csv_file):
     from pybossa.core import uploader
 
-    s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
+    s3_bucket = current_app.config.get('S3_IMPORT_BUCKET')
     container = 'user_{}'.format(current_user.id) if current_user else 'user'
     if s3_bucket:
-        path = s3_upload_file_storage(s3_bucket,
-            csv_file, directory=container,
-            file_type_check=False, return_key_only=True)
+        with_encryption = current_app.config.get('ENABLE_ENCRYPTION')
+        path = s3_upload_file_storage(s3_bucket, csv_file, directory=container,
+            file_type_check=False, return_key_only=True,
+            with_encryption=with_encryption, conn_name='S3_IMPORT')
     else:
         tmpfile = NamedTemporaryFile(delete=False)
         path = tmpfile.name
@@ -1095,7 +1096,9 @@ def get_file_path_for_import_csv(csv_file):
 def get_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
-        return get_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
+        decrypt = current_app.config.get('ENABLE_ENCRYPTION')
+        return get_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT',
+            decrypt=decrypt)
     else:
         return open(path)
 
