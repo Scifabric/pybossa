@@ -1068,7 +1068,7 @@ def add_metadata(name):
 def get_form_data(request, user, can_update):
     if isinstance(can_update, dict):
         # Some fields are not updatable.
-        # Replace the data that was submitted for those fields
+        # Replace (or add if missing) the data that was submitted for those fields
         # with the current actual data for the user
         # so that they won't be updated.
         user_data = get_user_data_as_form(user)
