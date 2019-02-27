@@ -678,7 +678,7 @@ class UserPrefMetadataForm(Form):
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self._disabled = {}
+        self.set_can_update(kwargs.get('can_update', True))
 
     def set_upref_mdata_choices(self):
         upref_mdata_choices = app_settings.upref_mdata.get_upref_mdata_choices()
@@ -687,8 +687,18 @@ class UserPrefMetadataForm(Form):
         self.timezone.choices = upref_mdata_choices['timezones']
         self.user_type.choices = upref_mdata_choices['user_types']
 
-    def set_disabled(self, disabled):
-        self._disabled = {getattr(self, disabled_field['name']): disabled_field['reason'] for disabled_field in (disabled or [])}
+    def set_can_update(self, can_update):
+        self._disabled = self._get_disabled_fields(can_update)
+
+    def _get_disabled_fields(self, can_update):
+        if can_update is True:
+            return {}
+        elif can_update is False:
+            return {field: 'Form is not updatable.' for field in self}
+        elif isinstance(can_update, dict):
+            return {getattr(self, name): reason for name, reason in can_update.get('disabled', {}).iteritems()}
+        else:
+            raise ValueError('Unsupported value for can_update.')
     
     def is_disabled(self, field):
         return self._disabled.get(field, False)

@@ -512,14 +512,12 @@ def profile(name):
         raise abort(404)
 
     form = None
+    can_update = False
     if app_settings.upref_mdata:
+        can_update = can_update_user_info(current_user, user)
         form_data = cached_users.get_user_pref_metadata(user.name)
-        form = UserPrefMetadataForm(**form_data)
+        form = UserPrefMetadataForm(can_update=can_update, **form_data)
         form.set_upref_mdata_choices()
-    can_update = can_update_user_info(current_user, user)
-    if form and isinstance(can_update, dict):
-        form.set_disabled(can_update['disabled'])
-        can_update = True
     if user.id != current_user.id:
         return _show_public_profile(user, form, can_update)
     else:
@@ -1015,10 +1013,10 @@ def delete(name):
 
 
 @blueprint.route('/save_metadata/<name>', methods=['POST'])
-@admin_or_subadmin_required
 def add_metadata(name):
     """
-    Admin can save metadata for selected user
+    Admin can save metadata for selected user.
+    Regular user can save their own metadata.
 
     Redirects to public profile page for selected user.
 
@@ -1027,7 +1025,8 @@ def add_metadata(name):
     can_update = can_update_user_info(current_user, user)
     if not can_update:
         abort(403)
-    form = UserPrefMetadataForm(request.form)
+    form_data = get_form_data(request, user, can_update)
+    form = UserPrefMetadataForm(form_data, can_update=can_update)
     form.set_upref_mdata_choices()
 
     if not form.validate():
@@ -1065,6 +1064,38 @@ def add_metadata(name):
     delete_memoized(get_user_preferences, user.id)
     flash("Input saved successfully", "info")
     return redirect(url_for('account.profile', name=name))
+
+def get_form_data(request, user, can_update):
+    if isinstance(can_update, dict):
+        # Some fields are not updatable.
+        # Replace the data that was submitted for those fields
+        # with the current actual data for the user
+        # so that they won't be updated.
+        user_data = get_user_data_as_form(user)
+        # Get a mutable MultiDict
+        result = request.form.copy()
+        for field_name in can_update['disabled'].iterkeys():
+            value = user_data[field_name]
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+        return result
+    else:
+        return request.form
+
+def get_user_data_as_form(user):
+    user_pref = user.user_pref
+    metadata = user.info.get('metadata', {})
+    return {
+        'languages': user_pref.get('languages'),
+        'locations': user_pref.get('locations'),
+        'user_type': metadata.get('user_type'),
+        'work_hours_from': metadata.get('work_hours_from'),
+        'work_hours_to': metadata.get('work_hours_to'),
+        'review': metadata.get('review'),
+        'timezone': metadata.get('timezone'),
+        'data_access': user.info.get('data_access')
+    }
 
 
 def get_user_pref_and_metadata(user_name, form):
