@@ -108,7 +108,7 @@ def configure_app(app):
     if not app.config.get('SQLALCHEMY_BINDS'):
         app.config['SQLALCHEMY_BINDS'] = {}
     if app.config['SQLALCHEMY_BINDS'].get('slave') is None:
-        print "Slave binds are misssing, adding Master as slave too."
+        print "Slave binds are missing, adding Master as slave too."
         master = app.config.get('SQLALCHEMY_DATABASE_URI')
         app.config['SQLALCHEMY_BINDS']['slave'] = master
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
