@@ -66,6 +66,7 @@ from pybossa.data_access import (data_access_levels, ensure_data_access_assignme
     copy_data_access_levels)
 import app_settings
 from flask import make_response
+import six
 
 blueprint = Blueprint('account', __name__)
 
@@ -514,9 +515,9 @@ def profile(name):
     form = None
     can_update = False
     if app_settings.upref_mdata:
-        can_update = can_update_user_info(current_user, user)
+        (can_update, disabled_fields) = can_update_user_info(current_user, user)
         form_data = cached_users.get_user_pref_metadata(user.name)
-        form = UserPrefMetadataForm(can_update=can_update, **form_data)
+        form = UserPrefMetadataForm(can_update=(can_update, disabled_fields), **form_data)
         form.set_upref_mdata_choices()
     if user.id != current_user.id:
         return _show_public_profile(user, form, can_update)
@@ -1022,11 +1023,11 @@ def add_metadata(name):
 
     """
     user = user_repo.get_by_name(name=name)
-    can_update = can_update_user_info(current_user, user)
+    (can_update, disabled_fields) = can_update_user_info(current_user, user)
     if not can_update:
         abort(403)
-    form_data = get_form_data(request, user, can_update)
-    form = UserPrefMetadataForm(form_data, can_update=can_update)
+    form_data = get_form_data(request, user, disabled_fields)
+    form = UserPrefMetadataForm(form_data, can_update=(can_update, disabled_fields))
     form.set_upref_mdata_choices()
 
     if not form.validate():
@@ -1065,23 +1066,23 @@ def add_metadata(name):
     flash("Input saved successfully", "info")
     return redirect(url_for('account.profile', name=name))
 
-def get_form_data(request, user, can_update):
-    if isinstance(can_update, dict):
-        # Some fields are not updatable.
-        # Replace (or add if missing) the data that was submitted for those fields
-        # with the current actual data for the user
-        # so that they won't be updated.
-        user_data = get_user_data_as_form(user)
-        # Get a mutable MultiDict
-        result = request.form.copy()
-        for field_name in can_update['disabled'].iterkeys():
-            value = user_data[field_name]
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
-        return result
-    else:
+# This is only called if can_update is True.
+def get_form_data(request, user, disabled_fields):
+    if not disabled_fields:
         return request.form
+    # Some fields are not updatable.
+    # Replace (or add if missing) the data that was submitted for those fields
+    # with the current actual data for the user
+    # so that they won't be updated.
+    user_data = get_user_data_as_form(user)
+    # Get a mutable MultiDict
+    result = request.form.copy()
+    for field_name in six.iterkeys(disabled_fields):
+        value = user_data[field_name]
+        if not isinstance(value, list):
+            value = [value]
+        result.setlist(field_name, value)
+    return result
 
 def get_user_data_as_form(user):
     user_pref = user.user_pref

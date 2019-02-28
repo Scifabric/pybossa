@@ -47,6 +47,7 @@ from pybossa.util import get_file_path_for_import_csv
 from flask import flash
 import pybossa.data_access as data_access
 import app_settings
+import six
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -678,7 +679,7 @@ class UserPrefMetadataForm(Form):
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self.set_can_update(kwargs.get('can_update', True))
+        self.set_can_update(kwargs.get('can_update', (True, None)))
 
     def set_upref_mdata_choices(self):
         upref_mdata_choices = app_settings.upref_mdata.get_upref_mdata_choices()
@@ -687,18 +688,13 @@ class UserPrefMetadataForm(Form):
         self.timezone.choices = upref_mdata_choices['timezones']
         self.user_type.choices = upref_mdata_choices['user_types']
 
-    def set_can_update(self, can_update):
-        self._disabled = self._get_disabled_fields(can_update)
+    def set_can_update(self, can_update_info):
+        self._disabled = self._get_disabled_fields(can_update_info)
 
-    def _get_disabled_fields(self, can_update):
-        if can_update is True:
-            return {}
-        elif can_update is False:
+    def _get_disabled_fields(self, (can_update, disabled_fields)):
+        if not can_update:
             return {field: 'Form is not updatable.' for field in self}
-        elif isinstance(can_update, dict):
-            return {getattr(self, name): reason for name, reason in can_update.get('disabled', {}).iteritems()}
-        else:
-            raise ValueError('Unsupported value for can_update.')
+        return {getattr(self, name): reason for name, reason in six.iteritems(disabled_fields or {})}
     
     def is_disabled(self, field):
         return self._disabled.get(field, False)
