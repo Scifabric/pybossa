@@ -38,7 +38,7 @@ class AuditlogAuth(object):
         if user.is_anonymous() or (auditlog is None and project_id is None):
             return False
         project = self._get_project(auditlog, project_id)
-        return user.admin or user.id in project.owners_ids
+        return user.admin or (user.subadmin and user.id in project.owners_ids)
 
     def _update(self, user, auditlog, project_id=None):
         return False

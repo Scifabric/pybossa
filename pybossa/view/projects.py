@@ -2321,11 +2321,7 @@ def _check_if_redirect_to_password(project):
 @login_required
 def auditlog(short_name):
     pro = pro_features()
-    if not pro['auditlog_enabled']:
-        raise abort(403)
-
     project, owner, ps = project_by_shortname(short_name)
-
 
     ensure_authorized_to('read', Auditlog, project_id=project.id)
     logs = auditlogger.get_project_logs(project.id)
