@@ -1,0 +1,288 @@
+from pybossa.stats import gold
+
+
+def test_count_matches_right():
+    gold_ans = {
+        'hello': 1
+    }
+    taskrun = {
+        'hello': 1
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 1
+    assert wrong == 0
+
+
+def test_count_matches_wrong():
+    gold_ans = {
+        'hello': 1
+    }
+    taskrun = {
+        'hello': 2
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 0
+    assert wrong == 1
+
+
+def test_count_matches_error():
+    gold_ans = {
+        'goodbye': 1
+    }
+    taskrun = {
+        'goodbye': 1
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 0
+    assert wrong == 0
+
+
+def test_count_matches_error_no_ans():
+    gold_ans = {
+        'hello': {
+            'goodbye': 1
+        }
+    }
+    taskrun = {}
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.goodbye')
+    assert right == 0
+    assert wrong == 1
+
+
+def test_count_matches_nested_right():
+    gold_ans = {
+        'hello': {
+            'world': 1
+        }
+    }
+    taskrun = {
+        'hello': {
+            'world': 1
+        }
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.world')
+    assert right == 1
+    assert wrong == 0
+
+
+def test_count_matches_nested_wrong():
+    gold_ans = {
+        'hello': {
+            'world': 1
+        }
+    }
+    taskrun = {
+        'hello': {
+            'world': 2
+        }
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.world')
+    assert right == 0
+    assert wrong == 1
+
+
+def test_count_matches_list_all_right():
+    gold_ans = {
+        'hello': [1, 2, 3]
+    }
+    taskrun = {
+        'hello': [1, 2, 3]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 3
+    assert wrong == 0
+
+
+def test_count_matches_list_all_wrong():
+    gold_ans = {
+        'hello': [1, 2, 3]
+    }
+    taskrun = {
+        'hello': [3, 4, 5]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 0
+    assert wrong == 3
+
+
+def test_count_matches_list_partially_correct():
+    gold_ans = {
+        'hello': [1, 2, 3]
+    }
+    taskrun = {
+        'hello': [3, 2, 5, 6]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 1
+    assert wrong == 2
+
+
+def test_count_matches_matrix():
+    gold_ans = {
+        'hello': [[1, 2], [3, 4]]
+    }
+    taskrun = {
+        'hello': [[1, 3], [3, 4]]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 3
+    assert wrong == 1
+
+
+def test_count_matches_different_shapes():
+    gold_ans = {
+        'hello': [[1, 2, 3]]
+    }
+    taskrun = {
+        'hello': [[1, 2], [3, 4]]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 2
+    assert wrong == 1
+
+
+def test_count_matches_different_shapes_2():
+    gold_ans = {
+        'hello': [[1, 2, 3], [4, 5, 6]]
+    }
+    taskrun = {
+        'hello': [[1, 2], [3, 5]]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 3
+    assert wrong == 3
+
+
+def test_count_matches_different_shapes_3():
+    gold_ans = {
+        'hello': [[1, 2, 3], [4, 5, 6]]
+    }
+    taskrun = {
+        'hello': [[1, 3]]
+    }
+    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
+    assert right == 1
+    assert wrong == 5
+
+
+def test_confusion_matrix():
+    stat = gold.ConfusionMatrix(['True', 'False'])
+    gold_ans = {
+        'hello': 'True'
+    }
+    taskrun = {
+        'hello': 'True'
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    assert stat.cm[0][0] == 1, stat.cm
+    assert stat.cm[0][1] == 0, stat.cm
+    assert stat.cm[1][0] == 0, stat.cm
+    assert stat.cm[1][1] == 0, stat.cm
+
+
+def test_confusion_matrix_list_1():
+    stat = gold.ConfusionMatrix(['True', 'False'])
+    gold_ans = {
+        'hello': ['True', 'False']
+    }
+    taskrun = {
+        'hello': ['True', 'False']
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    assert stat.cm[0][0] == 1, stat.cm
+    assert stat.cm[0][1] == 0, stat.cm
+    assert stat.cm[1][0] == 0, stat.cm
+    assert stat.cm[1][1] == 1, stat.cm
+
+
+def test_confusion_matrix_list_2():
+    stat = gold.ConfusionMatrix(['True', 'False'])
+    gold_ans = {
+        'hello': ['True', 'False', 'False', 'False']
+    }
+    taskrun = {
+        'hello': ['True', 'True', 'False', 'True']
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    assert stat.cm[0][0] == 1, stat.cm
+    assert stat.cm[0][1] == 0, stat.cm
+    assert stat.cm[1][0] == 2, stat.cm
+    assert stat.cm[1][1] == 1, stat.cm
+
+
+def test_many_labels():
+    stat = gold.ConfusionMatrix(['A', 'B', 'C', 'D'])
+    true = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D']
+    obs = ['B', 'C', 'B', 'B', 'D', 'C', 'A', 'B']
+    gold_ans = {
+        'hello': [{
+            'world': val
+        } for val in true]
+    }
+    taskrun = {
+        'hello': [{
+            'world': val
+        } for val in obs]
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello.world')
+    assert stat.cm[0, 1] == 1, stat.cm
+    assert stat.cm[0, 2] == 1, stat.cm
+    assert stat.cm[1, 1] == 2, stat.cm
+    assert stat.cm[2, 2] == 1, stat.cm
+    assert stat.cm[2, 3] == 1, stat.cm
+    assert stat.cm[3, 0] == 1, stat.cm
+    assert stat.cm[3, 1] == 1, stat.cm
+    assert (stat.cm >= 0).all(), stat.cm
+    assert stat.cm.sum() == len(true)
+
+
+def test_confusion_matrix_invalid_gold():
+    stat = gold.ConfusionMatrix(['True', 'False'])
+    gold_ans = {
+        'hello': 'None'
+    }
+    taskrun = {
+        'hello': 'True'
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    stat.cm == [[0, 0], [0, 0]]
+
+
+def test_confusion_matrix_invalid_answer():
+    stat = gold.ConfusionMatrix(['True', 'False'])
+    gold_ans = {
+        'hello': 'True'
+    }
+    taskrun = {
+        'hello': 'None'
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    stat.cm == [[0, 0], [0, 0]]
+
+
+def test_array_match_right():
+    stat = gold.RightWrongCount()
+    stat.compare_lists = True
+    gold_ans = {
+        'hello': [1, 2, 3]
+    }
+    taskrun = {
+        'hello': [1, 2, 3]
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    stat.right == 1
+    stat.wrong == 0
+
+
+def test_array_match_wrong():
+    stat = gold.RightWrongCount()
+    stat.compare_lists = True
+    gold_ans = {
+        'hello': [1, 9, 3]
+    }
+    taskrun = {
+        'hello': [1, 2, 3]
+    }
+    stat = gold.compute(stat, taskrun, gold_ans, 'hello')
+    stat.right == 0
+    stat.wrong == 1
