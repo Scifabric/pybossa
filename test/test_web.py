@@ -8772,12 +8772,12 @@ class TestWebUserMetadataUpdate(web.Helper):
         """Test normal user can update their own metadata except for user_type"""
         # First user created is automatically admin, so get that out of the way.
         user_admin = UserFactory.create()
-        user_normal_original = self.create_user()
-        self.assert_is_normal(user_normal_original)
-        self.signin_user(user_normal_original)
-        self.update_metadata(user_normal_original.name)
+        user_normal = self.create_user()
+        self.assert_is_normal(user_normal)
+        self.signin_user(user_normal)
+        self.update_metadata(user_normal.name)
         disabled = ['user_type']
-        self.assert_updates_applied_correctly(user_normal_original.id, disabled)
+        self.assert_updates_applied_correctly(user_normal.id, disabled)
 
     @with_context
     def test_admin_user_can_update_own_metadata(self):
