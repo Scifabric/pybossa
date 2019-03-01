@@ -100,6 +100,7 @@ class ProjectUpdateForm(ProjectForm):
                                 message=lazy_gettext(
                                     "You must provide a description.")),
                              validators.Length(max=255)])
+    short_name = TextField(label=None, widget=HiddenInput())    
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))

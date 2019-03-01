@@ -94,8 +94,8 @@ class ProjectAPI(APIBase):
         for key in data.keys():
             if key in self.reserved_keys:
                 if key == 'published':
-                    raise Forbidden('You cannot publish a project via the API')
-                raise BadRequest("Reserved keys in payload")
+                    raise Forbidden('You cannot publish a project via the API') 
+                raise BadRequest("Reserved keys in payload")         
 
     def _restricted_attributes(self, data):
         if (current_user.is_authenticated() and
