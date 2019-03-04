@@ -8762,11 +8762,6 @@ class TestWebUserMetadataUpdate(web.Helper):
     def assert_is_subadmin(self, user):
         assert not user.admin and user.subadmin
 
-    def test_update_differs_from_orginal(self):
-        '''Test updates are different from original values'''
-        for k,v in six.iteritems(self.update):
-            assert v != self.original[k], '[{}] is same in original and update'.format(k)
-
     def mock_upref_mdata_choices(self, upref_mdata, get_upref_mdata_choices):
         upref_mdata = True
         def double(x): return (x,x)
@@ -8777,13 +8772,18 @@ class TestWebUserMetadataUpdate(web.Helper):
             user_types=map(double, ["Researcher", "Analyst", "Curator"])
         )
 
+    def test_update_differs_from_orginal(self):
+        '''Test updates are different from original values'''
+        for k,v in six.iteritems(self.update):
+            assert v != self.original[k], '[{}] is same in original and update'.format(k)
+
     @with_context
     @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_normal_user_cannot_update_own_user_type(self, upref_mdata, get_upref_mdata_choices):
         """Test normal user can update their own metadata except for user_type"""
-        # First user created is automatically admin, so get that out of the way.
         self.mock_upref_mdata_choices(upref_mdata, get_upref_mdata_choices)
+        # First user created is automatically admin, so get that out of the way.
         user_admin = UserFactory.create()
         user_normal = self.create_user()
         self.assert_is_normal(user_normal)
