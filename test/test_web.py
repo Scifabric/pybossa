@@ -8807,7 +8807,7 @@ class TestWebUserMetadataUpdate(web.Helper):
         )
         data_created = self.get_user_data_as_form(user)
         for k,v in six.iteritems(data):
-            assert v == data_created[k], 'Created user field [{}] does not equal specified data'.format()
+            assert v == data_created[k], 'Created user field [{}] does not equal specified data'.format(k)
         return user
 
     def assert_updates_applied_correctly(self, user_id, disabled=update.keys()):
