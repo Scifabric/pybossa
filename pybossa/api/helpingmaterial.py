@@ -24,7 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from api_base import APIBase
 from pybossa.model.helpingmaterial import HelpingMaterial
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import BadRequest
 
 

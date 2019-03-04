@@ -18,16 +18,19 @@
 
 from mock import patch, Mock, mock_open
 from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
+from pybossa.encryption import AESWithGCM
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from default import with_context
+from default import with_context, Test
 from nose.tools import assert_equal
 
-class TestBulkTaskLocalCSVImport(object):
+
+class TestBulkTaskLocalCSVImport(Test):
 
     def setUp(self):
         form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
         self.importer = BulkTaskLocalCSVImport(**form_data)
+        super(TestBulkTaskLocalCSVImport, self).setUp()
 
     def test_importer_type_local_csv(self):
         assert isinstance(self.importer, BulkTaskLocalCSVImport) is True
@@ -90,3 +93,20 @@ class TestBulkTaskLocalCSVImport(object):
             assert_equal(t2['calibration'], 1)
             assert_equal(t1['exported'], True)
             assert_equal(t2['exported'], True)
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.get_s3_bucket_key')
+    def test_count_tasks_encrypted(self, s3_get):
+        k = Mock()
+        s3_get.return_value = '', k
+        cont = 'req\n1'
+        cipher = AESWithGCM('abcd')
+        k.get_contents_as_string.return_value = cipher.encrypt(cont)
+        config = {
+            'S3_IMPORT_BUCKET': 'aadf',
+            'FILE_ENCRYPTION_KEY': 'abcd',
+            'ENABLE_ENCRYPTION': True
+        }
+        with patch.dict(self.flask_app.config, config):
+            number_of_tasks = self.importer.count_tasks()
+            assert number_of_tasks is 1, number_of_tasks

@@ -39,7 +39,7 @@ class Helper(Test):
             return "<title>PYBOSSA &middot; %s - PyBossa by Scifabric</title>" % title
 
     @patch('pybossa.view.account.signer')
-    def register(self, mock, fullname="John Doe", name="johndoe",
+    def register(self, mock=None, fullname="John Doe", name="johndoe",
                  password="p4ssw0rd", email=None, consent=False, subadmin=False,
                  admin=False):
         """Helper function to register and sign in a user"""
@@ -49,7 +49,8 @@ class Helper(Test):
                     'email_addr': email, 'password': password,
                     'consent': consent, 'subadmin': subadmin,
                     'admin': admin}
-        mock.loads.return_value = userdict
+        if mock:
+            mock.loads.return_value = userdict
         return self.app.get('/account/register/confirmation?key=fake-key',
                             follow_redirects=True)
 

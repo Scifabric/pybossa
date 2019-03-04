@@ -23,23 +23,27 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 import json
-from flask import request, Response
+import time
+
+from datetime import datetime
+
+from flask import request, Response, current_app
 from flask import current_app as app
-from flask.ext.login import current_user
-from pybossa.model.task_run import TaskRun
+from flask_login import current_user
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
-from pybossa.util import get_user_id_or_ip
-from pybossa.core import task_repo, sentinel, anonymizer
+from pybossa.model.task_run import TaskRun
+from pybossa.util import get_user_id_or_ip, get_avatar_url
+from pybossa.core import task_repo, sentinel, anonymizer, project_repo
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
-from datetime import datetime
-from pybossa.sched import can_post, after_save
-
+from pybossa.sched import can_post
 from pybossa.model.completion_event import mark_if_complete
+from pybossa.core import uploader
+from pybossa.auth import ensure_authorized_to, is_authorized
 from pybossa.cloud_store_api.s3 import upload_json_data
 
 
@@ -60,14 +64,13 @@ class TaskRunAPI(APIBase):
             raise Forbidden('')
         task_id = data['task_id']
         project_id = data['project_id']
-        user_id = current_user.id
-        self.check_can_post(project_id, task_id, user_id)
+        self.check_can_post(project_id, task_id)
         info = data.get('info')
         with_encryption = app.config.get('ENABLE_ENCRYPTION')
         upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
         if info is None:
             return
-        path = "{0}/{1}/{2}".format(project_id, task_id, user_id)
+        path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
         _upload_files_from_json(info, path, with_encryption)
         _upload_files_from_request(info, request.files, path, with_encryption)
         if with_encryption:
@@ -77,12 +80,13 @@ class TaskRunAPI(APIBase):
                     conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
             }
 
-    def check_can_post(self, project_id, task_id, user_id):
-        if not can_post(project_id, task_id, user_id):
+    def check_can_post(self, project_id, task_id):
+        if not can_post(project_id, task_id, get_user_id_or_ip()):
             raise Forbidden("You must request a task first!")
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
+        self.check_can_post(taskrun.project_id, taskrun.task_id)
         task = task_repo.get_task(taskrun.task_id)
         guard = ContributionsGuard(sentinel.master)
 
@@ -128,7 +132,6 @@ class TaskRunAPI(APIBase):
         guard._remove_task_stamped(task, get_user_id_or_ip())
 
     def _after_save(self, instance):
-        after_save(instance.project_id, instance.task_id, instance.user_id)
         mark_if_complete(instance.task_id, instance.project_id)
 
     def _add_timestamps(self, taskrun, task, guard):

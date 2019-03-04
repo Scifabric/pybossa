@@ -90,7 +90,7 @@ class TestAuditlogAPI(Test):
         project = ProjectFactory.create(info=dict(list=[0]))
 
         data = {'name': 'New Name',
-                'short_name': 'new_short_name',
+                'short_name': project.short_name,
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
@@ -101,8 +101,7 @@ class TestAuditlogAPI(Test):
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
-
-        assert len(logs) == 6, (len(logs), logs)
+        assert len(logs) == 5, (len(logs), logs)
         for log in logs:
             assert log.user_id == project.owner_id, log.user_id
             assert log.user_name == project.owner.name, log.user_name
@@ -124,7 +123,7 @@ class TestAuditlogAPI(Test):
         admin = UserFactory.create(admin=True)
 
         data = {'name': 'New Name',
-                'short_name': 'new_short_name',
+                'short_name': project.short_name,
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
@@ -133,8 +132,7 @@ class TestAuditlogAPI(Test):
         url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
-
-        assert len(logs) == 5, logs
+        assert len(logs) == 4, logs
         for log in logs:
             assert log.user_id == admin.id, log.user_id
             assert log.user_name == admin.name, log.user_name
@@ -152,7 +150,7 @@ class TestAuditlogAPI(Test):
         user = UserFactory.create()
 
         data = {'name': 'New Name',
-                'short_name': 'new_short_name',
+                'short_name': project.short_name,
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
@@ -162,6 +160,7 @@ class TestAuditlogAPI(Test):
         logs = auditlog_repo.filter_by(project_id=project.id)
 
         assert len(logs) == 0, logs
+
 
     @with_context
     def test_project_update_task_presenter(self):
@@ -307,31 +306,6 @@ class TestAuditlogWEB(web.Helper):
             assert log.attribute == 'name', log.attribute
             assert log.old_value == 'Sample Project', log.old_value
             assert log.new_value == self.data['name'], log.new_value
-            assert log.caller == 'web', log.caller
-            assert log.action == 'update', log.action
-            assert log.user_name == 'johndoe', log.user_name
-            assert log.user_id == 1, log.user_id
-
-    @with_context
-    def test_project_update_short_name(self):
-        self.register()
-        self.signin()
-        self.new_project()
-        short_name = 'newshort_name'
-
-        url = "/project/sampleapp/update"
-
-        self.data['short_name'] = 'newshort_name'
-        self.data['zip_download'] = True
-
-        res = self.app.post(url, data=self.data, follow_redirects=True)
-
-        logs = auditlog_repo.filter_by(project_short_name=short_name)
-        assert len(logs) == 1, logs
-        for log in logs:
-            assert log.attribute == 'short_name', log.attribute
-            assert log.old_value == 'sampleapp', log.old_value
-            assert log.new_value == self.data['short_name'], log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name

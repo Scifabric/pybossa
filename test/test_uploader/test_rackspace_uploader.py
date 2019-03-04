@@ -102,8 +102,7 @@ class TestRackspaceUploader(Test):
             calls = [call.get_container('user_3'),
                      call.get_container().get_object().delete(),
                      call.get_container().get_object('test.jpg')]
-            print mycf.mock_calls
-            mycf.assert_has_calls(calls, any_order=True)
+            mycf.assert_has_calls(calls, any_order=True), mycf.mock_calls
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)

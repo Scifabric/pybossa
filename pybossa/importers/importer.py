@@ -18,7 +18,7 @@
 
 from collections import defaultdict
 from flask import current_app
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from .csv import BulkTaskCSVImport, BulkTaskGDImport, BulkTaskLocalCSVImport
 from .dropbox import BulkTaskDropboxImport
 from .flickr import BulkTaskFlickrImport
@@ -29,9 +29,8 @@ from .iiif import BulkTaskIIIFImporter
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
-from flask import current_app
 from pybossa.util import check_password_strength, valid_or_no_s3_bucket
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.datastructures import MultiDict
 import copy
 import json
@@ -165,8 +164,8 @@ class Importer(object):
         import_headers = importer.headers()
         mismatch_headers = []
 
+        msg = ''
         if import_headers:
-            msg = None
             if not project:
                 msg = gettext('Could not load project info')
             else:
@@ -201,7 +200,7 @@ class Importer(object):
                         n += 1
                     except Exception as e:
                         current_app.logger.exception(msg)
-                        validator.add_error(e.message)
+                        validator.add_error(str(e))
 
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')

@@ -34,6 +34,8 @@ from flask import current_app
 from pybossa import data_access
 from datetime import datetime
 
+from flask import current_app
+
 
 session = db.slave_session
 
@@ -45,6 +47,7 @@ class Schedulers(object):
 
 
 DEFAULT_SCHEDULER = Schedulers.locked
+TIMEOUT = ContributionsGuard.STAMP_TTL
 
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
@@ -68,32 +71,41 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
                      present_gold_task=present_gold_task)
 
 
-def can_post(project_id, task_id, user_id):
-    scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
-        allowed = has_lock(task_id, user_id, timeout)
-        current_app.logger.info(
-            'Project {} - user {} can submit for task {}: {}'
-            .format(project_id, user_id, task_id, allowed))
-        return allowed
-    else:
-        return True
+def is_locking_scheduler(sched):
+    return sched in [Schedulers.locked, Schedulers.user_pref, 'default']
 
 
 def can_read_task(task, user):
     project_id = task.project_id
     scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
+    if is_locking_scheduler(scheduler):
         return has_read_access(user) or has_lock(task.id, user.id,
                                                  timeout)
     else:
         return True
 
 
-def after_save(project_id, task_id, user_id):
-    scheduler, timeout = get_project_scheduler_and_timeout(project_id)
-    if scheduler == Schedulers.locked or scheduler == Schedulers.user_pref:
-        release_lock(task_id, user_id, timeout)
+def can_post(project_id, task_id, user_id_or_ip):
+    scheduler = get_project_scheduler(project_id, session)
+    if is_locking_scheduler(scheduler):
+        user_id = user_id_or_ip['user_id'] or \
+                user_id_or_ip['external_uid'] or \
+                user_id_or_ip['user_ip'] or \
+                '127.0.0.1'
+        allowed = has_lock(task_id, user_id, TIMEOUT)
+        return allowed
+    else:
+        return True
+
+
+def after_save(task_run, conn):
+    scheduler = get_project_scheduler(task_run.project_id, conn)
+    uid = task_run.user_id or \
+          task_run.external_uid or \
+          task_run.user_ip or \
+          '127.0.0.1'
+    if is_locking_scheduler(scheduler):
+        release_lock(task_run.task_id, uid, TIMEOUT)
 
 
 def get_breadth_first_task(project_id, user_id=None, user_ip=None,
@@ -214,8 +226,8 @@ def locked_scheduler(query_factory):
                                  rand_within_priority=False,
                                  present_gold_task=False):
         if offset > 2:
-            raise BadRequest()
-        if offset == 1:
+            raise BadRequest('')
+        if offset > 0:
             return None
         task_id, lock_seconds = get_task_id_and_duration_for_project_user(project_id, user_id)
         if lock_seconds > 10:
@@ -227,9 +239,9 @@ def locked_scheduler(query_factory):
             "Project {} - number of current users: {}"
             .format(project_id, user_count))
 
-        sql = query_factory(project_id, user_id, user_ip, external_uid,
-                            limit, offset, orderby, desc, rand_within_priority,
-                            present_gold_task)
+        sql = query_factory(project_id, user_id=user_id, user_ip=user_ip, external_uid=external_uid,
+                            limit=limit, offset=offset, orderby=orderby, desc=desc,
+                            rand_within_priority=rand_within_priority, present_gold_task=present_gold_task)
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
                                          limit=user_count + 5))
@@ -255,21 +267,23 @@ def locked_scheduler(query_factory):
 
 @locked_scheduler
 def get_locked_task(project_id, user_id=None, user_ip=None,
-                    external_uid=None, limit=1, offset=0,
-                    orderby='priority_0', desc=True, rand_within_priority=False,
-                    present_gold_task=False):
-    """ Select a new task to be returned to the contributor.
+                    external_uid=None, offset=0, limit=1,
+                    orderby='priority_0', desc=True,
+                    rand_within_priority=False, present_gold_task=False):
+    user_param = 'user_id'
+    if not user_id:
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        if not external_uid:
+            user_param = 'user_ip'
+        else:
+            user_param = 'external_uid'
 
-    For each incomplete task, check if the number of users working on the task
-    is smaller than the number of answers still needed. In that case, acquire
-    a lock on the task and return the task to the user. If offset is nonzero,
-    skip that amount of available tasks before returning to the user.
-    """
     having_clause = 'HAVING COUNT(task_run.task_id) < n_answers' if  not present_gold_task else ''
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
 
-    sql = text('''
+    sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
               (SELECT info->'timeout'
                FROM project
@@ -278,7 +292,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            LEFT JOIN task_run ON (task.id = task_run.task_id)
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-           user_id=:user_id AND task_id=task.id)
+           {}=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
@@ -286,11 +300,9 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            group by task.id
            {}
            ORDER BY task.calibration {}, priority_0 DESC, {} LIMIT :limit;
-           '''.format(allowed_task_levels_clause,
-                having_clause, order_by_calib,
-                'random()' if rand_within_priority else 'id ASC'))
-
-    return sql
+           '''.format(user_param, allowed_task_levels_clause, having_clause, order_by_calib,
+                      'random()' if rand_within_priority else 'id ASC')
+    return text(sql)
 
 
 @locked_scheduler
@@ -458,12 +470,22 @@ def has_read_access(user):
     return not user.is_anonymous() and (user.admin or user.subadmin)
 
 
+def get_project_scheduler(project_id, conn):
+    sql = text('''
+        SELECT info->>'sched' as sched FROM project WHERE id=:project_id;
+        ''')
+    row = conn.execute(sql, dict(project_id=project_id)).first()
+    if not row:
+        return 'default'
+    return row.sched or 'default'
+
+
 def sched_variants():
     return [('default', 'Default'), ('breadth_first', 'Breadth First'),
             ('depth_first', 'Depth First'),
             (Schedulers.locked, 'Locked'),
             (Schedulers.user_pref, 'User Preference Scheduler'),
-            ('depth_first_all', 'Depth First All'),
+            ('depth_first_all', 'Depth First All')
             ]
 
 

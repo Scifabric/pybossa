@@ -23,7 +23,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 from flask import abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import BadRequest, Conflict
 from pybossa.model.task import Task
 from pybossa.model.project import Project

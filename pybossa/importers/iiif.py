@@ -18,6 +18,7 @@
 
 import json
 import requests
+from iiif_prezi.loader import ManifestReader
 
 from .base import BulkTaskImport, BulkImportException
 
@@ -27,9 +28,10 @@ class BulkTaskIIIFImporter(BulkTaskImport):
 
     importer_id = "iiif"
 
-    def __init__(self, manifest_uri):
+    def __init__(self, manifest_uri, version='2.1'):
         """Init method."""
         self.manifest_uri = manifest_uri
+        self.version = version
 
     def tasks(self):
         """Get tasks."""
@@ -41,7 +43,8 @@ class BulkTaskIIIFImporter(BulkTaskImport):
 
     def _generate_tasks(self):
         """Generate the tasks."""
-        manifest = self._get_validated_manifest(self.manifest_uri)
+        manifest = self._get_validated_manifest(self.manifest_uri,
+                                                self.version)
         task_data = self._get_task_data(manifest)
         return [dict(info=data) for data in task_data]
 
@@ -74,17 +77,16 @@ class BulkTaskIIIFImporter(BulkTaskImport):
         query = '?manifest={}#?cv={}'.format(manifest_uri, canvas_index)
         return base + query
 
-    def _get_validated_manifest(self, manifest_uri):
+    def _get_validated_manifest(self, manifest_uri, version):
         """Return a validated manifest."""
-        url = 'http://iiif.io/api/presentation/validator/service/validate'
-        payload = dict(format='json', url=manifest_uri)
-        response = requests.get(url, params=payload)
-        json_response = json.loads(response.text)
-        valid = (response.status_code == 200 and json_response.get('okay'))
-
-        if not valid:
-            default_err = "Oops! That doesn't look like a valid IIIF manifest."
-            raise BulkImportException(json_response.get('error', default_err))
-
-        manifest = json.loads(json_response['received'])
-        return manifest
+        r = requests.get(manifest_uri)
+        if r.status_code != 200:
+            err_msg = 'Invalid manifest URI: {} error'.format(r.status_code)
+            raise BulkImportException(err_msg)
+        reader = ManifestReader(r.text, version=version)
+        try:
+            mf = reader.read()
+            mf_json = mf.toJSON()
+        except Exception as e:
+            raise BulkImportException(str(e))
+        return mf_json

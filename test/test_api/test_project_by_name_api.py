@@ -173,7 +173,7 @@ class TestProjectAPI(TestAPI):
 
     @with_context
     def test_project_put_invalid_short_name(self):
-        """Test API project PUT returns error if short_name is invalid (i.e. is
+        """Test API project PUT returns error if try to update short_name(i.e. is
             a name used by the Flask app as a URL endpoint"""
         user = UserFactory.create()
         CategoryFactory.create()
@@ -184,12 +184,12 @@ class TestProjectAPI(TestAPI):
         res = self.app.put('/api/projectbyname/%s?api_key=%s' % (project.short_name, user.api_key),
                             data=datajson)
         error = json.loads(res.data)
-        assert res.status_code == 415, res.status_code
+        assert res.status_code == 403, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'PUT', error
         assert error['target'] == 'project', error
-        assert error['exception_cls'] == 'ValueError', error
-        message = "Project short_name is not valid, as it's used by the system."
+        assert error['exception_cls'] == 'Forbidden', error
+        message = "Cannot change short_name via API"
         assert error['exception_msg'] == message, error
 
     @with_context

@@ -39,17 +39,6 @@ class TestSched(sched.Helper):
 
     endpoints = ['project', 'task', 'taskrun']
 
-    def get_headers_jwt(self, project):
-        """Return headesr JWT token."""
-        # Get JWT token
-        url = 'api/auth/project/%s/token' % project.short_name
-
-        res = self.app.get(url, headers={'Authorization': project.secret_key})
-
-        authorization_token = 'Bearer %s' % res.data
-
-        return {'Authorization': authorization_token}
-
     # Tests
     @with_context
     def test_anonymous_01_newtask(self):

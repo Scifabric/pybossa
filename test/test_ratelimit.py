@@ -19,7 +19,7 @@
 This module tests the RateLimit class and decorator for the API.
 
 It tests all the actions: GET, POST, DEL and PUT, as well as the specific
-API endpoints like userprogress or vmcp.
+API endpoints like userprogress.
 
 """
 import json
@@ -125,11 +125,6 @@ class TestAPI(object):
         """Test API.new_task(project_id) GET rate limit."""
         mock.return_value = {}
         url = '/api/project/1/newtask'
-        self.check_limit(url, 'get', 'project')
-
-    def test_05_vmcp(self):
-        """Test API.vmcp GET rate limit."""
-        url = '/api/vmcp'
         self.check_limit(url, 'get', 'project')
 
     @patch('pybossa.api.project_repo')

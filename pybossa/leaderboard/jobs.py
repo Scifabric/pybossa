@@ -33,7 +33,7 @@ def leaderboard(info=None):
         return refresh_materialized_view(db, materialized_view)
     else:
         sql = '''
-                   CREATE MATERIALIZED VIEW {} AS WITH scores AS (
+                   CREATE MATERIALIZED VIEW "{}" AS WITH scores AS (
                         SELECT "user".*, COUNT(task_run.user_id) AS score
                         FROM "user" LEFT JOIN task_run
                         ON task_run.user_id="user".id where
@@ -42,15 +42,15 @@ def leaderboard(info=None):
               '''.format(materialized_view)
         if info:
             sql = '''
-                       CREATE MATERIALIZED VIEW {} AS WITH scores AS (
+                       CREATE MATERIALIZED VIEW "{}" AS WITH scores AS (
                             SELECT "user".*, COALESCE(CAST("user".info->>'{}' AS INTEGER), 0) AS score
                             FROM "user" where "user".restrict=false ORDER BY score DESC) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
                   '''.format(materialized_view, info)
         db.session.execute(sql)
         db.session.commit()
         sql = '''
-              CREATE UNIQUE INDEX {}
-               on {}(id, rank);
+              CREATE UNIQUE INDEX "{}"
+               on "{}"(id, rank);
               '''.format(materialized_view_idx, materialized_view)
         db.session.execute(sql)
         db.session.commit()

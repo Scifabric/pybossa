@@ -26,8 +26,9 @@ from api_base import APIBase, error, jsonpify, ratelimits, ratelimit
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from flask import request
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa import data_access
+
 
 class UserAPI(APIBase):
 

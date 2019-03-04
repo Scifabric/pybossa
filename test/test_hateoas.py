@@ -121,7 +121,7 @@ class TestHateoas(Test):
         # err_msg = "There should be a Link with the object URI"
         # assert output['link'] is not None, err_msg
         # user_link = self.hateoas.link(rel='self', title='user',
-        #                               href='http://{}/api/user/1')
+        #                               href='https://localhost/api/user/1')
         # err_msg = "The object link ir wrong: %s" % output['link']
         # assert user_link == output['link'], err_msg
         # # when the links specification of a user will be set, modify the following
@@ -220,7 +220,7 @@ class TestHateoas(Test):
         # err_msg = "There should be a Link with the object URI"
         # assert output['link'] is not None, err_msg
         # user_link = self.hateoas.link(rel='self', title='user',
-        #                               href='http://{}/api/user/1')
+        #                               href='https://localhost/api/user/1')
         # err_msg = "The object link ir wrong: %s" % output['link']
         # assert user_link == output['link'], err_msg
         # # when the links specification of a user will be set, modify the following

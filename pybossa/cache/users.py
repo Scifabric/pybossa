@@ -63,7 +63,7 @@ def n_projects_contributed(user_id):
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def get_user_summary(name):
+def get_user_summary(name, current_user=None):
     """Return user summary."""
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
@@ -72,7 +72,8 @@ def get_user_summary(name):
                "user".locale,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers,
                "user".valid_email, "user".confirmation_email_sent,
-               max(task_run.finish_time) AS last_task_submission_on
+               max(task_run.finish_time) AS last_task_submission_on,
+               "user".restrict
                FROM "user"
                LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
@@ -92,13 +93,22 @@ def get_user_summary(name):
                     valid_email=row.valid_email,
                     confirmation_email_sent=row.confirmation_email_sent,
                     registered_ago=pretty_date(row.created),
-                    last_task_submission_on=row.last_task_submission_on)
+                    last_task_submission_on=row.last_task_submission_on,
+                    restrict=row.restrict)
     if user:
         rank_score = rank_and_score(user['id'])
         user['rank'] = rank_score['rank']
         user['score'] = rank_score['score']
         user['total'] = get_total_users()
-        return user
+        if user['restrict']:
+            if (current_user and
+                current_user.is_authenticated() and
+               (current_user.id == user['id'])):
+                return user
+            else:
+                return None
+        else:
+            return user
     else:  # pragma: no cover
         return None
 

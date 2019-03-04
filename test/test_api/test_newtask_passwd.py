@@ -136,7 +136,7 @@ class TestNewtaskPasswd(TestAPI):
         now = datetime.utcnow()
         url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url)
-        assert res.status_code == 200, res
+        assert res.status_code == 200, (res, res.data)
         task = json.loads(res.data)
         assert task['info'].get('question') == 'answer'
 
