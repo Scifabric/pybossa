@@ -219,8 +219,3 @@ def subadmins_are_privileged(user):
 def valid_user_type_based_data_access(user_type, access_levels):
     valid_data_access = data_access_levels['valid_access_levels_for_user_types'].get(user_type)
     return all(l in valid_data_access for l in access_levels), valid_data_access
-
-
-@when_data_access()
-def project_restricted_keys():
-    return 'info::pvf'
