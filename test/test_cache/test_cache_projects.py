@@ -662,7 +662,6 @@ class TestProjectsCache(Test):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_task_browse_user_pref_args(self, upref_mdata, get_valid_user_preferences):
         """Test task browse user preference works with valid user_pref settings"""
-        upref_mdata = True
         get_valid_user_preferences.return_value = dict(languages=["en", "sp"],
                                     locations=["us", "uk"])
         args = dict(
