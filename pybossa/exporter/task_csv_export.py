@@ -166,10 +166,10 @@ class TaskCsvExporter(CsvExporter):
                               expanded, filters):
         objs = browse_tasks_export(table, project_id, expanded, filters)
         rows = [obj for obj in objs]
-        for row in rows:
-            if row['info']:
-                info = dict(TaskCsvExporter.flatten(row['info'].iteritems()))
-                row['info'].update(info)
+        # for row in rows:
+        #     if row['info']:
+        #         info = dict(TaskCsvExporter.flatten(row['info'].iteritems()))
+        #         row['info'].update(info)
 
         headers = self._get_all_headers(objs=rows,
                                         expanded=expanded,
