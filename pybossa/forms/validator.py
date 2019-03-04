@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.babel import lazy_gettext
+from flask_babel import lazy_gettext
 from wtforms.validators import ValidationError
 import re
 import requests

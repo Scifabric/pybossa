@@ -18,8 +18,9 @@
 
 import requests
 from StringIO import StringIO
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from pybossa.util import unicode_csv_reader, validate_required_fields
+from pybossa.util import unicode_csv_reader
 
 from .base import BulkTaskImport, BulkImportException
 from flask import request
@@ -28,6 +29,7 @@ import io, time, json
 from flask import current_app as app
 from pybossa.util import get_import_csv_file
 import re
+from pybossa.data_access import data_access_levels
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -49,81 +51,109 @@ class BulkTaskCSVImport(BulkTaskImport):
         """Get data from URL."""
         return self.url
 
+    def _convert_row_to_task_data(self, row, row_number):
+        task_data = {"info": {}}
+        private_fields = dict()
+        private_gold_answers = dict()
+        for idx, cell in enumerate(row):
+            if idx in self.field_header_index:
+                if self._headers[idx] == 'user_pref':
+                    if cell:
+                        task_data[self._headers[idx]] = json.loads(cell.lower())
+                    else:
+                        task_data[self._headers[idx]] = {}
+                else:
+                    task_data[self._headers[idx]] = cell
+            elif self._headers[idx].endswith('_priv_gold'):
+                if cell:
+                    field_name = re.sub('_priv_gold$', '', self._headers[idx])
+                    if data_access_levels:
+                        private_gold_answers[field_name] = cell
+                    else:
+                        if 'gold_answers' not in task_data:
+                            task_data['gold_answers'] = {}
+                        task_data['gold_answers'][field_name] = cell
+            elif self._headers[idx].endswith('_gold'):
+                if cell:
+                    field_name = re.sub('_gold$', '', self._headers[idx])
+                    if 'gold_answers' not in task_data:
+                        task_data['gold_answers'] = {}
+                    task_data['gold_answers'][field_name] = cell
+            elif self._headers[idx].endswith('_priv'):
+                if cell:
+                    field_name = re.sub('_priv$', '', self._headers[idx])
+                    if data_access_levels:
+                        private_fields[field_name] = cell
+                    else:
+                        task_data["info"][field_name] = cell
+            elif self._headers[idx] == 'data_access' and data_access_levels:
+                if cell:
+                    task_data["info"][self._headers[idx]] = json.loads(cell.upper())
+            else:
+                task_data["info"][self._headers[idx]] = cell
+        if 'gold_answers' in task_data or private_gold_answers:
+            task_data['calibration'] = 1
+            task_data['exported'] = True
+        if private_fields:
+            task_data['private_fields'] = private_fields
+        if private_gold_answers:
+            task_data['private_gold_answers'] = private_gold_answers
+        return task_data
+
     def _import_csv_tasks(self, csvreader):
         """Import CSV tasks."""
-        headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers', 'user_pref', 'expiration'])
-        field_header_index = []
+        self._headers = []
+        self.field_header_index = []
         row_number = 0
         for row in csvreader:
-            if not headers:
-                headers = self._headers = row
-                self._check_no_duplicated_headers(headers)
-                self._check_no_empty_headers(headers)
-                self._check_required_headers(headers)
-                field_headers = set(headers) & fields
+            if not self._headers:
+                self._headers = row
+                self._check_no_duplicated_headers()
+                self._check_no_empty_headers()
+                self._check_required_headers()
+                field_headers = set(self._headers) & fields
                 for field in field_headers:
-                    field_header_index.append(headers.index(field))
+                    self.field_header_index.append(self._headers.index(field))
             else:
                 row_number += 1
-                self._check_valid_row_length(row, row_number, headers)
+                self._check_valid_row_length(row, row_number)
 
                 # check required fields
-                fvals = {headers[idx]: cell for idx, cell in enumerate(row)}
+                fvals = {self._headers[idx]: cell for idx, cell in enumerate(row)}
                 invalid_fields = validate_required_fields(fvals)
                 if invalid_fields:
                     msg = gettext('The file you uploaded has incorrect/missing '
                                   'values for required header(s): {0}'
                                   .format(','.join(invalid_fields)))
                     raise BulkImportException(msg)
-
-                task_data = {"info": {}}
-                for idx, cell in enumerate(row):
-                    if idx in field_header_index:
-                        if headers[idx] == 'user_pref':
-                            if len(cell) > 0:
-                                task_data[headers[idx]] = json.loads(cell.lower())
-                            else:
-                                task_data[headers[idx]] = {}
-                        else:
-                            task_data[headers[idx]] = cell
-                    elif headers[idx].endswith('_gold'):
-                        if cell:
-                            if 'gold_answers' not in task_data:
-                                task_data['gold_answers'] = {}
-                            field_name = re.sub('_gold$', '', headers[idx])
-                            task_data['gold_answers'][field_name] = cell
-                    else:
-                        task_data["info"][headers[idx]] = cell
-                if 'gold_answers' in task_data:
-                    task_data['calibration'] = 1
-                    task_data['exported'] = True
+                task_data = self._convert_row_to_task_data(row, row_number)
                 yield task_data
 
-    def _check_no_duplicated_headers(self, headers):
-        if len(headers) != len(set(headers)):
+    def _check_no_duplicated_headers(self):
+        if len(self._headers) != len(set(self._headers)):
             msg = gettext('The file you uploaded has '
                           'two headers with the same name.')
             raise BulkImportException(msg)
 
-    def _check_no_empty_headers(self, headers):
-        stripped_headers = [header.strip() for header in headers]
+    def _check_no_empty_headers(self):
+        stripped_headers = [header.strip() for header in self._headers]
         if "" in stripped_headers:
             position = stripped_headers.index("")
             msg = gettext("The file you uploaded has an empty header on "
                           "column %(pos)s.", pos=(position+1))
             raise BulkImportException(msg)
 
-    def _check_valid_row_length(self, row, row_number, headers):
-        if len(headers) != len(row):
+    def _check_valid_row_length(self, row, row_number):
+        if len(self._headers) != len(row):
             msg = gettext("The file you uploaded has an extra value on "
                           "row %s." % (row_number+1))
             raise BulkImportException(msg)
 
-    def _check_required_headers(self, headers):
+    def _check_required_headers(self):
         required_headers = app.config.get("TASK_REQUIRED_FIELDS", {})
-        missing_headers = [r for r in required_headers if r not in headers]
+        missing_headers = [r for r in required_headers if r not in self._headers]
         if missing_headers:
             msg = gettext('The file you uploaded has missing '
                           'required header(s): {0}'.format(','.join(missing_headers)))

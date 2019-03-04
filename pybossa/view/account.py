@@ -31,12 +31,12 @@ from markdown import markdown
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
-from flask.ext.login import login_required, login_user, logout_user, \
+from flask_login import login_required, login_user, logout_user, \
     current_user
 from rq import Queue
 
 import pybossa.model as model
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from flask import jsonify
 from pybossa.core import signer, uploader, sentinel, newsletter
@@ -286,7 +286,14 @@ def signout():
 def get_email_confirmation_url(account):
     """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
-    return url_for_app_type('.confirm_account', key=key, _external=True)
+    scheme = current_app.config.get('PREFERRED_URL_SCHEME')
+    if (scheme):
+        return url_for_app_type('.confirm_account',
+                                key=key,
+                                _scheme=scheme,
+                                _external=True)
+    else:
+        return url_for_app_type('.confirm_account', key=key, _external=True)
 
 
 @blueprint.route('/confirm-email')
@@ -493,7 +500,8 @@ def redirect_profile():
             form_data = cached_users.get_user_pref_metadata(current_user.name)
             form = UserPrefMetadataForm(**form_data)
             form.set_upref_mdata_choices()
-        return _show_own_profile(current_user, form)
+        can_update = can_update_user_info(current_user, current_user)
+        return _show_own_profile(current_user, form, current_user, can_update)
     else:
         return redirect_content_type(url_for('.profile', name=current_user.name))
 
@@ -521,7 +529,7 @@ def profile(name):
     if user.id != current_user.id:
         return _show_public_profile(user, form, can_update)
     else:
-        return _show_own_profile(user, form, can_update)
+        return _show_own_profile(user, form, current_user, can_update)
 
 
 def _show_public_profile(user, form, can_update):
@@ -529,18 +537,24 @@ def _show_public_profile(user, form, can_update):
         user_dict = cached_users.get_user_summary(user.name)
     else:
         user_dict = cached_users.public_get_user_summary(user.name)
-    if current_user.admin:
+    if user_dict and current_user.admin:
         user_dict['email_addr'] = user.email_addr
     projects_contributed = cached_users.public_projects_contributed_cached(user.id)
     projects_created = cached_users.public_published_projects_cached(user.id)
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
-    percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
+    percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1) if user_dict else None
 
     if current_user.is_authenticated() and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
 
-    title = "%s &middot; User Profile" % user_dict['fullname']
+    if user.restrict is False:
+        title = "%s &middot; User Profile" % user_dict['fullname']
+    else:
+        title = "User data is restricted"
+        projects_contributed = []
+        projects_created = []
+        form = None
     response = dict(template='/account/public_profile.html',
                     title=title,
                     user=user_dict,
@@ -556,8 +570,8 @@ def _show_public_profile(user, form, can_update):
     return handle_content_type(response)
 
 
-def _show_own_profile(user, form, can_update):
-    user_dict = cached_users.get_user_summary(user.name)
+def _show_own_profile(user, form, current_user, can_update):
+    user_dict = cached_users.get_user_summary(user.name, current_user)
     rank_and_score = cached_users.rank_and_score(user.id)
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
@@ -670,7 +684,7 @@ def update_profile(name):
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
-    usr = cached_users.get_user_summary(name)
+    usr = cached_users.get_user_summary(name, current_user)
     # Extend the values
     user.rank = usr.get('rank')
     user.score = usr.get('score')
@@ -742,7 +756,9 @@ def _handle_avatar_update(user, avatar_form):
             uploader.delete_file(user.info['avatar'], container)
         upload_method = current_app.config.get('UPLOAD_METHOD')
         avatar_url = get_avatar_url(upload_method,
-                                    _file.filename, container)
+                                    _file.filename,
+                                    container,
+                                    current_app.config.get('AVATAR_ABSOLUTE'))
         user.info['avatar'] = _file.filename
         user.info['container'] = container
         user.info['avatar_url'] = avatar_url
@@ -762,8 +778,10 @@ def _handle_profile_update(user, update_form):
         user.id = update_form.id.data
         user.fullname = update_form.fullname.data
         user.name = update_form.name.data
+        account, domain = update_form.email_addr.data.split('@')
         if (user.email_addr != update_form.email_addr.data and
-                acc_conf_dis is False):
+                acc_conf_dis is False and
+                domain not in current_app.config.get('SPAM')):
             user.valid_email = False
             user.newsletter_prompted = False
             account = dict(fullname=update_form.fullname.data,
@@ -785,6 +803,10 @@ def _handle_profile_update(user, update_form):
                           be updated.' % account['email_addr'])
             flash(fls, 'info')
             return True
+        if acc_conf_dis is False and domain in current_app.config.get('SPAM'):
+            fls = gettext('Use a valid email account')
+            flash(fls, 'info')
+            return False
         if acc_conf_dis:
             user.email_addr = update_form.email_addr.data
         user.privacy_mode = fuzzyboolean(update_form.privacy_mode.data)

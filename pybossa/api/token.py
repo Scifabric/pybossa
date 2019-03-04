@@ -25,7 +25,7 @@ This package adds GET method for:
 import json
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 from flask import Response
-from flask.ext.login import current_user
+from flask_login import current_user
 from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
 from api_base import APIBase, error

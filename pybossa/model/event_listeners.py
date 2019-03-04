@@ -38,6 +38,7 @@ from pybossa.core import result_repo, db, task_repo
 from pybossa.jobs import webhook, notify_blog_users
 from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
+from pybossa import sched
 
 from pybossa.core import sentinel
 from pybossa.sched import Schedulers
@@ -65,6 +66,7 @@ def add_blog_event(mapper, conn, target):
     update_feed(obj)
     # Notify volunteers
     if current_app.config.get('DISABLE_EMAIL_NOTIFICATIONS') is None:
+        scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
         mail_queue.enqueue(notify_blog_users,
                            blog_id=target.id,
                            project_id=target.project_id)
@@ -73,7 +75,9 @@ def add_blog_event(mapper, conn, target):
         launch_url = url_for('project.show_blogpost',
                              short_name=tmp['short_name'],
                              id=target.id,
+                             _scheme=scheme,
                              _external=True)
+        # print launch_url
         web_buttons = [{"id": "read-more-button",
                         "text": "Read more",
                         "icon": "http://i.imgur.com/MIxJp1L.png",
@@ -155,8 +159,10 @@ def add_user_contributed_to_feed(conn, user_id, project_obj):
                        fullname=r.fullname,
                        info=r.info)
             tmp = User().to_public_json(tmp)
+            tmp['project_id'] = project_obj['id']
             tmp['project_name'] = project_obj['name']
             tmp['project_short_name'] = project_obj['short_name']
+            tmp['category_id'] = project_obj['category_id']
             tmp['action_updated'] = 'UserContribution'
         if tmp:
             update_feed(tmp)
@@ -237,8 +243,8 @@ def create_result(conn, project_id, task_id):
 def on_taskrun_submit(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get project details
-    sql_query = ('select name, short_name, published, webhook, info from project \
-                 where id=%s') % target.project_id
+    sql_query = ('select name, short_name, published, webhook, info, category_id \
+                 from project where id=%s') % target.project_id
     results = conn.execute(sql_query)
     tmp = dict()
     for r in results:
@@ -247,12 +253,14 @@ def on_taskrun_submit(mapper, conn, target):
         _published = r.published
         tmp['info'] = r.info
         _webhook = r.webhook
+        tmp['category_id'] = r.category_id
         tmp['id'] = target.project_id
 
     project_public = dict()
     project_public.update(Project().to_public_json(tmp))
     project_public['action_updated'] = 'TaskCompleted'
 
+    sched.after_save(target, conn)
     add_user_contributed_to_feed(conn, target.user_id, project_public)
 
     # golden tasks never complete; bypass update to task.state

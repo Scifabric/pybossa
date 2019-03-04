@@ -25,7 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 import json
 from api_base import APIBase
 from pybossa.core import task_repo
-from flask.ext.login import current_user, request
+from flask_login import current_user, request
 from flask import Response, abort
 from werkzeug.exceptions import MethodNotAllowed, NotFound, Unauthorized
 from pybossa.core import ratelimits

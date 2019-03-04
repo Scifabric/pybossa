@@ -18,7 +18,7 @@
 
 from functools import wraps
 from flask import Blueprint, current_app, Response, request
-from flask.ext.login import current_user, login_required
+from flask_login import current_user, login_required
 
 import requests
 from werkzeug.exceptions import Forbidden, BadRequest, InternalServerError, NotFound
@@ -33,7 +33,7 @@ from pybossa.hdfs.client import HDFSKerberos
 from pybossa.sched import has_lock
 
 
-blueprint = Blueprint('files', __name__)
+blueprint = Blueprint('fileproxy', __name__)
 
 
 def no_cache(view_func):

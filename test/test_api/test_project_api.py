@@ -127,6 +127,13 @@ class TestProjectAPI(TestAPI):
         for key in keys:
             assert key not in data[0].keys()
 
+        # Stats
+        res = self.app.get("/api/project?limit=1&all=1&stats=True&api_key=" + user.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert 'stats' in data[0].keys()
+        assert data[0]['stats']['overall_progress'] == 0
+
         # Keyset pagination
         url = "/api/project?all=1&limit=5&last_id=%s&api_key=%s" % (projects[4].id, user.api_key)
         res = self.app.get(url)
@@ -364,7 +371,8 @@ class TestProjectAPI(TestAPI):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         make_subadmin(users[1])
-        CategoryFactory.create()
+        cat1 = CategoryFactory.create()
+        cat2 = CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -406,9 +414,47 @@ class TestProjectAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'user2')
-        ## Test that a default category is assigned to the project
-        assert out.category_id, "No category assigned to project"
+        # Test that a default category is assigned to the project
+        assert cat1.id == out.category_id, "No category assigned to project"
         id_ = out.id
+
+        # now a real user with headers auth and specific category_id
+        headers = [('Authorization', users[1].api_key)]
+        new_project2 = dict(
+            name=name + '3',
+            short_name='xxxx-project3',
+            description='description3',
+            owner_id=1,
+            category_id=cat2.id,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
+        new_project2 = json.dumps(new_project2)
+        res = self.app.post('/api/project', headers=headers,
+                            data=new_project2)
+        out = project_repo.get_by(name=name + '3')
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project3'), out
+        assert_equal(out.owner.name, 'user2')
+        # Test that a default category is assigned to the project
+        assert cat2.id == out.category_id, "No category assigned to project"
+
+        # now a real user with headers auth and non-existing category_id
+        headers = [('Authorization', users[1].api_key)]
+        new_project3 = dict(
+            name=name + '4',
+            short_name='xxxx-project4',
+            description='description4',
+            owner_id=1,
+            category_id=5014,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
+        new_project3 = json.dumps(new_project3)
+        res = self.app.post('/api/project', headers=headers,
+                            data=new_project3)
+        err = json.loads(res.data)
+        assert err['status'] == 'failed', res.data
+        assert err['exception_msg'] == 'category_id does not exist', res.data
+        assert err['status_code'] == 400, res.data
 
         # test re-create should fail
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
@@ -552,9 +598,27 @@ class TestProjectAPI(TestAPI):
         res = self.app.put('/api/project/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
-        assert res.status_code == 415, err
+        assert res.status_code == 403, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'Forbidden', err
+
+        empty_data = dict(
+            name=name,
+            short_name='',
+            description='',
+            owner_id=1,
+            long_description=u'Long Description\n================',
+            info=dict(passwd_hash="hello"))
+        empty_data = json.dumps(empty_data)
+
+        res = self.app.post('/api/project?api_key=' + users[1].api_key,
+                            data=empty_data)
+        err = json.loads(res.data)
+
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'DBIntegrityError', err
 
         # With not JSON data
@@ -608,19 +672,20 @@ class TestProjectAPI(TestAPI):
         assert res.mimetype == 'application/json'
 
         # delete a project that does not exist
-        url = '/api/project/5000?api_key=%s' % users[1].api_key
+        url = '/api/project/%s?api_key=%s' % (5000, users[1].api_key)
         res = self.app.delete(url, data=datajson)
-        error = json.loads(res.data)
-        assert res.status_code == 404, error
+        assert res.status_code == 429, error
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
         assert error['target'] == 'project', error
-        assert error['exception_cls'] == 'NotFound', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         # delete a project that does not exist
         url = '/api/project/?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
+
+
 
     @with_context
     def test_project_update_task_presenter(self):
@@ -652,7 +717,7 @@ class TestProjectAPI(TestAPI):
 
         assert_equal(res.status, '401 UNAUTHORIZED', res.data)
         out = json.loads(res.data)
-        assert out.get('status') == 'failed', error
+        assert out.get('status') == 'failed', res.data
 
         # Subadmin can create project without task presenter
         data['info'].pop('task_presenter')
@@ -662,8 +727,8 @@ class TestProjectAPI(TestAPI):
 
         out = project_repo.get_by(name=name)
         assert out, out
-        assert_equal(out.short_name, 'xxxx-project'), out
-        assert_equal(out.owner.name, 'user2')
+        assert_equal(out.short_name, u'xxxx-project'), out
+        assert_equal(out.owner.name, u'user2')
         assert_equal(out.owners_ids, [subadmin.id])
         assert_equal(out.info, {u'passwd_hash': u'hello'})
         id_ = out.id
@@ -677,25 +742,25 @@ class TestProjectAPI(TestAPI):
 
         assert_equal(res.status, '401 UNAUTHORIZED', res.data)
         out = json.loads(res.data)
-        assert out.get('status') == 'failed', error
+        assert out.get('status') == 'failed', res.data
 
         # Admin can create project with task presenter
         name=u'XXXX Project 2'
         data = dict(
             name=name,
-            short_name='xxxx-project-2',
-            description='description',
+            short_name=u'xxxx-project-2',
+            description=u'description',
             owner_id=admin.id,
             long_description=u'Long Description\n================',
-            info=dict(passwd_hash="hello", task_presenter='taskpresenter'))
+            info=dict(passwd_hash=u'hello', task_presenter=u'taskpresenter'))
 
         newdata = json.dumps(data)
         res = self.app.post('/api/project?api_key=' + admin.api_key,
                             data=newdata)
         out = project_repo.get_by(name=name)
         assert out, out
-        assert_equal(out.short_name, 'xxxx-project-2'), out
-        assert_equal(out.owner.name, 'user1')
+        assert_equal(out.short_name, u'xxxx-project-2'), out
+        assert_equal(out.owner.name, u'user1')
         assert_equal(out.owners_ids, [1])
         assert_equal(out.info, {u'task_presenter': u'taskpresenter', u'passwd_hash': u'hello'})
         id_ = out.id
@@ -713,7 +778,7 @@ class TestProjectAPI(TestAPI):
         assert_equal(out.owner.name, 'user1')
         assert_equal(out.owners_ids, [1])
         assert_equal(out.info, {u'task_presenter': u'new-taskpresenter', u'passwd_hash': u'hello'})
-        assert out.id == id_, error
+        assert out.id == id_, out
 
     @with_context
     def test_project_post_invalid_short_name(self):
@@ -739,29 +804,6 @@ class TestProjectAPI(TestAPI):
         assert error['exception_cls'] == 'ValueError', error
         message = "Project short_name is not valid, as it's used by the system."
         assert error['exception_msg'] == message, error
-
-
-    @with_context
-    def test_project_put_invalid_short_name(self):
-        """Test API project PUT returns error if short_name is invalid (i.e. is
-            a name used by the Flask app as a URL endpoint"""
-        user = UserFactory.create()
-        CategoryFactory.create()
-        project = ProjectFactory.create(owner=user)
-        name = u'XXXX Project'
-        data = {'short_name': 'new'}
-        datajson = json.dumps(data)
-        res = self.app.put('/api/project/%s?api_key=%s' % (project.id, user.api_key),
-                            data=datajson)
-        error = json.loads(res.data)
-        assert res.status_code == 415, res.status_code
-        assert error['status'] == 'failed', error
-        assert error['action'] == 'PUT', error
-        assert error['target'] == 'project', error
-        assert error['exception_cls'] == 'ValueError', error
-        message = "Project short_name is not valid, as it's used by the system."
-        assert error['exception_msg'] == message, error
-
 
     @with_context
     def test_admin_project_post(self):
@@ -840,8 +882,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.get('/api/project/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
-        print data
-        assert res.status_code == 401
+        assert res.status_code == 401, res.data
         return
 
         error_msg = "The reported total number of tasks is wrong"
@@ -1094,7 +1135,6 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
 
         res = self.app.put(url, data=data)
-        print res.data
         error_msg = json.loads(res.data)['exception_msg']
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
@@ -1134,7 +1174,6 @@ class TestProjectAPI(TestAPI):
         payload = dict(name='foo', short_name='foo', description='foo',
                        info=dict(passwd_hash="hey"))
         res = self.app.post(url, data=json.dumps(payload))
-        print res.data
         project_id = json.loads(res.data)['id']
         clean_project_mock.assert_called_with(project_id), res.data
 
@@ -1157,6 +1196,7 @@ class TestProjectAPI(TestAPI):
         del payload['published']
         del payload['owner_id']
         del payload['secret_key']
+
         res = self.app.put(url, data=json.dumps(payload))
         clean_project_mock.assert_called_with(project.id)
 
@@ -1438,3 +1478,21 @@ class TestProjectAPI(TestAPI):
             assert res.status_code == 200, 'user assigned to project should have obtained project'
             data = json.loads(res.data)
             assert data['short_name'] == project.short_name
+
+
+    @with_context
+    def test_project_filter_by_category_works(self):
+        """Test API project filter by category works."""
+        users = UserFactory.create_batch(1, info=dict())
+        make_subadmin(users[0])
+        category = CategoryFactory.create()
+        projects_published = ProjectFactory.create_batch(2,
+                                                         published=True,
+                                                         category=category)
+        projects_not_published = ProjectFactory.create_batch(2,
+                                                             published=False,
+                                                             category=category)
+        headers = [('Authorization', users[0].api_key)]
+        res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers)
+        data = json.loads(res.data)
+        assert len(data) == 4, data

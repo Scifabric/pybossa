@@ -18,16 +18,19 @@
 
 from mock import patch, Mock, mock_open
 from pybossa.importers.csv import BulkTaskLocalCSVImport, BulkTaskGDImport
+from pybossa.encryption import AESWithGCM
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
-from default import with_context
+from default import with_context, Test
 from nose.tools import assert_equal
 
-class TestBulkTaskLocalCSVImport(object):
+
+class TestBulkTaskLocalCSVImport(Test):
 
     def setUp(self):
         form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
         self.importer = BulkTaskLocalCSVImport(**form_data)
+        super(TestBulkTaskLocalCSVImport, self).setUp()
 
     def test_importer_type_local_csv(self):
         assert isinstance(self.importer, BulkTaskLocalCSVImport) is True
@@ -62,9 +65,48 @@ class TestBulkTaskLocalCSVImport(object):
     @with_context
     @patch('pybossa.importers.csv.get_import_csv_file')
     def test_gold_answers_import(self, s3_get):
-        expected_t1_gold_ans = {u'ans': u'3', u'ans2': u'4'}
-        expected_t2_gold_ans = {u'ans': u'a1', u'ans2': u'a2'}
-        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar,ans_gold,ans2_gold\n1,2,3,4\naaa,bbb,a1,a2\n'), create=True):
+        expected_t1_gold_ans = {u'ans': u'3', u'ans2': u'4', u'ans3': u'5'}
+        expected_t2_gold_ans = {u'ans': u'a1', u'ans2': u'a2', u'ans3': u'a3'}
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data=u'Foo,Bar,ans_gold,ans2_gold,ans3_priv_gold\n1,2,3,4,5\naaa,bbb,a1,a2,a3\n'), create=True):
             [t1, t2] = self.importer.tasks()
             assert_equal(t1['gold_answers'], expected_t1_gold_ans), t1
             assert_equal(t2['gold_answers'], expected_t2_gold_ans), t2
+
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
+    @patch('pybossa.importers.csv.data_access_levels')
+    def test_priv_fields_import(self, mock_data_access, s3_get):
+        mock_data_access = True
+        expected_t1_priv_field = {u'Bar2': u'4', u'Bar': u'3'}
+        expected_t1_priv_gold_ans = {u'ans2': u'5', u'ans': u'2'}
+        expected_t2_priv_field = {u'Bar2': u'd', u'Bar': u'c'}
+        expected_t2_priv_gold_ans = {u'ans2': u'e', u'ans': u'b'}
+
+        with patch('pybossa.importers.csv.io.open', mock_open(
+            read_data=u'Foo,ans_priv_gold,Bar_priv,Bar2_priv,ans2_priv_gold\n1,2,3,4,5\na,b,c,d,e\n'), create=True):
+            [t1, t2] = self.importer.tasks()
+            assert_equal(t1['private_fields'], expected_t1_priv_field), t1
+            assert_equal(t1['private_gold_answers'], expected_t1_priv_gold_ans), t1
+            assert_equal(t2['private_fields'], expected_t2_priv_field), t2
+            assert_equal(t2['private_gold_answers'], expected_t2_priv_gold_ans), t2
+            assert_equal(t1['calibration'], 1)
+            assert_equal(t2['calibration'], 1)
+            assert_equal(t1['exported'], True)
+            assert_equal(t2['exported'], True)
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.get_s3_bucket_key')
+    def test_count_tasks_encrypted(self, s3_get):
+        k = Mock()
+        s3_get.return_value = '', k
+        cont = 'req\n1'
+        cipher = AESWithGCM('abcd')
+        k.get_contents_as_string.return_value = cipher.encrypt(cont)
+        config = {
+            'S3_IMPORT_BUCKET': 'aadf',
+            'FILE_ENCRYPTION_KEY': 'abcd',
+            'ENABLE_ENCRYPTION': True
+        }
+        with patch.dict(self.flask_app.config, config):
+            number_of_tasks = self.importer.count_tasks()
+            assert number_of_tasks is 1, number_of_tasks

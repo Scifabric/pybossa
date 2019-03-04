@@ -217,7 +217,7 @@ class TestWebhookView(web.Helper):
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
         q.assert_called_once_with(webhook, project.webhook,
-                                  wh.payload, wh.id)
+                                  wh.payload, wh.id, True)
 
     @with_context
     @patch('pybossa.view.projects.webhook_queue.enqueue')
@@ -246,5 +246,5 @@ class TestWebhookView(web.Helper):
         calls = []
         for w in whs:
             calls.append(call(webhook, project.webhook,
-                              w.payload, w.id))
+                              w.payload, w.id, True))
         q.assert_has_calls(calls)

@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import io
+import os.path
 import json
 from default import (with_context, mock_contributions_guard,
                      mock_contributions_guard_presented_time)
@@ -22,7 +24,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
-                        AnonymousTaskRunFactory, UserFactory)
+                       AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.core import db, anonymizer
@@ -97,7 +99,7 @@ class TestTaskrunAPI(TestAPI):
                                     info={'answer': 'annakarenina'})
         TaskRunFactory.create_batch(10, project=project_two,
                                     info={'answer': 'annakarenina'})
-        date_new = '2022-01-01T14:37:30.642119'
+        date_new = '3019-01-01T14:37:30.642119'
         date_old = '2014-01-01T14:37:30.642119'
         t21 = TaskRunFactory.create(created=date_new)
         t22 = TaskRunFactory.create(created=date_old)
@@ -189,7 +191,6 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "It should get the last item first."
         taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
         for i in range(20):
-            print data[i]['id']
             assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context
@@ -442,7 +443,7 @@ class TestTaskrunAPI(TestAPI):
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
         # no anonymous contributions
-        assert tmp.status_code == 403, r_taskrun
+        assert tmp.status_code == 403, datajson
 
         # If the anonymous tries again it should be forbidden
         tmp = self.app.post('/api/taskrun', data=datajson)
@@ -451,10 +452,12 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
 
     @with_context
+    @patch('pybossa.api.task_run.can_post')
     @patch('pybossa.api.task_run.ContributionsGuard')
-    def test_taskrun_authenticated_post(self, guard):
+    def test_taskrun_authenticated_post(self, guard, mock_can_post):
         """Test API TaskRun creation and auth for authenticated users"""
         guard.return_value = mock_contributions_guard(True)
+        mock_can_post.return_value = True
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
         data = dict(
@@ -469,13 +472,12 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
-        print err
-        assert tmp.status_code == 403, err_msg
-        assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid project_id', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
-        assert err['target'] == 'taskrun', err_msg
+        assert tmp.status_code == 403, (err, err_msg)
+        assert err['status'] == 'failed', (err, err_msg)
+        assert err['status_code'] == 403, (err, err_msg)
+        assert err['exception_msg'] == 'Invalid project_id', (err, err_msg)
+        assert err['exception_cls'] == 'Forbidden', (err, err_msg)
+        assert err['target'] == 'taskrun', (err, err_msg)
 
         # With wrong task_id
         data['project_id'] = task.project_id
@@ -484,12 +486,12 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the task_id is wrong"
         err = json.loads(tmp.data)
-        assert tmp.status_code == 403, err_msg
-        assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid task_id', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
-        assert err['target'] == 'taskrun', err_msg
+        assert tmp.status_code == 403, (err, err_msg)
+        assert err['status'] == 'failed', (err, err_msg)
+        assert err['status_code'] == 403, (err, err_msg)
+        assert err['exception_msg'] == 'Invalid task_id', (err, err_msg)
+        assert err['exception_cls'] == 'Forbidden', (err, err_msg)
+        assert err['target'] == 'taskrun', (err, err_msg)
 
         # Now with everything fine
         data = dict(
@@ -739,6 +741,69 @@ class TestTaskrunAPI(TestAPI):
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
 
+    @with_context
+    def test_taskrun_update_with_result(self):
+        """Test TaskRun API update with result works"""
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        non_owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project, n_answers=2)
+        anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
+        user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
+
+        task_run = dict(project_id=project.id, task_id=task.id, info='another result')
+        datajson = json.dumps(task_run)
+
+        # anonymous user
+        # No one can update anonymous TaskRuns
+        url = '/api/taskrun/%s' % anonymous_taskrun.id
+        res = self.app.put(url, data=datajson)
+        assert anonymous_taskrun, anonymous_taskrun
+        assert_equal(anonymous_taskrun.user, None)
+        error_msg = 'Should not be allowed to update'
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+
+        # real user but not allowed as not owner!
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, non_owner.api_key)
+        res = self.app.put(url, data=datajson)
+        error_msg = 'Should not be able to update TaskRuns of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # real user
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
+        out = self.app.get(url, follow_redirects=True)
+        task = json.loads(out.data)
+        datajson = json.loads(datajson)
+        datajson['link'] = task['link']
+        datajson['links'] = task['links']
+        datajson = json.dumps(datajson)
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # PUT with not JSON data
+        res = self.app.put(url, data=task_run)
+        err = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(task_run))
+        err = json.loads(res.data)
+        assert_equal(res.status, '415 UNSUPPORTED MEDIA TYPE', error_msg)
+
+        # PUT with fake data
+        task_run['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(task_run))
+        err = json.loads(res.data)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
+        # root user
+        url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, admin.api_key)
+        res = self.app.put(url, data=datajson)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
 
     @with_context
     def test_taskrun_update(self):
@@ -781,16 +846,18 @@ class TestTaskrunAPI(TestAPI):
         url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, owner.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
-        assert_equal(res.status, '403 FORBIDDEN', res.data)
+        assert res.status_code == 200
+        assert out['info'] == 'another result'
+        # assert_equal(res.status, '403 FORBIDDEN', res.data)
 
         # PUT with not JSON data
         res = self.app.put(url, data=task_run)
         err = json.loads(res.data)
-        assert res.status_code == 403, err
+        assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'Forbidden', err
+        assert err['exception_cls'] == 'ValueError', err
 
         # PUT with not allowed args
         res = self.app.put(url + "&foo=bar", data=json.dumps(task_run))
@@ -805,17 +872,18 @@ class TestTaskrunAPI(TestAPI):
         task_run['wrongfield'] = 13
         res = self.app.put(url, data=json.dumps(task_run))
         err = json.loads(res.data)
-        assert res.status_code == 403, err
+        assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'Forbidden', err
+        assert err['exception_cls'] == 'TypeError', err
         task_run.pop('wrongfield')
 
         # root user
         url = '/api/taskrun/%s?api_key=%s' % (user_taskrun.id, admin.api_key)
         res = self.app.put(url, data=datajson)
-        assert_equal(res.status, '403 FORBIDDEN', res.data)
+        assert res.status_code == 200
+        #assert_equal(res.status, '403 FORBIDDEN', res.data)
 
 
     @with_context
@@ -1105,3 +1173,4 @@ class TestTaskrunAPI(TestAPI):
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
 
         assert result is None, result
+        # assert result is not None, result

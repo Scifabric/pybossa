@@ -25,9 +25,6 @@ This package adds GET, POST, PUT and DELETE methods for:
     * task_runs,
     * users,
     * global_stats,
-    * vmcp
-    * completedtasks
-    * completedtaskruns
 
 """
 
@@ -36,7 +33,7 @@ import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask import current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
@@ -55,7 +52,6 @@ from project import ProjectAPI
 from announcement import AnnouncementAPI
 from blogpost import BlogpostAPI
 from category import CategoryAPI
-from vmcp import VmcpAPI
 from favorites import FavoritesAPI
 from user import UserAPI
 from token import TokenAPI
@@ -126,7 +122,6 @@ register_api(HelpingMaterialAPI, 'api_helpingmaterial',
              '/helpingmaterial', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
-register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
              pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')

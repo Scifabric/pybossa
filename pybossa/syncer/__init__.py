@@ -24,7 +24,7 @@ import json
 import requests
 from datetime import datetime
 from flask import current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import Unauthorized
 from pybossa.core import sentinel, http_signer
 

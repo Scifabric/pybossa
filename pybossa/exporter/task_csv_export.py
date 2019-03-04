@@ -25,7 +25,6 @@ from pybossa.core import uploader, task_repo
 from pybossa.util import UnicodeWriter
 from export_helpers import browse_tasks_export
 
-
 class TaskCsvExporter(CsvExporter):
     """CSV Exporter for exporting ``Task``s and ``TaskRun``s
     for a project.
@@ -148,10 +147,29 @@ class TaskCsvExporter(CsvExporter):
     def _handle_row(self, writer, t, headers):
         writer.writerow(self._format_csv_row(self.merge_objects(t),
                                              headers=headers))
+   
+    @staticmethod
+    def flatten(key_value_pairs, key_prefix='', return_value=None):
+        return_value = return_value if return_value is not None else {}
+        for k, v in key_value_pairs:
+            key = k if not key_prefix else '{}__{}'.format(key_prefix, k) 
+            if isinstance(v, dict):
+                iterator = TaskCsvExporter.flatten(v.iteritems(), key, return_value)
+            elif isinstance(v, list):
+                iterator = TaskCsvExporter.flatten(enumerate(v), key, return_value)
+            else:
+                iterator = [(key, v)]
+            for kk, vv, in iterator:
+                yield kk, vv                                        
+
     def _get_csv_with_filters(self, out, writer, table, project_id,
                               expanded, filters):
         objs = browse_tasks_export(table, project_id, expanded, filters)
         rows = [obj for obj in objs]
+        # for row in rows:
+        #     if row['info']:
+        #         info = dict(TaskCsvExporter.flatten(row['info'].iteritems()))
+        #         row['info'].update(info)
 
         headers = self._get_all_headers(objs=rows,
                                         expanded=expanded,

@@ -49,6 +49,8 @@ class TaskRun(db.Model, DomainObject):
     calibration = Column(Integer)
     #: External User ID
     external_uid = Column(Text)
+    #: Media URL to an Image, Audio, PDF, or Video
+    media_url = Column(Text)
     #: Value of the answer.
     info = Column(JSONB)
     '''General writable field that should be used by clients to record results\

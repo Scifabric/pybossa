@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from .base import BulkTaskImport, BulkImportException
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from urlparse import urlparse, parse_qs

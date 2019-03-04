@@ -26,6 +26,7 @@ from pybossa.exporter.json_export import JsonExporter
 from factories import ProjectFactory, UserFactory, TaskFactory, TaskRunFactory
 from werkzeug.datastructures import FileStorage
 from pybossa.uploader.local import LocalUploader
+import unittest
 
 class TestTaskCsvExporter(Test):
 
@@ -87,7 +88,28 @@ class TestTaskCsvExporter(Test):
         assert french_value == u'fran\u00E7ais am\u00E9ricaine \u00E9pais'
         assert chinese_value == u'\u4E2D\u570B\u7684 \u82F1\u8A9E \u7F8E\u570B\u4EBA'
         assert smart_quotes_value == u'\u201CHello\u201D'
+    
+    @with_context
+    @unittest.skip("Skipping Test until we make flatten available")
+    def test_task_csv_exporter_flatten(self):
+        """Test that TaskCsvExporter flatten method works."""
+        exporter = TaskCsvExporter()
 
+        row = {'a': {'nested_x': 'N'},
+               'b': 1,
+               'c': {
+                   'nested_y': {'double_nested': 'www.example.com'},
+                   'nested_z': True},
+               'd': [{'nested_z': 'X'}]} 
+
+        keys = sorted(dict(exporter.flatten(row.iteritems(), key_prefix='', return_value=None)).keys())
+
+        expected_keys = ['a__nested_x',
+                         'b',
+                         'c__nested_y__double_nested',
+                         'c__nested_z',
+                         'd__0__nested_z']
+        assert keys == expected_keys
 
 class TestExporters(Test):
 

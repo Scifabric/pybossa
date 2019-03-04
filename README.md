@@ -9,8 +9,7 @@ Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveral
 
 # What is PYBOSSA?
 
-PYBOSSA is our technology, used for the development of platforms and data collection
-within collaborative environments, analysis and data enrichment.
+PYBOSSA is a technology built by [Scifabric](https://scifabric.com), for crowdsourcing or citizen science platforms.
 
 PYBOSSA is an extremely flexible and versatile technology with a multitude of applications that
 adapt to each specific case facilitating many of the daily tasks that take place in research
@@ -25,8 +24,24 @@ PYBOSSA integrates with other data collection products such as Amazon S3, Twitte
 Google Spreadsheets, Flickr, Raspberry Pi, etc. Through all these integrations
 PYBOSSA allows data capture for further analysis made by users in a transparent and easy way.
 
+- 📘 Documentation: [https://docs.pybossa.com](https://docs.pybossa.com)
+- 🎬 Video: [Intro](https://www.youtube.com/watch?v=oH8fJAhRDJM)
+- 🐦 Twitter: [@PyBossa](https://twitter.com/pybossa)
+- 💬 Chat: [Gitter](https://gitter.im/Scifabric/pybossa)
+- 📦 [PYBOSSA extras](https://github.com/Scifabric/)
+- 👉 [Play with PYBOSSA online](https://crowdcrafting.org)
 
-## Supporting PYBOSSA
+# PYBOSSA for python 3
+
+We've finally migrated PYBOSSA to python 3. We're not going to merge into master until we test it in production a bit
+more, so please, help us by testing it. All you have to do is basically, check out the python3 branch (migrate-python3) and run
+it. Then, any bug, issue you find, you just report it and we will be happy to help you.
+
+## Get professional support
+
+You can hire us to help you with your PYBOSSA project. Go to our website, and [contact us](https://scifabric.com/).
+
+### Supporting PYBOSSA
 
 PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome 
 [backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out 
@@ -40,7 +55,7 @@ Actividad subvencionada por el Ministerio de Educación, Cultura y Deporte
 
 # See it in Action
 
-PYBOSSA powers [Crowdcrafting.org](http://crowdcrafting.org/) and [MicroPast](http://crowdsourced.micropasts.org/), [LibCrowds](https://www.libcrowds.com/) and many more projects.
+PYBOSSA powers [Solar Maps](https://solarmaps.greenpeace.es/) and [MicroPast](http://crowdsourced.micropasts.org/), [LibCrowds](https://www.libcrowds.com/) and many more projects.
 
 For a full list of PYBOSSA projects, check our [case studies](https://scifabric.com/) and [blog](https://scifabric.com/blog/).
 
@@ -48,10 +63,9 @@ For a full list of PYBOSSA projects, check our [case studies](https://scifabric.
 
 **Important: if you are updating a server, please, be sure to check the
 Database Migration scripts, as new changes could introduce new tables,
-columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/install/#updating-pybossa) from the
-documentation**
+columns, etc, in the DB model. See the [Updating Section](https://docs.pybossa.com/installation/guide/#updating-pybossa) from the documentation**
 
-See [installation instructions](http://docs.pybossa.com/install/).
+See [installation instructions](https://docs.pybossa.com/installation/gettingstarted/).
 
 # Testing
 
@@ -68,10 +82,6 @@ Just run:
 [![BrowserStack](http://i.imgur.com/Pg0utrk.png)](http://browserstack.com/)
 
 Thanks to the support of [BrowserStack](http://browserstack.com/) we can do real cross browser testing on multiple desktop and mobile platforms.
-
-# Useful Links
-
-* [Documentation](http://docs.pybossa.com/)
 
 # Contributing
 
@@ -98,7 +108,7 @@ crowd-source human problem-solving skills!
 
 ## Copyright / License
 
-Copyright 2015 [Scifabric LTD](https://scifabric.com).
+Copyright 2019 [Scifabric LTD](https://scifabric.com).
 
 Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)

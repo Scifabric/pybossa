@@ -31,7 +31,7 @@ from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
 import dateutil.parser
 from functools import wraps
-from flask.ext.login import current_user
+from flask_login import current_user
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from math import ceil
@@ -42,7 +42,7 @@ import hmac
 import random
 import simplejson
 import time
-from flask.ext.babel import lazy_gettext
+from flask_babel import lazy_gettext
 import re
 import os
 from werkzeug.utils import secure_filename
@@ -644,7 +644,7 @@ def fuzzyboolean(value):
     raise ValueError("Invalid literal for boolean(): {}".format(value))
 
 
-def get_avatar_url(upload_method, avatar, container):
+def get_avatar_url(upload_method, avatar, container, external):
     """Return absolute URL for avatar."""
     upload_method = upload_method.lower()
     if upload_method in ['rackspace', 'cloud']:
@@ -653,11 +653,13 @@ def get_avatar_url(upload_method, avatar, container):
                        container=container)
     else:
         filename = container + '/' + avatar
-        return url_for('uploads.uploaded_file', filename=filename,
-                       _external=True)
+        return url_for('uploads.uploaded_file',
+                       filename=filename,
+                       _scheme=current_app.config.get('PREFERRED_URL_SCHEME'),
+                       _external=external)
 
 
-def get_disqus_sso(user): # pragma: no cover
+def get_disqus_sso(user):  # pragma: no cover
     # create a JSON packet of our data attributes
     # return a script tag to insert the sso message."""
     message, timestamp, sig, pub_key = get_disqus_sso_payload(user)
@@ -942,9 +944,10 @@ def valid_or_no_s3_bucket(task_data):
         return True
 
     for v in task_data.itervalues():
-        bucket = get_s3_bucket_name(v)
-        if bucket is not None and bucket not in allowed_s3_buckets:
-            return False
+        if isinstance(v, basestring):
+            bucket = get_s3_bucket_name(v)
+            if bucket is not None and bucket not in allowed_s3_buckets:
+                return False
     return True
 
 
@@ -1076,12 +1079,13 @@ def validate_required_fields(data):
 def get_file_path_for_import_csv(csv_file):
     from pybossa.core import uploader
 
-    s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
+    s3_bucket = current_app.config.get('S3_IMPORT_BUCKET')
     container = 'user_{}'.format(current_user.id) if current_user else 'user'
     if s3_bucket:
-        path = s3_upload_file_storage(s3_bucket,
-            csv_file, directory=container,
-            file_type_check=False, return_key_only=True)
+        with_encryption = current_app.config.get('ENABLE_ENCRYPTION')
+        path = s3_upload_file_storage(s3_bucket, csv_file, directory=container,
+            file_type_check=False, return_key_only=True,
+            with_encryption=with_encryption, conn_name='S3_IMPORT')
     else:
         tmpfile = NamedTemporaryFile(delete=False)
         path = tmpfile.name
@@ -1092,7 +1096,9 @@ def get_file_path_for_import_csv(csv_file):
 def get_import_csv_file(path):
     s3_bucket = current_app.config.get("S3_IMPORT_BUCKET")
     if s3_bucket:
-        return get_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT')
+        decrypt = current_app.config.get('ENABLE_ENCRYPTION')
+        return get_file_from_s3(s3_bucket, path, conn_name='S3_IMPORT',
+            decrypt=decrypt)
     else:
         return open(path)
 

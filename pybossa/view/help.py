@@ -23,7 +23,7 @@ from pybossa.util import handle_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from readability.readability import Document
-from flask.ext.login import login_required
+from flask_login import login_required
 
 blueprint = Blueprint('help', __name__)
 

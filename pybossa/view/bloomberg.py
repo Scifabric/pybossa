@@ -17,7 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint, request, flash, url_for, redirect, current_app, abort
-from flask.ext.babel import gettext
+from flask_babel import gettext
 from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user
 from urlparse import urlparse
