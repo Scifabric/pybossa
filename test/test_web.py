@@ -8838,8 +8838,7 @@ class TestWebUserMetadataUpdate(web.Helper):
     def assert_is_subadmin(self, user):
         assert not user.admin and user.subadmin
 
-    def mock_upref_mdata_choices(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
+    def mock_upref_mdata_choices(self, get_upref_mdata_choices):
         def double(x): return (x,x)
         get_upref_mdata_choices.return_value = dict(
             languages=map(double,["Afrikaans", "Albanian", "Welsh"]),
@@ -8858,7 +8857,7 @@ class TestWebUserMetadataUpdate(web.Helper):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_normal_user_cannot_update_own_user_type(self, upref_mdata, get_upref_mdata_choices):
         """Test normal user can update their own metadata except for user_type"""
-        self.mock_upref_mdata_choices(upref_mdata, get_upref_mdata_choices)
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
         # First user created is automatically admin, so get that out of the way.
         user_admin = UserFactory.create()
         user_normal = self.create_user()
@@ -8873,7 +8872,7 @@ class TestWebUserMetadataUpdate(web.Helper):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_admin_user_can_update_own_metadata(self, upref_mdata, get_upref_mdata_choices):
         '''Test admin can update their own metadata'''
-        self.mock_upref_mdata_choices(upref_mdata, get_upref_mdata_choices)
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
         user_admin = self.create_user()
         assert user_admin.admin
         self.signin_user(user_admin)
@@ -8886,7 +8885,7 @@ class TestWebUserMetadataUpdate(web.Helper):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_subadmin_user_can_update_own_metadata(self, upref_mdata, get_upref_mdata_choices):
         '''Test subadmin can update their own metadata'''
-        self.mock_upref_mdata_choices(upref_mdata, get_upref_mdata_choices)
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
         # First user created is automatically admin, so get that out of the way.
         user_admin = UserFactory.create()
         user_subadmin = self.create_user(subadmin=True)
@@ -8901,7 +8900,7 @@ class TestWebUserMetadataUpdate(web.Helper):
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_subadmin_user_can_update_normal_user_metadata(self, upref_mdata, get_upref_mdata_choices):
         '''Test subadmin can update normal user metadata'''
-        self.mock_upref_mdata_choices(upref_mdata, get_upref_mdata_choices)
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
         # First user created is automatically admin, so get that out of the way.
         user_admin = UserFactory.create()
         user_subadmin = UserFactory.create(subadmin=True)
