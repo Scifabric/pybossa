@@ -521,9 +521,8 @@ def profile(name):
         raise abort(404)
 
     form = None
-    can_update = False
+    (can_update, disabled_fields) = can_update_user_info(current_user, user)
     if app_settings.upref_mdata:
-        (can_update, disabled_fields) = can_update_user_info(current_user, user)
         form_data = cached_users.get_user_pref_metadata(user.name)
         form = UserPrefMetadataForm(can_update=(can_update, disabled_fields), **form_data)
         form.set_upref_mdata_choices()
