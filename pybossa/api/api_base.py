@@ -314,6 +314,7 @@ class APIBase(MethodView):
             json_response = json.dumps(inst.dictize())
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            raise
             content_type = request.headers.get('Content-Type')
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
@@ -486,7 +487,6 @@ class APIBase(MethodView):
             tmp = dict()
             for key in request.form.keys():
                 tmp[key] = request.form[key]
-
             if isinstance(self, announcement.Announcement):
                 # don't check project id for announcements
                 ensure_authorized_to('create', self)
@@ -520,6 +520,8 @@ class APIBase(MethodView):
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()
+            elif type(tmp['info']) is unicode:
+                tmp['info'] = json.loads(tmp['info'])
             tmp['info']['container'] = container
             tmp['info']['file_name'] = _file.filename
             return tmp
