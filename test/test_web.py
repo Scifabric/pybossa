@@ -8450,8 +8450,6 @@ class TestWeb(web.Helper):
     def test_register_with_upref_mdata(self, upref_mdata, get_upref_mdata_choices, signer, render, queue):
         """Test WEB register user with user preferences set"""
         from flask import current_app
-
-        upref_data = True
         get_upref_mdata_choices.return_value = dict(languages=[("en", "en"), ("sp", "sp")],
                                     locations=[("us", "us"), ("uk", "uk")],
                                     timezones=[("", ""), ("ACT", "Australia Central Time")],
@@ -8504,8 +8502,6 @@ class TestWeb(web.Helper):
     def test_register_with_invalid_upref_mdata(self, upref_mdata, get_valid_user_preferences):
         """Test WEB register user - invalid user preferences cannot be set"""
         from flask import current_app
-
-        upref_mdata = True
         get_valid_user_preferences.return_value = dict(languages=[("en", "en"), ("sp", "sp")],
                                     locations=[("us", "us"), ("uk", "uk")],
                                     timezones=[("", ""), ("ACT", "Australia Central Time")],

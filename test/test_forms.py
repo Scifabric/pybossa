@@ -347,7 +347,6 @@ class TestRegisterFormWithUserPrefMetadata(Test):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_register_form_with_upref_mdata_validates_with_valid_fields(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = self.upref_mdata_valid_choices
         form_data = dict(languages="en", locations="uk",
                         user_type="Researcher", timezone="")
@@ -359,7 +358,6 @@ class TestRegisterFormWithUserPrefMetadata(Test):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_register_form_with_upref_mdata_with_invalid_language(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = self.upref_mdata_valid_choices
         form_data = dict(languages="somelang", locations="uk",
                         user_type="Researcher", timezone="")
@@ -371,7 +369,6 @@ class TestRegisterFormWithUserPrefMetadata(Test):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_register_form_with_upref_mdata_with_invalid_preferences(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = self.upref_mdata_valid_choices
         form_data = dict(languages="somelang", locations="someloc",
                         user_type="someutype", timezone="ZZZ")

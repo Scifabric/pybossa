@@ -71,7 +71,6 @@ class TestUserImport(web.Helper):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_post(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = choices
 
         self.register()
@@ -92,7 +91,6 @@ class TestUserImport(web.Helper):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_invalid_data(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = choices
 
         self.register()
@@ -108,7 +106,6 @@ class TestUserImport(web.Helper):
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_invalid_metadata(self, upref_mdata, get_upref_mdata_choices):
-        upref_mdata = True
         get_upref_mdata_choices.return_value = choices
 
         self.register()
