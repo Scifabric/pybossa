@@ -53,6 +53,7 @@ from nose.tools import nottest
 from helper.gig_helper import make_subadmin, make_subadmin_by
 from datetime import datetime, timedelta
 import six
+from pybossa.view.account import get_user_data_as_form
 
 class TestWeb(web.Helper):
     pkg_json_not_found = {
@@ -8756,36 +8757,22 @@ class TestWebUserMetadataUpdate(web.Helper):
     original = {
         'user_type': 'Curator',
         'languages': ["Afrikaans", "Albanian", "Welsh"], 
-        'work_hours_from':'08:00',
-        'work_hours_to':'15:00',
-        'review':'Original Review',
-        'timezone':"AET",
-        'locations':['Bonaire', 'Wallis and Futuna']
+        'work_hours_from': '08:00',
+        'work_hours_to': '15:00',
+        'review': 'Original Review',
+        'timezone': "AET",
+        'locations': ['Bonaire', 'Wallis and Futuna']
     }
 
     update = {
         'user_type': 'Researcher',
         'languages': ["Afrikaans", "Albanian"], 
-        'work_hours_from':'09:00',
-        'work_hours_to':'16:00',
-        'review':'Updated Review',
-        'timezone':"AGT",
-        'locations':['Vanuatu']
+        'work_hours_from': '09:00',
+        'work_hours_to': '16:00',
+        'review': 'Updated Review',
+        'timezone': "AGT",
+        'locations': ['Vanuatu']
     }
-
-    def get_user_data_as_form(self, user):
-        user_pref = user.user_pref
-        metadata = user.info.get('metadata', {})
-        return {
-            'languages': user_pref.get('languages'),
-            'locations': user_pref.get('locations'),
-            'user_type': metadata.get('user_type'),
-            'work_hours_from': metadata.get('work_hours_from'),
-            'work_hours_to': metadata.get('work_hours_to'),
-            'review': metadata.get('review'),
-            'timezone': metadata.get('timezone'),
-            'data_access': user.info.get('data_access')
-        }
 
     def create_user(self, **kwargs):
         data = self.original
@@ -8805,14 +8792,14 @@ class TestWebUserMetadataUpdate(web.Helper):
             },
             **kwargs
         )
-        data_created = self.get_user_data_as_form(user)
+        data_created = get_user_data_as_form(user)
         for k,v in six.iteritems(data):
             assert v == data_created[k], 'Created user field [{}] does not equal specified data'.format(k)
         return user
 
     def assert_updates_applied_correctly(self, user_id, disabled=update.keys()):
         user_updated = user_repo.get(user_id)
-        updated = self.get_user_data_as_form(user_updated)
+        updated = get_user_data_as_form(user_updated)
 
         enabled = set(self.update.keys()) - set(disabled)
 
