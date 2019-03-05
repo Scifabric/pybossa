@@ -886,3 +886,67 @@ def delete_file(fname, container):
     """Delete file."""
     from pybossa.core import uploader
     return uploader.delete_file(fname, container)
+
+
+def get_notify_inactive_accounts(queue='super'):
+    """Return a list of inactive users."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    timeout = current_app.config.get('TIMEOUT')
+    notify_time = current_app.config.get('USER_INACTIVE_NOTIFICATION')
+    # First users that have participated once but more than 3 months ago
+    sql = text('''SELECT user_id, finish_time FROM task_run
+               WHERE user_id IS NOT NULL
+               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               <= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id, finish_time ORDER BY user_id;'''.format(notify_time))
+    results = db.slave_session.execute(sql)
+
+    for row in results:
+        print('hola', row.user_id, row.finish_time)
+        user = User.query.get(row.user_id)
+
+        if user.restrict is False:
+            subject = "Your account will be deleted the next month"
+            body = render_template('/account/email/deleteNotify.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/deleteNotify.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=timeout,
+                       queue=queue)
+            yield job
+
+def get_delete_inactive_accounts(queue='super'):
+    """Return a list of inactive users to delete."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    timeout = current_app.config.get('TIMEOUT')
+    time = current_app.config.get('USER_INACTIVE_DELETE')
+    # First users that have participated once but more than 3 months ago
+    sql = text('''SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id ORDER BY user_id;'''.format(time))
+    results = db.slave_session.execute(sql)
+
+    for row in results:
+        job = dict(name=delete_account,
+                   args=[row.user_id],
+                   kwargs={},
+                   timeout=timeout,
+                   queue=queue)
+        yield job
