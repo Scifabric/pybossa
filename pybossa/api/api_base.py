@@ -26,6 +26,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
     * etc.
 
 """
+import six
 import json
 from flask import request, abort, Response, current_app
 from flask_login import current_user
@@ -526,7 +527,7 @@ class APIBase(MethodView):
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()
-            elif type(tmp['info']) is unicode:
+            elif type(tmp['info']) is six.text_type:
                 tmp['info'] = json.loads(tmp['info'])
             tmp['info']['container'] = container
             tmp['info']['file_name'] = _file.filename
