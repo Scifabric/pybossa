@@ -1139,6 +1139,28 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 403, res.status_code
         assert error_msg == 'You cannot publish a project via the API', res.data
 
+    @with_context
+    def test_project_delete_with_results(self):
+        """Test API delete project with results can be deleted."""
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+        url = '/api/project/%s?api_key=%s' % (result.project_id,
+                                              project.owner.api_key)
+
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
+
+    @with_context
+    def test_project_delete_with_results_var(self):
+        """Test API delete project with results can be deleted by admin."""
+        root = UserFactory.create(admin=True)
+        result = self.create_result()
+        project = project_repo.get(result.project_id)
+
+        url = '/api/project/%s?api_key=%s' % (result.project_id,
+                                              root.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.status)
 
     @with_context
     @patch('pybossa.api.api_base.caching')
