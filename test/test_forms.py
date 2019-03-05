@@ -29,6 +29,7 @@ from pybossa.repositories import UserRepository
 from factories import UserFactory
 from mock import patch, MagicMock
 from werkzeug.datastructures import MultiDict
+import six
 
 user_repo = UserRepository(db)
 
@@ -353,6 +354,39 @@ class TestRegisterFormWithUserPrefMetadata(Test):
         form = UserPrefMetadataForm(MultiDict(form_data))
         form.set_upref_mdata_choices()
         assert form.validate()
+
+    @with_context
+    def test_register_form_with_upref_mdata_disables_fields_correctly(self):
+        form = UserPrefMetadataForm()
+        # All fields are enabled by default.
+        for field in form:
+            assert not form.is_disabled(field)
+
+        disabled = {
+            'languages':'languages is disabled',
+            'locations':'reason is disabled',
+            'work_hours_from':'work_hours_from is disabled',
+            'work_hours_to':'work_hours_to is disabled',
+            'timezone':'timezone is disabled',
+            'user_type':'user_type is disabled'
+        }
+        enabled = [
+            'review'
+        ]
+        #Disable some fields
+        form.set_can_update((True, disabled))
+        for field_name, disable_reason in six.iteritems(disabled):
+            assert form.is_disabled(getattr(form, field_name)) == disable_reason
+        for field_name in enabled:
+            assert not form.is_disabled(getattr(form, field_name))
+        #Disable all fields
+        form.set_can_update((False, None))
+        for field in form:
+            assert form.is_disabled(field)
+        #Enable all fields
+        form.set_can_update((True, None))
+        for field in form:
+            assert not form.is_disabled(field)
 
     @with_context
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')

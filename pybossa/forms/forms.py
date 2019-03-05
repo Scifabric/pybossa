@@ -47,6 +47,7 @@ from pybossa.util import get_file_path_for_import_csv
 from flask import flash
 import pybossa.data_access as data_access
 import app_settings
+import six
 from iiif_prezi.loader import ManifestReader
 
 EMAIL_MAX_LENGTH = 254
@@ -655,7 +656,8 @@ class GenericUserImportForm(object):
 
 
 class UserPrefMetadataForm(Form):
-    """Form for admins to add metadata for users."""
+    """Form for admins to add metadata for users or for users to update their
+    own metadata"""
     languages = Select2Field(
         lazy_gettext('Language(s)'), choices=[],default="")
     locations = Select2Field(
@@ -684,6 +686,10 @@ class UserPrefMetadataForm(Form):
     review = TextAreaField(
         lazy_gettext('Additional comments'), default="")
 
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        self.set_can_update(kwargs.get('can_update', (True, None)))
+
     def set_upref_mdata_choices(self):
         upref_mdata_choices = app_settings.upref_mdata.get_upref_mdata_choices()
         self.languages.choices = upref_mdata_choices['languages']
@@ -691,6 +697,16 @@ class UserPrefMetadataForm(Form):
         self.timezone.choices = upref_mdata_choices['timezones']
         self.user_type.choices = upref_mdata_choices['user_types']
 
+    def set_can_update(self, can_update_info):
+        self._disabled = self._get_disabled_fields(can_update_info)
+
+    def _get_disabled_fields(self, (can_update, disabled_fields)):
+        if not can_update:
+            return {field: 'Form is not updatable.' for field in self}
+        return {getattr(self, name): reason for name, reason in six.iteritems(disabled_fields or {})}
+    
+    def is_disabled(self, field):
+        return self._disabled.get(field, False)
 
 class TransferOwnershipForm(Form):
     email_addr = EmailField(lazy_gettext('Email of the new owner'))

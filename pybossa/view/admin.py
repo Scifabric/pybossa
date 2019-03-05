@@ -847,7 +847,7 @@ def manageusers():
         query = form.user.data
         found = [user for user in user_repo.search_by_name(query)
                  if user.id != current_user.id
-                 and can_update_user_info(current_user, user)]
+                 and can_update_user_info(current_user, user)[0]]
 
         if not found:
             flash('No user found matching your query: {}'.format(form.user.data))
@@ -869,7 +869,7 @@ def enable_user(user_id=None):
         user = user_repo.get(user_id)
         if user:
             # avoid enabling admin/subadmin user by subadmin with direct url
-            if not can_update_user_info(current_user, user):
+            if not can_update_user_info(current_user, user)[0]:
                 return abort(403)
 
             user.enabled = True
@@ -892,7 +892,7 @@ def disable_user(user_id=None):
         user = user_repo.get(user_id)
         if user:
             # avoid disabling admin/subadmin user by subadmin with direct url
-            if not can_update_user_info(current_user, user):
+            if not can_update_user_info(current_user, user)[0]:
                 return abort(403)
 
             user.enabled = False

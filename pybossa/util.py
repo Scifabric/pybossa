@@ -952,13 +952,17 @@ def valid_or_no_s3_bucket(task_data):
 
 
 def can_update_user_info(current_user, user_to_update):
+    # admin can update anyone
     if current_user.admin:
-        return True
-    if current_user.subadmin and current_user.id == user_to_update.id:
-        return True
-    if not current_user.subadmin:
-        return False
-    return not (user_to_update.admin or user_to_update.subadmin)
+        return True, None
+    # subadmin can update self and normal users
+    if current_user.subadmin:
+        return (current_user.id == user_to_update.id or
+            not (user_to_update.admin or user_to_update.subadmin)), None
+    # normal user can update self except for 'user_type' field
+    if current_user.id == user_to_update.id:
+        return True, {'user_type': 'You must be an admin or subadmin to edit this.'}
+    return False, None
 
 
 def get_enabled_users(user_emails):

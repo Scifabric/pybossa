@@ -52,7 +52,8 @@ from flatten_json import flatten
 from nose.tools import nottest
 from helper.gig_helper import make_subadmin, make_subadmin_by
 from datetime import datetime, timedelta
-
+import six
+from pybossa.view.account import get_user_data_as_form
 
 class TestWeb(web.Helper):
     pkg_json_not_found = {
@@ -8745,3 +8746,189 @@ class TestWeb(web.Helper):
 
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert b'Use a valid email account' in str(res.data), res.data
+
+
+class TestWebUserMetadataUpdate(web.Helper):
+
+    original = {
+        'user_type': 'Curator',
+        'languages': ["Afrikaans", "Albanian", "Welsh"], 
+        'work_hours_from': '08:00',
+        'work_hours_to': '15:00',
+        'review': 'Original Review',
+        'timezone': "AET",
+        'locations': ['Bonaire', 'Wallis and Futuna']
+    }
+
+    update = {
+        'user_type': 'Researcher',
+        'languages': ["Afrikaans", "Albanian"], 
+        'work_hours_from': '09:00',
+        'work_hours_to': '16:00',
+        'review': 'Updated Review',
+        'timezone': "AGT",
+        'locations': ['Vanuatu']
+    }
+
+    def create_user(self, **kwargs):
+        data = self.original
+        user = UserFactory.create(
+            info={
+                'metadata':{
+                    'user_type':data['user_type'],
+                    'work_hours_from':data['work_hours_from'],
+                    'work_hours_to':data['work_hours_to'],
+                    'timezone':data['timezone'],
+                    'review':data['review']
+                }
+            },
+            user_pref={
+                'languages':data['languages'],
+                'locations':data['locations']
+            },
+            **kwargs
+        )
+        data_created = get_user_data_as_form(user)
+        for k,v in six.iteritems(data):
+            assert v == data_created[k], 'Created user field [{}] does not equal specified data'.format(k)
+        return user
+
+    def assert_updates_applied_correctly(self, user_id, disabled=update.keys()):
+        user_updated = user_repo.get(user_id)
+        updated = get_user_data_as_form(user_updated)
+
+        enabled = set(self.update.keys()) - set(disabled)
+
+        for k in enabled:
+            assert updated[k] == self.update[k], 'Enabled field [{}] did not get updated.'.format(k)
+        for k in disabled:
+            original_value = self.original[k]
+            updated_value = updated[k]
+            assert updated_value == original_value, 'Disabled field [{}] got updated from [{}] to [{}].'.format(k, original_value, updated_value)
+
+    def update_metadata(self, user_name):
+        url = u'/account/save_metadata/{}'.format(user_name)
+        res = self.app.post(
+            url,
+            data=self.update,
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+    def assert_is_normal(self, user):
+        assert not user.admin and not user.subadmin
+
+    def assert_is_subadmin(self, user):
+        assert not user.admin and user.subadmin
+
+    def mock_upref_mdata_choices(self, get_upref_mdata_choices):
+        def double(x): return (x,x)
+        get_upref_mdata_choices.return_value = dict(
+            languages=map(double,["Afrikaans", "Albanian", "Welsh"]),
+            locations=map(double, ['Bonaire', 'Wallis and Futuna', 'Vanuatu']),
+            timezones=[("AET", "Australia Eastern Time"), ("AGT", "Argentina Standard Time")],
+            user_types=map(double, ["Researcher", "Analyst", "Curator"])
+        )
+
+    def test_update_differs_from_orginal(self):
+        '''Test updates are different from original values'''
+        for k,v in six.iteritems(self.update):
+            assert v != self.original[k], '[{}] is same in original and update'.format(k)
+
+    @with_context
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_normal_user_cannot_update_own_user_type(self, upref_mdata, get_upref_mdata_choices):
+        """Test normal user can update their own metadata except for user_type"""
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
+        # First user created is automatically admin, so get that out of the way.
+        user_admin = UserFactory.create()
+        user_normal = self.create_user()
+        self.assert_is_normal(user_normal)
+        self.signin_user(user_normal)
+        self.update_metadata(user_normal.name)
+        disabled = ['user_type']
+        self.assert_updates_applied_correctly(user_normal.id, disabled)
+
+    @with_context
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_admin_user_can_update_own_metadata(self, upref_mdata, get_upref_mdata_choices):
+        '''Test admin can update their own metadata'''
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
+        user_admin = self.create_user()
+        assert user_admin.admin
+        self.signin_user(user_admin)
+        self.update_metadata(user_admin.name)
+        disabled = []
+        self.assert_updates_applied_correctly(user_admin.id, disabled)
+
+    @with_context
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_subadmin_user_can_update_own_metadata(self, upref_mdata, get_upref_mdata_choices):
+        '''Test subadmin can update their own metadata'''
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
+        # First user created is automatically admin, so get that out of the way.
+        user_admin = UserFactory.create()
+        user_subadmin = self.create_user(subadmin=True)
+        self.assert_is_subadmin(user_subadmin)
+        self.signin_user(user_subadmin)
+        self.update_metadata(user_subadmin.name)
+        disabled = []
+        self.assert_updates_applied_correctly(user_subadmin.id, disabled)
+
+    @with_context
+    @patch('pybossa.view.account.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_subadmin_user_can_update_normal_user_metadata(self, upref_mdata, get_upref_mdata_choices):
+        '''Test subadmin can update normal user metadata'''
+        self.mock_upref_mdata_choices(get_upref_mdata_choices)
+        # First user created is automatically admin, so get that out of the way.
+        user_admin = UserFactory.create()
+        user_subadmin = UserFactory.create(subadmin=True)
+        self.assert_is_subadmin(user_subadmin)
+        user_normal = self.create_user()
+        self.assert_is_normal(user_normal)
+        self.signin_user(user_subadmin)
+        self.update_metadata(user_normal.name)
+        disabled = []
+        self.assert_updates_applied_correctly(user_normal.id, disabled)
+
+    @with_context
+    def test_subadmin_user_cannot_update_other_subadmin_metadata(self):
+        '''Test subadmin cannot update other subadmin metadata'''
+        # First user created is automatically admin, so get that out of the way.
+        user_admin = UserFactory.create()
+        user_subadmin = UserFactory.create(subadmin=True)
+        self.assert_is_subadmin(user_subadmin)
+        user_subadmin_updated =self.create_user(subadmin=True)
+        self.assert_is_subadmin(user_subadmin_updated)
+        self.signin_user(user_subadmin)
+        self.update_metadata(user_subadmin_updated.name)
+        self.assert_updates_applied_correctly(user_subadmin_updated.id)
+
+    @with_context
+    def test_subadmin_user_cannot_update_other_admin_metadata(self):
+        '''Test subadmin cannot update admin metadata'''
+        # First user created is automatically admin, so get that out of the way.
+        user_admin_updated = self.create_user()
+        assert user_admin_updated.admin
+        user_subadmin = UserFactory.create(subadmin=True)
+        self.assert_is_subadmin(user_subadmin)
+        self.signin_user(user_subadmin)
+        self.update_metadata(user_admin_updated.name)
+        self.assert_updates_applied_correctly(user_admin_updated.id)
+
+    @with_context
+    def test_normal_user_cannot_update_other_user_metadata(self):
+        '''Test normal user cannot update other user metadata'''
+        # First user created is automatically admin, so get that out of the way.
+        user_admin = UserFactory.create()
+        user_normal = UserFactory.create()
+        self.assert_is_normal(user_normal)
+        user_normal_updated = self.create_user()
+        self.assert_is_normal(user_normal_updated)
+        self.signin_user(user_normal)
+        self.update_metadata(user_normal_updated.name)
+        self.assert_updates_applied_correctly(user_normal_updated.id)
