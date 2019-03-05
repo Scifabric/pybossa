@@ -325,7 +325,8 @@ class TestHelpingMaterialAPI(TestAPI):
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,
-                       file=img)
+                       file=img,
+                       info=json.dumps(dict(foo=1)))
 
         url = '/api/helpingmaterial?api_key=%s' % project.owner.api_key
         res = self.app.post(url, data=payload,
@@ -335,6 +336,7 @@ class TestHelpingMaterialAPI(TestAPI):
         container = "user_%s" % owner.id
         assert data['info']['container'] == container, data
         assert data['info']['file_name'] == 'test_file.jpg', data
+        assert data['info']['foo'] == 1, data
         assert 'test_file.jpg' in data['media_url'], data
 
         # As owner wrong 404 project_id
