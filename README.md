@@ -92,6 +92,7 @@ It has the instructions to become a contributor.
 
 ## Acknowledgments
 
+* [Citizen Cyberscience Centre](http://www.citizencyberlab.org/)
 * [Open Knowledge Foundation](http://okfn.org/)
 * [FontAwesome fonts](http://fortawesome.github.com/Font-Awesome/)
 * [GeoLite data by MaxMind](http://www.maxmind.com)
