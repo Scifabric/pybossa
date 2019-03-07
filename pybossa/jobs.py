@@ -895,19 +895,39 @@ def get_notify_inactive_accounts(queue='super'):
     from pybossa.core import db
     timeout = current_app.config.get('TIMEOUT')
     notify_time = current_app.config.get('USER_INACTIVE_NOTIFICATION')
-    # First users that have participated once but more than 3 months ago
-    sql = text('''SELECT user_id, finish_time FROM task_run
+
+    sql = text('''SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               <= NOW() - '{} month'::INTERVAL
-               GROUP BY user_id, finish_time ORDER BY user_id;'''.format(notify_time))
+               >= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id
+               ORDER BY user_id;'''.format(notify_time))
+
+    results = db.slave_session.execute(sql)
+    for row in results:
+        print(row.user_id, 'row user id')
+
+
+    sql = text('''SELECT "user".id from "user", task_run
+               WHERE "user".id = task_run.user_id AND "user".id NOT IN
+               (SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id
+               ORDER BY user_id) AND
+               to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               < NOW() - '{} month'::INTERVAL AND
+               "user".admin=false
+               ;'''.format(notify_time, notify_time))
     results = db.slave_session.execute(sql)
 
     for row in results:
-        print('hola', row.user_id, row.finish_time)
-        user = User.query.get(row.user_id)
+        user = User.query.get(row.id)
+        print(user.id, user.admin, user.projects)
 
-        if user.restrict is False:
+        if (user.restrict is False
+                and len(user.projects) == 0):
             subject = "Your account will be deleted the next month"
             body = render_template('/account/email/deleteNotify.md',
                                    user=user.dictize(),
@@ -927,6 +947,7 @@ def get_notify_inactive_accounts(queue='super'):
                        timeout=timeout,
                        queue=queue)
             yield job
+
 
 def get_delete_inactive_accounts(queue='super'):
     """Return a list of inactive users to delete."""

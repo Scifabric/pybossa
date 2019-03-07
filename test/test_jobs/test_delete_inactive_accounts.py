@@ -18,9 +18,10 @@
 
 from pybossa.jobs import get_delete_inactive_accounts
 from pybossa.jobs import get_notify_inactive_accounts
-from default import Test, with_context
-from factories import TaskRunFactory, UserFactory
-from pybossa.core import user_repo
+from default import Test, with_context, rebuild_db
+from factories import TaskRunFactory, UserFactory, ProjectFactory
+from pybossa.core import user_repo, task_repo, db
+from pybossa.model.task_run import TaskRun
 import datetime
 from dateutil.relativedelta import relativedelta
 import calendar
@@ -41,19 +42,22 @@ class TestEngageUsers(Test):
     @with_context
     def test_get_notify_with_users(self):
         """Test JOB get with users returns empty list."""
-        TaskRunFactory.create()
+        user = UserFactory.create()
+        tr = TaskRunFactory.create(user=user)
         jobs_generator = get_notify_inactive_accounts()
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
-
         msg = "There should not be any job."
         assert len(jobs) == 0,  msg
 
     @with_context
     def test_get_notify_returns_jobs(self):
         """Test JOB get inactive users returns a list of jobs."""
-
+        # create root user
+        UserFactory.create()
+        projectOwner = UserFactory.create(admin=False)
+        ProjectFactory.create(owner=projectOwner)
         today = datetime.datetime.today()
         old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
@@ -66,6 +70,9 @@ class TestEngageUsers(Test):
         tr = TaskRunFactory.create(finish_time=date_str)
         # 1 year old contribution
         tr_year = TaskRunFactory.create(finish_time=one_year_str)
+        # 1 year old contribution for a project owner
+        tr_year_project = TaskRunFactory.create(finish_time=one_year_str,
+                                                user=projectOwner)
         # User with a contribution from a long time ago
         tr2 = TaskRunFactory.create(finish_time="2010-08-08T18:23:45.714110",
                                     user=user)
@@ -78,9 +85,9 @@ class TestEngageUsers(Test):
         for job in jobs_generator:
             jobs.append(job)
 
-        msg = "There should be two jobs."
-        assert len(jobs) == 2, (msg, len(jobs))
-        emails = [tr2.user.email_addr, tr3.user.email_addr]
+        msg = "There should be one job."
+        assert len(jobs) == 1, (msg, len(jobs))
+        emails = [tr_year.user.email_addr]
         for job in jobs:
             args = job['args'][0]
             email = args['recipients'][0]
