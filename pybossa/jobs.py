@@ -912,7 +912,6 @@ def get_notify_inactive_accounts(queue='super'):
 
     for row in results:
         user = User.query.get(row.id)
-        print(user.id, user.admin, user.projects)
 
         if (user.restrict is False
                 and len(user.projects) == 0):
@@ -944,18 +943,31 @@ def get_delete_inactive_accounts(queue='super'):
     from pybossa.core import db
     timeout = current_app.config.get('TIMEOUT')
     time = current_app.config.get('USER_INACTIVE_DELETE')
-    # First users that have participated once but more than 3 months ago
-    sql = text('''SELECT user_id FROM task_run
+
+    sql = text('''SELECT "user".id from "user", task_run
+               WHERE "user".id = task_run.user_id AND "user".id NOT IN
+               (SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
                AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                >= NOW() - '{} month'::INTERVAL
-               GROUP BY user_id ORDER BY user_id;'''.format(time))
+               GROUP BY user_id
+               ORDER BY user_id) AND
+               to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               < NOW() - '{} month'::INTERVAL AND
+               "user".admin=false
+               ;'''.format(time, time))
+
     results = db.slave_session.execute(sql)
 
     for row in results:
-        job = dict(name=delete_account,
-                   args=[row.user_id],
-                   kwargs={},
-                   timeout=timeout,
-                   queue=queue)
-        yield job
+        user = User.query.get(row.id)
+
+        if (user.restrict is False
+                and len(user.projects) == 0):
+
+            job = dict(name=delete_account,
+                       args=[row.user_id],
+                       kwargs={},
+                       timeout=timeout,
+                       queue=queue)
+            yield job

@@ -99,89 +99,61 @@ class TestEngageUsers(Test):
         assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
         assert "deleted the next month" in args['subject']
 
-    # @with_context
-    # def test_get_inactive_users_returns_jobs_unsubscribed(self):
-    #     """Test JOB get inactive users returns an empty list of jobs."""
+    @with_context
+    def test_get_notify_returns_jobs(self):
+        """Test JOB get inactive users returns a list of jobs."""
+        # create root user
+        UserFactory.create()
+        projectOwner = UserFactory.create(admin=False)
+        ProjectFactory.create(owner=projectOwner)
+        today = datetime.datetime.today()
+        old_date = today + relativedelta(months=-1)
+        date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        # substract six months and take care of leap years
+        one_year = today + relativedelta(months=-6, leapdays=1)
+        one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        user = UserFactory.create()
+        user_recent = UserFactory.create()
+        # 1 month old contribution
+        tr = TaskRunFactory.create(finish_time=date_str)
+        # 1 year old contribution
+        tr_year = TaskRunFactory.create(finish_time=one_year_str)
+        # 1 year old contribution for a project owner
+        tr_year_project = TaskRunFactory.create(finish_time=one_year_str,
+                                                user=projectOwner)
+        # User with a contribution from a long time ago
+        tr2 = TaskRunFactory.create(finish_time="2010-08-08T18:23:45.714110",
+                                    user=user)
+        # User with a recent contribution
+        tr3 = TaskRunFactory.create(user=user)
+        user = user_repo.get(tr.user_id)
 
-    #     tr = TaskRunFactory.create(finish_time="2010-07-07T17:23:45.714210")
-    #     user = user_repo.get(tr.user_id)
-    #     user.subscribed = False
-    #     user_repo.update(user)
+        jobs_generator = get_notify_inactive_accounts()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
 
-    #     jobs_generator = get_inactive_users_jobs()
-    #     jobs = []
-    #     for job in jobs_generator:
-    #         jobs.append(job)
+        msg = "There should be one job."
+        assert len(jobs) == 1, (msg, len(jobs))
+        emails = [tr_year.user.email_addr]
+        for job in jobs:
+            args = job['args'][0]
+            email = args['recipients'][0]
+            assert email in emails, (email, emails)
+        job = jobs[0]
+        args = job['args'][0]
+        assert job['queue'] == 'super', job['queue']
+        assert len(args['recipients']) == 1
+        assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
+        assert "deleted the next month" in args['subject']
 
-    #     msg = "There should be zero jobs."
-    #     assert len(jobs) == 0,  msg
+        # After warning the user, the user adds a new task run
+        # so its account will not be deleted
+        TaskRunFactory.create(user=tr_year.user)
 
-
-# class TestNonContributors(Test):
-# 
-#     @with_context
-#     def test_get_non_contrib_users_jobs_no_users(self):
-#         """Test JOB get without users returns empty list."""
-#         jobs_generator = get_non_contributors_users_jobs()
-#         jobs = []
-#         for job in jobs_generator:
-#             jobs.append(job)
-# 
-#         msg = "There should not be any job."
-#         assert len(jobs) == 0,  msg
-# 
-#     @with_context
-#     def test_get_non_contrib_users_jobs_with_users(self):
-#         """Test JOB get with users returns empty list."""
-#         TaskRunFactory.create()
-#         user = user_repo.get(1)
-#         jobs_generator = get_non_contributors_users_jobs()
-#         jobs = []
-#         for job in jobs_generator:
-#             jobs.append(job)
-# 
-#         msg = "There should not be any job."
-#         assert len(jobs) == 1,  msg
-#         job = jobs[0]
-#         args = job['args'][0]
-#         assert args['recipients'][0] == user.email_addr, args['recipients'][1]
-# 
-#     @with_context
-#     def test_get_non_contrib_users_returns_jobs(self):
-#         """Test JOB get non contrib users returns a list of jobs."""
-# 
-#         TaskRunFactory.create()
-#         user = user_repo.get(1)
-# 
-#         jobs_generator = get_non_contributors_users_jobs()
-#         jobs = []
-#         for job in jobs_generator:
-#             jobs.append(job)
-# 
-#         msg = "There should be one job."
-#         print jobs
-#         assert len(jobs) == 1,  msg
-#         job = jobs[0]
-#         args = job['args'][0]
-#         assert job['queue'] == 'quaterly', job['queue']
-#         assert len(args['recipients']) == 1
-#         assert args['recipients'][0] == user.email_addr, args['recipients'][0]
-#         assert "UNSUBSCRIBE" in args['body']
-#         assert "Update" in args['html']
-# 
-#     @with_context
-#     def test_get_non_contrib_users_returns_unsubscribed_jobs(self):
-#         """Test JOB get non contrib users returns a list of jobs."""
-# 
-#         TaskRunFactory.create()
-#         user = user_repo.get(1)
-#         user.subscribed = False
-#         user_repo.update(user)
-# 
-#         jobs_generator = get_non_contributors_users_jobs()
-#         jobs = []
-#         for job in jobs_generator:
-#             jobs.append(job)
-# 
-#         msg = "There should be zero jobs."
-#         assert len(jobs) == 0,  msg
+        jobs_generator = get_notify_inactive_accounts()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+        msg = "There should be 0 jobs"
+        assert len(jobs) == 0, (len(jobs), msg)
