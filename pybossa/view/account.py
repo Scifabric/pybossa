@@ -116,12 +116,6 @@ def signin():
         password = form.password.data
         email_addr = form.email.data.lower()
         user = user_repo.search_by_email(email_addr=email_addr)
-        if user and not user.enabled:
-            brand = current_app.config['BRAND']
-            flash(gettext('Your account is disabled. '
-                          'Please contact your {} administrator.'.format(brand)),
-                  'error')
-            return redirect(url_for('home.home'))
         if user and user.check_password(password):
             if not current_app.config.get('ENABLE_TWO_FACTOR_AUTH'):
                 msg_1 = gettext('Welcome back') + ' ' + user.fullname
@@ -196,6 +190,12 @@ def signin():
 
 
 def _sign_in_user(user, next_url=None):
+    if not user.enabled:
+        brand = current_app.config['BRAND']
+        flash(gettext('Your account is disabled. '
+                      'Please contact your {} administrator.'.format(brand)),
+              'error')
+        return redirect(url_for('home.home'))
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
     user_repo.update(user)
