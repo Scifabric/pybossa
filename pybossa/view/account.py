@@ -190,8 +190,13 @@ def signin():
 
 
 def _sign_in_user(user, next_url=None):
+    brand = current_app.config['BRAND']
+    if not user:
+        flash(gettext('There was a problem signing you in. '
+                      'Please contact your {} administrator.'.format(brand)),
+              'error')
+        return redirect(url_for('home.home'))
     if not user.enabled:
-        brand = current_app.config['BRAND']
         flash(gettext('Your account is disabled. '
                       'Please contact your {} administrator.'.format(brand)),
               'error')
