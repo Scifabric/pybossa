@@ -100,8 +100,8 @@ class TestEngageUsers(Test):
         assert "deleted the next month" in args['subject']
 
     @with_context
-    def test_get_notify_returns_jobs(self):
-        """Test JOB get inactive users returns a list of jobs."""
+    def test_delete_jobs(self):
+        """Test JOB returns jobs to delete inactive accounts."""
         # create root user
         UserFactory.create()
         projectOwner = UserFactory.create(admin=False)
@@ -128,32 +128,17 @@ class TestEngageUsers(Test):
         tr3 = TaskRunFactory.create(user=user)
         user = user_repo.get(tr.user_id)
 
-        jobs_generator = get_notify_inactive_accounts()
+        jobs_generator = get_delete_inactive_accounts()
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
 
         msg = "There should be one job."
         assert len(jobs) == 1, (msg, len(jobs))
-        emails = [tr_year.user.email_addr]
+        emails = [tr_year.user.id]
         for job in jobs:
-            args = job['args'][0]
-            email = args['recipients'][0]
-            assert email in emails, (email, emails)
+            err_msg = "Delete user is not the same"
+            assert job['args'][0] == tr_year.user.id, err_msg
         job = jobs[0]
         args = job['args'][0]
         assert job['queue'] == 'super', job['queue']
-        assert len(args['recipients']) == 1
-        assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
-        assert "deleted the next month" in args['subject']
-
-        # After warning the user, the user adds a new task run
-        # so its account will not be deleted
-        TaskRunFactory.create(user=tr_year.user)
-
-        jobs_generator = get_notify_inactive_accounts()
-        jobs = []
-        for job in jobs_generator:
-            jobs.append(job)
-        msg = "There should be 0 jobs"
-        assert len(jobs) == 0, (len(jobs), msg)

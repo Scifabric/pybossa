@@ -966,7 +966,7 @@ def get_delete_inactive_accounts(queue='super'):
                 and len(user.projects) == 0):
 
             job = dict(name=delete_account,
-                       args=[row.user_id],
+                       args=[user.id],
                        kwargs={},
                        timeout=timeout,
                        queue=queue)
