@@ -112,8 +112,8 @@ def get_periodic_jobs(queue):
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
-    warning_jobs = get_notify_inactive_accounts() if queue == 'low'
-    delete_account_jobs = get_delete_inactive_accounts() if queue == 'monthly'
+    warning_jobs = get_notify_inactive_accounts() if queue == 'low' else []
+    delete_account_jobs = get_delete_inactive_accounts() if queue == 'monthly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
