@@ -112,6 +112,8 @@ def get_periodic_jobs(queue):
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
+    warning_jobs = get_notify_inactive_accounts() if queue == 'low'
+    delete_account_jobs = get_delete_inactive_accounts() if queue == 'monthly'
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
@@ -888,7 +890,7 @@ def delete_file(fname, container):
     return uploader.delete_file(fname, container)
 
 
-def get_notify_inactive_accounts(queue='super'):
+def get_notify_inactive_accounts(queue='low'):
     """Return a list of inactive users."""
     from sqlalchemy.sql import text
     from pybossa.model.user import User
@@ -936,7 +938,7 @@ def get_notify_inactive_accounts(queue='super'):
             yield job
 
 
-def get_delete_inactive_accounts(queue='super'):
+def get_delete_inactive_accounts(queue='monthly'):
     """Return a list of inactive users to delete."""
     from sqlalchemy.sql import text
     from pybossa.model.user import User

@@ -94,7 +94,7 @@ class TestEngageUsers(Test):
             assert email in emails, (email, emails)
         job = jobs[0]
         args = job['args'][0]
-        assert job['queue'] == 'super', job['queue']
+        assert job['queue'] == 'low', job['queue']
         assert len(args['recipients']) == 1
         assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
         assert "deleted the next month" in args['subject']
@@ -141,4 +141,4 @@ class TestEngageUsers(Test):
             assert job['args'][0] == tr_year.user.id, err_msg
         job = jobs[0]
         args = job['args'][0]
-        assert job['queue'] == 'super', job['queue']
+        assert job['queue'] == 'monthly', job['queue']
