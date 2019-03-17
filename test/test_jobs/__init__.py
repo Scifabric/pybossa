@@ -18,7 +18,7 @@
 
 from datetime import datetime
 from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs,\
-    get_quarterly_date, get_periodic_jobs
+    get_quarterly_date, get_periodic_jobs, delete_account
 from pybossa.core import user_repo, task_repo, db
 from mock import patch
 from nose.tools import assert_raises
@@ -249,3 +249,38 @@ class TestJobs(Test):
             assert job['queue'] == 'monthly'
             assert 'delete' in job['args'][0]['subject'], job['args']
             assert [tr_year.user.email_addr] == job['args'][0]['recipients'], job['args']
+
+    @with_context
+    def test_get_periodic_jobs_with_bimonthly_queue(self):
+        # create root user
+        UserFactory.create()
+        projectOwner = UserFactory.create(admin=False)
+        ProjectFactory.create(owner=projectOwner)
+        today = datetime.datetime.today()
+        old_date = today + relativedelta(months=-1)
+        date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        # substract six months and take care of leap years
+        one_year = today + relativedelta(months=-6, leapdays=1)
+        one_year_str = one_year.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        user = UserFactory.create()
+        user_recent = UserFactory.create()
+        # 1 month old contribution
+        tr = TaskRunFactory.create(finish_time=date_str)
+        # 1 year old contribution
+        tr_year = TaskRunFactory.create(finish_time=one_year_str)
+        # 1 year old contribution for a project owner
+        tr_year_project = TaskRunFactory.create(finish_time=one_year_str,
+                                                user=projectOwner)
+        # User with a contribution from a long time ago
+        tr2 = TaskRunFactory.create(finish_time="2010-08-08T18:23:45.714110",
+                                    user=user)
+        # User with a recent contribution
+        tr3 = TaskRunFactory.create(user=user)
+
+        jobs = get_periodic_jobs('bimonthly')
+        # Only returns jobs for the specified queue
+        for job in jobs:
+            assert job['queue'] == 'bimonthly'
+            assert job['name'] == delete_account
+            assert tr_year.user.id == job['args'][0], (tr_year.user.id,
+                                                         job['args'])
