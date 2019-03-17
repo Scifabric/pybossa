@@ -678,6 +678,8 @@ def setup_scheduled_jobs(app):  # pragma: no cover
                  interval=(24 * HOUR), timeout=(10 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['monthly'], kwargs={},
                  interval=(1 * MONTH), timeout=(30 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['bimonthly'], kwargs={},
+                 interval=(2 * MONTH), timeout=(30 * MINUTE)),
             dict(name=enqueue_periodic_jobs, args=['quaterly'], kwargs={},
                  interval=(3 * MONTH), timeout=(30 * MINUTE),
                  scheduled_time=first_quaterly_execution)]

@@ -112,8 +112,8 @@ def get_periodic_jobs(queue):
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
-    warning_jobs = get_notify_inactive_accounts() if queue == 'low' else []
-    delete_account_jobs = get_delete_inactive_accounts() if queue == 'monthly' else []
+    warning_jobs = get_notify_inactive_accounts() if queue == 'monthly' else []
+    delete_account_jobs = get_delete_inactive_accounts() if queue == 'bimonthly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
@@ -122,7 +122,9 @@ def get_periodic_jobs(queue):
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
-            weekly_update_jobs, failed_jobs, leaderboard_jobs]
+            weekly_update_jobs, failed_jobs, leaderboard_jobs,
+            warning_jobs, delete_account_jobs]
+
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -231,7 +233,6 @@ def get_inactive_users_jobs(queue='quaterly'):
     timeout = current_app.config.get('TIMEOUT')
 
     for row in results:
-
         user = User.query.get(row.user_id)
 
         if user.subscribed and user.restrict is False:
@@ -890,7 +891,7 @@ def delete_file(fname, container):
     return uploader.delete_file(fname, container)
 
 
-def get_notify_inactive_accounts(queue='low'):
+def get_notify_inactive_accounts(queue='monthly'):
     """Return a list of inactive users."""
     from sqlalchemy.sql import text
     from pybossa.model.user import User
@@ -914,7 +915,6 @@ def get_notify_inactive_accounts(queue='low'):
 
     for row in results:
         user = User.query.get(row.id)
-
         if (user.restrict is False
                 and len(user.projects) == 0):
             subject = "Your account will be deleted the next month"
@@ -938,7 +938,7 @@ def get_notify_inactive_accounts(queue='low'):
             yield job
 
 
-def get_delete_inactive_accounts(queue='monthly'):
+def get_delete_inactive_accounts(queue='bimonthly'):
     """Return a list of inactive users to delete."""
     from sqlalchemy.sql import text
     from pybossa.model.user import User
