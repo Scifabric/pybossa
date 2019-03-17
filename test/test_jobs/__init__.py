@@ -25,7 +25,6 @@ from nose.tools import assert_raises
 from default import with_context, Test
 from factories import TaskRunFactory, UserFactory, ProjectFactory
 from dateutil.relativedelta import relativedelta
-import datetime
 
 def jobs():
     """Generator."""
@@ -222,7 +221,7 @@ class TestJobs(Test):
         UserFactory.create()
         projectOwner = UserFactory.create(admin=False)
         ProjectFactory.create(owner=projectOwner)
-        today = datetime.datetime.today()
+        today = datetime.today()
         old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
         # substract six months and take care of leap years
@@ -256,7 +255,7 @@ class TestJobs(Test):
         UserFactory.create()
         projectOwner = UserFactory.create(admin=False)
         ProjectFactory.create(owner=projectOwner)
-        today = datetime.datetime.today()
+        today = datetime.today()
         old_date = today + relativedelta(months=-1)
         date_str = old_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
         # substract six months and take care of leap years
