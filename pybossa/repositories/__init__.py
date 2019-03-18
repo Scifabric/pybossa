@@ -241,6 +241,7 @@ from auditlog_repository import AuditlogRepository
 from webhook_repository import WebhookRepository
 from result_repository import ResultRepository
 from helping_repository import HelpingMaterialRepository
+from performance_stats_repository import PerformanceStatsRepository
 
 assert ProjectRepository
 assert ProjectStatsRepository
