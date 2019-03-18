@@ -72,7 +72,7 @@ def handle_bloomberg_response():
         return redirect(url_for('home.home'))
     if auth.is_authenticated():
         attributes = auth.get_attributes()
-        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]))
+        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         return _sign_in_user(user, next_url=request.form.get('RelayState'))
     else:
         current_app.logger.error('BSSO authentication failed')
