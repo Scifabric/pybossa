@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import or_, func
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.repositories import Repository
 from pybossa.model.performance_stats import PerformanceStats
-from pybossa.exc import WrongObjectError, DBIntegrityError
+from pybossa.exc import DBIntegrityError
 
 
 class PerformanceStatsRepository(Repository):
