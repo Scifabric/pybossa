@@ -2992,7 +2992,8 @@ def answerfieldsconfig(short_name):
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
         'answer_fields': json.dumps(gold_fields),
-        'pro_features': pro
+        'pro_features': pro,
+        'csrf': generate_csrf()
     }
 
     return handle_content_type(response)
