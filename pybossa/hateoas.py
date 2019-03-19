@@ -96,7 +96,7 @@ class Hateoas(object):
                                           title='project', rel='parent')]
             return links, link
         else:  # pragma: no cover
-            return False
+            return False, False
 
     def remove_links(self, item):
         """Remove HATEOAS link and links from item."""

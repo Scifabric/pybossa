@@ -26,9 +26,9 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
 
 
-class StatType(enum.Enum):
-    confusion_matrix = 1
-    accuracy = 2
+class StatType(str, enum.Enum):
+    confusion_matrix = 'confusion_matrix'
+    accuracy = 'accuracy'
 
 
 class PerformanceStats(db.Model, DomainObject):
