@@ -314,6 +314,7 @@ class APIBase(MethodView):
             data = self._file_upload(request)
             if data is None:
                 data = self._parse_request_data()
+            original_data = self._copy_original(data)
             self._forbidden_attributes(data)
             self._restricted_attributes(data)
             self._preprocess_post_data(data)
@@ -321,7 +322,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
-            self._after_save(inst)
+            self._after_save(original_data, inst)
             self._log_changes(None, inst)
             self.refresh_cache(cls_name, inst.id)
             json_response = json.dumps(inst.dictize())
@@ -492,7 +493,7 @@ class APIBase(MethodView):
         """
         pass
 
-    def _after_save(self, instance):
+    def _after_save(self, original_data, instance):
         """Method to be overriden by inheriting classes to perform operations
         after new object has been saved
         """
@@ -586,3 +587,7 @@ class APIBase(MethodView):
     def _sign_item(self, item):
         """Apply custom signature"""
         pass
+
+    def _copy_original(self, item):
+        """change if need to keep some information about the original request"""
+        return item

@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * task_runs
 
 """
+from copy import deepcopy
 import json
 import time
 
@@ -35,7 +36,9 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from api_base import APIBase
 from pybossa.model.task_run import TaskRun
 from pybossa.util import get_user_id_or_ip, get_avatar_url
+from pybossa.cache.projects import get_project_data
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo
+from pybossa.core import performance_stats_repo
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
@@ -131,8 +134,9 @@ class TaskRunAPI(APIBase):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
         guard._remove_task_stamped(task, get_user_id_or_ip())
 
-    def _after_save(self, instance):
+    def _after_save(self, original_data, instance):
         mark_if_complete(instance.task_id, instance.project_id)
+        update_gold_stats(instance.user_id, instance.task_id, original_data)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -161,6 +165,9 @@ class TaskRunAPI(APIBase):
             # return an arbitrary valid timestamp so that answer can be submitted
             timestamp = datetime.strptime(self.DEFAULT_DATETIME, self.DATETIME_FORMAT)
         return timestamp.isoformat()
+
+    def _copy_original(self, item):
+        return deepcopy(item)
 
 
 def _upload_files_from_json(task_run_info, upload_path, with_encryption):
@@ -192,3 +199,62 @@ def _upload_files_from_request(task_run_info, files, upload_path, with_encryptio
                                         directory=upload_path, conn_name='S3_TASKRUN',
                                         with_encryption=with_encryption)
         task_run_info[key] = s3_url
+
+
+def update_gold_stats(user_id, task_id, data):
+    task = task_repo.get_task(task_id)
+    # TODO: read gold_answer from s3
+    if task.calibration:
+        answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
+        answer = data['info']
+        _update_gold_stats(task.project_id, user_id, answer_fields,
+                           task.gold_answers, answer)
+
+### stats stuff
+
+from pybossa.model.performance_stats import StatType, PerformanceStats
+from pybossa.stats.gold import ConfusionMatrix
+
+
+field_to_stat_type = {
+    'categorical': StatType.confusion_matrix,
+    'free_text': StatType.accuracy
+}
+
+type_to_class = {
+    StatType.confusion_matrix: ConfusionMatrix
+}
+
+
+def _update_gold_stats(project_id, user_id, gold_fields, gold_answer, answer):
+    for path, specs in gold_fields.items():
+        current_app.logger.info(path)
+        current_app.logger.info(specs)
+        stat_type = field_to_stat_type[specs['type']]
+        stats = performance_stats_repo.filter_by(project_id=project_id,
+            user_id=user_id, field=path, stat_type=stat_type)
+        current_app.logger.info(stats)
+        create = False
+        if not stats:
+            stat_row = PerformanceStats(
+                project_id=project_id,
+                user_id=user_id,
+                field=path,
+                stat_type=stat_type,
+                info={})
+            create = True
+        else:
+            stat_row = stats[0]
+        current_app.logger.info(stat_row)
+
+        stat_class = type_to_class[stat_type]
+        specs['config'].update(stat_row.info)
+        stat = stat_class(**specs['config'])
+        stat.compute(answer, gold_answer, path)
+        stat_row.info = stat.value
+        current_app.logger.info('save stats')
+        current_app.logger.info(stat_row)
+        if create:
+            performance_stats_repo.save(stat_row)
+        else:
+            performance_stats_repo.update(stat_row)

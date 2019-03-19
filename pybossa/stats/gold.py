@@ -58,14 +58,17 @@ class Statistic(object):
         self._update(seen.ans, true)
         return self
 
+    def compute(self, taskrun, gold, path):
+        compute(self, taskrun, gold, path)
+
 
 class RightWrongCount(Statistic):
 
     compare_lists = False
 
-    def __init__(self, compare_fn=equality):
-        self.right = 0
-        self.wrong = 0
+    def __init__(self, right=0, wrong=0, compare_fn=equality):
+        self.right = right
+        self.wrong = wrong
         self.equal = compare_fn
 
     def _update(self, seen, true):
@@ -74,16 +77,26 @@ class RightWrongCount(Statistic):
         else:
             self.wrong += 1
 
+    @property
+    def value(self):
+        return {
+            'right': self.right,
+            'wrong': self.wrong
+        }
+
 
 class ConfusionMatrix(Statistic):
 
     compare_lists = False
 
-    def __init__(self, labels):
+    def __init__(self, labels, matrix=None):
         self.labels = labels
         self.index = {v: i for i, v in enumerate(labels)}
         n = len(labels)
-        self.cm = np.zeros((n, n))
+        if not matrix:
+            self.matrix = np.zeros((n, n), dtype=int)
+        else:
+            self.matrix = np.array(matrix)
 
     def _update(self, seen, true):
         seen_ix = self.index.get(seen)
@@ -94,7 +107,18 @@ class ConfusionMatrix(Statistic):
         if true_ix is None:
             logger.warning('Invalid true label %s, won\'t update', true)
             return
-        self.cm[true_ix][seen_ix] += 1
+        self.matrix[true_ix][seen_ix] += 1
+
+    @property
+    def value(self):
+        return {
+            'matrix': self.matrix.tolist()
+        }
+
+
+def get_stat(field_type, **kwargs):
+    if field_type == '':
+        pass
 
 
 def compute(stat, taskrun, gold, path):
@@ -102,13 +126,10 @@ def compute(stat, taskrun, gold, path):
 
 
 def _compute(stat, taskrun, gold, path_parts):
-    if isinstance(gold, list):
-        if not path_parts and stat.compare_lists:
-            return stat.update(taskrun, gold)
-        else:
-            for ans, gold_ans in zip(taskrun, gold):
-                _compute(stat, ans, gold_ans, path_parts)
-            return stat
+    if isinstance(gold, list) and (path_parts or not stat.compare_lists):
+        for ans, gold_ans in zip(taskrun, gold):
+            _compute(stat, ans, gold_ans, path_parts)
+        return stat
 
     if not path_parts:
         return stat.update(taskrun, gold)
