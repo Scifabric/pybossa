@@ -2981,17 +2981,19 @@ def answerfieldsconfig(short_name):
         try:
             project.info['answer_fields'] = json.loads(request.data)
             project_repo.save(project)
+            auditlogger.log_event(project, current_user, 'update', 'project.answerfields',
+              'N/A', project.info['answer_fields'])
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
 
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
-    gold_fields = project.info.get('answer_fields', {})
+    answer_fields = project.info.get('answer_fields', {})
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
-        'answer_fields': json.dumps(gold_fields),
+        'answer_fields': json.dumps(answer_fields),
         'pro_features': pro,
         'csrf': generate_csrf()
     }
