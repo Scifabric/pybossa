@@ -1,4 +1,5 @@
 from pybossa.stats import gold
+import numpy as np
 
 
 def test_count_matches_right():
@@ -174,10 +175,10 @@ def test_confusion_matrix():
         'hello': 'True'
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello')
-    assert stat.cm[0][0] == 1, stat.cm
-    assert stat.cm[0][1] == 0, stat.cm
-    assert stat.cm[1][0] == 0, stat.cm
-    assert stat.cm[1][1] == 0, stat.cm
+    assert stat.value['matrix'][0][0] == 1, stat.value['matrix']
+    assert stat.value['matrix'][0][1] == 0, stat.value['matrix']
+    assert stat.value['matrix'][1][0] == 0, stat.value['matrix']
+    assert stat.value['matrix'][1][1] == 0, stat.value['matrix']
 
 
 def test_confusion_matrix_list_1():
@@ -189,10 +190,10 @@ def test_confusion_matrix_list_1():
         'hello': ['True', 'False']
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello')
-    assert stat.cm[0][0] == 1, stat.cm
-    assert stat.cm[0][1] == 0, stat.cm
-    assert stat.cm[1][0] == 0, stat.cm
-    assert stat.cm[1][1] == 1, stat.cm
+    assert stat.value['matrix'][0][0] == 1, stat.value['matrix']
+    assert stat.value['matrix'][0][1] == 0, stat.value['matrix']
+    assert stat.value['matrix'][1][0] == 0, stat.value['matrix']
+    assert stat.value['matrix'][1][1] == 1, stat.value['matrix']
 
 
 def test_confusion_matrix_list_2():
@@ -204,10 +205,10 @@ def test_confusion_matrix_list_2():
         'hello': ['True', 'True', 'False', 'True']
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello')
-    assert stat.cm[0][0] == 1, stat.cm
-    assert stat.cm[0][1] == 0, stat.cm
-    assert stat.cm[1][0] == 2, stat.cm
-    assert stat.cm[1][1] == 1, stat.cm
+    assert stat.value['matrix'][0][0] == 1, stat.value['matrix']
+    assert stat.value['matrix'][0][1] == 0, stat.value['matrix']
+    assert stat.value['matrix'][1][0] == 2, stat.value['matrix']
+    assert stat.value['matrix'][1][1] == 1, stat.value['matrix']
 
 
 def test_many_labels():
@@ -225,15 +226,15 @@ def test_many_labels():
         } for val in obs]
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello.world')
-    assert stat.cm[0, 1] == 1, stat.cm
-    assert stat.cm[0, 2] == 1, stat.cm
-    assert stat.cm[1, 1] == 2, stat.cm
-    assert stat.cm[2, 2] == 1, stat.cm
-    assert stat.cm[2, 3] == 1, stat.cm
-    assert stat.cm[3, 0] == 1, stat.cm
-    assert stat.cm[3, 1] == 1, stat.cm
-    assert (stat.cm >= 0).all(), stat.cm
-    assert stat.cm.sum() == len(true)
+    assert stat.value['matrix'][0][1] == 1, stat.value['matrix']
+    assert stat.value['matrix'][0][2] == 1, stat.value['matrix']
+    assert stat.value['matrix'][1][1] == 2, stat.value['matrix']
+    assert stat.value['matrix'][2][2] == 1, stat.value['matrix']
+    assert stat.value['matrix'][2][3] == 1, stat.value['matrix']
+    assert stat.value['matrix'][3][0] == 1, stat.value['matrix']
+    assert stat.value['matrix'][3][1] == 1, stat.value['matrix']
+    assert (np.array(stat.value['matrix']) >= 0).all(), stat.value['matrix']
+    assert np.array(stat.value['matrix']).sum() == len(true)
 
 
 def test_confusion_matrix_invalid_gold():
@@ -245,7 +246,7 @@ def test_confusion_matrix_invalid_gold():
         'hello': 'True'
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello')
-    stat.cm == [[0, 0], [0, 0]]
+    stat.value['matrix'] == [[0, 0], [0, 0]]
 
 
 def test_confusion_matrix_invalid_answer():
@@ -257,7 +258,7 @@ def test_confusion_matrix_invalid_answer():
         'hello': 'None'
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello')
-    stat.cm == [[0, 0], [0, 0]]
+    stat.value['matrix'] == [[0, 0], [0, 0]]
 
 
 def test_array_match_right():
