@@ -65,7 +65,7 @@ class TestUpdateGoldStats(Test):
             project_id=project.id, field='hello',
             info={'matrix': [[1, 4], [2, 3]]})
 
-        update_gold_stats(taskrun.user_id, task.id, task_run.dictize())
+        update_gold_stats(task_run.user_id, task.id, task_run.dictize())
         stats = performance_repo.filter_by(project_id=project.id)
         assert len(stats) == 1
         assert stats[0].info['matrix'] == [[1, 5], [2, 3]]
