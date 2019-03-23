@@ -481,7 +481,7 @@ class APIBase(MethodView):
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
         content_type = 'multipart/form-data'
-        if (content_type in request.headers.get('Content-Type') and
+        if (content_type in request.headers.get('Content-Type', []) and
                 cls_name in self.allowed_classes_upload):
             tmp = dict()
             for key in request.form.keys():
