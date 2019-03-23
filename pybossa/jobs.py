@@ -907,10 +907,9 @@ def get_notify_inactive_accounts(queue='monthly'):
                >= NOW() - '{} month'::INTERVAL
                GROUP BY user_id
                ORDER BY user_id) AND
-               to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               < NOW() - '{} month'::INTERVAL AND
                "user".admin=false
-               ;'''.format(notify_time, notify_time))
+               GROUP BY "user".id ORDER BY "user".id
+               ;'''.format(notify_time))
     results = db.slave_session.execute(sql)
 
     for row in results:
@@ -954,10 +953,9 @@ def get_delete_inactive_accounts(queue='bimonthly'):
                >= NOW() - '{} month'::INTERVAL
                GROUP BY user_id
                ORDER BY user_id) AND
-               to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               < NOW() - '{} month'::INTERVAL AND
                "user".admin=false
-               ;'''.format(time, time))
+               GROUP BY "user".id ORDER BY "user".id
+               ;'''.format(time))
 
     results = db.slave_session.execute(sql)
 
