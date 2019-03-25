@@ -3005,7 +3005,7 @@ def answerfieldsconfig(short_name):
 @login_required
 def show_performance_stats(short_name):
     """Returns Project Stats"""
-    project, owner, ps = project_by_shortname(short_name)
+    project, owner, ps = allow_deny_project_info(short_name)
     ensure_authorized_to('read', project)
     title = project_title(project, "Performance Statistics")
     pro = pro_features(owner)
