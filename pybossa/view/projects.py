@@ -2999,3 +2999,38 @@ def answerfieldsconfig(short_name):
     }
 
     return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/performancestats')
+@login_required
+def show_performance_stats(short_name):
+    """Returns Project Stats"""
+    project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
+    title = project_title(project, "Performance Statistics")
+    pro = pro_features(owner)
+
+    if project.needs_password():
+        redirect_to_password = _check_if_redirect_to_password(project)
+        if redirect_to_password:
+            return redirect_to_password
+
+    answer_fields = project.info.get('answer_fields', {})
+
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
+
+    _, _, user_ids = stats.stats_users(project.id)
+    users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
+
+    response = dict(template='/projects/performancestats.html',
+                    title=title,
+                    project=project_sanitized,
+                    answer_fields=answer_fields,
+                    owner=owner_sanitized,
+                    users=users,
+                    pro_features=pro)
+
+    return handle_content_type(response)

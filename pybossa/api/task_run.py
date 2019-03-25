@@ -213,16 +213,18 @@ def update_gold_stats(user_id, task_id, data):
 ### stats stuff
 
 from pybossa.model.performance_stats import StatType, PerformanceStats
-from pybossa.stats.gold import ConfusionMatrix
+from pybossa.stats.gold import ConfusionMatrix, RightWrongCount
 
 
 field_to_stat_type = {
     'categorical': StatType.confusion_matrix,
-    'free_text': StatType.accuracy
+    'freetext': StatType.accuracy
 }
 
+
 type_to_class = {
-    StatType.confusion_matrix: ConfusionMatrix
+    StatType.confusion_matrix: ConfusionMatrix,
+    StatType.accuracy: RightWrongCount
 }
 
 
