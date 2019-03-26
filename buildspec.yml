@@ -11,6 +11,7 @@ phases:
     commands:
       - echo Build started on `date`
       - git submodule update --init --recursive
+      - npm config set @dtwebservices:registry="https://api.bintray.com/npm/bloomberg/gigwork///"
       - cd pybossa/themes/default/static/src && yarn && webpack
   post_build:
     commands:
