@@ -862,6 +862,16 @@ def _handle_external_services_update(user, update_form):
         return False
 
 
+@blueprint.route('/password-reset-key', methods=['GET', 'POST'])
+def password_reset_key():
+    form = PasswordResetKeyForm(request.body)
+    if request.method == 'GET' or not form.validate_on_submit():
+        response = dict(template='/account/password_reset_key.html', form=form)
+    else:
+        return redirect_content_type(url_for('account.reset_password', key=form.password_reset_key.data))
+    return handle_content_type(response)
+
+
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     """
@@ -949,10 +959,10 @@ def forgot_password():
                                                 key=key, _external=True)
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
-                    user=user, recovery_url=recovery_url)
+                    user=user, recovery_url=recovery_url, key=key)
                 msg['html'] = render_template(
                     '/account/email/forgot_password.html',
-                    user=user, recovery_url=recovery_url)
+                    user=user, recovery_url=recovery_url, key=key)
             mail_queue.enqueue(send_mail, msg)
             flash(gettext("We've sent you an email with account "
                           "recovery instructions!"),
@@ -961,9 +971,12 @@ def forgot_password():
             flash(gettext("We don't have this email in our records. "
                           "You may have signed up with a different "
                           "email"), 'error')
-    if request.method == 'POST' and not form.validate():
-        flash(gettext('Something went wrong, please correct the errors on the '
-              'form'), 'error')
+    if request.method == 'POST':
+        if not form.validate():
+            flash(gettext('Something went wrong, please correct the errors on the '
+                'form'), 'error')
+        else:
+            return redirect_content_type(url_for('account.password_reset_key'))
     return handle_content_type(data)
 
 
