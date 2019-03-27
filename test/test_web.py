@@ -3959,6 +3959,22 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data.get('code') == 403, data
 
+    @with_context
+    @patch('pybossa.view.account.signer.loads')
+    def test_password_reset_key_page(self, mock_signer_loads):
+        """Test WEB password reset key page"""
+        self.register()
+        res = self.app.get('/account/forgot-password', follow_redirects=True)
+        assert res.status_code == 200, res
+        user = User.query.get(1)
+        res = self.app.post('/account/forgot-password', data={'email': user.email_addr}, follow_redirects=True)
+        assert res.status_code == 200, res
+        mock_signer_loads.return_value = {}
+        res = self.app.post('/account/password-reset-key', data={'password_reset_key': 'asdf'}, follow_redirects=True)
+        assert res.status_code == 403, res
+        mock_signer_loads.return_value = {'user': user.name, 'password': user.passwd_hash}
+        res = self.app.post('/account/password-reset-key', data={'password_reset_key': 'asdf'}, follow_redirects=True)
+        assert res.status_code == 200, res
 
     @with_context
     @patch('pybossa.view.account.signer.loads')
@@ -8752,7 +8768,7 @@ class TestWebUserMetadataUpdate(web.Helper):
 
     original = {
         'user_type': 'Curator',
-        'languages': ["Afrikaans", "Albanian", "Welsh"], 
+        'languages': ["Afrikaans", "Albanian", "Welsh"],
         'work_hours_from': '08:00',
         'work_hours_to': '15:00',
         'review': 'Original Review',
@@ -8762,7 +8778,7 @@ class TestWebUserMetadataUpdate(web.Helper):
 
     update = {
         'user_type': 'Researcher',
-        'languages': ["Afrikaans", "Albanian"], 
+        'languages': ["Afrikaans", "Albanian"],
         'work_hours_from': '09:00',
         'work_hours_to': '16:00',
         'review': 'Updated Review',

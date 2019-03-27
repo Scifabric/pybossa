@@ -101,7 +101,7 @@ class ProjectUpdateForm(ProjectForm):
                                 message=lazy_gettext(
                                     "You must provide a description.")),
                              validators.Length(max=255)])
-    short_name = TextField(label=None, widget=HiddenInput())    
+    short_name = TextField(label=None, widget=HiddenInput())
     long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = BooleanField(lazy_gettext('Allow Anonymous Contributors'))
     zip_download = BooleanField(lazy_gettext('Allow ZIP data download'))
@@ -587,6 +587,12 @@ class ForgotPasswordForm(Form):
                             validators.Email()])
 
 
+class PasswordResetKeyForm(Form):
+    password_reset_key = TextAreaField(lazy_gettext('Password Reset Key'),
+                                       [validators.Required(message=lazy_gettext(
+                                        'You must provide the Password Reset Key.'))])
+
+
 class OTPForm(Form):
     otp = TextField(lazy_gettext('One Time Password'),
                     [validators.Required(message=lazy_gettext(
@@ -704,7 +710,7 @@ class UserPrefMetadataForm(Form):
         if not can_update:
             return {field: 'Form is not updatable.' for field in self}
         return {getattr(self, name): reason for name, reason in six.iteritems(disabled_fields or {})}
-    
+
     def is_disabled(self, field):
         return self._disabled.get(field, False)
 

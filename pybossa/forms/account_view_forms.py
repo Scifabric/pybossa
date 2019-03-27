@@ -22,6 +22,7 @@ from forms import (
     RegisterForm,
     UpdateProfileForm,
     ChangePasswordForm,
+    PasswordResetKeyForm,
     ResetPasswordForm,
     ForgotPasswordForm,
     AvatarUploadForm,
