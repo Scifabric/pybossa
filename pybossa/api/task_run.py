@@ -48,6 +48,8 @@ from pybossa.model.completion_event import mark_if_complete
 from pybossa.core import uploader
 from pybossa.auth import ensure_authorized_to, is_authorized
 from pybossa.cloud_store_api.s3 import upload_json_data
+from pybossa.model.performance_stats import StatType, PerformanceStats
+from pybossa.stats.gold import ConfusionMatrix, RightWrongCount
 
 
 class TaskRunAPI(APIBase):
@@ -209,11 +211,6 @@ def update_gold_stats(user_id, task_id, data):
         answer = data['info']
         _update_gold_stats(task.project_id, user_id, answer_fields,
                            task.gold_answers, answer)
-
-### stats stuff
-
-from pybossa.model.performance_stats import StatType, PerformanceStats
-from pybossa.stats.gold import ConfusionMatrix, RightWrongCount
 
 
 field_to_stat_type = {
