@@ -116,11 +116,6 @@ class ConfusionMatrix(Statistic):
         }
 
 
-def get_stat(field_type, **kwargs):
-    if field_type == '':
-        pass
-
-
 def compute(stat, taskrun, gold, path):
     return _compute(stat, Answer(taskrun), gold, path.split('.'))
 
