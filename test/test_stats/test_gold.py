@@ -9,9 +9,10 @@ def test_count_matches_right():
     taskrun = {
         'hello': 1
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 1
-    assert wrong == 0
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 1
+    assert stat.value['wrong'] == 0
 
 
 def test_count_matches_wrong():
@@ -21,9 +22,10 @@ def test_count_matches_wrong():
     taskrun = {
         'hello': 2
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 0
-    assert wrong == 1
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 0
+    assert stat.value['wrong'] == 1
 
 
 def test_count_matches_error():
@@ -33,9 +35,10 @@ def test_count_matches_error():
     taskrun = {
         'goodbye': 1
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 0
-    assert wrong == 0
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 0
+    assert stat.value['wrong'] == 0
 
 
 def test_count_matches_error_no_ans():
@@ -45,9 +48,10 @@ def test_count_matches_error_no_ans():
         }
     }
     taskrun = {}
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.goodbye')
-    assert right == 0
-    assert wrong == 1
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello.goodbye')
+    assert stat.value['right'] == 0
+    assert stat.value['wrong'] == 1
 
 
 def test_count_matches_nested_right():
@@ -61,9 +65,10 @@ def test_count_matches_nested_right():
             'world': 1
         }
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.world')
-    assert right == 1
-    assert wrong == 0
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello.world')
+    assert stat.value['right'] == 1
+    assert stat.value['wrong'] == 0
 
 
 def test_count_matches_nested_wrong():
@@ -77,9 +82,10 @@ def test_count_matches_nested_wrong():
             'world': 2
         }
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello.world')
-    assert right == 0
-    assert wrong == 1
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello.world')
+    assert stat.value['right'] == 0
+    assert stat.value['wrong'] == 1
 
 
 def test_count_matches_list_all_right():
@@ -89,9 +95,10 @@ def test_count_matches_list_all_right():
     taskrun = {
         'hello': [1, 2, 3]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 3
-    assert wrong == 0
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 3
+    assert stat.value['wrong'] == 0
 
 
 def test_count_matches_list_all_wrong():
@@ -101,9 +108,10 @@ def test_count_matches_list_all_wrong():
     taskrun = {
         'hello': [3, 4, 5]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 0
-    assert wrong == 3
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 0
+    assert stat.value['wrong'] == 3
 
 
 def test_count_matches_list_partially_correct():
@@ -113,9 +121,10 @@ def test_count_matches_list_partially_correct():
     taskrun = {
         'hello': [3, 2, 5, 6]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 1
-    assert wrong == 2
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 1
+    assert stat.value['wrong'] == 2
 
 
 def test_count_matches_matrix():
@@ -125,9 +134,10 @@ def test_count_matches_matrix():
     taskrun = {
         'hello': [[1, 3], [3, 4]]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 3
-    assert wrong == 1
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 3
+    assert stat.value['wrong'] == 1
 
 
 def test_count_matches_different_shapes():
@@ -137,9 +147,10 @@ def test_count_matches_different_shapes():
     taskrun = {
         'hello': [[1, 2], [3, 4]]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 2
-    assert wrong == 1
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 2
+    assert stat.value['wrong'] == 1
 
 
 def test_count_matches_different_shapes_2():
@@ -149,9 +160,10 @@ def test_count_matches_different_shapes_2():
     taskrun = {
         'hello': [[1, 2], [3, 5]]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 3
-    assert wrong == 3
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 3
+    assert stat.value['wrong'] == 3
 
 
 def test_count_matches_different_shapes_3():
@@ -161,9 +173,10 @@ def test_count_matches_different_shapes_3():
     taskrun = {
         'hello': [[1, 3]]
     }
-    right, wrong = gold.count_matches(taskrun, gold_ans, 'hello')
-    assert right == 1
-    assert wrong == 5
+    stat = gold.RightWrongCount()
+    stat.compute(taskrun, gold_ans, 'hello')
+    assert stat.value['right'] == 1
+    assert stat.value['wrong'] == 5
 
 
 def test_confusion_matrix():
@@ -217,13 +230,13 @@ def test_many_labels():
     obs = ['B', 'C', 'B', 'B', 'D', 'C', 'A', 'B']
     gold_ans = {
         'hello': [{
-            'world': val
-        } for val in true]
+            'world': value
+        } for value in true]
     }
     taskrun = {
         'hello': [{
-            'world': val
-        } for val in obs]
+            'world': value
+        } for value in obs]
     }
     stat = gold.compute(stat, taskrun, gold_ans, 'hello.world')
     assert stat.value['matrix'][0][1] == 1, stat.value['matrix']
@@ -237,7 +250,7 @@ def test_many_labels():
     assert np.array(stat.value['matrix']).sum() == len(true)
 
 
-def test_confusion_matrix_invalid_gold():
+def test_confusion_matrix_invalueid_gold():
     stat = gold.ConfusionMatrix(['True', 'False'])
     gold_ans = {
         'hello': 'None'
@@ -249,7 +262,7 @@ def test_confusion_matrix_invalid_gold():
     stat.value['matrix'] == [[0, 0], [0, 0]]
 
 
-def test_confusion_matrix_invalid_answer():
+def test_confusion_matrix_invalueid_answer():
     stat = gold.ConfusionMatrix(['True', 'False'])
     gold_ans = {
         'hello': 'True'

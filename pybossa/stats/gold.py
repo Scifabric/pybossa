@@ -131,8 +131,3 @@ def _compute(stat, taskrun, gold, path_parts):
         return stat
     ans = taskrun[next_part]
     return _compute(stat, ans, gold_ans, other_parts)
-
-
-def count_matches(taskrun, gold, path):
-    stat = compute(RightWrongCount(), taskrun, gold, path)
-    return stat.right, stat.wrong
