@@ -477,7 +477,7 @@ def task_presenter_editor(short_name):
             flash(gettext('Please correct the errors'), 'error')
             errors = True
 
-    if project.info.get('task_presenter'):
+    if project.info.get('task_presenter') and not request.args.get('clear_template'):
         form.editor.data = project.info['task_presenter']
     else:
         if not request.args.get('template'):

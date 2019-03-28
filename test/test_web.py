@@ -4402,7 +4402,14 @@ class TestWeb(web.Helper):
         # Check it loads the previous posted code:
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
+
         assert "Some HTML code" in res.data, res.data
+
+        # Check it doesn't loads the previous posted code:
+        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor?template=basic&clear_template=true',
+                           follow_redirects=True)
+        assert "Some HTML code" not in res.data, res.data
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
