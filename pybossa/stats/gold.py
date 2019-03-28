@@ -3,6 +3,7 @@ This module should not depend on either the app or the request context
 """
 from itertools import chain
 import logging
+from operator import eq as equality
 
 import numpy as np
 
@@ -42,20 +43,13 @@ class Answer(object):
         return (Answer(x) for x in chain(base, self._no_ans))
 
 
-### Equalities
-
-
-def equality(one, two):
-    return one == two
-
-
 ### Statistics
 
 
 class Statistic(object):
 
-    def update(self, seen, true):
-        self._update(seen.ans, true)
+    def update(self, predicted, true_val):
+        self._update(predicted.ans, true_val)
         return self
 
     def compute(self, taskrun, gold, path):
@@ -71,8 +65,8 @@ class RightWrongCount(Statistic):
         self.wrong = wrong
         self.equal = compare_fn
 
-    def _update(self, seen, true):
-        if self.equal(seen, true):
+    def _update(self, predicted, true_val):
+        if self.equal(predicted, true_val):
             self.right += 1
         else:
             self.wrong += 1
@@ -98,16 +92,16 @@ class ConfusionMatrix(Statistic):
         else:
             self.matrix = np.array(matrix)
 
-    def _update(self, seen, true):
-        seen_ix = self.index.get(seen)
-        if seen_ix is None:
-            logger.warning('Invalid response label %s, won\'t update', seen)
+    def _update(self, predicted, true_val):
+        predicted_ix = self.index.get(predicted)
+        if predicted_ix is None:
+            logger.warning('Invalid response label %s, won\'t update', predicted)
             return
-        true_ix = self.index.get(true)
-        if true_ix is None:
-            logger.warning('Invalid true label %s, won\'t update', true)
+        true_val_ix = self.index.get(true_val)
+        if true_val_ix is None:
+            logger.warning('Invalid true_val label %s, won\'t update', true_val)
             return
-        self.matrix[true_ix][seen_ix] += 1
+        self.matrix[true_val_ix][predicted_ix] += 1
 
     @property
     def value(self):
