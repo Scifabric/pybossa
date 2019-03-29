@@ -8980,13 +8980,15 @@ class TestWebQuizModeUpdate(web.Helper):
         assert quiz == result
 
     def update_project(self, project, update):
-        url = u'/project/{}/quiz-mode'.format(project.short_name)
         return self.app.post(
-            url,
+            self.get_url(project),
             data=update,
             content_type="multipart/form-data",
             follow_redirects=True,
         )
+
+    def get_url(self, project):
+        return u'/project/{}/quiz-mode'.format(project.short_name)
 
     @with_context
     def test_enable(self):
@@ -9005,3 +9007,16 @@ class TestWebQuizModeUpdate(web.Helper):
         project = ProjectFactory.create(owner=admin)
 
         assert self.update_project(project, self.enabled_update).status_code == 401
+
+    @with_context
+    def test_display_new_project(self):
+        '''Test displaying quiz mode settings for new project'''
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+
+        result = self.app.get(
+            self.get_url(project),
+            follow_redirects=True,
+        )
+        assert result.status_code == 200

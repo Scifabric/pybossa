@@ -2947,7 +2947,7 @@ def quiz_mode(short_name):
             project_repo.update(project)
             return redirect_content_type(url_for('.details', short_name=short_name))
     else:
-        form = ProjectQuizForm(**project.info.get('quiz'))
+        form = ProjectQuizForm(**project.info.get('quiz', {}))
 
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
