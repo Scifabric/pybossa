@@ -2925,3 +2925,34 @@ def assign_users(short_name):
 
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
+
+@blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
+def quiz_mode(short_name):
+    project = project_repo.get_by_shortname(short_name)
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    if request.method == 'POST':
+        form = ProjectQuizForm(request.form)
+        if not form.validate():
+            flash("Please fix the errors", 'message')
+        else:
+            field_names = [
+                'enabled',
+                'questions_per_quiz',
+                'correct_answers_to_pass'
+            ]
+            project.info['quiz'] = { field_name: getattr(form, field_name).data for field_name in field_names }
+            project_repo.update(project)
+            return redirect_content_type(url_for('.details', short_name=short_name))
+    else:
+        form = ProjectQuizForm(**project.info.get('quiz'))
+
+    return handle_content_type(dict(
+        template='/projects/quiz_mode.html',
+        action_url=url_for('project.quiz_mode', short_name=short_name),
+        project=project,
+        pro_features=pro_features(),
+        form=form
+    ))
