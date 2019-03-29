@@ -24,6 +24,27 @@ from factories import UserFactory, ProjectFactory, TaskFactory,\
 class TestPerformanceStatsAPI(TestAPI):
 
     @with_context
+    def test_query_not_found(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+
+        url = '/api/performancestats/1'
+        res = self.app.get('{}?api_key={}'.format(url, user.api_key))
+        assert res.status_code == 404, res.data
+
+    @with_context
+    def test_query_by_id(self):
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        info = {'matrix': [[1, 0], [0, 1]]}
+        stat = PerformanceStatsFactory.create(user_id=user.id,
+            project_id=project.id, info=info)
+
+        url = '/api/performancestats/{}'.format(stat.id)
+        res = self.app.get('{}?api_key={}'.format(url, user.api_key))
+        assert json.loads(res.data)['info'] == info
+
+    @with_context
     def test_query_projectstats_permissions(self):
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create(owner=owner)

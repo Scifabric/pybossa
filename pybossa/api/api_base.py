@@ -75,7 +75,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
          'HelpingMaterial': {'repo': helping_repo, 'filter': 'filter_by',
                              'get': 'get', 'update': 'update',
                              'save': 'save', 'delete': 'delete'},
-         'PerformanceStats': {'repo': performance_stats_repo, 'filter': 'filter_by'}
+         'PerformanceStats': {'repo': performance_stats_repo, 'filter': 'filter_by',
+                              'get': 'get'}
         }
 
 caching = {'Project': {'refresh': clean_project},
