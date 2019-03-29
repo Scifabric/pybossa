@@ -8970,6 +8970,9 @@ class TestWebQuizModeUpdate(web.Helper):
     enabled_result = dict.copy(disabled_result)
     enabled_result['enabled'] = True
 
+    invalid_update = dict.copy(enabled_update)
+    invalid_update['correct_answers_to_pass'] = 30
+
     def update(self, update, result):
         admin = UserFactory.create()
         self.signin_user(admin)
@@ -9020,3 +9023,7 @@ class TestWebQuizModeUpdate(web.Helper):
             follow_redirects=True,
         )
         assert result.status_code == 200
+
+    @with_context
+    def test_invalid(self):
+        self.update(self.invalid_update, None)
