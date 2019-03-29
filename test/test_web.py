@@ -9026,4 +9026,5 @@ class TestWebQuizModeUpdate(web.Helper):
 
     @with_context
     def test_invalid(self):
+        '''Test invalid update has no effect'''
         self.update(self.invalid_update, None)
