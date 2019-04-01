@@ -115,7 +115,6 @@ class TestAnnouncementAPI(TestAPI):
         for i in range(len(announcements)):
             assert announcements_by_id[i].id == data[i]['id']
 
-
     @with_context
     def test_announcement_post(self):
         """Test API Announcement creation."""

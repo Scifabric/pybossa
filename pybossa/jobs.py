@@ -112,6 +112,8 @@ def get_periodic_jobs(queue):
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
+    warning_jobs = get_notify_inactive_accounts() if queue == 'monthly' else []
+    delete_account_jobs = get_delete_inactive_accounts() if queue == 'bimonthly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() \
         if queue == 'quaterly' else []
     dashboard_jobs = get_dashboard_jobs() if queue == 'low' else []
@@ -120,7 +122,9 @@ def get_periodic_jobs(queue):
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
-            weekly_update_jobs, failed_jobs, leaderboard_jobs]
+            weekly_update_jobs, failed_jobs, leaderboard_jobs,
+            warning_jobs, delete_account_jobs]
+
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -229,7 +233,6 @@ def get_inactive_users_jobs(queue='quaterly'):
     timeout = current_app.config.get('TIMEOUT')
 
     for row in results:
-
         user = User.query.get(row.user_id)
 
         if user.subscribed and user.restrict is False:
@@ -886,3 +889,85 @@ def delete_file(fname, container):
     """Delete file."""
     from pybossa.core import uploader
     return uploader.delete_file(fname, container)
+
+
+def get_notify_inactive_accounts(queue='monthly'):
+    """Return a list of inactive users."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    timeout = current_app.config.get('TIMEOUT')
+    notify_time = current_app.config.get('USER_INACTIVE_NOTIFICATION')
+
+    sql = text('''SELECT "user".id from "user", task_run
+               WHERE "user".id = task_run.user_id AND "user".id NOT IN
+               (SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id
+               ORDER BY user_id) AND
+               "user".admin=false
+               GROUP BY "user".id ORDER BY "user".id
+               ;'''.format(notify_time))
+    results = db.slave_session.execute(sql)
+
+    for row in results:
+        user = User.query.get(row.id)
+        if (user.restrict is False
+                and len(user.projects) == 0):
+            subject = "Your account will be deleted the next month"
+            body = render_template('/account/email/deleteNotify.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/deleteNotify.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=timeout,
+                       queue=queue)
+            yield job
+
+
+def get_delete_inactive_accounts(queue='bimonthly'):
+    """Return a list of inactive users to delete."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    timeout = current_app.config.get('TIMEOUT')
+    time = current_app.config.get('USER_INACTIVE_DELETE')
+
+    sql = text('''SELECT "user".id from "user", task_run
+               WHERE "user".id = task_run.user_id AND "user".id NOT IN
+               (SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               >= NOW() - '{} month'::INTERVAL
+               GROUP BY user_id
+               ORDER BY user_id) AND
+               "user".admin=false
+               GROUP BY "user".id ORDER BY "user".id
+               ;'''.format(time))
+
+    results = db.slave_session.execute(sql)
+
+    for row in results:
+        user = User.query.get(row.id)
+
+        if (user.restrict is False
+                and len(user.projects) == 0):
+
+            job = dict(name=delete_account,
+                       args=[user.id],
+                       kwargs={},
+                       timeout=timeout,
+                       queue=queue)
+            yield job
