@@ -2942,12 +2942,7 @@ def quiz_mode(short_name):
         if not form.validate():
             flash("Please fix the errors", 'message')
         else:
-            field_names = [
-                'enabled',
-                'questions_per_quiz',
-                'correct_answers_to_pass'
-            ]
-            new_quiz_config = { field_name: getattr(form, field_name).data for field_name in field_names }
+            new_quiz_config = form.data
             project.info['quiz'] = new_quiz_config
             project_repo.update(project)
             auditlogger.log_event(
