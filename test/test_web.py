@@ -8982,12 +8982,12 @@ class TestWebQuizModeUpdate(web.Helper):
         quiz = updated_project.info.get('quiz')
         assert quiz == result
 
-    def update_project(self, project, update):
+    def update_project(self, project, update, follow_redirects=True):
         return self.app.post(
             self.get_url(project),
             data=update,
             content_type="multipart/form-data",
-            follow_redirects=True,
+            follow_redirects=follow_redirects,
         )
 
     def get_url(self, project):
@@ -9009,7 +9009,8 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         project = ProjectFactory.create(owner=admin)
 
-        assert self.update_project(project, self.enabled_update).status_code == 401
+        result = self.update_project(project, self.enabled_update, follow_redirects=False)
+        assert result.status_code == 302
 
     @with_context
     def test_display_new_project(self):
@@ -9028,3 +9029,15 @@ class TestWebQuizModeUpdate(web.Helper):
     def test_invalid(self):
         '''Test invalid update has no effect'''
         self.update(self.invalid_update, None)
+
+    @with_context
+    def test_normal_user_cannot_update(self):
+        '''Test normal user cannot update project quiz mode'''
+        admin = UserFactory.create()
+        worker = UserFactory.create()
+        assert not worker.admin and not worker.subadmin
+        project = ProjectFactory.create(owner=admin)
+        self.signin_user(worker)
+        result = self.update_project(project, self.enabled_update)
+        assert result.status_code == 403
+

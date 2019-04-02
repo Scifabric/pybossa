@@ -2927,11 +2927,15 @@ def assign_users(short_name):
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
 def quiz_mode(short_name):
-    project = project_repo.get_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
+
+    current_quiz_config = project.info.get('quiz', {})
 
     if request.method == 'POST':
         form = ProjectQuizForm(request.form)
@@ -2943,16 +2947,26 @@ def quiz_mode(short_name):
                 'questions_per_quiz',
                 'correct_answers_to_pass'
             ]
-            project.info['quiz'] = { field_name: getattr(form, field_name).data for field_name in field_names }
+            new_quiz_config = { field_name: getattr(form, field_name).data for field_name in field_names }
+            project.info['quiz'] = new_quiz_config
             project_repo.update(project)
+            auditlogger.log_event(
+                project,
+                current_user,
+                'update',
+                'project.quiz',
+                json.dumps(current_quiz_config),
+                json.dumps(new_quiz_config)
+            )
             return redirect_content_type(url_for('.details', short_name=short_name))
     else:
-        form = ProjectQuizForm(**project.info.get('quiz', {}))
+        form = ProjectQuizForm(**current_quiz_config)
 
+    project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
         action_url=url_for('project.quiz_mode', short_name=short_name),
-        project=project,
+        project=project_sanitized,
         pro_features=pro_features(),
         form=form
     ))
