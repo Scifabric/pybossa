@@ -129,6 +129,36 @@ class ProjectSyncForm(Form):
     target_key = TextField(lazy_gettext('API Key'))
 
 
+class ProjectQuizForm(Form):
+    enabled = BooleanField(lazy_gettext('Enable Quiz Mode'))
+    questions_per_quiz = IntegerField(
+        lazy_gettext('Number of questions per quiz'),
+        [
+            validators.Required(lazy_gettext('This field must be a positive integer.')),
+            validators.NumberRange(min=1)
+        ]
+    )
+    correct_answers_to_pass = IntegerField(
+        lazy_gettext('Number of correct answers to pass quiz'),
+        [
+            validators.Required(lazy_gettext('This field must be a positive integer.')),
+            validators.NumberRange(min=1)
+        ]
+    )
+
+    def validate_correct_answers_to_pass(form, field):
+        correct = field.data
+        total = form.questions_per_quiz.data
+        if correct > total:
+            raise validators.ValidationError(
+                lazy_gettext(
+                    'Correct answers required to pass (%(correct)d) is greater than the number of questions per quiz (%(total)d). \
+                    It must be less than or equal to the number of questions per quiz.',
+                    correct=correct,
+                    total=total
+                )
+            )
+
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')

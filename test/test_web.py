@@ -8955,3 +8955,96 @@ class TestWebUserMetadataUpdate(web.Helper):
         self.signin_user(user_normal)
         self.update_metadata(user_normal_updated.name)
         self.assert_updates_applied_correctly(user_normal_updated.id)
+
+
+class TestWebQuizModeUpdate(web.Helper):
+
+    disabled_update = {
+        'questions_per_quiz': 20,
+        'correct_answers_to_pass': 15,
+        'garbage': 'junk'
+    }
+
+    enabled_update = dict.copy(disabled_update)
+    enabled_update['enabled'] ='y'
+
+    disabled_result = {
+        'enabled': False,
+        'questions_per_quiz': disabled_update['questions_per_quiz'],
+        'correct_answers_to_pass': disabled_update['correct_answers_to_pass']
+    }
+
+    enabled_result = dict.copy(disabled_result)
+    enabled_result['enabled'] = True
+
+    invalid_update = dict.copy(enabled_update)
+    invalid_update['correct_answers_to_pass'] = 30
+
+    def update(self, update, result):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        res = self.update_project(project, update)
+        updated_project = project_repo.get(project.id)
+        quiz = updated_project.info.get('quiz')
+        assert quiz == result
+
+    def update_project(self, project, update, follow_redirects=True):
+        return self.app.post(
+            self.get_url(project),
+            data=update,
+            content_type="multipart/form-data",
+            follow_redirects=follow_redirects,
+        )
+
+    def get_url(self, project):
+        return u'/project/{}/quiz-mode'.format(project.short_name)
+
+    @with_context
+    def test_enable(self):
+        '''Test project quiz mode form enables quiz mode'''
+        self.update(self.enabled_update, self.enabled_result)
+
+    @with_context
+    def test_disable(self):
+        '''Test project quiz mode form disables quiz mode'''
+        self.update(self.disabled_update, self.disabled_result)
+
+    @with_context
+    def test_requires_login(self):
+        '''Test login is required to update project quiz mode settings'''
+        admin = UserFactory.create()
+        project = ProjectFactory.create(owner=admin)
+
+        result = self.update_project(project, self.enabled_update, follow_redirects=False)
+        assert result.status_code == 302
+
+    @with_context
+    def test_display_new_project(self):
+        '''Test displaying quiz mode settings for new project'''
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+
+        result = self.app.get(
+            self.get_url(project),
+            follow_redirects=True,
+        )
+        assert result.status_code == 200
+
+    @with_context
+    def test_invalid(self):
+        '''Test invalid update has no effect'''
+        self.update(self.invalid_update, None)
+
+    @with_context
+    def test_normal_user_cannot_update(self):
+        '''Test normal user cannot update project quiz mode'''
+        admin = UserFactory.create()
+        worker = UserFactory.create()
+        assert not worker.admin and not worker.subadmin
+        project = ProjectFactory.create(owner=admin)
+        self.signin_user(worker)
+        result = self.update_project(project, self.enabled_update)
+        assert result.status_code == 403
+

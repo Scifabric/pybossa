@@ -2925,3 +2925,43 @@ def assign_users(short_name):
 
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
+
+@blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def quiz_mode(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    current_quiz_config = project.info.get('quiz', {})
+
+    if request.method == 'POST':
+        form = ProjectQuizForm(request.form)
+        if not form.validate():
+            flash("Please fix the errors", 'message')
+        else:
+            new_quiz_config = form.data
+            project.info['quiz'] = new_quiz_config
+            project_repo.update(project)
+            auditlogger.log_event(
+                project,
+                current_user,
+                'update',
+                'project.quiz',
+                json.dumps(current_quiz_config),
+                json.dumps(new_quiz_config)
+            )
+            return redirect_content_type(url_for('.details', short_name=short_name))
+    else:
+        form = ProjectQuizForm(**current_quiz_config)
+
+    project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
+    return handle_content_type(dict(
+        template='/projects/quiz_mode.html',
+        action_url=url_for('project.quiz_mode', short_name=short_name),
+        project=project_sanitized,
+        pro_features=pro_features(),
+        form=form
+    ))
