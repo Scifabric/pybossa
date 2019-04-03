@@ -245,11 +245,13 @@ def parse_tasks_browse_args(args):
             raise ValueError('invalid task state: %s'.format(args['state']))
         parsed_args['state'] = args['state']
 
-    if args.get('gold_task'):
-        if args['gold_task'] == 'Y':
-            parsed_args['gold_task'] = 1
-        if args['gold_task'] == 'N':
-            parsed_args['gold_task'] = 0
+    gold_task = args.get('gold_task')
+    if gold_task and gold_task != 'All':
+        gold_task = int(gold_task)
+        if gold_task in [0, 1]:
+            parsed_args['gold_task'] = gold_task
+        else:
+            raise ValueError('invalid gold value')
 
     return parsed_args
 
