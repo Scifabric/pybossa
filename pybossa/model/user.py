@@ -106,3 +106,52 @@ class User(db.Model, DomainObject, UserMixin):
             return list(set(default).union(set(extra)))
         else:
             return default
+
+    def get_quiz_for_project(self, project_id):
+        quiz = self.info.get('quiz', {})
+        self.info['quiz'] = quiz
+        project_quiz = quiz.setdefault(str(project_id), {})
+        status = project_quiz.setdefault('status', 'in_progress')
+        result = project_quiz.setdefault('result', {'right':0, 'wrong':0})
+        return project_quiz
+
+    @staticmethod
+    def update_quiz_status(quiz, project_id):
+        from pybossa.core import project_repo
+        project = project_repo.get(project_id)
+        pass_fail = project.get_quiz_pass_fail(quiz['result']['right'], quiz['result']['wrong'])
+        quiz['status'] = {
+            True: 'passed',
+            False: 'failed',
+            None: 'in_progress'
+        }[pass_fail]
+
+    def add_quiz_right_answer(self, project_id):
+        quiz = self.get_quiz_for_project(project_id)
+        if (quiz['status'] != 'in_progress'):
+            raise Exception('Cannot add right answer to quiz that is not in progress.')
+        result = quiz['result']
+        result['right'] += 1
+        self.update_quiz_status(quiz, project_id)
+
+    def add_quiz_wrong_answer(self, project_id):
+        quiz = self.get_quiz_for_project(project_id)
+        if (quiz['status'] != 'in_progress'):
+            raise Exception('Cannot add wrong answer to quiz that is not in progress.')
+        result = quiz['result']
+        result['wrong'] += 1
+        self.update_quiz_status(quiz, project_id)
+
+    def get_quiz_in_progress(self, project_id):
+        return self.get_quiz_for_project(project_id)['status'] == 'in_progress'
+
+    def get_quiz_failed(self, project_id):
+        return self.get_quiz_for_project(project_id)['status'] == 'failed'
+
+    def get_quiz_passed(self, project_id):
+        return self.get_quiz_for_project(project_id)['status'] == 'passed'
+
+    def clear_quiz_result(self, project_id):
+        quiz = self.get_quiz_for_project(project_id)
+        del quiz['result']
+        quiz['status'] = 'in_progress'

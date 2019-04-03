@@ -199,4 +199,16 @@ class Project(db.Model, DomainObject):
     def get_project_users(self):
         return self.info.get('project_users', [])
 
+    def get_quiz_pass_fail(self, right_count, wrong_count):
+        quiz = self.info.get('quiz')
+        if not quiz:
+            raise Exception('Quiz is not configured for this project.')
+        if right_count >= quiz.get('correct_answers_to_pass'):
+            return True
+        elif wrong_count + right_count >= quiz.get('questions_per_quiz'):
+            return False
+        
+    def get_quiz_enabled(self):
+        return self.info.get('quiz', {}).get('enabled', False)
+
 Index('project_owner_id_idx', Project.owner_id)

@@ -35,7 +35,7 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from api_base import APIBase
 from pybossa.model.task_run import TaskRun
 from pybossa.util import get_user_id_or_ip, get_avatar_url
-from pybossa.core import task_repo, sentinel, anonymizer, project_repo
+from pybossa.core import task_repo, sentinel, anonymizer, project_repo, user_repo, task_repo
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.contributions_guard import ContributionsGuard
@@ -132,7 +132,21 @@ class TaskRunAPI(APIBase):
         guard._remove_task_stamped(task, get_user_id_or_ip())
 
     def _after_save(self, instance):
-        mark_if_complete(instance.task_id, instance.project_id)
+        project_id = instance.project_id
+        mark_if_complete(instance.task_id, project_id)
+
+        project = project_repo.get(project_id)
+        if not project.get_quiz_enabled(): return
+
+        user = user_repo.get(current_user.id)
+        if user.get_quiz_in_progress(project_id):
+            task = task_repo.get_task(instance.task_id)
+            if task.gold_answers == instance.info:
+                user.add_quiz_right_answer(project_id)
+            else:
+                user.add_quiz_wrong_answer(project_id)
+
+            user_repo.update(user)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
