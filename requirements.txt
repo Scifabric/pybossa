@@ -1,5 +1,4 @@
 --index-url https://pypi.python.org/simple/
 
 -e git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard
--e git+https://github.com/Scifabric/flatten.git@5d57cc6336df277822305ad70b86adf8c6a1c947#egg=flatten_json
 -e .
