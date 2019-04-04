@@ -5,7 +5,7 @@ requirements = [
     "beautifulsoup4>=4.3.2, <5.0",
     "blinker>=1.3, <2.0",
     "Flask-Babel>=0.9, <0.10",
-    "flask-login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    "Flask-Login >=0.3.0 <0.4",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
     "misaka>=1.0.0, <2.0.0",
     "Flask-Misaka>=0.2.0, <0.4.0",
