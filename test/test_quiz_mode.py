@@ -88,11 +88,9 @@ class TestQuizUpdate(web.Helper):
         non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
 
         quiz = admin.get_quiz_for_project(project.id)
-        print quiz
         new_task_url = '/api/project/{}/newtask'.format(project.id)
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
-        print task
         task_run_url = '/api/taskrun'
         task_run_data = {
             'project_id': project.id,
@@ -103,9 +101,7 @@ class TestQuizUpdate(web.Helper):
             task_run_url,
             data=json.dumps(task_run_data)
         )
-        print task_run_response.data
         updated_quiz = admin.get_quiz_for_project(project.id)
-        print updated_quiz
         assert updated_quiz['result']['wrong'] == quiz['result']['wrong'] + 1
         assert updated_quiz['result']['right'] == quiz['result']['right']
 
@@ -129,11 +125,9 @@ class TestQuizUpdate(web.Helper):
         non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
 
         quiz = admin.get_quiz_for_project(project.id)
-        print quiz
         new_task_url = '/api/project/{}/newtask'.format(project.id)
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
-        print task
         task_run_url = '/api/taskrun'
         task_run_data = {
             'project_id': project.id,
@@ -144,9 +138,7 @@ class TestQuizUpdate(web.Helper):
             task_run_url,
             data=json.dumps(task_run_data)
         )
-        print task_run_response.data
         updated_quiz = admin.get_quiz_for_project(project.id)
-        print updated_quiz
         assert updated_quiz['result']['wrong'] == quiz['result']['wrong']
         assert updated_quiz['result']['right'] == quiz['result']['right'] + 1
 
@@ -180,11 +172,9 @@ class TestQuizUpdate(web.Helper):
             }
         )
         quiz = admin.get_quiz_for_project(project.id)
-        print quiz
         new_task_url = '/api/project/{}/newtask'.format(project.id)
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
-        print task
         task_run_url = '/api/taskrun'
         task_run_data = {
             'project_id': project.id,
@@ -195,9 +185,7 @@ class TestQuizUpdate(web.Helper):
             task_run_url,
             data=json.dumps(task_run_data)
         )
-        print task_run_response.data
         updated_quiz = admin.get_quiz_for_project(project.id)
-        print updated_quiz
         assert updated_quiz['status'] == 'passed'
         assert admin.get_quiz_passed(project.id)
 
@@ -231,11 +219,9 @@ class TestQuizUpdate(web.Helper):
             }
         )
         quiz = admin.get_quiz_for_project(project.id)
-        print quiz
         new_task_url = '/api/project/{}/newtask'.format(project.id)
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
-        print task
         task_run_url = '/api/taskrun'
         task_run_data = {
             'project_id': project.id,
@@ -246,8 +232,6 @@ class TestQuizUpdate(web.Helper):
             task_run_url,
             data=json.dumps(task_run_data)
         )
-        print task_run_response.data
         updated_quiz = admin.get_quiz_for_project(project.id)
-        print updated_quiz
         assert updated_quiz['status'] == 'failed'
         assert admin.get_quiz_failed(project.id)
