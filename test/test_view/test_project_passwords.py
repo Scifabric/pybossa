@@ -32,7 +32,7 @@ def configure_mock_current_user_from(user, mock):
         return user is None
     def is_authenticated():
         return True
-    mock.is_anonymous.return_value = is_anonymous()
+    mock.is_anonymous.return_value = is_anonymous
     mock.is_authenticated.return_value = True
     mock.admin = user.admin if user != None else None
     mock.id = user.id if user != None else None
