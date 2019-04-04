@@ -29,18 +29,18 @@ class UserAuth(object):
         return getattr(self, action)(user, resource_user)
 
     def _create(self, user, resource_user=None):
-        return user.is_authenticated() and user.admin is True
+        return user.is_authenticated and user.admin is True
 
     def _read(self, user, resource_user=None):
         if resource_user and resource_user.restrict:
-            if (user.is_authenticated() and user.id == resource_user.id):
+            if (user.is_authenticated and user.id == resource_user.id):
                 return True
             else:
                 return False
-        return user.is_authenticated() and (user.admin or user.subadmin)
+        return user.is_authenticated and (user.admin or user.subadmin)
 
     def _update(self, user, resource_user):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self._create(user, resource_user) or resource_user.id == user.id
 

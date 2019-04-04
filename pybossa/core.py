@@ -309,7 +309,7 @@ def setup_babel(app):
     @babel.localeselector
     def _get_locale():
         locales = [l[0] for l in app.config.get('LOCALES')]
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             lang = current_user.locale
         else:
             lang = request.cookies.get('language')
@@ -577,7 +577,7 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (current_user and current_user.is_authenticated()
+        if (current_user and current_user.is_authenticated
             and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):

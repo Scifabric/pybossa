@@ -96,7 +96,7 @@ class TaskAPI(APIBase):
                 raise BadRequest('Invalid gold_answers')
 
     def _verify_auth(self, item):
-        if not current_user.is_authenticated():
+        if not current_user.is_authenticated:
             return False
         if current_user.admin or current_user.subadmin:
             return True

@@ -35,7 +35,7 @@ class AuditlogAuth(object):
         return False
 
     def _read(self, user, auditlog=None, project_id=None):
-        if user.is_anonymous() or (auditlog is None and project_id is None):
+        if user.is_anonymous or (auditlog is None and project_id is None):
             return False
         project = self._get_project(auditlog, project_id)
         return user.admin or (user.subadmin and user.id in project.owners_ids)

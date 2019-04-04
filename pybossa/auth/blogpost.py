@@ -32,7 +32,7 @@ class BlogpostAuth(object):
         return getattr(self, action)(user, blogpost, project_id)
 
     def _create(self, user, blogpost=None, project_id=None):
-        if user.is_anonymous() or (blogpost is None and project_id is None):
+        if user.is_anonymous or (blogpost is None and project_id is None):
             return False
         project = self._get_project(blogpost, project_id)
         if blogpost is None:
@@ -44,20 +44,20 @@ class BlogpostAuth(object):
             project = self._get_project(blogpost, project_id)
             if project:
                 return (project.published or self._is_admin_or_owner(user, project))
-            if user.is_anonymous() or (blogpost is None and project_id is None):
+            if user.is_anonymous or (blogpost is None and project_id is None):
                 return False
             return self._is_admin_or_owner(user, project)
         else:
             return True
 
     def _update(self, user, blogpost, project_id=None):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
 
         return blogpost.user_id == user.id or user.admin
 
     def _delete(self, user, blogpost, project_id=None):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return blogpost.user_id == user.id or user.admin
 
@@ -67,5 +67,5 @@ class BlogpostAuth(object):
         return self.project_repo.get(project_id)
 
     def _is_admin_or_owner(self, user, project):
-        return (not user.is_anonymous() and
+        return (not user.is_anonymous and
                 (user.admin or user.id in project.owners_ids))

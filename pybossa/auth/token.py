@@ -32,7 +32,7 @@ class TokenAuth(object):
         return False
 
     def _read(self, user, token=None):
-        return not user.is_anonymous()
+        return not user.is_anonymous
 
     def _update(self, user, token):
         return False

@@ -187,7 +187,7 @@ def _retrieve_new_task(project_id):
         or current_user.id in project.owners_ids):
         raise NotFound
 
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         info = dict(
             error="This project does not allow anonymous contributors")
         error = [model.task.Task(info=info)]
@@ -232,9 +232,9 @@ def _retrieve_new_task(project_id):
     else:
         desc = False
 
-    user_id = None if current_user.is_anonymous() else current_user.id
+    user_id = None if current_user.is_anonymous else current_user.id
     user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
-               if current_user.is_anonymous() else None)
+               if current_user.is_anonymous else None)
     external_uid = request.args.get('external_uid')
     sched_rand_within_priority = project.info.get('sched_rand_within_priority', False)
 
@@ -285,7 +285,7 @@ def user_progress(project_id=None, short_name=None):
        them based on user preferences.
 
     """
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return abort(401)
     if project_id or short_name:
         if short_name:
@@ -342,7 +342,7 @@ def auth_jwt_project(short_name):
 def get_disqus_sso_api():
     """Return remote_auth_s3 and api_key for disqus SSO."""
     try:
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
         else:
             message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
@@ -364,7 +364,7 @@ def get_disqus_sso_api():
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def cancel_task(task_id=None):
     """Unlock task upon cancel so that same task can be presented again."""
-    if not current_user.is_authenticated():
+    if not current_user.is_authenticated:
         return abort(401)
 
     data = request.json
@@ -393,7 +393,7 @@ def fetch_lock(task_id):
     """Fetch the time (in seconds) until the current user's
     lock on a task expires.
     """
-    if not current_user.is_authenticated():
+    if not current_user.is_authenticated:
         return abort(401)
 
     task = task_repo.get_task(task_id)

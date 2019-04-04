@@ -45,7 +45,7 @@ def home():
         data = dict(featured=[])
     # Add historical contributions
     historical_projects = []
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user_id = current_user.id
         historical_projects = cached_users.projects_contributed(user_id, order_by='last_contribution')[:3]
     data['historical_contributions'] = historical_projects

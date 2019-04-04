@@ -43,5 +43,5 @@ class AnnouncementAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _update_object(self, obj):
-        if not current_user.is_anonymous():
+        if not current_user.is_anonymous:
             obj.user_id = current_user.id

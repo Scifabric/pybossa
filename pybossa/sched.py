@@ -525,7 +525,7 @@ def get_scheduler_and_timeout(project):
 
 
 def has_read_access(user):
-    return not user.is_anonymous() and (user.admin or user.subadmin)
+    return not user.is_anonymous and (user.admin or user.subadmin)
 
 
 def get_project_scheduler(project_id, conn):

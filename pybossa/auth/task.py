@@ -38,13 +38,13 @@ class TaskAuth(object):
         return self._only_admin_or_subadminowners(user, task)
 
     def _read(self, user, task=None):
-        return user.is_authenticated()
+        return user.is_authenticated
 
     def _update(self, user, task):
         return self._only_admin_or_subadminowners(user, task)
 
     def _delete(self, user, task):
-        if user.is_authenticated() and user.admin:
+        if user.is_authenticated and user.admin:
             return True
         if self.result_repo.get_by(task_id=task.id,
                                    project_id=task.project_id):
@@ -52,7 +52,7 @@ class TaskAuth(object):
         return self._only_admin_or_subadminowners(user, task)
 
     def _only_admin_or_subadminowners(self, user, task):
-        if not user.is_anonymous():
+        if not user.is_anonymous:
             project = self.project_repo.get(task.project_id)
             if project is None:
                 raise NotFound("Invalid project ID")

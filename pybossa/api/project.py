@@ -65,7 +65,7 @@ class ProjectAPI(APIBase):
         return inst
 
     def _update_object(self, obj):
-        if not current_user.is_anonymous():
+        if not current_user.is_anonymous:
             obj.owner_id = current_user.id
             owners = obj.owners_ids or []
             if current_user.id not in owners:
@@ -90,11 +90,11 @@ class ProjectAPI(APIBase):
         for key in data.keys():
             if key in self.reserved_keys:
                 if key == 'published':
-                    raise Forbidden('You cannot publish a project via the API') 
-                raise BadRequest("Reserved keys in payload")         
+                    raise Forbidden('You cannot publish a project via the API')
+                raise BadRequest("Reserved keys in payload")
 
     def _restricted_attributes(self, data):
-        if (current_user.is_authenticated() and
+        if (current_user.is_authenticated and
             not current_user.admin and
             not http_signer.valid(request)):
 
@@ -134,7 +134,7 @@ class ProjectAPI(APIBase):
         return tmp
 
     def _select_attributes(self, data):
-        if (current_user.is_authenticated() and
+        if (current_user.is_authenticated and
                 (current_user.id in data['owners_ids'] or
                     current_user.admin or current_user.subadmin)):
             return data

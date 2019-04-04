@@ -87,7 +87,7 @@ def index(page=1):
     if not accounts and page != 1:
         abort(404)
     pagination = Pagination(page, per_page, count)
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user_id = current_user.id
     else:
         user_id = None
@@ -168,7 +168,7 @@ def signin():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         # If Twitter is enabled in config, show the Twitter Sign in button
         if (isLdap is False):
             if ('twitter' in current_app.blueprints):  # pragma: no cover
@@ -282,7 +282,7 @@ def signout():
     Returns a redirection to PYBOSSA home page.
 
     """
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         release_user_locks(current_user.id)
     logout_user()
     flash(gettext('You are now signed out'), SUCCESS)
@@ -413,7 +413,7 @@ def newsletter_subscribe():
 
     """
     # Save that we've prompted the user to sign up in the newsletter
-    if newsletter.is_initialized() and current_user.is_authenticated():
+    if newsletter.is_initialized() and current_user.is_authenticated:
         next_url = request.args.get('next') or url_for('home.home')
         user = user_repo.get(current_user.id)
         if current_user.newsletter_prompted is False:
@@ -498,9 +498,9 @@ def _update_user_with_valid_email(user, email_addr):
 def redirect_profile():
     """Redirect method for profile."""
 
-    if current_user.is_anonymous():  # pragma: no cover
+    if current_user.is_anonymous:  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
-    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
+    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated:
         form = None
         if app_settings.upref_mdata:
             form_data = cached_users.get_user_pref_metadata(current_user.name)
@@ -522,7 +522,7 @@ def profile(name):
 
     """
     user = user_repo.get_by_name(name=name)
-    if user is None or current_user.is_anonymous():
+    if user is None or current_user.is_anonymous:
         raise abort(404)
 
     form = None
@@ -549,7 +549,7 @@ def _show_public_profile(user, form, can_update):
     total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
     percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1) if user_dict else None
 
-    if current_user.is_authenticated() and current_user.admin:
+    if current_user.is_authenticated and current_user.admin:
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
 
@@ -1078,7 +1078,7 @@ def add_metadata(name):
         projects_created = cached_users.published_projects_cached(user.id)
         total_projects_contributed = '{} / {}'.format(cached_users.n_projects_contributed(user.id), n_published())
         percentage_tasks_completed = user_dict['n_answers'] * 100 / (n_total_tasks() or 1)
-        if current_user.is_authenticated() and current_user.admin:
+        if current_user.is_authenticated and current_user.admin:
             draft_projects = cached_users.draft_projects(user.id)
             projects_created.extend(draft_projects)
         title = "%s &middot; User Profile" % user.name
