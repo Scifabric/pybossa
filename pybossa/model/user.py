@@ -155,3 +155,8 @@ class User(db.Model, DomainObject, UserMixin):
         quiz = self.get_quiz_for_project(project_id)
         del quiz['result']
         quiz['status'] = 'in_progress'
+
+    def set_quiz_for_project(self, project_id, project_quiz):
+        quiz = self.info.get('quiz', {})
+        self.info['quiz'] = quiz
+        quiz[str(project_id)] = project_quiz

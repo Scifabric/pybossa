@@ -1017,3 +1017,63 @@ class TestBreadthFirst(sched.Helper):
         res = self.app.get(url)
         task_four = json.loads(res.data)
         assert task_four == {}, task_four
+
+class TestQuizMode(sched.Helper):
+
+    @with_context
+    def test_only_golden_when_quiz_in_progress(self):
+        '''Test that user only receives golden tasks while quiz is in progress'''
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project_quiz = dict(
+            enabled=True,
+            questions_per_quiz=10,
+            correct_answers_to_pass=7
+        )
+        project = ProjectFactory.create(owner=admin, info=dict(quiz=project_quiz, enable_gold=False))
+        golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
+        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
+        url = '/api/project/{}/newtask'.format(project.id)
+        response = self.app.get(url)
+        task = json.loads(response.data)
+        assert task['calibration']
+
+    @with_context
+    def test_failed_quiz_no_task(self):
+        '''Test that user receives no tasks if they failed the quiz'''
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project_quiz = dict(
+            enabled=True,
+            questions_per_quiz=10,
+            correct_answers_to_pass=7
+        )
+        project = ProjectFactory.create(owner=admin, info=dict(quiz=project_quiz, enable_gold=False))
+        golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
+        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
+        admin.set_quiz_for_project(project.id, {'status':'failed'})
+
+        url = '/api/project/{}/newtask'.format(project.id)
+        response = self.app.get(url)
+        task = json.loads(response.data)
+        assert not task # task == {}
+
+    @with_context
+    def test_passed_quiz_normal_task(self):
+        '''Test that user receives normal tasks if they have passed the quiz'''
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project_quiz = dict(
+            enabled=True,
+            questions_per_quiz=10,
+            correct_answers_to_pass=7
+        )
+        project = ProjectFactory.create(owner=admin, info=dict(quiz=project_quiz, enable_gold=False))
+        golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
+        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
+        admin.set_quiz_for_project(project.id, {'status':'passed'})
+
+        url = '/api/project/{}/newtask'.format(project.id)
+        response = self.app.get(url)
+        task = json.loads(response.data)
+        assert not task['calibration']

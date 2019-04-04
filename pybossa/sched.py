@@ -74,7 +74,9 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
             # User is blocked from project so don't return a task
             return None
 
-    present_gold_task = False if gold_only else not random.randint(0, 10)
+    # This is here for testing. It removes the random variable to make testing deterministic.
+    disable_gold = not project.info.get('enable_gold', True)
+    present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)
 
     return scheduler(
         project_id,
