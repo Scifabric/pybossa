@@ -95,7 +95,7 @@ class TestQuizUpdate(web.Helper):
         task_run_data = {
             'project_id': project.id,
             'task_id': task['id'],
-            'info': {'answer': 'wrong'} #task_answers[task['id']]
+            'info': {'answer': 'wrong'}
         }
         task_run_response = self.app.post(
             task_run_url,
@@ -235,3 +235,52 @@ class TestQuizUpdate(web.Helper):
         updated_quiz = admin.get_quiz_for_project(project.id)
         assert updated_quiz['status'] == 'failed'
         assert admin.get_quiz_failed(project.id)
+
+    @with_context
+    def test_cannot_update_passed_quiz(self):
+        '''Test exception raised when updating results for quiz that has already passed'''
+        admin = UserFactory.create()
+        project_id = 7
+        admin.set_quiz_for_project(project_id, {'status':'passed'})
+        try:
+            admin.add_quiz_right_answer(project_id)
+            assert False, 'Updated passed quiz'
+        except:
+            pass
+
+    @with_context
+    def test_cannot_update_failed_quiz(self):
+        '''Test exception raised when updating results for quiz that has already failed'''
+        admin = UserFactory.create()
+        project_id = 7
+        admin.set_quiz_for_project(project_id, {'status':'failed'})
+        try:
+            admin.add_quiz_right_answer(project_id)
+            assert False, 'Updated failed quiz'
+        except:
+            pass
+
+    @with_context
+    def test_reset_quiz(self):
+        '''Test clear_quiz_result() resets quiz results '''
+        admin = UserFactory.create()
+        project_id = 7
+        admin.set_quiz_for_project(
+            project_id,
+            {
+                'status': 'passed',
+                'result': {
+                    'right': 1,
+                    'wrong': 2
+                }
+            }
+        )
+        admin.clear_quiz_result(project_id)
+        quiz = admin.get_quiz_for_project(project_id)
+        assert quiz == {
+            'status': 'in_progress',
+            'result': {
+                'right': 0,
+                'wrong': 0
+            }
+        }
