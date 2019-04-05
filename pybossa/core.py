@@ -363,9 +363,19 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
-    from rq_dashboard import RQDashboard
-    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
-                redis_conn=sentinel.master)
+    import rq_dashboard
+    app.config.from_object(rq_dashboard.default_settings)
+    rq_dashboard.blueprint.before_request(is_admin)
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
+                           redis_conn=sentinel.master)
+
+
+def is_admin():
+    """Check if user is admin."""
+    if current_user.is_anonymous:
+        return abort(401)
+    if current_user.admin is False:
+        return abort(403)
 
 
 def setup_external_services(app):
