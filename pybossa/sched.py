@@ -304,15 +304,6 @@ def get_locked_task(
     present_gold_task=False,
     gold_only=False
 ):
-    user_param = 'user_id'
-    if not user_id:
-        if not user_ip:
-            user_ip = '127.0.0.1'
-        if not external_uid:
-            user_param = 'user_ip'
-        else:
-            user_param = 'external_uid'
-
     having_clause = 'HAVING COUNT(task_run.task_id) < n_answers' if not (present_gold_task or gold_only) else ''
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
@@ -327,7 +318,7 @@ def get_locked_task(
            LEFT JOIN task_run ON (task.id = task_run.task_id)
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-           {}=:user_id AND task_id=task.id)
+           user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
@@ -337,7 +328,6 @@ def get_locked_task(
            {}
            ORDER BY task.calibration {}, priority_0 DESC, {} LIMIT :limit;
            '''.format(
-                user_param,
                 allowed_task_levels_clause,
                 gold_only_clause,
                 having_clause,
