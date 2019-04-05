@@ -31,7 +31,7 @@ requirements = [
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",
-    "redis>=2.9, <2.10",
+    "redis==3.0.1",
     "coverage",
     "nose-cov",
     "mock",
@@ -87,10 +87,6 @@ setup(
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
-                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
-                        'git+https://github.com/Scifabric/flatten.git@5d57cc6336df277822305ad70b86adf8c6a1c947#egg=flatten_json',
-                        ],
 
     # metadata for upload to PyPI
     author = 'Scifabric LTD',
