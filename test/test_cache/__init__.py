@@ -67,13 +67,16 @@ class TestCacheHashFunctions(object):
 
 class FakeApp(object):
     def __init__(self):
+        pwd = getattr(settings_test, 'REDIS_PWD', None)
         if all(hasattr(settings_test, attr) for attr in
             ['REDIS_MASTER_DNS', 'REDIS_SLAVE_DNS', 'REDIS_PORT']):
             self.config = dict(REDIS_MASTER_DNS=settings_test.REDIS_MASTER_DNS,
                 REDIS_SLAVE_DNS=settings_test.REDIS_SLAVE_DNS,
-                REDIS_PORT=settings_test.REDIS_PORT)
+                REDIS_PORT=settings_test.REDIS_PORT,
+                REDIS_PWD=pwd)
         else:
-            self.config = { 'REDIS_SENTINEL': settings_test.REDIS_SENTINEL }
+            self.config = { 'REDIS_SENTINEL': settings_test.REDIS_SENTINEL,
+                'REDIS_PWD': pwd }
 
 test_sentinel = Sentinel(app=FakeApp())
 

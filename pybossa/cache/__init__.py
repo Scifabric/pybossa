@@ -30,7 +30,6 @@ import os
 import hashlib
 from functools import wraps
 from pybossa.core import sentinel
-from pybossa.sentinel import keys, scan_iter
 
 try:
     import cPickle as pickle
@@ -228,7 +227,7 @@ def delete_memoized(function, *args, **kwargs):
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
             return bool(sentinel.master.delete(key))
-        keys_to_delete = list(scan_iter(sentinel.slave, match=key + '*', count=10000))
+        keys_to_delete = list(sentinel.slave.scan_iter(match=key + '*', count=10000))
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
@@ -246,7 +245,7 @@ def delete_memoized_essential(function, *args, **kwargs):
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key += get_key_to_hash(*args, **kwargs)
-        keys_to_delete = list(scan_iter(sentinel.slave, match=key + '*', count=10000))
+        keys_to_delete = list(sentinel.slave.scan_iter(match=key + '*', count=10000))
         if not keys_to_delete:
             return False
         return bool(sentinel.master.delete(*keys_to_delete))
