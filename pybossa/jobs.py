@@ -50,6 +50,16 @@ from pybossa.exporter.json_export import JsonExporter
 def schedule_job(function, scheduler):
     """Schedule a job and return a log message."""
     scheduled_jobs = scheduler.get_jobs()
+    for sj in scheduled_jobs:
+        if (function['name'].__name__ in sj.description and
+            sj.args == function['args'] and
+                sj.kwargs == function['kwargs']):
+            sj.cancel()
+            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
+                   % (function['name'].__name__, function['args'],
+                      function['kwargs']))
+            return msg
+    # If job was scheduled, it exists up here, else it continues
     job = scheduler.schedule(
         scheduled_time=(function.get('scheduled_time') or datetime.utcnow()),
         func=function['name'],
@@ -1049,8 +1059,9 @@ def news():
         tmp = get_news(score)
         if (d.entries and (len(tmp) == 0)
            or (tmp[0]['updated'] != d.entries[0]['updated'])):
-            sentinel.master.zadd(FEED_KEY, float(score),
-                                 pickle.dumps(d.entries[0]))
+            mapping = dict()
+            mapping[pickle.dumps(d.entries[0])] = float(score)
+            sentinel.master.zadd(FEED_KEY, mapping)
             notify = True
         score += 1
     if notify:
@@ -1088,7 +1099,7 @@ def check_failed():
                                  subject=subject, body=body)
                 send_mail(mail_dict)
                 ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
-                sentinel.master.setex(KEY, ttl, True)
+                sentinel.master.setex(KEY, ttl, 1)
     if count > 0:
         return "JOBS: %s You have failed the system." % job_ids
     else:
