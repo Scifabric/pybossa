@@ -723,13 +723,13 @@ class TestProjectsCache(Test):
         assert params == expected_params, params
 
         args = dict(task_id=12345, gold_task='1')
-        valid_args = dict(task_id=12345, gold_task=1, order_by_dict={},
+        valid_args = dict(task_id=12345, gold_task='1', order_by_dict={},
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
 
         args = dict(task_id=12345, gold_task='0')
-        valid_args = dict(task_id=12345, gold_task=0, order_by_dict={},
+        valid_args = dict(task_id=12345, gold_task='0', order_by_dict={},
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
