@@ -4,6 +4,7 @@ from helper import web
 from default import with_context
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from pybossa.core import user_repo
+from nose.tools import assert_raises
 
 class TestScheduler(web.Helper):
 
@@ -242,11 +243,8 @@ class TestQuizUpdate(web.Helper):
         admin = UserFactory.create()
         project_id = 7
         admin.set_quiz_for_project(project_id, {'status':'passed'})
-        try:
-            admin.add_quiz_right_answer(project_id)
-            assert False, 'Updated passed quiz'
-        except:
-            pass
+        assert_raises(Exception, lambda: admin.add_quiz_right_answer(project_id) )
+        assert_raises(Exception, lambda: admin.add_quiz_wrong_answer(project_id) )
 
     @with_context
     def test_cannot_update_failed_quiz(self):
@@ -254,11 +252,8 @@ class TestQuizUpdate(web.Helper):
         admin = UserFactory.create()
         project_id = 7
         admin.set_quiz_for_project(project_id, {'status':'failed'})
-        try:
-            admin.add_quiz_right_answer(project_id)
-            assert False, 'Updated failed quiz'
-        except:
-            pass
+        assert_raises(Exception, lambda: admin.add_quiz_right_answer(project_id) )
+        assert_raises(Exception, lambda: admin.add_quiz_wrong_answer(project_id) )
 
     @with_context
     def test_reset_quiz(self):
