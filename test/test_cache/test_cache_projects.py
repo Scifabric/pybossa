@@ -457,7 +457,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_count calls _n_draft when called with argument
         'draft'"""
         cached_projects.n_count('draft')
-
+        pickle.dumps.return_value = 'str'
         _n_draft.assert_called_with()
 
 
@@ -468,7 +468,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_count calls _n_featured when called with
         argument 'featured'"""
         cached_projects.n_count('featured')
-
+        pickle.dumps.return_value = 'str'
         _n_featured.assert_called_with()
 
 
