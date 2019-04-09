@@ -25,7 +25,7 @@ import datetime
 from pybossa.core import result_repo
 from pybossa.model.project import Project
 from pybossa.cache.project_stats import update_stats
-from nose.tools import nottest
+from nose.tools import nottest, assert_raises
 from pybossa.cache.task_browse_helpers import get_task_filters, parse_tasks_browse_args
 
 class TestProjectsCache(Test):
@@ -709,30 +709,39 @@ class TestProjectsCache(Test):
         assert params == expected_params, params
 
     def test_task_browse_gold_task_filters(self):
-        filters = dict(task_id=1,hide_completed=True, gold_task='Y', order_by='task_id')
+        filters = dict(task_id=1,hide_completed=True, gold_task='1', order_by='task_id')
         expected_filter_query = " AND task.id = :task_id AND task.state='ongoing' AND calibration = :calibration"
-        expected_params = {'task_id': 1, 'calibration': 'Y'}
+        expected_params = {'task_id': 1, 'calibration': '1'}
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters
         assert params == expected_params, params
 
-        filters = dict(task_id=1,hide_completed=True, gold_task='N', order_by='task_id')
-        expected_params = {'task_id': 1, 'calibration': 'N'}
+        filters = dict(task_id=1,hide_completed=True, gold_task='0', order_by='task_id')
+        expected_params = {'task_id': 1, 'calibration': '0'}
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters
         assert params == expected_params, params
 
-        args = dict(task_id=12345, gold_task='Y')
-        valid_args = dict(task_id=12345, gold_task=1, order_by_dict={},
+        args = dict(task_id=12345, gold_task='1')
+        valid_args = dict(task_id=12345, gold_task='1', order_by_dict={},
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
 
-        args = dict(task_id=12345, gold_task='N')
-        valid_args = dict(task_id=12345, gold_task=0, order_by_dict={},
+        args = dict(task_id=12345, gold_task='0')
+        valid_args = dict(task_id=12345, gold_task='0', order_by_dict={},
             display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
         pargs = parse_tasks_browse_args(args)
         assert pargs == valid_args, pargs
+
+        args = dict(task_id=12345, gold_task='All')
+        valid_args = dict(task_id=12345, order_by_dict={},
+            display_columns=[u'task_id', u'priority', u'pcomplete', u'created', u'finish_time', u'gold_task', u'actions'])
+        pargs = parse_tasks_browse_args(args)
+        assert pargs == valid_args, pargs
+
+        args = dict(task_id=12345, gold_task='7')
+        assert_raises(ValueError, parse_tasks_browse_args, args)
 
     @with_context
     def test_browse_completed(self):
