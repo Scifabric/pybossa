@@ -238,6 +238,7 @@ def setup_repositories(app):
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
     from pybossa.repositories import HelpingMaterialRepository
+    from pybossa.repositories import PerformanceStatsRepository
     global user_repo
     global project_repo
     global project_stats_repo
@@ -248,6 +249,7 @@ def setup_repositories(app):
     global webhook_repo
     global result_repo
     global helping_repo
+    global performance_stats_repo
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     rdancy_upd_exp = app.config.get('REDUNDANCY_UPDATE_EXPIRATION', 30)
     user_repo = UserRepository(db)
@@ -260,6 +262,7 @@ def setup_repositories(app):
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
     helping_repo = HelpingMaterialRepository(db)
+    performance_stats_repo = PerformanceStatsRepository(db)
 
 
 def setup_cache(app):

@@ -53,6 +53,7 @@ from announcement import AnnouncementAPI
 from blogpost import BlogpostAPI
 from category import CategoryAPI
 from favorites import FavoritesAPI
+from pybossa.api.performance_stats import PerformanceStatsAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
@@ -128,6 +129,7 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 register_api(CompletedTaskAPI, 'api_completedtask', '/completedtask', pk='oid', pk_type='int')
 register_api(CompletedTaskRunAPI, 'api_completedtaskrun', '/completedtaskrun', pk='oid', pk_type='int')
 register_api(ProjectByNameAPI, 'api_projectbyname', '/projectbyname', pk='key', pk_type='string')
+register_api(PerformanceStatsAPI, 'api_performancestats', '/performancestats', pk='oid', pk_type='int')
 
 
 def add_task_signature(tasks):
