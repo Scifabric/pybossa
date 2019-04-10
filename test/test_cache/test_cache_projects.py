@@ -710,7 +710,7 @@ class TestProjectsCache(Test):
 
     def test_task_browse_gold_task_filters(self):
         filters = dict(task_id=1,hide_completed=True, gold_task='1', order_by='task_id')
-        expected_filter_query = " AND task.id = :task_id AND task.state='ongoing' AND calibration = :calibration"
+        expected_filter_query = " AND task.id = :task_id AND task.state='ongoing' AND task.calibration = :calibration"
         expected_params = {'task_id': 1, 'calibration': '1'}
         filters, params = get_task_filters(filters)
         assert filters == expected_filter_query, filters
