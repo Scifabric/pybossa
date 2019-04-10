@@ -56,7 +56,7 @@ def get_task_filters(args):
         filters += " AND state = :state"
     if 'gold_task' in args:
         params['calibration'] = args['gold_task']
-        filters += " AND calibration = :calibration"
+        filters += " AND task.calibration = :calibration"
 
     if args.get('order_by'):
         args['order_by'].replace('pcomplete', '(coalesce(ct, 0)/task.n_answers)')
