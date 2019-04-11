@@ -169,6 +169,7 @@ class TestModelEventListeners(Test):
         target.project_id = 1
         target.task_id = 4
         target.user_id = 3
+
         tmp = Project(id=1, name='name', short_name='short_name',
                       info=dict(container=1, thumbnail="avatar.png"),
                       published=True,
@@ -176,9 +177,12 @@ class TestModelEventListeners(Test):
         conn.execute.return_value = [tmp]
         # update_feed is called during creation of other objects
         mock_update_feed.call_count = 0
+
         on_taskrun_submit(None, conn, target)
         obj = tmp.to_public_json()
         obj['action_updated'] = 'TaskCompleted'
+        obj['published'] = None
+
         mock_update_feed.assert_called_once_with(obj)
         mock_add_user.assert_called_with(conn, target.user_id, obj)
         mock_update_task.assert_called_with(conn, target.task_id)
@@ -186,6 +190,7 @@ class TestModelEventListeners(Test):
         obj_with_webhook = tmp.to_public_json()
         obj_with_webhook['webhook'] = tmp.webhook
         obj_with_webhook['action_updated'] = 'TaskCompleted'
+        obj_with_webhook['published'] = None
         mock_push.assert_called_with(obj_with_webhook, target.task_id, 1)
 
     @with_context
