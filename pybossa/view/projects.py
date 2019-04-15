@@ -980,9 +980,11 @@ def password_required(short_name):
 @blueprint.route('/<short_name>/task/<int:task_id>')
 @login_required
 def task_presenter(short_name, task_id):
+    mode = request.args.get('mode')
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     task = task_repo.get_task(id=task_id)
+    # import pdb; pdb.set_trace()
     if task is None:
         raise abort(404)
     if project.needs_password():
@@ -1021,6 +1023,8 @@ def task_presenter(short_name, task_id):
                                                                 current_user,
                                                                 ps)
     template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
+    if mode == 'gold':
+        template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized, "mode": mode}
 
     def respond(tmpl):
         response = dict(template = tmpl, **template_args)

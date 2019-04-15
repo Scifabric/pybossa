@@ -34,6 +34,8 @@ from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.util import get_user_id_or_ip, validate_required_fields
 from pybossa.core import task_repo
 from pybossa.cache.projects import get_project_data
+from pybossa.data_access import when_data_access
+
 import json
 import copy
 
