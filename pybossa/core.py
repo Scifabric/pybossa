@@ -133,8 +133,9 @@ def setup_sse(app):
 def setup_theme(app):
     """Configure theme for PYBOSSA app."""
     theme = app.config['THEME']
-    app.template_folder = os.path.join('themes', theme, 'templates')
-    app.static_folder = os.path.join('themes', theme, 'static')
+    template_dir = app.config.get('TEMPLATE_DIR', '')
+    app.template_folder = os.path.join(template_dir, 'themes', theme, 'templates')
+    app.static_folder = os.path.join(template_dir, 'themes', theme, 'static')
 
 
 def setup_uploader(app):
