@@ -1,15 +1,16 @@
+import logging
 import os
 from redis import StrictRedis
 from redis.sentinel import Sentinel
 from rq_scheduler.scheduler import Scheduler
-from rq.logutils import setup_loghandlers
-from flask import Flask
 from time import sleep
 import app_settings
 
 
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
+
+
 def run_scheduler():
-    setup_loghandlers('DEBUG')
     conn_kwargs = {
         'db': app_settings.config.get('REDIS_DB') or 0,
         'password': app_settings.config.get('REDIS_PWD')

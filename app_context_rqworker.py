@@ -58,8 +58,12 @@ def get_worker(queues):
 
 
 @retry(3)
-def run_worker(queues):
+def run_worker(queues, logger):
     with get_worker(queues) as w:
+        try:
+            w.log = logger
+        except Exception:
+            logger.warning('Unable to set logger')
         w.work()
 
 
@@ -69,4 +73,4 @@ with app.app_context():
     with Connection(sentinel.master):
         qs = map(Queue, sys.argv[1:]) or [Queue()]
 
-        run_worker(qs)
+        run_worker(qs, app.logger)
