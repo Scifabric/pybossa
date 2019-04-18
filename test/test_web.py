@@ -54,6 +54,8 @@ from helper.gig_helper import make_subadmin, make_subadmin_by
 from datetime import datetime, timedelta
 import six
 from pybossa.view.account import get_user_data_as_form
+from pybossa.api.task import TaskAPI
+
 
 class TestWeb(web.Helper):
     pkg_json_not_found = {
@@ -7551,6 +7553,76 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+    @with_context
+    def test_task_gold(self):
+        """Test WEB when making a task gold"""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+        self.new_project()
+        self.new_task(1)
+
+
+        url = "/api/project/1/taskgold"
+
+        project = db.session.query(Project).get(1)
+
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data.get('success') == True, data
+
+        t = db.session.query(Task).get(1)
+
+        assert t.state == 'ongoing', t.state
+        assert t.calibration == 1, t.calibration
+        assert t.exported == True, t.exported
+        assert t.gold_answers == {'ans1': 'test'}, t.gold_answers
+
+    @with_context
+    def test_task_gold_priv(self):
+        """Test WEB when making a task gold for priv"""
+        from pybossa.view.projects import data_access_levels
+
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        project = ProjectFactory.create(info={
+                'data_access': ["L1"],
+                'ext_config': {'data_access': {'tracking_id': '123'}}
+            })
+        task = Task(project_id=project.id, info={'data_access': ['L1']})
+        task_repo.save(task)
+
+        url = "/api/project/1/taskgold"
+
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+
+        with patch.dict(data_access_levels, self.patch_data_access_levels):
+            with patch.object(TaskAPI, 'upload_gold_data', return_value='testURL'):
+                res = self.app_post_json(url,
+                                    data=payload,
+                                    follow_redirects=False,
+                                    )
+
+                data = json.loads(res.data)
+                assert data.get('success') == True, data
+
+                t = db.session.query(Task).get(1)
+
+                assert t.state == 'ongoing', t.state
+                assert t.calibration == 1, t.calibration
+                assert t.exported == True, t.exported
+                assert t.gold_answers == 'testURL', t.gold_answers
+
 
 
     @with_context

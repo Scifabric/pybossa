@@ -984,7 +984,6 @@ def task_presenter(short_name, task_id):
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     task = task_repo.get_task(id=task_id)
-    # import pdb; pdb.set_trace()
     if task is None:
         raise abort(404)
     if project.needs_password():
