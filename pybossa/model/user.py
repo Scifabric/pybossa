@@ -204,3 +204,12 @@ class User(db.Model, DomainObject, UserMixin):
         
         if quiz['config']['short_circuit'] or right_count + wrong_count >= questions:
             quiz['status'] = status        
+
+    def reset_quiz(self, project_id):
+        # This user's quiz info for all projects
+        user_quizzes = self.info.get('quiz', {})
+        # Delete this user's quiz info for project_id
+        project_key = str(project_id)
+        del user_quizzes[project_key]
+        self.info['quiz'] = user_quizzes
+
