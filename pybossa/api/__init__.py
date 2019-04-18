@@ -70,6 +70,7 @@ from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.api.project_by_name import ProjectByNameAPI
 from pybossa.api.pwd_manager import get_pwd_manager
+from pybossa.data_access import (data_access_levels)
 
 blueprint = Blueprint('api', __name__)
 
@@ -397,3 +398,39 @@ def fetch_lock(task_id):
                       'expires': seconds_to_expire})
 
     return Response(res, 200, mimetype='application/json')
+
+
+@jsonpify
+@csrf.exempt
+@blueprint.route('/project/<int:project_id>/taskgold', methods=['POST'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def task_gold(project_id=None):
+    """Make task gold"""
+    if not current_user.is_authenticated():
+        return abort(401)
+
+    project = project_repo.get(project_id)
+    if project is None or not(current_user.admin
+        or current_user.id in project.owners_ids):
+        raise NotFound
+
+    task_run = TaskRunAPI()
+    tasks = TaskAPI()
+    task_data = request.json
+    task_id = task_data['task_id']
+    task = task_repo.get_task(task_id)
+    task.calibration = 1
+    task.exported = True
+    task.state = 'ongoing'
+
+    task_run.preprocess_task_run(project_id, task_id, task_data)
+
+    info = task_data['info']
+    if bool(data_access_levels):
+        task.gold_answers = tasks.upload_gold_data(task, project_id, info, task_id)
+    else:
+        task.gold_answers = info
+
+    task_repo.update(task)
+
+    return Response(json.dumps({'success': True}), 200, mimetype="application/json")

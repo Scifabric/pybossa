@@ -70,9 +70,12 @@ class TaskRunAPI(APIBase):
         task_id = data['task_id']
         project_id = data['project_id']
         self.check_can_post(project_id, task_id)
-        info = data.get('info')
+        self.preprocess_task_run(project_id, task_id, data)
+
+    def preprocess_task_run(self, project_id, task_id, data):
         with_encryption = app.config.get('ENABLE_ENCRYPTION')
         upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
+        info = data.get('info')
         if info is None:
             return
         path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)

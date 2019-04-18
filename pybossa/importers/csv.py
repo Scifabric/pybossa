@@ -64,15 +64,21 @@ class BulkTaskCSVImport(BulkTaskImport):
                         task_data[self._headers[idx]] = {}
                 else:
                     task_data[self._headers[idx]] = cell
-            elif self._headers[idx].endswith('_gold'):
+            elif self._headers[idx].endswith('_priv_gold'):
                 if cell:
-                    field_name = re.sub('_gold$', '', self._headers[idx])
+                    field_name = re.sub('_priv_gold$', '', self._headers[idx])
                     if data_access_levels:
                         private_gold_answers[field_name] = cell
                     else:
                         if 'gold_answers' not in task_data:
                             task_data['gold_answers'] = {}
                         task_data['gold_answers'][field_name] = cell
+            elif self._headers[idx].endswith('_gold'):
+                if cell:
+                    field_name = re.sub('_gold$', '', self._headers[idx])
+                    if 'gold_answers' not in task_data:
+                        task_data['gold_answers'] = {}
+                    task_data['gold_answers'][field_name] = cell
             elif self._headers[idx].endswith('_priv'):
                 if cell:
                     field_name = re.sub('_priv$', '', self._headers[idx])
