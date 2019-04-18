@@ -70,23 +70,7 @@ class TaskRunAPI(APIBase):
         task_id = data['task_id']
         project_id = data['project_id']
         self.check_can_post(project_id, task_id)
-        self.preprocess_task_run(project_id, task_id, data)
-
-    def preprocess_task_run(self, project_id, task_id, data):
-        with_encryption = app.config.get('ENABLE_ENCRYPTION')
-        upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
-        info = data.get('info')
-        if info is None:
-            return
-        path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
-        _upload_files_from_json(info, path, with_encryption)
-        _upload_files_from_request(info, request.files, path, with_encryption)
-        if with_encryption:
-            data['info'] = {
-                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
-                    file_name='pyb_answer.json', encryption=with_encryption,
-                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
-            }
+        preprocess_task_run(project_id, task_id, data)
 
     def check_can_post(self, project_id, task_id):
         if not can_post(project_id, task_id, get_user_id_or_ip()):
@@ -260,3 +244,19 @@ def _update_gold_stats(project_id, user_id, gold_fields, gold_answer, answer):
             performance_stats_repo.save(stat_row)
         else:
             performance_stats_repo.update(stat_row)
+
+def preprocess_task_run(project_id, task_id, data):
+        with_encryption = app.config.get('ENABLE_ENCRYPTION')
+        upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
+        info = data.get('info')
+        if info is None:
+            return
+        path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
+        _upload_files_from_json(info, path, with_encryption)
+        _upload_files_from_request(info, request.files, path, with_encryption)
+        if with_encryption:
+            data['info'] = {
+                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
+                    file_name='pyb_answer.json', encryption=with_encryption,
+                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
+            }

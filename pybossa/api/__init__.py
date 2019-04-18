@@ -46,8 +46,8 @@ import pybossa.sched as sched
 from pybossa.util import sign_task
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
-from task import TaskAPI
-from task_run import TaskRunAPI
+from task import TaskAPI, upload_gold_data
+from task_run import TaskRunAPI, preprocess_task_run
 from project import ProjectAPI
 from announcement import AnnouncementAPI
 from blogpost import BlogpostAPI
@@ -70,7 +70,7 @@ from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.api.project_by_name import ProjectByNameAPI
 from pybossa.api.pwd_manager import get_pwd_manager
-from pybossa.data_access import (data_access_levels)
+from pybossa.data_access import data_access_levels
 
 blueprint = Blueprint('api', __name__)
 
@@ -412,22 +412,23 @@ def task_gold(project_id=None):
     project = project_repo.get(project_id)
     if project is None or not(current_user.admin
         or current_user.id in project.owners_ids):
-        raise NotFound
+        raise Forbidden
 
-    task_run = TaskRunAPI()
-    tasks = TaskAPI()
     task_data = request.json
     task_id = task_data['task_id']
     task = task_repo.get_task(task_id)
+
+    if not task.project_id == project_id:
+        raise Forbidden
+
     task.calibration = 1
     task.exported = True
     task.state = 'ongoing'
-
-    task_run.preprocess_task_run(project_id, task_id, task_data)
+    preprocess_task_run(project_id, task_id, task_data)
 
     info = task_data['info']
-    if bool(data_access_levels):
-        task.gold_answers = tasks.upload_gold_data(task, project_id, info, task_id)
+    if data_access_levels:
+        task.gold_answers = upload_gold_data(task, project_id, info, task_id)
     else:
         task.gold_answers = info
 

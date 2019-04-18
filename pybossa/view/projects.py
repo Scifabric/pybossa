@@ -1021,9 +1021,7 @@ def task_presenter(short_name, task_id):
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
                                                                 ps)
-    template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized}
-    if mode == 'gold':
-        template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized, "mode": mode}
+    template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized, "mode": mode}
 
     def respond(tmpl):
         response = dict(template = tmpl, **template_args)

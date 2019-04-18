@@ -54,7 +54,8 @@ from helper.gig_helper import make_subadmin, make_subadmin_by
 from datetime import datetime, timedelta
 import six
 from pybossa.view.account import get_user_data_as_form
-from pybossa.api.task import TaskAPI
+from pybossa.cloud_store_api.s3 import upload_json_data
+
 
 
 class TestWeb(web.Helper):
@@ -7567,7 +7568,7 @@ class TestWeb(web.Helper):
 
         url = "/api/project/1/taskgold"
 
-        project = db.session.query(Project).get(1)
+        project = project_repo.get(1)
 
         payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
         res = self.app_post_json(url,
@@ -7578,7 +7579,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data.get('success') == True, data
 
-        t = db.session.query(Task).get(1)
+        t = task_repo.get_task(1)
 
         assert t.state == 'ongoing', t.state
         assert t.calibration == 1, t.calibration
@@ -7586,7 +7587,9 @@ class TestWeb(web.Helper):
         assert t.gold_answers == {'ans1': 'test'}, t.gold_answers
 
     @with_context
-    def test_task_gold_priv(self):
+    @patch('pybossa.api.task.url_for', return_value='testURL')
+    @patch('pybossa.api.task.upload_json_data')
+    def test_task_gold_priv(self, mock, mock2):
         """Test WEB when making a task gold for priv"""
         from pybossa.view.projects import data_access_levels
 
@@ -7607,21 +7610,20 @@ class TestWeb(web.Helper):
         payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
-            with patch.object(TaskAPI, 'upload_gold_data', return_value='testURL'):
-                res = self.app_post_json(url,
-                                    data=payload,
-                                    follow_redirects=False,
-                                    )
+            res = self.app_post_json(url,
+                                data=payload,
+                                follow_redirects=False,
+                                )
 
-                data = json.loads(res.data)
-                assert data.get('success') == True, data
+            data = json.loads(res.data)
+            assert data.get('success') == True, data
 
-                t = db.session.query(Task).get(1)
+            t = task_repo.get_task(1)
 
-                assert t.state == 'ongoing', t.state
-                assert t.calibration == 1, t.calibration
-                assert t.exported == True, t.exported
-                assert t.gold_answers == 'testURL', t.gold_answers
+            assert t.state == 'ongoing', t.state
+            assert t.calibration == 1, t.calibration
+            assert t.exported == True, t.exported
+            assert t.gold_answers == 'testURL', t.gold_answers
 
 
 

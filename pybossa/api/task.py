@@ -121,21 +121,21 @@ class TaskAPI(APIBase):
             data.pop('calibration', None)
         return data
 
-    def upload_gold_data(self, task, project_id, private_gold_answers, file_id=None):
-        encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
-        bucket = current_app.config.get("S3_REQUEST_BUCKET")
-        if file_id:
-            task_hash = file_id
-        else:
-            task_hash = hashlib.md5(json.dumps(task)).hexdigest()
-        path = "{}/{}".format(project_id, task_hash)
-        s3_conn_type = current_app.config.get('S3_CONN_TYPE')
-        file_name = 'task_private_gold_answer.json'
-        values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
-        gold_answers_url = url_for('fileproxy.encrypted_file', **values)
-        upload_json_data(bucket=bucket,
-        json_data=private_gold_answers, upload_path=path,
-        file_name=file_name, encryption=encryption,
-        conn_name='S3_TASK_REQUEST')
+def upload_gold_data(task, project_id, private_gold_answers, file_id=None):
+    encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
+    bucket = current_app.config.get("S3_REQUEST_BUCKET")
+    if file_id:
+        task_hash = file_id
+    else:
+        task_hash = hashlib.md5(json.dumps(task)).hexdigest()
+    path = "{}/{}".format(project_id, task_hash)
+    s3_conn_type = current_app.config.get('S3_CONN_TYPE')
+    file_name = 'task_private_gold_answer.json'
+    values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+    gold_answers_url = url_for('fileproxy.encrypted_file', **values)
+    upload_json_data(bucket=bucket,
+    json_data=private_gold_answers, upload_path=path,
+    file_name=file_name, encryption=encryption,
+    conn_name='S3_TASK_REQUEST')
 
-        return gold_answers_url
+    return gold_answers_url

@@ -30,7 +30,7 @@ from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
 from pybossa.model.counter import Counter
 from helper.gig_helper import make_subadmin, make_admin
-
+from pybossa.api.task import TaskAPI
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -1166,3 +1166,17 @@ class TestTaskAPI(TestAPI):
         res = self.app.post('/api/task', data=json.dumps(data), headers=admin_headers)
         res_data = json.loads(res.data)
         assert res_data['exception_msg'] == 'Missing or incorrect required fields: ', res
+
+    @with_context
+    @patch('pybossa.api.task.url_for', return_value='testURL')
+    @patch('pybossa.api.task.upload_json_data')
+    def upload_gold_data(self, mock, mock2):
+        """Test upload_gold_data"""
+        task = task_repo.get_task(1)
+        tasks = TaskAPI()
+        url = tasks.upload_gold_data(task, 1, {'ans1': 'test'}, file_id=1)
+        assert url == 'testURL', url
+
+        url = tasks.upload_gold_data(task, 1, {'ans1': 'test'})
+        assert url == 'testURL', url
+
