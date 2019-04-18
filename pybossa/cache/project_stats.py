@@ -484,7 +484,7 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
 
 
 @memoize(timeout=ONE_HOUR)
-def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
+def stats_format_users(project_id, users, anon_users, auth_users):
     """Format User Stats into JSON."""
     userStats = dict(label="User Statistics", values=[])
     userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
@@ -535,7 +535,7 @@ def update_stats(project_id, period='2 week'):
     """Update the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
-    users, anon_users, auth_users = stats_users(project_id, period)
+    users, anon_users, auth_users = stats_users(project_id)
     dates, dates_anon, dates_auth = stats_dates(project_id, period)
 
 

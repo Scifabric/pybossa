@@ -2926,6 +2926,7 @@ def assign_users(short_name):
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
+
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -2965,3 +2966,64 @@ def quiz_mode(short_name):
         pro_features=pro_features(),
         form=form
     ))
+
+
+@blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def answerfieldsconfig(short_name):
+    """Returns Project Stats"""
+    project, owner, ps = project_by_shortname(short_name)
+    pro = pro_features()
+    ensure_authorized_to('update', project)
+
+    if request.method == 'POST':
+        try:
+            project.info['answer_fields'] = json.loads(request.data)
+            project_repo.save(project)
+            auditlogger.log_event(project, current_user, 'update', 'project.answerfields',
+              'N/A', project.info['answer_fields'])
+            flash(gettext('Configuration updated successfully'), 'success')
+        except Exception:
+            flash(gettext('An error occurred.'), 'error')
+
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+    answer_fields = project.info.get('answer_fields', {})
+    response = {
+        'template': '/projects/answerfieldsconfig.html',
+        'project': project_sanitized,
+        'answer_fields': json.dumps(answer_fields),
+        'pro_features': pro,
+        'csrf': generate_csrf()
+    }
+
+    return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/performancestats')
+@login_required
+def show_performance_stats(short_name):
+    """Returns Project Stats"""
+    project, owner, ps = allow_deny_project_info(short_name)
+    ensure_authorized_to('read', project)
+    title = project_title(project, "Performance Statistics")
+    pro = pro_features(owner)
+
+    answer_fields = project.info.get('answer_fields', {})
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
+    _, _, user_ids = stats.stats_users(project.id)
+    users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
+
+    response = dict(template='/projects/performancestats.html',
+                    title=title,
+                    project=project_sanitized,
+                    answer_fields=answer_fields,
+                    owner=owner_sanitized,
+                    contributors=users,
+                    pro_features=pro)
+
+    return handle_content_type(response)

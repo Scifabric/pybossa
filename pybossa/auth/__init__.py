@@ -40,6 +40,7 @@ import auditlog
 import webhook
 import result
 import helpingmaterial
+from pybossa.auth import performancestats
 assert project
 assert projectstats
 assert task
@@ -67,7 +68,8 @@ _auth_classes = {'project': project.ProjectAuth,
                  'user': user.UserAuth,
                  'webhook': webhook.WebhookAuth,
                  'result': result.ResultAuth,
-                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth}
+                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth,
+                 'performancestats': performancestats.PerformanceStatsAuth}
 
 
 def is_authorized(user, action, resource, **kwargs):
@@ -98,7 +100,8 @@ def _authorizer_for(resource_name):
         kwargs.update({'task_repo': task_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result',
-                         'helpingmaterial'):
+                         'helpingmaterial',
+                         'performancestats'):
         kwargs.update({'project_repo': project_repo})
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})
