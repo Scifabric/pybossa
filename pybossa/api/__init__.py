@@ -59,7 +59,7 @@ from token import TokenAPI
 from result import ResultAPI
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
-from pybossa.core import project_repo, task_repo
+from pybossa.core import project_repo, task_repo, user_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
@@ -192,6 +192,10 @@ def _retrieve_new_task(project_id):
         error = [model.task.Task(info=info)]
         return error, None, lambda x: x
 
+    if current_user.get_quiz_failed(project):
+        # User is blocked from project so don't return a task
+        return None, None, None
+
     # check cookie
     pwd_manager = get_pwd_manager(project)
     user_id_or_ip = get_user_id_or_ip()
@@ -232,7 +236,19 @@ def _retrieve_new_task(project_id):
                if current_user.is_anonymous() else None)
     external_uid = request.args.get('external_uid')
     sched_rand_within_priority = project.info.get('sched_rand_within_priority', False)
-    task = sched.new_task(project.id, project.info.get('sched'),
+
+    user = user_repo.get(user_id)
+    if (
+        user.get_quiz_not_started(project)
+        and user.get_quiz_enabled(project)
+        and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
+    ):
+        user.set_quiz_status(project, 'in_progress')
+
+    user_repo.update(user)
+    
+    task = sched.new_task(project.id,
+                          project.info.get('sched'),
                           user_id,
                           user_ip,
                           external_uid,
@@ -240,7 +256,8 @@ def _retrieve_new_task(project_id):
                           limit,
                           orderby=orderby,
                           desc=desc,
-                          rand_within_priority=sched_rand_within_priority)
+                          rand_within_priority=sched_rand_within_priority,
+                          gold_only = user.get_quiz_in_progress(project))
 
     handler = partial(pwd_manager.update_response, project=project,
                       user=user_id_or_ip)
@@ -283,9 +300,14 @@ def user_progress(project_id=None, short_name=None):
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             num_available_tasks = n_available_tasks(project.id, current_user.id)
             num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
-            tmp = dict(done=taskrun_count, total=n_tasks(project.id), remaining=num_available_tasks,
-                       remaining_for_user=num_available_tasks_for_user)
-            return Response(json.dumps(tmp), mimetype="application/json")
+            response = dict(
+                done=taskrun_count,
+                total=n_tasks(project.id),
+                remaining=num_available_tasks,
+                remaining_for_user=num_available_tasks_for_user,
+                quiz = current_user.get_quiz_for_project(project)
+            )
+            return Response(json.dumps(response), mimetype="application/json")
         else:
             return abort(404)
     else:  # pragma: no cover

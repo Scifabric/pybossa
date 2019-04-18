@@ -52,7 +52,8 @@ TIMEOUT = ContributionsGuard.STAMP_TTL
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0',
-             desc=True, rand_within_priority=False):
+             desc=True, rand_within_priority=False,
+             gold_only=False):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
         'default': get_locked_task,
@@ -61,20 +62,12 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         Schedulers.locked: get_locked_task,
         'incremental': get_incremental_task,
         Schedulers.user_pref: get_user_pref_task,
-        'depth_first_all': get_depth_first_all_task}
+        'depth_first_all': get_depth_first_all_task
+    }
     scheduler = sched_map.get(sched, sched_map['default'])
 
-    gold_only = False
-    project = project_repo.get(project_id)
-    if project.get_quiz_enabled():
-        user = user_repo.get(user_id)
-        if user.get_quiz_in_progress(project_id):
-            gold_only = True
-        elif user.get_quiz_failed(project_id):
-            # User is blocked from project so don't return a task
-            return None
-
     # This is here for testing. It removes the random variable to make testing deterministic.
+    project = project_repo.get(project_id)
     disable_gold = not project.info.get('enable_gold', True)
     present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)
 

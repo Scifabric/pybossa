@@ -136,24 +136,10 @@ class TaskRunAPI(APIBase):
         taskrun.created = guard.retrieve_timestamp(task, get_user_id_or_ip())
         guard._remove_task_stamped(task, get_user_id_or_ip())
 
-    def _after_save(self, instance):
-        project_id = instance.project_id
-        mark_if_complete(instance.task_id, project_id)
+    def _after_save(self, original_data, instance):
+        mark_if_complete(instance.task_id, instance.project_id)
         update_gold_stats(instance.user_id, instance.task_id, original_data)
-
-        project = project_repo.get(project_id)
-        if not project.get_quiz_enabled():
-            return
-
-        user = user_repo.get(current_user.id)
-        if user.get_quiz_in_progress(project_id):
-            task = task_repo.get_task(instance.task_id)
-            if task.gold_answers == instance.info:
-                user.add_quiz_right_answer(project_id)
-            else:
-                user.add_quiz_wrong_answer(project_id)
-
-            user_repo.update(user)
+        update_quiz(instance.task_id, instance.project_id, original_data['info'])
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -227,6 +213,19 @@ def update_gold_stats(user_id, task_id, data):
         _update_gold_stats(task.project_id, user_id, answer_fields,
                            task.gold_answers, answer)
 
+def update_quiz(task_id, project_id, answer):
+    project = project_repo.get(project_id)
+    user = user_repo.get(current_user.id)
+    if not user.get_quiz_in_progress(project):
+        return
+        
+    task = task_repo.get_task(task_id)
+    if task.gold_answers == answer:
+        user.add_quiz_right_answer(project)
+    else:
+        user.add_quiz_wrong_answer(project)
+
+    user_repo.update(user)
 
 field_to_stat_type = {
     'categorical': StatType.confusion_matrix,

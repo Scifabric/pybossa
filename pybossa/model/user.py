@@ -107,52 +107,79 @@ class User(db.Model, DomainObject, UserMixin):
         else:
             return default
 
-    def get_quiz_for_project(self, project_id):
-        quiz = self.info.get('quiz', {})
-        self.info['quiz'] = quiz
-        project_quiz = quiz.setdefault(str(project_id), {})
-        status = project_quiz.setdefault('status', 'in_progress')
-        result = project_quiz.setdefault('result', {'right':0, 'wrong':0})
-        return project_quiz
+    def get_quiz_for_project(self, project):
+        # This user's quiz info for all projects
+        user_quizzes = self.info.get('quiz', {})
+        # This user's quiz info for project_id
+        project_key = str(project.id)
+        user_project_quiz = user_quizzes.get(project_key)
+        if not user_project_quiz:
+            user_project_quiz = {
+                'status': 'not_started',
+                'result': {
+                    'right': 0,
+                    'wrong': 0
+                },
+                # We take a snapshot of the project's quiz settings on the first use.
+                'config': project.get_quiz()
+            }
+            user_quizzes[project_key] = user_project_quiz
+        # You have to assign to the property in order for SQLAlchemy to detect the change.
+        # Just doing setdefault() will cause the changes to get lost.
+        self.info['quiz'] = user_quizzes
+        return user_project_quiz
 
-    @staticmethod
-    def update_quiz_status(quiz, project_id):
-        from pybossa.core import project_repo
-        project = project_repo.get(project_id)
-        pass_fail = project.get_quiz_pass_fail(quiz['result']['right'], quiz['result']['wrong'])
-        quiz['status'] = {
-            True: 'passed',
-            False: 'failed',
-            None: 'in_progress'
-        }[pass_fail]
-
-    def add_quiz_right_answer(self, project_id):
-        quiz = self.get_quiz_for_project(project_id)
+    def add_quiz_right_answer(self, project):
+        quiz = self.get_quiz_for_project(project)
         if (quiz['status'] != 'in_progress'):
             raise Exception('Cannot add right answer to quiz that is not in progress.')
         result = quiz['result']
         result['right'] += 1
-        self.update_quiz_status(quiz, project_id)
+        self.update_quiz_status(project)
 
-    def add_quiz_wrong_answer(self, project_id):
-        quiz = self.get_quiz_for_project(project_id)
+    def add_quiz_wrong_answer(self, project):
+        quiz = self.get_quiz_for_project(project)
         if (quiz['status'] != 'in_progress'):
             raise Exception('Cannot add wrong answer to quiz that is not in progress.')
         result = quiz['result']
         result['wrong'] += 1
-        self.update_quiz_status(quiz, project_id)
+        self.update_quiz_status(project)
 
-    def get_quiz_in_progress(self, project_id):
-        return self.get_quiz_for_project(project_id)['status'] == 'in_progress'
+    def get_quiz_in_progress(self, project):
+        return self.get_quiz_for_project(project)['status'] == 'in_progress'
 
-    def get_quiz_failed(self, project_id):
-        return self.get_quiz_for_project(project_id)['status'] == 'failed'
+    def get_quiz_failed(self, project):
+        return self.get_quiz_for_project(project)['status'] == 'failed'
 
-    def get_quiz_passed(self, project_id):
-        return self.get_quiz_for_project(project_id)['status'] == 'passed'
+    def get_quiz_passed(self, project):
+        return self.get_quiz_for_project(project)['status'] == 'passed'
 
-    def clear_quiz_result(self, project_id):
-        quiz = self.get_quiz_for_project(project_id)
+    def get_quiz_not_started(self, project):
+        return self.get_quiz_for_project(project)['status'] == 'not_started'
+
+    def get_quiz_right_answers(self, project):
+        return self.get_quiz_for_project(project)['result']['right']
+
+    def get_quiz_wrong_answers(self, project):
+        return self.get_quiz_for_project(project)['result']['wrong']
+
+    def get_quiz_status(self, project):
+        return self.get_quiz_for_project(project)['status']
+
+    def get_quiz_enabled(self, project):
+        return self.get_quiz_for_project(project)['config']['enabled']
+
+    def get_quiz_pass(self, project):
+        return self.get_quiz_for_project(project)['config']['pass']
+
+    def get_quiz_questions(self, project):
+        return self.get_quiz_for_project(project)['config']['questions']
+        
+    def set_quiz_status(self, project, status):
+        self.get_quiz_for_project(project)['status'] = status
+
+    def clear_quiz_result(self, project):
+        quiz = self.get_quiz_for_project(project)
         del quiz['result']
         quiz['status'] = 'in_progress'
 
@@ -160,3 +187,20 @@ class User(db.Model, DomainObject, UserMixin):
         quiz = self.info.get('quiz', {})
         self.info['quiz'] = quiz
         quiz[str(project_id)] = project_quiz
+
+    def update_quiz_status(self, project):
+        quiz = self.get_quiz_for_project(project)
+        right_count = quiz['result']['right']
+        correct_to_pass = quiz['config']['pass']
+        questions = quiz['config']['questions']
+        status = None
+        if right_count >= correct_to_pass:
+            status = 'passed'
+        elif quiz['result']['wrong'] > questions - correct_to_pass:
+            status = 'failed'
+
+        if not status:
+            return
+        
+        if quiz['config']['short_circuit'] or right_count + wrong_count >= questions:
+            quiz['status'] = status        

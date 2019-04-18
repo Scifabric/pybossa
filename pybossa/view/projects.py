@@ -23,6 +23,7 @@ import os
 import math
 import requests
 from StringIO import StringIO
+import six
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
@@ -2926,6 +2927,29 @@ def assign_users(short_name):
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
+class DbFormConverter(object):
+    form_to_db_field_map = {
+        'enabled': 'enabled',
+        'questions_per_quiz': 'questions',
+        'correct_answers_to_pass': 'pass'
+    }
+
+    @staticmethod
+    def db_to_form(config):
+        return {
+            form_name: config.get(db_name)
+            for form_name, db_name
+            in six.iteritems(DbFormConverter.form_to_db_field_map)
+        }
+
+    @staticmethod
+    def form_to_db(config):
+        return {
+            db_name: config.get(form_name)
+            for form_name, db_name
+            in six.iteritems(DbFormConverter.form_to_db_field_map)
+        }
+
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
 @login_required
@@ -2936,27 +2960,27 @@ def quiz_mode(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
-    current_quiz_config = project.info.get('quiz', {})
+    db_current_quiz_config = project.get_quiz()
 
     if request.method == 'POST':
         form = ProjectQuizForm(request.form)
         if not form.validate():
             flash("Please fix the errors", 'message')
         else:
-            new_quiz_config = form.data
-            project.info['quiz'] = new_quiz_config
+            db_new_quiz_config = DbFormConverter.form_to_db(form.data)
+            project.set_quiz(db_new_quiz_config)
             project_repo.update(project)
             auditlogger.log_event(
                 project,
                 current_user,
                 'update',
                 'project.quiz',
-                json.dumps(current_quiz_config),
-                json.dumps(new_quiz_config)
+                json.dumps(db_current_quiz_config),
+                json.dumps(db_new_quiz_config)
             )
             return redirect_content_type(url_for('.details', short_name=short_name))
     else:
-        form = ProjectQuizForm(**current_quiz_config)
+        form = ProjectQuizForm(**DbFormConverter.db_to_form(db_current_quiz_config))
 
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(

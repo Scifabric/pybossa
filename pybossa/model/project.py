@@ -200,16 +200,29 @@ class Project(db.Model, DomainObject):
     def get_project_users(self):
         return self.info.get('project_users', [])
 
-    def get_quiz_pass_fail(self, right_count, wrong_count):
-        quiz = self.info.get('quiz')
-        if not quiz:
-            raise Exception('Quiz is not configured for this project.')
-        if right_count >= quiz.get('correct_answers_to_pass'):
-            return True
-        elif wrong_count + right_count >= quiz.get('questions_per_quiz'):
-            return False
+    def get_quiz(self):
+        quiz = self.info.get(
+            'quiz',
+            {
+                'enabled': False,
+                'pass': 0,
+                'questions': 0
+            }
+        )
+
+        quiz['short_circuit'] = current_app.config.get('SHORT_CIRCUIT_QUIZ', True)
+        return quiz
+
+    def set_quiz(self, quiz):
+        self.info['quiz'] = quiz
         
     def get_quiz_enabled(self):
-        return self.info.get('quiz', {}).get('enabled', False)
+        return self.get_quiz()['enabled']
+
+    def get_quiz_correct_answers_to_pass(self):
+        return self.get_quiz()['pass']
+
+    def get_questions_per_quiz(self):
+        return self.get_quiz()['questions']
 
 Index('project_owner_id_idx', Project.owner_id)
