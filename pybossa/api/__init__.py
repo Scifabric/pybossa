@@ -417,8 +417,7 @@ def task_gold(project_id=None):
     task_data = request.json
     task_id = task_data['task_id']
     task = task_repo.get_task(task_id)
-
-    if not task.project_id == project_id:
+    if task.project_id != project_id:
         raise Forbidden
 
     task.calibration = 1

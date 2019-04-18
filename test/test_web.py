@@ -7556,6 +7556,63 @@ class TestWeb(web.Helper):
         assert dom.find(id="signin") is not None, err_msg
 
     @with_context
+    def test_task_gold_not_login(self):
+        """Test WEB when making a task gold without auth"""
+        url = "/api/project/1/taskgold"
+        project = project_repo.get(1)
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data.get('status_code') == 401, data
+
+    @with_context
+    def test_task_gold_wrong_project_id(self):
+        """Test WEB when making a task gold with wrong project id"""
+        url = "/api/project/3/taskgold"
+        project = project_repo.get(1)
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+        self.new_project()
+        self.new_task(1)
+
+        wrong_payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 2}
+        res = self.app_post_json(url,
+                            data=wrong_payload,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+    @with_context
+    def test_task_gold_no_admin_or_owner(self):
+        """Test WEB when making a task gold as a unauthorized user"""
+        url = "/api/project/1/taskgold"
+        project = project_repo.get(1)
+        user = UserFactory.create()
+        user.set_password('1234')
+        user_repo.save(user)
+        self.signin(email=user.email_addr, password='1234')
+        self.new_project()
+        self.new_task(1)
+
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+    @with_context
     def test_task_gold(self):
         """Test WEB when making a task gold"""
         admin = UserFactory.create(admin=True)
@@ -7585,6 +7642,8 @@ class TestWeb(web.Helper):
         assert t.calibration == 1, t.calibration
         assert t.exported == True, t.exported
         assert t.gold_answers == {'ans1': 'test'}, t.gold_answers
+
+
 
     @with_context
     @patch('pybossa.api.task.url_for', return_value='testURL')
