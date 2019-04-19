@@ -14,7 +14,7 @@ requirements = [
     # "Flask-OAuthlib>=0.9.1, <0.9.2",
     "oauthlib>=2.1.0,<2.1.1",
     "Flask-SQLAlchemy>=2.3, <2.4",
-    "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
+    "Flask-WTF==0.14.2",
     "Flask>=1.0.2, <1.0.3",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",

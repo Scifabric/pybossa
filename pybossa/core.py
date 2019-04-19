@@ -366,6 +366,7 @@ def setup_blueprints(app):
 
     import rq_dashboard
     rq_dashboard.blueprint.before_request(is_admin)
+    csrf.exempt(rq_dashboard.blueprint)
     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
                            redis_conn=sentinel.master)
 
