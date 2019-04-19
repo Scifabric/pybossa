@@ -110,8 +110,8 @@ json_exporter = None
 csv_exporter = None
 
 # CSRF protection
-from flask_wtf.csrf import CsrfProtect
-csrf = CsrfProtect()
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect()
 
 # Timeouts
 timeouts = dict()

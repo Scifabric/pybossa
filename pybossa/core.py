@@ -26,6 +26,7 @@ from flask_babel import gettext
 from flask_assets import Bundle
 from flask_json_multidict import get_json_multidict
 from flask_talisman import Talisman
+from flask_wtf.csrf import CSRFError
 from pybossa import default_settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -646,10 +647,10 @@ def setup_hooks(app):
             plugins=plugins,
             ldap_enabled=ldap_enabled)
 
-    @csrf.error_handler
-    def csrf_error_handler(reason):
+    @app.errorhandler(CSRFError)
+    def csrf_error_handler(err):
         response = dict(template='400.html', code=400,
-                        description=reason)
+                        description=err.description)
         return handle_content_type(response)
 
 
