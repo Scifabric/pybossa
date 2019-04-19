@@ -20,7 +20,7 @@ from mock import MagicMock
 from mock import patch
 from default import with_context, db, Test
 from datetime import datetime, timedelta
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 from factories import UserFactory, ProjectFactory, TaskFactory
 import calendar
 import time

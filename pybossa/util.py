@@ -21,7 +21,7 @@ from datetime import timedelta, datetime, date
 from yacryptopan import CryptoPAn
 from functools import update_wrapper
 from tempfile import NamedTemporaryFile
-from flask_wtf import Form
+from flask_wtf import FlaskForm as Form
 import csv
 import codecs
 import cStringIO
