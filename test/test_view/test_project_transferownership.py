@@ -58,7 +58,7 @@ class TestProjectTransferOwnership(web.Helper):
         data = json.loads(res.data)
         assert data['form'], data
         assert data['form']['errors'] == {}, data
-        assert data['form']['email_addr'] is None, data
+        assert not data['form']['email_addr'], data
         assert data['form']['csrf'] is not None, data
 
     @with_context
@@ -72,7 +72,7 @@ class TestProjectTransferOwnership(web.Helper):
         data = json.loads(res.data)
         assert data['form'], data
         assert data['form']['errors'] == {}, data
-        assert data['form']['email_addr'] is None, data
+        assert not data['form']['email_addr'], data
         assert data['form']['csrf'] is not None, data
 
     @with_context

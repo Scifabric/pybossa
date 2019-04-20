@@ -662,7 +662,7 @@ class TestWeb(web.Helper):
                                 headers={'X-CSRFToken': csrf})
             errors = json.loads(res.data)
             assert errors.get('status') == ERROR, errors
-            assert errors.get('form').get('name') is None, errors
+            assert not errors.get('form').get('name'), errors
             assert len(errors.get('form').get('errors').get('email_addr')) > 0, errors
 
             res = self.app_post_json(url, data="{stringoftext")
