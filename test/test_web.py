@@ -7595,13 +7595,10 @@ class TestWeb(web.Helper):
     def test_task_gold_no_admin_or_owner(self):
         """Test WEB when making a task gold as a unauthorized user"""
         url = "/api/project/1/taskgold"
-        project = project_repo.get(1)
         user = UserFactory.create()
         user.set_password('1234')
         user_repo.save(user)
         self.signin(email=user.email_addr, password='1234')
-        self.new_project()
-        self.new_task(1)
 
         payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
         res = self.app_post_json(url,
