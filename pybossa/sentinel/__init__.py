@@ -30,7 +30,9 @@ class Sentinel(object):
     def init_app(self, app):
         conn_kwargs = {
             'db': app.config.get('REDIS_DB') or 0,
-            'password': app.config.get('REDIS_PWD')
+            'password': app.config.get('REDIS_PWD'),
+            'socket_timeout': app.config.get('REDIS_SOCKET_TIMEOUT', 0.1),
+            'retry_on_timeout': app.config.get('REDIS_RETRY_ON_TIMEOUT', True)
         }
         if app.config.get('REDIS_MASTER_DNS') and \
             app.config.get('REDIS_SLAVE_DNS') and \
@@ -41,7 +43,7 @@ class Sentinel(object):
                 port=app.config['REDIS_PORT'], **conn_kwargs)
         else:
             self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
-                                                socket_timeout=0.1)
+                                                **conn_kwargs)
             redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
-            self.master = self.connection.master_for(redis_master, **conn_kwargs)
-            self.slave = self.connection.slave_for(redis_master, **conn_kwargs)
+            self.master = self.connection.master_for(redis_master)
+            self.slave = self.connection.slave_for(redis_master)

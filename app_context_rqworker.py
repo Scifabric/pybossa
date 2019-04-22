@@ -31,6 +31,7 @@ logger.setLevel(logging.DEBUG)
 from pybossa.core import create_app, sentinel
 
 app = create_app(run_as_server=False)
+app.config['REDIS_SOCKET_TIMEOUT'] = 600
 
 def retry(max_count):
     def decorator(func):
