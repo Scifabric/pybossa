@@ -9100,8 +9100,8 @@ class TestWebQuizModeUpdate(web.Helper):
 
     disabled_result = {
         'enabled': False,
-        'questions_per_quiz': disabled_update['questions_per_quiz'],
-        'correct_answers_to_pass': disabled_update['correct_answers_to_pass']
+        'questions': disabled_update['questions_per_quiz'],
+        'pass': disabled_update['correct_answers_to_pass']
     }
 
     enabled_result = dict.copy(disabled_result)
