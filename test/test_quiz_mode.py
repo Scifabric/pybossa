@@ -258,3 +258,10 @@ class TestQuizUpdate(web.Helper):
             },
             'config': quiz['config']
         }
+
+    @with_context
+    def test_reset_non_existent_quiz(self):
+        '''Test reset_quiz() does not error if there is no quiz'''
+        admin = UserFactory.create()
+        project = create_project(admin)
+        admin.reset_quiz(project.id)

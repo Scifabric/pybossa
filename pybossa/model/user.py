@@ -157,31 +157,11 @@ class User(db.Model, DomainObject, UserMixin):
     def get_quiz_not_started(self, project):
         return self.get_quiz_for_project(project)['status'] == 'not_started'
 
-    def get_quiz_right_answers(self, project):
-        return self.get_quiz_for_project(project)['result']['right']
-
-    def get_quiz_wrong_answers(self, project):
-        return self.get_quiz_for_project(project)['result']['wrong']
-
-    def get_quiz_status(self, project):
-        return self.get_quiz_for_project(project)['status']
-
     def get_quiz_enabled(self, project):
         return self.get_quiz_for_project(project)['config']['enabled']
 
-    def get_quiz_pass(self, project):
-        return self.get_quiz_for_project(project)['config']['pass']
-
-    def get_quiz_questions(self, project):
-        return self.get_quiz_for_project(project)['config']['questions']
-        
     def set_quiz_status(self, project, status):
         self.get_quiz_for_project(project)['status'] = status
-
-    def clear_quiz_result(self, project):
-        quiz = self.get_quiz_for_project(project)
-        del quiz['result']
-        quiz['status'] = 'in_progress'
 
     def set_quiz_for_project(self, project_id, project_quiz):
         quiz = self.info.get('quiz', {})
@@ -210,6 +190,6 @@ class User(db.Model, DomainObject, UserMixin):
         user_quizzes = self.info.get('quiz', {})
         # Delete this user's quiz info for project_id
         project_key = str(project_id)
-        del user_quizzes[project_key]
+        user_quizzes.pop(project_key, None)
         self.info['quiz'] = user_quizzes
 
