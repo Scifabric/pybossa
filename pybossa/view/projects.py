@@ -2992,18 +2992,20 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
-
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
 def answerfieldsconfig(short_name):
     """Returns Project Stats"""
     project, owner, ps = project_by_shortname(short_name)
+    # project.info.pop('answer_fields')
+    # project_repo.save(project)
     pro = pro_features()
     ensure_authorized_to('update', project)
 
     if request.method == 'POST':
         try:
+            # console.log(request.data)
             project.info['answer_fields'] = json.loads(request.data)
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.answerfields',
@@ -3022,10 +3024,50 @@ def answerfieldsconfig(short_name):
         'pro_features': pro,
         'csrf': generate_csrf()
     }
+    print(response)
 
     return handle_content_type(response)
+'''
+@blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def answerfieldsconfig(short_name):
+    """Returns Project Stats"""
+    project, owner, ps = project_by_shortname(short_name)
+    pro = pro_features()
+    ensure_authorized_to('update', project)
 
+    if request.method == 'POST':
+        answerFieldsConfig = json.load(request.data).get('answerFieldsConfig', {})
+        consensusConfig = json.load(request.data).get('consensusConfig', {})
+        if answerFieldsConfig:
+            key = 'answer_fields'
+            data = answerFieldsConfig
+        else:
+            key = 'tie_break_config'
+            data = consensusConfig
+        try:
+            project.info[key] = data
+            project_repo.save(project)
+            auditlogger.log_event(project, current_user, 'update', 'project.' + key,
+              'N/A', project.info[key])
+            flash(gettext('Configuration updated successfully'), 'success')
+        except Exception:
+            flash(gettext('An error occurred.'), 'error')
 
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+    data = project.info.get(key, {})
+    response = {
+        'template': '/projects/answerfieldsconfig.html',
+        'project': project_sanitized,
+        key: json.dumps(data),
+        'pro_features': pro,
+        'csrf': generate_csrf()
+    }
+
+    return handle_content_type(response)
+'''
 @blueprint.route('/<short_name>/performancestats')
 @login_required
 def show_performance_stats(short_name):
