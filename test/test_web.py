@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import codecs
 import copy
 import json
@@ -2856,7 +2857,7 @@ class TestWeb(web.Helper):
         assert "Sample Project" in res.data, res.data
         msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1">#1</a>'
         assert msg in res.data, res.data
-        assert '0 of 10' in res.data, res.data
+        assert re.search('0\s+of\s+10', res.data), res.data
 
         # For a non existing page
         res = self.app.get('project/%s/tasks/browse/5000' % (project.short_name),
