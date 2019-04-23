@@ -2718,7 +2718,7 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert "Sample Project" in res.data, res.data
-        assert '0 of 10' in res.data, res.data
+        assert re.search('0\s+of\s+10', res.data), res.data
         err_msg = "Download button should be disabled"
         assert dom.find(id='nothingtodownload') is not None, err_msg
 
@@ -2733,7 +2733,7 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert "Sample Project" in res.data, res.data
-        assert '5 of 10' in res.data, res.data
+        assert re.search('5\s+of\s+10', res.data), res.data
         err_msg = "Download Partial results button should be shown"
         assert dom.find(id='partialdownload') is not None, err_msg
 
@@ -2751,7 +2751,7 @@ class TestWeb(web.Helper):
         assert "Sample Project" in res.data, res.data
         msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1">#1</a>'
         assert msg in res.data, res.data
-        assert '10 of 10' in res.data, res.data
+        assert re.search('10\s+of\s+10', res.data), res.data
         dom = BeautifulSoup(res.data)
         err_msg = "Download Full results button should be shown"
         assert dom.find(id='fulldownload') is not None, err_msg
