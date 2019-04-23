@@ -143,6 +143,12 @@ class TaskRepository(Repository):
         query_args, _, _, _ = self.generate_query_from_keywords(TaskRun, **filters)
         return self.db.session.query(TaskRun).filter(*query_args).count()
 
+    def get_user_has_task_run_for_project(self, project_id, user_id):
+        return (self.db.session.query(TaskRun)
+                .filter(TaskRun.user_id == user_id)
+                .filter(TaskRun.project_id == project_id)
+                .first()) is not None
+
     # Filter helpers
     def _filter_query(self, query, obj, limit, offset, last_id, yielded, desc):
         if last_id:

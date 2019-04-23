@@ -37,7 +37,7 @@ from api_base import APIBase
 from pybossa.model.task_run import TaskRun
 from pybossa.util import get_user_id_or_ip, get_avatar_url
 from pybossa.cache.projects import get_project_data
-from pybossa.core import task_repo, sentinel, anonymizer, project_repo
+from pybossa.core import task_repo, sentinel, anonymizer, project_repo, user_repo, task_repo
 from pybossa.core import performance_stats_repo
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
@@ -126,6 +126,7 @@ class TaskRunAPI(APIBase):
     def _after_save(self, original_data, instance):
         mark_if_complete(instance.task_id, instance.project_id)
         update_gold_stats(instance.user_id, instance.task_id, original_data)
+        update_quiz(instance.task_id, instance.project_id, original_data['info'])
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -199,6 +200,19 @@ def update_gold_stats(user_id, task_id, data):
         _update_gold_stats(task.project_id, user_id, answer_fields,
                            task.gold_answers, answer)
 
+def update_quiz(task_id, project_id, answer):
+    project = project_repo.get(project_id)
+    user = user_repo.get(current_user.id)
+    if not user.get_quiz_in_progress(project):
+        return
+        
+    task = task_repo.get_task(task_id)
+    if task.gold_answers == answer:
+        user.add_quiz_right_answer(project)
+    else:
+        user.add_quiz_wrong_answer(project)
+
+    user_repo.update(user)
 
 field_to_stat_type = {
     'categorical': StatType.confusion_matrix,

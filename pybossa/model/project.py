@@ -200,4 +200,20 @@ class Project(db.Model, DomainObject):
     def get_project_users(self):
         return self.info.get('project_users', [])
 
+    def get_quiz(self):
+        quiz = self.info.get(
+            'quiz',
+            {
+                'enabled': False,
+                'pass': 0,
+                'questions': 0
+            }
+        )
+
+        quiz['short_circuit'] = current_app.config.get('SHORT_CIRCUIT_QUIZ', True)
+        return quiz
+
+    def set_quiz(self, quiz):
+        self.info['quiz'] = quiz
+
 Index('project_owner_id_idx', Project.owner_id)
