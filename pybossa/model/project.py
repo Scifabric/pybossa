@@ -215,14 +215,5 @@ class Project(db.Model, DomainObject):
 
     def set_quiz(self, quiz):
         self.info['quiz'] = quiz
-        
-    def get_quiz_enabled(self):
-        return self.get_quiz()['enabled']
-
-    def get_quiz_correct_answers_to_pass(self):
-        return self.get_quiz()['pass']
-
-    def get_questions_per_quiz(self):
-        return self.get_quiz()['questions']
 
 Index('project_owner_id_idx', Project.owner_id)
