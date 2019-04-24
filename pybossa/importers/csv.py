@@ -54,7 +54,6 @@ class BulkTaskCSVImport(BulkTaskImport):
     def _convert_row_to_task_data(self, row, row_number):
         task_data = {"info": {}}
         private_fields = dict()
-        private_gold_answers = dict()
         for idx, cell in enumerate(row):
             if idx in self.field_header_index:
                 if self._headers[idx] == 'user_pref':
@@ -64,15 +63,6 @@ class BulkTaskCSVImport(BulkTaskImport):
                         task_data[self._headers[idx]] = {}
                 else:
                     task_data[self._headers[idx]] = cell
-            elif self._headers[idx].endswith('_priv_gold'):
-                if cell:
-                    field_name = re.sub('_priv_gold$', '', self._headers[idx])
-                    if data_access_levels:
-                        private_gold_answers[field_name] = cell
-                    else:
-                        if 'gold_answers' not in task_data:
-                            task_data['gold_answers'] = {}
-                        task_data['gold_answers'][field_name] = cell
             elif self._headers[idx].endswith('_gold'):
                 if cell:
                     field_name = re.sub('_gold$', '', self._headers[idx])
@@ -91,13 +81,11 @@ class BulkTaskCSVImport(BulkTaskImport):
                     task_data["info"][self._headers[idx]] = json.loads(cell.upper())
             else:
                 task_data["info"][self._headers[idx]] = cell
-        if 'gold_answers' in task_data or private_gold_answers:
+        if 'gold_answers' in task_data:
             task_data['calibration'] = 1
             task_data['exported'] = True
         if private_fields:
             task_data['private_fields'] = private_fields
-        if private_gold_answers:
-            task_data['private_gold_answers'] = private_gold_answers
         return task_data
 
     def _import_csv_tasks(self, csvreader):

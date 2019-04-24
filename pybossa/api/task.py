@@ -39,6 +39,8 @@ from flask import current_app
 import hashlib
 from flask import url_for
 from pybossa.cloud_store_api.s3 import upload_json_data
+from pybossa.task_creator_helper import set_gold_answer
+
 
 import json
 import copy
@@ -90,6 +92,7 @@ class TaskAPI(APIBase):
             try:
                 gold_answers = data['gold_answers']
                 if type(gold_answers) is dict:
+                    set_gold_answer(data, project_id, gold_answers)
                     data['calibration'] = 1
                     data['exported'] = True
             except Exception as e:
@@ -121,21 +124,3 @@ class TaskAPI(APIBase):
             data.pop('calibration', None)
         return data
 
-def upload_gold_data(task, project_id, private_gold_answers, file_id=None):
-    encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
-    bucket = current_app.config.get("S3_REQUEST_BUCKET")
-    if file_id:
-        task_hash = file_id
-    else:
-        task_hash = hashlib.md5(json.dumps(task)).hexdigest()
-    path = "{}/{}".format(project_id, task_hash)
-    s3_conn_type = current_app.config.get('S3_CONN_TYPE')
-    file_name = 'task_private_gold_answer.json'
-    values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
-    gold_answers_url = url_for('fileproxy.encrypted_file', **values)
-    upload_json_data(bucket=bucket,
-    json_data=private_gold_answers, upload_path=path,
-    file_name=file_name, encryption=encryption,
-    conn_name='S3_TASK_REQUEST')
-
-    return gold_answers_url
