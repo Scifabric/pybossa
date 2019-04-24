@@ -131,13 +131,6 @@ class Importer(object):
             file_name = 'task_private_data.json'
             task['info']['private_json__upload_url'] = upload_files_priv(task, project_id, private_fields, file_name)
 
-    def set_gold_data(self, task, project_id):
-        gold_answers = task.pop('gold_answers', None)
-        if not gold_answers:
-            return
-        if gold_answers:
-            set_gold_answer(task, project_id, gold_answers)
-
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
@@ -174,7 +167,8 @@ class Importer(object):
         n_answers = project.get_default_n_answers()
         for task_data in tasks:
             self.upload_private_data(task_data, project.id)
-            self.set_gold_data(task_data, project.id)
+            gold_answers = task_data.pop('gold_answers', None)
+            set_gold_answer(task_data, project.id, gold_answers)
 
             task = Task(project_id=project.id, n_answers=n_answers)
             [setattr(task, k, v) for k, v in task_data.iteritems()]

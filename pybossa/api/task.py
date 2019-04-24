@@ -93,8 +93,6 @@ class TaskAPI(APIBase):
                 gold_answers = data['gold_answers']
                 if type(gold_answers) is dict:
                     set_gold_answer(data, project_id, gold_answers)
-                    data['calibration'] = 1
-                    data['exported'] = True
             except Exception as e:
                 raise BadRequest('Invalid gold_answers')
 

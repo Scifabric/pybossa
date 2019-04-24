@@ -22,6 +22,7 @@ from pybossa.cloud_store_api.s3 import upload_json_data
 from pybossa.data_access import data_access_levels
 from werkzeug.exceptions import BadRequest, Conflict
 from flask import url_for
+import json
 
 def set_gold_answer(task, project_id, gold_answers, file_id=None):
     if not gold_answers:
@@ -32,9 +33,12 @@ def set_gold_answer(task, project_id, gold_answers, file_id=None):
 
     if type(task) is dict:
         task['gold_answers'] = gold_answers
+        task['calibration'] = 1
+        task['exported'] = True
     else:
         task.gold_answers = gold_answers
-
+        task.calibration = 1
+        task.exported = True
 
 def upload_files_priv(task, project_id, data, file_name, file_id=None):
     encryption = current_app.config.get('ENABLE_ENCRYPTION', False)

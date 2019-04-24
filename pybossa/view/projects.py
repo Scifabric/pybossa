@@ -867,7 +867,6 @@ def import_task(short_name):
 
 
 def _import_tasks(project, **form_data):
-    import pdb; pdb.set_trace()
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
         report = importer.create_tasks(task_repo, project, **form_data)
