@@ -28,7 +28,7 @@ project_repo = ProjectRepository(db)
 
 
 def configure_mock_current_user_from(user, mock):
-    mock.is_anonymous = is_anonymous
+    mock.is_anonymous = user is None
     mock.is_authenticated = True
     mock.admin = user.admin if user != None else None
     mock.id = user.id if user != None else None
