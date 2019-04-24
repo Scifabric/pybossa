@@ -247,7 +247,7 @@ def _retrieve_new_task(project_id):
         user.set_quiz_status(project, 'in_progress')
 
     user_repo.update(user)
-    
+
     task = sched.new_task(project.id,
                           project.info.get('sched'),
                           user_id,
@@ -428,7 +428,7 @@ def fetch_lock(task_id):
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def task_gold(project_id=None):
     """Make task gold"""
-    if not current_user.is_authenticated():
+    if not current_user.is_authenticated:
         return abort(401)
 
     project = project_repo.get(project_id)
