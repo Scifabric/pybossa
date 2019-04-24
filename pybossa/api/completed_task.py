@@ -51,7 +51,7 @@ class CompletedTaskAPI(APIBase):
     def get(self, oid):
         """Get all completed tasks and gold tasks. Need admin access"""
         try:
-            if not (current_user.is_authenticated() and current_user.admin):
+            if not (current_user.is_authenticated and current_user.admin):
                 raise Unauthorized("Insufficient privilege to the request")
 
             # set filter from args

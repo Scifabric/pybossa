@@ -24,7 +24,6 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo, task_repo
-from pybossa.sentinel import keys
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
@@ -305,15 +304,6 @@ def get_locked_task(
     present_gold_task=False,
     gold_only=False
 ):
-    user_param = 'user_id'
-    if not user_id:
-        if not user_ip:
-            user_ip = '127.0.0.1'
-        if not external_uid:
-            user_param = 'user_ip'
-        else:
-            user_param = 'external_uid'
-
     having_clause = 'HAVING COUNT(task_run.task_id) < n_answers' if not (present_gold_task or gold_only) else ''
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
@@ -328,7 +318,7 @@ def get_locked_task(
            LEFT JOIN task_run ON (task.id = task_run.task_id)
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-           {}=:user_id AND task_id=task.id)
+           user_id=:user_id AND task_id=task.id)
            AND task.project_id=:project_id
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
@@ -338,7 +328,6 @@ def get_locked_task(
            {}
            ORDER BY task.calibration {}, priority_0 DESC, {} LIMIT :limit;
            '''.format(
-                user_param,
                 allowed_task_levels_clause,
                 gold_only_clause,
                 having_clause,
@@ -525,7 +514,7 @@ def get_scheduler_and_timeout(project):
 
 
 def has_read_access(user):
-    return not user.is_anonymous() and (user.admin or user.subadmin)
+    return not user.is_anonymous and (user.admin or user.subadmin)
 
 
 def get_project_scheduler(project_id, conn):

@@ -87,7 +87,7 @@ def is_authorized(user, action, resource, **kwargs):
 def ensure_authorized_to(action, resource, **kwargs):
     authorized = is_authorized(current_user, action, resource, **kwargs)
     if authorized is False:
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             raise abort(401)
         else:
             raise abort(403)

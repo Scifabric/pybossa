@@ -26,6 +26,7 @@ from flask_babel import gettext
 from flask_assets import Bundle
 from flask_json_multidict import get_json_multidict
 from flask_talisman import Talisman
+from flask_wtf.csrf import CSRFError
 from pybossa import default_settings
 from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
@@ -133,8 +134,9 @@ def setup_sse(app):
 def setup_theme(app):
     """Configure theme for PYBOSSA app."""
     theme = app.config['THEME']
-    app.template_folder = os.path.join('themes', theme, 'templates')
-    app.static_folder = os.path.join('themes', theme, 'static')
+    template_dir = app.config.get('TEMPLATE_DIR', '')
+    app.template_folder = os.path.join(template_dir, 'themes', theme, 'templates')
+    app.static_folder = os.path.join(template_dir, 'themes', theme, 'static')
 
 
 def setup_uploader(app):
@@ -309,7 +311,7 @@ def setup_babel(app):
     @babel.localeselector
     def _get_locale():
         locales = [l[0] for l in app.config.get('LOCALES')]
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             lang = current_user.locale
         else:
             lang = request.cookies.get('language')
@@ -363,9 +365,19 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
-    from rq_dashboard import RQDashboard
-    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
-                redis_conn=sentinel.master)
+    import rq_dashboard
+    rq_dashboard.blueprint.before_request(is_admin)
+    csrf.exempt(rq_dashboard.blueprint)
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
+                           redis_conn=sentinel.master)
+
+
+def is_admin():
+    """Check if user is admin."""
+    if current_user.is_anonymous:
+        return abort(401)
+    if current_user.admin is False:
+        return abort(403)
 
 
 def setup_external_services(app):
@@ -577,7 +589,7 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (current_user and current_user.is_authenticated()
+        if (current_user and current_user.is_authenticated
             and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
@@ -635,10 +647,10 @@ def setup_hooks(app):
             plugins=plugins,
             ldap_enabled=ldap_enabled)
 
-    @csrf.error_handler
-    def csrf_error_handler(reason):
+    @app.errorhandler(CSRFError)
+    def csrf_error_handler(err):
         response = dict(template='400.html', code=400,
-                        description=reason)
+                        description=err.description)
         return handle_content_type(response)
 
 

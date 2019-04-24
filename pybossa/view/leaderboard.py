@@ -29,7 +29,7 @@ blueprint = Blueprint('leaderboard', __name__)
 @login_required
 def index(window=0):
     """Get the last activity from users and projects."""
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user_id = current_user.id
     else:
         user_id = None

@@ -48,7 +48,7 @@ class FavoritesAPI(APIBase):
     def get(self, oid):
         """Return all the tasks favorited by current user."""
         try:
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 raise abort(401)
             uid = current_user.id
             limit, offset, orderby = self._set_limit_and_offset()
@@ -80,7 +80,7 @@ class FavoritesAPI(APIBase):
             data = json.loads(request.data)
             if (len(data.keys()) != 1) or ('task_id' not in data.keys()):
                 raise AttributeError
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 raise Unauthorized
             uid = current_user.id
             tasks = task_repo.get_task_favorited(uid, data['task_id'])
@@ -109,7 +109,7 @@ class FavoritesAPI(APIBase):
     def delete(self, oid):
         """Delete User ID from task as a favorite."""
         try:
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 raise abort(401)
             uid = current_user.id
             tasks = task_repo.get_task_favorited(uid, oid)

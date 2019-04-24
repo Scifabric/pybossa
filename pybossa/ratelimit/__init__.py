@@ -55,7 +55,7 @@ class RateLimit(object):
         self.per = per
         self.send_x_headers = send_x_headers
 
-        if not current_user.is_anonymous() and current_user.admin:
+        if not current_user.is_anonymous and current_user.admin:
             self.limit *= current_app.config.get("ADMIN_RATE_MULTIPLIER", 1)
 
         p = sentinel.master.pipeline()
@@ -75,7 +75,7 @@ def get_view_rate_limit():
 
 def default_scope_func():
     if current_app.config.get('RATE_LIMIT_BY_USER_ID'):
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             return current_user.id
     return anonymizer.ip(request.remote_addr or '127.0.0.1')
 

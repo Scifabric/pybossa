@@ -60,7 +60,7 @@ class TestLockedSched(sched.Helper):
         task1 = TaskFactory.create(project=project, info='task 1', n_answers=2)
         task2 = TaskFactory.create(project=project, info='task 2', n_answers=2)
 
-        t1 = get_locked_task(project.id)
+        t1 = get_locked_task(project.id, 11)
         t2 = get_locked_task(project.id, 1)
         assert t1[0].id == task1.id
         assert t2[0].id == task1.id
@@ -69,7 +69,7 @@ class TestLockedSched(sched.Helper):
         assert t3[0].id == task2.id
         assert t4[0].id == task2.id
 
-        t5 = get_locked_task(project.id)
+        t5 = get_locked_task(project.id, 11)
         assert t5[0].id == task1.id
 
         t6 = get_locked_task(project.id, 4)

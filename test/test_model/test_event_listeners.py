@@ -133,6 +133,7 @@ class TestModelEventListeners(Test):
                       webhook='http://localhost.com')
         mock_get_project_scheduler.return_value = 'default'
         mock_task_run = MagicMock()
+        mock_task_run.user_id = 42
         mock_task_run.exported = task.exported
         mock_task_run.task_id = task.id
         mock_task_run.calibration = task.calibration

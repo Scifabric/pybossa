@@ -28,7 +28,7 @@ class ResultAuth(object):
         return self._specific_actions
 
     def admin_subadmin_proj_owners(self, user, result=None):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         if user.admin or user.subadmin:
             return True
@@ -42,13 +42,13 @@ class ResultAuth(object):
         return getattr(self, action)(user, result)
 
     def _create(self, user, result):
-        return not user.is_anonymous() and user.admin
+        return not user.is_anonymous and user.admin
 
     def _read(self, user, result=None):
         return self.admin_subadmin_proj_owners(user, result)
 
     def _update(self, user, result):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         project = self._get_project(result, result.project_id)
         return user.admin or (user.subadmin and user.id in project.owners_ids)

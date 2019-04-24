@@ -102,7 +102,7 @@ def get_user_summary(name, current_user=None):
         user['total'] = get_total_users()
         if user['restrict']:
             if (current_user and
-                current_user.is_authenticated() and
+                current_user.is_authenticated and
                (current_user.id == user['id'])):
                 return user
             else:
@@ -445,7 +445,7 @@ def get_announcements_by_level_cached(level):
 
 
 def get_announcements_cached(user, announcement_levels):
-    if not (announcement_levels and user and user.is_authenticated()):
+    if not (announcement_levels and user and user.is_authenticated):
         return []
     level = announcement_levels['user']['level']
     if user.admin:

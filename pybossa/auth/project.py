@@ -30,19 +30,19 @@ class ProjectAuth(object):
 
     @staticmethod
     def only_admin_or_subadminowner(user, project):
-        return (user.is_authenticated() and
+        return (user.is_authenticated and
                 (user.admin or
                     (user.subadmin and
                         user.id in project.owners_ids)))
 
     @staticmethod
     def only_admin_or_subadmin(user):
-        return (user.is_authenticated() and
+        return (user.is_authenticated and
                 (user.admin or user.subadmin))
 
     @staticmethod
     def only_project_users(user, project):
-        return user.is_authenticated() and \
+        return user.is_authenticated and \
             user.id in project.info.get('project_users', [])
 
     def can(self, user, action, taskrun=None):
@@ -60,7 +60,7 @@ class ProjectAuth(object):
         if project is not None and data_access.data_access_levels:
             return self.only_admin_or_subadminowner(user, project) or \
                 self.only_project_users(user, project)
-        return user.is_authenticated()
+        return user.is_authenticated
 
     def _update(self, user, project):
         return self.only_admin_or_subadminowner(user, project)

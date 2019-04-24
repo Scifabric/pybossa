@@ -65,7 +65,7 @@ class TaskRunAPI(APIBase):
     immutable_keys = set(['project_id', 'task_id'])
 
     def _preprocess_post_data(self, data):
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             raise Forbidden('')
         task_id = data['task_id']
         project_id = data['project_id']
@@ -110,7 +110,7 @@ class TaskRunAPI(APIBase):
 
     def _add_user_info(self, taskrun):
         if taskrun.external_uid is None:
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 taskrun.user_ip = anonymizer.ip(request.remote_addr or
                                                 '127.0.0.1')
             else:

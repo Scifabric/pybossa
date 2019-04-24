@@ -48,14 +48,18 @@ class TestNews(Test):
 
     @with_context
     def test_get_news(self):
-        sentinel.master.zadd(myset, 0, pickle.dumps(self.news))
+        mapping = dict()
+        mapping[pickle.dumps(self.news)] = 0
+        sentinel.master.zadd(myset, mapping)
         news = get_news()
         assert len(news) == 1, len(news)
         news[0]['updated'] == self.news['updated'], news
 
     @with_context
     def test_get_news_with_score(self):
-        sentinel.master.zadd(myset, 0, pickle.dumps(self.news))
+        mapping = dict()
+        mapping[pickle.dumps(self.news)] = 0
+        sentinel.master.zadd(myset, mapping)
         news = get_news(score=1)
         assert len(news) == 0, len(news)
 

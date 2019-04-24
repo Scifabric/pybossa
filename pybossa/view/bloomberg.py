@@ -70,7 +70,7 @@ def handle_bloomberg_response():
         current_app.logger.error('BSSO auth error(s): %s %s', errors, error_reason)
         flash(gettext('There was a problem during the sign in process.'), 'error')
         return redirect(url_for('home.home'))
-    if auth.is_authenticated():
+    if auth.is_authenticated:
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         return _sign_in_user(user, next_url=request.form.get('RelayState'))

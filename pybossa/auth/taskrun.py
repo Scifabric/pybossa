@@ -32,7 +32,7 @@ class TaskRunAuth(object):
         return self._specific_actions
 
     def admin_subadmin_proj_owners(self, user, taskrun):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         if user.admin or user.subadmin:
             return True
@@ -47,7 +47,7 @@ class TaskRunAuth(object):
         project = self.project_repo.get(taskrun.project_id)
         if project is None:
             return False
-        if (user.is_anonymous() and
+        if (user.is_anonymous and
                 project.allow_anonymous_contributors is False):
             return False
         authorized = self.task_repo.count_task_runs_with(
@@ -64,13 +64,13 @@ class TaskRunAuth(object):
     def _read(self, user, taskrun=None):
         if taskrun is not None:
             return self.admin_subadmin_proj_owners(user, taskrun)
-        return user.is_authenticated()
+        return user.is_authenticated
 
     def _update(self, user, taskrun):
         return self._delete(user, taskrun)
 
     def _delete(self, user, taskrun):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         result = self.result_repo.get_by(project_id=taskrun.project_id,
                                          task_id=taskrun.task_id)

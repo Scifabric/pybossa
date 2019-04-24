@@ -49,7 +49,7 @@ def login():  # pragma: no cover
 @facebook.oauth.tokengetter
 def get_facebook_token():  # pragma: no cover
     """Get Facebook token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return session.get('oauth_token')
     else:
         return (current_user.info['facebook_token']['oauth_token'], '')

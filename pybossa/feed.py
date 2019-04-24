@@ -31,7 +31,9 @@ def update_feed(obj):
     """Add domain object to update feed in Redis."""
     pipeline = sentinel.master.pipeline()
     serialized_object = pickle.dumps(obj)
-    pipeline.zadd(FEED_KEY, time(), serialized_object)
+    mapping = dict()
+    mapping[serialized_object] = time()
+    pipeline.zadd(FEED_KEY, mapping)
     pipeline.execute()
 
 def get_update_feed():

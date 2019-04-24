@@ -51,7 +51,7 @@ class UserAPI(APIBase):
     allowed_attributes = public_attributes + ('fullname', 'created')
 
     def _select_attributes(self, user_data):
-        if (current_user.is_authenticated() and
+        if (current_user.is_authenticated and
                 (current_user.admin or current_user.subadmin or
                 current_user.id == user_data['id'])):
             tmp = User().to_public_json(user_data)
@@ -84,7 +84,7 @@ class UserAPI(APIBase):
         return not self._is_requester_admin() and user['privacy_mode']
 
     def _is_requester_admin(self):
-        return current_user.is_authenticated() and current_user.admin
+        return current_user.is_authenticated and current_user.admin
 
     def _custom_filter(self, filters):
         if self._private_attributes_in_request() and not self._is_requester_admin():
