@@ -79,18 +79,20 @@ class TaskRepository(Repository):
         last_id=None, yielded=False, desc=False, **filters):
 
         exp = filters.pop('exported', None)
+        finish_time = filters.pop('finish_time', None)
         filters.pop('state', None) # exclude state param
-        if exp is not None:
-            query = self.db.session.query(TaskRun).join(Task).\
-                filter(TaskRun.task_id == Task.id).\
-                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
-                filter(Task.exported == exp).\
-                filter_by(**filters)
-        else:
-            query = self.db.session.query(TaskRun).join(Task).\
-                filter(TaskRun.task_id == Task.id).\
-                filter(or_(Task.state == u'completed', Task.calibration == 1)).\
-                filter_by(**filters)
+
+        conditions = []
+        if exp:
+            conditions.append(Task.exported == exp)
+        if finish_time:
+            conditions.append(TaskRun.finish_time >= finish_time)
+
+        query = self.db.session.query(TaskRun).join(Task).\
+            filter(TaskRun.task_id == Task.id).\
+            filter(or_(Task.state == u'completed', Task.calibration == 1)).\
+            filter(*conditions).\
+            filter_by(**filters)
 
         results = self._filter_query(query, Task, limit, offset, last_id, yielded, desc)
         return results

@@ -27,6 +27,7 @@ from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
 from pybossa.repositories import ResultRepository
 from helper.gig_helper import make_admin
+from datetime import datetime, timedelta
 
 
 project_repo = ProjectRepository(db)
@@ -185,3 +186,18 @@ class TestCompletedTaskAPI(TestAPI):
             # last id set to all_expected_tasks[2].id. hence returned task ids to be from index 3 onwards
             assert taskrun['id'] in all_expected_taskruns_ids[3:], \
                 'completedtaskrun api with last_id should not have returned taskrun {}'.format(taskrun['id'])
+
+        # perform api call with finish_time
+        today = datetime.today().strftime('%Y-%m-%d')
+        tomorrow = (datetime.today() + timedelta(1)).strftime('%Y-%m-%d')
+        url = '/api/completedtaskrun?project_id=1&api_key={}&exported=False&finish_time={}' \
+            .format(admin.api_key, today)
+        res = self.app.get(url)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 9, 'there should be total 9 completed taskruns returned'
+
+        url = '/api/completedtaskrun?project_id=1&api_key={}&exported=False&finish_time={}' \
+            .format(admin.api_key, tomorrow)
+        res = self.app.get(url)
+        taskruns = json.loads(res.data)
+        assert not len(taskruns), 'no completed taskruns for future date'
