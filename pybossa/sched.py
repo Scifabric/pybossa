@@ -99,7 +99,7 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                    .filter(Task.id==Counter.task_id)\
                    .filter(Counter.task_id.in_(tmp))\
                    .group_by(Task.id)\
-                   .order_by('n_task_runs ASC')\
+                   .order_by(text('n_task_runs ASC'))\
 
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
