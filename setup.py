@@ -25,7 +25,7 @@ requirements = [
     "ndg-httpsclient>=0.4.0, <1.0",     # fix for python below 2.7.9
     "pyasn1>=0.1.7, <1.0",              # fix for python below 2.7.9
     "requests>=2.2.1, <3.0",
-    "SQLAlchemy>=1.1.7, <1.1.8",
+    "SQLAlchemy>=1.3.0, <1.3.1",
     "six>=1.9.0, <2.0.0",
     "nose",
     "rednose",

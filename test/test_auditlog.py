@@ -43,8 +43,8 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'False',
-                'zip_download': 'True'
+                'allow_anonymous_contributors': False,
+                'zip_download': True
                 }
         url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
@@ -92,7 +92,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'False',
+                'allow_anonymous_contributors': False,
                 'info': {u'list': [1]}
                 }
         attributes = data.keys()
@@ -111,7 +111,7 @@ class TestAuditlogAPI(Test):
             assert log.attribute in attributes, (log.attribute, attributes)
             if log.attribute != 'list':
                 msg = "%s != %s" % (data[log.attribute], log.new_value)
-                assert data[log.attribute] == log.new_value, msg
+                assert unicode(data[log.attribute]) == log.new_value, msg
             else:
                 msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
                 assert data['info'][log.attribute] == json.loads(log.new_value), msg
@@ -126,7 +126,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'False',
+                'allow_anonymous_contributors': False,
                 }
         attributes = data.keys()
         url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
@@ -142,7 +142,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
             msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert data[log.attribute] == log.new_value, msg
+            assert unicode(data[log.attribute]) == log.new_value, msg
 
     @with_context
     def test_project_update_attributes_non_owner(self):
@@ -154,7 +154,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'False',
+                'allow_anonymous_contributors': False,
                 }
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
         self.app.put(url, data=json.dumps(data))

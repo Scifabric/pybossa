@@ -42,8 +42,9 @@ import re
 from pybossa.model.project import Project, TaskRun, Task
 from pybossa.model.announcement import Announcement
 from pybossa.model.project_stats import ProjectStats
+from sqlalchemy import text
 from sqlalchemy.sql import and_, or_
-from sqlalchemy import cast, Text, func, desc
+from sqlalchemy import cast, Text, func, desc, text
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
 
@@ -178,7 +179,7 @@ class Repository(object):
             query = query.add_column(headlines[0])
         if len(orders) > 0:
             query = query.add_column(orders[0])
-            query = query.order_by('rank DESC')
+            query = query.order_by(text('rank DESC'))
         return query
 
     def _set_orderby_desc(self, query, model, limit,
@@ -203,9 +204,9 @@ class Repository(object):
                     query = query.order_by(getattr(model, orderby))
             else:
                 if descending:
-                    query = query.order_by(desc("n_favs"))
+                    query = query.order_by(desc(text("n_favs")))
                 else:
-                    query = query.order_by("n_favs")
+                    query = query.order_by(text("n_favs"))
         if last_id:
             query = query.limit(limit)
         else:
