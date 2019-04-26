@@ -81,9 +81,6 @@ class BulkTaskCSVImport(BulkTaskImport):
                     task_data["info"][self._headers[idx]] = json.loads(cell.upper())
             else:
                 task_data["info"][self._headers[idx]] = cell
-        if 'gold_answers' in task_data:
-            task_data['calibration'] = 1
-            task_data['exported'] = True
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data

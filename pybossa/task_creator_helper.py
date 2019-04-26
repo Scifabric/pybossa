@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2019 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,14 +31,10 @@ def set_gold_answer(task, project_id, gold_answers, file_id=None):
         file_name = 'task_private_gold_answer.json'
         gold_answers = dict(gold_ans_url=upload_files_priv(task, project_id, gold_answers, file_name, file_id))
 
-    if type(task) is dict:
-        task['gold_answers'] = gold_answers
-        task['calibration'] = 1
-        task['exported'] = True
-    else:
         task.gold_answers = gold_answers
         task.calibration = 1
         task.exported = True
+        task.state = 'ongoing'
 
 def upload_files_priv(task, project_id, data, file_name, file_id=None):
     encryption = current_app.config.get('ENABLE_ENCRYPTION', False)

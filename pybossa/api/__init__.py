@@ -450,9 +450,6 @@ def task_gold(project_id=None):
     if task.project_id != project_id:
         raise Forbidden
 
-    task.calibration = 1
-    task.exported = True
-    task.state = 'ongoing'
     preprocess_task_run(project_id, task_id, task_data)
 
     info = task_data['info']

@@ -127,9 +127,8 @@ class Importer(object):
         private_fields = task.pop('private_fields', None)
         if not private_fields:
             return
-        if private_fields:
-            file_name = 'task_private_data.json'
-            task['info']['private_json__upload_url'] = upload_files_priv(task, project_id, private_fields, file_name)
+        file_name = 'task_private_data.json'
+        task['info']['private_json__upload_url'] = upload_files_priv(task, project_id, private_fields, file_name)
 
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
@@ -167,11 +166,12 @@ class Importer(object):
         n_answers = project.get_default_n_answers()
         for task_data in tasks:
             self.upload_private_data(task_data, project.id)
+            task = Task(project_id=project.id, n_answers=n_answers)
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+
             gold_answers = task_data.pop('gold_answers', None)
             set_gold_answer(task_data, project.id, gold_answers)
 
-            task = Task(project_id=project.id, n_answers=n_answers)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.find_duplicate(project_id=project.id,
                                              info=task.info)
             if found is None:
