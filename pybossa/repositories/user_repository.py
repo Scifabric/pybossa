@@ -242,3 +242,13 @@ class UserRepository(Repository):
         contributors = [ row.email_addr for row in results]
         current_app.logger.info('contributors {}'.format(contributors))
         return contributors
+
+    def get_all_user_quizzes_for_project(self, project_id):
+        sql = text('''
+            SELECT id, fullname, info->'quiz'->'{0}' as quiz
+            FROM "user"
+            WHERE info->'quiz'->'{0}' IS NOT NULL
+        '''.format(project_id))
+
+        results = self.db.session.execute(sql)
+        return results

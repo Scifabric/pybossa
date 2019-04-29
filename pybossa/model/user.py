@@ -185,11 +185,17 @@ class User(db.Model, DomainObject, UserMixin):
         if quiz['config']['short_circuit'] or right_count + wrong_count >= questions:
             quiz['status'] = status        
 
-    def reset_quiz(self, project_id):
+    def reset_quiz(self, project):
         # This user's quiz info for all projects
         user_quizzes = self.info.get('quiz', {})
         # Delete this user's quiz info for project_id
-        project_key = str(project_id)
+        project_key = str(project.id)
         user_quizzes.pop(project_key, None)
         self.info['quiz'] = user_quizzes
+        if self.get_quiz_enabled(project):
+            self.set_quiz_status(project, 'in_progress')
+        from pybossa.sched import release_user_locks_for_project
+        released_task_ids = release_user_locks_for_project(self.id, project.id)
+        print 'released user id {} locks on tasks'.format(self.id), released_task_ids
+
 

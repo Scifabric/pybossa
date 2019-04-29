@@ -59,7 +59,7 @@ from token import TokenAPI
 from result import ResultAPI
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
-from pybossa.core import project_repo, task_repo, user_repo
+from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
@@ -238,16 +238,6 @@ def _retrieve_new_task(project_id):
     external_uid = request.args.get('external_uid')
     sched_rand_within_priority = project.info.get('sched_rand_within_priority', False)
 
-    user = user_repo.get(user_id)
-    if (
-        user.get_quiz_not_started(project)
-        and user.get_quiz_enabled(project)
-        and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
-    ):
-        user.set_quiz_status(project, 'in_progress')
-
-    user_repo.update(user)
-
     task = sched.new_task(project.id,
                           project.info.get('sched'),
                           user_id,
@@ -257,8 +247,7 @@ def _retrieve_new_task(project_id):
                           limit,
                           orderby=orderby,
                           desc=desc,
-                          rand_within_priority=sched_rand_within_priority,
-                          gold_only = user.get_quiz_in_progress(project))
+                          rand_within_priority=sched_rand_within_priority)
 
     handler = partial(pwd_manager.update_response, project=project,
                       user=user_id_or_ip)

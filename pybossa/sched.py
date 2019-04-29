@@ -23,7 +23,7 @@ from pybossa.model import DomainObject
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
-from pybossa.core import db, sentinel, project_repo, task_repo
+from pybossa.core import db, sentinel, project_repo, task_repo, user_repo
 from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
@@ -51,8 +51,7 @@ TIMEOUT = ContributionsGuard.STAMP_TTL
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0',
-             desc=True, rand_within_priority=False,
-             gold_only=False):
+             desc=True, rand_within_priority=False):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
         'default': get_locked_task,
@@ -65,11 +64,25 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     }
     scheduler = sched_map.get(sched, sched_map['default'])
 
-    # This is here for testing. It removes the random variable to make testing deterministic.
     project = project_repo.get(project_id)
+    user = user_repo.get(user_id)
+    if (
+        user.get_quiz_not_started(project)
+        and user.get_quiz_enabled(project)
+        and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
+    ):
+        user.set_quiz_status(project, 'in_progress')
+
+    # We always update the user even if we didn't change the quiz status.
+    # The reason for that is the user.<?quiz?> methods take a snapshot of the project's quiz
+    # config the first time it is accessed for a user and save that snapshot
+    # with the user. So we want to commit that snapshot if this is the first access.
+    user_repo.update(user)
+    gold_only = user.get_quiz_in_progress(project)
+
+    # This is here for testing. It removes the random variable to make testing deterministic.
     disable_gold = not project.info.get('enable_gold', True)
     present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)
-
     return scheduler(
         project_id,
         user_id,
@@ -420,6 +433,20 @@ def acquire_lock(task_id, user_id, limit, timeout, pipeline=None, execute=True):
             return all(not isinstance(r, Exception) for r in pipeline.execute())
         return True
     return False
+
+
+def release_user_locks_for_project(user_id, project_id):
+    user_tasks = get_user_tasks(user_id, TIMEOUT)
+    user_task_ids = user_tasks.keys()
+    results = get_task_ids_project_id(user_task_ids)
+    task_ids = []
+    for task_id, task_project_id in zip(user_task_ids, results):
+        if not task_project_id:
+            task_project_id = task_repo.get_task(task_id).project_id
+        if int(task_project_id) == project_id:
+            release_lock(task_id, user_id, TIMEOUT)
+            task_ids.append(task_id)
+    return task_ids
 
 
 def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):

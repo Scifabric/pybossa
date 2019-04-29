@@ -2951,6 +2951,36 @@ class DbFormConverter(object):
             in six.iteritems(DbFormConverter.form_to_db_field_map)
         }
 
+def process_quiz_mode_request(project):
+    db_current_quiz_config = project.get_quiz()
+
+    if request.method == 'GET':
+        return ProjectQuizForm(**DbFormConverter.db_to_form(db_current_quiz_config))
+
+    form = ProjectQuizForm(request.form)
+
+    if not form.validate():
+        flash("Please fix the errors", 'message')
+        return form
+
+    db_new_quiz_config = DbFormConverter.form_to_db(form.data)
+    project.set_quiz(db_new_quiz_config)
+    project_repo.update(project)
+    auditlogger.log_event(
+        project,
+        current_user,
+        'update',
+        'project.quiz',
+        json.dumps(db_current_quiz_config),
+        json.dumps(db_new_quiz_config)
+    )
+    reset_user_ids = request.form.getlist('reset')
+    if reset_user_ids:
+        for user_id in reset_user_ids:
+            user = user_repo.get(user_id)
+            user.reset_quiz(project)
+            user_repo.update(user)
+    return redirect_content_type(url_for('.quiz_mode', short_name=project.short_name))
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
 @login_required
@@ -2961,35 +2991,18 @@ def quiz_mode(short_name):
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
-    db_current_quiz_config = project.get_quiz()
-
-    if request.method == 'POST':
-        form = ProjectQuizForm(request.form)
-        if not form.validate():
-            flash("Please fix the errors", 'message')
-        else:
-            db_new_quiz_config = DbFormConverter.form_to_db(form.data)
-            project.set_quiz(db_new_quiz_config)
-            project_repo.update(project)
-            auditlogger.log_event(
-                project,
-                current_user,
-                'update',
-                'project.quiz',
-                json.dumps(db_current_quiz_config),
-                json.dumps(db_new_quiz_config)
-            )
-            return redirect_content_type(url_for('.details', short_name=short_name))
-    else:
-        form = ProjectQuizForm(**DbFormConverter.db_to_form(db_current_quiz_config))
-
+    form = process_quiz_mode_request(project)
+    if not isinstance(form, ProjectQuizForm):
+        return form
+    all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
         action_url=url_for('project.quiz_mode', short_name=short_name),
         project=project_sanitized,
         pro_features=pro_features(),
-        form=form
+        form=form,
+        all_user_quizzes=all_user_quizzes
     ))
 
 
