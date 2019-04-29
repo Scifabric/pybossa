@@ -2974,12 +2974,10 @@ def process_quiz_mode_request(project):
         json.dumps(db_current_quiz_config),
         json.dumps(db_new_quiz_config)
     )
-    reset_user_ids = request.form.getlist('reset')
-    if reset_user_ids:
-        for user_id in reset_user_ids:
-            user = user_repo.get(user_id)
-            user.reset_quiz(project)
-            user_repo.update(user)
+    for user_id in request.form.getlist('reset') or []:
+        user = user_repo.get(user_id)
+        user.reset_quiz(project)
+        user_repo.update(user)
     return redirect_content_type(url_for('.quiz_mode', short_name=project.short_name))
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
