@@ -9102,7 +9102,8 @@ class TestWebQuizModeUpdate(web.Helper):
     disabled_result = {
         'enabled': False,
         'questions': disabled_update['questions_per_quiz'],
-        'pass': disabled_update['correct_answers_to_pass']
+        'pass': disabled_update['correct_answers_to_pass'],
+        'short_circuit': True
     }
 
     enabled_result = dict.copy(disabled_result)
@@ -9118,7 +9119,7 @@ class TestWebQuizModeUpdate(web.Helper):
         res = self.update_project(project, update)
         updated_project = project_repo.get(project.id)
         quiz = updated_project.info.get('quiz')
-        assert quiz == result
+        assert quiz == result, {'quiz': quiz, 'result': result}
 
     def update_project(self, project, update, follow_redirects=True):
         return self.app.post(

@@ -247,21 +247,20 @@ class TestQuizUpdate(web.Helper):
                 }
             }
         )
-        admin.reset_quiz(project.id)
+        admin.reset_quiz(project)
         quiz = admin.get_quiz_for_project(project)
-        print quiz
         assert quiz == {
-            'status': 'not_started',
+            'status': 'in_progress',
             'result': {
                 'right': 0,
                 'wrong': 0
             },
             'config': quiz['config']
-        }
+        }, quiz
 
     @with_context
     def test_reset_non_existent_quiz(self):
         '''Test reset_quiz() does not error if there is no quiz'''
         admin = UserFactory.create()
         project = create_project(admin)
-        admin.reset_quiz(project.id)
+        admin.reset_quiz(project)
