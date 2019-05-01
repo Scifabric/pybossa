@@ -67,7 +67,10 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     project = project_repo.get(project_id)
     user = user_repo.get(user_id)
     if (
-        user.get_quiz_not_started(project)
+        project.published
+        and user_id != project.owner_id
+        and user_id not in project.owners_ids
+        and user.get_quiz_not_started(project)
         and user.get_quiz_enabled(project)
         and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
     ):

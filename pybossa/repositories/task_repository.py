@@ -97,6 +97,11 @@ class TaskRepository(Repository):
         results = self._filter_query(query, Task, limit, offset, last_id, yielded, desc)
         return results
 
+    def get_gold_task_count_for_project(self, project_id):
+        return (self.db.session.query(Task)
+                .filter(Task.project_id == project_id)
+                .filter(Task.calibration == 1)
+                .count())
 
     def count_tasks_with(self, **filters):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)

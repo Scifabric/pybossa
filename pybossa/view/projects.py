@@ -2964,6 +2964,15 @@ def process_quiz_mode_request(project):
         return form
 
     db_new_quiz_config = DbFormConverter.form_to_db(form.data)
+    gold_task_count = task_repo.get_gold_task_count_for_project(project.id)
+    question_count = db_new_quiz_config['questions']
+    if gold_task_count < question_count:
+        flash(
+            "There must be at least as many gold tasks as the number of questions in the quiz. You have {} gold tasks and {} questions.".format(gold_task_count, question_count),
+            "error"
+        )
+        return form
+
     project.set_quiz(db_new_quiz_config)
     project_repo.update(project)
     auditlogger.log_event(
