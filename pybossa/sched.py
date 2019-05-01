@@ -32,7 +32,7 @@ from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
 from datetime import datetime
-
+#TODO: Can this be removed? It's a duplicate.
 from flask import current_app
 
 
@@ -449,6 +449,7 @@ def release_user_locks_for_project(user_id, project_id):
         if int(task_project_id) == project_id:
             release_lock(task_id, user_id, TIMEOUT)
             task_ids.append(task_id)
+    current_app.logger.info('released user id {} locks on tasks {}'.format(user_id, released_task_ids))
     return task_ids
 
 

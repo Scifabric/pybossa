@@ -195,7 +195,6 @@ class User(db.Model, DomainObject, UserMixin):
         if self.get_quiz_enabled(project):
             self.set_quiz_status(project, 'in_progress')
         from pybossa.sched import release_user_locks_for_project
-        released_task_ids = release_user_locks_for_project(self.id, project.id)
-        print 'released user id {} locks on tasks'.format(self.id), released_task_ids
+        release_user_locks_for_project(self.id, project.id)
 
 
