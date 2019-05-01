@@ -65,12 +65,22 @@ class TaskRunAPI(APIBase):
     immutable_keys = set(['project_id', 'task_id'])
 
     def _preprocess_post_data(self, data):
+        with_encryption = app.config.get('ENABLE_ENCRYPTION')
+        upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
         if current_user.is_anonymous:
             raise Forbidden('')
         task_id = data['task_id']
         project_id = data['project_id']
         self.check_can_post(project_id, task_id)
         preprocess_task_run(project_id, task_id, data)
+        info = data['info']
+        path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
+        if with_encryption:
+            data['info'] = {
+                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
+                    file_name='pyb_answer.json', encryption=with_encryption,
+                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
+            }
 
     def check_can_post(self, project_id, task_id):
         if not can_post(project_id, task_id, get_user_id_or_ip()):
@@ -205,7 +215,7 @@ def update_quiz(task_id, project_id, answer):
     user = user_repo.get(current_user.id)
     if not user.get_quiz_in_progress(project):
         return
-        
+
     task = task_repo.get_task(task_id)
     if task.gold_answers == answer:
         user.add_quiz_right_answer(project)
@@ -268,9 +278,5 @@ def preprocess_task_run(project_id, task_id, data):
         path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
         _upload_files_from_json(info, path, with_encryption)
         _upload_files_from_request(info, request.files, path, with_encryption)
-        if with_encryption:
-            data['info'] = {
-                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
-                    file_name='pyb_answer.json', encryption=with_encryption,
-                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
-            }
+
+
