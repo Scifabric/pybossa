@@ -449,7 +449,7 @@ def release_user_locks_for_project(user_id, project_id):
         if int(task_project_id) == project_id:
             release_lock(task_id, user_id, TIMEOUT)
             task_ids.append(task_id)
-    current_app.logger.info('released user id {} locks on tasks {}'.format(user_id, released_task_ids))
+    current_app.logger.info('released user id {} locks on tasks {}'.format(user_id, task_ids))
     return task_ids
 
 
