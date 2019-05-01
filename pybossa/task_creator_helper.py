@@ -29,7 +29,7 @@ def set_gold_answer(task, project_id, gold_answers, file_id=None):
         return
     if data_access_levels:
         file_name = 'task_private_gold_answer.json'
-        gold_answers = dict(gold_ans_url=upload_files_priv(task, project_id, gold_answers, file_name, file_id))
+        gold_answers = dict(gold_ans__upload_url=upload_files_priv(task, project_id, gold_answers, file_name, file_id))
 
         task.gold_answers = gold_answers
         task.calibration = 1
