@@ -9116,6 +9116,30 @@ class TestWebQuizModeUpdate(web.Helper):
         return u'/project/{}/quiz-mode'.format(project.short_name)
 
     @with_context
+    def test_reset(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        quiz = {'enabled':True,'questions':10,'passing':5}
+        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
+        assert admin.get_quiz_not_started(project)
+        quiz['reset'] = admin.id
+        self.update_project(project, quiz)
+        updated_admin = user_repo.get(admin.id)
+        assert updated_admin.get_quiz_in_progress(project)
+    
+    @with_context
+    def test_not_enough_gold(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        quiz = {'enabled':True,'questions':10,'passing':5}
+        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
+        quiz['questions'] = 100
+        response = self.update_project(project, quiz)
+        assert "There must be at least as many gold tasks as the number of questions in the quiz." in response.data
+
+    @with_context
     def test_enable(self):
         '''Test project quiz mode form enables quiz mode'''
         self.update(self.enabled_update, self.enabled_result)

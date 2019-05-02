@@ -177,3 +177,11 @@ class TestModelProject(Test):
         project.set_project_users(assign_users)
         users = project.get_project_users()
         assert not project.info.get('project_users'), "User should not be assigned to project without access levels"
+
+    @with_context
+    def test_rename_pass_to_passing(self):
+        quiz = {'pass':10,'questions':20,'enabled':True}
+        project = ProjectFactory.build(info={'quiz':quiz.copy()})
+        returned_quiz = project.get_quiz()
+        assert 'pass' not in returned_quiz
+        assert returned_quiz['passing'] == quiz['pass']
