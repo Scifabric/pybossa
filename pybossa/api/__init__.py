@@ -59,7 +59,7 @@ from token import TokenAPI
 from result import ResultAPI
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
-from pybossa.core import project_repo, task_repo
+from pybossa.core import project_repo, task_repo, user_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
