@@ -14,7 +14,7 @@ class QuizTest(web.Helper):
         project_quiz = {
             'enabled':True,
             'questions':10,
-            'pass':7
+            'passing':7
         }
         project = ProjectFactory.create(
             owner=admin, 
@@ -146,7 +146,7 @@ class TestQuizUpdate(QuizTest):
             {
                 'status':'in_progress',
                 'result':{
-                    'right': quiz['config']['pass'] - 1,
+                    'right': quiz['config']['passing'] - 1,
                     'wrong': 0
                 },
                 'config': quiz['config']
@@ -187,8 +187,8 @@ class TestQuizUpdate(QuizTest):
             {
                 'status':'in_progress',
                 'result':{
-                    'right': quiz['config']['pass'] - 1,
-                    'wrong': quiz['config']['questions'] - quiz['config']['pass']
+                    'right': quiz['config']['passing'] - 1,
+                    'wrong': quiz['config']['questions'] - quiz['config']['passing']
                 },
                 'config': quiz['config']
             }
