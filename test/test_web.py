@@ -8386,7 +8386,7 @@ class TestWeb(web.Helper):
         new_url = url + '?api_key={}'.format(admin.api_key)
         self.app_post_json(new_url, data=dict(timeout='99'))
 
-        new_task_response = self.app.get('/api/project/{}/newtask'.format(project.id),
+        self.app.get('/api/project/{}/newtask'.format(project.id),
                      follow_redirects=True)
         res = self.app_get_json('/api/task/{}/lock'.format(task.id))
         data = json.loads(res.data)
