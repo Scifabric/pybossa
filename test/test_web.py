@@ -7736,24 +7736,6 @@ class TestWeb(web.Helper):
         self.signout()
 
     @with_context
-    def test_user_with_no_more_tasks_find_volunteers(self):
-        """Test WEB when a user has contributed to all available tasks, he is
-        asked to find new volunteers for a project, if the project is not
-        completed yet (overall progress < 100%)"""
-
-        self.register()
-        self.signin()
-        user = User.query.first()
-        project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=project)
-        taskrun = TaskRunFactory.create(task=task, user=user)
-        res = self.app.get('/project/%s/newtask' % project.short_name)
-
-        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
-        assert message in res.data
-        self.signout()
-
-    @with_context
     def test_user_with_no_more_tasks_find_volunteers_project_completed(self):
         """Test WEB when a user has contributed to all available tasks, he is
         not asked to find new volunteers for a project, if the project is
@@ -8404,7 +8386,7 @@ class TestWeb(web.Helper):
         new_url = url + '?api_key={}'.format(admin.api_key)
         self.app_post_json(new_url, data=dict(timeout='99'))
 
-        self.app.get('/project/{}/newtask'.format(project.short_name),
+        new_task_response = self.app.get('/api/project/{}/newtask'.format(project.id),
                      follow_redirects=True)
         res = self.app_get_json('/api/task/{}/lock'.format(task.id))
         data = json.loads(res.data)
@@ -8423,7 +8405,7 @@ class TestWeb(web.Helper):
         new_url = url + '?api_key={}'.format(admin.api_key)
         self.app_post_json(new_url, data=dict(timeout='99'))
 
-        self.app.get('/project/{}/newtask'.format(project2.short_name),
+        self.app.get('/api/project/{}/newtask'.format(project2.id),
                      follow_redirects=True)
         res = self.app_get_json('/api/task/{}/lock'.format(task.id))
         data = json.loads(res.data)
