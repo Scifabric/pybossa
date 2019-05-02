@@ -51,7 +51,8 @@ TIMEOUT = ContributionsGuard.STAMP_TTL
 
 def new_task(project_id, sched, user_id=None, user_ip=None,
              external_uid=None, offset=0, limit=1, orderby='priority_0',
-             desc=True, rand_within_priority=False):
+             desc=True, rand_within_priority=False,
+             gold_only=False):
     """Get a new task by calling the appropriate scheduler function."""
     sched_map = {
         'default': get_locked_task,
@@ -65,24 +66,6 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     scheduler = sched_map.get(sched, sched_map['default'])
 
     project = project_repo.get(project_id)
-    user = user_repo.get(user_id)
-    if (
-        project.published
-        and user_id != project.owner_id
-        and user_id not in project.owners_ids
-        and user.get_quiz_not_started(project)
-        and user.get_quiz_enabled(project)
-        and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
-    ):
-        user.set_quiz_status(project, 'in_progress')
-
-    # We always update the user even if we didn't change the quiz status.
-    # The reason for that is the user.<?quiz?> methods take a snapshot of the project's quiz
-    # config the first time it is accessed for a user and save that snapshot
-    # with the user. So we want to commit that snapshot if this is the first access.
-    user_repo.update(user)
-    gold_only = user.get_quiz_in_progress(project)
-
     # This is here for testing. It removes the random variable to make testing deterministic.
     disable_gold = not project.info.get('enable_gold', True)
     present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)

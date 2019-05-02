@@ -1049,15 +1049,6 @@ def task_presenter(short_name, task_id):
 @login_required
 def presenter(short_name):
 
-    def invite_new_volunteers(project, ps):
-        user_id = None if current_user.is_anonymous else current_user.id
-        user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
-                   if current_user.is_anonymous else None)
-        task = sched.new_task(project.id,
-                              project.info.get('sched'),
-                              user_id, user_ip, 0)
-        return task == [] and ps.overall_progress < 100.0
-
     def respond(tmpl):
         if (current_user.is_anonymous):
             msg_1 = gettext(msg)
@@ -1075,7 +1066,7 @@ def presenter(short_name):
 
     title = project_title(project, "Contribute")
     template_args = {"project": project, "title": title, "owner": owner,
-                     "invite_new_volunteers": invite_new_volunteers(project, ps)}
+                     "invite_new_volunteers": False}
 
     if not project.allow_anonymous_contributors and current_user.is_anonymous:
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \

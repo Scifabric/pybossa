@@ -238,6 +238,23 @@ def _retrieve_new_task(project_id):
     external_uid = request.args.get('external_uid')
     sched_rand_within_priority = project.info.get('sched_rand_within_priority', False)
 
+    user = user_repo.get(user_id)
+    if (
+        project.published
+        and user_id != project.owner_id
+        and user_id not in project.owners_ids
+        and user.get_quiz_not_started(project)
+        and user.get_quiz_enabled(project)
+        and not task_repo.get_user_has_task_run_for_project(project_id, user_id)
+    ):
+        user.set_quiz_status(project, 'in_progress')
+
+    # We always update the user even if we didn't change the quiz status.
+    # The reason for that is the user.<?quiz?> methods take a snapshot of the project's quiz
+    # config the first time it is accessed for a user and save that snapshot
+    # with the user. So we want to commit that snapshot if this is the first access.
+    user_repo.update(user)
+
     task = sched.new_task(project.id,
                           project.info.get('sched'),
                           user_id,
@@ -247,7 +264,8 @@ def _retrieve_new_task(project_id):
                           limit,
                           orderby=orderby,
                           desc=desc,
-                          rand_within_priority=sched_rand_within_priority)
+                          rand_within_priority=sched_rand_within_priority,
+                          gold_only=user.get_quiz_in_progress(project))
 
     handler = partial(pwd_manager.update_response, project=project,
                       user=user_id_or_ip)
