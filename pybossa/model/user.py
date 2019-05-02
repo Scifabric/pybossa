@@ -124,6 +124,10 @@ class User(db.Model, DomainObject, UserMixin):
                 'config': project.get_quiz()
             }
             user_quizzes[project_key] = user_project_quiz
+        user_project_quiz_config = user_project_quiz['config']
+        if 'passing' not in user_project_quiz_config:
+            user_project_quiz_config['passing'] = user_project_quiz_config['pass']
+            del user_project_quiz_config['pass']
         # You have to assign to the property in order for SQLAlchemy to detect the change.
         # Just doing setdefault() will cause the changes to get lost.
         self.info['quiz'] = user_quizzes
@@ -171,7 +175,7 @@ class User(db.Model, DomainObject, UserMixin):
     def update_quiz_status(self, project):
         quiz = self.get_quiz_for_project(project)
         right_count = quiz['result']['right']
-        correct_to_pass = quiz['config']['pass']
+        correct_to_pass = quiz['config']['passing']
         questions = quiz['config']['questions']
         status = None
         if right_count >= correct_to_pass:

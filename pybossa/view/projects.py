@@ -2928,34 +2928,11 @@ def assign_users(short_name):
     flash(msg, 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
-class DbFormConverter(object):
-    form_to_db_field_map = {
-        'enabled': 'enabled',
-        'questions_per_quiz': 'questions',
-        'correct_answers_to_pass': 'pass'
-    }
-
-    @staticmethod
-    def db_to_form(config):
-        return {
-            form_name: config.get(db_name)
-            for form_name, db_name
-            in six.iteritems(DbFormConverter.form_to_db_field_map)
-        }
-
-    @staticmethod
-    def form_to_db(config):
-        return {
-            db_name: config.get(form_name)
-            for form_name, db_name
-            in six.iteritems(DbFormConverter.form_to_db_field_map)
-        }
-
 def process_quiz_mode_request(project):
-    db_current_quiz_config = project.get_quiz()
+    current_quiz_config = project.get_quiz()
 
     if request.method == 'GET':
-        return ProjectQuizForm(**DbFormConverter.db_to_form(db_current_quiz_config))
+        return ProjectQuizForm(**current_quiz_config)
 
     form = ProjectQuizForm(request.form)
 
@@ -2963,9 +2940,9 @@ def process_quiz_mode_request(project):
         flash("Please fix the errors", 'message')
         return form
 
-    db_new_quiz_config = DbFormConverter.form_to_db(form.data)
+    new_quiz_config = form.data
     gold_task_count = task_repo.get_gold_task_count_for_project(project.id)
-    question_count = db_new_quiz_config['questions']
+    question_count = new_quiz_config['questions']
     if gold_task_count < question_count:
         flash(
             "There must be at least as many gold tasks as the number of questions in the quiz. You have {} gold tasks and {} questions.".format(gold_task_count, question_count),
@@ -2973,15 +2950,15 @@ def process_quiz_mode_request(project):
         )
         return form
 
-    project.set_quiz(db_new_quiz_config)
+    project.set_quiz(new_quiz_config)
     project_repo.update(project)
     auditlogger.log_event(
         project,
         current_user,
         'update',
         'project.quiz',
-        json.dumps(db_current_quiz_config),
-        json.dumps(db_new_quiz_config)
+        json.dumps(current_quiz_config),
+        json.dumps(new_quiz_config)
     )
     for user_id in request.form.getlist('reset') or []:
         user = user_repo.get(user_id)

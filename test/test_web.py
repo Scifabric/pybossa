@@ -9091,8 +9091,8 @@ class TestWebUserMetadataUpdate(web.Helper):
 class TestWebQuizModeUpdate(web.Helper):
 
     disabled_update = {
-        'questions_per_quiz': 20,
-        'correct_answers_to_pass': 15,
+        'questions': 20,
+        'passing': 15,
         'garbage': 'junk'
     }
 
@@ -9101,8 +9101,8 @@ class TestWebQuizModeUpdate(web.Helper):
 
     disabled_result = {
         'enabled': False,
-        'questions': disabled_update['questions_per_quiz'],
-        'pass': disabled_update['correct_answers_to_pass'],
+        'questions': disabled_update['questions'],
+        'passing': disabled_update['passing'],
         'short_circuit': True
     }
 
@@ -9110,7 +9110,7 @@ class TestWebQuizModeUpdate(web.Helper):
     enabled_result['enabled'] = True
 
     invalid_update = dict.copy(enabled_update)
-    invalid_update['correct_answers_to_pass'] = 30
+    invalid_update['passing'] = 30
 
     def update(self, update, result):
         admin = UserFactory.create()
