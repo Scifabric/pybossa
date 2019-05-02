@@ -9116,6 +9116,7 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         project = ProjectFactory.create(owner=admin)
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         res = self.update_project(project, update)
         updated_project = project_repo.get(project.id)
         quiz = updated_project.info.get('quiz')

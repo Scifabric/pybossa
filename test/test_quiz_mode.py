@@ -44,7 +44,7 @@ class TestScheduler(QuizTest):
         project, user = self.create_project_and_user()
         golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
         non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
-        user.set_quiz_for_project(project.id, {'status':'failed'})
+        user.set_quiz_status(project, 'failed')
 
         url = '/api/project/{}/newtask'.format(project.id)
         response = self.app.get(url)
@@ -57,7 +57,7 @@ class TestScheduler(QuizTest):
         project, user = self.create_project_and_user()
         golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
         non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
-        user.set_quiz_for_project(project.id, {'status':'passed'})
+        user.set_quiz_status(project, 'passed')
 
         url = '/api/project/{}/newtask'.format(project.id)
         response = self.app.get(url)
@@ -214,7 +214,7 @@ class TestQuizUpdate(QuizTest):
     def test_cannot_update_passed_quiz(self):
         '''Test exception raised when updating results for quiz that has already passed'''
         project, user = self.create_project_and_user()
-        user.set_quiz_for_project(project.id, {'status':'passed'})
+        user.set_quiz_status(project, 'passed')
         assert_raises(Exception, lambda: user.add_quiz_right_answer(project) )
         assert_raises(Exception, lambda: user.add_quiz_wrong_answer(project) )
 
@@ -222,7 +222,7 @@ class TestQuizUpdate(QuizTest):
     def test_cannot_update_failed_quiz(self):
         '''Test exception raised when updating results for quiz that has already failed'''
         project, user = self.create_project_and_user()
-        user.set_quiz_for_project(project.id, {'status':'failed'})
+        user.set_quiz_status(project, 'failed')
         assert_raises(Exception, lambda: user.add_quiz_right_answer(project) )
         assert_raises(Exception, lambda: user.add_quiz_wrong_answer(project) )
 
