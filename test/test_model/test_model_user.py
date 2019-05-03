@@ -20,6 +20,8 @@ from default import Test, db, with_context
 from nose.tools import assert_raises
 from sqlalchemy.exc import IntegrityError
 from pybossa.model.user import User
+from pybossa.model.project import Project
+from copy import deepcopy
 
 
 class TestModelUser(Test):
@@ -136,3 +138,24 @@ class TestModelUser(Test):
         data = user.to_public_json()
         err_msg = "There are some keys that should not be public"
         assert data.get('info').keys().sort() == public_info_keys.sort(), err_msg
+
+    def test_rename_pass_to_passing(self):
+        project_id = 7
+        project_key = str(project_id)
+        quiz = {
+            project_key: {
+                'config': {
+                    'pass': 10
+                }
+            }
+        }
+        user = User(
+            info={
+                'quiz': deepcopy(quiz)
+            }
+        )
+        project = Project(id=project_id) 
+        returned_quiz = user.get_quiz_for_project(project)
+        returned_quiz_config = returned_quiz['config']
+        assert 'pass' not in returned_quiz_config
+        assert returned_quiz_config['passing'] == quiz[project_key]['config']['pass']

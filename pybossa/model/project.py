@@ -205,12 +205,15 @@ class Project(db.Model, DomainObject):
             'quiz',
             {
                 'enabled': False,
-                'pass': 0,
+                'passing': 0,
                 'questions': 0
             }
         )
 
         quiz['short_circuit'] = current_app.config.get('SHORT_CIRCUIT_QUIZ', True)
+        if 'passing' not in quiz:
+            quiz['passing'] = quiz['pass']
+            del quiz['pass']
         return quiz
 
     def set_quiz(self, quiz):

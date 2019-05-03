@@ -131,14 +131,14 @@ class ProjectSyncForm(Form):
 
 class ProjectQuizForm(Form):
     enabled = BooleanField(lazy_gettext('Enable Quiz Mode'))
-    questions_per_quiz = IntegerField(
+    questions = IntegerField(
         lazy_gettext('Number of questions per quiz'),
         [
             validators.Required(lazy_gettext('This field must be a positive integer.')),
             validators.NumberRange(min=1)
         ]
     )
-    correct_answers_to_pass = IntegerField(
+    passing = IntegerField(
         lazy_gettext('Number of correct answers to pass quiz'),
         [
             validators.Required(lazy_gettext('This field must be a positive integer.')),
@@ -146,9 +146,9 @@ class ProjectQuizForm(Form):
         ]
     )
 
-    def validate_correct_answers_to_pass(form, field):
+    def validate_passing(form, field):
         correct = field.data
-        total = form.questions_per_quiz.data
+        total = form.questions.data
         if correct > total:
             raise validators.ValidationError(
                 lazy_gettext(

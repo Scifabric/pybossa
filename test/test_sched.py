@@ -33,6 +33,7 @@ from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from factories import AnonymousTaskRunFactory, ExternalUidTaskRunFactory
 from factories import reset_all_pk_sequences
 import pybossa
+from pybossa.sched import release_user_locks_for_project, has_lock, TIMEOUT
 
 
 class TestSched(sched.Helper):
@@ -224,6 +225,28 @@ class TestSched(sched.Helper):
         assert data['id'], data
         assert data['id'] != task_id, data
 
+        self.signout()
+
+    @with_context
+    def test_user_01_release_tasks(self):
+        """ Test SCHED newtask returns a Task for John Doe User"""
+        user = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=user,info={'sched':'default'})
+        TaskFactory.create_batch(2, project=project, n_answers=2)
+        self.signin_user(user)
+        url = 'api/project/%s/newtask' % project.id
+        self.set_proj_passwd_cookie(project, user=user)
+        res = self.app.get(url)
+        data = json.loads(res.data)
+        task_id = data['id']
+        print data
+        assert task_id, data
+        assert has_lock(task_id, user.id, TIMEOUT)
+
+        released_task_ids = release_user_locks_for_project(user.id, project.id)
+        # TODO: Figure out how to test this
+        # assert released_task_ids == [task_id]
+        # assert not has_lock(task_id, user.id, TIMEOUT)
         self.signout()
 
     @with_context

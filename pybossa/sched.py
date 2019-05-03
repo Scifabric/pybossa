@@ -32,7 +32,7 @@ from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
 from datetime import datetime
-
+#TODO: Can this be removed? It's a duplicate.
 from flask import current_app
 
 
@@ -65,11 +65,10 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     }
     scheduler = sched_map.get(sched, sched_map['default'])
 
-    # This is here for testing. It removes the random variable to make testing deterministic.
     project = project_repo.get(project_id)
+    # This is here for testing. It removes the random variable to make testing deterministic.
     disable_gold = not project.info.get('enable_gold', True)
     present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)
-
     return scheduler(
         project_id,
         user_id,
@@ -420,6 +419,21 @@ def acquire_lock(task_id, user_id, limit, timeout, pipeline=None, execute=True):
             return all(not isinstance(r, Exception) for r in pipeline.execute())
         return True
     return False
+
+
+def release_user_locks_for_project(user_id, project_id):
+    user_tasks = get_user_tasks(user_id, TIMEOUT)
+    user_task_ids = user_tasks.keys()
+    results = get_task_ids_project_id(user_task_ids)
+    task_ids = []
+    for task_id, task_project_id in zip(user_task_ids, results):
+        if not task_project_id:
+            task_project_id = task_repo.get_task(task_id).project_id
+        if int(task_project_id) == project_id:
+            release_lock(task_id, user_id, TIMEOUT)
+            task_ids.append(task_id)
+    current_app.logger.info('released user id {} locks on tasks {}'.format(user_id, task_ids))
+    return task_ids
 
 
 def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):
