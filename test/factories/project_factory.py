@@ -51,6 +51,9 @@ class ProjectFactory(BaseFactory):
             'thumbnail_url': 'http://cdn.com/container/img.png',
             'onesignal': {'data': 'private'},
             'onesignal_app_id': 1,
-            'sched': 'breadth_first'
+            'sched': 'breadth_first',
+            'product': '',
+            'subproduct': '',
+            'kpi': 0
             }
     owners_ids = factory.LazyAttribute(lambda project: [project.owner.id])
