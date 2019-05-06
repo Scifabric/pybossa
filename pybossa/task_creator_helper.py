@@ -24,25 +24,22 @@ from werkzeug.exceptions import BadRequest, Conflict
 from flask import url_for
 import json
 
-def set_gold_answer(task, project_id, gold_answers, file_id=None):
+def set_gold_answer(task, project_id, gold_answers):
     if not gold_answers:
         return
     if data_access_levels:
         file_name = 'task_private_gold_answer.json'
-        gold_answers = dict(gold_ans__upload_url=upload_files_priv(task, project_id, gold_answers, file_name, file_id))
+        gold_answers = dict(gold_ans__upload_url=upload_files_priv(task, project_id, gold_answers, file_name))
 
-        task.gold_answers = gold_answers
-        task.calibration = 1
-        task.exported = True
-        task.state = 'ongoing'
+    task.gold_answers = gold_answers
+    task.calibration = 1
+    task.exported = True
+    task.state = 'ongoing'
 
-def upload_files_priv(task, project_id, data, file_name, file_id=None):
+def upload_files_priv(task, project_id, data, file_name):
     encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
     bucket = current_app.config.get("S3_REQUEST_BUCKET")
-    if file_id:
-        task_hash = file_id
-    else:
-        task_hash = hashlib.md5(json.dumps(task)).hexdigest()
+    task_hash = hashlib.md5(str(task)).hexdigest()
     path = "{}/{}".format(project_id, task_hash)
     s3_conn_type = current_app.config.get('S3_CONN_TYPE')
     values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
@@ -52,4 +49,3 @@ def upload_files_priv(task, project_id, data, file_name, file_id=None):
     file_name=file_name, encryption=encryption,
     conn_name='S3_TASK_REQUEST')
     return file_url
-

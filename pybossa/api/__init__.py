@@ -453,7 +453,7 @@ def task_gold(project_id=None):
     preprocess_task_run(project_id, task_id, task_data)
 
     info = task_data['info']
-    set_gold_answer(task, project_id, info, task_id)
+    set_gold_answer(task, project_id, info)
 
     task_repo.update(task)
 

@@ -170,7 +170,7 @@ class Importer(object):
             [setattr(task, k, v) for k, v in task_data.iteritems()]
 
             gold_answers = task_data.pop('gold_answers', None)
-            set_gold_answer(task_data, project.id, gold_answers)
+            set_gold_answer(task, project.id, gold_answers)
 
             found = task_repo.find_duplicate(project_id=project.id,
                                              info=task.info)
