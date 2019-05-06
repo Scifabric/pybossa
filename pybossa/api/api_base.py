@@ -326,13 +326,21 @@ class APIBase(MethodView):
             self._after_save(original_data, inst)
             self._log_changes(None, inst)
             self.refresh_cache(cls_name, inst.id)
-            json_response = json.dumps(inst.dictize())
+            response_dict = inst.dictize()
+            self._customize_response_dict(response_dict)
+            json_response = json.dumps(response_dict)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='POST')
+
+    def _customize_response_dict(self, response_dict):
+        """Method to be overridden by inheriting classes that want
+        to modify the returned response to something other than
+        the raw data from the DB."""
+        pass
 
     def _parse_request_data(self):
         if 'request_json' in request.form:

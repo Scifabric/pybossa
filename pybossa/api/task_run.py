@@ -137,7 +137,6 @@ class TaskRunAPI(APIBase):
         mark_if_complete(instance.task_id, instance.project_id)
         update_gold_stats(instance.user_id, instance.task_id, original_data)
         update_quiz(instance.task_id, instance.project_id, original_data['info'])
-        add_gold_answer(instance)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -169,6 +168,10 @@ class TaskRunAPI(APIBase):
 
     def _copy_original(self, item):
         return deepcopy(item)
+
+    def _customize_response_dict(self, response_dict):
+        task = task_repo.get_task(response_dict['task_id'])
+        response_dict['gold_answers'] = task.gold_answers
 
 
 def _upload_files_from_json(task_run_info, upload_path, with_encryption):
@@ -224,10 +227,6 @@ def update_quiz(task_id, project_id, answer):
         user.add_quiz_wrong_answer(project)
 
     user_repo.update(user)
-
-def add_gold_answer(instance):
-    task = task_repo.get_task(instance.task_id)
-    instance.info['gold_answers'] = task.gold_answers
 
 field_to_stat_type = {
     'categorical': StatType.confusion_matrix,
