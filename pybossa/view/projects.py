@@ -382,7 +382,12 @@ def new():
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
-    info = {'sync': {'enabled': False}}
+    info = {
+        'sync': {'enabled': False},
+        'product': form.product.data,
+        'subproduct': form.subproduct.data,
+        'kpi': form.kpi.data
+    }
     category_by_default = cached_cat.get_all()[0]
 
     project = Project(name=form.name.data,
@@ -618,6 +623,9 @@ def update(short_name):
         sync = new_project.info.get('sync', dict(enabled=False))
         sync['enabled'] = sync_enabled and form.sync_enabled.data
         new_project.info['sync'] = sync
+        new_project.info['product'] = form.product.data
+        new_project.info['subproduct'] = form.subproduct.data
+        new_project.info['kpi'] = form.kpi.data
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -637,6 +645,9 @@ def update(short_name):
         sync = project.info.get('sync')
         if sync:
             project.sync_enabled = sync.get('enabled')
+        project.product = project.info.get('product')
+        project.subproduct = project.info.get('subproduct')
+        project.kpi = project.info.get('kpi')
 
         form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
@@ -649,6 +660,7 @@ def update(short_name):
             project.category_id = categories[0].id
         form.populate_obj(project)
         ensure_data_access_assignment_to_form(project.info, form)
+
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()

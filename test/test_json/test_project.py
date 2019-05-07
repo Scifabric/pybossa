@@ -81,3 +81,49 @@ class TestJsonProject(web.Helper):
             db_project = project_repo.get(1)
             err_msg = "It should be the same project"
             assert db_project.name == project['name'], err_msg
+
+    @with_context
+    def test_project_prod_subp_kpi(self):
+        """Test PROJECT new/update works for product, subproduct, kpi."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS': {'north', 'south'},
+            'SUBPRODUCTS': {'winterfell', 'westeros'}
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # new project
+            url = '/project/new'
+            project = dict(name='greatwar', short_name='gr8w', long_description='great war',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=1)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['product'] == project['product'], 'product has not been set as expected'
+            assert proj_repo.info['subproduct'] == project['subproduct'], 'subproduct has not been set as expected'
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi has not been set as expected'
+
+            # update project
+            url = '/project/%s/update' % project['short_name']
+            project = dict(name='greatwar', description=proj_repo.description, id=proj_repo.id,
+                           category_id=proj_repo.category_id, product='south', subproduct='westeros', kpi=2)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['product'] == project['product'], 'product has not been set as expected'
+            assert proj_repo.info['subproduct'] == project['subproduct'], 'subproduct has not been set as expected'
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi has not been set as expected'
+
+            # incorrect vals results error
+            url = '/project/new'
+            project = dict(name='greatwar2', short_name='gr8w2', long_description='great war',
+                           password='NightW1', product='wrongp', subproduct='wrongsubp', kpi='aa')
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            err_msg = {'kpi': ['Not a valid integer value'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
+            assert data.get('errors') and data['form']['errors'] == err_msg, data

@@ -49,6 +49,7 @@ import pybossa.data_access as data_access
 import app_settings
 import six
 from iiif_prezi.loader import ManifestReader
+from wtforms.widgets import html5
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -92,6 +93,20 @@ class ProjectForm(Form):
                         pb_validator.CheckPasswordStrength(
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)])
+
+    product = SelectField(lazy_gettext('Product'), choices=[("", "")], default="")
+    subproduct = SelectField(lazy_gettext('Subproduct'), choices=[("", "")], default="")
+    kpi = IntegerField(lazy_gettext('KPI'), widget=html5.NumberInput(), default=0)
+
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        self.set_project_choices()
+
+    def set_project_choices(self):
+        products = current_app.config.get('PRODUCTS', [])
+        subproducts = current_app.config.get('SUBPRODUCTS',[])
+        self.product.choices = [("", "")] + [(p, p) for p in products]
+        self.subproduct.choices = [("", "")] + [(sp, sp) for sp in subproducts]
 
 
 class ProjectUpdateForm(ProjectForm):
