@@ -122,12 +122,9 @@ def signin():
                 flash(msg_1, 'success')
                 return _sign_in_user(user)
             else:
-                if not user.enabled:
-                    return disable_redirect()
                 _email_two_factor_auth(user)
                 url_token = otp.generate_url_token(user.email_addr)
                 next_url = is_own_url_or_else(request.args.get('next'), url_for('home.home'))
-
                 return redirect_content_type(url_for('account.otpvalidation',
                                              token=url_token,
                                              next=next_url))
@@ -191,15 +188,6 @@ def signin():
         # User already signed in, so redirect to home page
         return redirect_content_type(url_for("home.home"))
 
-def disable_redirect(brand=None):
-    if brand:
-        flash(gettext('Your account is disabled. '
-                    'Please contact your {} administrator.'.format(brand)),
-            'error')
-    else:
-        flash(gettext('Your account is disabled. '
-                    'Please contact your administrator.'), 'error')
-    return redirect(url_for('home.home'))
 
 def _sign_in_user(user, next_url=None):
     brand = current_app.config['BRAND']
@@ -209,8 +197,10 @@ def _sign_in_user(user, next_url=None):
               'error')
         return redirect(url_for('home.home'))
     if not user.enabled:
-        return disable_redirect(brand)
-
+        flash(gettext('Your account is disabled. '
+                      'Please contact your {} administrator.'.format(brand)),
+              'error')
+        return redirect(url_for('home.home'))
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
     user_repo.update(user)

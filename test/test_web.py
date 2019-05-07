@@ -1428,27 +1428,6 @@ class TestWeb(web.Helper):
         err_msg = "success message missing"
         assert data['status'] == 'success', err_msg
 
-    @with_context
-    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
-    def test_06_test_disabled_user_signin_1(self):
-        res = self.register()
-        res = self.signout()
-        user = user_repo.get_by(name='johndoe')
-        user.enabled = False
-        user_repo.update(user)
-        res = self.signin()
-        assert "Your account is disabled" in res.data, res.data
-
-    @with_context
-    @with_context_settings(ENABLE_TWO_FACTOR_AUTH=False)
-    def test_06_test_disabled_user_signin_2(self):
-        res = self.register()
-        res = self.signout()
-        user = user_repo.get_by(name='johndoe')
-        user.enabled = False
-        user_repo.update(user)
-        res = self.signin()
-        assert "Your account is disabled" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
