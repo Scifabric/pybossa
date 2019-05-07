@@ -3004,14 +3004,12 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            answerFieldsConfig = body.get('answerFieldsConfig') or {}
-            consensusConfig = body.get('consensusConfig') or {}
-            if answerFieldsConfig:
+            if 'answerFieldsConfig' in body.keys():
                 key = 'answer_fields'
-                data = answerFieldsConfig
-            else:
+                data = body.get('answerFieldsConfig') or {}
+            else :
                 key = 'tie_break_config'
-                data = consensusConfig
+                data = body.get('consensusConfig') or {}
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
