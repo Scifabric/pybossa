@@ -140,6 +140,7 @@ def url_for_app_type(endpoint, _hash_last_flash=False, **values):
     spa_server_name = current_app.config.get('SPA_SERVER_NAME')
     if spa_server_name:
       values.pop('_external', None)
+      values.pop('_scheme', None)
       if _hash_last_flash:
           values['flash'] = hash_last_flash_message()
           return spa_server_name + url_for(endpoint, **values)
