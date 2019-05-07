@@ -169,6 +169,10 @@ class TaskRunAPI(APIBase):
     def _copy_original(self, item):
         return deepcopy(item)
 
+    def _customize_response_dict(self, response_dict):
+        task = task_repo.get_task(response_dict['task_id'])
+        response_dict['gold_answers'] = task.gold_answers
+
 
 def _upload_files_from_json(task_run_info, upload_path, with_encryption):
     if not isinstance(task_run_info, dict):
