@@ -3004,7 +3004,7 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            if 'answerFieldsConfig' in body.keys():
+            if 'answerFieldsConfig' in body:
                 key = 'answer_fields'
                 data = body.get('answerFieldsConfig') or {}
             else :
