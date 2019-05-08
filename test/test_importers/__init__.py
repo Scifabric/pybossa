@@ -170,12 +170,14 @@ class TestImporterPublicMethods(Test):
     @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
     @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
     @patch('pybossa.importers.csv.data_access_levels')
+    @patch('pybossa.task_creator_helper.data_access_levels')
     def test_create_tasks_creates_private_regular_and_gold_fields(self,
-        mock_data_access, mock_del, upload_from_string, importer_factory):
+        mock_data_access, mock_data_access_task_creator, mock_del, upload_from_string, importer_factory):
         mock_importer = Mock()
         mock_data_access = True
+        mock_data_access_task_creator = True
         mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
-            'private_gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True}]
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True}]
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
@@ -192,6 +194,25 @@ class TestImporterPublicMethods(Test):
             tasks = task_repo.filter_tasks_by(project_id=project.id)
             assert len(tasks) == 1, len(tasks)
             task = tasks[0]
-            assert task.info['private_json__upload_url'] == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_data.json'
-            assert task.gold_answers == u'http://localhost/fileproxy/encrypted/dev/mybucket/1/f53d27fe2a2e52930a9846a1c66312a2/task_private_gold_answer.json'
+            private_json_url = task.info['private_json__upload_url']
+
+            localhost, fileproxy, encrypted, env, bucket, project_id, hash_key, filename = private_json_url.split('/', 2)[2].split('/')
+            assert localhost == 'localhost', localhost
+            assert fileproxy == 'fileproxy', fileproxy
+            assert encrypted == 'encrypted', encrypted
+            assert env == 'dev', env
+            assert bucket == 'mybucket', bucket
+            assert project_id == '1', project_id
+            assert filename == 'task_private_data.json', filename
+
+            gold_ans__upload_url = task.gold_answers['gold_ans__upload_url']
+            localhost, fileproxy, encrypted, env, bucket, project_id, hash_key, filename = gold_ans__upload_url.split('/', 2)[2].split('/')
+            assert localhost == 'localhost', localhost
+            assert fileproxy == 'fileproxy', fileproxy
+            assert encrypted == 'encrypted', encrypted
+            assert env == 'dev', env
+            assert bucket == 'mybucket', bucket
+            assert project_id == '1', project_id
+            assert filename == 'task_private_gold_answer.json', filename
             assert task.calibration and task.exported
+            assert task.state == 'ongoing', task.state

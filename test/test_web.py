@@ -7644,8 +7644,8 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.api.task.url_for', return_value='testURL')
-    @patch('pybossa.api.task.upload_json_data')
+    @patch('pybossa.task_creator_helper.url_for', return_value='testURL')
+    @patch('pybossa.task_creator_helper.upload_json_data')
     def test_task_gold_priv(self, mock, mock2):
         """Test WEB when making a task gold for priv"""
         from pybossa.view.projects import data_access_levels
@@ -7680,7 +7680,7 @@ class TestWeb(web.Helper):
             assert t.state == 'ongoing', t.state
             assert t.calibration == 1, t.calibration
             assert t.exported == True, t.exported
-            assert t.gold_answers == 'testURL', t.gold_answers
+            assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
 
 
 
