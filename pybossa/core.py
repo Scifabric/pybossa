@@ -570,7 +570,6 @@ def setup_hooks(app):
     @app.before_request
     def _api_authentication():
         """ Attempt API authentication on a per-request basis."""
-
         secure_app_access = app.config.get('SECURE_APP_ACCESS', False)
         if not secure_app_access:
             grant_access_with_api_key(secure_app_access)

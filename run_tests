@@ -1,7 +1,7 @@
 #!/bin/bash
-
+set -x
 this_dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 PYBOSSA_SETTINGS="${this_dir}/settings_test.py" \
     PYBOSSA_REDIS_CACHE_DISABLED=1 \
-    nosetests ${@:-test/}
+    nosetests -s ${@:-test/}
