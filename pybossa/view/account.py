@@ -191,11 +191,14 @@ def signin():
         # User already signed in, so redirect to home page
         return redirect_content_type(url_for("home.home"))
 
-def disable_redirect():
-    brand = current_app.config['BRAND']
-    flash(gettext('Your account is disabled. '
-                'Please contact your {} administrator.'.format(brand)),
-        'error')
+def disable_redirect(brand=None):
+    if brand:
+        flash(gettext('Your account is disabled. '
+                    'Please contact your {} administrator.'.format(brand)),
+            'error')
+    else:
+        flash(gettext('Your account is disabled. '
+                    'Please contact your administrator.'), 'error')
     return redirect(url_for('home.home'))
 
 def _sign_in_user(user, next_url=None):
@@ -206,7 +209,7 @@ def _sign_in_user(user, next_url=None):
               'error')
         return redirect(url_for('home.home'))
     if not user.enabled:
-        return disable_redirect()
+        return disable_redirect(brand)
 
     login_user(user, remember=False)
     user.last_login = model.make_timestamp()
