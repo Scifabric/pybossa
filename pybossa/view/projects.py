@@ -2992,7 +2992,6 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
-
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3004,10 +3003,17 @@ def answerfieldsconfig(short_name):
 
     if request.method == 'POST':
         try:
-            project.info['answer_fields'] = json.loads(request.data)
+            body = json.loads(request.data) or {}
+            if 'answerFieldsConfig' in body:
+                key = 'answer_fields'
+                data = body.get('answerFieldsConfig') or {}
+            else :
+                key = 'tie_break_config'
+                data = body.get('consensusConfig') or {}
+            project.info[key] = data
             project_repo.save(project)
-            auditlogger.log_event(project, current_user, 'update', 'project.answerfields',
-              'N/A', project.info['answer_fields'])
+            auditlogger.log_event(project, current_user, 'update', 'project.' + key,
+              'N/A', project.info[key])
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
@@ -3015,10 +3021,12 @@ def answerfieldsconfig(short_name):
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
     answer_fields = project.info.get('answer_fields', {})
+    consensus_config = project.info.get('tie_break_config', {})
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
         'answer_fields': json.dumps(answer_fields),
+        'consensus_config': json.dumps(consensus_config),
         'pro_features': pro,
         'csrf': generate_csrf()
     }

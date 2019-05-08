@@ -17,23 +17,43 @@ class TestAnswerFieldConfig(web.Helper):
         project = ProjectFactory.create(published=True)
         url = '/project/%s/answerfieldsconfig?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app.get(url)
-        assert 'Answer Fields Config' in res.data, res.data
+        assert 'Answer Field Config' in res.data, res.data
+        assert 'Consensus Config' in res.data, res.data
 
     @with_context
-    def test_post_config(self):
+    def test_post_answer_field_config(self):
         project = ProjectFactory.create(published=True)
         url = '/project/%s/answerfieldsconfig?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = data['csrf']
-        fields = {
+        fields = {'answerFieldsConfig': {
             'hello': {
                 'type': 'categorical',
                 'config': {
                     'labels': ['A', 'B', 'C']
-                }
+                },
+                'retry_for_consensus': True
             }
-        }
+        }}
+        res = self.app.post(url, content_type='application/json',
+                            data=json.dumps(fields),
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert data['flash'] == 'Configuration updated successfully'
+
+    @with_context
+    def test_post_consensus_config(self):
+        project = ProjectFactory.create(published=True)
+        url = '/project/%s/answerfieldsconfig?api_key=%s' % (project.short_name, project.owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        csrf = data['csrf']
+        fields = {'consensusConfig': {
+            'threshold': 70,
+            'maxRetries': 10,
+            'redundanceDelta': 2
+        }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
                             headers={'X-CSRFToken': csrf})
