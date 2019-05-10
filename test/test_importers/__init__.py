@@ -186,7 +186,14 @@ class TestImporterPublicMethods(Test):
         project = ProjectFactory.create()
         form_data = dict(type='localCSV', csv_filename='fakefile.csv')
 
-        with patch.dict(self.flask_app.config, { 'S3_REQUEST_BUCKET': 'mybucket', 'S3_CONN_TYPE': 'dev' }):
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             importer_factory.assert_called_with(**form_data)
             upload_from_string.assert_called()
