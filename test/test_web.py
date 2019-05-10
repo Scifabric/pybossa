@@ -7687,7 +7687,7 @@ class TestWeb(web.Helper):
 
         payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
 
-        with patch.dict(data_access_levels, self.patch_data_access_levels):
+        with patch.dict(self.flask_app.config, {'ENABLE_ENCRYPTION': True}):
             res = self.app_post_json(url,
                                 data=payload,
                                 follow_redirects=False,
