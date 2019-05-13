@@ -56,7 +56,7 @@ from datetime import datetime, timedelta
 import six
 from pybossa.view.account import get_user_data_as_form
 from pybossa.cloud_store_api.s3 import upload_json_data
-
+from pybossa.task_creator_helper import get_gold_answers
 
 
 class TestWeb(web.Helper):
@@ -7703,7 +7703,28 @@ class TestWeb(web.Helper):
             assert t.exported == True, t.exported
             assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
 
+    @with_context
+    def test_get_private_gold_answers(self):
+        """Test can retrieve and decrypt private gold answers for task"""
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = Task(project_id=project.id)
+        task_repo.save(task)
 
+        url = "/api/project/1/taskgold"
+
+        gold_answers = {'ans1': 'test'}
+        payload = {'info': gold_answers, 'task_id': 1, 'project_id': 1}
+
+        with patch.dict(self.flask_app.config, {'ENABLE_ENCRYPTION': True}):
+            res = self.app_post_json(url,
+                                data=payload,
+                                follow_redirects=False,
+                                )
+
+            t = task_repo.get_task(1)
+            assert get_gold_answers(t) == gold_answers
 
     @with_context
     def test_78_cookies_warning(self):
