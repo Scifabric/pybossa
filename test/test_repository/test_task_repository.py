@@ -567,6 +567,25 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
 
     @with_context
+    def test_save_multiple_task_with_one_commit(self):
+        """Test save persists Task instances with only one commit"""
+
+        task = TaskFactory.build()
+        assert self.task_repo.get_task(task.id) is None
+
+        task2 = TaskFactory.build()
+        assert self.task_repo.get_task(task2.id) is None
+
+        self.task_repo.add(task)
+        self.task_repo.add(task2)
+
+        self.task_repo.commit_tasks()
+
+        assert self.task_repo.get_task(task.id) == task, "Task not saved"
+        assert self.task_repo.get_task(task2.id) == task2, "Task2 not saved"
+
+
+    @with_context
     def test_save_saves_tasks(self):
         """Test save persists Task instances"""
 
@@ -833,7 +852,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
         assert tasks[2].n_answers == 1, tasks[2].n_answers
         assert tasks[2].state == 'completed', tasks[2].state
-           
+
 
     @with_context
     def test_update_tasks_redundancy_updates_state_when_decrementing(self):

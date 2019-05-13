@@ -105,7 +105,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
         form_data = dict(type='flickr', album_id='1234')
-        with patch.object(task_repo, 'save', side_effect=Exception('a')):
+        with patch.object(task_repo, 'add', side_effect=Exception('a')):
             result = self.importer.create_tasks(task_repo, project, **form_data)
         assert '1 task import failed due to a' in result.message, result.message
 

@@ -177,12 +177,13 @@ class Importer(object):
             if found is None:
                 if validator.validate(task):
                     try:
-                        task_repo.save(task)
+                        task_repo.add(task)
                         n += 1
                     except Exception as e:
                         current_app.logger.exception(msg)
                         validator.add_error(str(e))
-
+        task_repo.commit_tasks()
+        task_repo.clean_project(project.id)
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')
             delete_import_csv_file(csv_filename)
