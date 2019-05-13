@@ -163,17 +163,20 @@ def get_s3_bucket_key(s3_bucket, s3_url, conn_name=DEFAULT_CONN):
 
 
 def get_file_from_s3(s3_bucket, path, conn_name=DEFAULT_CONN, decrypt=False):
+    content = get_content_from_s3(s3_bucket, path, conn_name, decrypt)
     temp_file = NamedTemporaryFile()
+    temp_file.write(content)
+    temp_file.seek(0)
+    return temp_file
+
+def get_content_from_s3(s3_bucket, path, conn_name=DEFAULT_CONN, decrypt=False):
     _, key = get_s3_bucket_key(s3_bucket, path, conn_name)
     content = key.get_contents_as_string()
     if decrypt:
         secret = app.config.get('FILE_ENCRYPTION_KEY')
         cipher = AESWithGCM(secret)
         content = cipher.decrypt(content)
-    temp_file.write(content)
-    temp_file.seek(0)
-    return temp_file
-
+    return content
 
 def delete_file_from_s3(s3_bucket, s3_url, conn_name=DEFAULT_CONN):
     headers = {}

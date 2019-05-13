@@ -18,10 +18,8 @@
 """Module with PyBossa create task helper."""
 from flask import current_app
 import hashlib
-from pybossa.cloud_store_api.s3 import upload_json_data
+from pybossa.cloud_store_api.s3 import upload_json_data, get_content_from_s3
 from flask import url_for
-from pybossa.encryption import AESWithGCM
-from pybossa.cloud_store_api.connection import create_connection
 import json
 
 TASK_PRIVATE_GOLD_ANSWER_FILE_NAME = 'task_private_gold_answer.json'
@@ -32,12 +30,6 @@ def encrypted():
 
 def bucket_name():
     return current_app.config.get("S3_REQUEST_BUCKET")
-
-def conn_args():
-    return current_app.config.get('S3_TASK_REQUEST', {})
-
-def file_encryption_key():
-    return current_app.config.get('FILE_ENCRYPTION_KEY')
 
 def s3_conn_type():
     return current_app.config.get('S3_CONN_TYPE')
@@ -91,15 +83,5 @@ def get_gold_answers(task):
 
     parts = url.split('/')
     key_name = '/{}/{}/{}'.format(*parts[-3:])
-    conn = create_connection(**conn_args())
-
-    # Since we are getting the hash, project id, and file name from the url,
-    # we might as well get the bucket from there too.
-
-    bucket = conn.get_bucket(parts[-4], validate=False)
-    key = bucket.get_key(key_name, validate=False)
-    content = key.get_contents_as_string()
-    ## decyrpt file
-    cipher = AESWithGCM(file_encryption_key())
-    decrypted = cipher.decrypt(content)
+    decrypted = get_content_from_s3(s3_bucket=parts[-4], path=key_name, conn_name='S3_TASK_REQUEST', decrypt=True)
     return json.loads(decrypted)

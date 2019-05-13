@@ -7704,7 +7704,9 @@ class TestWeb(web.Helper):
             assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
 
     @with_context
-    def test_get_private_gold_answers(self):
+    @patch('pybossa.task_creator_helper.upload_json_data')
+    @patch('pybossa.task_creator_helper.get_content_from_s3')
+    def test_get_private_gold_answers(self, get_content_from_s3_mock, upload_json_data_mock):
         """Test can retrieve and decrypt private gold answers for task"""
         admin = UserFactory.create()
         self.signin_user(admin)
@@ -7717,14 +7719,33 @@ class TestWeb(web.Helper):
         gold_answers = {'ans1': 'test'}
         payload = {'info': gold_answers, 'task_id': 1, 'project_id': 1}
 
-        with patch.dict(self.flask_app.config, {'ENABLE_ENCRYPTION': True}):
+        bucket_name = "BUCKET"
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'ENABLE_ENCRYPTION': True,
+                "S3_REQUEST_BUCKET": bucket_name,
+                'S3_CONN_TYPE': "STORE"
+            }
+        ):
             res = self.app_post_json(url,
                                 data=payload,
                                 follow_redirects=False,
                                 )
+            args1, kwargs1 = upload_json_data_mock.call_args
+            saved_gold_answers = kwargs1['json_data']
+            upload_path = kwargs1['upload_path'] # project_id/task_hash
+            file_name = kwargs1['file_name']
 
             t = task_repo.get_task(1)
-            assert get_gold_answers(t) == gold_answers
+            get_content_from_s3_mock.return_value = json.dumps(saved_gold_answers)
+
+            retrieved_gold_answers = get_gold_answers(t)
+
+            args2, kwargs2 = get_content_from_s3_mock.call_args
+            assert kwargs2['s3_bucket'] == bucket_name
+            assert kwargs2['path'] == '/{}/{}'.format(upload_path, file_name)
+            assert retrieved_gold_answers == gold_answers, { retrieved: retrieved_gold_answers, actual: gold_answers}
 
     @with_context
     def test_78_cookies_warning(self):
