@@ -48,7 +48,7 @@ class TestJsonProject(web.Helper):
             url = '/project/new'
             res = self.app_get_json(url, follow_redirects=True)
             data = json.loads(res.data)
-            keys = sorted(['errors', 'form', 'template', 'title', 'message'])
+            keys = sorted(['errors', 'form', 'template', 'title', 'message', 'prodsubprods'])
             assert keys == sorted(data.keys()), data
             assert data.get('form').get('csrf') is not None, data
 
@@ -70,7 +70,7 @@ class TestJsonProject(web.Helper):
 
             # New Project
             project = dict(name='project1', short_name='project1', long_description='lore ipsum',
-                           password='TestPwd1')
+                           password='TestPwd1', product='abc', subproduct='def')
             csrf = self.get_csrf(url)
             print csrf
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
@@ -89,8 +89,10 @@ class TestJsonProject(web.Helper):
         self.signin()
         configs = {
             'WTF_CSRF_ENABLED': True,
-            'PRODUCTS': {'north', 'south'},
-            'SUBPRODUCTS': {'winterfell', 'westeros'}
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
         }
         with patch.dict(self.flask_app.config, configs):
             # new project
@@ -109,7 +111,7 @@ class TestJsonProject(web.Helper):
             # update project
             url = '/project/%s/update' % project['short_name']
             project = dict(name='greatwar', description=proj_repo.description, id=proj_repo.id,
-                           category_id=proj_repo.category_id, product='south', subproduct='westeros', kpi=2)
+                           category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
             assert data.get('status') == SUCCESS, data
@@ -125,5 +127,5 @@ class TestJsonProject(web.Helper):
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
-            err_msg = {'kpi': ['Not a valid integer value'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
+            err_msg = {'kpi': ['Not a valid decimal value', 'Number must be between 0.5 and 120.0.'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data

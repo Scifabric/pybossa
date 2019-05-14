@@ -358,7 +358,8 @@ def new():
         response = dict(template='projects/new.html',
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
-                        message=current_app.config.get('PROJECT_CREATE_MESSAGE'))
+                        message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
+                        prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
         return handle_content_type(response)
 
     def _description_from_long_description():
@@ -386,7 +387,7 @@ def new():
         'sync': {'enabled': False},
         'product': form.product.data,
         'subproduct': form.subproduct.data,
-        'kpi': form.kpi.data
+        'kpi': float(form.kpi.data)
     }
     category_by_default = cached_cat.get_all()[0]
 
@@ -625,7 +626,7 @@ def update(short_name):
         new_project.info['sync'] = sync
         new_project.info['product'] = form.product.data
         new_project.info['subproduct'] = form.subproduct.data
-        new_project.info['kpi'] = form.kpi.data
+        new_project.info['kpi'] = float(form.kpi.data)
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -727,7 +728,8 @@ def update(short_name):
                     target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
                     server_url=current_app.config.get('SERVER_URL'),
                     sync_enabled=sync_enabled,
-                    private_instance=bool(data_access_levels))
+                    private_instance=bool(data_access_levels),
+                    prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
     return handle_content_type(response)
 
 

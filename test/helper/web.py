@@ -182,7 +182,10 @@ class Helper(Test):
                 'short_name': short_name,
                 'description': description,
                 'long_description': long_description,
-                'password': 'Abc01$'
+                'password': 'Abc01$',
+                'product': 'abc',
+                'subproduct': 'def',
+                'kpi':0.5
             }, follow_redirects=True)
         else:
             return self.app.get("/project/new", follow_redirects=True)
@@ -254,7 +257,9 @@ class Helper(Test):
                        new_sched="random",
                        new_webhook='http://server.com',
                        new_protect=False,
-                       new_password=None):
+                       new_password=None,
+                       new_product='abc',
+                       new_subproduct='def'):
         """Helper function to update a project"""
         payload = dict(id=id,
                        name=new_name,
@@ -266,7 +271,9 @@ class Helper(Test):
                        sched=new_sched,
                        webhook=new_webhook,
                        protect=new_protect,
-                       password=new_password)
+                       password=new_password,
+                       product=new_product,
+                       subproduct=new_subproduct)
 
         if method == "POST":
             return self.app.post("/project/%s/update" % short_name,
