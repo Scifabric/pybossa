@@ -17,8 +17,8 @@ class TestAnswerFieldConfig(web.Helper):
         project = ProjectFactory.create(published=True)
         url = '/project/%s/answerfieldsconfig?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app.get(url)
-        assert 'Answer Field Config' in res.data, res.data
-        assert 'Consensus Config' in res.data, res.data
+        assert '<fields-config' in res.data, res.data
+        assert '<consensus-config' in res.data, res.data
 
     @with_context
     def test_post_answer_field_config(self):

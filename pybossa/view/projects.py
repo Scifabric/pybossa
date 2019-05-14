@@ -3008,7 +3008,7 @@ def answerfieldsconfig(short_name):
                 key = 'answer_fields'
                 data = body.get('answerFieldsConfig') or {}
             else :
-                key = 'tie_break_config'
+                key = 'consensus_config'
                 data = body.get('consensusConfig') or {}
             project.info[key] = data
             project_repo.save(project)
@@ -3021,7 +3021,7 @@ def answerfieldsconfig(short_name):
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
     answer_fields = project.info.get('answer_fields', {})
-    consensus_config = project.info.get('tie_break_config', {})
+    consensus_config = project.info.get('consensus_config', {})
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
