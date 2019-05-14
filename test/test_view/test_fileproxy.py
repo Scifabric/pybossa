@@ -61,7 +61,7 @@ class TestFileproxy(web.Helper):
         assert res.status_code == 400, res.status_code
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_proxy_owner(self, create_connection):
         project = ProjectFactory.create()
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
@@ -86,7 +86,7 @@ class TestFileproxy(web.Helper):
             assert res.data == 'the content', res.data
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_proxy_admin(self, create_connection):
         admin, owner = UserFactory.create_batch(2)
         project = ProjectFactory.create(owner=owner)
@@ -111,7 +111,7 @@ class TestFileproxy(web.Helper):
             assert res.data == 'the content', res.data
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_file_not_in_task(self, create_connection):
         project = ProjectFactory.create()
         url = '/fileproxy/encrypted/s3/test/%s/file.pdf' % project.id
@@ -127,7 +127,7 @@ class TestFileproxy(web.Helper):
         assert res.status_code == 403, res.status_code
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_file_user(self, create_connection):
         admin, owner, user = UserFactory.create_batch(3)
         project = ProjectFactory.create()
@@ -143,7 +143,7 @@ class TestFileproxy(web.Helper):
         assert res.status_code == 403, res.status_code
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     @patch('pybossa.view.fileproxy.has_lock')
     def test_file_user(self, has_lock, create_connection):
         has_lock.return_value = True
@@ -170,7 +170,7 @@ class TestFileproxy(web.Helper):
             assert res.data == 'the content', res.data
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_proxy_s3_error(self, create_connection):
         admin, owner = UserFactory.create_batch(2)
         project = ProjectFactory.create(owner=owner)
@@ -189,7 +189,7 @@ class TestFileproxy(web.Helper):
         assert res.status_code == 500, res.status_code
 
     @with_context
-    @patch('pybossa.cloud_store_api.connection.create_connection')
+    @patch('pybossa.cloud_store_api.s3.create_connection')
     def test_proxy_key_not_found(self, create_connection):
         admin, owner = UserFactory.create_batch(2)
         project = ProjectFactory.create(owner=owner)
