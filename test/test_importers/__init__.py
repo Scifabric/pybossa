@@ -169,16 +169,13 @@ class TestImporterPublicMethods(Test):
     @with_context
     @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
     @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
-    @patch('pybossa.importers.csv.data_access_levels')
     def test_create_tasks_creates_private_regular_and_gold_fields(
         self,
-        mock_data_access,
         mock_del,
         upload_from_string,
         importer_factory
     ):
         mock_importer = Mock()
-        mock_data_access = True
         mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
             'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True}]
 
