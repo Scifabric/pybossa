@@ -25,13 +25,12 @@ from werkzeug.exceptions import Forbidden, BadRequest, InternalServerError, NotF
 
 from pybossa.cache.projects import get_project_data
 from boto.exception import S3ResponseError
-from pybossa.cloud_store_api.connection import create_connection
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.core import task_repo, signer
 from pybossa.encryption import AESWithGCM
 from pybossa.hdfs.client import HDFSKerberos
 from pybossa.sched import has_lock
-
+from pybossa.cloud_store_api.s3 import get_content_and_key_from_s3
 
 blueprint = Blueprint('fileproxy', __name__)
 
@@ -74,7 +73,6 @@ def check_allowed(user_id, task_id, project, file_url):
 def encrypted_file(store, bucket, project_id, path):
     """Proxy encrypted task file in a cloud storage"""
     current_app.logger.info('Project id {} decrypt file. {}'.format(project_id, path))
-    conn_args = current_app.config.get('S3_TASK_REQUEST', {})
     signature = request.args.get('task-signature')
     if not signature:
         current_app.logger.exception('Project id {} no signature {}'.format(project_id, path))
@@ -90,11 +88,8 @@ def encrypted_file(store, bucket, project_id, path):
 
     ## download file
     try:
-        key = '/{}/{}'.format(project_id, path)
-        conn = create_connection(**conn_args)
-        _bucket = conn.get_bucket(bucket, validate=False)
-        _key = _bucket.get_key(key, validate=False)
-        content = _key.get_contents_as_string()
+        key_name = '/{}/{}'.format(project_id, path)
+        decrypted, key = get_content_and_key_from_s3(bucket, key_name, 'S3_TASK_REQUEST', decrypt=True)
     except S3ResponseError as e:
         current_app.logger.exception('Project id {} get task file {} {}'.format(project_id, path, e))
         if e.error_code == 'NoSuchKey':
@@ -102,14 +97,9 @@ def encrypted_file(store, bucket, project_id, path):
         else:
             raise InternalServerError('An Error Occurred')
 
-    ## decyrpt file
-    secret = current_app.config.get('FILE_ENCRYPTION_KEY')
-    cipher = AESWithGCM(secret)
-    decrypted = cipher.decrypt(content)
-
-    response = Response(decrypted, content_type=_key.content_type)
-    response.headers.add('Content-Encoding', _key.content_encoding)
-    response.headers.add('Content-Disposition', _key.content_disposition)
+    response = Response(decrypted, content_type=key.content_type)
+    response.headers.add('Content-Encoding', key.content_encoding)
+    response.headers.add('Content-Disposition', key.content_disposition)
     return response
 
 
