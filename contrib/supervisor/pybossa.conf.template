@@ -3,6 +3,7 @@ command=/home/pybossa/pybossa/env/bin/uwsgi /home/pybossa/pybossa/pybossa.ini
 directory=/home/pybossa/pybossa
 autostart=true
 autorestart=true
+priority=920
 user=pybossa
 log_stdout=true
 log_stderr=true
