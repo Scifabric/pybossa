@@ -70,12 +70,12 @@ def upload_files_priv(task, project_id, data, file_name):
 def get_gold_answers(task):
     gold_answers = task.gold_answers
 
-    if not encrypted() or not gold_answers:
+    if not encrypted() or gold_answers is None:
         return gold_answers
 
     url = gold_answers.get(TASK_GOLD_ANSWER_URL_KEY)
     if not url:
-        return None
+        raise Exception('Cannot retrieve Private Gigwork gold answers for task id {}. URL is missing.'.format(task.id))
 
     # The task instance here is not the same as the one that was used to generate the hash
     # in the upload url. So we can't regenerate that hash here, and instead we have to parse it

@@ -7748,6 +7748,21 @@ class TestWeb(web.Helper):
             assert retrieved_gold_answers == gold_answers, { retrieved: retrieved_gold_answers, actual: gold_answers}
 
     @with_context
+    def test_missing_private_gold_answers(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = Task(project_id=project.id, gold_answers={})
+        task_repo.save(task)
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'ENABLE_ENCRYPTION': True,
+            }
+        ):
+            assert_raises(Exception, get_gold_answers, task)
+
+    @with_context
     def test_78_cookies_warning(self):
         """Test WEB cookies warning is displayed"""
         # As Anonymous
