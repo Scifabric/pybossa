@@ -209,8 +209,10 @@ class Project(db.Model, DomainObject):
                 'questions': 0
             }
         )
+        # If short_circuit is not configured for the project then use the current app setting.
+        quiz.setdefault('short_circuit', current_app.config.get('SHORT_CIRCUIT_QUIZ', True))
 
-        quiz['short_circuit'] = current_app.config.get('SHORT_CIRCUIT_QUIZ', True)
+        # We changed the name of 'pass' to 'passing'. Upgrade any existing data with the old name.
         if 'passing' not in quiz:
             quiz['passing'] = quiz['pass']
             del quiz['pass']

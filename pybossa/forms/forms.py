@@ -156,8 +156,8 @@ class ProjectQuizForm(Form):
     passing = IntegerField(
         lazy_gettext('Number of correct answers to pass quiz'),
         [
-            validators.Required(lazy_gettext('This field must be a positive integer.')),
-            validators.NumberRange(min=1)
+            validators.Required(lazy_gettext('This field must be a non-negative integer.')),
+            validators.NumberRange(min=0) # Making this 0 to allow quizzes with free-form answers.
         ]
     )
 
