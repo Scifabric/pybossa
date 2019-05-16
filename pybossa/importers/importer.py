@@ -38,7 +38,7 @@ from pybossa.util import delete_import_csv_file
 from pybossa.cloud_store_api.s3 import upload_json_data
 import hashlib
 from flask import url_for
-from pybossa.task_creator_helper import set_gold_answer, upload_files_priv
+from pybossa.task_creator_helper import set_gold_answers, upload_files_priv
 
 
 def validate_s3_bucket(task):
@@ -170,7 +170,7 @@ class Importer(object):
             [setattr(task, k, v) for k, v in task_data.iteritems()]
 
             gold_answers = task_data.pop('gold_answers', None)
-            set_gold_answer(task, gold_answers)
+            set_gold_answers(task, gold_answers)
 
             found = task_repo.find_duplicate(project_id=project.id,
                                              info=task.info)

@@ -39,7 +39,6 @@ from flask import current_app
 import hashlib
 from flask import url_for
 from pybossa.cloud_store_api.s3 import upload_json_data
-from pybossa.task_creator_helper import set_gold_answer
 
 
 import json

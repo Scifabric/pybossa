@@ -34,7 +34,7 @@ def bucket_name():
 def s3_conn_type():
     return current_app.config.get('S3_CONN_TYPE')
 
-def set_gold_answer(task, gold_answers):
+def set_gold_answers(task, gold_answers):
     if not gold_answers:
         return
     if encrypted():

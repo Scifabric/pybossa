@@ -71,7 +71,7 @@ from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_
 from pybossa.api.project_by_name import ProjectByNameAPI
 from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.data_access import data_access_levels
-from pybossa.task_creator_helper import set_gold_answer
+from pybossa.task_creator_helper import set_gold_answers
 
 blueprint = Blueprint('api', __name__)
 
@@ -453,7 +453,7 @@ def task_gold(project_id=None):
     preprocess_task_run(project_id, task_id, task_data)
 
     info = task_data['info']
-    set_gold_answer(task, info)
+    set_gold_answers(task, info)
 
     task_repo.update(task)
 
