@@ -3001,14 +3001,16 @@ def answerfieldsconfig(short_name):
     pro = pro_features()
     ensure_authorized_to('update', project)
 
+    answer_fields_key = 'answer_fields'
+    consensus_config_key = 'consensus_config'
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
             if 'answerFieldsConfig' in body:
-                key = 'answer_fields'
+                key = answer_fields_key
                 data = body.get('answerFieldsConfig') or {}
             else :
-                key = 'tie_break_config'
+                key = consensus_config_key
                 data = body.get('consensusConfig') or {}
             project.info[key] = data
             project_repo.save(project)
@@ -3020,13 +3022,13 @@ def answerfieldsconfig(short_name):
 
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
-    answer_fields = project.info.get('answer_fields', {})
-    consensus_config = project.info.get('tie_break_config', {})
+    answer_fields = project.info.get(answer_fields_key , {})
+    consensus_config = project.info.get(consensus_config_key , {})
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
-        'answer_fields': json.dumps(answer_fields),
-        'consensus_config': json.dumps(consensus_config),
+        answer_fields_key : json.dumps(answer_fields),
+        consensus_config_key : json.dumps(consensus_config),
         'pro_features': pro,
         'csrf': generate_csrf()
     }
