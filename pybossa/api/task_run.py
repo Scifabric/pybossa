@@ -133,8 +133,10 @@ class TaskRunAPI(APIBase):
 
     def _after_save(self, original_data, instance):
         mark_if_complete(instance.task_id, instance.project_id)
-        update_gold_stats(instance.user_id, instance.task_id, original_data)
-        update_quiz(instance.task_id, instance.project_id, original_data['info'])
+        task = task_repo.get_task(instance.task_id)
+        gold_answers = get_gold_answers(task)
+        update_gold_stats(instance.user_id, instance.task_id, original_data, gold_answers)
+        update_quiz(instance.project_id, original_data['info'], gold_answers)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -203,23 +205,21 @@ def _upload_files_from_request(task_run_info, files, upload_path, with_encryptio
         task_run_info[key] = s3_url
 
 
-def update_gold_stats(user_id, task_id, data):
+def update_gold_stats(user_id, task_id, data, gold_answers):
     task = task_repo.get_task(task_id)
-    # TODO: read gold_answer from s3
     if task.calibration:
         answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
         answer = data['info']
         _update_gold_stats(task.project_id, user_id, answer_fields,
-                           get_gold_answers(task), answer)
+                           gold_answers, answer)
 
-def update_quiz(task_id, project_id, answer):
+def update_quiz(project_id, answer, gold_answers):
     project = project_repo.get(project_id)
     user = user_repo.get(current_user.id)
     if not user.get_quiz_in_progress(project):
         return
 
-    task = task_repo.get_task(task_id)
-    if get_gold_answers(task) == answer:
+    if gold_answers == answer:
         user.add_quiz_right_answer(project)
     else:
         user.add_quiz_wrong_answer(project)
