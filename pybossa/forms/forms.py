@@ -49,7 +49,7 @@ import pybossa.data_access as data_access
 import app_settings
 import six
 from iiif_prezi.loader import ManifestReader
-from wtforms.widgets import html5
+from wtforms.validators import NumberRange
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -94,19 +94,26 @@ class ProjectForm(Form):
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)])
 
-    product = SelectField(lazy_gettext('Product'), choices=[("", "")], default="")
-    subproduct = SelectField(lazy_gettext('Subproduct'), choices=[("", "")], default="")
-    kpi = IntegerField(lazy_gettext('KPI'), widget=html5.NumberInput(), default=0)
+    product = SelectField(lazy_gettext('Product'),
+                          [validators.Required()], choices=[("", "")], default="")
+    subproduct = SelectField(lazy_gettext('Subproduct'),
+                             [validators.Required()], choices=[("", "")], default="")
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.5-120)'),
+                       places=1, validators=[NumberRange(0.5, 120.0)], default=0.5)
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self.set_project_choices()
+        self.set_product_subproduct_choices()
 
-    def set_project_choices(self):
-        products = current_app.config.get('PRODUCTS', [])
-        subproducts = current_app.config.get('SUBPRODUCTS',[])
-        self.product.choices = [("", "")] + [(p, p) for p in products]
-        self.subproduct.choices = [("", "")] + [(sp, sp) for sp in subproducts]
+    def set_product_subproduct_choices(self):
+        choices = [("", "")]
+        products = list(current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).keys())
+        self.product.choices = choices + [(p, p) for p in products]
+        product = self.product.data
+        if product:
+            subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS').get(product, [])
+            choices += [(sp, sp) for sp in subproducts]
+        self.subproduct.choices = choices
 
 
 class ProjectUpdateForm(ProjectForm):

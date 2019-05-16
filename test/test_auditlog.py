@@ -247,7 +247,9 @@ class TestAuditlogWEB(web.Helper):
                      'allow_anonymous_contributors': 'true',
                      'category_id': 1,
                      'long_description': 'Long Description\n================',
-                     'btn': 'Save'}
+                     'btn': 'Save',
+                     'product': 'abc',
+                     'subproduct': 'def'}
         self.editor = {'editor': 'Some HTML code!'}
 
     @with_context
