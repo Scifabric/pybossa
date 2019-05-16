@@ -205,13 +205,22 @@ def _upload_files_from_request(task_run_info, files, upload_path, with_encryptio
         task_run_info[key] = s3_url
 
 
-def update_gold_stats(user_id, task_id, data, gold_answers):
+def update_gold_stats(user_id, task_id, data, gold_answers=None):
     task = task_repo.get_task(task_id)
-    if task.calibration:
-        answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
-        answer = data['info']
-        _update_gold_stats(task.project_id, user_id, answer_fields,
-                           gold_answers, answer)
+    if not task.calibration:
+        return
+    
+    if gold_answers is None:
+        gold_answers = get_gold_answers(task)
+    answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
+    answer = data['info']
+    _update_gold_stats(
+        task.project_id,
+        user_id,
+        answer_fields,
+        gold_answers,
+        answer
+    )
 
 def update_quiz(project_id, answer, gold_answers):
     project = project_repo.get(project_id)
