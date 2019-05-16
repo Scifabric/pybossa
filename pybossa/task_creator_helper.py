@@ -18,18 +18,28 @@
 """Module with PyBossa create task helper."""
 from flask import current_app
 import hashlib
-from pybossa.cloud_store_api.s3 import upload_json_data
-from pybossa.data_access import data_access_levels
-from werkzeug.exceptions import BadRequest, Conflict
+from pybossa.cloud_store_api.s3 import upload_json_data, get_content_from_s3
 from flask import url_for
 import json
 
-def set_gold_answer(task, project_id, gold_answers):
+TASK_PRIVATE_GOLD_ANSWER_FILE_NAME = 'task_private_gold_answer.json'
+TASK_GOLD_ANSWER_URL_KEY = 'gold_ans__upload_url'
+
+def encrypted():
+    return current_app.config.get('ENABLE_ENCRYPTION')
+
+def bucket_name():
+    return current_app.config.get("S3_REQUEST_BUCKET")
+
+def s3_conn_type():
+    return current_app.config.get('S3_CONN_TYPE')
+
+def set_gold_answers(task, gold_answers):
     if not gold_answers:
         return
-    if data_access_levels:
-        file_name = 'task_private_gold_answer.json'
-        gold_answers = dict(gold_ans__upload_url=upload_files_priv(task, project_id, gold_answers, file_name))
+    if encrypted():
+        url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)
+        gold_answers = dict([(TASK_GOLD_ANSWER_URL_KEY, url)])
 
     task.gold_answers = gold_answers
     task.calibration = 1
@@ -37,15 +47,41 @@ def set_gold_answer(task, project_id, gold_answers):
     task.state = 'ongoing'
 
 def upload_files_priv(task, project_id, data, file_name):
-    encryption = current_app.config.get('ENABLE_ENCRYPTION', False)
-    bucket = current_app.config.get("S3_REQUEST_BUCKET")
+    bucket = bucket_name()
     task_hash = hashlib.md5(str(task)).hexdigest()
     path = "{}/{}".format(project_id, task_hash)
-    s3_conn_type = current_app.config.get('S3_CONN_TYPE')
-    values = dict(store=s3_conn_type, bucket=bucket, project_id=project_id, path='{}/{}'.format(task_hash, file_name))
+    values = dict(
+        store=s3_conn_type(),
+        bucket=bucket,
+        project_id=project_id,
+        path='{}/{}'.format(task_hash, file_name)
+    )
     file_url = url_for('fileproxy.encrypted_file', **values)
-    upload_json_data(bucket=bucket,
-    json_data=data, upload_path=path,
-    file_name=file_name, encryption=encryption,
-    conn_name='S3_TASK_REQUEST')
+    upload_json_data(
+        bucket=bucket,
+        json_data=data,
+        upload_path=path,
+        file_name=file_name,
+        encryption=True,
+        conn_name='S3_TASK_REQUEST'
+    )
     return file_url
+
+def get_gold_answers(task):
+    gold_answers = task.gold_answers
+
+    if not encrypted() or gold_answers is None:
+        return gold_answers
+
+    url = gold_answers.get(TASK_GOLD_ANSWER_URL_KEY)
+    if not url:
+        raise Exception('Cannot retrieve Private Gigwork gold answers for task id {}. URL is missing.'.format(task.id))
+
+    # The task instance here is not the same as the one that was used to generate the hash
+    # in the upload url. So we can't regenerate that hash here, and instead we have to parse it
+    # from the url.
+
+    parts = url.split('/')
+    key_name = '/{}/{}/{}'.format(*parts[-3:])
+    decrypted = get_content_from_s3(s3_bucket=parts[-4], path=key_name, conn_name='S3_TASK_REQUEST', decrypt=True)
+    return json.loads(decrypted)

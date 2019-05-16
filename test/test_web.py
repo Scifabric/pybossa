@@ -56,7 +56,7 @@ from datetime import datetime, timedelta
 import six
 from pybossa.view.account import get_user_data_as_form
 from pybossa.cloud_store_api.s3 import upload_json_data
-
+from pybossa.task_creator_helper import get_gold_answers
 
 
 class TestWeb(web.Helper):
@@ -7687,7 +7687,7 @@ class TestWeb(web.Helper):
 
         payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
 
-        with patch.dict(data_access_levels, self.patch_data_access_levels):
+        with patch.dict(self.flask_app.config, {'ENABLE_ENCRYPTION': True}):
             res = self.app_post_json(url,
                                 data=payload,
                                 follow_redirects=False,
@@ -7703,7 +7703,64 @@ class TestWeb(web.Helper):
             assert t.exported == True, t.exported
             assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
 
+    @with_context
+    @patch('pybossa.task_creator_helper.upload_json_data')
+    @patch('pybossa.task_creator_helper.get_content_from_s3')
+    def test_get_private_gold_answers(self, get_content_from_s3_mock, upload_json_data_mock):
+        """Test can retrieve and decrypt private gold answers for task"""
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = Task(project_id=project.id)
+        task_repo.save(task)
 
+        url = "/api/project/1/taskgold"
+
+        gold_answers = {'ans1': 'test'}
+        payload = {'info': gold_answers, 'task_id': 1, 'project_id': 1}
+
+        bucket_name = "BUCKET"
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'ENABLE_ENCRYPTION': True,
+                "S3_REQUEST_BUCKET": bucket_name,
+                'S3_CONN_TYPE': "STORE"
+            }
+        ):
+            res = self.app_post_json(url,
+                                data=payload,
+                                follow_redirects=False,
+                                )
+            args1, kwargs1 = upload_json_data_mock.call_args
+            saved_gold_answers = kwargs1['json_data']
+            upload_path = kwargs1['upload_path'] # project_id/task_hash
+            file_name = kwargs1['file_name']
+
+            t = task_repo.get_task(1)
+            get_content_from_s3_mock.return_value = json.dumps(saved_gold_answers)
+
+            retrieved_gold_answers = get_gold_answers(t)
+
+            args2, kwargs2 = get_content_from_s3_mock.call_args
+            assert kwargs2['s3_bucket'] == bucket_name
+            assert kwargs2['path'] == '/{}/{}'.format(upload_path, file_name)
+            assert retrieved_gold_answers == gold_answers, { retrieved: retrieved_gold_answers, actual: gold_answers}
+
+    @with_context
+    def test_missing_private_gold_answers(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = Task(project_id=project.id, gold_answers={})
+        task_repo.save(task)
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'ENABLE_ENCRYPTION': True,
+            }
+        ):
+            assert_raises(Exception, get_gold_answers, task)
 
     @with_context
     def test_78_cookies_warning(self):

@@ -35,7 +35,7 @@ from werkzeug.exceptions import Forbidden, BadRequest
 
 from api_base import APIBase
 from pybossa.model.task_run import TaskRun
-from pybossa.util import get_user_id_or_ip, get_avatar_url
+from pybossa.util import get_user_id_or_ip
 from pybossa.cache.projects import get_project_data
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo, user_repo, task_repo
 from pybossa.core import performance_stats_repo
@@ -45,12 +45,10 @@ from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from pybossa.sched import can_post
 from pybossa.model.completion_event import mark_if_complete
-from pybossa.core import uploader
-from pybossa.auth import ensure_authorized_to, is_authorized
 from pybossa.cloud_store_api.s3 import upload_json_data
 from pybossa.model.performance_stats import StatType, PerformanceStats
 from pybossa.stats.gold import ConfusionMatrix, RightWrongCount
-
+from pybossa.task_creator_helper import get_gold_answers
 
 class TaskRunAPI(APIBase):
 
@@ -135,8 +133,10 @@ class TaskRunAPI(APIBase):
 
     def _after_save(self, original_data, instance):
         mark_if_complete(instance.task_id, instance.project_id)
-        update_gold_stats(instance.user_id, instance.task_id, original_data)
-        update_quiz(instance.task_id, instance.project_id, original_data['info'])
+        task = task_repo.get_task(instance.task_id)
+        gold_answers = get_gold_answers(task)
+        update_gold_stats(instance.user_id, instance.task_id, original_data, gold_answers)
+        update_quiz(instance.project_id, original_data['info'], gold_answers)
 
     def _add_timestamps(self, taskrun, task, guard):
         finish_time = datetime.utcnow().isoformat()
@@ -171,7 +171,7 @@ class TaskRunAPI(APIBase):
 
     def _customize_response_dict(self, response_dict):
         task = task_repo.get_task(response_dict['task_id'])
-        response_dict['gold_answers'] = task.gold_answers
+        response_dict['gold_answers'] = get_gold_answers(task)
 
 
 def _upload_files_from_json(task_run_info, upload_path, with_encryption):
@@ -205,23 +205,30 @@ def _upload_files_from_request(task_run_info, files, upload_path, with_encryptio
         task_run_info[key] = s3_url
 
 
-def update_gold_stats(user_id, task_id, data):
+def update_gold_stats(user_id, task_id, data, gold_answers=None):
     task = task_repo.get_task(task_id)
-    # TODO: read gold_answer from s3
-    if task.calibration:
-        answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
-        answer = data['info']
-        _update_gold_stats(task.project_id, user_id, answer_fields,
-                           task.gold_answers, answer)
+    if not task.calibration:
+        return
+    
+    if gold_answers is None:
+        gold_answers = get_gold_answers(task)
+    answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
+    answer = data['info']
+    _update_gold_stats(
+        task.project_id,
+        user_id,
+        answer_fields,
+        gold_answers,
+        answer
+    )
 
-def update_quiz(task_id, project_id, answer):
+def update_quiz(project_id, answer, gold_answers):
     project = project_repo.get(project_id)
     user = user_repo.get(current_user.id)
     if not user.get_quiz_in_progress(project):
         return
 
-    task = task_repo.get_task(task_id)
-    if task.gold_answers == answer:
+    if gold_answers == answer:
         user.add_quiz_right_answer(project)
     else:
         user.add_quiz_wrong_answer(project)
@@ -275,7 +282,6 @@ def _update_gold_stats(project_id, user_id, gold_fields, gold_answer, answer):
 
 def preprocess_task_run(project_id, task_id, data):
         with_encryption = app.config.get('ENABLE_ENCRYPTION')
-        upload_root_dir = app.config.get('S3_UPLOAD_DIRECTORY')
         info = data.get('info')
         if info is None:
             return
