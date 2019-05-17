@@ -2995,6 +2995,22 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
+def convert_to_camel(data):
+    if not isinstance(data, dict):
+        return data
+    res = {}
+    for key, value in data.items():
+        res[snake_to_camel(key)] = convert_to_camel(value)
+    return res
+
+def convert_to_snake(data):
+    if not isinstance(data, dict):
+        return data
+    res = {}
+    for key, value in data.items():
+        res[camel_to_snake(key)] = convert_to_snake(value)
+    return res
+
 def snake_to_camel(name):
     tags = name.split('_')
     if len(tags) == 0:
@@ -3024,16 +3040,10 @@ def answerfieldsconfig(short_name):
             if 'answerFieldsConfig' in body:
                 key = answer_fields_key
                 _config = body.get('answerFieldsConfig') or {}
-                data = {}
-                for field, cf in _config.items():
-                    cf['retry_for_consensus'] = cf.pop('retryForConsensus')
-                    data[field] = cf
             else :
                 key = consensus_config_key
                 _config = body.get('consensusConfig') or {}
-                data = {}
-                for field, value in _config.items():
-                    data[camel_to_snake(field)] = value
+            data = convert_to_snake(_config)
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3045,15 +3055,9 @@ def answerfieldsconfig(short_name):
         project, owner, current_user, ps)
 
     _config = project.info.get(answer_fields_key , {})
-    answer_fields = {}
-    for field, cf in _config.items():
-        cf['retryForConsensus'] = cf.pop('retry_for_consensus')
-        answer_fields[field] = cf
-
+    answer_fields = convert_to_camel(_config)
     _config = project.info.get(consensus_config_key , {})
-    consensus_config = {}
-    for field, value in _config.items():
-        consensus_config[snake_to_camel(field)] = value
+    consensus_config = convert_to_camel(_config)
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
