@@ -174,29 +174,13 @@ class TaskRepository(Repository):
 
 
     # Methods for saving, deleting and updating both Task and TaskRun objects
-    def save(self, element):
-        self.add(element)
-        try:
-            self.db.session.commit()
-            cached_projects.clean_project(element.project_id)
-        except IntegrityError as e:
-            self.db.session.rollback()
-            raise DBIntegrityError(e)
-
-    def add(self, element):
+    def save(self, element, clean_project=True):
         self._validate_can_be(self.SAVE_ACTION, element)
         try:
             self.db.session.add(element)
-        except IntegrityError as e:
-            self.db.session.rollback()
-            raise DBIntegrityError(e)
-
-    def clean_project(self, project_id):
-        cached_projects.clean(project_id)
-
-    def commit_tasks(self):
-        try:
             self.db.session.commit()
+            if clean_project:
+                cached_projects.clean_project(element.project_id)
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
