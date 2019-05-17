@@ -24,6 +24,7 @@ import math
 import requests
 from StringIO import StringIO
 import six
+import re
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
@@ -3003,7 +3004,6 @@ def snake_to_camel(name):
     return first + ''.join(ele.capitalize() for ele in tags)
 
 def camel_to_snake(name):
-    import re
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
