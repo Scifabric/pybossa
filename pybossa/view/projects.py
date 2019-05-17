@@ -2994,6 +2994,19 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
+def snake_to_camel(name):
+    tags = name.split('_')
+    if len(tags) == 0:
+        return name
+    first = tags[0]
+    tags = tags[1:]
+    return first + ''.join(ele.capitalize() for ele in tags)
+
+def camel_to_snake(name):
+    import re
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3006,14 +3019,23 @@ def answerfieldsconfig(short_name):
     answer_fields_key = 'answer_fields'
     consensus_config_key = 'consensus_config'
     if request.method == 'POST':
+        print('-----------post----------')
         try:
             body = json.loads(request.data) or {}
             if 'answerFieldsConfig' in body:
                 key = answer_fields_key
-                data = body.get('answerFieldsConfig') or {}
+                _config = body.get('answerFieldsConfig') or {}
+                data = {}
+                for field, cf in _config.items():
+                    cf['retry_for_consensus'] = cf.pop('retryForConsensus')
+                    data[field] = cf
             else :
                 key = consensus_config_key
-                data = body.get('consensusConfig') or {}
+                _config = body.get('consensusConfig') or {}
+                data = {}
+                for field, value in _config.items():
+                    data[camel_to_snake(field)] = value
+            print(data)
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3021,11 +3043,20 @@ def answerfieldsconfig(short_name):
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
-
+    print('-----------get----------')
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
-    answer_fields = project.info.get(answer_fields_key , {})
-    consensus_config = project.info.get(consensus_config_key , {})
+
+    _config = project.info.get(answer_fields_key , {})
+    answer_fields = {}
+    for field, cf in _config.items():
+        cf['retryForConsensus'] = cf.pop('retry_for_consensus')
+        answer_fields[field] = cf
+
+    _config = project.info.get(consensus_config_key , {})
+    consensus_config = {}
+    for field, value in _config.items():
+        consensus_config[snake_to_camel(field)] = value
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
@@ -3034,6 +3065,8 @@ def answerfieldsconfig(short_name):
         'pro_features': pro,
         'csrf': generate_csrf()
     }
+    print(consensus_config)
+    print(answer_fields)
 
     return handle_content_type(response)
 

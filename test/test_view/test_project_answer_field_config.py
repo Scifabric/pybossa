@@ -33,7 +33,7 @@ class TestAnswerFieldConfig(web.Helper):
                 'config': {
                     'labels': ['A', 'B', 'C']
                 },
-                'retry_for_consensus': True
+                'retryForConsensus': True
             }
         }}
         res = self.app.post(url, content_type='application/json',
@@ -50,9 +50,9 @@ class TestAnswerFieldConfig(web.Helper):
         data = json.loads(res.data)
         csrf = data['csrf']
         fields = {'consensusConfig': {
-            'threshold': 70,
+            'consensusThreshold': 70,
             'maxRetries': 10,
-            'redundanceDelta': 2
+            'redundanceConfig': 2
         }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
