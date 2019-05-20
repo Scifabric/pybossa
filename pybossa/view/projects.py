@@ -3008,12 +3008,11 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            if 'answerFieldsConfig' in body:
+            if answer_fields_key in body:
                 key = answer_fields_key
-                data = body.get('answerFieldsConfig') or {}
             else :
                 key = consensus_config_key
-                data = body.get('consensusConfig') or {}
+            data = body.get(key) or {}
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3021,9 +3020,9 @@ def answerfieldsconfig(short_name):
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
-
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
+
     answer_fields = project.info.get(answer_fields_key , {})
     consensus_config = project.info.get(consensus_config_key , {})
     response = {
@@ -3034,7 +3033,6 @@ def answerfieldsconfig(short_name):
         'pro_features': pro,
         'csrf': generate_csrf()
     }
-
     return handle_content_type(response)
 
 

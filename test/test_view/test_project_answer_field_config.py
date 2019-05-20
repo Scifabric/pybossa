@@ -27,7 +27,7 @@ class TestAnswerFieldConfig(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = data['csrf']
-        fields = {'answerFieldsConfig': {
+        fields = {'answer_fields': {
             'hello': {
                 'type': 'categorical',
                 'config': {
@@ -49,10 +49,10 @@ class TestAnswerFieldConfig(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = data['csrf']
-        fields = {'consensusConfig': {
-            'threshold': 70,
-            'maxRetries': 10,
-            'redundanceDelta': 2
+        fields = {'consensus_config': {
+            'consensus_threshold': 70,
+            'max_retries': 10,
+            'redundance_config': 2
         }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
