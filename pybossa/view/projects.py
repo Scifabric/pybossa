@@ -24,7 +24,6 @@ import math
 import requests
 from StringIO import StringIO
 import six
-import re
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
@@ -3011,10 +3010,9 @@ def answerfieldsconfig(short_name):
             body = json.loads(request.data) or {}
             if answer_fields_key in body:
                 key = answer_fields_key
-                data= body.get(key) or {}
             else :
                 key = consensus_config_key
-                data = body.get(key) or {}
+            data = body.get(key) or {}
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
