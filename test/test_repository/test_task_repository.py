@@ -577,6 +577,17 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
         assert self.task_repo.get_task(task.id) == task, "Task not saved"
 
+    @with_context
+    def test_save_saves_tasks_without_clean_project(self):
+        """Test save persists Task instances"""
+
+        task = TaskFactory.build()
+        assert self.task_repo.get_task(task.id) is None
+
+        self.task_repo.save(task, clean_project=False)
+
+        assert self.task_repo.get_task(task.id) == task, "Task not saved"
+
 
     @with_context
     def test_save_saves_taskruns(self):
@@ -833,7 +844,6 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
         assert tasks[2].n_answers == 1, tasks[2].n_answers
         assert tasks[2].state == 'completed', tasks[2].state
-           
 
     @with_context
     def test_update_tasks_redundancy_updates_state_when_decrementing(self):

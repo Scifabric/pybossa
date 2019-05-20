@@ -133,6 +133,8 @@ class Importer(object):
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
+        from pybossa.cache import projects as cached_projects
+
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
         n = 0
@@ -164,24 +166,27 @@ class Importer(object):
 
         validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
-        for task_data in tasks:
-            self.upload_private_data(task_data, project.id)
-            task = Task(project_id=project.id, n_answers=n_answers)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
+        try:
+            for task_data in tasks:
+                self.upload_private_data(task_data, project.id)
+                task = Task(project_id=project.id, n_answers=n_answers)
+                [setattr(task, k, v) for k, v in task_data.iteritems()]
 
-            gold_answers = task_data.pop('gold_answers', None)
-            set_gold_answers(task, gold_answers)
+                gold_answers = task_data.pop('gold_answers', None)
+                set_gold_answers(task, gold_answers)
 
-            found = task_repo.find_duplicate(project_id=project.id,
-                                             info=task.info)
-            if found is None:
-                if validator.validate(task):
-                    try:
-                        task_repo.save(task)
-                        n += 1
-                    except Exception as e:
-                        current_app.logger.exception(msg)
-                        validator.add_error(str(e))
+                found = task_repo.find_duplicate(project_id=project.id,
+                                                info=task.info)
+                if found is None:
+                    if validator.validate(task):
+                        try:
+                            n += 1
+                            task_repo.save(task, clean_project=False)
+                        except Exception as e:
+                            current_app.logger.exception(msg)
+                            validator.add_error(str(e))
+        finally:
+            cached_projects.clean_project(project.id)
 
         if form_data.get('type') == 'localCSV':
             csv_filename = form_data.get('csv_filename')
