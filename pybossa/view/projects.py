@@ -2995,34 +2995,6 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
-def convert_to_camel(data):
-    if not isinstance(data, dict):
-        return data
-    res = {}
-    for key, value in data.items():
-        res[snake_to_camel(key)] = convert_to_camel(value)
-    return res
-
-def convert_to_snake(data):
-    if not isinstance(data, dict):
-        return data
-    res = {}
-    for key, value in data.items():
-        res[camel_to_snake(key)] = convert_to_snake(value)
-    return res
-
-def snake_to_camel(name):
-    tags = name.split('_')
-    if len(tags) == 0:
-        return name
-    first = tags[0]
-    tags = tags[1:]
-    return first + ''.join(ele.capitalize() for ele in tags)
-
-def camel_to_snake(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3037,13 +3009,12 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            if 'answerFieldsConfig' in body:
+            if answer_fields_key in body:
                 key = answer_fields_key
-                _config = body.get('answerFieldsConfig') or {}
+                data= body.get(key) or {}
             else :
                 key = consensus_config_key
-                _config = body.get('consensusConfig') or {}
-            data = convert_to_snake(_config)
+                data = body.get(key) or {}
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3054,10 +3025,8 @@ def answerfieldsconfig(short_name):
     project_sanitized, owner_sanitized = sanitize_project_owner(
         project, owner, current_user, ps)
 
-    _config = project.info.get(answer_fields_key , {})
-    answer_fields = convert_to_camel(_config)
-    _config = project.info.get(consensus_config_key , {})
-    consensus_config = convert_to_camel(_config)
+    answer_fields = project.info.get(answer_fields_key , {})
+    consensus_config = project.info.get(consensus_config_key , {})
     response = {
         'template': '/projects/answerfieldsconfig.html',
         'project': project_sanitized,
@@ -3066,7 +3035,6 @@ def answerfieldsconfig(short_name):
         'pro_features': pro,
         'csrf': generate_csrf()
     }
-
     return handle_content_type(response)
 
 
