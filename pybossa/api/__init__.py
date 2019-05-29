@@ -440,8 +440,10 @@ def task_gold(project_id=None):
         return abort(401)
 
     project = project_repo.get(project_id)
-    if project is None or not(current_user.admin
-        or current_user.id in project.owners_ids):
+
+    # Allow project owner, sub-admin co-owners, and admins to update Gold tasks.
+    is_gold_access = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
+    if project is None or not is_gold_access:
         raise Forbidden
 
     task_data = request.json
