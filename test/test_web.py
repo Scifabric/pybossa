@@ -4372,14 +4372,6 @@ class TestWeb(web.Helper):
         assert "Task Presenter Editor" in res.data, err_msg
         err_msg = "Basic template not found"
         assert "The most basic template" in res.data, err_msg
-        err_msg = "Image Pattern Recognition not found"
-        assert "Image Pattern Recognition" in res.data, err_msg
-        err_msg = "Sound Pattern Recognition not found"
-        assert "Sound Pattern Recognition" in res.data, err_msg
-        err_msg = "Video Pattern Recognition not found"
-        assert "Video Pattern Recognition" in res.data, err_msg
-        err_msg = "Transcribing documents not found"
-        assert "Transcribing documents" in res.data, err_msg
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
@@ -4392,12 +4384,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         err_msg = "Task Presenter options not found"
         assert "Task Presenter Editor" in data['title'], err_msg
-        presenters = ["projects/presenters/basic.html",
-                      "projects/presenters/image.html",
-                      "projects/presenters/sound.html",
-                      "projects/presenters/video.html",
-                      "projects/presenters/map.html",
-                      "projects/presenters/pdf.html"]
+        presenters = ["projects/presenters/basic.html"]
         assert data['presenters'] == presenters, err_msg
 
     @with_context
@@ -5905,16 +5892,6 @@ class TestWeb(web.Helper):
         assert "type=twitter" in res.data, err_msg
         err_msg = "There should be an S3 importer"
         assert "type=s3" in res.data, err_msg
-        err_msg = "There should be an Image template"
-        assert "template=image" in res.data, err_msg
-        err_msg = "There should be a Map template"
-        assert "template=map" in res.data, err_msg
-        err_msg = "There should be a PDF template"
-        assert "template=pdf" in res.data, err_msg
-        err_msg = "There should be a Sound template"
-        assert "template=sound" in res.data, err_msg
-        err_msg = "There should be a Video template"
-        assert "template=video" in res.data, err_msg
 
         self.signout()
 
@@ -9205,7 +9182,7 @@ class TestWebQuizModeUpdate(web.Helper):
         self.update_project(project, quiz)
         updated_admin = user_repo.get(admin.id)
         assert updated_admin.get_quiz_in_progress(project)
-    
+
     @with_context
     def test_not_enough_gold(self):
         admin = UserFactory.create()
