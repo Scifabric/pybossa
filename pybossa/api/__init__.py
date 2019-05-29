@@ -442,8 +442,8 @@ def task_gold(project_id=None):
     project = project_repo.get(project_id)
 
     # Allow project owner, sub-admin co-owners, and admins to update Gold tasks.
-    isGoldAccess = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
-    if project is None or not isGoldAccess:
+    is_gold_access = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
+    if project is None or not is_gold_access:
         raise Forbidden
 
     task_data = request.json
