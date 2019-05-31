@@ -75,4 +75,26 @@ class Task(db.Model, DomainObject):
         Index('task_info_idx', sqlalchemy.text('md5(info::text)')),
     )
 
+    @staticmethod
+    def apply_access_control(data, user=None, project_data=None):
+        def has_full_access():
+            if not user:
+                return False
+            if user.admin:
+                return True
+            if not user.subadmin:
+                return False
+            if user.id not in project_data['owners_ids']:
+                return False
+            return True
+
+        if not has_full_access():
+            data.pop('gold_answers', None)
+            data.pop('calibration', None)
+
+        return data
+
+    def dictize_with_access_control(self):
+        return self.apply_access_control(self.dictize())
+
 Index('task_project_id_idx', Task.project_id)

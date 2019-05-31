@@ -165,7 +165,7 @@ def new_task(project_id):
                     # to continue original presented time, extend expiry
                     guard.extend_task_presented_timestamp_expiry(task, user_id_or_ip)
 
-            data = [task.dictize() for task in tasks]
+            data = [task.dictize_with_access_control() for task in tasks]
             add_task_signature(data)
             if len(data) == 0:
                 response = make_response(json.dumps({}))
