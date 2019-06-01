@@ -30,9 +30,12 @@ These objects are an abstraction layer between the ORM and the application:
     * auditlog_repo
     * webhook_repo
     * result_repo
+    * helpingmaterial_repo
+    * page_repo
 
-The responsibility of these repositories is only fetching one or many objects of
-a kind and/or saving them to the DB by calling the ORM apropriate methods.
+The responsibility of these repositories is only fetching one
+or many objects of kind and/or saving them to the DB by calling
+the ORM apropriate methods.
 
 For more complex DB queries, refer to other packages or services within
 PYBOSSA.
@@ -44,9 +47,10 @@ from pybossa.model.announcement import Announcement
 from pybossa.model.project_stats import ProjectStats
 from sqlalchemy import text
 from sqlalchemy.sql import and_, or_
-from sqlalchemy import cast, Text, func, desc, text
+from sqlalchemy import cast, func, desc
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
+
 
 class Repository(object):
 
@@ -57,22 +61,26 @@ class Repository(object):
     def generate_query_from_keywords(self, model, fulltextsearch=None,
                                      **kwargs):
         clauses = [_entity_descriptor(model, key) == value
-                       for key, value in kwargs.items()
-                       if (key != 'info' and key != 'fav_user_ids'
-                            and key != 'created' and key != 'project_id')]
+                   for key, value in kwargs.items()
+                   if (key != 'info' and key != 'fav_user_ids'
+                       and key != 'created' and key != 'project_id')]
         queries = []
         headlines = []
         order_by_ranks = []
         or_clauses = []
 
         if 'info' in kwargs.keys():
-            queries, headlines, order_by_ranks = self.handle_info_json(model, kwargs['info'],
-                                                                       fulltextsearch)
+            queries, headlines, order_by_ranks = self.handle_info_json(
+                model,
+                kwargs['info'],
+                fulltextsearch)
+
             clauses = clauses + queries
 
         if 'created' in kwargs.keys():
             like_query = kwargs['created'] + '%'
-            clauses.append(_entity_descriptor(model,'created').like(like_query))
+            clauses.append(
+                _entity_descriptor(model, 'created').like(like_query))
 
         if 'project_id' in kwargs.keys():
             tmp = "%s" % kwargs['project_id']
@@ -82,7 +90,6 @@ class Repository(object):
                                    project_id))
         all_clauses = and_(and_(*clauses), or_(*or_clauses))
         return (all_clauses,), queries, headlines, order_by_ranks
-
 
     def handle_info_json(self, model, info, fulltextsearch=None):
         """Handle info JSON query filter."""
@@ -94,19 +101,24 @@ class Repository(object):
             pairs = info.split('|')
             for pair in pairs:
                 if pair != '':
-                    k,v = pair.split("::")
+                    k, v = pair.split("::")
                     if fulltextsearch == '1':
                         vector = _entity_descriptor(model, 'info')[k].astext
                         clause = func.to_tsvector(vector).match(v)
                         clauses.append(clause)
                         if len(headlines) == 0:
-                            headline = func.ts_headline(self.language, vector, func.to_tsquery(v))
+                            headline = func.ts_headline(
+                                self.language,
+                                vector,
+                                func.to_tsquery(v))
                             headlines.append(headline)
-                            order = func.ts_rank_cd(func.to_tsvector(vector), func.to_tsquery(v), 4).label('rank')
+                            order = func.ts_rank_cd(
+                                func.to_tsvector(vector),
+                                func.to_tsquery(v), 4).label('rank')
                             order_by_ranks.append(order)
                     else:
-                        clauses.append(_entity_descriptor(model,
-                                                          'info')[k].astext == v)
+                        clauses.append(
+                            _entity_descriptor(model, 'info')[k].astext == v)
         else:
             if type(info) == dict:
                 clauses.append(_entity_descriptor(model, 'info') == info)
@@ -120,7 +132,6 @@ class Repository(object):
                 clauses.append(_entity_descriptor(model,
                                                   'info').contains(info))
         return clauses, headlines, order_by_ranks
-
 
     def create_context(self, filters, fulltextsearch, model):
         """Return query with context aware query."""
@@ -140,9 +151,9 @@ class Repository(object):
             participated = filters.get('participated')
             del filters['participated']
 
-        query_args, queries, headlines, orders = self.generate_query_from_keywords(model,
-                                                               fulltextsearch,
-                                                               **filters)
+        query_args, queries, headlines, orders = self.generate_query_from_keywords(
+            model, fulltextsearch,
+            **filters)
 
         if model not in [Announcement, ProjectStats] and owner_id:
             subquery = self.db.session.query(Project)\
@@ -163,7 +174,8 @@ class Repository(object):
             if participated['user_id']:
                 subquery = self.db.session.query(TaskRun)\
                                .with_entities(TaskRun.task_id)\
-                               .filter_by(user_id=participated['user_id']).subquery()
+                               .filter_by(
+                                   user_id=participated['user_id']).subquery()
             if participated['external_uid']:
                 subquery = self.db.session.query(TaskRun)\
                                .with_entities(TaskRun.task_id)\
@@ -213,10 +225,9 @@ class Repository(object):
             query = query.limit(limit).offset(offset)
         return query
 
-
     def _filter_by(self, model, limit=None, offset=0, yielded=False,
-                  last_id=None, fulltextsearch=None, desc=False,
-                  orderby='id', **filters):
+                   last_id=None, fulltextsearch=None, desc=False,
+                   orderby='id', **filters):
         """Filter by using several arguments and ordering items."""
         query = self.create_context(filters, fulltextsearch, model)
         if last_id:
@@ -242,6 +253,7 @@ from auditlog_repository import AuditlogRepository
 from webhook_repository import WebhookRepository
 from result_repository import ResultRepository
 from helping_repository import HelpingMaterialRepository
+from page_repository import PageRepository
 
 assert ProjectRepository
 assert ProjectStatsRepository
@@ -253,3 +265,4 @@ assert AuditlogRepository
 assert WebhookRepository
 assert ResultRepository
 assert HelpingMaterialRepository
+assert PageRepository

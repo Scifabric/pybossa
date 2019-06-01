@@ -198,6 +198,7 @@ def setup_repositories(app):
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
     from pybossa.repositories import HelpingMaterialRepository
+    from pybossa.repositories import PageRepository
     global user_repo
     global project_repo
     global project_stats_repo
