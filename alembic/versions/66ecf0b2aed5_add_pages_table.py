@@ -13,6 +13,7 @@ down_revision = 'c7476118715f'
 import datetime
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP
 
 
 def make_timestamp():
@@ -22,16 +23,18 @@ def make_timestamp():
 
 def upgrade():
     op.create_table(
-    'pages',
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('title', sa.Unicode(length=255), nullable=False),
-    sa.Column('body', sa.UnicodeText, nullable=False),
-    sa.Column('app_id', sa.Integer, sa.ForeignKey('app.id', ondelete='CASCADE'), nullable=False),
-    sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id')),
-    sa.Column('created', sa.Text, default=make_timestamp),
-    )
-
+        'pages',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('slug', sa.Unicode(length=255), nullable=False),
+        sa.Column('project_id',
+                  sa.Integer,
+                  sa.ForeignKey('project.id', ondelete='CASCADE'),
+                  nullable=False),
+        sa.Column('created', TIMESTAMP, default=make_timestamp),
+        sa.Column('info', JSON, nullable=False),
+        sa.Column('media_url', sa.Text),
+        )
 
 
 def downgrade():
-   op.drop_table('pages')
+    op.drop_table('pages')
