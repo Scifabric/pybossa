@@ -209,6 +209,7 @@ def setup_repositories(app):
     global webhook_repo
     global result_repo
     global helping_repo
+    global page_repo
     language = app.config.get('FULLTEXTSEARCH_LANGUAGE')
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
@@ -220,6 +221,7 @@ def setup_repositories(app):
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
     helping_repo = HelpingMaterialRepository(db)
+    page_repo = PageRepository(db)
 
 
 def setup_error_email(app):

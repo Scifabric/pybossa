@@ -24,8 +24,8 @@ from pybossa.model import DomainObject, make_timestamp
 from sqlalchemy.ext.mutable import MutableDict
 
 
-class Pages(db.Model, DomainObject):
-    '''A Pages objects to provide a headles CMS.'''
+class Page(db.Model, DomainObject):
+    '''A Page objects to provide a headles CMS.'''
 
     __tablename__ = 'pages'
 
