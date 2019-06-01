@@ -40,6 +40,7 @@ import auditlog
 import webhook
 import result
 import helpingmaterial
+import page
 
 assert project
 assert projectstats
@@ -53,6 +54,7 @@ assert blogpost
 assert auditlog
 assert webhook
 assert result
+assert page
 
 
 _actions = ['create', 'read', 'update', 'delete']
@@ -68,7 +70,9 @@ _auth_classes = {'project': project.ProjectAuth,
                  'user': user.UserAuth,
                  'webhook': webhook.WebhookAuth,
                  'result': result.ResultAuth,
-                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth}
+                 'helpingmaterial': helpingmaterial.HelpingMaterialAuth,
+                 'page': page.PageAuth
+                 }
 
 
 def is_authorized(user, action, resource, **kwargs):
@@ -99,7 +103,7 @@ def _authorizer_for(resource_name):
         kwargs.update({'task_repo': task_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result',
-                         'helpingmaterial'):
+                         'helpingmaterial', 'page'):
         kwargs.update({'project_repo': project_repo})
     if resource_name in ('project', 'task', 'taskrun'):
         kwargs.update({'result_repo': result_repo})
