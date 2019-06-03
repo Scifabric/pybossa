@@ -36,7 +36,7 @@ class TestScheduler(QuizTest):
         url = '/api/project/{}/newtask'.format(project.id)
         response = self.app.get(url)
         task = json.loads(response.data)
-        assert task['calibration']
+        assert any(task['id'] == golden_task.id for golden_task in golden_tasks)
 
     @with_context
     def test_failed_quiz_no_task(self):
@@ -62,7 +62,7 @@ class TestScheduler(QuizTest):
         url = '/api/project/{}/newtask'.format(project.id)
         response = self.app.get(url)
         task = json.loads(response.data)
-        assert not task['calibration']
+        assert any(task['id'] == non_golden_task.id for non_golden_task in non_golden_tasks)
 
 
 class TestQuizUpdate(QuizTest):
