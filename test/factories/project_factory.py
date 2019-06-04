@@ -53,7 +53,6 @@ class ProjectFactory(BaseFactory):
             'onesignal_app_id': 1,
             'sched': 'breadth_first',
             'product': 'abc',
-            'subproduct': 'def',
-            'kpi': 0.5
+            'subproduct': 'def'
             }
     owners_ids = factory.LazyAttribute(lambda project: [project.owner.id])
