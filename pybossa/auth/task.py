@@ -57,6 +57,8 @@ class TaskAuth(object):
         if user.is_anonymous:
             return False
         if project_owners_ids is None:
+            if task is None:
+                return False
             project = self.project_repo.get(task.project_id)
             if project is None:
                 raise NotFound("Invalid project ID")
