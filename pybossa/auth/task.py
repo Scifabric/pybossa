@@ -64,8 +64,8 @@ class TaskAuth(object):
         return user.admin or (user.subadmin and user.id in project_owners_ids)
 
     @staticmethod
-    def apply_access_control(task_dict, user=None, project_dict=None):
-        project_owners_ids = (project_dict or {}).get('owners_ids', [])
+    def apply_access_control(task_dict, user=None, project_data=None):
+        project_owners_ids = project_data and project_data['owners_ids']
 
         if not TaskAuth()._only_admin_or_subadminowners(user, project_owners_ids=project_owners_ids):
             task_dict.pop('gold_answers', None)

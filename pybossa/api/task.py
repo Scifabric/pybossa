@@ -112,4 +112,4 @@ class TaskAPI(APIBase):
             sign_task(item)
 
     def _select_attributes(self, data):
-        return TaskAuth.apply_access_control(data, user=current_user, project_dict=get_project_data(data['project_id']))
+        return TaskAuth.apply_access_control(data, user=current_user, project_data=get_project_data(data['project_id']))
