@@ -25,7 +25,7 @@ from sqlalchemy.ext.mutable import MutableList
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 from pybossa.model.task_run import TaskRun
-
+from pybossa.auth.project import ProjectAuth
 
 class Task(db.Model, DomainObject):
     '''An individual Task which can be performed by a user. A Task is
@@ -76,25 +76,17 @@ class Task(db.Model, DomainObject):
     )
 
     @staticmethod
-    def apply_access_control(data, user=None, project_data=None):
-        def has_full_access():
-            if not user:
-                return False
-            if user.admin:
-                return True
-            if not user.subadmin:
-                return False
-            if user.id not in project_data['owners_ids']:
-                return False
-            return True
+    def apply_access_control(task_dict, user=None, project_dict=None):
+        project_owners_ids = (project_dict or {}).get('owners_ids')
 
-        if not has_full_access():
-            data.pop('gold_answers', None)
-            data.pop('calibration', None)
+        if not ProjectAuth.only_admin_or_subadminowner(user, project_owners_ids=project_owners_ids):
+            task_dict.pop('gold_answers', None)
+            task_dict.pop('calibration', None)
 
-        return data
+        return task_dict
 
     def dictize_with_access_control(self):
+        # We're not passing a user so we get the minimum set of properties that are visible to anyone.
         return self.apply_access_control(self.dictize())
 
 Index('task_project_id_idx', Task.project_id)
