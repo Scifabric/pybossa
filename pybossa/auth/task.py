@@ -22,7 +22,7 @@ from werkzeug.exceptions import NotFound
 class TaskAuth(object):
     _specific_actions = []
 
-    def __init__(self, project_repo, result_repo):
+    def __init__(self, project_repo=None, result_repo=None):
         self.project_repo = project_repo
         self.result_repo = result_repo
 
@@ -51,10 +51,29 @@ class TaskAuth(object):
             return False
         return self._only_admin_or_subadminowners(user, task)
 
-    def _only_admin_or_subadminowners(self, user, task):
-        if not user.is_anonymous:
+    def _only_admin_or_subadminowners(self, user, task=None, project_owners_ids=None):
+        if not user:
+            return False
+        if user.is_anonymous:
+            return False
+        if project_owners_ids is None:
             project = self.project_repo.get(task.project_id)
             if project is None:
                 raise NotFound("Invalid project ID")
-            return user.admin or (user.subadmin and user.id in project.owners_ids)
-        return False
+            project_owners_ids = project.owners_ids
+        return user.admin or (user.subadmin and user.id in project_owners_ids)
+
+    @staticmethod
+    def apply_access_control(task_dict, user=None, project_dict=None):
+        project_owners_ids = (project_dict or {}).get('owners_ids')
+
+        if not TaskAuth()._only_admin_or_subadminowners(user, project_owners_ids=project_owners_ids):
+            task_dict.pop('gold_answers', None)
+            task_dict.pop('calibration', None)
+
+        return task_dict
+
+    @staticmethod
+    def dictize_with_access_control(task):
+        # We're not passing a user so we get the minimum set of properties that are visible to anyone.
+        return TaskAuth.apply_access_control(task.dictize())

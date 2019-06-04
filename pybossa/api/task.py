@@ -39,7 +39,7 @@ from flask import current_app
 import hashlib
 from flask import url_for
 from pybossa.cloud_store_api.s3 import upload_json_data
-
+from pybossa.auth.task import TaskAuth
 
 import json
 import copy
@@ -112,4 +112,4 @@ class TaskAPI(APIBase):
             sign_task(item)
 
     def _select_attributes(self, data):
-        return Task.apply_access_control(data, user=current_user, project_data=get_project_data(data['project_id']))
+        return TaskAuth.apply_access_control(data, user=current_user, project_data=get_project_data(data['project_id']))

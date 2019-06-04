@@ -29,17 +29,11 @@ class ProjectAuth(object):
         return self._specific_actions
 
     @staticmethod
-    def only_admin_or_subadminowner(user, project=None, project_owners_ids=None):
-        if not user:
-            return False
-
-        if project_owners_ids is None:
-            project_owners_ids = project.owners_ids
-
+    def only_admin_or_subadminowner(user, project):
         return (user.is_authenticated and
                 (user.admin or
                     (user.subadmin and
-                        user.id in project_owners_ids)))
+                        user.id in project.owners_ids)))
 
     @staticmethod
     def only_admin_or_subadmin(user):
