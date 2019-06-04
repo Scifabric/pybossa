@@ -26,6 +26,7 @@ from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp
 from pybossa.model.task_run import TaskRun
 
+
 class Task(db.Model, DomainObject):
     '''An individual Task which can be performed by a user. A Task is
     associated to a project.
