@@ -127,5 +127,5 @@ class TestJsonProject(web.Helper):
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
-            err_msg = {'kpi': ['Not a valid decimal value', 'Number must be between 0.5 and 120.0.'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
+            err_msg = {'kpi': ['Not a valid decimal value', 'Number must be between 0.1 and 120.0.'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
