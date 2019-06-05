@@ -166,6 +166,30 @@ class TestJsonProject(web.Helper):
             assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
 
     @with_context
+    def test_project_kpi_two_decimals_valid(self):
+        """Test PROJECT valid kpi with 2 decimal places."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Valid kpi at minimum threshold of 0.1.
+            url = '/project/new'
+            project = dict(name='kpitwodecimals', short_name='kpitwodecimals', long_description='kpitwodecimals',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.16)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
+
+    @with_context
     def test_project_kpi_range_below_threshold(self):
         """Test PROJECT invalid kpi range below threshold."""
         self.register()
