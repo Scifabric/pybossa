@@ -48,7 +48,7 @@ class TestSetupScheduledJobs(object):
                 port=settings_test.REDIS_PORT, db=db, password=pwd)
         else:
             sentinel = Sentinel(settings_test.REDIS_SENTINEL)
-            self.connection = sentinel.master_for('mymaster', db=db, password=pwd)
+            self.connection = sentinel.master_for(settings_test.REDIS_MASTER_NAME, db=db, password=pwd)
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 
