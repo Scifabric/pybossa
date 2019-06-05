@@ -127,5 +127,90 @@ class TestJsonProject(web.Helper):
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
-            err_msg = {'kpi': ['Not a valid decimal value', 'Number must be between 0.1 and 120.0.'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
+            err_msg = {'kpi': ['This field is required.'], 'product': ['Not a valid choice'], 'subproduct': ['Not a valid choice']}
+            assert data.get('errors') and data['form']['errors'] == err_msg, data
+
+    @with_context
+    def test_project_kpi_range_valid(self):
+        """Test PROJECT valid kpi range thresholds."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Valid kpi at minimum threshold of 0.1.
+            url = '/project/new'
+            project = dict(name='kpimin', short_name='kpimin', long_description='kpimin',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
+
+            # Valid kpi at maximum threshold of 120.
+            url = '/project/new'
+            project = dict(name='kpimax', short_name='kpimax', long_description='kpimax',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=120)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(2)
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
+
+    @with_context
+    def test_project_kpi_range_below_threshold(self):
+        """Test PROJECT invalid kpi range below threshold."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Invalid kpi below minimum threshold of 0.1.
+            url = '/project/new'
+            project = dict(name='kpibelowmin', short_name='kpibelowmin', long_description='kpibelowmin',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.01)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') != SUCCESS, data
+            proj_repo = project_repo.get(1)
+            err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
+            assert data.get('errors') and data['form']['errors'] == err_msg, data
+
+    @with_context
+    def test_project_kpi_range_above_threshold(self):
+        """Test PROJECT invalid kpi range above threshold."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Invalid kpi above maximum threshold of 120.
+            url = '/project/new'
+            project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=121)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') != SUCCESS, data
+            proj_repo = project_repo.get(1)
+            err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
