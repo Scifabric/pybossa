@@ -173,7 +173,7 @@ class Helper(Test):
 
     def new_project(self, method="POST", name="Sample Project",
                         short_name="sampleapp", description="Description",
-                        long_description=u'Long Description\n================'):
+                        long_description=u'Long Description\n================', kpi=0.5):
         """Helper function to create a project"""
         if method == "POST":
             self.create_categories()
@@ -185,7 +185,7 @@ class Helper(Test):
                 'password': 'Abc01$',
                 'product': 'abc',
                 'subproduct': 'def',
-                'kpi':0.5
+                'kpi': kpi
             }, follow_redirects=True)
         else:
             return self.app.get("/project/new", follow_redirects=True)
@@ -259,7 +259,8 @@ class Helper(Test):
                        new_protect=False,
                        new_password=None,
                        new_product='abc',
-                       new_subproduct='def'):
+                       new_subproduct='def',
+                       new_kpi=0.5):
         """Helper function to update a project"""
         payload = dict(id=id,
                        name=new_name,
@@ -273,7 +274,8 @@ class Helper(Test):
                        protect=new_protect,
                        password=new_password,
                        product=new_product,
-                       subproduct=new_subproduct)
+                       subproduct=new_subproduct,
+                       kpi=new_kpi)
 
         if method == "POST":
             return self.app.post("/project/%s/update" % short_name,
