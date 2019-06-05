@@ -45,7 +45,8 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': False,
                 'info': dict(passwd_hash="hello"),
-                'zip_download': True
+                'zip_download': True,
+                'kpi': 0.5
                 }
         url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
@@ -249,7 +250,8 @@ class TestAuditlogWEB(web.Helper):
                      'long_description': 'Long Description\n================',
                      'btn': 'Save',
                      'product': 'abc',
-                     'subproduct': 'def'}
+                     'subproduct': 'def',
+                     'kpi': 0.5}
         self.editor = {'editor': 'Some HTML code!'}
 
     @with_context
