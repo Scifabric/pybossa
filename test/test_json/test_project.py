@@ -178,7 +178,7 @@ class TestJsonProject(web.Helper):
             }
         }
         with patch.dict(self.flask_app.config, configs):
-            # Valid kpi at minimum threshold of 0.1.
+            # Valid kpi with 2 decimal places.
             url = '/project/new'
             project = dict(name='kpitwodecimals', short_name='kpitwodecimals', long_description='kpitwodecimals',
                            password='NightW1', product='north', subproduct='winterfell', kpi=0.16)
