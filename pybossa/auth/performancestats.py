@@ -34,7 +34,7 @@ class PerformanceStatsAuth(object):
     def _read(self, user, stat=None):
         if not stat:
             return True
-        if user.admin:
+        if user.admin or user.subadmin:
             return True
         project = self.project_repo.get(stat.project_id)
         return user.id in project.owners_ids
