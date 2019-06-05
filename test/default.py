@@ -61,7 +61,7 @@ def with_context_settings(**kwargs):
 
 
 def delete_indexes():
-    sql = text('''select * from pg_indexes WHERE tablename = 'users_rank' ''')
+    sql = text('''select * from pg_indexes WHERE schemaname = current_schema() and tablename = 'users_rank' ''')
     results = db.session.execute(sql)
     for row in results:
         sql = 'drop index %s;' % row.indexname
