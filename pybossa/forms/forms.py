@@ -98,8 +98,8 @@ class ProjectForm(Form):
                           [validators.Required()], choices=[("", "")], default="")
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.5-120)'),
-                       places=1, validators=[NumberRange(0.5, 120.0)], default=0.5)
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
+                       places=2, validators=[validators.Required(), NumberRange(0.1, 120.0)])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)

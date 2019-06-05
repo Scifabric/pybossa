@@ -249,7 +249,8 @@ class TestAuditlogWEB(web.Helper):
                      'long_description': 'Long Description\n================',
                      'btn': 'Save',
                      'product': 'abc',
-                     'subproduct': 'def'}
+                     'subproduct': 'def',
+                     'kpi': 0.5}
         self.editor = {'editor': 'Some HTML code!'}
 
     @with_context
